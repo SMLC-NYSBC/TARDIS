@@ -1,17 +1,14 @@
-import matplotlib.pyplot as plt
 from os import path
 from typing import Optional
-from matplotlib import cm
 
 import mrcfile
 import numpy as np
-from pandas import array
 import tifffile.tifffile as tif
 
 
 class ImportDataFromAmira:
     """
-    HANDLEER for 3D .AM DATA
+    HANDLEER for loading 3D .AM DATA
 
     Loading of Amira 3D spatial graph and/or image data (.tif/.mrc).
     In case of including image data, coordinates from spatial graph are corrected for Amira transformation.
@@ -261,5 +258,5 @@ def import_am(img: str):
         
     img = np.fromfile(img, dtype=np.uint8)
     
-    return img[binary_start:-1].reshape((nz, ny, nx)), None
+    return img[binary_start:-1].reshape((nz, ny, nx)), pixel_size
     
