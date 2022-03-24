@@ -1,4 +1,4 @@
-from os import path
+from os.path import isfile
 from typing import Optional
 
 import mrcfile
@@ -26,7 +26,7 @@ class ImportDataFromAmira:
         self.src_am = src_am
 
         if self.src_img is not None:
-            if not path.isfile(self.src_img[:-3] + "am"):
+            if not isfile(self.src_img[:-3] + "am"):
                 raise Warning("Missing corresponding .am file...")
             
             try:
@@ -210,6 +210,9 @@ def import_tiff(img: str,
         image: Image array of [Z, Y, X] shape
         pixel_size: None
     """
+    if not isfile(img):
+        raise Warning("Indicated .tif file does not exist...")
+    
     return np.array(tif.imread(img), dtype=dtype), None
 
 
@@ -224,6 +227,9 @@ def import_mrc(img: str):
         image: Image array of [Z, Y, X] shape
         pixel_size: float value of the pixel size
     """
+    if not isfile(img):
+        raise Warning("Indicated .mrc file does not exist...")
+    
     mrc = mrcfile.open(img, mode='r+')
 
     return mrc.data, mrc.voxel_size.x
@@ -240,6 +246,9 @@ def import_am(img: str):
         image: Image array of [Z, Y, X] shape
         pixel_size: float value of the pixel size
     """
+    if not isfile(img):
+        raise Warning("Indicated .am file does not exist...")
+    
     am = open(img, 'r', encoding="iso-8859-1").read(5000)
     binary_start = str.find(am, "\n@1\n") + 4
     size = [word for word in am.split('\n') if word.startswith('define Lattice ')][0][15:].split(" ")
