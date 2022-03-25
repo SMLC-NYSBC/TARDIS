@@ -249,8 +249,7 @@ def import_am(img: str):
     if not isfile(img):
         raise Warning("Indicated .am file does not exist...")
 
-    am = open(img, 'r', encoding="iso-8859-1").read(5000)
-    binary_start = str.find(am, "\n@1\n") + 4
+    am = open(img, 'r', encoding="iso-8859-1").read(8000)
     size = [word for word in am.split('\n') if word.startswith(
         'define Lattice ')][0][15:].split(" ")
 
@@ -258,12 +257,23 @@ def import_am(img: str):
 
     physical_size = str([word for word in am.split('\n') if
                         word.startswith('    BoundingBox')]).split(" ")
-    physical_size = np.array((float(physical_size[6][:-3]),
-                              float(physical_size[8][:-3]),
-                              float(physical_size[10][:-3])))
+    try:
+        physical_size = np.array((float(physical_size[6][:-3]),
+                                  float(physical_size[8][:-3]),
+                                  float(physical_size[10][:-3])))
+        binary_start = str.find(am, "\n@1\n") + 4
+    except IndexError:
+        am = open(img, 'r', encoding="iso-8859-1").read(10000)
+        physical_size = np.array((float(physical_size[6][:-3]),
+                                  float(physical_size[8][:-3]),
+                                  float(physical_size[10][:-3])))
+        binary_start = str.find(am, "\n@1\n") + 4
 
     pixel_size = round(physical_size[0] / (nx-1),  3)
 
     img = np.fromfile(img, dtype=np.uint8)
-
-    return img[binary_start:-1].reshape((nz, ny, nx)), pixel_size
+    
+    if nz == 1:
+        return img[binary_start:-1].reshape((ny, nx)), pixel_size
+    else:
+        return img[binary_start:-1].reshape((nz, ny, nx)), pixel_size
