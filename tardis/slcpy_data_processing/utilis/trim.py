@@ -3,7 +3,7 @@ from os.path import join
 from typing import Optional
 
 import numpy as np
-from tifffile import tifffile
+from tifffile import tifffile as tif
 
 
 def trim_image(image: np.ndarray,
@@ -122,15 +122,16 @@ def trim_image(image: np.ndarray,
                                    0:trim_df.shape[1]] = trim_df
 
                 # 0 refere to stride == 0
-                img_name = str(f'{image_counter}_{z}_{y}_{x}_0' + prefix + '.tif')
+                img_name = str(
+                    f'{image_counter}_{z}_{y}_{x}_0' + prefix + '.tif')
 
                 if not clean_empty and not np.all(trim_image == 0):
                     # Hard transform between int8 and uint8
                     if np.min(trim_image) < 0:
                         trim_image = trim_image + 128
 
-                    tifffile.imwrite(join(output, img_name),
-                                     np.array(trim_image, 'int8'))
+                    tif.imwrite(join(output, img_name),
+                                np.array(trim_image, 'int8'))
 
 
 def empty_mask(size: tuple):
@@ -160,8 +161,6 @@ def trim_with_stride(image: np.ndarray,
         prefix: Prefix name at the end of the file
         stride: Trimming step size
     """
-    idx = image_counter
-
     if image.ndim == 4:  # 3D with RGB
         nz, ny, nx, nc = image.shape
         dim = 3
@@ -191,46 +190,70 @@ def trim_with_stride(image: np.ndarray,
         trim_size_z = 64
 
     # Calculate number of patches and stride for xyz
-    x, y, z = ceil(nx / trim_size_xy), ceil(ny /
-                                            trim_size_xy), ceil(nz / trim_size_z)
+    x, y, z = ceil(nx / trim_size_xy), ceil(ny / trim_size_xy), \
+        ceil(nz / trim_size_z)
 
-    x_padding, y_padding, z_padding = (trim_size_xy + ((trim_size_xy - stride) * (x - 1))) - nx, \
-                                      (trim_size_xy + ((trim_size_xy - stride) * (y - 1))) - ny, \
-                                      (trim_size_z +
-                                       ((trim_size_z - stride) * (z - 1))) - nz
+    if dim == 3:
+        x_pad, y_pad, z_pad = (trim_size_xy + ((trim_size_xy - stride) * (x - 1))) - nx, \
+            (trim_size_xy + ((trim_size_xy - stride) * (y - 1))) - ny, \
+            (trim_size_z + (trim_size_z - stride) * (z - 1)) - nz
+    else:
+        x_pad, y_pad, z_pad = (trim_size_xy + ((trim_size_xy - stride) * (x - 1))) - nx, \
+            (trim_size_xy + ((trim_size_xy - stride) * (y - 1))) - ny, \
+            0
 
     # Adapt number of patches for trimming
     if trim_size_xy is not None or trim_size_z is not None:
-        while x_padding < 0:
+        while x_pad < 0:
             x += 1
-            x_padding += trim_size_xy - stride
-        while y_padding < 0:
+            x_pad += trim_size_xy - stride
+        while y_pad < 0:
             y += 1
-            y_padding += trim_size_xy - stride
-        while z_padding < 0:
-            z += 1
-            z_padding += trim_size_z - stride
+            y_pad += trim_size_xy - stride
+        if dim == 3:
+            while z_pad < 0:
+                z += 1
+                z_pad += trim_size_z - stride
 
     # Adapt patch size for trimming
     else:
-        while x_padding <= 0 or y_padding <= 0:
+        while x_pad <= 0 or y_pad <= 0:
             trim_size_xy += 1
-            x_padding = (trim_size_xy +
-                         ((trim_size_xy - stride) * (x - 1))) - nx
-            y_padding = (trim_size_xy +
-                         ((trim_size_xy - stride) * (y - 1))) - ny
+            x_pad = (trim_size_xy + ((trim_size_xy - stride) * (x - 1))) - nx
+            y_pad = (trim_size_xy + ((trim_size_xy - stride) * (y - 1))) - ny
 
-        while z_padding < 0:
-            trim_size_z += 1
-            z_padding = (trim_size_z + ((trim_size_z - stride) * (z - 1))) - nz
+        if dim == 3:
+            while z_pad < 0:
+                trim_size_z += 1
+                z_pad = (
+                    trim_size_z + ((trim_size_z - stride) * (z - 1))) - nz
+        else:
+            z_pad = 0
 
     # Expand image of a patch
-    image_padded = np.pad(image,
-                          [(0, z_padding), (0, y_padding), (0, x_padding)],
-                          mode='constant')
+    if dim == 3:
+        if nc is not None:
+            image_padded = np.pad(image,
+                                  [(0, z_pad), (0, y_pad), (0, x_pad), (0, 0)],
+                                  mode='constant')
+        else:
+            image_padded = np.pad(image,
+                                  [(0, z_pad), (0, y_pad), (0, x_pad)],
+                                  mode='constant')
+    else:
+        if nc is not None:
+            image_padded = np.pad(image,
+                                  [(0, y_pad), (0, x_pad), (0, 0)],
+                                  mode='constant')
+        else:
+            image_padded = np.pad(image,
+                                  [(0, y_pad), (0, x_pad)],
+                                  mode='constant')
 
     # Trim image and mask with stride
     z_start, z_stop = 0 - (trim_size_z - stride), 0
+    if z == 0:
+        z = 1
 
     for i in range(z):
         z_start = z_start + trim_size_z - stride
@@ -246,17 +269,39 @@ def trim_with_stride(image: np.ndarray,
                 x_start = x_start + trim_size_xy - stride
                 x_stop = x_start + trim_size_xy
 
-                img_name = str("{}_{}_{}_{}_{}{}.tif".format(
-                    image_counter, i, j, k, stride, prefix))
+                if nc is None:
+                    if dim == 3:
+                        img_name = str("{}_{}_{}_{}_{}{}.tif".format(
+                            image_counter, i, j, k, stride, prefix))
 
-                trim_img = image_padded[z_start:z_stop,
-                                        y_start:y_stop,
-                                        x_start:x_stop]
+                        trim_img = image_padded[z_start:z_stop,
+                                                y_start:y_stop,
+                                                x_start:x_stop]
+                    elif dim == 2:
+                        img_name = str("{}_0_{}_{}_{}{}.tif".format(
+                            image_counter, j, k, stride, prefix))
 
+                        trim_img = image_padded[y_start:y_stop,
+                                                x_start:x_stop]
+                else:
+                    if dim == 3:
+                        img_name = str("{}_{}_{}_{}_{}{}.tif".format(
+                            image_counter, i, j, k, stride, prefix))
 
-                tifffile.imwrite(join(output, img_name),
-                                     np.array(trim_img, 'int8'))
+                        trim_img = image_padded[z_start:z_stop,
+                                                y_start:y_stop,
+                                                x_start:x_stop,
+                                                :]
+                    elif dim == 2:
+                        img_name = str("{}_0_{}_{}_{}{}.tif".format(
+                            image_counter, j, k, stride, prefix))
 
+                        trim_img = image_padded[y_start:y_stop,
+                                                x_start:x_stop,
+                                                :]
+
+                tif.imwrite(join(output, img_name),
+                            np.array(trim_img, 'int8'))
 
 
 def trim_label_mask(points: np.ndarray,
