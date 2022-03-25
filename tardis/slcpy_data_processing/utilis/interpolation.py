@@ -12,10 +12,9 @@ def interpolation_1D(start: int,
         stop: 1D single coordinate to stop interpolation
         max_len: 1D axis length
     """
-    points_seq = np.linspace(
-        int(start),
-        int(stop),
-        max_len).round()
+    points_seq = np.linspace(start=int(start),
+                             stop=int(stop),
+                             num=max_len).round()
 
     return points_seq
 
@@ -40,6 +39,7 @@ def interpolation_3D(points: np.ndarray):
         z_len = abs(z[0] - z[1])
         max_len = int(max([x_len, y_len, z_len]) + 1)
 
+        """1D interpolation for each dimension"""
         x_new = interpolation_1D(start=x[0],
                                  stop=x[1],
                                  max_len=max_len)
@@ -58,8 +58,8 @@ def interpolation_3D(points: np.ndarray):
         df[0:max_len, 1] = list(map(int, y_new))
         df[0:max_len, 2] = list(map(int, z_new))
 
-        interpolated = np.append(interpolated,
-                                 df,
+        interpolated = np.append(arr=interpolated,
+                                 values=df,
                                  axis=0)
 
     return interpolated

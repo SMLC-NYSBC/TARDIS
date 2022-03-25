@@ -3,7 +3,6 @@ from os.path import isfile, join
 
 import numpy as np
 from tifffile import tifffile
-from tqdm import tqdm
 
 
 class StitchImages:

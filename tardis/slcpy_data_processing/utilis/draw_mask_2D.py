@@ -47,7 +47,7 @@ def draw_2D(r: int,
     if z == nz:
         z = z - 1
 
-    # Quickfix for 2D images
+    """Quickfix for 2D images"""
     if dim == 2:
         z = 0
 

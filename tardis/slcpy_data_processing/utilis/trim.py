@@ -1,6 +1,5 @@
 from math import ceil
 from os.path import join
-from typing import Optional
 
 import numpy as np
 from tifffile import tifffile as tif
@@ -30,7 +29,6 @@ def trim_image(image: np.ndarray,
         clean_empty: Omit saving images with all values at 0 aka empty
         prefix: Prefix name added at the end of each trimmed file
     """
-
     if image.ndim == 4:  # 3D with RGB
         nz, ny, nx, nc = image.shape
         dim = 3
@@ -48,28 +46,28 @@ def trim_image(image: np.ndarray,
         nz = 0
         dim = 2
 
-    # Count number of trimming in z, y and x with padding
+    """Count number of trimming in z, y and x with padding"""
     x_axis, y_axis, z_axis = ceil(nx / trim_size_xy), ceil(ny / trim_size_xy), \
         ceil(nz / trim_size_z)
     if nz == 0:  # Hardfix for 2D data when nz == 0
         z_axis = 1
 
-    # Zero-out Z axis counter
+    """Zero-out Z axis counter"""
     nz_start, nz_end = -trim_size_z, 0
 
-    # Trimming throw Z axis
+    """Trimming throw Z axis"""
     for z in range(z_axis):
         nz_start += trim_size_z
         nz_end += trim_size_z
         ny_start, ny_end = -trim_size_xy, 0  # Zero-out Y axis counter
 
-        # Trimming throw Y axis
+        """Trimming throw Y axis"""
         for y in range(y_axis):
             ny_start += trim_size_xy
             ny_end += trim_size_xy
             nx_start, nx_end = -trim_size_xy, 0  # Zero-out X axis counter
 
-            # Trimming throw Z axis
+            """Trimming throw Z axis"""
             for x in range(x_axis):
                 nx_start += trim_size_xy
                 nx_end += trim_size_xy
@@ -121,12 +119,11 @@ def trim_image(image: np.ndarray,
                         trim_image[0:trim_df.shape[0],
                                    0:trim_df.shape[1]] = trim_df
 
-                # 0 refere to stride == 0
-                img_name = str(
-                    f'{image_counter}_{z}_{y}_{x}_0' + prefix + '.tif')
+                """0 refere to stride == 0"""
+                img_name = str(f'{image_counter}_{z}_{y}_{x}_0{prefix}.tif')
 
                 if not clean_empty and not np.all(trim_image == 0):
-                    # Hard transform between int8 and uint8
+                    """Hard transform between int8 and uint8"""
                     if np.min(trim_image) < 0:
                         trim_image = trim_image + 128
 
@@ -189,9 +186,8 @@ def trim_with_stride(image: np.ndarray,
         trim_size_xy = 64
         trim_size_z = 64
 
-    # Calculate number of patches and stride for xyz
-    x, y, z = ceil(nx / trim_size_xy), ceil(ny / trim_size_xy), \
-        ceil(nz / trim_size_z)
+    """Calculate number of patches and stride for xyz"""
+    x, y, z = ceil(nx / trim_size_xy), ceil(ny / trim_size_xy), ceil(nz / trim_size_z)
 
     if dim == 3:
         x_pad, y_pad, z_pad = (trim_size_xy + ((trim_size_xy - stride) * (x - 1))) - nx, \
@@ -202,7 +198,7 @@ def trim_with_stride(image: np.ndarray,
             (trim_size_xy + ((trim_size_xy - stride) * (y - 1))) - ny, \
             0
 
-    # Adapt number of patches for trimming
+    """Adapt number of patches or patch size for trimming"""
     if trim_size_xy is not None or trim_size_z is not None:
         while x_pad < 0:
             x += 1
@@ -214,8 +210,6 @@ def trim_with_stride(image: np.ndarray,
             while z_pad < 0:
                 z += 1
                 z_pad += trim_size_z - stride
-
-    # Adapt patch size for trimming
     else:
         while x_pad <= 0 or y_pad <= 0:
             trim_size_xy += 1
@@ -225,12 +219,11 @@ def trim_with_stride(image: np.ndarray,
         if dim == 3:
             while z_pad < 0:
                 trim_size_z += 1
-                z_pad = (
-                    trim_size_z + ((trim_size_z - stride) * (z - 1))) - nz
+                z_pad = (trim_size_z + ((trim_size_z - stride) * (z - 1))) - nz
         else:
             z_pad = 0
 
-    # Expand image of a patch
+    """Expand image of a patch"""
     if dim == 3:
         if nc is not None:
             image_padded = np.pad(image,
@@ -250,7 +243,7 @@ def trim_with_stride(image: np.ndarray,
                                   [(0, y_pad), (0, x_pad)],
                                   mode='constant')
 
-    # Trim image and mask with stride
+    """Trim image and mask with stride"""
     z_start, z_stop = 0 - (trim_size_z - stride), 0
     if z == 0:
         z = 1
@@ -268,34 +261,24 @@ def trim_with_stride(image: np.ndarray,
             for k in range(x):
                 x_start = x_start + trim_size_xy - stride
                 x_stop = x_start + trim_size_xy
-
+                
+                img_name = str(f'{image_counter}_{i}_{j}_{k}_{stride}{prefix}.tif')
+                
                 if nc is None:
                     if dim == 3:
-                        img_name = str("{}_{}_{}_{}_{}{}.tif".format(
-                            image_counter, i, j, k, stride, prefix))
-
                         trim_img = image_padded[z_start:z_stop,
                                                 y_start:y_stop,
                                                 x_start:x_stop]
                     elif dim == 2:
-                        img_name = str("{}_0_{}_{}_{}{}.tif".format(
-                            image_counter, j, k, stride, prefix))
-
                         trim_img = image_padded[y_start:y_stop,
                                                 x_start:x_stop]
                 else:
                     if dim == 3:
-                        img_name = str("{}_{}_{}_{}_{}{}.tif".format(
-                            image_counter, i, j, k, stride, prefix))
-
                         trim_img = image_padded[z_start:z_stop,
                                                 y_start:y_stop,
                                                 x_start:x_stop,
                                                 :]
                     elif dim == 2:
-                        img_name = str("{}_0_{}_{}_{}{}.tif".format(
-                            image_counter, j, k, stride, prefix))
-
                         trim_img = image_padded[y_start:y_stop,
                                                 x_start:x_stop,
                                                 :]
