@@ -1,4 +1,5 @@
 import numpy as np
+from pyrsistent import v
 import tardis.slcpy_data_processing.utilis.trim as trim
 from os.path import join, isdir
 from os import mkdir
@@ -18,23 +19,20 @@ class TestTrimming:
             rmtree(self.temp_dir)
         mkdir(self.temp_dir)
 
-        idx = trim.trim_image(image=image,
-                              trim_size_xy=self.trim_xy,
-                              trim_size_z=self.trim_z,
-                              image_counter=0,
-                              output=self.temp_dir,
-                              clean_empty=False,
-                              prefix='_test')
-        assert idx - 1 == 64, \
-            f'Wrong number of outputted images given {idx - 1} expected 64!'
+        trim.trim_image(image=image,
+                        trim_size_xy=self.trim_xy,
+                        trim_size_z=self.trim_z,
+                        image_counter=0,
+                        output=self.temp_dir,
+                        clean_empty=False,
+                        prefix='_test')
 
         for _ in range(10):
-            rand_idx = np.random.choice(idx, size=1)[0]
-            if rand_idx == 0:
-                rand_idx = 1
+            y = np.random.choice(8, size=1)[0]
+            x = np.random.choice(8, size=1)[0]
 
             image = tif.imread(
-                join(self.temp_dir, str(rand_idx) + '_test.tif'))
+                join(self.temp_dir, f'{0}_{0}_{y}_{x}_0_test.tif'))
             assert image.shape == (self.trim_xy, self.trim_xy), \
                 'Wrong output size!'
 
@@ -47,25 +45,22 @@ class TestTrimming:
             rmtree(self.temp_dir)
         mkdir(self.temp_dir)
 
-        idx = trim.trim_image(image=image,
-                              trim_size_xy=self.trim_xy,
-                              trim_size_z=self.trim_z,
-                              image_counter=0,
-                              output=self.temp_dir,
-                              clean_empty=False,
-                              prefix='_test')
-        assert idx - 1 == 90, \
-            f'Wrong number of outputted images given {idx - 1} expected 64!'
+        trim.trim_image(image=image,
+                        trim_size_xy=self.trim_xy,
+                        trim_size_z=self.trim_z,
+                        image_counter=0,
+                        output=self.temp_dir,
+                        clean_empty=False,
+                        prefix='_test')
 
         for _ in range(10):
-            rand_idx = np.random.choice(idx, size=1)[0]
-            if rand_idx == 0:
-                rand_idx = 1
+            y = np.random.choice(9, size=1)[0]
+            x = np.random.choice(10, size=1)[0]
 
             image = tif.imread(
-                join(self.temp_dir, str(rand_idx) + '_test.tif'))
+                join(self.temp_dir, f'{0}_{0}_{y}_{x}_0_test.tif'))
             assert image.shape == (self.trim_xy, self.trim_xy), \
-                f'Wrong output size given {image.shape}, expected [64, 64]!'
+                'Wrong output size!'
 
         rmtree(self.temp_dir)
 
@@ -76,23 +71,21 @@ class TestTrimming:
             rmtree(self.temp_dir)
         mkdir(self.temp_dir)
 
-        idx = trim.trim_image(image=image,
-                              trim_size_xy=self.trim_xy,
-                              trim_size_z=self.trim_z,
-                              image_counter=0,
-                              output=self.temp_dir,
-                              clean_empty=False,
-                              prefix='_test')
-        assert idx - 1 == 128, \
-            f'Wrong number of outputted images given {idx - 1} expected 128!'
+        trim.trim_image(image=image,
+                        trim_size_xy=self.trim_xy,
+                        trim_size_z=self.trim_z,
+                        image_counter=0,
+                        output=self.temp_dir,
+                        clean_empty=False,
+                        prefix='_test')
 
         for _ in range(10):
-            rand_idx = np.random.choice(idx, size=1)[0]
-            if rand_idx == 0:
-                rand_idx = 1
+            z = np.random.choice(2, size=1)[0]
+            y = np.random.choice(8, size=1)[0]
+            x = np.random.choice(8, size=1)[0]
 
             image = tif.imread(
-                join(self.temp_dir, str(rand_idx) + '_test.tif'))
+                join(self.temp_dir, f'{0}_{z}_{y}_{x}_0_test.tif'))
             assert image.shape == (self.trim_z, self.trim_xy, self.trim_xy), \
                 'Wrong output size!'
 
@@ -105,21 +98,47 @@ class TestTrimming:
             rmtree(self.temp_dir)
         mkdir(self.temp_dir)
 
-        idx = trim.trim_image(image=image,
-                              trim_size_xy=self.trim_xy,
-                              trim_size_z=self.trim_z,
-                              image_counter=0,
-                              output=self.temp_dir,
-                              clean_empty=False,
-                              prefix='_test')
-        assert idx - 1 == 180, \
-            f'Wrong number of outputted images given {idx - 1} expected 64!'
+        trim.trim_image(image=image,
+                        trim_size_xy=self.trim_xy,
+                        trim_size_z=self.trim_z,
+                        image_counter=0,
+                        output=self.temp_dir,
+                        clean_empty=False,
+                        prefix='_test')
 
         for _ in range(10):
-            rand_idx = np.random.choice(idx, size=1)[0]
+            z = np.random.choice(2, size=1)[0]
+            y = np.random.choice(9, size=1)[0]
+            x = np.random.choice(10, size=1)[0]
+
             image = tif.imread(
-                join(self.temp_dir, str(rand_idx) + '_test.tif'))
+                join(self.temp_dir, f'{0}_{z}_{y}_{x}_0_test.tif'))
             assert image.shape == (self.trim_z, self.trim_xy, self.trim_xy), \
                 'Wrong output size!'
 
+        rmtree(self.temp_dir)
+
+    def test_trim_stride2D(self):
+        image = np.zeros((72, 525, 582)) + 1
+        if isdir(self.temp_dir):
+            rmtree(self.temp_dir)
+        mkdir(self.temp_dir)
+
+        trim.trim_with_stride(image=image,
+                              trim_size_xy=self.trim_xy,
+                              trim_size_z=self.trim_z,
+                              output=self.temp_dir,
+                              image_counter=0,
+                              stride=25,
+                              prefix='_test')
+
+        for _ in range(10):
+            z = np.random.choice(2, size=1)[0]
+            y = np.random.choice(9, size=1)[0]
+            x = np.random.choice(10, size=1)[0]
+
+            image = tif.imread(
+                join(self.temp_dir, f'{0}_{z}_{y}_{x}_25_test.tif'))
+            assert image.shape == (self.trim_z, self.trim_xy, self.trim_xy), \
+                'Wrong output size!'
         rmtree(self.temp_dir)
