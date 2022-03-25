@@ -28,7 +28,7 @@ class ImportDataFromAmira:
         if self.src_img is not None:
             if not isfile(self.src_img[:-3] + "am"):
                 raise Warning("Missing corresponding .am file...")
-            
+
             try:
                 # Image file [Z x Y x X]
                 self.image, self.pixel_size = import_am(src_img)
@@ -124,7 +124,7 @@ class ImportDataFromAmira:
 
         with open(self.src_img, "r", encoding="iso-8859-1") as et:
             lines_in_et = et.read(50000).split("\n")
-            
+
         transformation_list = str([
             word for word in lines_in_et if word.startswith('    BoundingBox')
         ]).split(" ")
@@ -212,7 +212,7 @@ def import_tiff(img: str,
     """
     if not isfile(img):
         raise Warning("Indicated .tif file does not exist...")
-    
+
     return np.array(tif.imread(img), dtype=dtype), None
 
 
@@ -229,7 +229,7 @@ def import_mrc(img: str):
     """
     if not isfile(img):
         raise Warning("Indicated .mrc file does not exist...")
-    
+
     mrc = mrcfile.open(img, mode='r+')
 
     return mrc.data, mrc.voxel_size.x
@@ -248,24 +248,22 @@ def import_am(img: str):
     """
     if not isfile(img):
         raise Warning("Indicated .am file does not exist...")
-    
+
     am = open(img, 'r', encoding="iso-8859-1").read(5000)
     binary_start = str.find(am, "\n@1\n") + 4
-    size = [word for word in am.split('\n') if word.startswith('define Lattice ')][0][15:].split(" ")
+    size = [word for word in am.split('\n') if word.startswith(
+        'define Lattice ')][0][15:].split(" ")
 
     nx, ny, nz = int(size[0]), int(size[1]), int(size[2])
-    
-    physical_size = str([word for word in am.split('\n') if
-                        word.startswith('        XLen') or word.startswith(
-                            '        xLen')]).split(" ")
-    if 'XLen' in physical_size or 'xLen' in physical_size:
-        physical_size = float(physical_size[9][:-3])
 
-        pixel_size = round(nx / physical_size,  3)
-    else:
-        pixel_size = None
-        
+    physical_size = str([word for word in am.split('\n') if
+                        word.startswith('    BoundingBox')]).split(" ")
+    physical_size = np.array((float(physical_size[6][:-3]),
+                              float(physical_size[8][:-3]),
+                              float(physical_size[10][:-3])))
+
+    pixel_size = round(physical_size[0] / (nx-1),  3)
+
     img = np.fromfile(img, dtype=np.uint8)
-    
+
     return img[binary_start:-1].reshape((nz, ny, nx)), pixel_size
-    
