@@ -20,7 +20,7 @@ class TestLoader:
     def check_pixel_size(self,
                          pixel_size):
          assert pixel_size == 23.2, \
-            f'Pixel size was not detected correctly. Given {pixel_size}, expected 2.32!'
+            f'Pixel size was not detected correctly. Given {pixel_size}, expected 23.2!'
             
     def test_tif2D(self):
         image, _ = loader.import_tiff(join('tests', self.dir, 'tif2D.tif'),
@@ -65,7 +65,7 @@ class TestLoader:
     def test_rec2D(self):
         image, pixel_size = loader.import_mrc(join('tests',
                                                    self.dir,
-                                                   'rec3D.rec'))
+                                                   'rec2D.rec'))
         self.check_size2D(image)
         self.check_pixel_size(pixel_size)
 
@@ -88,5 +88,9 @@ class TestLoader:
         image, pixel_size = loader.import_am(join('tests',
                                                   self.dir,
                                                   'am3D.am'))
-        self.check_size3D(image)
-        self.check_pixel_size(pixel_size)
+        assert image.shape == (8, 256, 256), \
+            'Error while loading file. Incorrect image shape or orientation!'
+        assert pixel_size == 92.8, \
+            f'Pixel size was not detected correctly. Given {pixel_size}, expected !'
+
+    
