@@ -1,7 +1,7 @@
 from os.path import join
 
 import numpy as np
-import tardis.slcpy_data_processing.utilis.load_data as loader
+import tardis.slcpy_data_processing.utils.load_data as loader
 
 
 class TestLoader:

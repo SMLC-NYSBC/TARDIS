@@ -3,8 +3,8 @@ from os.path import isdir, join
 from shutil import rmtree
 
 import numpy as np
-import tardis.slcpy_data_processing.utilis.stitch as stich
-import tardis.slcpy_data_processing.utilis.trim as trim
+import tardis.slcpy_data_processing.utils.stitch as stich
+import tardis.slcpy_data_processing.utils.trim as trim
 import tifffile.tifffile as tif
 
 
