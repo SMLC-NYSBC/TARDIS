@@ -93,4 +93,39 @@ class TestLoader:
         assert pixel_size == 92.8, \
             f'Pixel size was not detected correctly. Given {pixel_size}, expected !'
 
-    
+    def test_amira_spatialgraph(self):
+        amira_src = join('tests', self.dir, 'am3D.CorrelationLines.am')
+        
+        AmiraImporter = loader.ImportDataFromAmira(src_am=amira_src,
+                                                   src_img=None)
+        segments = AmiraImporter.get_segments()
+        points = AmiraImporter.get_points()
+
+        assert len(segments) == 3, \
+            f'Wrong nubmer of imported segments. Given {len(segments)}, expected 3!'
+        assert len(points) == 10, \
+            f'Wrong nubmer of imported points. Given {len(points)}, expected 10!'
+
+    def test_amira_spatialgraph_binary(self):
+        amira_src = join('tests', self.dir, 'am3D.CorrelationLines.am')
+        amira_binary = join('tests', self.dir, 'am3D.am')
+        
+        AmiraImporter = loader.ImportDataFromAmira(src_am=amira_src,
+                                                   src_img=amira_binary)
+        segments = AmiraImporter.get_segments()
+        points = AmiraImporter.get_points()
+
+        # Check general data structure
+        assert len(segments) == 3, \
+            f'Wrong nubmer of imported segments. Given {len(segments)}, expected 3!'
+        assert np.sum(segments) == 10, \
+            f'Incorrect number of segments. Given {np.sum(segments)}, expected 10!'
+        assert points.shape == (10, 3), 'Array of points imported impropriety!'
+
+        # Test data transformation
+        assert np.max(points[:, :2]) <= 256, \
+            f'Point transformation is incorrect!'
+
+        # Test detected pixel size 
+        assert AmiraImporter.pixel_size == 92.8, \
+            f'Wrong pixel size detected!'

@@ -27,16 +27,21 @@ class ImportDataFromAmira:
         self.src_am = src_am
 
         if self.src_img is not None:
-            if not isfile(self.src_img[:-3] + "am"):
-                raise Warning("Missing corresponding .am file...")
+            if not self.src_img[-3:] == '.am':
+                raise Warning("Not a .am file...")
 
+            if src_img[:-3] != src_am[:-20]:
+                raise Warning(f'Image file {src_img} has wrong extension for {src_am}!')
+
+            
             try:
                 # Image file [Z x Y x X]
                 self.image, self.pixel_size = import_am(src_img)
             except RuntimeWarning:
                 raise Warning(
                     "Directory or input .am image file is not correct...")
-
+        else:
+            self.pixel_size = 1
         self.spatial_graph = open(src_am,
                                   "r",
                                   encoding="iso-8859-1").read().split("\n")
@@ -107,7 +112,7 @@ class ImportDataFromAmira:
 
         return df
 
-    def __read_tiff_transformation(self):
+    def __read_am_transformation(self):
         """
         This method read the header of ET (.am) file and determines global
         transformation for all coordinates
@@ -124,69 +129,22 @@ class ImportDataFromAmira:
                                      float(transformation_list[9]))
         return trans_x, trans_y, trans_z
 
-    def pixel_size_in_et(self):
-        """
-        If not specified by user, pixel size is searched in .am file
-
-        Estimation is done by an assumption that points can be found on the top
-        and the bottom surface
-        pixel_size = tomogram physical size[A] / pixel_number in X[px]
-        """
-
-        if self.pixel_size is None:
-            am = open(self.src_img, 'r', encoding="iso-8859-1").read(8000)
-            size = [word for word in am.split('\n') \
-                if word.startswith('define Lattice ')][0][15:].split(" ")
-
-            nx, ny, nz = int(size[0]), int(size[1]), int(size[2])
-
-            physical_size = str([word for word in am.split('\n') if \
-                                word.startswith('    BoundingBox')]).split(" ")
-            try:
-                physical_size = np.array((float(physical_size[6]),
-                                        float(physical_size[8]),
-                                        float(physical_size[10][:-3])))
-                binary_start = str.find(am, "\n@1\n") + 4
-            except IndexError:
-                am = open(self.src_img, 'r', encoding="iso-8859-1").read(10000)
-
-                physical_size = str([word for word in am.split('\n') if \
-                    word.startswith('    BoundingBox')]).split(" ")
-                            
-                physical_size = np.array((float(physical_size[6]),
-                                        float(physical_size[8]),
-                                        float(physical_size[10][:-3])))
-                binary_start = str.find(am, "\n@1\n") + 4
-
-            pixel_size_nx = round(physical_size[0] / (nx-1),  3)
-            pixel_size_ny = round(physical_size[1] / (ny-1),  3)
-            pixel_size_nz = round(physical_size[2] / (nz-1),  3)
-
-            if pixel_size_nx == pixel_size_ny == pixel_size_nz:
-                return pixel_size_nx
-            else:
-                return (pixel_size_nx, pixel_size_ny, pixel_size_nz)
-        else:
-            return self.pixel_size
-
     def get_points(self):
         """Generate table of all points with coordinates in pixel"""
-        if self.pixel_size is not None and self.src_img is not None:
-            pixel_size = self.pixel_size_in_et()
-            transformation = self.__read_tiff_transformation()
+        if self.src_img is not None:
+            self.transformation = self.__read_am_transformation()
         else:
-            self.pixel_size = 1
-            transformation = [0, 0, 0]
+            self.transformation = [0, 0, 0]
         points_coord = self.__find_points()
 
         points_coord[0:len(points_coord), 0] = points_coord[0:len(
-            points_coord), 0] - transformation[0]
+            points_coord), 0] - self.transformation[0]
         points_coord[0:len(points_coord), 1] = points_coord[0:len(
-            points_coord), 1] - transformation[1]
+            points_coord), 1] - self.transformation[1]
         points_coord[0:len(points_coord), 2] = points_coord[0:len(
-            points_coord), 2] - transformation[2]
+            points_coord), 2] - self.transformation[2]
 
-        return points_coord / pixel_size
+        return points_coord / self.pixel_size
 
 
 def import_tiff(img: str,
