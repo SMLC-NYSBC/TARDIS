@@ -1,6 +1,6 @@
 import numpy as np
-from tardis.slcpy_data_processing.utilis.draw_mask_2D import draw_2D
-from tardis.slcpy_data_processing.utilis.interpolation import interpolation_3D
+from tardis.slcpy_data_processing.utils.draw_mask_2D import draw_2D
+from tardis.slcpy_data_processing.utils.interpolation import interpolation_3D
 
 
 def slcpy_semantic(mask_size: tuple,

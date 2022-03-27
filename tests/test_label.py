@@ -25,8 +25,8 @@ class TestLabelDrawing:
                                    multi_layer=False,
                                    tqdm=True)
         assert np.any(labels_2D == 1), 'Label was not created!'
-        assert not np.any(labels_2D > 1), 'MultiLable was created in single mode!'
-    
+        assert not np.any(labels_2D > 1), 'Multi label was created in single mode!'
+
     def test_drawing_2D_multi(self):
         df_coord = np.zeros((100, 4))
         start = 0
@@ -46,8 +46,8 @@ class TestLabelDrawing:
                                    circle_size=self.r,
                                    multi_layer=True,
                                    tqdm=True)
-        assert np.any(labels_2D > 0), 'MultiLable was not created!'
-         
+        assert np.any(labels_2D > 0), 'Multi label was not created!'
+
     def test_drawing_3D_single(self):
         df_coord = np.zeros((100, 4))
         start = 0
@@ -67,8 +67,9 @@ class TestLabelDrawing:
                                    multi_layer=False,
                                    tqdm=True)
         assert np.any(labels_3D == 1), 'Label was not created!'
-        assert not np.any(labels_3D > 1), 'MultiLable was created in single mode!'
-        
+        assert not np.any(
+            labels_3D > 1), 'Multi label was created in single mode!'
+
     def test_drawing_3D_multi(self):
         df_coord = np.zeros((100, 4))
         start = 0
@@ -88,4 +89,4 @@ class TestLabelDrawing:
                                    circle_size=self.r,
                                    multi_layer=True,
                                    tqdm=True)
-        assert np.any(labels_3D > 0), 'MultiLable was not created!'
+        assert np.any(labels_3D > 0), 'Multi label was not created!'

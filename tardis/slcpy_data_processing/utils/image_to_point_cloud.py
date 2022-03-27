@@ -38,11 +38,13 @@ class BuildPointCloud:
         except RuntimeWarning:
             raise Warning("Directory or input .tiff file is not correct...")
 
-        if np.unique(self.image) in [0, 255]:  # Fix uint8 formating
+        if np.any(np.unique(self.image) > 1):  # Fix uint8 formating
             self.image = self.image / 255
-        assert np.unique(self.image) not in [1] and len(np.unique(self.image)) != 2, \
-            'Array or file directory loaded properly but image is not semanti mask...'
+            
+        assert np.unique(self.image)[1] == 1, \
+            'Array or file directory loaded properly but image is not semantic mask...'
 
+        assert self.image.ndim in [2, 3], 'File must be 2D or 3D array!'
     def build_point_cloud(self,
                           edt=False,
                           label_size=250,
@@ -93,9 +95,11 @@ class BuildPointCloud:
 
             """Output point cloud"""
             coordinates = []
-            
+
+        """If 2D bring artificially Z dim == 0"""
+        
         """CleanUp to avoid memory loss"""
-        del image_edt
+        del image_sk
         gc.collect()
 
         """ Down-sampling point cloud by removing closest point """
