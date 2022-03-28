@@ -49,7 +49,6 @@ class BuildPointCloud:
                           edt=False,
                           label_size=250,
                           down_sampling: Optional[float] = None):
-        x, y, z = [], [], []
         if self.tqdm:
             from tqdm import tqdm
 
@@ -64,42 +63,45 @@ class BuildPointCloud:
                 image_edt = np.array(np.where(image_edt > label_size, 1, 0),
                                      dtype=np.int8)
             else:
-                image_edt_df = np.zeros(self.image.shape, dtype=np.float16)
                 image_edt = np.zeros(self.image.shape, dtype=np.int8)
 
                 if self.tqdm:
-                    edt_iter = tqdm(range(image_edt_df.shape[0]),
+                    edt_iter = tqdm(range(image_edt.shape[0]),
                                     'Calculating EDT map:',
-                                    total=len(range(image_edt_df.shape[0])))
+                                    total=len(range(image_edt.shape[0])))
                 else:
-                    edt_iter = range(image_edt_df.shape[0])
-
+                    edt_iter = range(image_edt.shape[0])
+                
                 for i in edt_iter:
-                    image_edt[i, :] = np.array(np.where(edt.edt(self.image[i, :]) > label_size, 1, 0),
-                                               dtype=np.int8)
-
-                del(image_edt_df)
-
-            """CleanUp to avoid memory loss"""
-            del(self.image)
-            gc.collect()
+                    image_edt[i, :] = np.where(edt.edt(self.image[i, :]) > label_size, 1, 0)
 
             """Skeletonization"""
-            image_edt = np.where(skeletonize_3d(image_edt) > 0, 1, 0)
-
-            """Output point cloud"""
-            coordinates = []
+            image_point = np.where(skeletonize_3d(image_edt) > 0)
         else:
             """Skeletonization"""
-            image_sk = np.where(skeletonize_3d(self.image) > 0, 1, 0)
+            image_point = np.where(skeletonize_3d(self.image) > 0)
 
-            """Output point cloud"""
-            coordinates = []
-
-        """If 2D bring artificially Z dim == 0"""
-        
         """CleanUp to avoid memory loss"""
-        del image_sk
+        self.image = None
+        self.image_edt = None
+        del self.image, self.image_edt
+
+        """Output point cloud [X x Y x Z]"""
+        if len(image_point) == 2:
+            """If 2D bring artificially Z dim == 0"""
+            coordinates = np.stack((image_point[1], 
+                                    image_point[0],
+                                    np.zeros(image_point[0].shape))).T
+            
+        elif len(image_point) == 3:
+            coordinates = np.stack((image_point[2], 
+                                    image_point[1], 
+                                    image_point[0])).T
+            
+            
+        """CleanUp to avoid memory loss"""
+        image_point = None
+        del image_point
         gc.collect()
 
         """ Down-sampling point cloud by removing closest point """
@@ -110,4 +112,6 @@ class BuildPointCloud:
             pcd.points = o3d.utility.Vector3dVector(coordinates)
             coordinates_ds = np.asarray(pcd.voxel_down_sample(voxel_size=down_sampling).points)
 
+            return coordinates_ds
+        
         return coordinates
