@@ -21,37 +21,43 @@ class BuildPointCloud:
         filter_small_object: Filter size to remove small object .
         clean_close_point: If True, close point will be removed.
     """
-
     def __init__(self,
-                 image: Optional[str] = np.ndarray,
-                 tqdm=True):
+                 tqdm):
         self.tqdm = tqdm
 
+    def check_data(self,
+                    image):
         try:
             if isinstance(image, str):
                 from tardis.slcpy_data_processing.utils.load_data import import_tiff
 
-                self.image = import_tiff(img=image,
-                                         dtype=np.int8)
+                image = import_tiff(img=image,
+                                        dtype=np.int8)
             else:
-                self.image = image
+                image = image
         except RuntimeWarning:
             raise Warning("Directory or input .tiff file is not correct...")
 
-        if np.any(np.unique(self.image) > 1):  # Fix uint8 formating
-            self.image = self.image / 255
+        if np.any(np.unique(image) > 1):  # Fix uint8 formating
+            image = image / 255
             
-        assert np.unique(self.image)[1] == 1, \
+        assert np.unique(image)[1] == 1, \
             'Array or file directory loaded properly but image is not semantic mask...'
 
-        assert self.image.ndim in [2, 3], 'File must be 2D or 3D array!'
+        assert image.ndim in [2, 3], 'File must be 2D or 3D array!'
+
+        return image 
+    
     def build_point_cloud(self,
+                          image: Optional[str] = np.ndarray,
                           edt=False,
                           label_size=250,
                           down_sampling: Optional[float] = None):
         if self.tqdm:
             from tqdm import tqdm
 
+        image = self.check_data(image)
+        
         if edt:
             import edt
 
@@ -59,32 +65,32 @@ class BuildPointCloud:
 
             """Calculate EDT and apply threshold based on predefine mask size"""
             if image_edt.ndim == 2:
-                image_edt = edt.edt(self.image)
+                image_edt = edt.edt(image)
                 image_edt = np.array(np.where(image_edt > label_size, 1, 0),
                                      dtype=np.int8)
             else:
-                image_edt = np.zeros(self.image.shape, dtype=np.int8)
+                image_edt = np.zeros(image.shape, dtype=np.int8)
 
                 if self.tqdm:
                     edt_iter = tqdm(range(image_edt.shape[0]),
                                     'Calculating EDT map:',
-                                    total=len(range(image_edt.shape[0])))
+                                    leave=True)
                 else:
                     edt_iter = range(image_edt.shape[0])
                 
                 for i in edt_iter:
-                    image_edt[i, :] = np.where(edt.edt(self.image[i, :]) > label_size, 1, 0)
+                    image_edt[i, :] = np.where(edt.edt(image[i, :]) > label_size, 1, 0)
 
             """Skeletonization"""
             image_point = np.where(skeletonize_3d(image_edt) > 0)
         else:
             """Skeletonization"""
-            image_point = np.where(skeletonize_3d(self.image) > 0)
+            image_point = np.where(skeletonize_3d(image) > 0)
 
         """CleanUp to avoid memory loss"""
-        self.image = None
+        image = None
         self.image_edt = None
-        del self.image, self.image_edt
+        del image, self.image_edt
 
         """Output point cloud [X x Y x Z]"""
         if len(image_point) == 2:

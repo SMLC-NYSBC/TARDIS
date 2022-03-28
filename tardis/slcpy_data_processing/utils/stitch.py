@@ -2,12 +2,12 @@ from os import listdir
 from os.path import isfile, join
 
 import numpy as np
-from tifffile import tifffile
+import tifffile.tifffile as tif
 
 
 class StitchImages:
     """
-    MAIN MODULE TO STITCH IMAGE FROM IMAGE PATCHES 
+    MAIN MODULE TO STITCH IMAGE FROM IMAGE PATCHES
 
     Class object to stitch cut date into one big image. Object recognize images
     with naming 0_1_1_1_25_pf where:
@@ -32,22 +32,20 @@ class StitchImages:
         self.stride = 0  # Variable to store step size
 
     def _find_xyz(self,
-                  dir_path: str):
-        # Extract information about images in dir_path
-        file_list = [f for f in listdir(dir_path) if isfile(join(dir_path, f))]
-
-        self.idx = max(
-            list(map(int, [str.split(f[:-4], "_")[0] for f in file_list]))) + 1
-        self.z = max(
-            list(map(int, [str.split(f[:-4], "_")[1] for f in file_list]))) + 1
-        self.y = max(
-            list(map(int, [str.split(f[:-4], "_")[2] for f in file_list]))) + 1
-        self.x = max(
-            list(map(int, [str.split(f[:-4], "_")[3] for f in file_list]))) + 1
-        self.stride = max(
-            list(map(int, [str.split(f[:-4], "_")[4] for f in file_list])))
-
-        return file_list
+                  file_list: str,
+                  idx: int):
+        self.z = max(list(map(int,
+                              [str.split(f[:-4], "_")[1] for f in file_list
+                                  if f.startswith(f'{idx}')]))) + 1
+        self.y = max(list(map(int,
+                              [str.split(f[:-4], "_")[2] for f in file_list
+                                  if f.startswith(f'{idx}')]))) + 1
+        self.x = max(list(map(int,
+                              [str.split(f[:-4], "_")[3] for f in file_list
+                                  if f.startswith(f'{idx}')]))) + 1
+        self.stride = max(list(map(int,
+                                   [str.split(f[:-4], "_")[4] for f in file_list
+                                    if f.startswith(f'{idx}')])))
 
     def _calculate_dim(self,
                        image: np.ndarray):
@@ -58,46 +56,50 @@ class StitchImages:
             self.nz = 0
 
     def __call__(self,
-                 dir_path: str,
+                 image_dir: str,
+                 output: str,
                  mask: bool,
                  prefix='',
                  dtype=np.int8):
+        """Extract information about images in dir_path"""
+        file_list = [f for f in listdir(image_dir) if isfile(join(image_dir, f))]
+        file_list = [f for f in file_list if f.endswith('.tif')]
 
-        file_list = self._find_xyz(dir_path)
-        self._calculate_dim(tifffile.imread(join(dir_path, file_list[0])))
-
-        x_dim = self.nx + ((self.nx - self.stride) * (self.x - 1))
-        y_dim = self.ny + ((self.ny - self.stride) * (self.y - 1))
-        if self.nz == 0:
-            z_dim = 0
-            stitched_image = np.zeros((y_dim, x_dim), dtype=dtype)
-        else:
-            z_dim = self.nz + ((self.nz - self.stride) * (self.z - 1))
-            stitched_image = np.zeros((z_dim, y_dim, x_dim), dtype=dtype)
-
-        z_start, z_stop = 0 - (self.nz - self.stride), 0
-
-        if self.z == 0:
-            self.z = 1
+        self.idx = max(list(map(int,
+                                [str.split(f[:-4], "_")[0] for f in file_list]))) + 1
 
         if self.tqdm:
             from tqdm import tqdm
 
-            batch_iter_z = tqdm(range(self.z),
-                                'Stitching images in Z',
-                                total=len(range(self.z)),
-                                leave=False)
-
-            batch_iter_y = tqdm(range(self.y),
-                                'Stitching images in XY',
-                                total=len(range(self.y)),
-                                leave=False)
+            batch_iter_idx = tqdm(range(self.idx),
+                                  'Stitching image number',
+                                  leave=True)
         else:
+            batch_iter_idx = range(self.idx)
+
+        for idx in batch_iter_idx:
+            self._find_xyz(file_list, idx)
+            self._calculate_dim(tif.imread(join(image_dir, 
+                                                f'{idx}_0_0_0_{self.stride}{prefix}.tif')))
+
+            x_dim = self.nx + ((self.nx - self.stride) * (self.x - 1))
+            y_dim = self.ny + ((self.ny - self.stride) * (self.y - 1))
+            if self.nz == 0:
+                z_dim = 0
+                stitched_image = np.zeros((y_dim, x_dim), dtype=dtype)
+            else:
+                z_dim = self.nz + ((self.nz - self.stride) * (self.z - 1))
+                stitched_image = np.zeros((z_dim, y_dim, x_dim), dtype=dtype)
+
+            z_start, z_stop = 0 - (self.nz - self.stride), 0
+
+            if self.z == 0:
+                self.z = 1
+
             batch_iter_z = range(self.z)
 
             batch_iter_y = range(self.y)
 
-        for idx in range(self.idx):
             for i in batch_iter_z:
                 z_start = z_start + self.nz - self.stride
                 z_stop = z_start + self.nz
@@ -112,10 +114,10 @@ class StitchImages:
                         x_start = x_start + self.nx - self.stride
                         x_stop = x_start + self.nx
 
-                        img_dir = str(join(dir_path,
-                                           f"{idx}_{i}_{j}_{k}_{self.stride}{prefix}.tif"))
+                        img_name = str(join(image_dir,
+                                            f"{idx}_{i}_{j}_{k}_{self.stride}{prefix}.tif"))
+                        img = tif.imread(img_name)
 
-                        img = tifffile.imread(img_dir)
                         if self.nz == 0:
                             assert img.shape == (self.ny, self.nx)
                         else:
@@ -136,4 +138,5 @@ class StitchImages:
                                            y_start:y_stop,
                                            x_start:x_stop] = img
 
-        return stitched_image
+            tif.imwrite(join(output, f'Stitched_Image_idx_{idx}.tif'),
+                        np.array(stitched_image, dtype=dtype))

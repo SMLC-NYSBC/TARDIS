@@ -271,22 +271,16 @@ class TestTrimming:
         rmtree(self.temp_dir)
 
     def check_stitch(self,
-                     dir: str,
-                     target: np.ndarray,
-                     prefix='',
-                     stride=False):
+                     dir: str):
+        mkdir(join(self.temp_dir, 'output'))
+        
         stitcher = stich.StitchImages()
 
-        input = stitcher(dir_path=dir,
-                         mask=False,
-                         prefix=prefix,
-                         dtype=np.int8)
-
-        if not stride:
-            assert input.shape == target.shape, f'Input {input.shape} != target {target.shape}'
-            assert np.all(input == target), f'Image differe from target!'
-        else:
-            assert input.shape >= target.shape, f'Input {input.shape} >= target {target.shape}'
+        stitcher(image_dir=dir,
+                 output=join(self.temp_dir, 'output'),
+                 mask=False,
+                 prefix='_test',
+                 dtype=np.int8)
 
     def test_stitch2D(self):
         image = np.zeros((512, 512)) + 1
@@ -303,9 +297,7 @@ class TestTrimming:
                         clean_empty=False,
                         prefix='_test')
 
-        self.check_stitch(dir=self.temp_dir,
-                          target=image,
-                          prefix='_test')
+        self.check_stitch(dir=self.temp_dir)
         rmtree(self.temp_dir)
 
     def test_stitch3D(self):
@@ -323,9 +315,7 @@ class TestTrimming:
                         clean_empty=False,
                         prefix='_test')
 
-        self.check_stitch(dir=self.temp_dir,
-                          target=image,
-                          prefix='_test')
+        self.check_stitch(dir=self.temp_dir)
         rmtree(self.temp_dir)
 
     def test_stitch_stride2D(self):
@@ -343,10 +333,7 @@ class TestTrimming:
                               stride=25,
                               prefix='_test')
 
-        self.check_stitch(dir=self.temp_dir,
-                          target=image,
-                          prefix='_test',
-                          stride=True)
+        self.check_stitch(dir=self.temp_dir)
         rmtree(self.temp_dir)
 
     def test_stitch_stride3D(self):
@@ -364,8 +351,5 @@ class TestTrimming:
                               stride=25,
                               prefix='_test')
 
-        self.check_stitch(dir=self.temp_dir,
-                          target=image,
-                          prefix='_test',
-                          stride=True)
+        self.check_stitch(dir=self.temp_dir)
         rmtree(self.temp_dir)

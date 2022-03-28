@@ -38,23 +38,23 @@ def slcpy_semantic(mask_size: tuple,
         
         batch_iter = tqdm(range(len(segments)),
                         'Building semantic mask',
-                        total=len(segments),
-                        leave=False)
+                        leave=True)
     else:
         batch_iter = range(len(segments))
         
-    # Build semantic mask by drawing circle in 2D for each coordinate point
+    """Build semantic mask by drawing circle in 2D for each coordinate point"""
     for i in batch_iter:
         points = coordinate[np.where(coordinate[:, 0] == i)[0]][:, 1:]
         
         label = interpolation_3D(points)
         
         if multi_layer:
-            segment_color = list(np.random.choice(range(256), size=3))
+            segment_color = list(np.random.choice(range(255), size=3))
         
-        # Draw 2D label
+        """Draw 2D label"""
         for j in range(len(label)):
             c = label[j, :] # Point center
+            
             label_mask = draw_2D(r=r,
                                  c=c,
                                  label_mask=label_mask,

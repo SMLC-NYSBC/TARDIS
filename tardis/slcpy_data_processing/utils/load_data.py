@@ -137,12 +137,9 @@ class ImportDataFromAmira:
             self.transformation = [0, 0, 0]
         points_coord = self.__find_points()
 
-        points_coord[0:len(points_coord), 0] = points_coord[0:len(
-            points_coord), 0] - self.transformation[0]
-        points_coord[0:len(points_coord), 1] = points_coord[0:len(
-            points_coord), 1] - self.transformation[1]
-        points_coord[0:len(points_coord), 2] = points_coord[0:len(
-            points_coord), 2] - self.transformation[2]
+        points_coord[0:len(points_coord), 0] = points_coord[0:len(points_coord), 0] - self.transformation[0]
+        points_coord[0:len(points_coord), 1] = points_coord[0:len(points_coord), 1] - self.transformation[1]
+        points_coord[0:len(points_coord), 2] = points_coord[0:len(points_coord), 2] - self.transformation[2]
 
         return points_coord / self.pixel_size
 
