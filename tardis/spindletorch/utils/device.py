@@ -3,12 +3,10 @@ import torch
 
 def get_device(device=None):
     """
-    Return device that can be used for training/predictions
+    RETURN DEVICE THAT CAN BE USED FOR TRAINING/PREDICTIONS
 
     Args:
         device: If indicated then overnight automatic selection of the device
-
-    author: Robert Kiewisz
     """
     if device is None or device == "gpu":
         device = 'cuda' if torch.cuda.is_available() else 'cpu'

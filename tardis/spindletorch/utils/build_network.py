@@ -12,6 +12,22 @@ def build_network(network_type: str,
                   layer_components='gcl',
                   no_groups=8,
                   prediction=False):
+    """
+    MAIN MODULE FOR BUILDING CNN
+
+    Args:
+        network_type: Name of network
+        classification: If True Unet3Plus classified network output before loss
+        in_channel: Number of input channels
+        out_channel: Number of output channels
+        img_size: Image size used for training inference
+        dropout: If float dropout is used
+        no_conv_layers: Number of convoltion layers
+        conv_multiplayer: Convolution multiplayer used in each layer
+        layer_components: b,g,c,l,r type of operation and order for each convolution
+        no_groups: Number of group used for groupnorm
+        prediction: If True, network output softmax of the prediction
+    """
     if network_type == 'unet':
         model = UNet(in_channels=in_channel,
                      out_channels=out_channel,

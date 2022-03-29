@@ -20,7 +20,10 @@ class CenterCrop:
                  size: tuple):
         assert len(size) in [2, 3]
         self.size = size
-
+        
+        if len(self.size) == 2:
+            self.size = (0, size[0], size[1])
+            
     def __call__(self,
                  x: np.ndarray,
                  y: np.ndarray):
@@ -33,7 +36,7 @@ class CenterCrop:
             up_d = int(d // 2 - self.size[0] // 2)
         
         else:
-            h, w = x.shape[1:]
+            h, w = x.shape
 
         bottom_h = int(h // 2 + self.size[1] // 2)
         top_h = int(h // 2 - self.size[1] // 2)
@@ -52,7 +55,7 @@ class SimpleNormalize:
     Normalize image vale by simple division
 
         Object as an input required
-            x: image or target 3D or 4D arrays
+            x: image or target
     """
 
     def __call__(self,
@@ -67,7 +70,7 @@ class MinMaxNormalize:
     Normalize image vale between 0 and 1 and
 
     Object as an input required
-        x: image or target 3D or 4D arrays
+        x: image or target
 
     Args:
         min: Minimal value for initialize normalization e.g. 0
@@ -113,15 +116,15 @@ class RandomFlip:
 
 class RandomRotation:
     """
-    Perform 90, 180 or 270 degree rotation for 3D or 4D in left or right
+    Perform 90, 180 or 270 degree rotation for 2D or 3D in left or right
 
     Object as an input required
-        x: image 3D or 4D arrays
-        y: target/mask 3D or 4D arrays
+        x: image 2D or 3D arrays
+        y: target/mask 2D or 3D arrays
     """
 
     def __init__(self):
-        self.random_rotation = np.random.randint(0, 2)
+        self.random_rotation = np.random.randint(0, 3)
         # 0 is 90, 1 is 180, 2 is 270
         self.random_direction = np.random.randint(0, 1)
         # 0 is left, 1 is right
@@ -129,24 +132,19 @@ class RandomRotation:
     def __call__(self,
                  x: np.ndarray,
                  y: np.ndarray):
-
         if self.random_direction == 0:
-            self.random_rotation *= -1
+            if x.ndim == 2:
+                axis = (0, 1)
+            elif x.ndim == 3:
+                axis = (1, 2)
+        elif self.random_direction == 1:
+            if x.ndim == 2:
+                axis = (1, 0)
+            elif x.ndim == 3:
+                axis = (2, 1)
 
-        if x.ndim == 3:
-            x_dim = (1, 2)
-        else:
-            x_dim = (2, 3)
-
-        if y.ndim == 3:
-            y_dim = (1, 2)
-        else:
-            y_dim = (2, 3)
-
-        x = np.rot90(x, self.random_rotation, x_dim)
-        y = np.rot90(y, self.random_rotation, y_dim)
-
-        return x, y
+        return np.rot90(x, self.random_rotation, axis), \
+            np.rot90(y, self.random_rotation, axis)
 
 
 class ComposeRandomTransformation:
@@ -154,8 +152,8 @@ class ComposeRandomTransformation:
     Double wrapper for image and mask to perform random transformation
 
     Object as an input required
-        x: image 3D or 4D arrays
-        y: target/mask 3D or 4D arrays
+        x: image 2D or 3D arrays
+        y: target/mask 2D or 3D arrays
 
     Args:
         transformations: list of transforms objects from which single
@@ -202,7 +200,7 @@ def preprocess(image: np.ndarray,
         z, h, w = image.shape
         dim = 3
     else:
-        z, h, w = None, image.shape
+        h, w = image.shape
         dim = 2
 
     """ resize image """
@@ -234,13 +232,11 @@ def preprocess(image: np.ndarray,
 
         image = normalization(image)
 
-    """ Expand dimension order from DHW to CDHW """
-    if len(image.shape) == 3:
-        image = np.expand_dims(image, axis=0)
-    if len(mask.shape) == 3:
-        mask = np.expand_dims(mask, axis=0)
+    """ Expand dimension order for HW / DHW to CHW / CDHW """
+    image = np.expand_dims(image, axis=0)
+    mask = np.expand_dims(mask, axis=0)
 
-        if output_dim_mask != mask.shape[0]:
-            mask = np.tile(mask, [output_dim_mask, 1, 1, 1])
+    if output_dim_mask != mask.shape[0]:
+        mask = np.tile(mask, [output_dim_mask, 1, 1, 1])
 
     return image, mask

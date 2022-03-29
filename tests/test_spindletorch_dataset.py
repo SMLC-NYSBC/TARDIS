@@ -3,7 +3,7 @@ from tardis.spindletorch.utils.augment import preprocess
 import numpy as np
 
 
-class TestDataSetBuilder3D:
+class TestDataSetBuilder2D3D:
     mask3D = np.zeros((64, 64, 64))
     mask3D[:32, 32, :32] = 1 # draw a line
     mask2D = np.zeros((64, 64))
