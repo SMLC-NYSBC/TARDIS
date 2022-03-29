@@ -187,7 +187,8 @@ def trim_with_stride(image: np.ndarray,
         trim_size_z = 64
 
     """Calculate number of patches and stride for xyz"""
-    x, y, z = ceil(nx / trim_size_xy), ceil(ny / trim_size_xy), ceil(nz / trim_size_z)
+    x, y, z = ceil(nx / trim_size_xy), ceil(ny / trim_size_xy), \
+        ceil(nz / trim_size_z)
 
     if dim == 3:
         x_pad, y_pad, z_pad = (trim_size_xy + ((trim_size_xy - stride) * (x - 1))) - nx, \
@@ -261,9 +262,10 @@ def trim_with_stride(image: np.ndarray,
             for k in range(x):
                 x_start = x_start + trim_size_xy - stride
                 x_stop = x_start + trim_size_xy
-                
-                img_name = str(f'{image_counter}_{i}_{j}_{k}_{stride}{prefix}.tif')
-                
+
+                img_name = str(
+                    f'{image_counter}_{i}_{j}_{k}_{stride}{prefix}.tif')
+
                 if nc is None:
                     if dim == 3:
                         trim_img = image_padded[z_start:z_stop,

@@ -7,7 +7,7 @@ import requests
 
 def get_weights_aws(save_weights=True):
     """
-    
+
     Args:
         save_weights: If True model is saved in temp repository
     """
@@ -23,5 +23,5 @@ def get_weights_aws(save_weights=True):
 
         print(f'Pre-Trained model download from S3 and saved in {dir}')
         return join(dir, 'model_weights.pth')
-    
+
     return io.BytesIO(weight.content)

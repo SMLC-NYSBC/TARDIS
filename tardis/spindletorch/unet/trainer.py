@@ -1,12 +1,12 @@
 import numpy as np
 import torch
-from numpy import savetxt
 from spindletorch.utils.metrics import calculate_F1
 from torch import nn
 from os import mkdir, getcwd
 from os.path import isdir, join
 from shutil import rmtree
 from spindletorch.utils.utils import EarlyStopping
+
 
 class Trainer:
     """
@@ -71,7 +71,7 @@ class Trainer:
             mkdir('temp')
         else:
             mkdir('temp')
-            
+
         early_stoping = EarlyStopping(patience=10, min_delta=0)
         progressbar = trange(self.epochs, desc='Progress')
         for i in progressbar:
@@ -81,8 +81,8 @@ class Trainer:
             """Validation block"""
             if self.validation_DataLoader is not None:
                 self._validate()
-                early_stoping(val_loss=self.validation_loss[len(self.validation_loss) - 1])
-
+                early_stoping(
+                    val_loss=self.validation_loss[len(self.validation_loss) - 1])
 
             """Learning rate scheduler block"""
             if self.lr_scheduler is not None:
@@ -90,8 +90,8 @@ class Trainer:
 
             """ Save training metrics """
             np.savetxt(join(getcwd(), 'temp', 'training_losses.csv'),
-                    self.training_loss,
-                    delimiter=';')
+                       self.training_loss,
+                       delimiter=';')
             np.savetxt(join(getcwd(), 'temp', 'validation_losses.csv'),
                        self.validation_loss,
                        delimiter=',')
@@ -108,7 +108,8 @@ class Trainer:
                 torch.save({'model_state_dict': self.model.state_dict(),
                             'optimizer_state_dict': self.optimizer.state_dict()},
                            join(getcwd(), 'temp', 'checkpoint_{}.pth'.format(self.checkpoint_name)))
-                print(f'Saved model checkpoint no. {i} for F1 {self.f1[len(self.f1) - 1]:.2f}')
+                print(
+                    f'Saved model checkpoint no. {i} for F1 {self.f1[len(self.f1) - 1]:.2f}')
 
             torch.save({'model_state_dict': self.model.state_dict(),
                         'optimizer_state_dict': self.optimizer.state_dict()},
@@ -128,7 +129,7 @@ class Trainer:
                           'Training',
                           total=len(self.training_DataLoader),
                           leave=False)
-            
+
         for i, (x, y) in batch_iter:
             self.model.train()
             input, target = x.to(self.device), y.to(self.device)

@@ -21,8 +21,9 @@ setup(
         'Natural Language :: English',
         'Programming Language :: Python :: 3.8',
     ],
-    description="PyTorch segmentation of 2D/3D images such as electron tomography (ET), Cryo-EM or "
-                "fluorescent microscopy data into 3D segmented point cloud.",
+    description="PyTorch segmentation of 2D/3D images such as electron tomography "
+                "(ET), Cryo-EM or fluorescent microscopy data into 3D segmented "
+                "point cloud.",
     entry_points={
         'console_scripts': [],
     },

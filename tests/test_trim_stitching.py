@@ -273,7 +273,7 @@ class TestTrimming:
     def check_stitch(self,
                      dir: str):
         mkdir(join(self.temp_dir, 'output'))
-        
+
         stitcher = stich.StitchImages()
 
         stitcher(image_dir=dir,

@@ -64,7 +64,7 @@ def ImageVoxalizer(images_dir: str,
         image = tif.imread(join(images_dir, file))
         if image.ndim == 2:
             trim_z = 1
-            
+
         if image_with_mask:
             if file[-(len(mask_prefix) + 4)] == f'{mask_prefix}.tif':
                 image_prefix = mask_prefix

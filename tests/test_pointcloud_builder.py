@@ -2,9 +2,8 @@ from os.path import join
 
 import numpy as np
 import tifffile.tifffile as tif
-from tqdm import tqdm
-from tardis.slcpy_data_processing.utils.image_to_point_cloud import BuildPointCloud
 from tardis.slcpy_data_processing.image_postprocess import ImageToPointCloud
+from tardis.slcpy_data_processing.utils.image_to_point_cloud import BuildPointCloud
 
 
 class TestPointCloudBuilder:

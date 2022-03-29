@@ -19,9 +19,9 @@ class TestLoader:
 
     def check_pixel_size(self,
                          pixel_size):
-         assert pixel_size == 23.2, \
+        assert pixel_size == 23.2, \
             f'Pixel size was not detected correctly. Given {pixel_size}, expected 23.2!'
-            
+
     def test_tif2D(self):
         image, _ = loader.import_tiff(join('tests', self.dir, 'tif2D.tif'),
                                       dtype=np.uint8)
@@ -83,7 +83,6 @@ class TestLoader:
         self.check_size2D(image)
         self.check_pixel_size(pixel_size)
 
-
     def test_am3D(self):
         image, pixel_size = loader.import_am(join('tests',
                                                   self.dir,
@@ -95,7 +94,7 @@ class TestLoader:
 
     def test_amira_spatialgraph(self):
         amira_src = join('tests', self.dir, 'am3D.CorrelationLines.am')
-        
+
         AmiraImporter = loader.ImportDataFromAmira(src_am=amira_src,
                                                    src_img=None)
         segments = AmiraImporter.get_segments()
@@ -109,7 +108,7 @@ class TestLoader:
     def test_amira_spatialgraph_binary(self):
         amira_src = join('tests', self.dir, 'am3D.CorrelationLines.am')
         amira_binary = join('tests', self.dir, 'am3D.am')
-        
+
         AmiraImporter = loader.ImportDataFromAmira(src_am=amira_src,
                                                    src_img=amira_binary)
         segments = AmiraImporter.get_segments()
@@ -124,8 +123,8 @@ class TestLoader:
 
         # Test data transformation
         assert np.max(points[:, :2]) <= 256, \
-            f'Point transformation is incorrect!'
+            'Point transformation is incorrect!'
 
-        # Test detected pixel size 
+        # Test detected pixel size
         assert AmiraImporter.pixel_size == 92.8, \
-            f'Wrong pixel size detected!'
+            'Wrong pixel size detected!'

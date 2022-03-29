@@ -40,16 +40,16 @@ class CenterCrop:
 
         if x.ndim == 3 and y.ndim == 3:
             return x[up_d:down_d, top_h:bottom_h, left_w:right_w], \
-                   y[up_d:down_d, top_h:bottom_h, left_w:right_w]
+                y[up_d:down_d, top_h:bottom_h, left_w:right_w]
         elif x.ndim == 4 and y.ndim == 4:
             return x[:, up_d:down_d, top_h:bottom_h, left_w:right_w], \
-                   y[:, up_d:down_d, top_h:bottom_h, left_w:right_w]
+                y[:, up_d:down_d, top_h:bottom_h, left_w:right_w]
         elif x.ndim == 4 and y.ndim == 3:
             return x[:, up_d:down_d, top_h:bottom_h, left_w:right_w], \
-                   y[up_d:down_d, top_h:bottom_h, left_w:right_w]
+                y[up_d:down_d, top_h:bottom_h, left_w:right_w]
         else:
             return x[up_d:down_d, top_h:bottom_h, left_w:right_w], \
-                   y[:, up_d:down_d, top_h:bottom_h, left_w:right_w]
+                y[:, up_d:down_d, top_h:bottom_h, left_w:right_w]
 
 
 class SimpleNormalize:
@@ -85,7 +85,7 @@ class MinMaxNormalize:
         assert max > min
         self.min = int(min)
         self.max = int(max)
-        
+
         self.range = self.max - self.min
 
     def __call__(self, x):

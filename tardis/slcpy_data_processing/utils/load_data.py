@@ -31,9 +31,9 @@ class ImportDataFromAmira:
                 raise Warning("Not a .am file...")
 
             if src_img[:-3] != src_am[:-20]:
-                raise Warning(f'Image file {src_img} has wrong extension for {src_am}!')
+                raise Warning(
+                    f'Image file {src_img} has wrong extension for {src_am}!')
 
-            
             try:
                 # Image file [Z x Y x X]
                 self.image, self.pixel_size = import_am(src_img)
@@ -53,18 +53,21 @@ class ImportDataFromAmira:
         # Find line starting with EDGE { int NumEdgePoints }
         segments = str([word for word in self.spatial_graph if
                         word.startswith('EDGE { int NumEdgePoints }')])
-        
+
         segment_start = "".join((ch if ch in "0123456789" else " ")
                                 for ch in segments)
         segment_start = [int(i) for i in segment_start.split()]
 
         # Find in the line directory that starts with @..
-        segment_start = int(self.spatial_graph.index("@" + str(segment_start[0]))) + 1
+        segment_start = int(self.spatial_graph.index(
+            "@" + str(segment_start[0]))) + 1
 
         # Find line define EDGE ... <- number indicate number of segments
-        segments = str([word for word in self.spatial_graph if word.startswith('define EDGE')])
+        segments = str(
+            [word for word in self.spatial_graph if word.startswith('define EDGE')])
 
-        segment_finish = "".join((ch if ch in "0123456789" else " ") for ch in segments)
+        segment_finish = "".join(
+            (ch if ch in "0123456789" else " ") for ch in segments)
         segment_finish = [int(i) for i in segment_finish.split()]
         segment_no = int(segment_finish[0])
         segment_finish = segment_start + int(segment_finish[0])
@@ -81,9 +84,9 @@ class ImportDataFromAmira:
 
     def __find_points(self):
         # Find line starting with POINT { float[3] EdgePointCoordinates }
-        points = str([word for word in self.spatial_graph \
-            if word.startswith('POINT { float[3] EdgePointCoordinates }')])
-        
+        points = str([word for word in self.spatial_graph
+                      if word.startswith('POINT { float[3] EdgePointCoordinates }')])
+
         # Find in the line directory that starts with @..
         points_start = "".join((ch if ch in "0123456789" else " ")
                                for ch in points)
@@ -93,10 +96,11 @@ class ImportDataFromAmira:
             "@" + str(points_start[1]))) + 1
 
         # Find line define POINT ... <- number indicate number of points
-        points = str([word for word in self.spatial_graph \
-            if word.startswith('define POINT')])
+        points = str([word for word in self.spatial_graph
+                      if word.startswith('define POINT')])
 
-        points_finish = "".join((ch if ch in "0123456789" else " ") for ch in points)
+        points_finish = "".join(
+            (ch if ch in "0123456789" else " ") for ch in points)
         points_finish = [int(i) for i in points_finish.split()][0]
         points_no = points_finish
         points_finish = points_start + points_finish
@@ -121,8 +125,8 @@ class ImportDataFromAmira:
         with open(self.src_img, "r", encoding="iso-8859-1") as et:
             lines_in_et = et.read(50000).split("\n")
 
-        transformation_list = str([word for word in lines_in_et \
-            if word.startswith('    BoundingBox')]).split(" ")
+        transformation_list = str([word for word in lines_in_et
+                                   if word.startswith('    BoundingBox')]).split(" ")
 
         trans_x, trans_y, trans_z = (float(transformation_list[5]),
                                      float(transformation_list[7]),
@@ -137,9 +141,12 @@ class ImportDataFromAmira:
             self.transformation = [0, 0, 0]
         points_coord = self.__find_points()
 
-        points_coord[0:len(points_coord), 0] = points_coord[0:len(points_coord), 0] - self.transformation[0]
-        points_coord[0:len(points_coord), 1] = points_coord[0:len(points_coord), 1] - self.transformation[1]
-        points_coord[0:len(points_coord), 2] = points_coord[0:len(points_coord), 2] - self.transformation[2]
+        points_coord[0:len(points_coord), 0] = points_coord[0:len(
+            points_coord), 0] - self.transformation[0]
+        points_coord[0:len(points_coord), 1] = points_coord[0:len(
+            points_coord), 1] - self.transformation[1]
+        points_coord[0:len(points_coord), 2] = points_coord[0:len(
+            points_coord), 2] - self.transformation[2]
 
         return points_coord / self.pixel_size
 
@@ -166,7 +173,7 @@ def import_mrc(img: str):
     """
     DEFAULT IMPORT FOR .mrc/.rec files
 
-    Read out for MRC2014 files with     
+    Read out for MRC2014 files with
 
     Args:
         img: Source of image file
@@ -341,7 +348,7 @@ def import_am(img: str):
 
     nx, ny, nz = int(size[0]), int(size[1]), int(size[2])
 
-    physical_size = str([word for word in am.split('\n') if \
+    physical_size = str([word for word in am.split('\n') if
                         word.startswith('    BoundingBox')]).split(" ")
     if len(physical_size) == 0:
         physical_size = np.array((float(physical_size[6]),
@@ -350,15 +357,15 @@ def import_am(img: str):
         binary_start = str.find(am, "\n@1\n") + 4
     else:
         am = open(img, 'r', encoding="iso-8859-1").read(20000)
-        physical_size = str([word for word in am.split('\n') if \
-            word.startswith('    BoundingBox')]).split(" ")
-            
+        physical_size = str([word for word in am.split('\n') if
+                             word.startswith('    BoundingBox')]).split(" ")
+
         physical_size = np.array((float(physical_size[6]),
                                   float(physical_size[8]),
                                   float(physical_size[10][:-3])))
         binary_start = str.find(am, "\n@1\n") + 4
 
-    pixel_size = round(physical_size[0] / (nx-1),  3)
+    pixel_size = round(physical_size[0] / (nx - 1), 3)
 
     img = np.fromfile(img, dtype=np.uint8)
 
@@ -366,4 +373,3 @@ def import_am(img: str):
         return img[binary_start:-1].reshape((ny, nx)), pixel_size
     else:
         return img[binary_start:-1].reshape((nz, ny, nx)), pixel_size
-

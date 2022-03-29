@@ -8,8 +8,8 @@ class BuildPointCloud:
     """
     MAIN MODULE FOR SEMANTIC MASK IMAGE DATA TRANSFORMATION INTO POINT CLOUD
 
-    Module build point cloud from semantic mask based on skeletonization in 3D. 
-    Optionally, user can trigger point cloud correction with euclidean distance 
+    Module build point cloud from semantic mask based on skeletonization in 3D.
+    Optionally, user can trigger point cloud correction with euclidean distance
     transformation to correct for skeletonization artefact. It will not fix issue
     with heavily overlaping objects.
 
@@ -21,18 +21,19 @@ class BuildPointCloud:
         filter_small_object: Filter size to remove small object .
         clean_close_point: If True, close point will be removed.
     """
+
     def __init__(self,
                  tqdm):
         self.tqdm = tqdm
 
     def check_data(self,
-                    image):
+                   image):
         try:
             if isinstance(image, str):
                 from tardis.slcpy_data_processing.utils.load_data import import_tiff
 
                 image = import_tiff(img=image,
-                                        dtype=np.int8)
+                                    dtype=np.int8)
             else:
                 image = image
         except RuntimeWarning:
@@ -40,14 +41,14 @@ class BuildPointCloud:
 
         if np.any(np.unique(image) > 1):  # Fix uint8 formating
             image = image / 255
-            
+
         assert np.unique(image)[1] == 1, \
             'Array or file directory loaded properly but image is not semantic mask...'
 
         assert image.ndim in [2, 3], 'File must be 2D or 3D array!'
 
-        return image 
-    
+        return image
+
     def build_point_cloud(self,
                           image: Optional[str] = np.ndarray,
                           edt=False,
@@ -57,14 +58,14 @@ class BuildPointCloud:
             from tqdm import tqdm
 
         image = self.check_data(image)
-        
+
         if edt:
             import edt
 
             label_size = label_size / 100
 
             """Calculate EDT and apply threshold based on predefine mask size"""
-            if image_edt.ndim == 2:
+            if image.ndim == 2:
                 image_edt = edt.edt(image)
                 image_edt = np.array(np.where(image_edt > label_size, 1, 0),
                                      dtype=np.int8)
@@ -77,9 +78,10 @@ class BuildPointCloud:
                                     leave=True)
                 else:
                     edt_iter = range(image_edt.shape[0])
-                
+
                 for i in edt_iter:
-                    image_edt[i, :] = np.where(edt.edt(image[i, :]) > label_size, 1, 0)
+                    image_edt[i, :] = np.where(
+                        edt.edt(image[i, :]) > label_size, 1, 0)
 
             """Skeletonization"""
             image_point = np.where(skeletonize_3d(image_edt) > 0)
@@ -95,16 +97,15 @@ class BuildPointCloud:
         """Output point cloud [X x Y x Z]"""
         if len(image_point) == 2:
             """If 2D bring artificially Z dim == 0"""
-            coordinates = np.stack((image_point[1], 
+            coordinates = np.stack((image_point[1],
                                     image_point[0],
                                     np.zeros(image_point[0].shape))).T
-            
+
         elif len(image_point) == 3:
-            coordinates = np.stack((image_point[2], 
-                                    image_point[1], 
+            coordinates = np.stack((image_point[2],
+                                    image_point[1],
                                     image_point[0])).T
-            
-            
+
         """CleanUp to avoid memory loss"""
         image_point = None
         del image_point
@@ -113,11 +114,12 @@ class BuildPointCloud:
         """ Down-sampling point cloud by removing closest point """
         if down_sampling is not None:
             import open3d as o3d
-            
+
             pcd = o3d.geometry.PointCloud()
             pcd.points = o3d.utility.Vector3dVector(coordinates)
-            coordinates_ds = np.asarray(pcd.voxel_down_sample(voxel_size=down_sampling).points)
+            coordinates_ds = np.asarray(
+                pcd.voxel_down_sample(voxel_size=down_sampling).points)
 
             return coordinates_ds
-        
+
         return coordinates
