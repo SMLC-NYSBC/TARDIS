@@ -3,17 +3,12 @@ name: Python Package using Conda
 on:
   push:
     branches:
-      - main
       - release/*
-  pull_request:
-    branches:
-      - main
 
 jobs:
   test_build:
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
         python-version: ["3.8", "3.9"]
         os: [ubuntu-latest, macOS-latest, windows-latest]
