@@ -6,33 +6,35 @@ import numpy as np
 class CenterCrop:
     """
         Rescale the image and mask to a given size for 3D [DxHxW],
-         or 4D images [CxDxHxW]
+         or 2D images [HxW]
 
     Object as an input required
-            x: image 3D or 4D arrays
-            y: target/mask 3D or 4D arrays
+            x: image 2D or 3D arrays
+            y: target/mask 2D or 3D arrays
 
     Args:
-        size: output size of image in DHW
+        size: output size of image in DHW/HW
     """
 
     def __init__(self,
                  size: tuple):
-        assert len(size) == 3
+        assert len(size) in [2, 3]
         self.size = size
 
     def __call__(self,
                  x: np.ndarray,
                  y: np.ndarray):
-        assert x.ndim in [3, 4] and y.ndim in [3, 4]
+        assert x.ndim in [2, 3] and y.ndim in [2, 3]
 
         if x.ndim == 3:
             d, h, w = x.shape
+            
+            down_d = int(d // 2 + self.size[0] // 2)
+            up_d = int(d // 2 - self.size[0] // 2)
+        
         else:
-            d, h, w = x.shape[1:]
+            h, w = x.shape[1:]
 
-        down_d = int(d // 2 + self.size[0] // 2)
-        up_d = int(d // 2 - self.size[0] // 2)
         bottom_h = int(h // 2 + self.size[1] // 2)
         top_h = int(h // 2 - self.size[1] // 2)
         right_w = int(w // 2 + self.size[2] // 2)
@@ -41,16 +43,9 @@ class CenterCrop:
         if x.ndim == 3 and y.ndim == 3:
             return x[up_d:down_d, top_h:bottom_h, left_w:right_w], \
                 y[up_d:down_d, top_h:bottom_h, left_w:right_w]
-        elif x.ndim == 4 and y.ndim == 4:
-            return x[:, up_d:down_d, top_h:bottom_h, left_w:right_w], \
-                y[:, up_d:down_d, top_h:bottom_h, left_w:right_w]
-        elif x.ndim == 4 and y.ndim == 3:
-            return x[:, up_d:down_d, top_h:bottom_h, left_w:right_w], \
-                y[up_d:down_d, top_h:bottom_h, left_w:right_w]
-        else:
-            return x[up_d:down_d, top_h:bottom_h, left_w:right_w], \
-                y[:, up_d:down_d, top_h:bottom_h, left_w:right_w]
-
+        elif x.ndim == 2 and y.ndim == 2:
+            return x[top_h:bottom_h, left_w:right_w], \
+                y[top_h:bottom_h, left_w:right_w]
 
 class SimpleNormalize:
     """
@@ -97,20 +92,23 @@ class RandomFlip:
     Perform 180 degree flip randomly in z,x or y axis for 3D or 4D
 
     Object as an input required
-        x: image 3D or 4D arrays
-        y: target/mask 3D or 4D arrays
+        x: image 2D or 3D arrays
+        y: target/mask 2D or 3D arrays
     """
 
     def __init__(self):
         self.random_state = np.random.randint(0, 2)
-        # 0 is z axis, 1 is x axis, 2 is y axis
-
+        # 0 is z axis, 1 is x axis, 2 is y axis for 3D
+        # 0 is x axis, 1 is y axis for 2D
+        
     def __call__(self,
                  x: np.ndarray,
                  y: np.ndarray):
-        if self.random_state == 0:
-            return np.flipud(x), np.flipud(y)
-        return np.fliplr(x), np.fliplr(y)
+        if x.ndim == 2 or y.ndim == 2:
+            if self.random_state == 2:
+                self.random_state = np.random.randint(0, 1)
+                
+        return np.flip(x, self.random_state), np.flip(y, self.random_state)
 
 
 class RandomRotation:
@@ -177,6 +175,7 @@ class ComposeRandomTransformation:
                 random_transf = np.random.randint(0, len(self.transforms))
                 transform = self.transforms[random_transf]
                 x, y = transform(x, y)
+
         return x, y
 
 
@@ -190,24 +189,34 @@ def preprocess(image: np.ndarray,
         Module to transform dataset and prepare them for learning
 
     Args:
-        image: 3D tiff file with image data
-        mask: 3d tiff file with semantic labels
+        image: 2D/3D array with image data
+        mask: 2D/3D array with semantic labels
         normalization: normalize object to bring img to 0 and 1 values
         transformation: perform transformation on img and mask with
             same random effect
         size: image size output for center crop
-        output_dim_mask: output channel diemsions for label mask
+        output_dim_mask: output channel dimensions for label mask
     """
-
-    assert len(image.shape) in [3, 4]
-    z, h, w = image.shape[:3]
+    assert image.ndim in [2, 3]
+    if image.ndim == 3:
+        z, h, w = image.shape
+        dim = 3
+    else:
+        z, h, w = None, image.shape
+        dim = 2
 
     """ resize image """
-    if size != "None" and size is not None:
-        if (z, h, w) != (size, size, size):
-            # resize image
-            crop = CenterCrop(size)
-            image, mask = crop(image, mask)
+    if size != "None" and size is not None: # Fix for Cli module
+        if dim == 3:
+            if (z, h, w) != (size, size, size):
+                # resize image
+                crop = CenterCrop(size)
+                image, mask = crop(image, mask)
+        elif dim == 2:
+            if (h, w) != (size, size):
+                # resize image
+                crop = CenterCrop(size)
+                image, mask = crop(image, mask)
 
     """ Transform image randomly """
     if transformation:

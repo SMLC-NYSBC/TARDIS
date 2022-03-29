@@ -27,7 +27,7 @@ def max_number_of_conv_layer(img=None,
     Based on the torch input automatically select number of convolution blocks,
     based on a standard settings.
 
-        I = [(W-K+2P)/S]+1
+        I = [(W - K + 2*P) / S] + 1
         Out_size = [(I - F) / S] + 1
         - W is the input volume
         - K is the Kernel size

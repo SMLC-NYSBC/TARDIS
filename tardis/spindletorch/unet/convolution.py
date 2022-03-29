@@ -10,7 +10,7 @@ def convolution(in_ch: int,
                 no_group=None):
     """
     Build an convolution block with a specified components:
-    conv.(c), ReLu (r), LeakyReLu (l), groupnorm (g), batchnorm (b).
+    conv (c), ReLu (r), LeakyReLu (l), GroupNorm (g), BatchNorm (b).
 
     Args:
         in_ch: Number of input channels

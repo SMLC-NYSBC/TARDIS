@@ -46,19 +46,19 @@ class FindBestThreshold:
         """ For each threshold predict images and calculate F1 score. """
         batch_iter = tqdm(enumerate(self.threshold_range),
                           'Initial searching for Threshold',
-                          total=len(self.threshold_range),
                           leave=False)
 
         self._build_dir()
         self._predict_with_threshold()
         logits, target = self._stitch_image_build_target()
+        
         if logits.shape != target.shape:
             z, y, x = target.shape
             logits = logits[0:z, 0:y, 0:x]
 
         for i, threshold_next_step in batch_iter:
-            logits_th = np.where(
-                logits > threshold_next_step, 1, 0).astype('uint8')
+            logits_th = np.where(logits > threshold_next_step, 1, 0).astype('uint8')
+            
             self._calculate_metrics3D(logits=logits_th,
                                       target=target,
                                       metric=metric)

@@ -22,8 +22,8 @@ def build_network(network_type: str,
                      layer_components=layer_components,
                      prediction=prediction)
     elif network_type == 'resunet':
-        model = ResUNet(in_channels=1,
-                        out_channels=1,
+        model = ResUNet(in_channels=in_channel,
+                        out_channels=out_channel,
                         patch_size=img_size,
                         dropout=dropout,
                         no_conv_layer=no_conv_layers,
@@ -31,8 +31,8 @@ def build_network(network_type: str,
                         layer_components=layer_components,
                         prediction=prediction)
     elif network_type == 'unet3plus':
-        model = UNet3Plus(in_channels=1,
-                          out_channels=1,
+        model = UNet3Plus(in_channels=in_channel,
+                          out_channels=out_channel,
                           classifies=classification,
                           patch_size=img_size,
                           no_conv_layer=no_conv_layers,
