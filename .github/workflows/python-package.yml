@@ -10,7 +10,7 @@ on:
       - main
 
 jobs:
-  build-linux:
+  test_build:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -31,7 +31,8 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --upgrade coverage
           python -m pip install flake8 pytest
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install -r requirements.txt
+          pip install -e .
 
       - name: Lint with flake8
         run: |
