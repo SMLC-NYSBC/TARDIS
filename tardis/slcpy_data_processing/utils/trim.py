@@ -128,7 +128,8 @@ def trim_image(image: np.ndarray,
                         trim_image = trim_image + 128
 
                     tif.imwrite(join(output, img_name),
-                                np.array(trim_image, 'int8'))
+                                np.array(trim_image, 'uint8'),
+                                shape=trim_image.shape)
 
 
 def empty_mask(size: tuple):
@@ -286,7 +287,8 @@ def trim_with_stride(image: np.ndarray,
                                                 :]
 
                 tif.imwrite(join(output, img_name),
-                            np.array(trim_img, 'int8'))
+                            np.array(trim_img, 'uint8'),
+                            shape=trim_img.shape)
 
 
 def trim_label_mask(points: np.ndarray,
