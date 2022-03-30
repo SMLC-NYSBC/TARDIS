@@ -1,6 +1,7 @@
 name: Python PyTest
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - release/*
