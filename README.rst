@@ -9,7 +9,7 @@ Semantic Label Converter [TARDIS]
         :target: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python-package.yml
 
 .. image:: https://readthedocs.org/projects/tardis/badge/?version=latest
-        :target: https://tardis.readthedocs.io/en/latest/?badge=latest
+        :target: https://tardis-pytorch.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
 ....
