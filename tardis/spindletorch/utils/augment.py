@@ -1,5 +1,3 @@
-from typing import Optional
-
 import numpy as np
 
 
@@ -182,7 +180,7 @@ def preprocess(image: np.ndarray,
                mask: np.ndarray,
                normalization: str,
                transformation: bool,
-               size: Optional[tuple] = None,
+               size: int,
                output_dim_mask=1):
     """
         Module to transform dataset and prepare them for learning
@@ -205,16 +203,15 @@ def preprocess(image: np.ndarray,
         dim = 2
 
     """ resize image """
-    if size != "None" and size is not None:  # Fix for Cli module
-        if dim == 3:
-            if (z, h, w) != (size, size, size):
-                # resize image
-                crop = CenterCrop(size)
-                image, mask = crop(image, mask)
+    if dim == 3:
+        if (z, h, w) != (size, size, size):
+            # resize image
+            crop = CenterCrop((size, size, size))
+            image, mask = crop(image, mask)
         elif dim == 2:
             if (h, w) != (size, size):
                 # resize image
-                crop = CenterCrop(size)
+                crop = CenterCrop((size, size))
                 image, mask = crop(image, mask)
 
     """ Transform image randomly """

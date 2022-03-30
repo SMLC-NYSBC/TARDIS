@@ -26,7 +26,7 @@ class VolumeDataset(Dataset):
     def __init__(self,
                  img_dir: str,
                  mask_dir: str,
-                 size=(64, 512, 512),
+                 size=64,
                  mask_suffix='_mask',
                  normalize="simple",
                  transform=True,

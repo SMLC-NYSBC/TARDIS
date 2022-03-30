@@ -14,7 +14,7 @@ Semantic Label Converter [TARDIS]
 
 ....
 
-* Documentation: https://tardis.readthedocs.io/en/latest/
+* Documentation: https://tardis-pytorch.readthedocs.io/en/latest/
 
 Features
 --------
