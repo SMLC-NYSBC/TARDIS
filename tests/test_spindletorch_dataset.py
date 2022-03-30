@@ -13,7 +13,7 @@ class TestDataSetBuilder2D3D:
                        mask=self.mask3D,
                        normalization='simple',
                        transformation=True,
-                       size=(64, 64, 64),
+                       size=64,
                        output_dim_mask=1)
 
     def test_data_augmentation2D(self):
@@ -21,5 +21,5 @@ class TestDataSetBuilder2D3D:
                        mask=self.mask2D,
                        normalization='simple',
                        transformation=True,
-                       size=(64, 64),
+                       size=64,
                        output_dim_mask=1)
