@@ -1,5 +1,6 @@
 from os import listdir
 from os.path import isfile, join
+from typing import Optional
 
 import numpy as np
 import tifffile.tifffile as tif
@@ -57,9 +58,9 @@ class StitchImages:
 
     def __call__(self,
                  image_dir: str,
-                 output: str,
                  mask: bool,
                  prefix='',
+                 output: Optional[str] = None,
                  dtype=np.int8):
         """Extract information about images in dir_path"""
         file_list = [f for f in listdir(image_dir) if isfile(join(image_dir, f))]
@@ -137,6 +138,8 @@ class StitchImages:
                             stitched_image[z_start:z_stop,
                                            y_start:y_stop,
                                            x_start:x_stop] = img
-
-            tif.imwrite(join(output, f'Stitched_Image_idx_{idx}.tif'),
-                        np.array(stitched_image, dtype=dtype))
+            if output is None:
+                return np.array(stitched_image, dtype=dtype)
+            else:
+                tif.imwrite(join(output, f'Stitched_Image_idx_{idx}.tif'),
+                            np.array(stitched_image, dtype=dtype))

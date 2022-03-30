@@ -14,14 +14,13 @@ class VolumeDataset(Dataset):
         Class module to load image and semantic label masks
 
     Args:
-        img_dir: source of the 3D .tif file
-        mask_dir: source of the 3D .tif  images masks
-        size: numeric value between 0 and 1 for scaling px
+        img_dir: source of the 2D/3D .tif file
+        mask_dir: source of the 2D/3D .tif  images masks
+        size: Output patch size for image and mask
         mask_suffix: numeric value of pixel size
         normalize: type of normalization for img data ["simple", "minmax"]
         transform: call for random transformation on img and mask data
-
-        :author Robert Kiewisz
+        out_channels: Number of output channels
     """
 
     def __init__(self,
@@ -45,10 +44,12 @@ class VolumeDataset(Dataset):
     def __len__(self):
         return len(self.ids)
 
-    def __getitem__(self, i):
+    def __getitem__(self,
+                    i):
         """
         Get list of all images and masks, load and prepare for packaging
         """
+
         idx = self.ids[i]
         mask_file = os.path.join(self.mask_dir, str(idx) + '_mask' + '.tif')
         img_file = os.path.join(self.img_dir, str(idx) + '.tif')

@@ -20,10 +20,10 @@ class CenterCrop:
                  size: tuple):
         assert len(size) in [2, 3]
         self.size = size
-        
+
         if len(self.size) == 2:
             self.size = (0, size[0], size[1])
-            
+
     def __call__(self,
                  x: np.ndarray,
                  y: np.ndarray):
@@ -31,10 +31,10 @@ class CenterCrop:
 
         if x.ndim == 3:
             d, h, w = x.shape
-            
+
             down_d = int(d // 2 + self.size[0] // 2)
             up_d = int(d // 2 - self.size[0] // 2)
-        
+
         else:
             h, w = x.shape
 
@@ -49,6 +49,7 @@ class CenterCrop:
         elif x.ndim == 2 and y.ndim == 2:
             return x[top_h:bottom_h, left_w:right_w], \
                 y[top_h:bottom_h, left_w:right_w]
+
 
 class SimpleNormalize:
     """
@@ -103,14 +104,14 @@ class RandomFlip:
         self.random_state = np.random.randint(0, 2)
         # 0 is z axis, 1 is x axis, 2 is y axis for 3D
         # 0 is x axis, 1 is y axis for 2D
-        
+
     def __call__(self,
                  x: np.ndarray,
                  y: np.ndarray):
         if x.ndim == 2 or y.ndim == 2:
             if self.random_state == 2:
                 self.random_state = np.random.randint(0, 1)
-                
+
         return np.flip(x, self.random_state), np.flip(y, self.random_state)
 
 
@@ -204,7 +205,7 @@ def preprocess(image: np.ndarray,
         dim = 2
 
     """ resize image """
-    if size != "None" and size is not None: # Fix for Cli module
+    if size != "None" and size is not None:  # Fix for Cli module
         if dim == 3:
             if (z, h, w) != (size, size, size):
                 # resize image

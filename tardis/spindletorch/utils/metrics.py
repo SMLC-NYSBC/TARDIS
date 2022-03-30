@@ -97,8 +97,7 @@ def calculate_F1(input: Optional[np.ndarray] = torch.Tensor,
         recall_score = tp / (tp + fn + smooth)
 
         # F1 Score - 2 * [(Prec * Rec) / (Prec + Rec)]
-        F1_score = 2 * ((precision_score * recall_score) /
-                        (precision_score + recall_score + smooth))
+        F1_score = 2 * ((precision_score * recall_score) / (precision_score + recall_score + smooth))
 
         return accuracy_score, precision_score, recall_score, F1_score
 
