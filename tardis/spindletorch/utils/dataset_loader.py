@@ -24,7 +24,8 @@ class VolumeDataset(Dataset):
     """
 
     def __init__(self,
-                 img_dir, mask_dir,
+                 img_dir: str,
+                 mask_dir: str,
                  size=(64, 512, 512),
                  mask_suffix='_mask',
                  normalize="simple",
@@ -71,10 +72,23 @@ class VolumeDataset(Dataset):
 
 
 class PredictionDataSet(Dataset):
+    """
+    CLASS MODULE TO LOAD IMAGE FOR PREDICTIONS
+
+    Module has turn off all transformations
+
+    Args:
+        img_dir: source of the 2D/3D .tif file
+        size: Output patch size for image and mask
+        out_channels: Number of output channels
+    """
+
     def __init__(self,
-                 img_dir,
+                 img_dir: str,
+                 size: tuple,
                  out_channels=1):
         self.img_dir = img_dir
+        self.size = size
         self.out_channels = out_channels
 
         self.ids = [splitext(file)[0] for file in listdir(img_dir)
@@ -92,9 +106,10 @@ class PredictionDataSet(Dataset):
 
         img = tifffile.imread(img_file)
         img = np.array(img, dtype='uint8')
+
         img, _ = preprocess(image=img,
                             mask=img,
-                            size=None,
+                            size=self.size,
                             normalization="minmax",
                             transformation=False,
                             output_dim_mask=self.out_channels)
