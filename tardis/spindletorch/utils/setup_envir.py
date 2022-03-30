@@ -6,8 +6,8 @@ from shutil import rmtree
 from typing import Optional
 
 import numpy as np
-from slcpy.main import slcpy_semantic
-from slcpy.utils.trim import trim_images
+from tardis.slcpy_data_processing.build_semantic_mask import slcpy_semantic
+from tardis.slcpy_data_processing.voxalize_image import ImageVoxalizer
 from tqdm import tqdm
 
 

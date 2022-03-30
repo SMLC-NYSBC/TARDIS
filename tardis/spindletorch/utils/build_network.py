@@ -1,4 +1,4 @@
-from spindletorch.unet.network import UNet, ResUNet, UNet3Plus
+from tardis.spindletorch.unet.network import UNet, ResUNet, UNet3Plus
 
 
 def build_network(network_type: str,

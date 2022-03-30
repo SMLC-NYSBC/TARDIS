@@ -1,8 +1,8 @@
 from typing import Optional
 
 import torch.nn as nn
-from spindletorch.unet.init_weights import init_weights
-from spindletorch.utils.utils import number_of_features_per_level
+from tardis.spindletorch.unet.init_weights import init_weights
+from tardis.spindletorch.utils.utils import number_of_features_per_level
 
 
 class EncoderBlock(nn.Module):

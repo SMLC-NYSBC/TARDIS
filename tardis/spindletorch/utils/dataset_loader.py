@@ -4,7 +4,7 @@ from os.path import join, splitext
 
 import numpy as np
 import torch
-from spindletorch.utils.augment import preprocess
+from tardis.spindletorch.utils.augment import preprocess
 from tifffile import tifffile
 from torch.utils.data import Dataset
 

@@ -3,11 +3,11 @@ from typing import Optional
 import numpy as np
 import torch
 import torch.nn as nn
-from spindletorch.unet.convolution import (DoubleConvolution,
-                                           RecurrentDoubleConvolution)
-from spindletorch.unet.decoder_blocks import build_decoder
-from spindletorch.unet.encoder_blocks import build_encoder
-from spindletorch.utils.utils import number_of_features_per_level
+from tardis.spindletorch.unet.convolution import (DoubleConvolution,
+                                                  RecurrentDoubleConvolution)
+from tardis.spindletorch.unet.decoder_blocks import build_decoder
+from tardis.spindletorch.unet.encoder_blocks import build_encoder
+from tardis.spindletorch.utils.utils import number_of_features_per_level
 
 
 class UNet(nn.Module):

@@ -4,8 +4,9 @@ from shutil import rmtree
 
 import numpy as np
 import torch
-from slcpy.main import slcpy_semantic, slcpy_stitch
-from spindletorch.unet.trainer import calculate_F1
+from tardis.slcpy_data_processing.stitch_image import StitchImages
+from tardis.slcpy_data_processing.build_semantic_mask import slcpy_semantic
+from tardis.spindletorch.unet.trainer import calculate_F1
 from tifffile import tifffile
 from tqdm import tqdm
 

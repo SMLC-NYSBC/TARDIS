@@ -2,10 +2,10 @@ from typing import Optional
 
 import torch
 import torch.nn as nn
-from spindletorch.unet.convolution import (DoubleConvolution,
-                                           RecurrentDoubleConvolution)
-from spindletorch.unet.init_weights import init_weights
-from spindletorch.utils.utils import number_of_features_per_level
+from tardis.spindletorch.unet.convolution import (DoubleConvolution,
+                                                  RecurrentDoubleConvolution)
+from tardis.spindletorch.unet.init_weights import init_weights
+from tardis.spindletorch.utils.utils import number_of_features_per_level
 
 
 class DecoderBlockCNN(nn.Module):

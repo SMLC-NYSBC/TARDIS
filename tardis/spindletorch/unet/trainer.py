@@ -1,11 +1,11 @@
 import numpy as np
 import torch
-from spindletorch.utils.metrics import calculate_F1
+from tardis.spindletorch.utils.metrics import calculate_F1
 from torch import nn
 from os import mkdir, getcwd
 from os.path import isdir, join
 from shutil import rmtree
-from spindletorch.utils.utils import EarlyStopping
+from tardis.spindletorch.utils.utils import EarlyStopping
 
 
 class Trainer:
