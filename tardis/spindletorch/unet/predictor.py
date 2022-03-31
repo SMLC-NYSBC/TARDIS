@@ -1,5 +1,5 @@
-import gc
 from os.path import join
+from typing import Optional
 
 import numpy as np
 import torch
@@ -8,7 +8,7 @@ from tifffile import tifffile
 
 class Predictor:
     """
-    Wrapper for prediction
+    WRAPPER FOR PREDICTION
 
      Args:
          model: Model with loaded pretrained weights.
@@ -25,14 +25,14 @@ class Predictor:
                  device: str,
                  output: str,
                  prediction_DataLoader,
-                 threshold: float,
-                 notebook=False):
+                 threshold: Optional[float] = None,
+                 tqdm=False):
         self.model = model
         self.device = device
         self.output = output
         self.prediction_DataLoader = prediction_DataLoader
         self.threshold = threshold
-        self.notebook = notebook
+        self.tqdm = tqdm
 
     def run_prediction(self):
         """Prediction block block"""
@@ -40,17 +40,15 @@ class Predictor:
 
     def _predict(self):
 
-        if self.notebook:
-            from tqdm.notebook import tqdm
-        else:
+        if self.tqdm:
             from tqdm import tqdm
+            batch_iter = tqdm(enumerate(self.prediction_DataLoader),
+                              'Predicting',
+                              leave=False)
+        else:
+            batch_iter = enumerate(self.prediction_DataLoader)
 
-        batch_iter = tqdm(enumerate(self.prediction_DataLoader),
-                          'Predicting',
-                          total=len(self.prediction_DataLoader),
-                          leave=False)
-
-        for i, (x, name) in batch_iter:
+        for _, (x, name) in batch_iter:
             self.model.eval()
             with torch.no_grad():
                 out = self.model(x.to(self.device))
@@ -79,5 +77,4 @@ class Predictor:
                             out_batch = out_batch[0, :]
 
                         tifffile.imwrite(join(self.output, name_batch + '.tif'),
-                                         np.array(out_batch, 'float32'))
-        gc.collect()
+                                         np.array(out_batch, 'float16'))

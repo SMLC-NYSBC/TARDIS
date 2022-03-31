@@ -185,6 +185,7 @@ class DecoderBlockUnet3Plus(nn.Module):
             if pool_kernel is not None:
                 max_pool = nn.MaxPool3d(kernel_size=pool_kernel,
                                         stride=pool_kernel,
+                                        dilation=1,
                                         ceil_mode=True)
             else:
                 max_pool = None

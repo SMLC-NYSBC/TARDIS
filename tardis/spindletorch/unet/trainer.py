@@ -10,7 +10,7 @@ from tardis.spindletorch.utils.utils import EarlyStopping
 
 class Trainer:
     """
-    Wrapper for training
+    WRAPPER FOR TRAINER
 
      Args:
          model: Model with loaded pretrained weights
@@ -34,7 +34,7 @@ class Trainer:
                  validation_DataLoader=None,
                  lr_scheduler=False,
                  epochs=100,
-                 notebook=False,
+                 tqdm=False,
                  checkpoint_name="Unet",
                  classification=False):
         self.model = model.to(device)
@@ -45,7 +45,7 @@ class Trainer:
         self.validation_DataLoader = validation_DataLoader
         self.lr_scheduler = lr_scheduler
         self.epochs = epochs
-        self.notebook = notebook
+        self.tqdm = tqdm
         self.checkpoint_name = checkpoint_name
         self.classification = classification
         if classification:
@@ -120,17 +120,15 @@ class Trainer:
 
     def _train(self):
 
-        if self.notebook:
-            from tqdm.notebook import tqdm
-        else:
+        if self.tqdm:
             from tqdm import tqdm
+            batch_iter = tqdm(enumerate(self.training_DataLoader),
+                              'Training',
+                              leave=False)
+        else:
+            batch_iter = enumerate(self.training_DataLoader)
 
-        batch_iter = tqdm(enumerate(self.training_DataLoader),
-                          'Training',
-                          total=len(self.training_DataLoader),
-                          leave=False)
-
-        for i, (x, y) in batch_iter:
+        for _, (x, y) in batch_iter:
             self.model.train()
             input, target = x.to(self.device), y.to(self.device)
             self.optimizer.zero_grad(set_to_none=True)

@@ -3,12 +3,12 @@ from tardis.slcpy_data_processing.utils.draw_mask_2D import draw_2D
 from tardis.slcpy_data_processing.utils.interpolation import interpolation_3D
 
 
-def slcpy_semantic(mask_size: tuple,
-                   coordinate: np.ndarray,
-                   pixel_size: float,
-                   circle_size=250,
-                   multi_layer=False,
-                   tqdm=True):
+def draw_semantic(mask_size: tuple,
+                  coordinate: np.ndarray,
+                  pixel_size: float,
+                  circle_size=250,
+                  multi_layer=False,
+                  tqdm=True):
     """
     MODULE TO BUILD SEMANTIC MASK FROM CORRESPONDING COORDINATES
 

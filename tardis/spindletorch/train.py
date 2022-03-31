@@ -6,7 +6,6 @@ import torch
 from torch import optim
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
-from tardis.spindletorch.utils.dataset_loader import VolumeDataset
 from tardis.spindletorch.utils.build_network import build_network
 from tardis.spindletorch.unet.losses import BCELoss, BCEDiceLoss, DiceLoss, \
     AdaptiveDiceLoss
@@ -20,9 +19,9 @@ torch.autograd.profiler.profile(enabled=False)
 torch.autograd.profiler.emit_nvtx(enabled=False)
 
 
-def train(data_dir: Optional[str] = None,
+def train(train_dataloader: DataLoader,
+          test_dataloader: DataLoader,
           img_size=64,
-          batch_size=10,
           cnn_type='unet',
           classification=False,
           dropout: Optional[float] = None,
@@ -36,41 +35,6 @@ def train(data_dir: Optional[str] = None,
           learning_rate_scheduler=False,
           device='gpu',
           epochs=100):
-    """Build data directory"""
-    if data_dir is None:
-        img_train = join('data', 'train', 'imgs')
-        mask_train = join('data', 'train', 'mask')
-        img_test = join('data', 'test', 'imgs')
-        mask_test = join('data', 'test', 'mask')
-    else:
-        img_train = join(data_dir, 'train', 'imgs')
-        mask_train = join(data_dir, 'train', 'mask')
-        img_test = join(data_dir, 'test', 'imgs')
-        mask_test = join(data_dir, 'test', 'mask')
-
-    """Build train and test dataset"""
-    train_dataloader = DataLoader(VolumeDataset(img_dir=img_train,
-                                                mask_dir=mask_train,
-                                                size=img_size,
-                                                mask_suffix='_mask',
-                                                normalize="simple",
-                                                transform=True,
-                                                out_channels=1),
-                                  shuffle=True,
-                                  batch_size=batch_size,
-                                  pin_memory=True,
-                                  num_workers=4)
-    test_dataloader = DataLoader(VolumeDataset(img_dir=img_test,
-                                               mask_dir=mask_test,
-                                               size=img_size,
-                                               mask_suffix='_mask',
-                                               normalize="simple",
-                                               transform=False,
-                                               out_channels=1),
-                                 shuffle=False,
-                                 batch_size=1,
-                                 pin_memory=True)
-
     img, mask = next(iter(train_dataloader))
     print(f'x = shape: {img.shape}; '
           f'type: {img.dtype}')
@@ -160,7 +124,3 @@ def train(data_dir: Optional[str] = None,
     torch.save({'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict()},
                join('model', 'model_weights.pth'))
-
-
-if __name__ == '__main__':
-    train()

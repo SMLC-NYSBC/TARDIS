@@ -1,5 +1,5 @@
 import numpy as np
-from tardis.slcpy_data_processing.build_semantic_mask import slcpy_semantic
+from tardis.slcpy_data_processing.utils.build_semantic_mask import draw_semantic
 
 
 class TestLabelDrawing:
@@ -18,14 +18,15 @@ class TestLabelDrawing:
             df_coord[start:stop, 1] = i + 4
             df_coord[start:stop, 2] = i + 2
 
-        labels_2D = slcpy_semantic(mask_size=(64, 64),
-                                   coordinate=df_coord,
-                                   pixel_size=self.pixel_size,
-                                   circle_size=self.r,
-                                   multi_layer=False,
-                                   tqdm=True)
+        labels_2D = draw_semantic(mask_size=(64, 64),
+                                  coordinate=df_coord,
+                                  pixel_size=self.pixel_size,
+                                  circle_size=self.r,
+                                  multi_layer=False,
+                                  tqdm=True)
         assert np.any(labels_2D == 1), 'Label was not created!'
-        assert not np.any(labels_2D > 1), 'Multi label was created in single mode!'
+        assert not np.any(
+            labels_2D > 1), 'Multi label was created in single mode!'
 
     def test_drawing_2D_multi(self):
         df_coord = np.zeros((100, 4))
@@ -40,12 +41,12 @@ class TestLabelDrawing:
             df_coord[start:stop, 2] = i + 2
             df_coord[start:stop, 3] = start / 2
 
-        labels_2D = slcpy_semantic(mask_size=(64, 64),
-                                   coordinate=df_coord,
-                                   pixel_size=self.pixel_size,
-                                   circle_size=self.r,
-                                   multi_layer=True,
-                                   tqdm=True)
+        labels_2D = draw_semantic(mask_size=(64, 64),
+                                  coordinate=df_coord,
+                                  pixel_size=self.pixel_size,
+                                  circle_size=self.r,
+                                  multi_layer=True,
+                                  tqdm=True)
         assert np.any(labels_2D > 0), 'Multi label was not created!'
 
     def test_drawing_3D_single(self):
@@ -60,12 +61,12 @@ class TestLabelDrawing:
             df_coord[start:stop, 1] = i + 4
             df_coord[start:stop, 2] = i + 2
 
-        labels_3D = slcpy_semantic(mask_size=(64, 64, 64),
-                                   coordinate=df_coord,
-                                   pixel_size=self.pixel_size,
-                                   circle_size=self.r,
-                                   multi_layer=False,
-                                   tqdm=True)
+        labels_3D = draw_semantic(mask_size=(64, 64, 64),
+                                  coordinate=df_coord,
+                                  pixel_size=self.pixel_size,
+                                  circle_size=self.r,
+                                  multi_layer=False,
+                                  tqdm=True)
         assert np.any(labels_3D == 1), 'Label was not created!'
         assert not np.any(
             labels_3D > 1), 'Multi label was created in single mode!'
@@ -83,10 +84,10 @@ class TestLabelDrawing:
             df_coord[start:stop, 2] = i + 2
             df_coord[start:stop, 3] = start / 2
 
-        labels_3D = slcpy_semantic(mask_size=(64, 64, 64),
-                                   coordinate=df_coord,
-                                   pixel_size=self.pixel_size,
-                                   circle_size=self.r,
-                                   multi_layer=True,
-                                   tqdm=True)
+        labels_3D = draw_semantic(mask_size=(64, 64, 64),
+                                  coordinate=df_coord,
+                                  pixel_size=self.pixel_size,
+                                  circle_size=self.r,
+                                  multi_layer=True,
+                                  tqdm=True)
         assert np.any(labels_3D > 0), 'Multi label was not created!'
