@@ -157,7 +157,7 @@ class TestTrimming:
                         trim_size_z=self.trim_z,
                         image_counter=0,
                         output=self.temp_dir,
-                        clean_empty=False,
+                        clean_empty=True,
                         prefix='_test')
 
         for _ in range(10):
@@ -184,6 +184,7 @@ class TestTrimming:
                               output=self.temp_dir,
                               image_counter=0,
                               stride=25,
+                              clean_empty=False,
                               prefix='_test')
 
         for _ in range(10):

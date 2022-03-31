@@ -46,9 +46,6 @@ class ImportDataFromAmira:
                                   "r",
                                   encoding="iso-8859-1").read().split("\n")
 
-    def empty_semantic_label(self):
-        return np.zeros(self.image.shape, 'int8')
-
     def get_segments(self):
         # Find line starting with EDGE { int NumEdgePoints }
         segments = str([word for word in self.spatial_graph if
@@ -149,6 +146,27 @@ class ImportDataFromAmira:
             points_coord), 2] - self.transformation[2]
 
         return points_coord / self.pixel_size
+
+    def get_segmented_points(self):
+        points = self.get_points()
+        segments = self.get_segments()
+
+        segmentation = np.zeros((points.shape[0], ))
+        id = 0
+        idx = 0
+        for i in segments:
+            segmentation[id:(id + int(i))] = idx
+
+            idx += 1
+            id += int(i)
+
+        return np.stack((segmentation,
+                         points[:, 0],
+                         points[:, 1],
+                         points[:, 2])).T
+
+    def get_image(self):
+        return self.image, self.pixel_size
 
 
 def import_tiff(img: str,
@@ -340,7 +358,7 @@ def import_am(img: str):
         pixel_size: float value of the pixel size
     """
     if not isfile(img):
-        raise Warning("Indicated .am file does not exist...")
+        raise Warning(f"Indicated .am {img} file does not exist...")
 
     am = open(img, 'r', encoding="iso-8859-1").read(8000)
     size = [word for word in am.split('\n') if word.startswith(

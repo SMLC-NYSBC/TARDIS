@@ -1,11 +1,13 @@
-from os.path import isdir, join
 from os import listdir, mkdir
+from os.path import isdir, join
 from shutil import rmtree
-
 from typing import Optional
+
+from torch.utils.data import DataLoader
+
+from tardis.slcpy_data_processing.build_training_dataset import BuildDataSet
 from tardis.spindletorch.train import train
 from tardis.spindletorch.utils.dataset_loader import VolumeDataset
-from torch.utils.data import DataLoader
 
 
 def main(training_dataset: str,
@@ -73,6 +75,14 @@ def main(training_dataset: str,
             mkdir(join(training_dataset, 'test'))
             mkdir(test_imgs_dir)
             mkdir(test_masks_dir)
+
+        """Build train/test DataSets if they don't exist"""
+        dataset_builder = BuildDataSet(dataset_dir=training_dataset,
+                                       circle_size=250,
+                                       multi_layer=False,
+                                       tqdm=True)
+        dataset_builder.__builddataset__(trim_xy=image_size,
+                                         trim_z=image_size)
 
     """Build training and test dataset 2D/3D"""
     train_DL = DataLoader(dataset=VolumeDataset(img_dir=train_imgs_dir,

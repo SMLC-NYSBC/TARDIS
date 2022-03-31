@@ -99,6 +99,7 @@ class TestLoader:
                                                    src_img=None)
         segments = AmiraImporter.get_segments()
         points = AmiraImporter.get_points()
+        _ = AmiraImporter.get_segmented_points()
 
         assert len(segments) == 3, \
             f'Wrong nubmer of imported segments. Given {len(segments)}, expected 3!'
@@ -113,6 +114,7 @@ class TestLoader:
                                                    src_img=amira_binary)
         segments = AmiraImporter.get_segments()
         points = AmiraImporter.get_points()
+        _ = AmiraImporter.get_segmented_points()
 
         # Check general data structure
         assert len(segments) == 3, \

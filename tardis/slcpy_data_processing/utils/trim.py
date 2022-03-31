@@ -122,11 +122,16 @@ def trim_image(image: np.ndarray,
                 """0 refere to stride == 0"""
                 img_name = str(f'{image_counter}_{z}_{y}_{x}_0{prefix}.tif')
 
-                if not clean_empty and not np.all(trim_image == 0):
-                    """Hard transform between int8 and uint8"""
-                    if np.min(trim_image) < 0:
-                        trim_image = trim_image + 128
+                if clean_empty:
+                    if not np.all(trim_image == 0):
+                        """Hard transform between int8 and uint8"""
+                        if np.min(trim_image) < 0:
+                            trim_image = trim_image + 128
 
+                        tif.imwrite(join(output, img_name),
+                                    np.array(trim_image, 'uint8'),
+                                    shape=trim_image.shape)
+                else:
                     tif.imwrite(join(output, img_name),
                                 np.array(trim_image, 'uint8'),
                                 shape=trim_image.shape)
@@ -142,6 +147,7 @@ def trim_with_stride(image: np.ndarray,
                      output: str,
                      image_counter: int,
                      prefix='',
+                     clean_empty=True,
                      stride=25):
     """
     FUNCTION TO TRIMMED IMAGE AND MASKS TO SPECIFIED SIZE
@@ -286,9 +292,19 @@ def trim_with_stride(image: np.ndarray,
                                                 x_start:x_stop,
                                                 :]
 
-                tif.imwrite(join(output, img_name),
-                            np.array(trim_img, 'uint8'),
-                            shape=trim_img.shape)
+                if clean_empty:
+                    if not np.all(trim_image == 0):
+                        """Hard transform between int8 and uint8"""
+                        if np.min(trim_img) < 0:
+                            trim_img = trim_img + 128
+
+                        tif.imwrite(join(output, img_name),
+                                    np.array(trim_img, 'uint8'),
+                                    shape=trim_img.shape)
+                else:
+                    tif.imwrite(join(output, img_name),
+                                np.array(trim_img, 'uint8'),
+                                shape=trim_img.shape)
 
 
 def trim_label_mask(points: np.ndarray,
