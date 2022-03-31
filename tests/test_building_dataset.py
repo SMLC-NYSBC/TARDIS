@@ -3,6 +3,7 @@ from tardis.slcpy_data_processing.build_training_dataset import BuildDataSet
 from os.path import join
 from shutil import rmtree
 
+
 class TestDataSetBuilder:
 
     def test_main_class(self):
@@ -18,7 +19,7 @@ class TestDataSetBuilder:
         mkdir(join('tests', 'test_data', 'data_loader', 'train'))
         mkdir(join('tests', 'test_data', 'data_loader', 'train', 'imgs'))
         mkdir(join('tests', 'test_data', 'data_loader', 'train', 'masks'))
-        
+
         builder = BuildDataSet(dataset_dir=join('tests', 'test_data', 'data_loader'),
                                circle_size=250,
                                multi_layer=False,
@@ -29,5 +30,4 @@ class TestDataSetBuilder:
         assert len(listdir(join('tests', 'test_data', 'data_loader', 'train', 'imgs'))) == \
             len(listdir(join('tests', 'test_data', 'data_loader', 'train', 'masks')))
 
-            
         rmtree(join('tests', 'test_data', 'data_loader', 'train'))
