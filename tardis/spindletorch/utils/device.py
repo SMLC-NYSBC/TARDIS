@@ -1,19 +1,22 @@
+from typing import Optional
 import torch
 
 
-def get_device(device=None):
+def get_device(device: Optional[str] = 0):
     """
     RETURN DEVICE THAT CAN BE USED FOR TRAINING/PREDICTIONS
 
     Args:
-        device: If indicated then overnight automatic selection of the device
+        device: Device name or ID
     """
-    if device is None or device == "gpu":
+    if device == "gpu":  # Load GPU ID 0
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
-        if device == 'cuda':
-            for i in range(torch.cuda.device_count()):
-                device = torch.device('cuda:{}'.format(i))
+        device = 'cuda:0'
+    elif isinstance(device, int):  # Load specific GPU ID
+        device = f'cuda:{device}'
+    elif device == 'cpu':  # Load CPU
+        device = 'cpu'
     else:
-        device = device
+        device = 'cpu'
+
     return device
