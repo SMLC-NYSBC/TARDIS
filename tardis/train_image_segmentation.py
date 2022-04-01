@@ -76,7 +76,7 @@ from tardis.version import version
 @click.option('-d', '--device',
               default=click.Choice(['gpu', 'cpu', int],
                                    case_sensitive=True),
-              type=[str, int],
+              type=(str, int),
               help='Define which device use for training: '
               'gpu: Use ID 0 gpus'
               'cpu: Usa CPU'
@@ -122,6 +122,7 @@ def main(training_dataset: str,
          loss_alpha: Optional[float] = None,
          cnn_checkpoint: Optional[str] = None,
          dropout_rate: Optional[float] = None):
+    """Test Description"""
     """Set environment"""
     train_imgs_dir = join(training_dataset, 'train', 'imgs')
     train_masks_dir = join(training_dataset, 'train', 'masks')

@@ -25,7 +25,9 @@ setup(
                 "(ET), Cryo-EM or fluorescent microscopy data into 3D segmented "
                 "point cloud.",
     entry_points={
-        'console_scripts': [],
+        'console_scripts': [
+            'tardis_cnn_train=tardis.train_image_segmentation:main', 
+            ],
     },
     license="MIT License",
     long_description_content_type='text/x-rst',
