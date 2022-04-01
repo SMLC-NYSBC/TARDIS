@@ -5,7 +5,7 @@ from typing import Optional
 
 from torch.utils.data import DataLoader
 
-from tardis.slcpy_data_processing.build_training_dataset import BuildDataSet
+from tardis.slcpy_data_processing.build_training_dataset import BuildTestDataSet, BuildTrainDataSet
 from tardis.spindletorch.train import train
 from tardis.spindletorch.utils.dataset_loader import VolumeDataset
 
@@ -76,13 +76,18 @@ def main(training_dataset: str,
             mkdir(test_imgs_dir)
             mkdir(test_masks_dir)
 
-        """Build train/test DataSets if they don't exist"""
-        dataset_builder = BuildDataSet(dataset_dir=training_dataset,
-                                       circle_size=250,
-                                       multi_layer=False,
-                                       tqdm=True)
+        """Build train DataSets if they don't exist"""
+        dataset_builder = BuildTrainDataSet(dataset_dir=training_dataset,
+                                            circle_size=250,
+                                            multi_layer=False,
+                                            tqdm=True)
         dataset_builder.__builddataset__(trim_xy=image_size,
                                          trim_z=image_size)
+
+        """Build test DataSets if they don't exist"""
+        dataset_builder = BuildTestDataSet(dataset_dir=training_dataset,
+                                           train_test_ration=train_test_ratio)
+        dataset_builder.__builddataset__()
 
     """Build training and test dataset 2D/3D"""
     train_DL = DataLoader(dataset=VolumeDataset(img_dir=train_imgs_dir,

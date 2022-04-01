@@ -116,3 +116,56 @@ class PredictionDataSet(Dataset):
         img = torch.from_numpy(img).type(torch.float32)
 
         return img, idx
+
+
+class GPU_DataLoader(object):
+    """
+    Simple data provider for datasets that
+    fit in GPU memory completely.
+    data: torch Tensor
+    batch_size: batch size (default: 128)
+    returns: batch-sized tensors. Iteration
+    stops when epoch is completed.
+    Every epoch a new shuffle of the data is
+    generated.
+
+    Author:
+        Paul Kim
+    """
+    def __init__(self, x, y, batch_size=128):
+        self._n_examples = len(x)
+
+        self.x = torch.tensor(x).float().cuda()
+        self.y = torch.tensor(y).float().cuda()
+
+        self.batch_index = 0
+        self.batch_size = batch_size
+        self._update_permutation()
+
+    def __iter__(self):
+        return self
+
+    def _update_permutation(self):
+        """
+        Update the list of indices defining the order
+        in which examples are provided. Meant to be
+        called once an epoch.
+        """
+        self.permutation = torch.randperm(self._n_examples).cuda()
+
+    def _get_batch(self):
+        batch_indices = self.permutation.narrow(dim=0, start=self.batch_index, length=self.batch_size)
+        x_batch = torch.index_select(self.x, dim=0, index=batch_indices)
+        y_batch = torch.index_select(self.y, dim=0, index=batch_indices)
+
+        return x_batch, y_batch
+
+    def __next__(self):
+        if self.batch_index + self.batch_size > self._n_examples:
+            self.batch_index = 0
+            self._update_permutation()
+            raise StopIteration
+        else:
+            batch = self._get_batch()
+            self.batch_index += self.batch_size
+            return batch

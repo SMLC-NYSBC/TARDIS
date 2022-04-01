@@ -179,12 +179,12 @@ def import_tiff(img: str,
         dtype: Type of output data
     Return:
         image: Image array of [Z, Y, X] shape
-        pixel_size: None
+        pixel_size: 1
     """
     if not isfile(img):
         raise Warning("Indicated .tif file does not exist...")
 
-    return np.array(tif.imread(img), dtype=dtype), None
+    return np.array(tif.imread(img), dtype=dtype), 1
 
 
 def import_mrc(img: str):

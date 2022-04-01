@@ -1,5 +1,6 @@
 from os.path import join
 from os import listdir
+from shutil import move
 
 import numpy as np
 from tardis.slcpy_data_processing.utils.build_semantic_mask import draw_semantic
@@ -7,22 +8,30 @@ from tardis.slcpy_data_processing.utils.load_data import ImportDataFromAmira, \
     import_am, import_mrc, import_tiff
 from tardis.slcpy_data_processing.utils.trim import trim_with_stride
 
-"""
-# For each file
-    # Load data
-        # if .tif or .am require .am coord or _mask.tif _mask.am image exist
-        # if .tif, .mrc, .rec require .csv coord or _mask.tif, _mask.mrc, _mask.rec exist
-    # If coordinate file exist load coordinate file
-        # Check if coordinates are compatible with image shape
-        # Build semantic mask from coordinates
-    # Voxalize image to fit needed image size
-        # Save in train/imgs
-    # Voxalize mask to fir needed mask size
-        # Save in train/masks
-"""
 
+class BuildTrainDataSet:
+    """
+    MODULE FOR BUILDING TRAIN DATASET
 
-class BuildDataSet:
+    This module building a train dataset from each file in the specified dir.
+    Module working on the file as .tif/.mrc/.rec/.am and mask in image format
+    or .csv/.am
+        If mask as .csv module expect image file in format of .tif/.mrc/.rec/.am
+        If mask as .am module expect image file in format of .am
+
+    For the given dir, module recognize file, and then for each file couple
+    (e.g. image and mask) if needed it build mask from the point cloud
+    and voxalize image and mask for given size in each dim.
+
+    Files are saved in dir/train/imgs and dir/train/masks
+
+    Args:
+        dataset_dir: Directory with train test folders
+        circle_size: Size of the segmented object in nm
+        multi_layer: If True mask is build in RGB channel insted of gray (0-1)
+        tqdm: If True build with progressbar
+    """
+
     def __init__(self,
                  dataset_dir: str,
                  circle_size: int,
@@ -82,6 +91,11 @@ class BuildDataSet:
     def __builddataset__(self,
                          trim_xy: int,
                          trim_z: int):
+        """
+        Args:
+            trim_xy: Voxal size of output image in x and y dimension
+            trim_z: Voxal size of output image in z dimension
+        """
         """Load data, build mask if not image and voxalize"""
         coord = None
         img_counter = 0
@@ -155,3 +169,54 @@ class BuildDataSet:
                              clean_empty=True,
                              prefix='_mask',
                              stride=25)
+
+
+class BuildTestDataSet:
+    """
+    MODULE FOR BUILDING TEST DATASET
+
+    This module building a test dataset from training subset, by moving random
+    files from train to test directory.
+    Number of files is specified in %.
+
+    Files are saved in dir/test/imgs and dir/test/masks
+    Args:
+        dataset_dir: Directory with train test folders
+        train_test_ration: Percentage of dataset to be moved
+    """
+
+    def __init__(self,
+                 dataset_dir: str,
+                 train_test_ration: int):
+        self.dataset = dataset_dir
+        assert 'test' in listdir(dataset_dir) and 'train' in listdir(dataset_dir), \
+            f'Could not find train or test folder in directory {dataset_dir}'
+
+        self.image_list = listdir(join(dataset_dir, 'train', 'imgs'))
+        self.mask_list = listdir(join(dataset_dir, 'train', 'masks'))
+
+        self.train_test_ratio = (
+            len(self.image_list) * train_test_ration) // 100
+        if self.train_test_ratio == 0:
+            self.train_test_ratio = 1
+
+    def __builddataset__(self):
+        test_idx = []
+
+        for _ in range(self.train_test_ratio):
+            random_idx = np.random.choice(len(self.image_list))
+
+            while random_idx in test_idx:
+                random_idx = np.random.choice(len(self.image_list))
+            test_idx.append(random_idx)
+
+        test_image_idx = list(np.array(self.image_list)[test_idx])
+        for i in test_image_idx:
+            # Move image file to test dir
+            move(join(self.dataset, 'train', 'imgs', i),
+                 join(self.dataset, 'test', 'imgs', i))
+
+            # Move mask file to test dir
+            m = f'{i[:-4]}_mask.tif'
+            move(join(self.dataset, 'train', 'masks', m),
+                 join(self.dataset, 'test', 'masks', m))
