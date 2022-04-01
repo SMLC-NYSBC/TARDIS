@@ -26,8 +26,13 @@ setup(
                 "point cloud.",
     entry_points={
         'console_scripts': [
-            'tardis_cnn_train=tardis.train_image_segmentation:main', 
-            ],
+            'tardis_cnn_train=tardis.train_image_segmentation:main',
+            'tardis_cnn_predict=tardis.predict_image_segmentation:main',
+            'tardis_postprocessing=tardis.cnn_postprocess:main'
+            'tardis_pointcloud_train=tardis.train_pointcloud_segmentation:main',
+            'tardis_pointcloud_predict=tardis.segment_pointcloud:main',
+            'tardis_MT=tardis.predict_MTs:main'
+        ],
     },
     license="MIT License",
     long_description_content_type='text/x-rst',
