@@ -34,6 +34,7 @@ class Trainer:
                  validation_DataLoader=None,
                  lr_scheduler=False,
                  epochs=100,
+                 early_stop_rate=10,
                  tqdm=False,
                  checkpoint_name="Unet",
                  classification=False):
@@ -45,6 +46,7 @@ class Trainer:
         self.validation_DataLoader = validation_DataLoader
         self.lr_scheduler = lr_scheduler
         self.epochs = epochs
+        self.early_stop_rate = early_stop_rate
         self.tqdm = tqdm
         self.checkpoint_name = checkpoint_name
         self.classification = classification
@@ -72,7 +74,7 @@ class Trainer:
         else:
             mkdir('temp')
 
-        early_stoping = EarlyStopping(patience=10, min_delta=0)
+        early_stoping = EarlyStopping(patience=self.early_stop_rate, min_delta=0)
         progressbar = trange(self.epochs, desc='Progress')
         for i in progressbar:
             """Training block"""
