@@ -89,9 +89,8 @@ from tardis.version import version
               help='If True learning rate scheduler is used.',
               show_default=True)
 @click.option('-d', '--device',
-              default=click.Choice(['gpu', 'cpu', int],
-                                   case_sensitive=True),
-              type=(str, int),
+              default=0,
+              type=str,
               help='Define which device use for training: '
               'gpu: Use ID 0 gpus'
               'cpu: Usa CPU'
