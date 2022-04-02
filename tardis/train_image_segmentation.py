@@ -26,8 +26,13 @@ from tardis.version import version
               type=float,
               help='Percentage value of train dataset that will become test.',
               show_default=True)
-@click.option('-cnn', '--cnn_type',
+@click.option('-ps', '--patch_size',
               default=64,
+              type=int,
+              help='Size of image size used for prediction.',
+              show_default=True)
+@click.option('-cnn', '--cnn_type',
+              default='unet',
               type=click.Choice(['unet', 'resunet', 'unet3plus'],
                                 case_sensitive=True),
               help='Type of NN used for training.',
@@ -51,6 +56,16 @@ from tardis.version import version
               default=5,
               type=int,
               help='Convolution multiplayer for CNN layers.',
+              show_default=True)
+@click.option('-cs', '--cnn_structure',
+              default='gcl',
+              type=str,
+              help='Define structure of the convolution layer.'
+              'c - convolution'
+              'g - group normalization'
+              'b - batch normalization'
+              'r - ReLU'
+              'l - LeakyReLU',
               show_default=True)
 @click.option('-l', '--cnn_loss',
               default=click.Choice(['bce', 'dice', 'hybrid', 'adaptive_dice'],
@@ -103,10 +118,15 @@ from tardis.version import version
               type=float,
               help='If indicated, value of dropout for CNN.',
               show_default=True)
+@click.option('-tq', '--tqdm',
+              default=True,
+              type=bool,
+              help='If True, build with progressbar.',
+              show_default=True)
 @click.version_option(version=version)
 def main(training_dataset: str,
          train_test_ratio: float,
-         image_size: int,
+         patch_size: int,
          cnn_type: str,
          cnn_out_channel: int,
          taining_batch_size: int,
@@ -119,10 +139,13 @@ def main(training_dataset: str,
          device: str,
          epochs: int,
          early_stop: int,
+         tqdm: bool,
          loss_alpha: Optional[float] = None,
          cnn_checkpoint: Optional[str] = None,
          dropout_rate: Optional[float] = None):
-    """Test Description"""
+    """
+    MAIN MODULE FOR TRAINING CNN UNET/RESUNET/UNET3PLUS MODELS
+    """
     """Set environment"""
     train_imgs_dir = join(training_dataset, 'train', 'imgs')
     train_masks_dir = join(training_dataset, 'train', 'masks')
@@ -177,8 +200,8 @@ def main(training_dataset: str,
                                             circle_size=250,
                                             multi_layer=False,
                                             tqdm=True)
-        dataset_builder.__builddataset__(trim_xy=image_size,
-                                         trim_z=image_size)
+        dataset_builder.__builddataset__(trim_xy=patch_size,
+                                         trim_z=patch_size)
 
         """Build test DataSets if they don't exist"""
         dataset_builder = BuildTestDataSet(dataset_dir=training_dataset,
@@ -188,7 +211,7 @@ def main(training_dataset: str,
     """Build training and test dataset 2D/3D"""
     train_DL = DataLoader(dataset=VolumeDataset(img_dir=train_imgs_dir,
                                                 mask_dir=train_masks_dir,
-                                                size=image_size,
+                                                size=patch_size,
                                                 mask_suffix='_mask',
                                                 normalize='simple',
                                                 transform=True,
@@ -200,7 +223,7 @@ def main(training_dataset: str,
 
     test_DL = DataLoader(dataset=VolumeDataset(img_dir=test_imgs_dir,
                                                mask_dir=test_masks_dir,
-                                               size=image_size,
+                                               size=patch_size,
                                                mask_suffix='_mask',
                                                normalize='simple',
                                                transform=True,
@@ -216,7 +239,7 @@ def main(training_dataset: str,
     """Run Training loop"""
     train(train_dataloader=train_DL,
           test_dataloader=test_DL,
-          img_size=image_size,
+          img_size=patch_size,
           cnn_type=cnn_type,
           classification=False,
           dropout=dropout_rate,
@@ -228,9 +251,10 @@ def main(training_dataset: str,
           loss_alpha=loss_alpha,
           learning_rate=loss_lr_rate,
           learning_rate_scheduler=lr_rate_schedule,
+          early_stop_rate=early_stop,
+          tqdm=tqdm,
           device=device,
-          epochs=epochs,
-          early_stop_rate=early_stop)
+          epochs=epochs)
 
 
 if __name__ == '__main__':

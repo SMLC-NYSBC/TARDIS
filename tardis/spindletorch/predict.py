@@ -26,7 +26,7 @@ def predict(image_DL: DataLoader,
             cnn_composition: str,
             tqdm: bool,
             threshold: Optional[float] = None,
-            cnn_dropout: Optional[float] = None,):
+            cnn_dropout: Optional[float] = None):
     """
     PREDICTION MODULE
 

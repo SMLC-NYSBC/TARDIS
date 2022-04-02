@@ -33,6 +33,8 @@ def train(train_dataloader: DataLoader,
           loss_alpha: Optional[float] = None,
           learning_rate=0.001,
           learning_rate_scheduler=False,
+          early_stop_rate=10,
+          tqdm=True,
           device='gpu',
           epochs=100):
     img, mask = next(iter(train_dataloader))
@@ -114,7 +116,8 @@ def train(train_dataloader: DataLoader,
                       validation_DataLoader=test_dataloader,
                       epochs=epochs,
                       lr_scheduler=learning_rate_scheduler,
-                      notebook=False,
+                      early_stop_rate=early_stop_rate,
+                      tqdm=tqdm,
                       checkpoint_name=cnn_type,
                       classification=classification)
 
