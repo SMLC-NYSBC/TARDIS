@@ -21,7 +21,7 @@ from tardis.version import version
               help='Directory with train, test folder or folder with dataset '
               'to be used for training.',
               show_default=True)
-@click.option('-dir', '--train_test_ratio',
+@click.option('-ttr', '--train_test_ratio',
               default=10,
               type=float,
               help='Percentage value of train dataset that will become test.',
