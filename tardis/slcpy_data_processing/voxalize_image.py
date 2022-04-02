@@ -13,6 +13,7 @@ def ImageVoxalizer(images_dir: str,
                    mask_prefix: Optional[None] = '_mask',
                    trim_xy=64,
                    trim_z=1,
+                   clean_empty=False,
                    stride: Optional[int] = None,
                    tqdm=True):
     """
@@ -82,7 +83,7 @@ def ImageVoxalizer(images_dir: str,
                        trim_size_z=trim_z,
                        output=image_output,
                        image_counter=idx,
-                       clean_empty=False,
+                       clean_empty=clean_empty,
                        prefix=image_prefix)
         else:
             trim_with_stride(image=image,
@@ -90,6 +91,7 @@ def ImageVoxalizer(images_dir: str,
                              trim_size_z=trim_z,
                              output=image_output,
                              image_counter=idx,
+                             clean_empty=clean_empty,
                              prefix=image_prefix,
                              stride=stride)
 

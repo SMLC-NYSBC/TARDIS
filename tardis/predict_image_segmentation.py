@@ -4,12 +4,14 @@ from shutil import rmtree
 from typing import Optional
 
 import numpy as np
+import tifffile.tifffile as tif
+from torch.utils.data import DataLoader
 
 from tardis.spindletorch.predict import predict
-from tardis.slcpy_data_processing.image_postprocess import ImageToPointCloud
 from tardis.spindletorch.utils.dataset_loader import PredictionDataSet
-from torch.utils.data import DataLoader
-import tifffile.tifffile as tif
+from tardis.slcpy_data_processing.utils.trim import trim_image
+from tardis.slcpy_data_processing.utils.load_data import import_tiff, import_mrc, \
+    import_am
 
 
 def main(prediction_dir: str,
@@ -20,7 +22,6 @@ def main(prediction_dir: str,
          cnn_layers: int,
          cnn_multiplayer: int,
          tqdm: bool,
-         output: str,
          threshold: Optional[float] = None,
          dropout: Optional[float] = None):
     """
@@ -34,12 +35,25 @@ def main(prediction_dir: str,
         prediction_dir) if f.endswith(available_format)]
     assert len(predict_list) > 0, 'No file found in given direcotry!'
 
-    post_process = ImageToPointCloud(tqdm=tqdm)
-
     for i in predict_list:
         """Build temp dir"""
 
         """Voxalize image"""
+        if i.endswith('.tif'):
+            image = import_tiff(img=join(prediction_dir, i),
+                                dtype=np.uint8)
+        elif i.endswith(['.mrc', '.rec']):
+            image, _ = import_mrc(img=join(prediction_dir, i))
+        elif i.endswith('.am'):
+            image, _ = import_am(img=join(prediction_dir, i))
+
+        trim_image(image=image,
+                   trim_size_xy=patch_size,
+                   trim_size_z=patch_size,
+                   output=join(prediction_dir, 'temp', 'Patches'),
+                   image_counter=0,
+                   clean_empty=False,
+                   prefix='')
 
         """Predict image patches"""
         patches_DL = DataLoader(dataset=PredictionDataSet(img_dir=join(prediction_dir, 'temp', 'Patches'),
