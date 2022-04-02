@@ -176,7 +176,7 @@ def main(training_dataset: str,
 
     # If any incompatibility and data exist, build dataset
     if not dataset_test:
-        assert len([f for f in listdir(train_imgs_dir) if f.endswith('.tif')]) > 0, \
+        assert len([f for f in listdir(training_dataset) if f.endswith('.tif')]) > 0, \
             'Indicated folder for training do not have any compatible data or ' \
             'one of the following folders: '\
             'test/imgs; test/masks; train/imgs; train/masks'
