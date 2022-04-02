@@ -63,10 +63,12 @@ class Trainer:
         self.threshold = []
 
     def run_trainer(self):
-        if self.notebook:
-            from tqdm.notebook import trange
-        else:
+        if self.tqdm:
             from tqdm import trange
+
+            progressbar = trange(self.epochs, desc='Progress')
+        else:
+            progressbar = range(self.epochs)
 
         if isdir('temp'):
             rmtree('temp')
@@ -74,8 +76,8 @@ class Trainer:
         else:
             mkdir('temp')
 
-        early_stoping = EarlyStopping(patience=self.early_stop_rate, min_delta=0)
-        progressbar = trange(self.epochs, desc='Progress')
+        early_stoping = EarlyStopping(
+            patience=self.early_stop_rate, min_delta=0)
         for i in progressbar:
             """Training block"""
             self._train()
@@ -123,10 +125,9 @@ class Trainer:
     def _train(self):
 
         if self.tqdm:
-            from tqdm import tqdm
-            batch_iter = tqdm(enumerate(self.training_DataLoader),
-                              'Training',
-                              leave=False)
+            from tqdm import trange
+            batch_iter = trange(enumerate(self.training_DataLoader),
+                                'Training')
         else:
             batch_iter = enumerate(self.training_DataLoader)
 

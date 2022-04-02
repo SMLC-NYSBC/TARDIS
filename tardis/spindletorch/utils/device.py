@@ -1,4 +1,3 @@
-import re
 from typing import Optional
 import torch
 
@@ -21,6 +20,7 @@ def get_device(device: Optional[str] = 0):
         device = 'cpu'
 
     return device
+
 
 def device_is_int(device):
     try:

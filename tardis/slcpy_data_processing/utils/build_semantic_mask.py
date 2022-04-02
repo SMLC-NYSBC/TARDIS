@@ -38,7 +38,7 @@ def draw_semantic(mask_size: tuple,
 
         batch_iter = tqdm(range(len(segments)),
                           'Building semantic mask',
-                          leave=True)
+                          leave=False)
     else:
         batch_iter = range(len(segments))
 

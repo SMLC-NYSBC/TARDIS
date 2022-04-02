@@ -53,7 +53,7 @@ from tardis.version import version
               help='Number of convolution layer for NN.',
               show_default=True)
 @click.option('-cm', '--cnn_multiplayer',
-              default=5,
+              default=64,
               type=int,
               help='Convolution multiplayer for CNN layers.',
               show_default=True)
@@ -148,8 +148,8 @@ def main(training_dataset: str,
     """Set environment"""
     train_imgs_dir = join(training_dataset, 'train', 'imgs')
     train_masks_dir = join(training_dataset, 'train', 'masks')
-    test_imgs_dir = join(training_dataset, 'train', 'imgs')
-    test_masks_dir = join(training_dataset, 'train', 'masks')
+    test_imgs_dir = join(training_dataset, 'test', 'imgs')
+    test_masks_dir = join(training_dataset, 'test', 'masks')
     dataset_test = False
 
     # Check if dir has train/test folder and if folder have data
@@ -183,16 +183,16 @@ def main(training_dataset: str,
         if isdir(join(training_dataset, 'train')):
             rmtree(join(training_dataset, 'train'))
 
-            mkdir(join(training_dataset, 'train'))
-            mkdir(train_imgs_dir)
-            mkdir(train_masks_dir)
+        mkdir(join(training_dataset, 'train'))
+        mkdir(train_imgs_dir)
+        mkdir(train_masks_dir)
 
         if isdir(join(training_dataset, 'test')):
             rmtree(join(training_dataset, 'test'))
 
-            mkdir(join(training_dataset, 'test'))
-            mkdir(test_imgs_dir)
-            mkdir(test_masks_dir)
+        mkdir(join(training_dataset, 'test'))
+        mkdir(test_imgs_dir)
+        mkdir(test_masks_dir)
 
         """Build train DataSets if they don't exist"""
         dataset_builder = BuildTrainDataSet(dataset_dir=training_dataset,

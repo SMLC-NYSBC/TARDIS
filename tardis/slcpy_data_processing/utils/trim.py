@@ -1,5 +1,6 @@
 from math import ceil
 from os.path import join
+from typing import Optional
 
 import numpy as np
 from tifffile import tifffile as tif
@@ -148,7 +149,8 @@ def trim_with_stride(image: np.ndarray,
                      image_counter: int,
                      prefix='',
                      clean_empty=True,
-                     stride=25):
+                     stride=25,
+                     mask: Optional[np.ndarray] = None):
     """
     FUNCTION TO TRIMMED IMAGE AND MASKS TO SPECIFIED SIZE
 
@@ -165,6 +167,9 @@ def trim_with_stride(image: np.ndarray,
         prefix: Prefix name at the end of the file
         stride: Trimming step size
     """
+    if mask is not None:
+        assert image.shape == mask.shape, \
+            f'Image {image.shape} has different shape from mask {mask.shape}'
     if image.ndim == 4:  # 3D with RGB
         nz, ny, nx, nc = image.shape
         dim = 3
@@ -241,6 +246,11 @@ def trim_with_stride(image: np.ndarray,
             image_padded = np.pad(image,
                                   [(0, z_pad), (0, y_pad), (0, x_pad)],
                                   mode='constant')
+
+        if mask is not None:
+            mask_padded = np.pad(mask,
+                                 [(0, z_pad), (0, y_pad), (0, x_pad)],
+                                 mode='constant')
     else:
         if nc is not None:
             image_padded = np.pad(image,
@@ -250,6 +260,11 @@ def trim_with_stride(image: np.ndarray,
             image_padded = np.pad(image,
                                   [(0, y_pad), (0, x_pad)],
                                   mode='constant')
+
+            if mask is not None:
+                mask_padded = np.pad(mask,
+                                     [(0, y_pad), (0, x_pad)],
+                                     mode='constant')
 
     """Trim image and mask with stride"""
     z_start, z_stop = 0 - (trim_size_z - stride), 0
@@ -278,33 +293,60 @@ def trim_with_stride(image: np.ndarray,
                         trim_img = image_padded[z_start:z_stop,
                                                 y_start:y_stop,
                                                 x_start:x_stop]
+                        if mask is not None:
+                            trim_mask = mask_padded[z_start:z_stop,
+                                                    y_start:y_stop,
+                                                    x_start:x_stop]
                     elif dim == 2:
                         trim_img = image_padded[y_start:y_stop,
                                                 x_start:x_stop]
+                        if mask is not None:
+                            trim_mask = mask_padded[y_start:y_stop,
+                                                    x_start:x_stop]
                 else:
                     if dim == 3:
                         trim_img = image_padded[z_start:z_stop,
                                                 y_start:y_stop,
                                                 x_start:x_stop,
                                                 :]
+                        if mask is not None:
+                            trim_mask = mask_padded[z_start:z_stop,
+                                                    y_start:y_stop,
+                                                    x_start:x_stop]
                     elif dim == 2:
                         trim_img = image_padded[y_start:y_stop,
                                                 x_start:x_stop,
                                                 :]
+                        if mask is not None:
+                            trim_mask = mask_padded[z_start:z_stop,
+                                                    y_start:y_stop,
+                                                    x_start:x_stop]
 
-                if clean_empty:
-                    if not np.all(trim_image == 0):
+                if clean_empty and mask is not None:
+                    if not np.all(trim_mask == 0):
                         """Hard transform between int8 and uint8"""
                         if np.min(trim_img) < 0:
                             trim_img = trim_img + 128
 
+                        tif.imwrite(join(output, 'imgs', img_name),
+                                    np.array(trim_img, 'uint8'),
+                                    shape=trim_img.shape)
+                        tif.imwrite(join(output, 'masks', f'{img_name[:-4]}_mask.tif'),
+                                    np.array(trim_mask, 'uint8'),
+                                    shape=trim_mask.shape)
+                else:
+                    if mask is None:
                         tif.imwrite(join(output, img_name),
                                     np.array(trim_img, 'uint8'),
                                     shape=trim_img.shape)
-                else:
-                    tif.imwrite(join(output, img_name),
-                                np.array(trim_img, 'uint8'),
-                                shape=trim_img.shape)
+
+                    else:
+                        tif.imwrite(join(output, 'imgs', img_name),
+                                    np.array(trim_img, 'uint8'),
+                                    shape=trim_img.shape)
+                        tif.imwrite(join(output, 'masks', f'{img_name[:-4]}_mask.tif'),
+                                    np.array(trim_mask, 'uint8'),
+                                    shape=trim_mask.shape)
 
 
 def trim_label_mask(points: np.ndarray,

@@ -56,17 +56,17 @@ class BuildTrainDataSet:
         self.is_mask_image = False
         self.is_am = False
         if np.any(is_csv):  # Expect .csv as coordinate
-            assert sum(is_csv) * 2 == len(self.idx_img), \
+            assert sum(is_csv) * 2 == (len(self.idx_img) / 2), \
                 'Not all image file in directory has corresponding .csv file...'
             self.is_csv = True
         else:
             if np.any(is_mask_image):  # Expect image semantic mask as input
-                assert sum(is_mask_image) * 2 == len(self.idx_img), \
+                assert sum(is_mask_image) * 2 == (len(self.idx_img) / 2), \
                     'Not all image file in directory has corresponding _mask.* file...'
                 self.is_mask_image = True
             else:  # Expect .am as coordinate
-                assert len([f for f in self.idx_img if f.endswith('.am')]) == len(self.idx_img), \
-                    'Not all image file in directory has corresponding _mask.* file...'
+                assert len([f for f in self.idx_img if f.endswith('.CorrelationLines.am')]) == (len(self.idx_img) / 2), \
+                    'Not all image file in directory has corresponding _mask.am file...'
                 self.is_am = True
         assert np.any([self.is_csv, self.is_mask_image, self.is_am]), \
             'Could not find any compatible dataset. Refer to documentation for, ' \
@@ -99,16 +99,23 @@ class BuildTrainDataSet:
         """Load data, build mask if not image and voxalize"""
         coord = None
         img_counter = 0
+        if self.tqdm:
+            from tqdm import tqdm
 
-        for i in range(self.__len__()):
+            batch_iter = tqdm(range(self.__len__()),
+                              'Building Training dataset')
+        else:
+            batch_iter = range(self.__len__())
+
+        for i in batch_iter:
             """Load image data"""
             img_name = self.idx_img[i]
             mask_name = self.idx_mask[i]
             mask = None
 
             if img_name.endswith('.tif'):
-                image = import_tiff(join(self.dataset_dir, img_name),
-                                    dtype=np.uint8)
+                image, _ = import_tiff(join(self.dataset_dir, img_name),
+                                       dtype=np.uint8)
                 pixel_size = 1
             elif img_name.endswith(('.mrc', '.rec')):
                 image, pixel_size = import_mrc(join(self.dataset_dir,
@@ -150,24 +157,15 @@ class BuildTrainDataSet:
                                          multi_layer=self.multi_layer,
                                          tqdm=self.tqdm)
 
-            """Voxalize Image"""
+            """Voxalize Image and Mask"""
             trim_with_stride(image=image,
+                             mask=mask,
                              trim_size_xy=trim_xy,
                              trim_size_z=trim_z,
-                             output=join(self.dataset_dir, 'train', 'imgs'),
+                             output=join(self.dataset_dir, 'train'),
                              image_counter=img_counter,
                              clean_empty=True,
                              prefix='',
-                             stride=25)
-
-            """Voxalize Mask"""
-            trim_with_stride(image=mask,
-                             trim_size_xy=trim_xy,
-                             trim_size_z=trim_z,
-                             output=join(self.dataset_dir, 'train', 'masks'),
-                             image_counter=img_counter,
-                             clean_empty=True,
-                             prefix='_mask',
                              stride=25)
 
 
@@ -197,6 +195,8 @@ class BuildTestDataSet:
 
         self.train_test_ratio = (
             len(self.image_list) * train_test_ration) // 100
+        self.train_test_ratio = int(self.train_test_ratio)
+
         if self.train_test_ratio == 0:
             self.train_test_ratio = 1
 
