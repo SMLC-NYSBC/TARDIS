@@ -99,14 +99,14 @@ class BuildPointCloud:
         """Output point cloud [X x Y x Z]"""
         if len(image_point) == 2:
             """If 2D bring artificially Z dim == 0"""
-            coordinates = np.stack((image_point[1],
-                                    image_point[0],
-                                    np.zeros(image_point[0].shape))).T
+            coordinates_HD = np.stack((image_point[1],
+                                       image_point[0],
+                                       np.zeros(image_point[0].shape))).T
 
         elif len(image_point) == 3:
-            coordinates = np.stack((image_point[2],
-                                    image_point[1],
-                                    image_point[0])).T
+            coordinates_HD = np.stack((image_point[2],
+                                       image_point[1],
+                                       image_point[0])).T
 
         """CleanUp to avoid memory loss"""
         image_point = None
@@ -118,10 +118,10 @@ class BuildPointCloud:
             import open3d as o3d
 
             pcd = o3d.geometry.PointCloud()
-            pcd.points = o3d.utility.Vector3dVector(coordinates)
-            coordinates_ds = np.asarray(
+            pcd.points = o3d.utility.Vector3dVector(coordinates_HD)
+            coordinates_LD = np.asarray(
                 pcd.voxel_down_sample(voxel_size=down_sampling).points)
 
-            return coordinates_ds
+            return coordinates_HD, coordinates_LD
 
-        return coordinates
+        return coordinates_HD

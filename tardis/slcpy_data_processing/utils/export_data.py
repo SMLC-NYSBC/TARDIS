@@ -5,14 +5,12 @@ class NumpyToAmira:
     """
     Builder of Amira file from numpy array
 
-        Support for 3D only! 2D data are build with Z=0
+        Support for 3D only! If 2D data, 3D dim build with Z=0
 
-    coord_labels: Numpy array [Label x X x Y x Z] or [Label x X x Y] of
+    coord: Numpy array [Label x X x Y x Z] or [Label x X x Y] of
         shape [Length x Dim] / [x, (3,4)]
+    file_dir: Full direcotry for saving .am file
     """
-
-    def __init__(self):
-        pass
 
     @staticmethod
     def check_3D(coord: np.ndarray):
@@ -31,7 +29,8 @@ class NumpyToAmira:
 
     def _build_header(self,
                       coord: np.ndarray,
-                      file_dir: str):
+                      file_dir: str,
+                      name: str):
         vertex = int(np.max(coord[:, 0]) + 1) * 2
         edge = int(vertex / 2)
         point = int(coord.shape[0])
@@ -56,6 +55,8 @@ class NumpyToAmira:
     def _write_to_amira(self,
                         data: list,
                         file_dir: str):
+        assert file_dir.endswith('.am'), f'{file_dir} must be and .am file!'
+
         with open(file_dir, 'a+') as f:
             f.write('\r\n')
 

@@ -1,3 +1,6 @@
+import numpy as np
+
+
 class EarlyStopping():
     """
     Early stopping to stop the training when the loss does not improve after
@@ -33,3 +36,12 @@ class EarlyStopping():
             if self.counter >= self.patience:
                 print('INFO: Early stopping')
                 self.early_stop = True
+
+
+def check_uint8(image: np.ndarray):
+    if np.all(np.unique(image) == [0, 1]):
+        return image
+    elif np.all(np.unique(image) == [0, 254]) or np.all(np.unique(image) == [0, 255]):
+        return np.array(np.where(image > 1, 1, 0), dtype=np.int8)
+    else:
+        raise TypeError('Given file is not uint8 or int8')
