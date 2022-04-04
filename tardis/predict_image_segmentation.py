@@ -11,6 +11,7 @@ from torch.utils.data import DataLoader
 from tardis.slcpy_data_processing.utils.load_data import (import_am,
                                                           import_mrc,
                                                           import_tiff)
+from tardis.slcpy_data_processing.utils.stitch import StitchImages
 from tardis.slcpy_data_processing.utils.trim import trim_image
 from tardis.spindletorch.predict import predict
 from tardis.spindletorch.utils.dataset_loader import PredictionDataSet
@@ -25,8 +26,8 @@ from tardis.version import version
               help='Directory with images for prediction with CNN model.',
               show_default=True)
 @click.option('-ps', '--patch_size',
-              default=getcwd(),
-              type=str,
+              default=64,
+              type=int,
               help='Size of image size used for prediction.',
               show_default=True)
 @click.option('-cnn', '--cnn_type',
@@ -46,7 +47,7 @@ from tardis.version import version
               help='Number of convolution layer for NN.',
               show_default=True)
 @click.option('-cm', '--cnn_multiplayer',
-              default=5,
+              default=64,
               type=int,
               help='Convolution multiplayer for CNN layers.',
               show_default=True)
@@ -95,18 +96,27 @@ def main(prediction_dir: str,
         prediction_dir) if f.endswith(available_format)]
     assert len(predict_list) > 0, 'No file found in given direcotry!'
 
+    if cnn_type == 'multi':
+        cnn_type = ['unet', 'unet3plus']
+    else:
+        cnn_type = [cnn_type]
+
+    stitcher = StitchImages(tqdm=tqdm)
+
     for i in predict_list:
         """Build temp dir"""
         build_temp_dir(dir=prediction_dir)
 
         """Voxalize image"""
         if i.endswith('.tif'):
-            image = import_tiff(img=join(prediction_dir, i),
-                                dtype=np.uint8)
+            image, _ = import_tiff(img=join(prediction_dir, i),
+                                   dtype=np.uint8)
         elif i.endswith(['.mrc', '.rec']):
             image, _ = import_mrc(img=join(prediction_dir, i))
         elif i.endswith('.am'):
             image, _ = import_am(img=join(prediction_dir, i))
+
+        org_shape = image.shape
 
         trim_image(image=image,
                    trim_size_xy=patch_size,
@@ -115,6 +125,7 @@ def main(prediction_dir: str,
                    image_counter=0,
                    clean_empty=False,
                    prefix='')
+        del(image)
 
         """Predict image patches"""
         patches_DL = DataLoader(dataset=PredictionDataSet(img_dir=join(prediction_dir, 'temp', 'Patches'),
@@ -138,13 +149,13 @@ def main(prediction_dir: str,
                 threshold=threshold,
                 cnn_dropout=dropout)
 
-        """Stitch patches from temp dir"""
-        stitched_image = []
-
-        """Save point cloud, (Optional) image"""
-
+        """Stitch patches from temp dir and save image"""
         tif.imsave(file=join(prediction_dir, 'Prediction', i),
-                   data=np.array(stitched_image, dtype=np.int8))
+                   data=stitcher(image_dir=join(prediction_dir, 'temp', 'Prediction'),
+                                 output=None,
+                                 mask=True,
+                                 prefix='',
+                                 dtype=np.int8)[:org_shape[0], :org_shape[1], :org_shape[2]])
 
         """Clean-up temp dir"""
         rmtree(join(prediction_dir, 'temp'))

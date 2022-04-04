@@ -362,12 +362,12 @@ def import_am(img: str):
 
     am = open(img, 'r', encoding="iso-8859-1").read(8000)
     size = [word for word in am.split('\n') if word.startswith(
-        'define Lattice ')][0][15:].split(" ")
+            'define Lattice ')][0][15:].split(" ")
 
     nx, ny, nz = int(size[0]), int(size[1]), int(size[2])
 
     physical_size = str([word for word in am.split('\n') if
-                        word.startswith('    BoundingBox')]).split(" ")
+                         word.startswith('    BoundingBox')]).split(" ")
     if len(physical_size) == 0:
         physical_size = np.array((float(physical_size[6]),
                                   float(physical_size[8]),

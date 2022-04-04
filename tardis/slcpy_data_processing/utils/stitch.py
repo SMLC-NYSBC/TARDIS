@@ -37,13 +37,13 @@ class StitchImages:
                   idx: int):
         self.z = max(list(map(int,
                               [str.split(f[:-4], "_")[1] for f in file_list
-                                  if f.startswith(f'{idx}')]))) + 1
+                               if f.startswith(f'{idx}')]))) + 1
         self.y = max(list(map(int,
                               [str.split(f[:-4], "_")[2] for f in file_list
-                                  if f.startswith(f'{idx}')]))) + 1
+                               if f.startswith(f'{idx}')]))) + 1
         self.x = max(list(map(int,
                               [str.split(f[:-4], "_")[3] for f in file_list
-                                  if f.startswith(f'{idx}')]))) + 1
+                               if f.startswith(f'{idx}')]))) + 1
         self.stride = max(list(map(int,
                                    [str.split(f[:-4], "_")[4] for f in file_list
                                     if f.startswith(f'{idx}')])))
@@ -63,7 +63,8 @@ class StitchImages:
                  output: Optional[str] = None,
                  dtype=np.int8):
         """Extract information about images in dir_path"""
-        file_list = [f for f in listdir(image_dir) if isfile(join(image_dir, f))]
+        file_list = [f for f in listdir(
+            image_dir) if isfile(join(image_dir, f))]
         file_list = [f for f in file_list if f.endswith('.tif')]
 
         self.idx = max(list(map(int,
@@ -138,6 +139,7 @@ class StitchImages:
                             stitched_image[z_start:z_stop,
                                            y_start:y_stop,
                                            x_start:x_stop] = img
+
             if output is None:
                 return np.array(stitched_image, dtype=dtype)
             else:

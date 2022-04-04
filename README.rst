@@ -11,7 +11,6 @@ Semantic Label Converter [TARDIS]
 .. image:: https://readthedocs.org/projects/tardis/badge/?version=latest
         :target: https://tardis-pytorch.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
-
 ....
 
 * Documentation: https://tardis-pytorch.readthedocs.io/en/latest/

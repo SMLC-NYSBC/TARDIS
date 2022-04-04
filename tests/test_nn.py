@@ -70,8 +70,7 @@ class TestNetwork3D:
                                dropout=None)
 
                 with torch.no_grad():
-                    with torch.cuda.amp.autocast():
-                        input = nn(input)
+                    input = nn(input)
 
     def test_resunet(self):
         for i in self.image_sizes:
@@ -85,8 +84,7 @@ class TestNetwork3D:
                                   dropout=None)
 
                 with torch.no_grad():
-                    with torch.cuda.amp.autocast():
-                        input = nn(input)
+                    input = nn(input)
 
     def test_unet3plus(self):
         for i in self.image_sizes:

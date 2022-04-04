@@ -4,7 +4,7 @@ from shutil import rmtree
 from typing import Optional
 
 import click
-from tardis.spindletorch.utils.device import get_device
+from tardis.utils.device import get_device
 from torch.utils.data import DataLoader
 
 from tardis.slcpy_data_processing.build_training_dataset import BuildTestDataSet, \

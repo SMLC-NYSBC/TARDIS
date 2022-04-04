@@ -7,36 +7,35 @@ with open('README.rst') as readme_file:
 with open('docs/HISTORY.rst') as history_file:
     history = history_file.read()
 
+with open('requirements.txt') as r:
+    required = r.read().splitlines()
+
 setup(
     author=["Robert Kiewisz", "Tristan Bepler"],
     author_email='rkiewisz@nysbc.com',
     python_requires='>=3.8',
-    requirements=[],
-    classifiers=[
-        'Development Status :: Drafting Alpha Release',
-        'Intended Audience :: Developers/Research',
-        'Environment :: Console/WebApp',
-        'Environment :: GPU :: NVIDIA CUDA :: 11.1',
-        'License :: OSI Approved :: MIT License',
-        'Natural Language :: English',
-        'Programming Language :: Python :: 3.8',
-    ],
+    requirements=required,
+    classifiers=['Development Status :: Alpha Release',
+                 'Intended Audience :: Developers/Research',
+                 'Environment :: Console/WebApp',
+                 'Environment :: GPU :: NVIDIA CUDA :: >=11.3',
+                 'License :: OSI Approved :: MIT License',
+                 'Natural Language :: English',
+                 'Programming Language :: Python :: 3.8-3.9'],
     description="PyTorch segmentation of 2D/3D images such as electron tomography "
                 "(ET), Cryo-EM or fluorescent microscopy data into 3D segmented "
                 "point cloud.",
-    entry_points={
-        'console_scripts': [
-            'tardis_cnn_train=tardis.train_image_segmentation:main',
-            # 'tardis_cnn_predict=tardis.predict_image_segmentation:main',
-            # 'tardis_postprocessing=tardis.cnn_postprocess:main'
-            # 'tardis_pointcloud_train=tardis.train_pointcloud_segmentation:main',
-            # 'tardis_pointcloud_predict=tardis.segment_pointcloud:main',
-            # 'tardis_MT=tardis.predict_MTs:main',
-        ],
-    },
+    entry_points={'console_scripts': ['tardis_cnn_train=tardis.train_image_segmentation:main',
+                                      'tardis_cnn_predict=tardis.predict_image_segmentation:main', ],
+                  # 'tardis_postprocessing=tardis.cnn_postprocess:main'
+                  # 'tardis_pointcloud_train=tardis.train_pointcloud_segmentation:main',
+                  # 'tardis_pointcloud_predict=tardis.segment_pointcloud:main',
+                  # 'tardis_MT=tardis.predict_MTs:main'
+                  },
     license="MIT License",
     long_description_content_type='text/x-rst',
     long_description=readme,
+    history=history,
     include_package_data=True,
     keywords=['spindletorch', 'semantic segmentation', 'point cloud segmentation',
               'MT segmentation', 'UNet', 'Unet3Plus'],
