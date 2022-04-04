@@ -64,7 +64,7 @@ class TestDataLoader:
                                 drop_rate=1,
                                 downsampling_rate=None,
                                 normalize="simple",
-                                memory_save=True)
+                                memory_save=False)
 
         coords_v, imgs_v, graph_v, output_idx = train_DL.__getitem__(0)
 

@@ -7,3 +7,4 @@ torch>=1.10.0
 imagecodecs>=2021.8.26
 open3d>=0.15.1
 click>=8.0.4
+zarr>=2.8.1
