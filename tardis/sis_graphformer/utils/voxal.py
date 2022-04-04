@@ -45,7 +45,7 @@ class VoxalizeDataSetV2:
                  coord: np.ndarray,
                  image: Optional[np.ndarray] = None,
                  downsampling_threshold=500,
-                 downsampling_rate=2,
+                 downsampling_rate: Optional[float] = None,
                  init_voxal_size=500,
                  drop_rate=1,
                  graph=True,
@@ -184,20 +184,23 @@ class VoxalizeDataSetV2:
         Return:
             inx_bool: Boolen list of point to keep after downsampling
         """
+        if self.downsampling_rate is not None:
+            pcd = geometry.PointCloud()
+            pcd.points = utility.Vector3dVector(coord)
+            pcd = np.asarray(pcd.voxel_down_sample(self.downsampling_rate).points)
 
-        pcd = geometry.PointCloud()
-        pcd.points = utility.Vector3dVector(coord)
-        pcd = np.asarray(pcd.voxel_down_sample(self.downsampling_rate).points)
+            idx_ds = []
+            dist_matrix = distance.cdist(pcd, coord, 'euclidean')
 
-        idx_ds = []
-        dist_matrix = distance.cdist(pcd, coord, 'euclidean')
+            for i in dist_matrix:
+                idx = np.where(i == np.min(i))[0]
+                idx_ds.append(idx[0])
 
-        for i in dist_matrix:
-            idx = np.where(i == np.min(i))[0]
-            idx_ds.append(idx[0])
-
-        full_idx = list(range(0, coord.shape[0], 1))
-        idx_bool = [True if id in idx_ds else False for id in full_idx]
+            full_idx = list(range(0, coord.shape[0], 1))
+            idx_bool = [True if id in idx_ds else False for id in full_idx]
+        else:
+            full_idx = list(range(0, coord.shape[0], 1))
+            idx_bool = [True for p in full_idx]
 
         return idx_bool
 

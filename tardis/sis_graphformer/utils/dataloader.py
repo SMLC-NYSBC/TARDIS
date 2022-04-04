@@ -39,9 +39,9 @@ class GraphDataset(Dataset):
                  prefix: Optional[str] = None,
                  size=(12, 12),
                  voxal_size=500,
-                 downsampling=500000,
+                 downsampling_if=500,
                  drop_rate=1,
-                 downsampling_rate=2,
+                 downsampling_rate=2.1,
                  normalize="simple",
                  memory_save=True):
         # Coord setting
@@ -58,12 +58,11 @@ class GraphDataset(Dataset):
 
         # Voxal setting
         self.drop_rate = drop_rate
-        self.downsampling = downsampling
+        self.downsampling = downsampling_if
         self.downsampling_rate = downsampling_rate
         self.voxal_size = voxal_size
 
-        self.ids = [splitext(file)[0] for file in listdir(coord_dir)
-                    if not file.startswith('.')]
+        self.ids = [file for file in listdir(coord_dir) if file.endswith(f'.{coord_format}')]
 
     def __len__(self):
         return len(self.ids)
@@ -73,11 +72,11 @@ class GraphDataset(Dataset):
         idx = self.ids[i]
 
         if self.coord_format == "csv":
-            coord_file = join(self.coord_dir, str(idx) + '.csv')
+            coord_file = join(self.coord_dir, str(idx))
         elif self.coord_format == "npy":
-            coord_file = join(self.coord_dir, str(idx) + '.npy')
+            coord_file = join(self.coord_dir, str(idx))
         elif self.coord_format == "am":
-            coord_file = join(self.coord_dir, str(idx) + '.am')
+            coord_file = join(self.coord_dir, str(idx))
 
         if self.prefix is not None:
             img_idx = idx[:-len(self.prefix)]
@@ -85,7 +84,7 @@ class GraphDataset(Dataset):
             img_idx = idx
 
         if self.img_dir is not None:
-            img_file = join(self.img_dir, str(img_idx) + '.*')
+            img_file = join(self.img_dir, str(img_idx))
         else:
             img_file = None
 

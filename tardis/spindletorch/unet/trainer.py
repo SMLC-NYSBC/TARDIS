@@ -5,7 +5,7 @@ from torch import nn
 from os import mkdir, getcwd
 from os.path import isdir, join
 from shutil import rmtree
-from tardis.spindletorch.utils.utils import EarlyStopping
+from tardis.utils.utils import EarlyStopping
 
 
 class Trainer:

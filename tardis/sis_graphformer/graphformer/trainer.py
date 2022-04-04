@@ -7,7 +7,7 @@ import torch
 from tqdm import tqdm
 
 from torch.cuda.amp import GradScaler
-from tardis.sis_graphformer.utils.utils import EarlyStopping
+from tardis.utils.utils import EarlyStopping
 
 
 class Trainer:

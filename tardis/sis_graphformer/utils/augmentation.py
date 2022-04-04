@@ -49,8 +49,6 @@ def preprocess_data(coord: str,
         coord_label = np.load(coord)
 
     if coord[-3:] == ".am":
-        amira_import = ImportDataFromAmira(src_am=coord,
-                                           src_img=None)
         if image is None:
             amira_import = ImportDataFromAmira(src_am=coord,
                                                src_img=None)
@@ -71,12 +69,11 @@ def preprocess_data(coord: str,
         else:
             normalization = MinMaxNormalize(0, 255)
 
-        if image is not None and coord[-3:] != ".am":
-            if memory_save:
-                img_df = tiff.imread(image, aszarr=True)
-                img_stack = zarr.open(img_df, mode='r')
-            else:
-                img_stack = tiff.imread(image)
+        if memory_save:
+            img_df = tiff.imread(image, aszarr=True)
+            img_stack = zarr.open(img_df, mode='r')
+        else:
+            img_stack = tiff.imread(image)
 
         crop_tiff = Crop2D3D(image=img_stack,
                              size=size,
@@ -98,13 +95,18 @@ def preprocess_data(coord: str,
                 img[i, :] = np.array(crop_tiff(center_point=point)).flatten()
         if memory_save:
             img_df.close()
-    elif image.endswith('.am'):
-        img_df, pixel_size = amira_import.get_image()
+    elif image is not None and image.endswith('.am'):
+        if normalization == "simple":
+            normalization = SimpleNormalize()
+        else:
+            normalization = MinMaxNormalize(0, 255)
+
+        img_stack, pixel_size = amira_import.get_image()
 
         crop_tiff = Crop2D3D(image=img_stack,
                              size=size,
                              normalization=normalization,
-                             memory_save=memory_save)  # Z x Y x X
+                             memory_save=False)  # Z x Y x X
 
         if len(size) == 2:
             img = np.zeros((len(coords), size[0] * size[1]))
@@ -272,8 +274,6 @@ class Crop2D3D:
     def get_xyz_position(center_point: int,
                          size: int,
                          max_size: int):
-        assert size <= max_size, \
-            'Cropping frame must be smaller then image size!'
         x0 = center_point - (size / 2)
         x1 = center_point + (size / 2)
 
@@ -310,7 +310,12 @@ class Crop2D3D:
             else:
                 crop_img = self.image[z0:z1, y0:y1, x0:x1]
 
-        if len(center_point) == 2:
+            if crop_img.shape != (self.size[-1], self.size[0], self.size[1]):
+                crop_df = np.array(crop_img)
+                shape = crop_img.shape
+                crop_img = np.zeros((self.size[2], self.size[0], self.size[1]))
+                crop_img[0:shape[0], 0:shape[1], 0:shape[2]] = crop_df
+        elif len(center_point) == 2:
             x0, x1 = self.get_xyz_position(center_point=center_point[0],
                                            size=self.size[0],
                                            max_size=self.height)
@@ -322,5 +327,12 @@ class Crop2D3D:
             else:
                 crop_img = self.image[y0:y1, x0:x1]
 
+            if crop_img.shape != (self.size[0], self.size[1]):
+                crop_df = np.array(crop_img)
+                shape = crop_img.shape
+                crop_img = np.zeros((self.size[0], self.size[1]))
+                crop_img[0:shape[0], 0:shape[1]] = crop_df
+
         crop_img = self.normalization(crop_img)
+
         return crop_img
