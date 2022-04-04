@@ -6,7 +6,7 @@ import torch
 class TestGraphFormer:
 
     def rand_tensor(self,
-                          shape: tuple):
+                    shape: tuple):
         return torch.rand(shape)
 
     def test_nn_wo_img(self):
@@ -36,7 +36,8 @@ class TestGraphFormer:
                 for n_layer in [6, 3, 1]:
                     for n_head in [8, 4, 2, 1]:
                         model = CloudToGraph(n_out=1,
-                                             node_input=cal_node_input((32, 32, 32)),
+                                             node_input=cal_node_input(
+                                                 (32, 32, 32)),
                                              node_dim=n_dim,
                                              edge_dim=e_dim,
                                              num_layers=n_layer,
@@ -49,7 +50,8 @@ class TestGraphFormer:
                               padding_mask=None)
 
                         model = CloudToGraph(n_out=1,
-                                             node_input=cal_node_input((32, 32)),
+                                             node_input=cal_node_input(
+                                                 (32, 32)),
                                              node_dim=n_dim,
                                              edge_dim=e_dim,
                                              num_layers=n_layer,

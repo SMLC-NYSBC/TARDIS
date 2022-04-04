@@ -45,29 +45,30 @@ class BuildTrainDataSet:
         self.file_formats = ('.tif', '.am', '.mrc', '.rec')
         self.mask_format = ('_mask.tif', "_mask.mrc", '_mask.rec', '_mask.am')
 
+        """Check what file are in the folder to build dataset"""
         self.idx_img = [f for f in listdir(
             dataset_dir) if f.endswith(self.file_formats)]
         is_csv = [f for f in self.idx_img if f.endswith('.csv')]
         is_mask_image = [
             f for f in self.idx_img if f.endswith(self.mask_format)]
 
-        """Check what file are in the folder to build dataset"""
         self.is_csv = False
         self.is_mask_image = False
         self.is_am = False
-        if np.any(is_csv):  # Expect .csv as coordinate
-            assert sum(is_csv) * 2 == (len(self.idx_img) / 2), \
+        if len(is_csv) > 0:  # Expect .csv as coordinate
+            assert len(is_csv) * 2 == (len(self.idx_img) / 2), \
                 'Not all image file in directory has corresponding .csv file...'
             self.is_csv = True
         else:
-            if np.any(is_mask_image):  # Expect image semantic mask as input
-                assert sum(is_mask_image) * 2 == (len(self.idx_img) / 2), \
+            if len(is_mask_image) > 0:  # Expect image semantic mask as input
+                assert len(is_mask_image) == (len(self.idx_img) / 2), \
                     'Not all image file in directory has corresponding _mask.* file...'
                 self.is_mask_image = True
             else:  # Expect .am as coordinate
                 assert len([f for f in self.idx_img if f.endswith('.CorrelationLines.am')]) == (len(self.idx_img) / 2), \
-                    'Not all image file in directory has corresponding _mask.am file...'
+                    'Not all image file in directory has corresponding .CorrelationLines.am file...'
                 self.is_am = True
+
         assert np.any([self.is_csv, self.is_mask_image, self.is_am]), \
             'Could not find any compatible dataset. Refer to documentation for, ' \
             'how to structure your dataset properly!'
@@ -113,6 +114,7 @@ class BuildTrainDataSet:
             mask_name = self.idx_mask[i]
             mask = None
 
+            """Load image file"""
             if img_name.endswith('.tif'):
                 image, _ = import_tiff(join(self.dataset_dir, img_name),
                                        dtype=np.uint8)
@@ -131,8 +133,8 @@ class BuildTrainDataSet:
             """Load mask/coord data"""
             if self.is_mask_image:
                 if mask_name.endswith('_mask.tif'):
-                    mask = import_tiff(join(self.dataset_dir, img_name),
-                                       dtype=np.uint8)
+                    mask, _ = import_tiff(join(self.dataset_dir, img_name),
+                                          dtype=np.uint8)
                 elif mask_name.endswith(('_mask.mrc', '_mask.rec')):
                     mask, _ = import_mrc(join(self.dataset_dir,
                                               img_name))
@@ -144,6 +146,12 @@ class BuildTrainDataSet:
                                       delimiter=',')  # [ID x X x Y x Z]
                 if str(coord[0, 0]) == 'nan':
                     coord = coord[1:, :]
+            elif self.is_am:
+                if img_name.endswith('.tif') and pixel_size == 1:
+                    raise TypeError('Data are incompatible in this version. '
+                                    '.tif image and .am coordinate file are incompatible '
+                                    'pixel size was {pixel_size} which may yeald '
+                                    'incorrect drawing of the mask!')
 
             """Draw mask"""
             if coord is not None:

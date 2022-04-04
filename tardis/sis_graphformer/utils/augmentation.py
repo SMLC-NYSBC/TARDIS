@@ -105,7 +105,7 @@ def preprocess_data(coord: str,
                              size=size,
                              normalization=normalization,
                              memory_save=memory_save)  # Z x Y x X
-        
+
         if len(size) == 2:
             img = np.zeros((len(coords), size[0] * size[1]))
 

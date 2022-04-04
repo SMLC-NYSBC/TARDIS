@@ -176,6 +176,7 @@ class ImportDataFromAmira:
     def get_pixel_size(self):
         return self.pixel_size
 
+
 def import_tiff(img: str,
                 dtype=np.uint8):
     """

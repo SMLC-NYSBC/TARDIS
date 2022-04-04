@@ -68,9 +68,9 @@ from tardis.version import version
               'l - LeakyReLU',
               show_default=True)
 @click.option('-l', '--cnn_loss',
-              default=click.Choice(['bce', 'dice', 'hybrid', 'adaptive_dice'],
-                                   case_sensitive=True),
-              type=str,
+              default='bce',
+              type=click.Choice(['bce', 'dice', 'hybrid', 'adaptive_dice'],
+                                case_sensitive=True),
               help='Loss function use for training.',
               show_default=True)
 @click.option('-la', '--loss_alpha',
