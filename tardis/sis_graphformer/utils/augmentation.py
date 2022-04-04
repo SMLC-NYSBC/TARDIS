@@ -1,4 +1,3 @@
-from os import path
 from typing import Optional
 
 import numpy as np
@@ -50,16 +49,18 @@ def preprocess_data(coord: str,
         coord_label = np.load(coord)
 
     if coord[-3:] == ".am":
+        amira_import = ImportDataFromAmira(src_am=coord,
+                                           src_img=None)
         if image is None:
-            loader = LoadAmira(coord_am=coord,
-                               img_am=None,
-                               pixel_size=pixel_size)
-            coord_label = loader.build_coord_with_label()
+            amira_import = ImportDataFromAmira(src_am=coord,
+                                               src_img=None)
+            coord_label = amira_import.get_segmented_points()
+            pixel_size = amira_import.get_pixel_size()
         else:
-            loader = LoadAmira(coord_am=coord,
-                               img_am=image,
-                               pixel_size=pixel_size)
-            coord_label = loader.build_coord_with_label()
+            amira_import = ImportDataFromAmira(src_am=coord,
+                                               src_img=image)
+            coord_label = amira_import.get_segmented_points()
+            pixel_size = amira_import.get_pixel_size()
 
     coords = coord_label[:, 1:]
 
@@ -97,6 +98,27 @@ def preprocess_data(coord: str,
                 img[i, :] = np.array(crop_tiff(center_point=point)).flatten()
         if memory_save:
             img_df.close()
+    elif image.endswith('.am'):
+        img_df, pixel_size = amira_import.get_image()
+
+        crop_tiff = Crop2D3D(image=img_stack,
+                             size=size,
+                             normalization=normalization,
+                             memory_save=memory_save)  # Z x Y x X
+        
+        if len(size) == 2:
+            img = np.zeros((len(coords), size[0] * size[1]))
+
+            for i in range(img.shape[0]):
+                point = coords[i]  # X x Y
+                img[i, :] = np.array(crop_tiff(center_point=point)).flatten()
+
+        elif len(size) == 3:
+            img = np.zeros((len(coords), size[0] * size[1] * size[2]))
+
+            for i in range(img.shape[0]):
+                point = coords[i]  # X x Y x Z
+                img[i, :] = np.array(crop_tiff(center_point=point)).flatten()
     else:
         img = np.zeros(size)
 
@@ -152,7 +174,8 @@ class BuildGraph:
 
             # Check euclidian distance between fist and last point. if shorter then
             #  10 nm then connect
-            ends_distance = np.linalg.norm(self.coord[points_in_contour[0]][1:] - self.coord[points_in_contour[-1]][1:])
+            ends_distance = np.linalg.norm(
+                self.coord[points_in_contour[0]][1:] - self.coord[points_in_contour[-1]][1:])
 
             if self.pixel_size is not None:
                 if ends_distance < round(10 / self.pixel_size):
@@ -164,59 +187,6 @@ class BuildGraph:
                     self.graph[points_in_contour[-1], points_in_contour[0]] = 1
 
         return self.graph
-
-
-class LoadAmira:
-    """
-    OBJECT TO LOAD AND TRANSFORM 3D POINT CLOUD FROM .AM FILES
-
-    Args:
-        am_dir: Directory for the .am file with 3D point cloud
-    !Important! Object need additional raw .am file for calculating transformation
-
-    Modified from slcpy package
-    """
-
-    def __init__(self,
-                 coord_am: str,
-                 img_am: Optional[str] = None,
-                 pixel_size=None):
-        self.coord_am = coord_am
-        self.img_am = img_am
-        self.pixel_size = pixel_size
-
-        assert path.isfile(coord_am), \
-            'Indicated .am file does not exist!'
-
-        if img_am is not None:
-            assert path.isfile(img_am), \
-                'Indicated Image file is not .tif!'
-            assert path.isfile(img_am[:-3] + ".am"), \
-                'No corresponding raw .am files was found!'
-
-    def build_coord_with_label(self):
-        importer = ImportDataFromAmira(src_am=self.coord_am,
-                                       src_tiff=self.img_am,
-                                       pixel_size=self.pixel_size,
-                                       mask=True)
-        if self.pixel_size is None:
-            points = np.array(importer.get_raw_point().round(), dtype=np.int32)
-        else:
-            # Correct point coordinates for Amira tranformation
-            points = np.array(importer.get_points().round(), dtype=np.int32)
-
-        segments = importer.get_segments()
-
-        seg_idx = np.zeros((len(points), 1))
-        start = 0
-        for id, i in enumerate(segments):
-            stop = start + i[0]
-            seg_idx[start:stop, 0] = id
-            start = stop
-
-        coord_label = np.hstack((seg_idx, points))  # ID x X x Y x Z
-
-        return coord_label
 
 
 class SimpleNormalize:

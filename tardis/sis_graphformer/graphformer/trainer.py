@@ -31,7 +31,7 @@ class Trainer:
 
     def __init__(self,
                  model,
-                 node_input,
+                 node_input: bool,
                  device: str,
                  batch: int,
                  criterion,

@@ -131,7 +131,9 @@ class ImportDataFromAmira:
         return trans_x, trans_y, trans_z
 
     def get_points(self):
-        """Generate table of all points with coordinates in pixel"""
+        """
+        Output for point cloud as array of a shape [X, Y, Z]
+        """
         if self.src_img is not None:
             self.transformation = self.__read_am_transformation()
         else:
@@ -148,6 +150,9 @@ class ImportDataFromAmira:
         return points_coord / self.pixel_size
 
     def get_segmented_points(self):
+        """
+        Output for segmented point cloud as array of a shape [ID, X, Y, Z]
+        """
         points = self.get_points()
         segments = self.get_segments()
 
@@ -168,6 +173,8 @@ class ImportDataFromAmira:
     def get_image(self):
         return self.image, self.pixel_size
 
+    def get_pixel_size(self):
+        return self.pixel_size
 
 def import_tiff(img: str,
                 dtype=np.uint8):
