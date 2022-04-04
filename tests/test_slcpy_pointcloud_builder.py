@@ -46,18 +46,18 @@ class TestPointCloudBuilder:
 
     def test_pointcloud_downsample2D(self):
         pc, pc_ld = self.builder(image=self.point_cloud[5, :],
-                          euclidean_transform=False,
-                          label_size=250,
-                          down_sampling_voxal_size=50)
+                                 euclidean_transform=False,
+                                 label_size=250,
+                                 down_sampling_voxal_size=50)
 
         self.check_pointcloud(pc)
         self.check_pointcloud(pc_ld)
 
     def test_pointcloud_downsample3D(self):
         pc, pc_ld = self.builder(image=self.point_cloud,
-                          euclidean_transform=False,
-                          label_size=250,
-                          down_sampling_voxal_size=5)
+                                 euclidean_transform=False,
+                                 label_size=250,
+                                 down_sampling_voxal_size=5)
 
         self.check_pointcloud(pc)
         self.check_pointcloud(pc_ld)
