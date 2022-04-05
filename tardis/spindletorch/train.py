@@ -79,10 +79,11 @@ def train(train_dataloader: DataLoader,
     """Define Optimizer for training"""
     optimizer = optim.Adam(params=model.parameters(),
                            lr=learning_rate)
-    if cnn_checkpoint:
+    if cnn_checkpoint is not None:
         optimizer.load_state_dict(save_train['optimizer_state_dict'])
-    save_train = None
-    del(save_train)
+
+        save_train = None
+        del(save_train)
 
     """Learning rate for the optimizer"""
     if learning_rate_scheduler:

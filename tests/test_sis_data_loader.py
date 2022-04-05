@@ -55,7 +55,6 @@ class TestDataLoader:
     def test_training_DL(self):
         train_DL = GraphDataset(coord_dir=self.dir,
                                 coord_format="am",
-                                coord_downsample=None,
                                 img_dir=None,
                                 prefix='.CorrelationLines',
                                 size=(12, 12, 12),

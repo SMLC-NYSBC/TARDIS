@@ -70,11 +70,11 @@ class Trainer:
         else:
             progressbar = range(self.epochs)
 
-        if isdir('temp'):
-            rmtree('temp')
-            mkdir('temp')
+        if isdir('cnn_checkpoint'):
+            rmtree('cnn_checkpoint')
+            mkdir('cnn_checkpoint')
         else:
-            mkdir('temp')
+            mkdir('cnn_checkpoint')
 
         early_stoping = EarlyStopping(
             patience=self.early_stop_rate, min_delta=0)
@@ -93,13 +93,13 @@ class Trainer:
                 self.lr_scheduler.step()
 
             """ Save training metrics """
-            np.savetxt(join(getcwd(), 'temp', 'training_losses.csv'),
+            np.savetxt(join(getcwd(), 'cnn_checkpoint', 'training_losses.csv'),
                        self.training_loss,
                        delimiter=';')
-            np.savetxt(join(getcwd(), 'temp', 'validation_losses.csv'),
+            np.savetxt(join(getcwd(), 'cnn_checkpoint', 'validation_losses.csv'),
                        self.validation_loss,
                        delimiter=',')
-            np.savetxt(join(getcwd(), 'temp', 'accuracy.csv'),
+            np.savetxt(join(getcwd(), 'cnn_checkpoint', 'accuracy.csv'),
                        np.column_stack([self.accuracy,
                                         self.precision,
                                         self.recall,
@@ -111,13 +111,13 @@ class Trainer:
             if (np.array(self.f1)[:len(self.f1) - 1] < self.f1[len(self.f1) - 1]).all():
                 torch.save({'model_state_dict': self.model.state_dict(),
                             'optimizer_state_dict': self.optimizer.state_dict()},
-                           join(getcwd(), 'temp', 'checkpoint_{}.pth'.format(self.checkpoint_name)))
+                           join(getcwd(), 'cnn_checkpoint', 'checkpoint_{}.pth'.format(self.checkpoint_name)))
                 print(
                     f'Saved model checkpoint no. {i} for F1 {self.f1[len(self.f1) - 1]:.2f}')
 
             torch.save({'model_state_dict': self.model.state_dict(),
                         'optimizer_state_dict': self.optimizer.state_dict()},
-                       join(getcwd(), 'temp', 'model_weights.pth'))
+                       join(getcwd(), 'cnn_checkpoint', 'model_weights.pth'))
 
             if early_stoping.early_stop:
                 break

@@ -1,14 +1,52 @@
-def cal_node_input(patch_size: tuple):
+from os import listdir
+from os.path import join
+from shutil import move
+from typing import Optional
+
+
+def cal_node_input(patch_size: Optional[tuple] = None):
     """
     FUNCTION TO CALCULATE NUMBER OF NODE INPUTS BASED ON IMAGE PATCH SIZE
 
     Args:
         patch_size: Image patch size
     """
-    n_dim = len(patch_size)
-    node_input = 1
+    if patch_size is not None:
+        n_dim = len(patch_size)
+        node_input = 1
 
-    for i in range(n_dim):
-        node_input = node_input * patch_size[i]
+        for i in range(n_dim):
+            node_input = node_input * patch_size[i]
 
-    return node_input
+        return node_input
+    else:
+        return None
+
+
+def BuildTrainDataSet(dir: str,
+                      coord_format: tuple,
+                      with_img: Optional[str] = None,
+                      img_format: Optional[tuple] = None):
+    assert [f for f in listdir(dir) if f.endswith(coord_format)] > 0, \
+        f'No file found in given dir {dir}'
+    file_format = []
+
+    idx_coord = [f for f in listdir(dir) if f.endswith(coord_format)]
+
+    for i in idx_coord:
+        move(src=join(dir, i),
+             dst=join(dir, 'train', 'coords', i))
+    file_format.append([f for f in coord_format if idx_coord[0].endswith(f)][0])
+
+    if with_img:
+        assert [f for f in listdir(dir) if f.endswith(img_format)] > 0, \
+            f'No file found in given dir {dir}'
+
+        idx_coord = [f for f in listdir(dir) if f.endswith(img_format)]
+
+        for i in idx_coord:
+            move(src=join(dir, i),
+                 dst=join(dir, 'train', 'imgs', i))
+        file_format.append([f for f in img_format if idx_coord[0].endswith(f)][0])
+
+    return file_format

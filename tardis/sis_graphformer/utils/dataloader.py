@@ -30,14 +30,12 @@ class GraphDataset(Dataset):
         memory_save: If True data are loaded with memory save mode on
             (~10x faster computation).
     """
-
     def __init__(self,
                  coord_dir: str,
                  coord_format="csv",
-                 coord_downsample: Optional[str] = None,
                  img_dir: Optional[str] = None,
                  prefix: Optional[str] = None,
-                 size=(12, 12),
+                 size: Optional[tuple] = (12, 12),
                  voxal_size=500,
                  downsampling_if=500,
                  drop_rate=1,
@@ -47,7 +45,8 @@ class GraphDataset(Dataset):
         # Coord setting
         self.coord_dir = coord_dir
         self.coord_format = coord_format
-        self.coord_downsample = coord_downsample
+        if self.coord_format == '.CorrelationLines.am':
+            self.coord_format == 'am'
 
         # Image setting
         self.img_dir = img_dir
@@ -122,7 +121,6 @@ class PredictDataset(Dataset):
     def __init__(self,
                  coord_dir: str,
                  coord_format="csv",
-                 coord_downsample: Optional[str] = None,
                  img_dir: Optional[str] = None,
                  prefix: Optional[str] = None,
                  size=(12, 12),
@@ -135,7 +133,6 @@ class PredictDataset(Dataset):
         # Coord setting
         self.coord_dir = coord_dir
         self.coord_format = coord_format
-        self.coord_downsample = coord_downsample
 
         # Image setting
         self.img_dir = img_dir

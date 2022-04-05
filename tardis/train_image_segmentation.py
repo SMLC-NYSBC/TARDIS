@@ -1,16 +1,16 @@
-from os import listdir, mkdir, getcwd
+from os import getcwd, listdir, mkdir
 from os.path import isdir, join
 from shutil import rmtree
 from typing import Optional
 
 import click
-from tardis.utils.device import get_device
 from torch.utils.data import DataLoader
 
-from tardis.slcpy_data_processing.build_training_dataset import BuildTestDataSet, \
-    BuildTrainDataSet
+from tardis.slcpy_data_processing.build_training_dataset import BuildTrainDataSet
 from tardis.spindletorch.train import train
 from tardis.spindletorch.utils.dataset_loader import VolumeDataset
+from tardis.utils.device import get_device
+from tardis.utils.utils import check_dir, BuildTestDataSet
 from tardis.version import version
 
 
@@ -153,26 +153,13 @@ def main(training_dataset: str,
     dataset_test = False
 
     # Check if dir has train/test folder and if folder have data
-    if isdir(join(training_dataset, 'train')) and isdir(join(training_dataset, 'test')):
-        dataset_test = True
-
-        # Check if train img and mask exist and have same files
-        if isdir(train_imgs_dir) and isdir(train_masks_dir):
-            if len([f for f in listdir(train_imgs_dir) if f.endswith('.tif')]) == \
-                    len([f for f in listdir(train_masks_dir) if f.endswith('.tif')]):
-                if len([f for f in listdir(train_imgs_dir) if f.endswith('.tif')]) == 0:
-                    dataset_test = False
-            else:
-                dataset_test = False
-
-        # Check if test img and mask exist and have same files
-        if isdir(test_imgs_dir) and isdir(test_masks_dir):
-            if len([f for f in listdir(test_imgs_dir) if f.endswith('.tif')]) == \
-                    len([f for f in listdir(test_masks_dir) if f.endswith('.tif')]):
-                if len([f for f in listdir(test_imgs_dir) if f.endswith('.tif')]) == 0:
-                    dataset_test = False
-            else:
-                dataset_test = False
+    dataset_test = check_dir(dir=training_dataset,
+                             train_img=train_imgs_dir,
+                             train_mask=train_masks_dir,
+                             img_format=['.tif'],
+                             test_img=test_imgs_dir,
+                             test_mask=test_masks_dir,
+                             mask_format=['.tif'])
 
     # If any incompatibility and data exist, build dataset
     if not dataset_test:

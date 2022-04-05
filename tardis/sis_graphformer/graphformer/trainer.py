@@ -4,7 +4,6 @@ from shutil import rmtree
 
 import numpy as np
 import torch
-from tqdm import tqdm
 
 from torch.cuda.amp import GradScaler
 from tardis.utils.utils import EarlyStopping
@@ -41,7 +40,8 @@ class Trainer:
                  validation_step: int,
                  epochs: int,
                  checkpoint_name: str,
-                 lr_scheduler=None):
+                 lr_scheduler=None,
+                 tqdm=True):
         self.f1 = []
         self.recall = []
         self.precision = []
@@ -63,6 +63,7 @@ class Trainer:
         self.epochs = epochs
         self.checkpoint_name = checkpoint_name
         self.scaler = GradScaler()
+        self.tqdm = tqdm
 
     @ staticmethod
     def calculate_F1(logits,
@@ -89,29 +90,36 @@ class Trainer:
         return accuracy_score, precision_score, recall_score, F1_score
 
     def run_training(self):
-        progressbar = tqdm(range(self.epochs),
-                           'Epochs:',
-                           total=self.epochs,
-                           leave=False)
+        if self.tqdm:
+            from tqdm import tqdm
+
+            progressbar = tqdm(range(self.epochs),
+                               'Epochs:',
+                               total=self.epochs,
+                               leave=False)
+        else:
+            progressbar = range(self.epochs)
+
         early_stoping = EarlyStopping(patience=25, min_delta=0)
 
-        if isdir('temp'):
-            rmtree('temp')
-            mkdir('temp')
+        if isdir('GF_checkpoint'):
+            rmtree('GF_checkpoint')
+            mkdir('GF_checkpoint')
         else:
-            mkdir('temp')
+            mkdir('GF_checkpoint')
 
         for i in progressbar:
             """ For each Epoch load be t model from previous run"""
             self.train()
 
             self.validate()
-            early_stoping(val_loss=self.validation_loss[len(self.validation_loss) - 1])
+            early_stoping(
+                val_loss=self.validation_loss[len(self.validation_loss) - 1])
 
-            np.savetxt('temp/validation_losses.csv',
+            np.savetxt('GF_checkpoint/validation_losses.csv',
                        self.validation_loss,
                        delimiter=',')
-            np.savetxt('temp/accuracy.csv',
+            np.savetxt('GF_checkpoint/accuracy.csv',
                        np.column_stack([self.accuracy,
                                         self.precision,
                                         self.recall,
@@ -122,21 +130,28 @@ class Trainer:
             if (np.array(self.f1)[:len(self.f1) - 1] < self.f1[len(self.f1) - 1]).all():
                 torch.save({'model_state_dict': self.model.state_dict(),
                             'optimizer_state_dict': self.optimizer.state_dict()},
-                           'temp/checkpoint_{}.pth'.format(self.checkpoint_name))
-                print(f'Saved model checkpoint no. {i} for F1 {self.f1[len(self.f1) - 1]:.2f}')
+                           'GF_checkpoint/checkpoint_{}.pth'.format(self.checkpoint_name))
+                print(
+                    f'Saved model checkpoint no. {i} for F1 {self.f1[len(self.f1) - 1]:.2f}')
 
             torch.save({'model_state_dict': self.model.state_dict(),
                         'optimizer_state_dict': self.optimizer.state_dict()},
-                       join(getcwd(), 'temp', 'model_weights.pth'))
+                       join(getcwd(), 'GF_checkpoint', 'model_weights.pth'))
 
             if early_stoping.early_stop:
                 break
 
     def train(self):
-        train_progress = tqdm(enumerate(self.training_DataLoader),
-                              'Training:',
-                              total=len(self.training_DataLoader),
-                              leave=False)
+        if self.tqdm:
+            from tqdm import tqdm
+
+            train_progress = tqdm(enumerate(self.training_DataLoader),
+                                  'Training:',
+                                  total=len(self.training_DataLoader),
+                                  leave=False)
+        else:
+            train_progress = enumerate(self.training_DataLoader)
+
         self.model.train()
 
         for i, (x, y, z, _) in train_progress:
@@ -164,15 +179,16 @@ class Trainer:
                 self.optimizer.step()
 
                 self.training_loss.append(loss.item())
-                np.savetxt('temp/training_losses.csv',
+                np.savetxt('GF_checkpoint/training_losses.csv',
                            self.training_loss,
                            delimiter=',')
 
-                train_progress.set_description(f'Training: (loss {loss.item():.4f})')
+                train_progress.set_description(
+                    f'Training: (loss {loss.item():.4f})')
 
         """ Save current learning rate """
         self.learning_rate.append(self.optimizer.param_groups[0]['lr'])
-        np.savetxt('temp/lr_rates.csv',
+        np.savetxt('GF_checkpoint/lr_rates.csv',
                    self.learning_rate,
                    delimiter=',')
 
