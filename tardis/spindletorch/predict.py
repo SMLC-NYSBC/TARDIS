@@ -4,6 +4,7 @@ import numpy as np
 import tifffile.tifffile as tif
 import torch
 from tardis.spindletorch.unet.predictor import Predictor
+from tardis.spindletorch.utils.aws import get_weights_aws
 from tardis.spindletorch.utils.build_network import build_network
 from torch.utils.data import DataLoader
 from os.path import join
@@ -24,7 +25,9 @@ def predict(image_DL: DataLoader,
             cnn_layers: int,
             cnn_multiplayer: int,
             cnn_composition: str,
+            device: str,
             tqdm: bool,
+            checkpoints: Optional[tuple] = None,
             threshold: Optional[float] = None,
             cnn_dropout: Optional[float] = None):
     """
@@ -58,6 +61,10 @@ def predict(image_DL: DataLoader,
                                                   layer_components=cnn_composition,
                                                   no_groups=8,
                                                   prediction=True),
+                              checkpoint=checkpoints[0],
+                              network=cnn_type[0],
+                              subtype=str(cnn_multiplayer),
+                              device=device,
                               threshold=threshold,
                               tqdm=tqdm)
 
@@ -73,8 +80,22 @@ def predict(image_DL: DataLoader,
                                                         layer_components=cnn_composition,
                                                         no_groups=8,
                                                         prediction=True),
+                                    checkpoint=checkpoints[1],
+                                    network=cnn_type[1],
+                                    subtype=str(cnn_multiplayer),
+                                    device=device,
                                     threshold=threshold,
                                     tqdm=tqdm)
+
+        if checkpoints[1] is None:
+            image_predict.load_state_dict(torch.load(get_weights_aws(network=cnn_type[1],
+                                                                     subtype=str(
+                                                                         cnn_multiplayer),
+                                                                     save_weights=False),
+                                                     map_location=device)['model_state_dict'])
+        else:
+            image_predict.load_state_dict(torch.load(checkpoints[1],
+                                                     map_location=device)['model_state_dict'])
     else:
         image_predict_2 = None
 

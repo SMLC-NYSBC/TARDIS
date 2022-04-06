@@ -21,14 +21,20 @@ def build_new_dir(dir: str):
 
 
 def build_temp_dir(dir: str):
-    if isdir(join(dir, 'temp', 'Patches')) or isdir(join(dir, 'temp', 'Predictions')):
-        clean_up(dir=dir)
+    if isdir(join(dir, 'temp')):
+        if isdir(join(dir, 'temp', 'Patches')) or isdir(join(dir, 'temp', 'Predictions')):
+            clean_up(dir=dir)
 
-        mkdir(join(dir, 'temp', 'Patches'))
-        mkdir((join(dir, 'temp', 'Predictions')))
+            mkdir(join(dir, 'temp'))
+            mkdir(join(dir, 'temp', 'Patches'))
+            mkdir(join(dir, 'temp', 'Predictions'))
+        else:
+            mkdir(join(dir, 'temp', 'Patches'))
+            mkdir(join(dir, 'temp', 'Predictions'))
     else:
+        mkdir(join(dir, 'temp'))
         mkdir(join(dir, 'temp', 'Patches'))
-        mkdir((join(dir, 'temp', 'Predictions')))
+        mkdir(join(dir, 'temp', 'Predictions'))
 
 
 def clean_up(dir: str):

@@ -61,10 +61,23 @@ from tardis.version import version
               'r - ReLU'
               'l - LeakyReLU',
               show_default=True)
+@click.option('-ch', '--checkpoints',
+              default=(None, None),
+              type=(str, str),
+              help='Convolution multiplayer for CNN layers.',
+              show_default=True)
 @click.option('-dp', '--dropout',
               default=None,
               type=float,
               help='If not None, define dropout rate.',
+              show_default=True)
+@click.option('-d', '--device',
+              default=0,
+              type=str,
+              help='Define which device use for training: '
+              'gpu: Use ID 0 gpus'
+              'cpu: Usa CPU'
+              '0-9 - specified gpu device id to use',
               show_default=True)
 @click.option('-th', '--threshold',
               default=None,
@@ -84,6 +97,8 @@ def main(prediction_dir: str,
          cnn_layers: int,
          cnn_multiplayer: int,
          cnn_structure: str,
+         checkpoints: tuple,
+         device: str,
          tqdm: bool,
          threshold: Optional[float] = None,
          dropout: Optional[float] = None):
@@ -91,9 +106,8 @@ def main(prediction_dir: str,
     MAIN MODULE FOR PREDICTION WITH CNN UNET/RESUNET/UNET3PLUS MODELS
     """
     """Searching for available images for prediction"""
-    available_format = ['.tif', '.mrc', '.rec', '.am']
-    predict_list = [f for f in listdir(
-        prediction_dir) if f.endswith(available_format)]
+    available_format = ('.tif', '.mrc', '.rec', '.am')
+    predict_list = [f for f in listdir(prediction_dir) if f.endswith(available_format)]
     assert len(predict_list) > 0, 'No file found in given direcotry!'
 
     if cnn_type == 'multi':
@@ -111,7 +125,7 @@ def main(prediction_dir: str,
         if i.endswith('.tif'):
             image, _ = import_tiff(img=join(prediction_dir, i),
                                    dtype=np.uint8)
-        elif i.endswith(['.mrc', '.rec']):
+        elif i.endswith(('.mrc', '.rec')):
             image, _ = import_mrc(img=join(prediction_dir, i))
         elif i.endswith('.am'):
             image, _ = import_am(img=join(prediction_dir, i))
@@ -125,6 +139,8 @@ def main(prediction_dir: str,
                    image_counter=0,
                    clean_empty=False,
                    prefix='')
+
+        image = None
         del(image)
 
         """Predict image patches"""
@@ -145,7 +161,9 @@ def main(prediction_dir: str,
                 cnn_layers=cnn_layers,
                 cnn_multiplayer=cnn_multiplayer,
                 cnn_composition=cnn_structure,
+                checkpoints=checkpoints,
                 tqdm=tqdm,
+                device=device,
                 threshold=threshold,
                 cnn_dropout=dropout)
 

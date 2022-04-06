@@ -18,7 +18,7 @@ def get_weights_aws(network: str,
         save_weights: If True model is saved in temp repository
     """
     if network in ['unet', 'unet3plus']:
-        assert model in ['32', '64'], \
+        assert subtype in ['32', '64'], \
             'For Graphformer, pre train model must be selected!'
 
         weight = requests.get(

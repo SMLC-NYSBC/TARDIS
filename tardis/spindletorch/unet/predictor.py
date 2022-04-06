@@ -1,7 +1,8 @@
-
 from typing import Optional
 
 import torch
+
+from tardis.spindletorch.utils.aws import get_weights_aws
 
 
 class Predictor:
@@ -18,9 +19,20 @@ class Predictor:
     def __init__(self,
                  model,
                  device: str,
+                 checkpoint: Optional[str] = None,
+                 network: Optional[str] = None,
+                 subtype: Optional[str] = None,
                  threshold: Optional[float] = None,
                  tqdm=False):
         self.model = model
+        if checkpoint is None:
+            model.load_state_dict(torch.load(get_weights_aws(network, subtype,
+                                                             save_weights=False),
+                                             map_location=device)['model_state_dict'])
+        else:
+            model.load_state_dict(torch.load(checkpoint,
+                                             map_location=device)['model_state_dict'])
+
         self.model.eval()
 
         self.device = device

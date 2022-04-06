@@ -7,6 +7,8 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+GF_checkpoint/
+cnn_checkpoint/
 data/
 env/
 build/
