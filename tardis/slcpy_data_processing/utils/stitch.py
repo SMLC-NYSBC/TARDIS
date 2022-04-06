@@ -50,7 +50,6 @@ class StitchImages:
 
     def _calculate_dim(self,
                        image: np.ndarray):
-        print(image.shape)
         if image.ndim == 3:
             self.nz, self.ny, self.nx = image.shape
         else:

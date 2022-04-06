@@ -12,7 +12,7 @@ class ImageToPointCloud:
     def __call__(self,
                  image: Optional[str] = np.ndarray,
                  euclidean_transform=True,
-                 label_size=250,
+                 label_size=2.5,
                  down_sampling_voxal_size=None):
 
         return self.postprocess.build_point_cloud(image=image,

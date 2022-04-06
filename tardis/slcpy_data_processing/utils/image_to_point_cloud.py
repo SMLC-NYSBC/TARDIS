@@ -54,7 +54,7 @@ class BuildPointCloud:
     def build_point_cloud(self,
                           image: Optional[str] = np.ndarray,
                           edt=False,
-                          label_size=250,
+                          label_size=2.5,
                           down_sampling: Optional[float] = None):
         if self.tqdm:
             from tqdm import tqdm
@@ -63,8 +63,6 @@ class BuildPointCloud:
 
         if edt:
             import edt
-
-            label_size = label_size / 100
 
             """Calculate EDT and apply threshold based on predefine mask size"""
             if image.ndim == 2:
@@ -82,8 +80,7 @@ class BuildPointCloud:
                     edt_iter = range(image_edt.shape[0])
 
                 for i in edt_iter:
-                    image_edt[i, :] = np.where(
-                        edt.edt(image[i, :]) > label_size, 1, 0)
+                    image_edt[i, :] = np.where(edt.edt(image[i, :]) > label_size, 1, 0)
 
             """Skeletonization"""
             image_point = np.where(skeletonize_3d(image_edt) > 0)

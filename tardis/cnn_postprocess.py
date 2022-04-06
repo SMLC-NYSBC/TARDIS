@@ -63,7 +63,7 @@ def main(postprocess_dataset: str,
 
     """Setting up pos-processing"""
     post_processer = ImageToPointCloud(tqdm=True)
-    feature_size = feature_size * 10  # nm to Angstrom
+    feature_size = feature_size / 10  # Value for edt threshold
 
     if save_format in ['am', 'all']:
         am_convert = NumpyToAmira()
@@ -78,7 +78,7 @@ def main(postprocess_dataset: str,
     """For each file run post-processing"""
     for idx in batch_iter:
         """Check file type and correct to uin8 (aka 01 binnary type"""
-        image = check_uint8(tif.imread(idx))
+        image = check_uint8(tif.imread(join(postprocess_dataset, idx)))
 
         """Post-processing"""
         if downsample is None:
@@ -95,27 +95,27 @@ def main(postprocess_dataset: str,
 
         """Save point cloud"""
         if save_format in ['csv', 'all']:
-            np.savetxt(fname=join(postprocess_dataset, f'{postprocess_dataset}_HD.csv'),
+            np.savetxt(fname=join(postprocess_dataset, f'{idx[:-4]}_HD.csv'),
                        X=point_cloud_HD,
                        delimiter=',')
             if downsample is not None:
-                np.savetxt(fname=join(postprocess_dataset, f'{postprocess_dataset}_LD.csv'),
+                np.savetxt(fname=join(postprocess_dataset, f'{idx[:-4]}_LD.csv'),
                            X=point_cloud_LD,
                            delimiter=',')
 
         if save_format in ['npy', 'all']:
-            np.save(file=join(postprocess_dataset, f'{postprocess_dataset}_HD.npy'),
+            np.save(file=join(postprocess_dataset, f'{idx[:-4]}_HD.npy'),
                     arr=point_cloud_HD)
             if downsample is not None:
-                np.save(file=join(postprocess_dataset, f'{postprocess_dataset}_LD.npy'),
+                np.save(file=join(postprocess_dataset, f'{idx[:-4]}_LD.npy'),
                         arr=point_cloud_LD)
 
         if save_format in ['am', 'all']:
             am_convert.export_amira(coord=point_cloud_HD,
-                                    file_dir=join(postprocess_dataset, f'{postprocess_dataset}_HD.am'))
+                                    file_dir=join(postprocess_dataset, f'{idx[:-4]}_HD.am'))
             if downsample is not None:
                 am_convert.export_amira(coord=point_cloud_HD,
-                                        file_dir=join(postprocess_dataset, f'{postprocess_dataset}_LD.am'))
+                                        file_dir=join(postprocess_dataset, f'{idx[:-4]}_LD.am'))
 
 
 if __name__ == '__main__':
