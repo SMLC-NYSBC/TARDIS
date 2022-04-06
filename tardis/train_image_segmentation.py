@@ -1,7 +1,6 @@
 from os import getcwd, listdir, mkdir
 from os.path import isdir, join
 from shutil import rmtree
-from sys import prefix
 from typing import Optional
 
 import click
@@ -152,19 +151,21 @@ def main(training_dataset: str,
     test_imgs_dir = join(training_dataset, 'test', 'imgs')
     test_masks_dir = join(training_dataset, 'test', 'masks')
     dataset_test = False
+    img_format = ('.tif', '.am', '.rmc', '.rec')
 
     # Check if dir has train/test folder and if folder have data
     dataset_test = check_dir(dir=training_dataset,
+                             with_img=True,
                              train_img=train_imgs_dir,
                              train_mask=train_masks_dir,
-                             img_format=['.tif'],
+                             img_format='.tif',
                              test_img=test_imgs_dir,
                              test_mask=test_masks_dir,
-                             mask_format=['.tif'])
+                             mask_format='_mask.tif')
 
     # If any incompatibility and data exist, build dataset
     if not dataset_test:
-        assert len([f for f in listdir(training_dataset) if f.endswith('.tif')]) > 0, \
+        assert len([f for f in listdir(training_dataset) if f.endswith(img_format)]) > 0, \
             'Indicated folder for training do not have any compatible data or ' \
             'one of the following folders: '\
             'test/imgs; test/masks; train/imgs; train/masks'
@@ -193,7 +194,7 @@ def main(training_dataset: str,
         """Build test DataSets if they don't exist"""
         dataset_builder = BuildTestDataSet(dataset_dir=training_dataset,
                                            train_test_ration=train_test_ratio,
-                                           prefix=prefix)
+                                           prefix='_mask')
         dataset_builder.__builddataset__()
 
     """Build training and test dataset 2D/3D"""

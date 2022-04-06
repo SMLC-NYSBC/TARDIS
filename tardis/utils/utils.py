@@ -124,8 +124,7 @@ class BuildTestDataSet:
         self.image_list = listdir(join(dataset_dir, 'train', 'imgs'))
         self.mask_list = listdir(join(dataset_dir, 'train', 'masks'))
 
-        self.train_test_ratio = (
-            len(self.mask_list) * train_test_ration) // 100
+        self.train_test_ratio = (len(self.mask_list) * train_test_ration) // 100
         self.train_test_ratio = int(self.train_test_ratio)
 
         if self.train_test_ratio == 0:
@@ -154,7 +153,7 @@ class BuildTestDataSet:
         else:
             test_image_idx = []
             test_mask_idx = list(np.array(self.mask_list)[test_idx])
-
+        print(test_image_idx)
         for i in range(len(test_idx)):
             if len(self.image_list) != 0:
                 # Move image file to test dir

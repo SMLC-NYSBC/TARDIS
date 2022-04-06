@@ -125,9 +125,9 @@ class Trainer:
     def _train(self):
 
         if self.tqdm:
-            from tqdm import trange
-            batch_iter = trange(enumerate(self.training_DataLoader),
-                                'Training')
+            from tqdm import tqdm
+            batch_iter = tqdm(enumerate(self.training_DataLoader),
+                              'Training')
         else:
             batch_iter = enumerate(self.training_DataLoader)
 
