@@ -1,4 +1,4 @@
-from os import listdir, mkdir
+from os import getcwd, listdir, mkdir
 from os.path import isdir, join
 from shutil import rmtree
 
@@ -21,39 +21,163 @@ from tardis.version import version
 
 
 @click.command()
+@click.option('-dir', '--pointcloud_dir',
+              default=getcwd(),
+              type=str,
+              help='Directory with train, test folder or folder with dataset '
+              'to be used for training.',
+              show_default=True)
+@click.option('-wi', '--with_img',
+              default=False,
+              type=bool,
+              help='Directory with train, test folder or folder with dataset ',
+              show_default=True)
+@click.option('-ps', '--patch_size',
+              default=None,
+              type=int,
+              help='If not None, patch size of images for GF',
+              show_default=True)
+@click.option('-pf', '--prefix',
+              default=None,
+              type=str,
+              help='If not None, prefix name for coord data',
+              show_default=True)
+@click.option('-ttr', '--train_test_ratio',
+              default=10,
+              type=float,
+              help='Percentage value of train dataset that will become test.',
+              show_default=True)
+@click.option('-go', '--GF_out',
+              default=1,
+              type=int,
+              help='Number of output channels in GF.',
+              show_default=True)
+@click.option('-gn', '--GF_node_dim',
+              default=256,
+              type=int,
+              help='Number embedding channels for nodes.',
+              show_default=True)
+@click.option('-ge', '--GF_edge_dim',
+              default=128,
+              type=int,
+              help='Number embedding channels for edges.',
+              show_default=True)
+@click.option('-gl', '--GF_layers',
+              default=6,
+              type=int,
+              help='Number of GF layers',
+              show_default=True)
+@click.option('-gh', '--GF_heads',
+              default=8,
+              type=int,
+              help='Number of GF heads in MHA',
+              show_default=True)
+@click.option('-gd', '--GF_dropout',
+              default=0,
+              type=float,
+              help='If 0, dropout is turn-off. Else indicate dropout rate',
+              show_default=True)
+@click.option('-gds', '--GF_dist_sigma',
+              default=16,
+              type=int,
+              help='Distance embedding sigma value used for initial distance embedding of distances',
+              show_default=True)
+@click.option('-dv', '--DL_voxal_size',
+              default=500,
+              type=int,
+              help='Max voxal size for point cloud with number of point greater then threshold',
+              show_default=True)
+@click.option('-dd', '--DL_drop_rate',
+              default=10,
+              type=int,
+              help='Drop rate of voxal size used for optimizing voxal size',
+              show_default=True)
+@click.option('-dds', '--DL_downsampling',
+              default=10,
+              type=int,
+              help='Number of point threshold for voxal optimization',
+              show_default=True)
+@click.option('-ddsr', '--DL_downsampling_rate',
+              default=5,
+              type=float,
+              help='Downsampling value for each point cloud',
+              show_default=True)
+@click.option('-b', '--batch_size',
+              default=25,
+              type=float,
+              help='Downsampling value for each point cloud',
+              show_default=True)
+@click.option('-glo', '--GF_loss',
+              default='bce',
+              type=click.Choice(['bce', 'dice', 'sfl']),
+              help='Type of loss function use for training',
+              show_default=True)
+@click.option('-lr', '--loss_lr_rate',
+              default=0.001,
+              type=float,
+              help='Learning rate',
+              show_default=True)
+@click.option('-lrs', '--lr_rate_schedule',
+              default=False,
+              type=bool,
+              help='If True, use learning rate scheduler [StepLR]',
+              show_default=True)
+@click.option('-gch', '--GF_checkpoint',
+              default=None,
+              type=str,
+              help='If not None, directory to checkpoint',
+              show_default=True)
+@click.option('-d', '--device',
+              default=0,
+              type=str,
+              help='Define which device use for training: '
+              'gpu: Use ID 0 gpus'
+              'cpu: Usa CPU'
+              '0-9 - specified gpu device id to use',
+              show_default=True)
+@click.option('-e', '--epochs',
+              default=100,
+              type=int,
+              help='Number of epoches.',
+              show_default=True)
+@click.option('-tq', '--tqdm',
+              default=True,
+              type=bool,
+              help='If True, build with progressbar.',
+              show_default=True)
 @click.version_option(version=version)
 def main(pointcloud_dir: str,
-         img_dir,
+         with_img: bool,
          patch_size,
          prefix,
          train_test_ratio: float,
-         GF_out: int,
-         GF_node_dim: int,
-         GF_edge_dim: int,
-         GF_layers: int,
-         GF_heads: int,
-         GF_dropout: float,
-         GF_dist_sigma: int,
-         DL_voxal_size: int,
-         DL_drop_rate: float,
-         DL_downsampling,
-         DL_downsampling_rate,
+         gf_out: int,
+         gf_node_dim: int,
+         gf_edge_dim: int,
+         gf_layers: int,
+         gf_heads: int,
+         gf_dropout: float,
+         gf_dist_sigma: int,
+         dl_voxal_size: int,
+         dl_drop_rate: float,
+         dl_downsampling,
+         dl_downsampling_rate,
          batch_size: int,
-         GF_loss: str,
+         gf_loss: str,
          loss_lr_rate: float,
          lr_rate_schedule: bool,
-         GF_checkpoint,
+         gf_checkpoint,
          device: str,
-         epoches: int,
+         epochs: int,
          tqdm: bool,):
     """Check directory for data compatibility"""
     train_imgs_dir = join(pointcloud_dir, 'train', 'imgs')
-    train_coords_dir = join(pointcloud_dir, 'train', 'coords')
+    train_coords_dir = join(pointcloud_dir, 'train', 'masks')
     test_imgs_dir = join(pointcloud_dir, 'test', 'imgs')
-    test_coords_dir = join(pointcloud_dir, 'test', 'coords')
+    test_coords_dir = join(pointcloud_dir, 'test', 'masks')
 
-    img_format = ['.tif', '.am', '.mrc', '.rec']
-    coord_format = ['.CorrelationLines.am', '.npy', '.csv']
+    img_format = ('.tif', '.tiff', '.am', '.mrc', '.rec')
+    coord_format = ('.CorrelationLines.am', '.npy', '.csv')
     dataset_test = False
 
     # Check if dir has train/test folder and if folder have data
@@ -63,83 +187,90 @@ def main(pointcloud_dir: str,
                              img_format=img_format,
                              test_img=test_imgs_dir,
                              test_mask=test_coords_dir,
-                             mask_format=coord_format)
+                             mask_format=coord_format,
+                             with_img=with_img)
 
     """Set-up environment"""
     if not dataset_test:
-        assert len([f for f in listdir(pointcloud_dir) if f.endswith(img_format)]) > 0, \
+        assert len([f for f in listdir(pointcloud_dir) if f.endswith(coord_format)]) > 0, \
             'Indicated folder for training do not have any compatible data or ' \
             'one of the following folders: '\
             'test/imgs; test/masks; train/imgs; train/masks'
 
         if isdir(join(pointcloud_dir, 'train')):
             rmtree(join(pointcloud_dir, 'train'))
-
         mkdir(join(pointcloud_dir, 'train'))
         mkdir(train_imgs_dir)
         mkdir(train_coords_dir)
 
         if isdir(join(pointcloud_dir, 'test')):
             rmtree(join(pointcloud_dir, 'test'))
-
         mkdir(join(pointcloud_dir, 'test'))
         mkdir(test_imgs_dir)
-        mkdir(train_coords_dir)
+        mkdir(test_coords_dir)
 
-    """Move data to setuped dir"""
-    coord_format = BuildTrainDataSet(dir=pointcloud_dir,
-                                     coord_format=coord_format,
-                                     with_img=img_dir,
-                                     img_format=img_format)
-    BuildTestDataSet(dir=pointcloud_dir,
-                     train_test_ration=train_test_ratio)
+        """Move data to setuped dir"""
+        coord_format = BuildTrainDataSet(dir=pointcloud_dir,
+                                         coord_format=coord_format,
+                                         with_img=with_img,
+                                         img_format=img_format)
+
+        build_test = BuildTestDataSet(dataset_dir=pointcloud_dir,
+                                      train_test_ration=train_test_ratio,
+                                      prefix=prefix)
+        build_test.__builddataset__()
+
+    else:
+        coord_format = [f for f in coord_format if listdir(train_coords_dir)[
+            0].endswith(f)]
+
+        if with_img:
+            coord_format.append(
+                [f for f in img_format if listdir(train_imgs_dir)[0].endswith(f)][0])
+        else:
+            train_imgs_dir = None
 
     """Build dataset for training/validation"""
     dl_train_graph = DataLoader(dataset=GraphDataset(coord_dir=train_coords_dir,
-                                                     coord_format=coord_format[0][1:],
+                                                     coord_format=coord_format,
                                                      img_dir=train_imgs_dir,
                                                      prefix=prefix,
                                                      size=patch_size,
-                                                     drop_rate=DL_drop_rate,
-                                                     normalize="simple",
-                                                     downsampling=DL_downsampling,
-                                                     downsampling_rate=DL_downsampling_rate,
-                                                     voxal_size=DL_voxal_size,
+                                                     drop_rate=dl_drop_rate,
+                                                     normalize="minmax",
+                                                     downsampling_if=dl_downsampling,
+                                                     downsampling_rate=dl_downsampling_rate,
+                                                     voxal_size=dl_voxal_size,
                                                      memory_save=False),
                                 batch_size=1,
                                 shuffle=True,
                                 pin_memory=True)
 
-    dl_test_graph = DataLoader(dataset=GraphDataset(coord_dir=test_imgs_dir,
+    dl_test_graph = DataLoader(dataset=GraphDataset(coord_dir=train_coords_dir,
                                                     coord_format=coord_format,
-                                                    img_dir=test_coords_dir,
+                                                    img_dir=train_imgs_dir,
                                                     prefix=prefix,
                                                     size=patch_size,
-                                                    normalize="simple",
-                                                    voxal_size=DL_voxal_size,
-                                                    downsampling_if=DL_downsampling,
-                                                    downsampling_rate=DL_downsampling_rate,
-                                                    drop_rate=DL_drop_rate,
+                                                    normalize="minmax",
+                                                    voxal_size=dl_voxal_size,
+                                                    downsampling_if=dl_downsampling,
+                                                    downsampling_rate=dl_downsampling_rate,
+                                                    drop_rate=dl_drop_rate,
                                                     memory_save=False),
                                batch_size=1,
                                shuffle=False,
                                pin_memory=True)
 
     """Setup training"""
-    if img_dir is None:
-        train_with_images = False
-    else:
-        train_with_images = True
-
     device = get_device(device)
-    model = CloudToGraph(n_out=GF_out,
+    model = CloudToGraph(n_out=gf_out,
                          node_input=cal_node_input(patch_size),
-                         node_dim=GF_node_dim,
-                         edge_dim=GF_edge_dim,
-                         num_layers=GF_layers,
-                         num_heads=GF_heads,
-                         dropout_rate=GF_dropout,
-                         coord_embed_sigma=GF_dist_sigma,
+                         node_dim=gf_node_dim,
+                         edge_dim=gf_edge_dim,
+                         num_layers=gf_layers,
+                         num_heads=gf_heads,
+                         dropout_rate=gf_dropout,
+                         coord_embed_sigma=gf_dist_sigma,
                          predict=False)
 
     coord, img, graph, _ = next(iter(dl_train_graph))
@@ -151,17 +282,17 @@ def main(pointcloud_dir: str,
           f'class: {graph[0].unique()}; '
           f'type: {graph[0].dtype}')
 
-    if GF_loss == "dice":
+    if gf_loss == "dice":
         loss_fn = DiceLoss()
-    if GF_loss == "bce":
+    if gf_loss == "bce":
         loss_fn = BCELoss()
-    if GF_loss == 'sfl':
+    if gf_loss == 'sfl':
         loss_fn = SigmoidFocalLoss()
 
     optimizer = optim.Adam(params=model.parameters(),
                            lr=loss_lr_rate)
-    if GF_checkpoint is not None:
-        save_train = join(GF_checkpoint)
+    if gf_checkpoint is not None:
+        save_train = join(gf_checkpoint)
 
         save_train = torch.load(join(save_train))
         model.load_state_dict(save_train['model_state_dict'])
@@ -177,19 +308,19 @@ def main(pointcloud_dir: str,
         learning_rate_scheduler = None
 
     print(f"Training is started on {device}, with: "
-          f"Loss function = {GF_loss} "
+          f"Loss function = {gf_loss} "
           f"LR = {optimizer.param_groups[0]['lr']}, and "
           f"LRS = {learning_rate_scheduler}")
 
     print('The Network was build:')
     print(f"Network: Graphformer, "
-          f"No. of Layers: {GF_layers} with {GF_heads} heads, "
-          f"Each layer is build of {GF_node_dim} nodes, {GF_edge_dim} edges embedding, "
+          f"No. of Layers: {gf_layers} with {gf_heads} heads, "
+          f"Each layer is build of {gf_node_dim} nodes, {gf_edge_dim} edges embedding, "
           f"Image patch size: {patch_size}, ")
 
     """Train"""
     train = Trainer(model=model.to(device),
-                    node_input=train_with_images,
+                    node_input=with_img,
                     device=device,
                     batch=batch_size,
                     criterion=loss_fn,
@@ -197,9 +328,13 @@ def main(pointcloud_dir: str,
                     training_DataLoader=dl_train_graph,
                     validation_DataLoader=dl_test_graph,
                     validation_step=1,
-                    epochs=epoches,
+                    epochs=epochs,
                     checkpoint_name='GF',
                     lr_scheduler=learning_rate_scheduler,
                     tqdm=tqdm)
 
     train.run_training()
+
+
+if __name__ == '__main__':
+    main()

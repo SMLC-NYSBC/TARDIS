@@ -30,12 +30,13 @@ class GraphDataset(Dataset):
         memory_save: If True data are loaded with memory save mode on
             (~10x faster computation).
     """
+
     def __init__(self,
                  coord_dir: str,
-                 coord_format="csv",
+                 coord_format=[".csv"],
                  img_dir: Optional[str] = None,
                  prefix: Optional[str] = None,
-                 size: Optional[tuple] = (12, 12),
+                 size: Optional[int] = 12,
                  voxal_size=500,
                  downsampling_if=500,
                  drop_rate=1,
@@ -44,12 +45,15 @@ class GraphDataset(Dataset):
                  memory_save=True):
         # Coord setting
         self.coord_dir = coord_dir
-        self.coord_format = coord_format
+        self.coord_format = coord_format[0]
         if self.coord_format == '.CorrelationLines.am':
-            self.coord_format == 'am'
+            self.coord_format == '.am'
 
         # Image setting
         self.img_dir = img_dir
+        if self.img_dir is not None:
+            self.img_format = coord_format[1]
+
         self.prefix = prefix
         self.size = size
         self.normalize = normalize
@@ -61,7 +65,8 @@ class GraphDataset(Dataset):
         self.downsampling_rate = downsampling_rate
         self.voxal_size = voxal_size
 
-        self.ids = [file for file in listdir(coord_dir) if file.endswith(f'.{coord_format}')]
+        self.ids = [f for f in listdir(
+            coord_dir) if f.endswith(f'{self.coord_format}')]
 
     def __len__(self):
         return len(self.ids)
@@ -70,17 +75,21 @@ class GraphDataset(Dataset):
         """ Get list of all coordinates and image patches """
         idx = self.ids[i]
 
-        if self.coord_format == "csv":
+        if self.coord_format == ".csv":
             coord_file = join(self.coord_dir, str(idx))
-        elif self.coord_format == "npy":
+        elif self.coord_format == ".npy":
             coord_file = join(self.coord_dir, str(idx))
-        elif self.coord_format == "am":
+        elif self.coord_format == ".CorrelationLines.am":
             coord_file = join(self.coord_dir, str(idx))
 
-        if self.prefix is not None:
-            img_idx = idx[:-len(self.prefix)]
+        if self.img_dir is not None and self.prefix is not None:
+            img_idx = idx[:-len(self.prefix + self.coord_format)]
+            img_idx = f'{img_idx}{self.img_format}'
+        elif self.img_dir is not None and self.prefix is None:
+            img_idx = idx[:-len(self.coord_format)]
+            img_idx = f'{img_idx}{self.img_format}'
         else:
-            img_idx = idx
+            img_idx = None
 
         if self.img_dir is not None:
             img_file = join(self.img_dir, str(img_idx))
@@ -157,11 +166,11 @@ class PredictDataset(Dataset):
         """ Get list of all coordinates and image patches """
         idx = self.ids[i]
 
-        if self.coord_format == "csv":
+        if self.coord_format == ".csv":
             coord_file = join(self.coord_dir, str(idx) + '.csv')
-        elif self.coord_format == "npy":
+        elif self.coord_format == ".npy":
             coord_file = join(self.coord_dir, str(idx) + '.npy')
-        elif self.coord_format == "am":
+        elif self.coord_format == ".am":
             coord_file = join(self.coord_dir, str(idx) + '.am')
 
         if self.prefix is not None:

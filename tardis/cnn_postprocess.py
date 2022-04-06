@@ -116,3 +116,7 @@ def main(postprocess_dataset: str,
             if downsample is not None:
                 am_convert.export_amira(coord=point_cloud_HD,
                                         file_dir=join(postprocess_dataset, f'{postprocess_dataset}_LD.am'))
+
+
+if __name__ == '__main__':
+    main()

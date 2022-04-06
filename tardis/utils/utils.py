@@ -56,29 +56,46 @@ def check_dir(dir: str,
               img_format: tuple,
               test_img: str,
               test_mask: str,
-              mask_format: tuple):
+              mask_format: tuple,
+              with_img: bool):
     dataset_test = False
     if isdir(join(dir, 'train')) and isdir(join(dir, 'test')):
         dataset_test = True
 
-        # Check if train img and coord exist and have same files
-        if isdir(train_img) and isdir(train_mask):
-            if len([f for f in listdir(train_img) if f.endswith(img_format)]) == \
-                    len([f for f in listdir(train_mask) if f.endswith(mask_format)]):
-                if len([f for f in listdir(train_img) if f.endswith(img_format)]) == 0:
+        if with_img:
+            # Check if train img and coord exist and have same files
+            if isdir(train_img) and isdir(train_mask):
+                if len([f for f in listdir(train_img) if f.endswith(img_format)]) == \
+                        len([f for f in listdir(train_mask) if f.endswith(mask_format)]):
+                    if len([f for f in listdir(train_img) if f.endswith(img_format)]) == 0:
+                        dataset_test = False
+                else:
+                    dataset_test = False
+
+            # Check if test img and mask exist and have same files
+            if isdir(test_img) and isdir(test_mask):
+                if len([f for f in listdir(test_img) if f.endswith(img_format)]) == \
+                        len([f for f in listdir(test_mask) if f.endswith(mask_format)]):
+                    if len([f for f in listdir(test_img) if f.endswith(img_format)]) == 0:
+                        dataset_test = False
+                else:
+                    dataset_test = False
+        else:
+            if isdir(train_img) and isdir(train_mask):
+                if len([f for f in listdir(train_mask) if f.endswith(mask_format)]) > 0:
+                    pass
+                else:
                     dataset_test = False
             else:
                 dataset_test = False
 
-        # Check if test img and mask exist and have same files
-        if isdir(train_img) and isdir(train_mask):
-            if len([f for f in listdir(train_img) if f.endswith(img_format)]) == \
-                    len([f for f in listdir(train_mask) if f.endswith(mask_format)]):
-                if len([f for f in listdir(train_img) if f.endswith(img_format)]) == 0:
+            if isdir(test_img) and isdir(test_mask):
+                if len([f for f in listdir(test_mask) if f.endswith(mask_format)]) > 0:
+                    pass
+                else:
                     dataset_test = False
             else:
                 dataset_test = False
-
     return dataset_test
 
 
@@ -98,7 +115,8 @@ class BuildTestDataSet:
 
     def __init__(self,
                  dataset_dir: str,
-                 train_test_ration: int):
+                 train_test_ration: int,
+                 prefix: str):
         self.dataset = dataset_dir
         assert 'test' in listdir(dataset_dir) and 'train' in listdir(dataset_dir), \
             f'Could not find train or test folder in directory {dataset_dir}'
@@ -106,29 +124,45 @@ class BuildTestDataSet:
         self.image_list = listdir(join(dataset_dir, 'train', 'imgs'))
         self.mask_list = listdir(join(dataset_dir, 'train', 'masks'))
 
-        self.train_test_ratio = (len(self.image_list) * train_test_ration) // 100
+        self.train_test_ratio = (
+            len(self.mask_list) * train_test_ration) // 100
         self.train_test_ratio = int(self.train_test_ratio)
 
         if self.train_test_ratio == 0:
             self.train_test_ratio = 1
 
+        self.prefix = prefix
+
     def __builddataset__(self):
         test_idx = []
+        if len(self.image_list) == 0:
+            data_no = len(self.mask_list) + 1
+        else:
+            data_no = len(self.image_list) + 1
 
         for _ in range(self.train_test_ratio):
-            random_idx = np.random.choice(len(self.image_list))
+            random_idx = np.random.choice(data_no)
 
             while random_idx in test_idx:
-                random_idx = np.random.choice(len(self.image_list))
+                random_idx = np.random.choice(data_no)
+
             test_idx.append(random_idx)
 
-        test_image_idx = list(np.array(self.image_list)[test_idx])
-        for i in test_image_idx:
-            # Move image file to test dir
-            move(join(self.dataset, 'train', 'imgs', i),
-                 join(self.dataset, 'test', 'imgs', i))
+        if len(self.image_list) != 0:
+            test_image_idx = list(np.array(self.image_list)[test_idx])
+            test_mask_idx = []
+        else:
+            test_image_idx = []
+            test_mask_idx = list(np.array(self.mask_list)[test_idx])
 
-            # Move mask file to test dir
-            m = f'{i[:-4]}_mask.tif'
-            move(join(self.dataset, 'train', 'masks', m),
-                 join(self.dataset, 'test', 'masks', m))
+        for i in range(len(test_idx)):
+            if len(self.image_list) != 0:
+                # Move image file to test dir
+                move(join(self.dataset, 'train', 'imgs', test_image_idx[i]),
+                     join(self.dataset, 'test', 'imgs', test_image_idx[i]))
+                move(join(self.dataset, 'train', 'masks', f'{test_image_idx[i][:-4]}{self.prefix}.tif'),
+                     join(self.dataset, 'test', 'masks', f'{test_image_idx[i][:-4]}{self.prefix}.tif'))
+            elif len(self.image_list) == 0 and len(self.mask_list) != 0:
+                # Move mask file to test dir
+                move(join(self.dataset, 'train', 'masks', test_mask_idx[i]),
+                     join(self.dataset, 'test', 'masks', test_mask_idx[i]))

@@ -25,9 +25,9 @@ def cal_node_input(patch_size: Optional[tuple] = None):
 
 def BuildTrainDataSet(dir: str,
                       coord_format: tuple,
-                      with_img: Optional[str] = None,
+                      with_img: bool,
                       img_format: Optional[tuple] = None):
-    assert [f for f in listdir(dir) if f.endswith(coord_format)] > 0, \
+    assert len([f for f in listdir(dir) if f.endswith(coord_format)]) > 0, \
         f'No file found in given dir {dir}'
     file_format = []
 
@@ -35,11 +35,11 @@ def BuildTrainDataSet(dir: str,
 
     for i in idx_coord:
         move(src=join(dir, i),
-             dst=join(dir, 'train', 'coords', i))
+             dst=join(dir, 'train', 'masks', i))
     file_format.append([f for f in coord_format if idx_coord[0].endswith(f)][0])
 
     if with_img:
-        assert [f for f in listdir(dir) if f.endswith(img_format)] > 0, \
+        assert len([f for f in listdir(dir) if f.endswith(img_format)]) > 0, \
             f'No file found in given dir {dir}'
 
         idx_coord = [f for f in listdir(dir) if f.endswith(img_format)]

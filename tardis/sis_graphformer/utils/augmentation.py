@@ -7,7 +7,7 @@ from tardis.slcpy_data_processing.utils.load_data import ImportDataFromAmira
 
 def preprocess_data(coord: str,
                     image: Optional[str] = None,
-                    size: Optional[tuple] = None,
+                    size: Optional[int] = None,
                     include_label=True,
                     pixel_size=None,
                     normalization: Optional[str] = 'simple',
@@ -35,10 +35,6 @@ def preprocess_data(coord: str,
     if memory_save:
         import zarr
 
-    if size is not None:
-        assert (size[0] % 2) == 0, 'Size of a patch must be divided by 2!'
-        assert len(size) in [2, 3], 'Size has to be 2D or 3D only!'
-
     """ Collect Coordinates [Length x Dimension] """
     if coord[-3:] == "csv":
         coord_label = np.genfromtxt(coord, delimiter=',')
@@ -62,11 +58,19 @@ def preprocess_data(coord: str,
 
     coords = coord_label[:, 1:]
 
+    if size is None:
+        size = 1
+
+    if coords.shape[1] == 2:
+        size = (size, size)
+    elif coords.shape[1] == 3:
+        size = (size, size, size)
+
     """ Collect Image Patches [Channels x Length] """
     if image is not None and coord[-3:] != ".am":
         if normalization == "simple":
             normalization = SimpleNormalize()
-        else:
+        elif normalization == 'minmax':
             normalization = MinMaxNormalize(0, 255)
 
         if memory_save:
@@ -210,6 +214,8 @@ class SimpleNormalize:
             norm = x / x.max()  # Convert 32 to 16 bit and normalize
 
         return norm
+
+# %%
 
 
 class MinMaxNormalize:

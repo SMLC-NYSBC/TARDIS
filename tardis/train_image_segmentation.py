@@ -1,6 +1,7 @@
 from os import getcwd, listdir, mkdir
 from os.path import isdir, join
 from shutil import rmtree
+from sys import prefix
 from typing import Optional
 
 import click
@@ -191,7 +192,8 @@ def main(training_dataset: str,
 
         """Build test DataSets if they don't exist"""
         dataset_builder = BuildTestDataSet(dataset_dir=training_dataset,
-                                           train_test_ration=train_test_ratio)
+                                           train_test_ration=train_test_ratio,
+                                           prefix=prefix)
         dataset_builder.__builddataset__()
 
     """Build training and test dataset 2D/3D"""

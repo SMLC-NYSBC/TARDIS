@@ -51,7 +51,8 @@ class TestDataSetBuilder:
                                  trim_z=128)
 
         test_build = BuildTestDataSet(dataset_dir=join('tests', 'test_data', 'data_loader'),
-                                      train_test_ration=10)
+                                      train_test_ration=10,
+                                      prefix='_mask')
         test_build.__builddataset__()
 
         assert [f'{f[:-4]}_mask.tif' for f in listdir(join('tests', 'test_data', 'data_loader', 'test', 'imgs'))] == \

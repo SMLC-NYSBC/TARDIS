@@ -25,13 +25,14 @@ setup(
     description="PyTorch segmentation of 2D/3D images such as electron tomography "
                 "(ET), Cryo-EM or fluorescent microscopy data into 3D segmented "
                 "point cloud.",
-    entry_points={'console_scripts': ['tardis_cnn_train=tardis.train_image_segmentation:main',
-                                      'tardis_cnn_predict=tardis.predict_image_segmentation:main', ],
-                  # 'tardis_postprocessing=tardis.cnn_postprocess:main'
-                  # 'tardis_pointcloud_train=tardis.train_pointcloud_segmentation:main',
-                  # 'tardis_pointcloud_predict=tardis.segment_pointcloud:main',
-                  # 'tardis_MT=tardis.predict_MTs:main'
-                  },
+    entry_points={
+        'console_scripts': [
+            'tardis_cnn_train = tardis.train_image_segmentation:main',
+            'tardis_cnn_predict = tardis.predict_image_segmentation:main',
+            'tardis_postprocessing = tardis.cnn_postprocess:main',
+            'tardis_pointcloud_train = tardis.train_pointcloud_segmentation:main',
+        ],
+    },
     license="MIT License",
     long_description_content_type='text/x-rst',
     long_description=readme,
@@ -41,7 +42,8 @@ setup(
               'MT segmentation', 'UNet', 'Unet3Plus'],
     name='tardis',
     longname='Transformer And Rapid Dimensionless Instance Segmentation',
-    packages=find_packages(include=['tardis']),
+    packages=find_packages(include=['tardis'],
+                           exclude=['tests']),
     url='https://github.com/SMLC-NYSBC/tardis',
     version=version,
 )
