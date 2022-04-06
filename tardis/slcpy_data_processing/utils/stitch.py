@@ -50,6 +50,7 @@ class StitchImages:
 
     def _calculate_dim(self,
                        image: np.ndarray):
+        print(image.shape)
         if image.ndim == 3:
             self.nz, self.ny, self.nx = image.shape
         else:
@@ -63,12 +64,10 @@ class StitchImages:
                  output: Optional[str] = None,
                  dtype=np.int8):
         """Extract information about images in dir_path"""
-        file_list = [f for f in listdir(
-            image_dir) if isfile(join(image_dir, f))]
+        file_list = [f for f in listdir(image_dir) if isfile(join(image_dir, f))]
         file_list = [f for f in file_list if f.endswith('.tif')]
 
-        self.idx = max(list(map(int,
-                                [str.split(f[:-4], "_")[0] for f in file_list]))) + 1
+        self.idx = max(list(map(int, [str.split(f[:-4], "_")[0] for f in file_list]))) + 1
 
         if self.tqdm:
             from tqdm import tqdm
@@ -81,8 +80,7 @@ class StitchImages:
 
         for idx in batch_iter_idx:
             self._find_xyz(file_list, idx)
-            self._calculate_dim(tif.imread(join(image_dir,
-                                                f'{idx}_0_0_0_{self.stride}{prefix}.tif')))
+            self._calculate_dim(tif.imread(join(image_dir, f'{idx}_0_0_0_{self.stride}{prefix}.tif')))
 
             x_dim = self.nx + ((self.nx - self.stride) * (self.x - 1))
             y_dim = self.ny + ((self.ny - self.stride) * (self.y - 1))

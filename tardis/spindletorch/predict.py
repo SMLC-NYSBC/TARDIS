@@ -100,12 +100,22 @@ def predict(image_DL: DataLoader,
         image_predict_2 = None
 
     """Prediction"""
-    for input, name in image_DL:
+    dl_len = image_DL.__len__()
+    if tqdm:
+        from tqdm import tqdm
+        dl_iter = tqdm(range(dl_len),
+                       'Predicting images: ')
+    else:
+        dl_iter = range(dl_iter)
+
+    for i in dl_iter:
+        input, name = image_DL.__getitem__(i)
+
         """Predict"""
-        out = image_predict._predict(input)
+        out = image_predict._predict(input[None, :])
 
         if len(cnn_type) == 2:
-            out_support = image_predict_2._predict(input)
+            out_support = image_predict_2._predict(input[None, :])
 
             out = (out + out_support) / 2
         else:
@@ -114,9 +124,9 @@ def predict(image_DL: DataLoader,
         """Threshold"""
         out = np.where(out >= threshold, 1, 0)
 
-    """Save"""
-    tif.imsave(file=join(output, name),
-               data=np.array(out, dtype=np.arrayint8))
+        """Save"""
+        tif.imsave(file=join(output, f'{name}.tif'),
+                   data=np.array(out, dtype=np.int8))
 
     """Clean-up env."""
     image_predict = None

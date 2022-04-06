@@ -50,7 +50,7 @@ class VolumeDataset(Dataset):
         """
         Get list of all images and masks, load and prepare for packaging
         """
-
+        print(self.idx)
         idx = self.ids[i]
         mask_file = os.path.join(self.mask_dir, str(idx) + '_mask' + '.tif')
         img_file = os.path.join(self.img_dir, str(idx) + '.tif')

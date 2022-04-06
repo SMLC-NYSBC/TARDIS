@@ -26,13 +26,19 @@ class Predictor:
                  tqdm=False):
         self.model = model
         if checkpoint is None:
-            model.load_state_dict(torch.load(get_weights_aws(network, subtype,
-                                                             save_weights=False),
-                                             map_location=device)['model_state_dict'])
+            print('Downloading weight file...')
+            
+            weights = torch.load(get_weights_aws(network, subtype,
+                                                 save_weights=False),
+                                 map_location=device)
+            model.load_state_dict(weights['model_state_dict'])
         else:
-            model.load_state_dict(torch.load(checkpoint,
-                                             map_location=device)['model_state_dict'])
+            weights = torch.load(checkpoint,
+                                 map_location=device)
 
+            model.load_state_dict(weights['model_state_dict'])
+
+        weights = None
         self.model.eval()
 
         self.device = device
@@ -44,4 +50,4 @@ class Predictor:
         with torch.no_grad():
             out = self.model(x.to(self.device))
 
-            return out.cpu().detach().numpy()[0, :]
+            return out.cpu().detach().numpy()[0, 0, :]

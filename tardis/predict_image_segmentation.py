@@ -5,6 +5,7 @@ from typing import Optional
 
 import click
 import numpy as np
+from pytest import skip
 import tifffile.tifffile as tif
 from torch.utils.data import DataLoader
 
@@ -80,7 +81,7 @@ from tardis.version import version
               '0-9 - specified gpu device id to use',
               show_default=True)
 @click.option('-th', '--threshold',
-              default=None,
+              default=0.5,
               type=float,
               help='Threshold use for model prediction.',
               show_default=True)
@@ -100,14 +101,15 @@ def main(prediction_dir: str,
          checkpoints: tuple,
          device: str,
          tqdm: bool,
-         threshold: Optional[float] = None,
+         threshold: float,
          dropout: Optional[float] = None):
     """
     MAIN MODULE FOR PREDICTION WITH CNN UNET/RESUNET/UNET3PLUS MODELS
     """
     """Searching for available images for prediction"""
     available_format = ('.tif', '.mrc', '.rec', '.am')
-    predict_list = [f for f in listdir(prediction_dir) if f.endswith(available_format)]
+    predict_list = [f for f in listdir(
+        prediction_dir) if f.endswith(available_format)]
     assert len(predict_list) > 0, 'No file found in given direcotry!'
 
     if cnn_type == 'multi':
@@ -122,13 +124,19 @@ def main(prediction_dir: str,
         build_temp_dir(dir=prediction_dir)
 
         """Voxalize image"""
-        if i.endswith('.tif'):
-            image, _ = import_tiff(img=join(prediction_dir, i),
-                                   dtype=np.uint8)
-        elif i.endswith(('.mrc', '.rec')):
-            image, _ = import_mrc(img=join(prediction_dir, i))
-        elif i.endswith('.am'):
-            image, _ = import_am(img=join(prediction_dir, i))
+        try:
+            if i.endswith('.tif'):
+                image, _ = import_tiff(img=join(prediction_dir, i),
+                                       dtype=np.uint8)
+                format = 4
+            elif i.endswith(('.mrc', '.rec')):
+                image, _ = import_mrc(img=join(prediction_dir, i))
+                format = 4
+            elif i.endswith('.am'):
+                image, _ = import_am(img=join(prediction_dir, i))
+                format = 3
+        except:
+            continue
 
         org_shape = image.shape
 
@@ -144,16 +152,12 @@ def main(prediction_dir: str,
         del(image)
 
         """Predict image patches"""
-        patches_DL = DataLoader(dataset=PredictionDataSet(img_dir=join(prediction_dir, 'temp', 'Patches'),
-                                                          size=patch_size,
-                                                          out_channels=cnn_out_channel),
-                                batch_size=1,
-                                shuffle=False,
-                                pin_memory=True,
-                                num_workers=5)
+        patches_DL = PredictionDataSet(img_dir=join(prediction_dir, 'temp', 'Patches'),
+                                       size=patch_size,
+                                       out_channels=cnn_out_channel)
 
         predict(image_DL=patches_DL,
-                output=join(prediction_dir, 'temp', 'Prediction'),
+                output=join(prediction_dir, 'temp', 'Predictions'),
                 cnn_type=cnn_type,
                 cnn_in_channel=1,
                 cnn_out_channel=cnn_out_channel,
@@ -168,15 +172,14 @@ def main(prediction_dir: str,
                 cnn_dropout=dropout)
 
         """Stitch patches from temp dir and save image"""
-        tif.imsave(file=join(prediction_dir, 'Prediction', i),
-                   data=stitcher(image_dir=join(prediction_dir, 'temp', 'Prediction'),
+        tif.imsave(file=join(prediction_dir, 'Predictions', f'{i[:-format]}.tif'),
+                   data=stitcher(image_dir=join(prediction_dir, 'temp', 'Predictions'),
                                  output=None,
                                  mask=True,
                                  prefix='',
                                  dtype=np.int8)[:org_shape[0], :org_shape[1], :org_shape[2]])
 
         """Clean-up temp dir"""
-        rmtree(join(prediction_dir, 'temp'))
         clean_up(dir=prediction_dir)
 
 

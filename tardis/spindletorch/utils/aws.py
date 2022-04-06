@@ -21,8 +21,7 @@ def get_weights_aws(network: str,
         assert subtype in ['32', '64'], \
             'For Graphformer, pre train model must be selected!'
 
-        weight = requests.get(
-            f'https://tardis-weigths.s3.amazonaws.com/{network}_{subtype}/model_weights.pth')
+        weight = requests.get(f'https://tardis-weigths.s3.amazonaws.com/{network}_{subtype}/model_weights.pth')
     elif network == 'graphformer':
         assert model in ['cryo_membrane', 'microtubules'], \
             'For Graphformer, pre train model must be selected!'
