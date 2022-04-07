@@ -1,8 +1,9 @@
-from shutil import move
-import numpy as np
 from os import listdir
-from os.path import join, isdir
-import tifffile.tifffile as tif
+from os.path import isdir, join
+from shutil import move
+
+import numpy as np
+
 
 class EarlyStopping():
     """
@@ -42,8 +43,6 @@ class EarlyStopping():
 
 
 def check_uint8(image: np.ndarray):
-    tif.imsave('img.tif', image)
-    print(np.unique(image))
     if np.all(np.unique(image) == [0, 1]):
         return image
     elif np.all(np.unique(image) == [0, 254]) or np.all(np.unique(image) == [0, 255]):
@@ -121,16 +120,17 @@ class BuildTestDataSet:
                  prefix: str):
         self.dataset = dataset_dir
         self.prefix = prefix
-        
+
         assert 'test' in listdir(dataset_dir) and 'train' in listdir(dataset_dir), \
             f'Could not find train or test folder in directory {dataset_dir}'
-        
+
         self.image_list = listdir(join(dataset_dir, 'train', 'imgs'))
         self.image_list.sort()
         self.mask_list = listdir(join(dataset_dir, 'train', 'masks'))
         self.mask_list.sort()
 
-        self.train_test_ratio = (len(self.mask_list) * train_test_ration) // 100
+        self.train_test_ratio = (
+            len(self.mask_list) * train_test_ration) // 100
         self.train_test_ratio = int(self.train_test_ratio)
 
         if self.train_test_ratio == 0:

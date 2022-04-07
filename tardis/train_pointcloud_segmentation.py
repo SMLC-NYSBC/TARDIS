@@ -219,7 +219,6 @@ def main(pointcloud_dir: str,
                                       train_test_ration=train_test_ratio,
                                       prefix=prefix)
         build_test.__builddataset__()
-        
 
     else:
         coord_format = [f for f in coord_format if listdir(train_coords_dir)[

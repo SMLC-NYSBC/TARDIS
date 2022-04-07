@@ -1,13 +1,12 @@
+from os.path import join
 from typing import Optional
 
 import numpy as np
 import tifffile.tifffile as tif
 import torch
 from tardis.spindletorch.unet.predictor import Predictor
-from tardis.spindletorch.utils.aws import get_weights_aws
 from tardis.spindletorch.utils.build_network import build_network
 from torch.utils.data import DataLoader
-from os.path import join
 
 # Setting for stable release to turn off all debug APIs
 torch.backends.cudnn.benchmark = True

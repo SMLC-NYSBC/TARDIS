@@ -1,10 +1,10 @@
-from unittest import result
 from click.testing import CliRunner
-from tardis.train_image_segmentation import main as cnn_trainer
-from tardis.predict_image_segmentation import main as cnn_predictor
 from tardis.cnn_postprocess import main as cnn_postprocess
-from tardis.train_pointcloud_segmentation import main as gf_trainer
+from tardis.predict_image_segmentation import main as cnn_predictor
 from tardis.predict_MTs import main as t_mt
+from tardis.train_image_segmentation import main as cnn_trainer
+from tardis.train_pointcloud_segmentation import main as gf_trainer
+
 
 class TestClick:
     runner = CliRunner()

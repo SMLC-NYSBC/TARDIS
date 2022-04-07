@@ -22,12 +22,16 @@ class Predictor:
                  checkpoint: Optional[str] = None,
                  network: Optional[str] = None,
                  subtype: Optional[str] = None,
+                 model_type: Optional[str] = None,
                  tqdm=False):
         self.model = model
+        self.network = network
         if checkpoint is None:
             print(f'Downloading weight file for {network}_{subtype}...')
-            
-            weights = torch.load(get_weights_aws(network, subtype,
+
+            weights = torch.load(get_weights_aws(network,
+                                                 subtype,
+                                                 model_type,
                                                  save_weights=False),
                                  map_location=device)
             model.load_state_dict(weights['model_state_dict'])
@@ -46,6 +50,12 @@ class Predictor:
     def _predict(self,
                  x: torch.Tensor):
         with torch.no_grad():
-            out = self.model(x.to(self.device))
+            if self.network == 'graphformer':
+                out = self.model(coords=x,
+                                 node_features=None,
+                                 padding_mask=None)
+                return out.cpu().detach().numpy()[0, :]
+            else:
+                out = self.model(x.to(self.device))
 
-            return out.cpu().detach().numpy()[0, 0, :]
+                return out.cpu().detach().numpy()[0, 0, :]

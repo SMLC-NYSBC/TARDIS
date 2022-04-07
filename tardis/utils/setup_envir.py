@@ -38,7 +38,8 @@ def build_temp_dir(dir: str):
 
     if not isdir(join(dir, 'Predictions')):
         mkdir(join(dir, 'Predictions'))
-        
+
+
 def clean_up(dir: str):
     """ Clean up temp files """
     rmtree(join(dir, 'temp'))

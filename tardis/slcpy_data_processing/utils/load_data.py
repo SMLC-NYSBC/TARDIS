@@ -371,7 +371,7 @@ def import_am(img: str):
     am = open(img, 'r', encoding="iso-8859-1").read(8000)
     assert '# AmiraMesh BINARY' in am, \
         f'{img} file is not Amira binary image file!'
-        
+
     size = [word for word in am.split('\n') if word.startswith(
             'define Lattice ')][0][15:].split(" ")
 

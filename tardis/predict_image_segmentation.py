@@ -1,13 +1,10 @@
 from os import getcwd, listdir
 from os.path import join
-from shutil import rmtree
 from typing import Optional
 
 import click
 import numpy as np
-from pytest import skip
 import tifffile.tifffile as tif
-from torch.utils.data import DataLoader
 
 from tardis.slcpy_data_processing.utils.load_data import (import_am,
                                                           import_mrc,

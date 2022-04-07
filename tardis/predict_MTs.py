@@ -1,22 +1,26 @@
-from os import listdir, getcwd
+from os import getcwd, listdir
 from os.path import join
 from shutil import rmtree
-import numpy as np
+
 import click
+import numpy as np
+import tifffile.tifffile as tif
 
+from tardis.sis_graphformer.graphformer.network import CloudToGraph
+from tardis.sis_graphformer.utils.utils import cal_node_input
+from tardis.sis_graphformer.utils.voxal import VoxalizeDataSetV2
 from tardis.slcpy_data_processing.image_postprocess import ImageToPointCloud
-from tardis.slcpy_data_processing.utils.load_data import import_tiff, import_mrc, \
-    import_am
-from tardis.slcpy_data_processing.utils.trim import trim_image
+from tardis.slcpy_data_processing.utils.load_data import (import_am,
+                                                          import_mrc,
+                                                          import_tiff)
 from tardis.slcpy_data_processing.utils.stitch import StitchImages
-from tardis.spindletorch.predict import predict
+from tardis.slcpy_data_processing.utils.trim import trim_image
+from tardis.spindletorch.unet.predictor import Predictor
+from tardis.spindletorch.utils.build_network import build_network
 from tardis.spindletorch.utils.dataset_loader import PredictionDataSet
-from tardis.version import version
-
 from tardis.utils.setup_envir import build_temp_dir, clean_up
-from torch.utils.data import DataLoader
-
 from tardis.utils.utils import check_uint8
+from tardis.version import version
 
 
 @click.command()
@@ -36,7 +40,7 @@ from tardis.utils.utils import check_uint8
               help='Threshold use for model prediction.',
               show_default=True)
 @click.option('-ch', '--checkpoints',
-              default=(None, None),
+              default=(None, None, None),
               type=tuple,
               help='If not None, str for Unet and Unet3Plus checkpoints',
               show_default=True)
@@ -65,22 +69,75 @@ def main(prediction_dir: str,
     """
     """Searching for available images for prediction"""
     available_format = ('.tif', '.mrc', '.rec', '.am')
+    output = join(prediction_dir, 'temp', 'Predictions')
+
     predict_list = [f for f in listdir(
         prediction_dir) if f.endswith(available_format)]
     assert len(predict_list) > 0, 'No file found in given direcotry!'
 
-    stitcher = StitchImages(tqdm=tqdm)
-    post_processer = ImageToPointCloud(tqdm=True)
+    stitcher = StitchImages(tqdm=False)
+    post_processer = ImageToPointCloud(tqdm=False)
 
+    predict_unet = Predictor(model=build_network(network_type='unet',
+                                                 classification=False,
+                                                 in_channel=1,
+                                                 out_channel=1,
+                                                 img_size=patch_size,
+                                                 dropout=None,
+                                                 no_conv_layers=5,
+                                                 conv_multiplayer=32,
+                                                 layer_components='gcl',
+                                                 no_groups=8,
+                                                 prediction=True),
+                             checkpoint=checkpoints[0],
+                             network='unet',
+                             subtype=str(32),
+                             device=device,
+                             tqdm=tqdm)
+
+    predict_unet3plus = Predictor(model=build_network(network_type='unet3plus',
+                                                      classification=False,
+                                                      in_channel=1,
+                                                      out_channel=1,
+                                                      img_size=patch_size,
+                                                      dropout=None,
+                                                      no_conv_layers=5,
+                                                      conv_multiplayer=32,
+                                                      layer_components='gcl',
+                                                      no_groups=8,
+                                                      prediction=True),
+                                  checkpoint=checkpoints[1],
+                                  network='unet3plus',
+                                  subtype=str(32),
+                                  device=device,
+                                  tqdm=tqdm)
+
+    predict_gf = Predictor(model=CloudToGraph(n_out=1,
+                                              node_input=cal_node_input((10,10,10)),
+                                              node_dim=128,
+                                              edge_dim=64,
+                                              num_layers=3,
+                                              num_heads=4,
+                                              dropout_rate=0,
+                                              coord_embed_sigma=16,
+                                              predict=True),
+                           checkpoint=checkpoints[2],
+                           network='graphformer',
+                           subtype='without_img',
+                           model_type='microtubules',
+                           device=device,
+                           tqdm=tqdm)
     if tqdm:
         from tqdm import tqdm as tq
 
         batch_iter = tq(predict_list)
     else:
         batch_iter = predict_list
-        
+
     for i in batch_iter:
-        batch_iter.set_description(f'Predicting image {i} ...')
+        if tqdm:
+            batch_iter.set_description(f'Predicting image {i} ...')
+
         """Build temp dir"""
         build_temp_dir(dir=prediction_dir)
 
@@ -113,44 +170,72 @@ def main(prediction_dir: str,
         patches_DL = PredictionDataSet(img_dir=join(prediction_dir, 'temp', 'Patches'),
                                        size=patch_size,
                                        out_channels=1)
+        dl_len = patches_DL.__len__()
 
-        predict(image_DL=patches_DL,
-                output=join(prediction_dir, 'temp', 'Predictions'),
-                cnn_type=['unet', 'unet3plus'],
-                cnn_in_channel=1,
-                cnn_out_channel=1,
-                image_patch_size=patch_size,
-                cnn_layers=5,
-                cnn_multiplayer=32,
-                cnn_composition='gcl',
-                device=device,
-                tqdm=tqdm,
-                checkpoints=checkpoints,
-                threshold=cnn_threshold,
-                cnn_dropout=None)
+        if tqdm:
+            dl_iter = tq(range(dl_len),
+                         'Predicting images: ')
+        else:
+            dl_iter = range(dl_len)
+
+        for j in dl_iter:
+            input, name = patches_DL.__getitem__(j)
+
+            """Predict"""
+            out_unet = predict_unet._predict(input[None, :])
+
+            out_unet3plus = predict_unet3plus._predict(input[None, :])
+
+            out = (out_unet + out_unet3plus) / 2
+
+            """Threshold"""
+            out = np.where(out >= cnn_threshold, 1, 0)
+
+            """Save"""
+            tif.imsave(file=join(output, f'{name}.tif'),
+                       data=np.array(out, dtype=np.int8))
 
         """Stitch patches and post-process"""
-        image = check_uint8(stitcher(image_dir=join(prediction_dir, 'temp', 'Predictions'),
+        image = check_uint8(stitcher(image_dir=output,
                                      output=None,
                                      mask=True,
                                      prefix='',
                                      dtype=np.int8)[:org_shape[0],
                                                     :org_shape[1],
                                                     :org_shape[2]])
-
+        tif.imsave('img.tif', image)
+        """Check if predicted image is not empty"""
         if image is None:
             continue
-        point_cloud_hd = post_processer(image=image,
-                                        euclidean_transform=True,
-                                        label_size=300,
-                                        down_sampling_voxal_size=None)
-        print(point_cloud_hd.shape)
-        """Build Graphformer and predict point cloud"""
+
+        point_cloud = post_processer(image=image,
+                                     euclidean_transform=True,
+                                     label_size=3,
+                                     down_sampling_voxal_size=None)
+
+        """Build data loader for point cloud"""
+        if tqdm:
+            batch_iter.set_description(f'Predicting point cloud {i} ...')
+
+        VD = VoxalizeDataSetV2(coord=point_cloud,
+                               image=None,
+                               init_voxal_size=5000,
+                               drop_rate=100,
+                               downsampling_threshold=500,
+                               downsampling_rate=16,
+                               graph=False)
+        coords, _, output_idx, = VD.voxalize_dataset(out_idx=True)
+
+        """Predict point cloud"""
+        graphs = []
+        for coord in coords:
+            graph = predict_gf._predict(x=coord)
+            graphs.append(graph)
 
         """Graph representation to segmented point cloud"""
 
         """Save as .am"""
 
         """Clean-up temp dir"""
-        rmtree(join(prediction_dir, 'temp'))
-        clean_up(dir=prediction_dir)
+        # rmtree(join(prediction_dir, 'temp'))
+        # clean_up(dir=prediction_dir)
