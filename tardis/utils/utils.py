@@ -2,7 +2,7 @@ from shutil import move
 import numpy as np
 from os import listdir
 from os.path import join, isdir
-
+import tifffile.tifffile as tif
 
 class EarlyStopping():
     """
@@ -42,12 +42,14 @@ class EarlyStopping():
 
 
 def check_uint8(image: np.ndarray):
+    tif.imsave('img.tif', image)
+    print(np.unique(image))
     if np.all(np.unique(image) == [0, 1]):
         return image
     elif np.all(np.unique(image) == [0, 254]) or np.all(np.unique(image) == [0, 255]):
         return np.array(np.where(image > 1, 1, 0), dtype=np.int8)
     else:
-        raise TypeError('Given file is not uint8 or int8')
+        return None  # Image is empty
 
 
 def check_dir(dir: str,

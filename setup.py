@@ -31,6 +31,7 @@ setup(
             'tardis_cnn_predict = tardis.predict_image_segmentation:main',
             'tardis_postprocessing = tardis.cnn_postprocess:main',
             'tardis_pointcloud_train = tardis.train_pointcloud_segmentation:main',
+            'tardis_mt = tardis.predict_MTs:main',
         ],
     },
     license="MIT License",

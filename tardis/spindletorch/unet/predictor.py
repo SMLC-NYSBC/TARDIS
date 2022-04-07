@@ -22,11 +22,10 @@ class Predictor:
                  checkpoint: Optional[str] = None,
                  network: Optional[str] = None,
                  subtype: Optional[str] = None,
-                 threshold: Optional[float] = None,
                  tqdm=False):
         self.model = model
         if checkpoint is None:
-            print('Downloading weight file...')
+            print(f'Downloading weight file for {network}_{subtype}...')
             
             weights = torch.load(get_weights_aws(network, subtype,
                                                  save_weights=False),
@@ -42,7 +41,6 @@ class Predictor:
         self.model.eval()
 
         self.device = device
-        self.threshold = threshold
         self.tqdm = tqdm
 
     def _predict(self,

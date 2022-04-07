@@ -1,9 +1,10 @@
+from unittest import result
 from click.testing import CliRunner
 from tardis.train_image_segmentation import main as cnn_trainer
 from tardis.predict_image_segmentation import main as cnn_predictor
 from tardis.cnn_postprocess import main as cnn_postprocess
 from tardis.train_pointcloud_segmentation import main as gf_trainer
-
+from tardis.predict_MTs import main as t_mt
 
 class TestClick:
     runner = CliRunner()
@@ -22,4 +23,8 @@ class TestClick:
 
     def test_gf_trainer(self):
         result = self.runner.invoke(gf_trainer, ['--version'])
+        assert str(result) == '<Result okay>'
+
+    def test_t_mt(self):
+        result = self.runner.invoke(t_mt, ['--version'])
         assert str(result) == '<Result okay>'

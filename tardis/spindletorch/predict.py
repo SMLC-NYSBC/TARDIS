@@ -65,7 +65,6 @@ def predict(image_DL: DataLoader,
                               network=cnn_type[0],
                               subtype=str(cnn_multiplayer),
                               device=device,
-                              threshold=threshold,
                               tqdm=tqdm)
 
     if len(cnn_type) == 2:
@@ -84,18 +83,7 @@ def predict(image_DL: DataLoader,
                                     network=cnn_type[1],
                                     subtype=str(cnn_multiplayer),
                                     device=device,
-                                    threshold=threshold,
                                     tqdm=tqdm)
-
-        if checkpoints[1] is None:
-            image_predict.load_state_dict(torch.load(get_weights_aws(network=cnn_type[1],
-                                                                     subtype=str(
-                                                                         cnn_multiplayer),
-                                                                     save_weights=False),
-                                                     map_location=device)['model_state_dict'])
-        else:
-            image_predict.load_state_dict(torch.load(checkpoints[1],
-                                                     map_location=device)['model_state_dict'])
     else:
         image_predict_2 = None
 
