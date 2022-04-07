@@ -13,7 +13,7 @@ class Predictor:
          model: Model with loaded pretrained weights.
          device: Device on which to predict.
          threshold: Threshold parameater for output binary prediction.
-         twdm: Build with progressbar
+         tqdm: Build with progressbar
      """
 
     def __init__(self,

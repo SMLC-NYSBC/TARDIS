@@ -118,11 +118,15 @@ class BuildTestDataSet:
                  train_test_ration: int,
                  prefix: str):
         self.dataset = dataset_dir
+        self.prefix = prefix
+        
         assert 'test' in listdir(dataset_dir) and 'train' in listdir(dataset_dir), \
             f'Could not find train or test folder in directory {dataset_dir}'
-
+        
         self.image_list = listdir(join(dataset_dir, 'train', 'imgs'))
+        self.image_list.sort()
         self.mask_list = listdir(join(dataset_dir, 'train', 'masks'))
+        self.mask_list.sort()
 
         self.train_test_ratio = (len(self.mask_list) * train_test_ration) // 100
         self.train_test_ratio = int(self.train_test_ratio)
@@ -130,14 +134,12 @@ class BuildTestDataSet:
         if self.train_test_ratio == 0:
             self.train_test_ratio = 1
 
-        self.prefix = prefix
-
     def __builddataset__(self):
         test_idx = []
         if len(self.image_list) == 0:
-            data_no = len(self.mask_list) + 1
+            data_no = len(self.mask_list)
         else:
-            data_no = len(self.image_list) + 1
+            data_no = len(self.image_list)
 
         for _ in range(self.train_test_ratio):
             random_idx = np.random.choice(data_no)
@@ -149,18 +151,18 @@ class BuildTestDataSet:
 
         if len(self.image_list) != 0:
             test_image_idx = list(np.array(self.image_list)[test_idx])
-            test_mask_idx = []
+            test_mask_idx = list(np.array(self.mask_list)[test_idx])
         else:
             test_image_idx = []
             test_mask_idx = list(np.array(self.mask_list)[test_idx])
-        print(test_image_idx)
+
         for i in range(len(test_idx)):
             if len(self.image_list) != 0:
                 # Move image file to test dir
                 move(join(self.dataset, 'train', 'imgs', test_image_idx[i]),
                      join(self.dataset, 'test', 'imgs', test_image_idx[i]))
-                move(join(self.dataset, 'train', 'masks', f'{test_image_idx[i][:-4]}{self.prefix}.tif'),
-                     join(self.dataset, 'test', 'masks', f'{test_image_idx[i][:-4]}{self.prefix}.tif'))
+                move(join(self.dataset, 'train', 'masks', test_mask_idx[i]),
+                     join(self.dataset, 'test', 'masks', test_mask_idx[i]))
             elif len(self.image_list) == 0 and len(self.mask_list) != 0:
                 # Move mask file to test dir
                 move(join(self.dataset, 'train', 'masks', test_mask_idx[i]),

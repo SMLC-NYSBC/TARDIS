@@ -131,8 +131,8 @@ from tardis.version import version
               default=0,
               type=str,
               help='Define which device use for training: '
-              'gpu: Use ID 0 gpus'
-              'cpu: Usa CPU'
+              'gpu: Use ID 0 gpus '
+              'cpu: Usa CPU '
               '0-9 - specified gpu device id to use',
               show_default=True)
 @click.option('-e', '--epochs',
@@ -219,16 +219,17 @@ def main(pointcloud_dir: str,
                                       train_test_ration=train_test_ratio,
                                       prefix=prefix)
         build_test.__builddataset__()
+        
 
     else:
         coord_format = [f for f in coord_format if listdir(train_coords_dir)[
             0].endswith(f)]
 
-        if with_img:
-            coord_format.append(
-                [f for f in img_format if listdir(train_imgs_dir)[0].endswith(f)][0])
-        else:
-            train_imgs_dir = None
+    if with_img:
+        coord_format.append(
+            [f for f in img_format if listdir(train_imgs_dir)[0].endswith(f)][0])
+    else:
+        train_imgs_dir = None
 
     """Build dataset for training/validation"""
     dl_train_graph = DataLoader(dataset=GraphDataset(coord_dir=train_coords_dir,

@@ -5,7 +5,6 @@ from shutil import rmtree
 import numpy as np
 import torch
 
-from torch.cuda.amp import GradScaler
 from tardis.utils.utils import EarlyStopping
 
 
@@ -62,7 +61,6 @@ class Trainer:
         self.lr_scheduler = lr_scheduler
         self.epochs = epochs
         self.checkpoint_name = checkpoint_name
-        self.scaler = GradScaler()
         self.tqdm = tqdm
 
     @ staticmethod
@@ -158,7 +156,6 @@ class Trainer:
             for j in range(len(x)):
                 self.optimizer.zero_grad(set_to_none=True)
 
-                # with torch.cuda.amp.autocast():
                 if self.node_input:
                     logits = self.model(coords=x[j].to(self.device),
                                         node_features=y[j].to(self.device),
@@ -170,10 +167,6 @@ class Trainer:
 
                 loss = self.criterion(logits.permute(0, 3, 1, 2)[0, :],
                                       z[j].to(self.device))
-
-                # self.scaler.scale(loss).backward()
-                # self.scaler.step(self.optimizer)
-                # self.scaler.update()
 
                 loss.backward()
                 self.optimizer.step()
