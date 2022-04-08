@@ -10,11 +10,13 @@ def get_device(device: Optional[str] = 0):
         device: Device name or ID
     """
     if device == "gpu":  # Load GPU ID 0
+        torch.set_num_threads(4)
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         device = 'cuda:0'
     elif device == 'cpu':  # Load CPU
         device = 'cpu'
     elif device_is_int(device):  # Load specific GPU ID
+        torch.set_num_threads(4)
         device = f'cuda:{int(device)}'
     else:
         device = 'cpu'

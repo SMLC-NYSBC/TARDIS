@@ -1,6 +1,5 @@
 from os import getcwd, listdir
 from os.path import join
-from shutil import rmtree
 
 import click
 import numpy as np
@@ -230,8 +229,7 @@ def main(prediction_dir: str,
 
         """Build data loader for point cloud"""
         if tqdm:
-            batch_iter.set_description(
-                f'Image postprocess and building voxal ...')
+            batch_iter.set_description('Image postprocess and building voxal ...')
 
         VD = VoxalizeDataSetV2(coord=point_cloud,
                                image=None,

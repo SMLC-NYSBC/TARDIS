@@ -1,6 +1,4 @@
 from typing import Optional
-from xml.dom.minicompat import defproperty
-from matplotlib.pyplot import bar_label
 
 import numpy as np
 import torch
