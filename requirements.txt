@@ -1,5 +1,5 @@
 numpy>=1.22.3
-tifffile>=2022.2.9
+tifffile>=2022.3.25
 scikit-image>=0.19.2
 tqdm>=4.63.0
 scipy>=1.8.0

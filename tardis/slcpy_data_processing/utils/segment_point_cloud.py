@@ -203,18 +203,16 @@ class GraphInstance:
                        graph_voxal: list,
                        coord_voxal: list):
         """
-
-
         Args:
-            graph_voxal: List of predicted graph propability for each voxal [Lenght x Length]
-            coord_voxal: List of coord for each voxal [Batch x Length x Dim]
+            graph_voxal: List of predicted graph propability for each voxal [Length x Length]
+            coord_voxal: List of coord for each voxal [Length x Dim]
         """
         idx = []
         points = []
 
         # Pick segments from first voxal
-        graph_df_p = graph_voxal[0].cpu().detach().numpy()
-        coord_pred = coord_voxal[0].cpu().detach().numpy()[0, :]
+        graph_df_p = graph_voxal[0]
+        coord_pred = coord_voxal[0]
 
         segments_p = self.segment_graph(graph=np.array(graph_df_p),
                                         coord=coord_pred)
@@ -226,8 +224,8 @@ class GraphInstance:
         last_id = np.max(np.unique(segments_p[:, 0]))
         if len((graph_voxal)) > 1:
             for i in range(1, len(graph_voxal)):
-                graph_df_p = graph_voxal[i].cpu().detach().numpy()
-                coord_pred = coord_voxal[i].cpu().detach().numpy()[0, :]
+                graph_df_p = graph_voxal[i]
+                coord_pred = coord_voxal[i]
 
                 # Pick predicted segments from voxal
                 if len(coord_pred) > 1:

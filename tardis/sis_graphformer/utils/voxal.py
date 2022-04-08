@@ -1,4 +1,6 @@
 from typing import Optional
+from xml.dom.minicompat import defproperty
+from matplotlib.pyplot import bar_label
 
 import numpy as np
 import torch
@@ -263,9 +265,19 @@ class VoxalizeDataSetV2:
         voxal_idx, piv = self.collect_voxal_idx(voxals=voxals_coord)
 
         # Optimize voxal size based on no_point threshold
+        break_if = 0
+        voxal_size = self.voxal_patch_size
+        drop_rate = self.drop_rate
         while not all(i <= self.downsampling_threshold for i in piv):
             self.voxal_patch_size = self.voxal_patch_size - self.drop_rate
+
             if self.voxal_patch_size <= 0:
+                break_if += 1
+
+                self.drop_rate = drop_rate / 2
+                self.voxal_patch_size = voxal_size - self.drop_rate
+
+            if break_if == 2:
                 print('Could not find valid voxal size!')
                 break
 

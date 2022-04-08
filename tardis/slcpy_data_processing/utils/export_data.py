@@ -29,8 +29,7 @@ class NumpyToAmira:
 
     def _build_header(self,
                       coord: np.ndarray,
-                      file_dir: str,
-                      name: str):
+                      file_dir: str):
         vertex = int(np.max(coord[:, 0]) + 1) * 2
         edge = int(vertex / 2)
         point = int(coord.shape[0])
