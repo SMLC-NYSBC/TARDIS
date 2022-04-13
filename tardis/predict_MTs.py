@@ -13,7 +13,7 @@ from tardis.slcpy_data_processing.utils.export_data import NumpyToAmira
 from tardis.slcpy_data_processing.utils.load_data import (import_am,
                                                           import_mrc,
                                                           import_tiff)
-from tardis.slcpy_data_processing.utils.segment_point_cloud import GraphInstance
+from tardis.slcpy_data_processing.utils.segment_point_cloud import GraphInstanceV2
 from tardis.slcpy_data_processing.utils.stitch import StitchImages
 from tardis.slcpy_data_processing.utils.trim import trim_image
 from tardis.spindletorch.unet.predictor import Predictor
@@ -78,8 +78,7 @@ def main(prediction_dir: str,
 
     stitcher = StitchImages(tqdm=False)
     post_processer = ImageToPointCloud(tqdm=False)
-    GraphToSegment = GraphInstance(max_interactions=2,
-                                   threshold=0.1)
+    GraphToSegment = GraphInstanceV2(threshold=0.25)
     BuildAmira = NumpyToAmira()
 
     predict_unet = Predictor(model=build_network(network_type='unet',
@@ -229,7 +228,8 @@ def main(prediction_dir: str,
 
         """Build data loader for point cloud"""
         if tqdm:
-            batch_iter.set_description('Image postprocess and building voxal ...')
+            batch_iter.set_description(
+                'Image postprocess and building voxal ...')
 
         VD = VoxalizeDataSetV2(coord=point_cloud,
                                image=None,
@@ -256,11 +256,10 @@ def main(prediction_dir: str,
             coords.append(coord.cpu().detach().numpy())
 
         """Graph  to segmented point cloud"""
-        # TODO Rebuild Graph segmentation and clean-up
-        segments = clean_segments(GraphToSegment.segment_voxals(graph_voxal=graphs,
-                                                                coord_voxal=coords))
+        segments = GraphToSegment.graph_to_segments(graph=graphs,
+                                                    coord=coords,
+                                                    idx=output_idx)
         """Save as .am"""
-        # TODO add additional check-up to validate if file will open in Amira
         BuildAmira._write_to_amira(data=segments,
                                    file_dir=join(output, f'{i[:-out_format]}_SpatialGraph.am'))
 
