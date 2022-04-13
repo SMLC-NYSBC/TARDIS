@@ -379,8 +379,8 @@ class GraphInstanceV2:
             if i == 0:
                 id = [id for id, e in enumerate(idx) if len(e) == 1]
                 if len(id) == 0:
-                    id = np.where([sum(i) for i in cdist(coord, coord)] ==
-                                  max([sum(i) for i in cdist(coord, coord)]))[0]
+                    id = np.where([sum(i) for i in cdist(coord, coord)] == max([sum(i) for i in cdist(coord, coord)]))[0]
+
                 new_c.append(coord[id[0]])
                 new_i.append(idx[id[0]])
                 coord = np.delete(coord, id[0], 0)

@@ -71,6 +71,7 @@ def main(prediction_dir: str,
     """Searching for available images for prediction"""
     available_format = ('.tif', '.mrc', '.rec', '.am')
     output = join(prediction_dir, 'temp', 'Predictions')
+    am_output = join(dir, 'Predictions')
 
     predict_list = [f for f in listdir(
         prediction_dir) if f.endswith(available_format)]
@@ -140,6 +141,9 @@ def main(prediction_dir: str,
         batch_iter = predict_list
 
     for i in batch_iter:
+        if i.endswith('CorrelationLines.am'):
+            continue
+
         if tqdm:
             batch_iter.set_description(f'Predicting image {i} ...')
 
@@ -158,9 +162,6 @@ def main(prediction_dir: str,
             image, _ = import_mrc(img=join(prediction_dir, i))
             out_format = 4
         elif i.endswith('.am'):
-            if i.endswith('CorrelationLines.am'):
-                continue
-
             image, _ = import_am(img=join(prediction_dir, i))
             out_format = 3
 
@@ -244,7 +245,8 @@ def main(prediction_dir: str,
         if tqdm:
             batch_iter.set_description(f'Predicting point cloud {i} ...')
             pc_iter = tq(coords_df,
-                         'Predicting graph: ')
+                         'Predicting graph: ',
+                         leave=True)
         else:
             pc_iter = coords_df
 
@@ -261,7 +263,8 @@ def main(prediction_dir: str,
                                                     idx=output_idx)
         """Save as .am"""
         BuildAmira._write_to_amira(data=segments,
-                                   file_dir=join(output, f'{i[:-out_format]}_SpatialGraph.am'))
+                                   file_dir=join(am_output,
+                                                 f'{i[:-out_format]}_SpatialGraph.am'))
 
         """Clean-up temp dir"""
         clean_up(dir=prediction_dir)
