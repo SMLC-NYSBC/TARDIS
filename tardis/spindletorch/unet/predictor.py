@@ -2,7 +2,7 @@ from typing import Optional
 
 import torch
 
-from tardis.spindletorch.utils.aws import get_weights_aws
+from tardis.utils.aws import get_weights_aws
 
 
 class Predictor:

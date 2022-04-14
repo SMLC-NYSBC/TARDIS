@@ -280,14 +280,10 @@ class GraphInstanceV2:
         coord_df = max([max(f) for f in idx]) + 1
         coord_df = np.zeros((coord_df, dim),
                             dtype=np.float32)
-        coord_df[:, :] = -1
 
         for coord_voxal, idx_voxal in zip(coord, idx):
             for value, id in zip(coord_voxal, idx_voxal):
                 coord_df[id, :] = value
-
-        coord_df[np.where(coord_df == -1)[0],
-                 np.where(coord_df == -1)[1]] = 0
 
         return coord_df
 
@@ -305,7 +301,7 @@ class GraphInstanceV2:
             """Check which selected interaction do not have higher prop with other points"""
             idx = [id for id, (i, p) in enumerate(zip(id, prop))
                    if len([x for x in [k for k in graph[:, i]
-                                       if k > 0.25]
+                                       if k > self.threshold]
                            if x > p]) < 3]
 
             adjacency_list_id.append(list(np.array(id)[idx]))
@@ -348,6 +344,7 @@ class GraphInstanceV2:
 
                     if x > len(adj_list):
                         break
+                idx_df = idx_df + [(x - 1)]
 
             past = idx_df
             """Search for all connected points"""
@@ -362,14 +359,18 @@ class GraphInstanceV2:
                 else:
                     idx_df = idx_df + adj_list[i]
 
+            """Pick unique nodes and check if other nodes has interaction to them"""
+            for x in list(np.unique(idx_df)):
+                idx_df = idx_df + [id for id, i in enumerate(adj_list) if [x] in i]
             idx_df = list(np.unique(idx_df))
 
+            """Check if no more connection"""
             if len(past) == len(idx_df):
                 stop_iter = True
 
         return idx_df
 
-    @staticmethod
+    @ staticmethod
     def _sort_segment(coord: np.ndarray,
                       idx: list):
         new_c = []
@@ -379,7 +380,8 @@ class GraphInstanceV2:
             if i == 0:
                 id = [id for id, e in enumerate(idx) if len(e) == 1]
                 if len(id) == 0:
-                    id = np.where([sum(i) for i in cdist(coord, coord)] == max([sum(i) for i in cdist(coord, coord)]))[0]
+                    id = np.where([sum(i) for i in cdist(coord, coord)] == max(
+                        [sum(i) for i in cdist(coord, coord)]))[0]
 
                 new_c.append(coord[id[0]])
                 new_i.append(idx[id[0]])

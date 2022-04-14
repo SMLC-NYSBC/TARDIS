@@ -275,9 +275,9 @@ class VoxalizeDataSetV2:
                 self.drop_rate = drop_rate / 2
                 self.voxal_patch_size = voxal_size - self.drop_rate
 
-            if break_if == 2:
-                print('Could not find valid voxal size!')
-                break
+            if break_if == 3:
+                print('Could not find valid voxal size, prediction of full point cloud!')
+                return [voxals_coord[0]], [voxal_idx[0]]
 
             self.size_expand = self.voxal_patch_size * 0.25
             self.voxal_stride = self.voxal_patch_size * 0.15

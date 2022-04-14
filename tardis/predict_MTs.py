@@ -35,10 +35,20 @@ from tardis.version import version
               type=int,
               help='Size of image size used for prediction.',
               show_default=True)
+@click.option('-s', '--sigma',
+              default=1,
+              type=float,
+              help='Point cloud downsampling rate.',
+              show_default=True)
 @click.option('-ct', '--cnn_threshold',
-              default=0.3,
+              default=0.2,
               type=float,
               help='Threshold use for model prediction.',
+              show_default=True)
+@click.option('-gt', '--gt_threshold',
+              default=0.25,
+              type=float,
+              help='Threshold use for graph segmentation.',
               show_default=True)
 @click.option('-ch', '--checkpoints',
               default=(None, None, None),
@@ -46,7 +56,7 @@ from tardis.version import version
               help='If not None, str for Unet and Unet3Plus checkpoints',
               show_default=True)
 @click.option('-d', '--device',
-              default=0,
+              default='0',
               type=str,
               help='Define which device use for training: '
               'gpu: Use ID 0 GPUs '
@@ -58,20 +68,28 @@ from tardis.version import version
               type=bool,
               help='If True, build with progressbar.',
               show_default=True)
+@click.option('-db', '--debug',
+              default=False,
+              type=bool,
+              help='If True, save output from each step for debugging.',
+              show_default=True)
 @click.version_option(version=version)
 def main(prediction_dir: str,
          patch_size: int,
+         sigma: float,
          cnn_threshold: float,
+         gt_threshold: float,
          checkpoints: tuple,
          device: str,
-         tqdm: bool):
+         tqdm: bool,
+         debug: bool):
     """
     MAIN MODULE FOR PREDICTION MT with Tardis
     """
     """Searching for available images for prediction"""
     available_format = ('.tif', '.mrc', '.rec', '.am')
     output = join(prediction_dir, 'temp', 'Predictions')
-    am_output = join(dir, 'Predictions')
+    am_output = join(prediction_dir, 'Predictions')
 
     predict_list = [f for f in listdir(
         prediction_dir) if f.endswith(available_format)]
@@ -79,7 +97,7 @@ def main(prediction_dir: str,
 
     stitcher = StitchImages(tqdm=False)
     post_processer = ImageToPointCloud(tqdm=False)
-    GraphToSegment = GraphInstanceV2(threshold=0.25)
+    GraphToSegment = GraphInstanceV2(threshold=gt_threshold)
     BuildAmira = NumpyToAmira()
 
     predict_unet = Predictor(model=build_network(network_type='unet',
@@ -124,7 +142,7 @@ def main(prediction_dir: str,
                                               num_layers=3,
                                               num_heads=4,
                                               dropout_rate=0,
-                                              coord_embed_sigma=16,
+                                              coord_embed_sigma=float((0.989 * sigma) + 4.2036),
                                               predict=True),
                            checkpoint=checkpoints[2],
                            network='graphformer',
@@ -135,8 +153,7 @@ def main(prediction_dir: str,
     if tqdm:
         from tqdm import tqdm as tq
 
-        batch_iter = tq(predict_list,
-                        leave=True)
+        batch_iter = tq(predict_list)
     else:
         batch_iter = predict_list
 
@@ -145,7 +162,7 @@ def main(prediction_dir: str,
             continue
 
         if tqdm:
-            batch_iter.set_description(f'Predicting image {i} ...')
+            batch_iter.set_description(f'Preprocessing for CNN {i}')
 
         """Build temp dir"""
         build_temp_dir(dir=prediction_dir)
@@ -186,7 +203,10 @@ def main(prediction_dir: str,
 
         if tqdm:
             dl_iter = tq(range(dl_len),
-                         'Predicting images: ')
+                         'Images',
+                         leave=False)
+
+            batch_iter.set_description(f'CNN prediction for {i}')
         else:
             dl_iter = range(dl_len)
 
@@ -208,6 +228,9 @@ def main(prediction_dir: str,
                         data=np.array(out, dtype=np.int8))
 
         """Stitch patches and post-process"""
+        if tqdm:
+            batch_iter.set_description(f'Postprocessing for {i}')
+
         image = check_uint8(stitcher(image_dir=output,
                                      output=None,
                                      mask=True,
@@ -217,8 +240,16 @@ def main(prediction_dir: str,
                                                     :org_shape[2]])
 
         """Check if predicted image is not empty"""
+        if debug:
+            tif.imwrite(join(am_output,
+                             f'{i[:-out_format]}_CNN.tif'),
+                        image)
+
         if image is None:
             continue
+
+        if tqdm:
+            batch_iter.set_description(f'Building voxal for {i}')
 
         point_cloud = post_processer(image=image,
                                      euclidean_transform=True,
@@ -227,44 +258,81 @@ def main(prediction_dir: str,
         image = None
         del(image)
 
-        """Build data loader for point cloud"""
-        if tqdm:
-            batch_iter.set_description(
-                'Image postprocess and building voxal ...')
+        if debug:
+            np.save(join(am_output,
+                         f'{i[:-out_format]}_raw_pc.npy'),
+                    point_cloud)
 
+        """Build data loader for point cloud"""
         VD = VoxalizeDataSetV2(coord=point_cloud,
                                image=None,
                                init_voxal_size=5000,
-                               drop_rate=100,
+                               drop_rate=25,
                                downsampling_threshold=500,
-                               downsampling_rate=16,
+                               downsampling_rate=sigma,
                                graph=False)
         coords_df, _, output_idx, = VD.voxalize_dataset(out_idx=True)
 
+        if debug:
+            np.save(join(am_output,
+                         f'{i[:-out_format]}_coord_voxal.npy'),
+                    [i.cpu().detach().numpy() for i in coords_df],
+                    allow_pickle=True)
+            np.save(join(am_output,
+                         f'{i[:-out_format]}_idx_voxal.npy'),
+                    [i.cpu().detach().numpy() for i in output_idx],
+                    allow_pickle=True)
+
         """Predict point cloud"""
         if tqdm:
-            batch_iter.set_description(f'Predicting point cloud {i} ...')
-            pc_iter = tq(coords_df,
-                         'Predicting graph: ',
-                         leave=True)
+            dl_iter = tq(coords_df,
+                         'Voxals',
+                         leave=False)
+
+            batch_iter.set_description(f'GF prediction for {i}')
         else:
-            pc_iter = coords_df
+            dl_iter = coords_df
 
         graphs = []
         coords = []
-        for coord in pc_iter:
+        for coord in dl_iter:
             graph = predict_gf._predict(x=coord[None, :])
             graphs.append(graph[0, :])
             coords.append(coord.cpu().detach().numpy())
 
+        if debug:
+            np.save(join(am_output,
+                         f'{i[:-out_format]}_graph_voxal.npy'),
+                    graphs,
+                    allow_pickle=True)
+            np.save(join(am_output,
+                         f'{i[:-out_format]}_coord_voxal.npy'),
+                    coords,
+                    allow_pickle=True)
+
         """Graph  to segmented point cloud"""
+        if tqdm:
+            batch_iter.set_description(f'Graph segmentation for {i}')
+
         segments = GraphToSegment.graph_to_segments(graph=graphs,
                                                     coord=coords,
                                                     idx=output_idx)
+
+        if debug:
+            np.save(join(am_output,
+                         f'{i[:-out_format]}_segments.npy'),
+                    segments)
+
         """Save as .am"""
-        BuildAmira._write_to_amira(data=segments,
-                                   file_dir=join(am_output,
-                                                 f'{i[:-out_format]}_SpatialGraph.am'))
+        if tqdm:
+            batch_iter.set_description(f'Saving .am {i}')
+
+        BuildAmira.export_amira(coord=segments,
+                                file_dir=join(am_output,
+                                              f'{i[:-out_format]}_SpatialGraph.am'))
 
         """Clean-up temp dir"""
+        if tqdm:
+            batch_iter.set_description(f'Clean-up temp for {i}')
+
         clean_up(dir=prediction_dir)
