@@ -156,18 +156,10 @@ class VoxalizeDataSetV2:
         """
         voxal_size = self.voxal_patch_size + self.voxal_stride
 
-        if self.coord.shape[1] == 2:
-            coord_idx = (self.coord[:, 0] <= (voxal_center[0] + voxal_size)) & \
-                        (self.coord[:, 0] >= (voxal_center[0] - voxal_size)) & \
-                        (self.coord[:, 1] <= (voxal_center[1] + voxal_size)) & \
-                        (self.coord[:, 1] >= (voxal_center[1] - voxal_size))
-        else:
-            coord_idx = (self.coord[:, 0] <= (voxal_center[0] + voxal_size)) & \
-                        (self.coord[:, 0] >= (voxal_center[0] - voxal_size)) & \
-                        (self.coord[:, 1] <= (voxal_center[1] + voxal_size)) & \
-                        (self.coord[:, 1] >= (voxal_center[1] - voxal_size)) & \
-                        (self.coord[:, 2] <= (voxal_center[2] + voxal_size)) & \
-                        (self.coord[:, 2] >= (voxal_center[2] - voxal_size))
+        coord_idx = (self.coord[:, 0] <= (voxal_center[0] + voxal_size)) & \
+                    (self.coord[:, 0] >= (voxal_center[0] - voxal_size)) & \
+                    (self.coord[:, 1] <= (voxal_center[1] + voxal_size)) & \
+                    (self.coord[:, 1] >= (voxal_center[1] - voxal_size))
 
         return coord_idx
 
@@ -221,11 +213,9 @@ class VoxalizeDataSetV2:
             else:
                 coord_voxal = self.coord[idx, :]
 
-            idx = self.voxal_downsampling(coord=coord_voxal)
-
-            if np.sum(idx) > 1:
+            if coord_voxal.shape[0] > 1:
                 not_empty_voxal.append(i)
-                points_no.append(np.sum(idx))
+                points_no.append(coord_voxal.shape[0])
 
         return not_empty_voxal, points_no
 
@@ -240,6 +230,9 @@ class VoxalizeDataSetV2:
             voxals_idx: List of voxal that contains points
         """
         # Initial check for voxalization
+        if self.downsampling_rate is not None:
+            self.coord = self.coord[self.voxal_downsampling(self.coord), :]
+
         if self.coord.shape[0] <= self.downsampling_threshold:
             b_box = self.boundary_box()
             voxal_coord_x = b_box[1][0] - \

@@ -289,90 +289,103 @@ class GraphInstanceV2:
 
     def adjacency_list(self,
                        graph: np.ndarray):
+        """
+        # Stitch coord list and graph
+        # Get Point ID
+        # For each point find ID of 2 interactions with highest prop
+            # For each possible interaction
+            # Check for example: if Point ID 0 - 1 and 1 - 0 are highest prop for each other
+                # if yes add prop
+                # if not, check if there is other pair that has highest prop for each other
+                    # If not remove
+                    # If yes add
+        """
         adjacency_list_id = []
         adjacency_list_prop = []
-        for column in range(graph.shape[0]):
-            """Find all interaction bellow the threshold"""
-            prop = [p for p in graph[:, column]
-                    if p > self.threshold]
-            id = [i for i, p in enumerate(graph[:, column])
-                  if p > self.threshold]
 
-            """Check which selected interaction do not have higher prop with other points"""
-            idx = [id for id, (i, p) in enumerate(zip(id, prop))
-                   if len([x for x in [k for k in graph[:, i]
-                                       if k > self.threshold]
-                           if x > p]) < 3]
+        all_prop = []
+        for i in graph:
+            all_prop.append(sorted(zip(i[np.where(i > 0)[0]],
+                                       np.where(i > 0)[0]), reverse=True)[1:])
 
-            adjacency_list_id.append(list(np.array(id)[idx]))
-            adjacency_list_prop.append(list(np.array(prop)[idx]))
+        id = 0  # Current ID edge for which interacion is search
+        for id, i in enumerate(all_prop):
+            edges = 0  # Number of edges found
+            prop_id = 0  # Id in order list, take 1st, 2nd etc highest value
 
-        """Remove self connections"""
-        for i in range(len(adjacency_list_id)):
-            idx = [id for id, v in enumerate(adjacency_list_id[i]) if v != i]
+            while edges != 2 and prop_id != 5:
+                if len(i) != 0:
+                    node_id = [id, i[prop_id][1]]
+                    node_prop = i[prop_id][0]
 
-            adjacency_list_id[i] = [j for id, j in enumerate(adjacency_list_id[i])
-                                    if id in idx]
-            adjacency_list_prop[i] = [j for id, j in enumerate(adjacency_list_prop[i])
-                                      if id in idx]
+                    """Search if the interaction has highest prop for each connected points"""
+                    if node_prop > self.threshold:
+                        if np.any([True for p in all_prop[node_id[1]][:2] if p[1] == id]):
+                            adjacency_list_id.append(node_id)
+                            adjacency_list_prop.append(node_prop)
+
+                            edges += 1
+
+                    prop_id += 1
+                    if prop_id + 1 > len(i):
+                        prop_id = 5
+                else:
+                    break
 
         return adjacency_list_id, adjacency_list_prop
 
     @staticmethod
-    def _find_segment(adj_list: list,
-                      adj_prop: list):
+    def _find_segment(adj_ids: list):
         """
         Iterative search mechanism that search for connected points in the
-        adjacency list. If the list is longer then 2 (max number of connections),
-        iterator sort and pick 2 connections with highest popability.
+        adjacency list.
 
         Args:
-            adj_list: adjacency list of graph connections
-            adj_prop: adjacency list of propability of the graph connections
+            adj_ids: adjacency list of graph connections
         """
         idx_df = []
+        x = 0
+
+        while len(idx_df) == 0:
+            idx_df = adj_ids[x]
+            x += 1
+
+            if x > len(adj_ids):
+                break
+
+        past = idx_df = list(np.unique(idx_df))
         stop_iter = False
 
         while not stop_iter:
-            """Initiate segment search - Find edge point"""
-            if len(idx_df) == 0:
-                x = 0
+            past = list(np.unique(idx_df))
 
-                while len(idx_df) == 0:
-                    idx_df = adj_list[x]
-                    x += 1
-
-                    if x > len(adj_list):
-                        break
-                idx_df = idx_df + [(x - 1)]
-
-            past = idx_df
-            """Search for all connected points"""
             for i in past:
-                """Pick only 2 nodes per edge with highest propability"""
-                if len(adj_list[i]) > 2:
-                    sort = sorted(zip(adj_prop[i], adj_list[i]),
-                                  reverse=True)
+                idx_df.extend([p[0] for p in adj_ids if i in p])
+                idx_df.extend([p[1] for p in adj_ids if i in p])
 
-                    for i in sort[:2]:
-                        idx_df = idx_df + [i[1]]
-                else:
-                    idx_df = idx_df + adj_list[i]
-
-            """Pick unique nodes and check if other nodes has interaction to them"""
-            for x in list(np.unique(idx_df)):
-                idx_df = idx_df + [id for id, i in enumerate(adj_list) if [x] in i]
             idx_df = list(np.unique(idx_df))
 
-            """Check if no more connection"""
             if len(past) == len(idx_df):
                 stop_iter = True
 
-        return idx_df
+        mask = []
+        for p in idx_df:
+            mask.extend([id for id, i in enumerate(adj_ids) if p in i])
+        mask = list(np.unique(mask))
+
+        return idx_df, mask
 
     @ staticmethod
     def _sort_segment(coord: np.ndarray,
                       idx: list):
+        """
+        Sorting of the point cloud based on number of connections followed by
+        searching of the closest point with cdist.
+
+        Args:
+            coord: Coordinates for each unsorted point idx
+            idx: idx of point included in the segment
+        """
         new_c = []
         new_i = []
 
@@ -419,8 +432,11 @@ class GraphInstanceV2:
         stop = False
         segment_id = 0
         while not stop:
-            idx = self._find_segment(adj_list=adjacency_id,
-                                     adj_prop=adjacency_prop)
+            idx, mask = self._find_segment(adj_ids=adjacency_id)
+
+            for i in mask:
+                adjacency_id[i] = []
+                adjacency_prop[i] = []
 
             """Select segment longer then 3 points"""
             if len(idx) > 3:
