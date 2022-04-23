@@ -1,5 +1,5 @@
 ================================
-Semantic Label Converter [TARDIS]
+Transformer And Rapid Dimensionless Instance Segmentation [TARDIS]
 ================================
 
 .. image:: https://img.shields.io/github/v/release/SMLC-NYSBC/tardis

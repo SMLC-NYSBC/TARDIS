@@ -54,7 +54,7 @@ class Predictor:
                 out = self.model(coords=x,
                                  node_features=None,
                                  padding_mask=None)
-                return out.cpu().detach().numpy()[0, :]
+                return out.cpu().detach().numpy()[0, 0, :]
             else:
                 out = self.model(x.to(self.device))
 

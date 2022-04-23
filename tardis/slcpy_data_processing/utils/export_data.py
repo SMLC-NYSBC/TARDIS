@@ -36,7 +36,7 @@ class NumpyToAmira:
 
         with open(file_dir, 'w') as f:
             f.write('# ASCII Spatial Graph \r\n')
-            f.write('# SpindleTorch (R) \r\n')
+            f.write('# TARDIS - Transformer And Rapid Dimensionless Instance Segmentation (R) \r\n')
             f.write('# MIT License * 2022 * Robert Kiewisz & Tristan Bepler \r\n')
             f.write('\r\n')
             f.write(f'define VERTEX {vertex} \r\n')

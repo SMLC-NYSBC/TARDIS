@@ -1,9 +1,11 @@
 from os import getcwd, listdir
 from os.path import join
+from typing import Optional
 
 import click
 import numpy as np
 import tifffile.tifffile as tif
+from scipy.spatial.distance import cdist
 
 from tardis.sis_graphformer.graphformer.network import CloudToGraph
 from tardis.sis_graphformer.utils.utils import cal_node_input
@@ -13,7 +15,8 @@ from tardis.slcpy_data_processing.utils.export_data import NumpyToAmira
 from tardis.slcpy_data_processing.utils.load_data import (import_am,
                                                           import_mrc,
                                                           import_tiff)
-from tardis.slcpy_data_processing.utils.segment_point_cloud import GraphInstanceV2
+from tardis.slcpy_data_processing.utils.segment_point_cloud import \
+    GraphInstanceV2
 from tardis.slcpy_data_processing.utils.stitch import StitchImages
 from tardis.slcpy_data_processing.utils.trim import trim_image
 from tardis.spindletorch.unet.predictor import Predictor
@@ -35,25 +38,35 @@ from tardis.version import version
               type=int,
               help='Size of image size used for prediction.',
               show_default=True)
-@click.option('-s', '--sigma',
-              default=1,
-              type=float,
-              help='Point cloud downsampling rate.',
-              show_default=True)
 @click.option('-ct', '--cnn_threshold',
               default=0.2,
               type=float,
               help='Threshold use for model prediction.',
               show_default=True)
 @click.option('-gt', '--gt_threshold',
-              default=0.25,
+              default=0.5,
               type=float,
               help='Threshold use for graph segmentation.',
               show_default=True)
 @click.option('-ch', '--checkpoints',
-              default=(None, None, None),
-              type=tuple,
-              help='If not None, str for Unet and Unet3Plus checkpoints',
+              default=False,
+              type=bool,
+              help='If True, include offline checkpoints',
+              show_default=True)
+@click.option('-chu', '--checkpoints_unet',
+              default=None,
+              type=str,
+              help='If not None, str checkpoints for Unet',
+              show_default=True)
+@click.option('-chup', '--checkpoints_unetplus',
+              default=None,
+              type=str,
+              help='If not None, str checkpoints for Unet3Plus',
+              show_default=True)
+@click.option('-chg', '--checkpoints_gf',
+              default=None,
+              type=str,
+              help='If not None, str checkpoints for graphormer',
               show_default=True)
 @click.option('-d', '--device',
               default='0',
@@ -76,17 +89,20 @@ from tardis.version import version
 @click.version_option(version=version)
 def main(prediction_dir: str,
          patch_size: int,
-         sigma: float,
          cnn_threshold: float,
          gt_threshold: float,
-         checkpoints: tuple,
+         checkpoints: bool,
          device: str,
          tqdm: bool,
-         debug: bool):
+         debug: bool,
+         checkpoints_unet: Optional[str] = None,
+         checkpoints_unetplus: Optional[str] = None,
+         checkpoints_gf: Optional[str] = None,):
     """
     MAIN MODULE FOR PREDICTION MT with Tardis
     """
-    """Searching for available images for prediction"""
+    """Initial setup"""
+    # Searching for available images for prediction
     available_format = ('.tif', '.mrc', '.rec', '.am')
     output = join(prediction_dir, 'temp', 'Predictions')
     am_output = join(prediction_dir, 'Predictions')
@@ -95,10 +111,17 @@ def main(prediction_dir: str,
         prediction_dir) if f.endswith(available_format)]
     assert len(predict_list) > 0, 'No file found in given direcotry!'
 
+    # Build handler's
     stitcher = StitchImages(tqdm=False)
     post_processer = ImageToPointCloud(tqdm=False)
     GraphToSegment = GraphInstanceV2(threshold=gt_threshold)
     BuildAmira = NumpyToAmira()
+
+    # Build CNN from checkpoints
+    if checkpoints:
+        checkpoints = (checkpoints_unet, checkpoints_unetplus, checkpoints_gf)
+    else:
+        checkpoints = (None, None, None)
 
     predict_unet = Predictor(model=build_network(network_type='unet',
                                                  classification=False,
@@ -134,22 +157,6 @@ def main(prediction_dir: str,
                                   device=device,
                                   tqdm=tqdm)
 
-    predict_gf = Predictor(model=CloudToGraph(n_out=1,
-                                              node_input=cal_node_input(
-                                                  (10, 10, 10)),
-                                              node_dim=128,
-                                              edge_dim=64,
-                                              num_layers=3,
-                                              num_heads=4,
-                                              dropout_rate=0,
-                                              coord_embed_sigma=float((0.989 * sigma) + 4.2036),
-                                              predict=True),
-                           checkpoint=checkpoints[2],
-                           network='graphformer',
-                           subtype='without_img',
-                           model_type='microtubules',
-                           device=device,
-                           tqdm=tqdm)
     if tqdm:
         from tqdm import tqdm as tq
 
@@ -157,17 +164,19 @@ def main(prediction_dir: str,
     else:
         batch_iter = predict_list
 
+    """Process each image with CNN and GF"""
     for i in batch_iter:
+        """CNN prediction"""
         if i.endswith('CorrelationLines.am'):
             continue
 
         if tqdm:
             batch_iter.set_description(f'Preprocessing for CNN {i}')
 
-        """Build temp dir"""
+        # Build temp dir
         build_temp_dir(dir=prediction_dir)
 
-        """Voxalize image"""
+        # Cut image for smaller image
         if i.endswith(('.tif', '.tiff')):
             image, _ = import_tiff(img=join(prediction_dir, i),
                                    dtype=np.uint8)
@@ -195,7 +204,7 @@ def main(prediction_dir: str,
         image = None
         del(image)
 
-        """Predict image patches"""
+        # Setup for predicting image patches
         patches_DL = PredictionDataSet(img_dir=join(prediction_dir, 'temp', 'Patches'),
                                        size=patch_size,
                                        out_channels=1)
@@ -210,6 +219,7 @@ def main(prediction_dir: str,
         else:
             dl_iter = range(dl_len)
 
+        # Predict image patches
         for j in dl_iter:
             input, name = patches_DL.__getitem__(j)
 
@@ -227,7 +237,8 @@ def main(prediction_dir: str,
             tif.imwrite(file=join(output, f'{name}.tif'),
                         data=np.array(out, dtype=np.int8))
 
-        """Stitch patches and post-process"""
+        """CNN post-process"""
+        # Stitch predicted image patches
         if tqdm:
             batch_iter.set_description(f'Postprocessing for {i}')
 
@@ -239,7 +250,7 @@ def main(prediction_dir: str,
                                                     :org_shape[1],
                                                     :org_shape[2]])
 
-        """Check if predicted image is not empty"""
+        # Check if predicted image is not empty
         if debug:
             tif.imwrite(join(am_output,
                              f'{i[:-out_format]}_CNN.tif'),
@@ -248,6 +259,7 @@ def main(prediction_dir: str,
         if image is None:
             continue
 
+        # Post-process predicted image patches
         if tqdm:
             batch_iter.set_description(f'Building voxal for {i}')
 
@@ -263,27 +275,68 @@ def main(prediction_dir: str,
                          f'{i[:-out_format]}_raw_pc.npy'),
                     point_cloud)
 
-        """Build data loader for point cloud"""
+        """Graphformer prediction"""
+        # Find downsampling value
+        dist = cdist(point_cloud, point_cloud)
+        dist = [sorted(d)[1] for d in dist if sorted(d)[1] != 0]
+
+        # Build voxalized dataset with
         VD = VoxalizeDataSetV2(coord=point_cloud,
                                image=None,
                                init_voxal_size=5000,
                                drop_rate=25,
                                downsampling_threshold=500,
-                               downsampling_rate=sigma,
+                               downsampling_rate=round(np.mean(dist), 0) * 5,
                                graph=False)
         coords_df, _, output_idx, = VD.voxalize_dataset(out_idx=True)
 
-        if debug:
-            np.save(join(am_output,
-                         f'{i[:-out_format]}_coord_voxal.npy'),
-                    [i.cpu().detach().numpy() for i in coords_df],
-                    allow_pickle=True)
-            np.save(join(am_output,
-                         f'{i[:-out_format]}_idx_voxal.npy'),
-                    [i.cpu().detach().numpy() for i in output_idx],
-                    allow_pickle=True)
+        # Calculate sigma for graphformer from mean of nearest point dist
+        gf = GraphInstanceV2(threshold=0)
+        coord = gf._stitch_coord(coord=coords_df,
+                                 idx=output_idx)
+        dist = cdist(coord, coord)
+        dist = [sorted(d)[1] for d in dist if sorted(d)[1] != 0]
+        dist = round(np.mean(dist), 0)
+        sigma = dist * 1.5
 
-        """Predict point cloud"""
+        # Predict point cloud
+        predict_gf = Predictor(model=CloudToGraph(n_out=1,
+                                                  node_input=cal_node_input((10, 10, 10)),
+                                                  node_dim=128,
+                                                  edge_dim=64,
+                                                  num_layers=3,
+                                                  num_heads=4,
+                                                  dropout_rate=0,
+                                                  coord_embed_sigma=sigma,
+                                                  predict=True),
+                               checkpoint=checkpoints[2],
+                               network='graphformer',
+                               subtype='without_img',
+                               model_type='microtubules',
+                               device=device,
+                               tqdm=tqdm)
+
+        if debug:
+            if device == 'cpu':
+                np.save(join(am_output,
+                             f'{i[:-out_format]}_coord_voxal.npy'),
+                        [c.detach().numpy() for c in coords_df],
+                        allow_pickle=True)
+                np.save(join(am_output,
+                             f'{i[:-out_format]}_idx_voxal.npy'),
+                        output_idx,
+                        allow_pickle=True)
+            else:
+                np.save(join(am_output,
+                             f'{i[:-out_format]}_coord_voxal.npy'),
+                        [c.cpu().detach().numpy() for c in coords_df],
+                        allow_pickle=True)
+                np.save(join(am_output,
+                             f'{i[:-out_format]}_idx_voxal.npy'),
+                        output_idx,
+                        allow_pickle=True)
+
+        # Predict point cloud
         if tqdm:
             dl_iter = tq(coords_df,
                          'Voxals',
@@ -297,7 +350,7 @@ def main(prediction_dir: str,
         coords = []
         for coord in dl_iter:
             graph = predict_gf._predict(x=coord[None, :])
-            graphs.append(graph[0, :])
+            graphs.append(graph)
             coords.append(coord.cpu().detach().numpy())
 
         if debug:
@@ -310,10 +363,11 @@ def main(prediction_dir: str,
                     coords,
                     allow_pickle=True)
 
-        """Graph  to segmented point cloud"""
+        """Graphformer post-processing"""
         if tqdm:
             batch_iter.set_description(f'Graph segmentation for {i}')
 
+        # Segment graph
         segments = GraphToSegment.graph_to_segments(graph=graphs,
                                                     coord=coords,
                                                     idx=output_idx)
@@ -325,7 +379,8 @@ def main(prediction_dir: str,
 
         """Save as .am"""
         if tqdm:
-            batch_iter.set_description(f'Saving .am {i}')
+            n_ele = np.max(segments[:, 0])
+            batch_iter.set_description(f'Saving .am {i} with {n_ele}')
 
         BuildAmira.export_amira(coord=segments,
                                 file_dir=join(am_output,
