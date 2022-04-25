@@ -22,8 +22,6 @@ Features
 ============
 Installation
 ============
-
-
 Stable release
 --------------
 

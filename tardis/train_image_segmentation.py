@@ -144,6 +144,8 @@ def main(training_dataset: str,
          dropout_rate: Optional[float] = None):
     """
     MAIN MODULE FOR TRAINING CNN UNET/RESUNET/UNET3PLUS MODELS
+
+    Supported 3D images only!
     """
     """Set environment"""
     train_imgs_dir = join(training_dataset, 'train', 'imgs')

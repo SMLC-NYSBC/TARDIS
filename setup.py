@@ -37,9 +37,9 @@ setup(
     include_package_data=True,
     keywords=['spindletorch', 'semantic segmentation', 'point cloud segmentation',
               'MT segmentation', 'UNet', 'Unet3Plus'],
-    name='tardis',
+    name='tardis-pytorch',
     packages=find_packages(include=['tardis'],
                            exclude=['tests']),
-    url='https://github.com/SMLC-NYSBC/tardis',
+    url='https://github.com/SMLC-NYSBC/tardis-pytorch',
     version=version,
 )

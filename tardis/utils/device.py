@@ -15,7 +15,7 @@ def get_device(device: Optional[str] = 0):
         device = 'cuda:0'
     elif device == 'cpu':  # Load CPU
         device = 'cpu'
-    elif device_is_int(device):  # Load specific GPU ID
+    elif device_is_str(device):  # Load specific GPU ID
         torch.set_num_threads(4)
         device = f'cuda:{int(device)}'
     else:
@@ -24,9 +24,18 @@ def get_device(device: Optional[str] = 0):
     return device
 
 
-def device_is_int(device):
+def device_is_str(device):
+    """
+    CHECK IF USED DEVICE IS CONVERTABLE TO INT VALUE
+
+    Args:
+        device: Device ID
+    """
     try:
         int(device)
-        return True
+        if isinstance(int(device), int):
+            return True
+        else:
+            return False
     except ValueError:
         return False

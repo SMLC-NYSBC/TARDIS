@@ -11,10 +11,11 @@ def get_weights_aws(network: str,
                     model: Optional[str] = '',
                     save_weights=True):
     """
-    Module to download weights from S3
+    Module to download pre-train weights from S3 aws bucket
     Args:
         network: Type of network for which weight are requested
-        subtype: Sub name of the network or sub parameater for network
+        subtype: Sub-name of the network or sub parameater for network
+        model: Additional dataset name use for the graphformer
         save_weights: If True model is saved in temp repository
     """
     if network in ['unet', 'unet3plus']:

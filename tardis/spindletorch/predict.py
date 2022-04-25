@@ -45,6 +45,7 @@ def predict(image_DL: DataLoader,
         cnn_multiplayer: Layer multiplayer for CNN
         cnn_composition: Structure of each layer for CNN
         tqdm: If True, build with progressbar
+        checkpoints: If not None, dir. name with checkpoint weights
         threshold: Threshold for image prediction
         cnn_dropout: If not None, float use as dropout rate in CNN
     """

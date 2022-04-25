@@ -1,11 +1,12 @@
+from os import getcwd, mkdir
+from os.path import isdir, join
+from shutil import rmtree
+
 import numpy as np
 import torch
 from tardis.spindletorch.utils.metrics import calculate_F1
-from torch import nn
-from os import mkdir, getcwd
-from os.path import isdir, join
-from shutil import rmtree
 from tardis.utils.utils import EarlyStopping
+from torch import nn
 
 
 class Trainer:
@@ -13,16 +14,18 @@ class Trainer:
     WRAPPER FOR TRAINER
 
      Args:
-         model: Model with loaded pretrained weights
-         device: Device on which to predict
-         criterion: Loss function
-         optimizer: Optimizer
-         training_DataLoader: DataLoader object with data sets for training
-         validation_DataLoader: DataLoader object with data sets for training
-         lr_scheduler: learning rete scheduler
-         epochs: Number of epoches for training
-         notebook: If True plot progress bar in Jupyter else console
-
+        model: Model with loaded pretrained weights
+        device: Device on which to predict
+        criterion: Loss function
+        optimizer: Optimizer
+        training_DataLoader: DataLoader object with data sets for training
+        validation_DataLoader: DataLoader object with data sets for training
+        lr_scheduler: learning rete scheduler
+        epochs: Number of epoches for training
+        early_stop_rate: Number of epoches witout improvement for early stop
+        tqdm: If True plot progress bar in Jupyter else console
+        checkpoint_name: Name for saving checkpoint
+        classification: If True Unet3Plus use classification before loss evaluation
      """
 
     def __init__(self,

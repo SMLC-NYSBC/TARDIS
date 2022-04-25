@@ -1,7 +1,6 @@
 from typing import Optional
 
 import torch
-
 from tardis.utils.aws import get_weights_aws
 
 
@@ -24,8 +23,8 @@ class Predictor:
                  subtype: Optional[str] = None,
                  model_type: Optional[str] = None,
                  tqdm=False):
-        self.model = model
-        self.network = network
+        self.model = model.to(device)
+
         if checkpoint is None:
             print(f'Downloading weight file for {network}_{subtype}...')
 
@@ -44,6 +43,7 @@ class Predictor:
         weights = None
         self.model.eval()
 
+        self.network = network
         self.device = device
         self.tqdm = tqdm
 

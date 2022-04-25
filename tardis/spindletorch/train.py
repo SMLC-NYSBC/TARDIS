@@ -3,14 +3,13 @@ from os.path import isdir, join
 from typing import Optional
 
 import torch
+from tardis.spindletorch.unet.losses import (AdaptiveDiceLoss, BCEDiceLoss,
+                                             BCELoss, DiceLoss)
+from tardis.spindletorch.unet.trainer import Trainer
+from tardis.spindletorch.utils.build_network import build_network
 from torch import optim
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
-from tardis.spindletorch.utils.build_network import build_network
-from tardis.spindletorch.unet.losses import BCELoss, BCEDiceLoss, DiceLoss, \
-    AdaptiveDiceLoss
-from tardis.spindletorch.unet.trainer import Trainer
-
 
 # Setting for stable release to turn off all debug APIs
 torch.backends.cudnn.benchmark = True
@@ -37,6 +36,29 @@ def train(train_dataloader: DataLoader,
           tqdm=True,
           device='gpu',
           epochs=100):
+    """
+    CNN MAIN TRAINING WRAPPER
+
+    Args:
+        train_dataloader: DataLoader with train dataset
+        test_dataloader: DataLoader with validation dataset
+        img_size: Image patch size, needed to calculate CNN layers
+        cnn_type: Name of CNN type
+        classification: If True Unet3Plus use classification before loss evaluation
+        dropout: Dropout value, if None dropout is not used
+        convolution_layer: Number of convolution layers
+        convolution_multiplayer: Number of output channels in first CNN layer
+        convolution_structure: Structure and order of CNN layer components
+        cnn_checkpoint: If not None, indicate dir. with a checpoint weights
+        loss_function: Name of loss function used for evaluation
+        loss_alpha: Alpha value for Adaptive_Dice loss function
+        learning_rate: Float value of learning rate
+        learning_rate_scheduler: If True, build optimizer with lr scheduler
+        early_stop_rate: Number of epoches without improvement needed for early stop of the training
+        tqdm: If True, build Trainer with progress bar
+        device: Device ID used for training
+        epochs: Number of epoches
+    """
     img, mask = next(iter(train_dataloader))
     print(f'x = shape: {img.shape}; '
           f'type: {img.dtype}')

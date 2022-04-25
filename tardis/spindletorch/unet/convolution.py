@@ -25,6 +25,7 @@ def convolution(in_ch: int,
     modules = []
     conv = False
 
+    """Build single CNN block"""
     for letter in components:
         if "c" in letter:
             conv = True

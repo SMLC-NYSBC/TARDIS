@@ -18,9 +18,9 @@ def calculate_F1(input: Optional[np.ndarray] = torch.Tensor,
         target: Ground truth mask
         best_f1: if True an expected inputs is probability of classes and
             measured metrics is soft-f1
+        smooth: Arbitrate low number to avoid division by 0
     """
-    # Calculate confusion matrix, if np.array pass warning for
-    # dividing by 0
+    """Find best f1 based on variating threshold"""
     if best_f1:
         threshold = 0
         f1 = []
@@ -87,6 +87,7 @@ def calculate_F1(input: Optional[np.ndarray] = torch.Tensor,
             tn = np.sum(np.isnan(confusion_vector) is True)
             fn = np.sum(confusion_vector == 0)
 
+        """Metric calculation"""
         # Accuracy Score - (tp + tn) / (tp + tn + fp + fn)
         accuracy_score = (tp + tn) / (tp + tn + fp + fn + smooth)
 
@@ -103,6 +104,12 @@ def calculate_F1(input: Optional[np.ndarray] = torch.Tensor,
 
 
 def normalize_image(image: np.ndarray):
+    """
+    Simple image data normalizer between 0,1
+
+    Args:
+        image: Image data set
+    """
     image_min = np.min(image)
     image_max = np.max(image)
 

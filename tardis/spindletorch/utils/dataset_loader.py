@@ -11,7 +11,7 @@ from torch.utils.data import Dataset
 
 class VolumeDataset(Dataset):
     """
-        Class module to load image and semantic label masks
+    DATASET BUILDER FOR IMAGES AND SEMANTIC LABEL MASKS FOR TRAINING
 
     Args:
         img_dir: source of the 2D/3D .tif file
@@ -47,9 +47,7 @@ class VolumeDataset(Dataset):
 
     def __getitem__(self,
                     i):
-        """
-        Get list of all images and masks, load and prepare for packaging
-        """
+        """Find next image and corresponding label mask image"""
         idx = self.ids[i]
         mask_file = os.path.join(self.mask_dir, str(idx) + '_mask' + '.tif')
         img_file = os.path.join(self.img_dir, str(idx) + '.tif')
@@ -57,6 +55,7 @@ class VolumeDataset(Dataset):
         img, mask = tifffile.imread(img_file), tifffile.imread(mask_file)
         img, mask = np.array(img, dtype='uint8'), np.array(mask, dtype='uint8')
 
+        """Pre-process image and mask"""
         img, mask = preprocess(image=img,
                                mask=mask,
                                size=self.size,
@@ -64,15 +63,13 @@ class VolumeDataset(Dataset):
                                transformation=self.transform,
                                output_dim_mask=self.out_channels)
 
-        img = torch.from_numpy(img).type(torch.float32)
-        mask = torch.from_numpy(mask.copy()).type(torch.float32)
-
-        return img, mask
+        return torch.from_numpy(img).type(torch.float32), \
+            torch.from_numpy(mask.copy()).type(torch.float32)
 
 
 class PredictionDataSet(Dataset):
     """
-    CLASS MODULE TO LOAD IMAGE FOR PREDICTIONS
+    DATASET BUILDER FOR IMAGES AND SEMANTIC LABEL MASKS FOR PREDICTION
 
     Module has turn off all transformations
 
@@ -97,41 +94,43 @@ class PredictionDataSet(Dataset):
         return len(self.ids)
 
     def __getitem__(self, i):
-        """
-        Get list of all images and masks, load and prepare for packaging
-        """
+        """Find next image and corresponding label mask image"""
         idx = self.ids[i]
         img_file = join(self.img_dir, str(idx) + '.*')
 
         img = tifffile.imread(img_file)
         img = np.array(img, dtype='uint8')
 
+        """Pre-process image and mask"""
         img, _ = preprocess(image=img,
                             mask=img,
                             size=self.size,
                             normalization="minmax",
                             transformation=False,
                             output_dim_mask=self.out_channels)
-        img = torch.from_numpy(img).type(torch.float32)
 
-        return img, idx
+        return torch.from_numpy(img).type(torch.float32), idx
 
 
 class GPU_DataLoader(object):
     """
-    Simple data provider for datasets that
-    fit in GPU memory completely.
-    data: torch Tensor
-    batch_size: batch size (default: 128)
-    returns: batch-sized tensors. Iteration
-    stops when epoch is completed.
-    Every epoch a new shuffle of the data is
-    generated.
+    SIMPLE DATA PROVIDER FOR DATASETS THAT FIT IN GPU MEMORY COMPLETELY
+
+    Every epoch a new shuffle of the data is generated.
+
+    Args:
+        x: Image data
+        y: Mask data
+        batch_size: batch size
 
     Author:
         Paul Kim
     """
-    def __init__(self, x, y, batch_size=128):
+
+    def __init__(self,
+                 x: np.ndarray,
+                 y: np.ndarray,
+                 batch_size=128):
         self._n_examples = len(x)
 
         self.x = torch.tensor(x).float().cuda()
@@ -146,14 +145,14 @@ class GPU_DataLoader(object):
 
     def _update_permutation(self):
         """
-        Update the list of indices defining the order
-        in which examples are provided. Meant to be
-        called once an epoch.
+        Update the list of indices defining the order in which examples are provided.
+        Meant to be called once an epoch.
         """
         self.permutation = torch.randperm(self._n_examples).cuda()
 
     def _get_batch(self):
-        batch_indices = self.permutation.narrow(dim=0, start=self.batch_index, length=self.batch_size)
+        batch_indices = self.permutation.narrow(
+            dim=0, start=self.batch_index, length=self.batch_size)
         x_batch = torch.index_select(self.x, dim=0, index=batch_indices)
         y_batch = torch.index_select(self.y, dim=0, index=batch_indices)
 

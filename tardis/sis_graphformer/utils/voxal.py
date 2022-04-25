@@ -2,7 +2,6 @@ from typing import Optional
 
 import numpy as np
 import torch
-from open3d import geometry, utility
 from scipy.spatial import distance
 from tardis.sis_graphformer.utils.augmentation import BuildGraph
 
@@ -177,6 +176,8 @@ class VoxalizeDataSetV2:
             inx_bool: Boolen list of point to keep after downsampling
         """
         if self.downsampling_rate is not None:
+            from open3d import geometry, utility
+
             pcd = geometry.PointCloud()
             pcd.points = utility.Vector3dVector(coord)
             pcd = np.asarray(pcd.voxel_down_sample(self.downsampling_rate).points)

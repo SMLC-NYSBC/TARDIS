@@ -9,24 +9,25 @@ class EarlyStopping():
     """
     Early stopping to stop the training when the loss does not improve after
     certain epochs.
+
+    Args:
+        patience: how many epochs to wait before stopping when loss is
+               not improving
+        min_delta: minimum difference between new loss and old loss for
+               new loss to be considered as an improvement
     """
 
     def __init__(self,
                  patience=10,
                  min_delta=0):
-        """
-        patience: how many epochs to wait before stopping when loss is
-               not improving
-        min_delta: minimum difference between new loss and old loss for
-               new loss to be considered as an improvement
-        """
         self.patience = patience
         self.min_delta = min_delta
         self.counter = 0
         self.best_loss = None
         self.early_stop = False
 
-    def __call__(self, val_loss):
+    def __call__(self,
+                 val_loss: float):
         if self.best_loss is None:
             self.best_loss = val_loss
         elif self.best_loss - val_loss > self.min_delta:
@@ -35,14 +36,20 @@ class EarlyStopping():
             self.counter = 0
         elif self.best_loss - val_loss < self.min_delta:
             self.counter += 1
-            print(
-                f"INFO: Early stopping counter {self.counter} of {self.patience}")
+            print(f"INFO: Early stopping counter {self.counter} of {self.patience}")
+
             if self.counter >= self.patience:
                 print('INFO: Early stopping')
                 self.early_stop = True
 
 
 def check_uint8(image: np.ndarray):
+    """
+    SIMPLE CHECK FOR UINT8 DATA TYPE
+
+    Args:
+        image: Image for evaluation
+    """
     if np.all(np.unique(image) == [0, 1]):
         return image
     elif np.all(np.unique(image) == [0, 254]) or np.all(np.unique(image) == [0, 255]):
@@ -59,6 +66,19 @@ def check_dir(dir: str,
               test_mask: str,
               mask_format: tuple,
               with_img: bool):
+    """
+    CHECK LIST USED TO EVALUATE IF DIRECOTRY CONTAIN CORRECT DATA TYPE FOR CNN
+
+    Args:
+        dir: Main direcotry with all files
+        train_img: Direcotry name with images for training
+        train_mask: Direcotry name with mask images for training
+        img_format: Allowed image format
+        test_img: Direcotry name with images for validation
+        test_mask: Direcotry name with mask images for validation
+        mask_format: Allowed mask image format
+        with_img: GraphFormer bool value for training with/without images
+    """
     dataset_test = False
     if isdir(join(dir, 'train')) and isdir(join(dir, 'test')):
         dataset_test = True
@@ -112,6 +132,7 @@ class BuildTestDataSet:
     Args:
         dataset_dir: Directory with train test folders
         train_test_ration: Percentage of dataset to be moved
+        prefix: Additional prefix name at the end of the file
     """
 
     def __init__(self,

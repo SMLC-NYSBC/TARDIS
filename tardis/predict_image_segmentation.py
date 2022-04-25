@@ -102,6 +102,8 @@ def main(prediction_dir: str,
          dropout: Optional[float] = None):
     """
     MAIN MODULE FOR PREDICTION WITH CNN UNET/RESUNET/UNET3PLUS MODELS
+
+    Supported 3D images only!
     """
     """Searching for available images for prediction"""
     available_format = ('.tif', '.mrc', '.rec', '.am')
@@ -121,18 +123,23 @@ def main(prediction_dir: str,
         build_temp_dir(dir=prediction_dir)
 
         """Voxalize image"""
-        try:
-            if i.endswith('.tif'):
-                image, _ = import_tiff(img=join(prediction_dir, i),
-                                       dtype=np.uint8)
-                format = 4
-            elif i.endswith(('.mrc', '.rec')):
-                image, _ = import_mrc(img=join(prediction_dir, i))
-                format = 4
-            elif i.endswith('.am'):
-                image, _ = import_am(img=join(prediction_dir, i))
-                format = 3
-        except:
+        check_format = False
+
+        if i.endswith('.tif'):
+            image, _ = import_tiff(img=join(prediction_dir, i),
+                                   dtype=np.uint8)
+            format = 4
+            check_format = True
+        elif i.endswith(('.mrc', '.rec')):
+            image, _ = import_mrc(img=join(prediction_dir, i))
+            format = 4
+            check_format = True
+        elif i.endswith('.am'):
+            image, _ = import_am(img=join(prediction_dir, i))
+            format = 3
+            check_format = True
+
+        if not check_format:
             continue
 
         org_shape = image.shape

@@ -1,7 +1,8 @@
-from tardis.slcpy_data_processing.utils.stitch import StitchImages
-from os.path import join, isdir
 from os import mkdir, rename
+from os.path import isdir, join
 from shutil import rmtree
+
+from tardis.slcpy_data_processing.utils.stitch import StitchImages
 
 
 def ImageStitcher(image_dir: str,

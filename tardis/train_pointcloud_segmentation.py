@@ -170,6 +170,12 @@ def main(pointcloud_dir: str,
          device: str,
          epochs: int,
          tqdm: bool,):
+    """
+    MAIN MODULE FOR GRAPHFORMER TRAINING
+
+    Training unit for GrapFormer with 2D/3D dataset of point cloud with or without
+    images.
+    """
     """Check directory for data compatibility"""
     train_imgs_dir = join(pointcloud_dir, 'train', 'imgs')
     train_coords_dir = join(pointcloud_dir, 'train', 'masks')

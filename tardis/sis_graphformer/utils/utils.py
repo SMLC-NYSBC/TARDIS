@@ -27,6 +27,18 @@ def BuildTrainDataSet(dir: str,
                       coord_format: tuple,
                       with_img: bool,
                       img_format: Optional[tuple] = None):
+    """
+    STANDARD BUILDER FOR TRAINING DATASETS
+
+    Args:
+        dir: Direcotry where the file should outputted
+        coord_format: Format of the coordinate files
+        with_img: If True, expect corresponding image files
+        img_format: Allowed format that can be used
+
+    Returns:
+        _type_: _description_
+    """
     assert len([f for f in listdir(dir) if f.endswith(coord_format)]) > 0, \
         f'No file found in given dir {dir}'
     file_format = []
@@ -38,6 +50,7 @@ def BuildTrainDataSet(dir: str,
              dst=join(dir, 'train', 'masks', i))
     file_format.append([f for f in coord_format if idx_coord[0].endswith(f)][0])
 
+    """Sort coord with images if included"""
     if with_img:
         assert len([f for f in listdir(dir) if f.endswith(img_format)]) > 0, \
             f'No file found in given dir {dir}'

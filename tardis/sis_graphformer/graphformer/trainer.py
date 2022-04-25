@@ -1,10 +1,9 @@
-from os import mkdir, getcwd
+from os import getcwd, mkdir
 from os.path import isdir, join
 from shutil import rmtree
 
 import numpy as np
 import torch
-
 from tardis.utils.utils import EarlyStopping
 
 

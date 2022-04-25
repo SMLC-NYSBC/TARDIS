@@ -2,7 +2,12 @@
 History
 =======
 
-0.1.0 (2022-03-XX)
+0.1.0a2 (2022-04-25)
+------------------
+- Fix for better handling graph prediction
+- Fix for #4-#6 issues
+
+0.1.0a1 (2022-04-13)
 ------------------
 * Rename tardis to tardis-pytorch
 * Build tests for all modules

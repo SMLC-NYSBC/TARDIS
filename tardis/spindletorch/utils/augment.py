@@ -3,15 +3,13 @@ import numpy as np
 
 class CenterCrop:
     """
-        Rescale the image and mask to a given size for 3D [DxHxW],
-         or 2D images [HxW]
-
-    Object as an input required
-            x: image 2D or 3D arrays
-            y: target/mask 2D or 3D arrays
+    Rescale the image and mask to a given size for 3D [DxHxW],
+    or 2D images [HxW]
 
     Args:
         size: output size of image in DHW/HW
+        x: image 2D or 3D arrays
+        y: target/mask 2D or 3D arrays
     """
 
     def __init__(self,
@@ -25,6 +23,7 @@ class CenterCrop:
     def __call__(self,
                  x: np.ndarray,
                  y: np.ndarray):
+        """Evaluate data structure"""
         assert x.ndim in [2, 3] and y.ndim in [2, 3]
 
         if x.ndim == 3:
@@ -36,11 +35,13 @@ class CenterCrop:
         else:
             h, w = x.shape
 
+        """"Calculate padding for crop"""
         bottom_h = int(h // 2 + self.size[1] // 2)
         top_h = int(h // 2 - self.size[1] // 2)
         right_w = int(w // 2 + self.size[2] // 2)
         left_w = int(w // 2 - self.size[2] // 2)
 
+        """Crop"""
         if x.ndim == 3 and y.ndim == 3:
             return x[up_d:down_d, top_h:bottom_h, left_w:right_w], \
                 y[up_d:down_d, top_h:bottom_h, left_w:right_w]
@@ -53,8 +54,8 @@ class SimpleNormalize:
     """
     Normalize image vale by simple division
 
-        Object as an input required
-            x: image or target
+    Args:
+        x: image or target
     """
 
     def __call__(self,
@@ -66,14 +67,12 @@ class SimpleNormalize:
 
 class MinMaxNormalize:
     """
-    Normalize image vale between 0 and 1 and
-
-    Object as an input required
-        x: image or target
+    Normalize image vale between 0 and 1
 
     Args:
         min: Minimal value for initialize normalization e.g. 0
         max: Maximal value for initialize normalization e.g. 255
+        x: image or target
     """
 
     def __init__(self,
@@ -85,7 +84,8 @@ class MinMaxNormalize:
 
         self.range = self.max - self.min
 
-    def __call__(self, x):
+    def __call__(self,
+                 x: np.ndarray):
         return (x - self.min) / self.range
 
 
@@ -93,7 +93,7 @@ class RandomFlip:
     """
     Perform 180 degree flip randomly in z,x or y axis for 3D or 4D
 
-    Object as an input required
+    Args:
         x: image 2D or 3D arrays
         y: target/mask 2D or 3D arrays
     """
@@ -117,12 +117,13 @@ class RandomRotation:
     """
     Perform 90, 180 or 270 degree rotation for 2D or 3D in left or right
 
-    Object as an input required
+    Args:
         x: image 2D or 3D arrays
         y: target/mask 2D or 3D arrays
     """
 
     def __init__(self):
+        """Randomize rotation"""
         self.random_rotation = np.random.randint(0, 3)
         # 0 is 90, 1 is 180, 2 is 270
         self.random_direction = np.random.randint(0, 1)
@@ -131,6 +132,7 @@ class RandomRotation:
     def __call__(self,
                  x: np.ndarray,
                  y: np.ndarray):
+        """Evaluate data structure"""
         if self.random_direction == 0:
             if x.ndim == 2:
                 axis = (0, 1)
@@ -150,13 +152,11 @@ class ComposeRandomTransformation:
     """
     Double wrapper for image and mask to perform random transformation
 
-    Object as an input required
-        x: image 2D or 3D arrays
-        y: target/mask 2D or 3D arrays
-
     Args:
         transformations: list of transforms objects from which single
             or multiple transformations will be selected
+        x: image 2D or 3D arrays
+        y: target/mask 2D or 3D arrays
     """
 
     def __init__(self,
@@ -167,8 +167,9 @@ class ComposeRandomTransformation:
     def __call__(self,
                  x: np.ndarray,
                  y: np.ndarray):
+        """Run randomize transformation"""
         if self.random_repetition > 0:
-            for i in range(self.random_repetition):
+            for _ in range(self.random_repetition):
                 random_transf = np.random.randint(0, len(self.transforms))
                 transform = self.transforms[random_transf]
                 x, y = transform(x, y)
@@ -194,6 +195,7 @@ def preprocess(image: np.ndarray,
         size: image size output for center crop
         output_dim_mask: output channel dimensions for label mask
     """
+    """Evaluate data structure"""
     assert image.ndim in [2, 3]
     if image.ndim == 3:
         z, h, w = image.shape
@@ -202,7 +204,7 @@ def preprocess(image: np.ndarray,
         h, w = image.shape
         dim = 2
 
-    """ resize image """
+    """Resize image"""
     if dim == 3:
         if (z, h, w) != (size, size, size):
             # resize image
@@ -214,14 +216,14 @@ def preprocess(image: np.ndarray,
                 crop = CenterCrop((size, size))
                 image, mask = crop(image, mask)
 
-    """ Transform image randomly """
+    """Transform image randomly"""
     if transformation:
         transformations = [RandomFlip(), RandomRotation()]
         random_transform = ComposeRandomTransformation(transformations)
 
         image, mask = random_transform(image, mask)
 
-    """ Normalize image for value between 1 and 0 """
+    """Normalize image for value between 1 and 0"""
     if image.max() > 1:
         if normalization == "simple":
             normalization = SimpleNormalize()
@@ -230,7 +232,7 @@ def preprocess(image: np.ndarray,
 
         image = normalization(image)
 
-    """ Expand dimension order for HW / DHW to CHW / CDHW """
+    """Expand dimension order for HW / DHW to CHW / CDHW"""
     image = np.expand_dims(image, axis=0)
     mask = np.expand_dims(mask, axis=0)
 

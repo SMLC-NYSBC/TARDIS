@@ -56,6 +56,7 @@ def preprocess_data(coord: str,
             coord_label = amira_import.get_segmented_points()
             pixel_size = amira_import.get_pixel_size()
 
+    """Coordinates without labels"""
     coords = coord_label[:, 1:]
 
     if size is None:
@@ -67,12 +68,14 @@ def preprocess_data(coord: str,
         size = (size, size, size)
 
     """ Collect Image Patches [Channels x Length] """
+    # Normalize image between 0,1
     if image is not None and coord[-3:] != ".am":
         if normalization == "simple":
             normalization = SimpleNormalize()
         elif normalization == 'minmax':
             normalization = MinMaxNormalize(0, 255)
 
+        # Crop images size around coordinates
         if memory_save:
             img_df = tiff.imread(image, aszarr=True)
             img_stack = zarr.open(img_df, mode='r')
@@ -84,6 +87,7 @@ def preprocess_data(coord: str,
                              normalization=normalization,
                              memory_save=memory_save)  # Z x Y x X
 
+        # Load images in an array
         if len(size) == 2:
             img = np.zeros((len(coords), size[0] * size[1]))
 
@@ -100,6 +104,8 @@ def preprocess_data(coord: str,
         if memory_save:
             img_df.close()
     elif image is not None and image.endswith('.am'):
+        """Collect Image Patches for .am binnary files"""
+        # Normalize image values between 0 and 1
         if normalization == "simple":
             normalization = SimpleNormalize()
         else:
@@ -107,11 +113,13 @@ def preprocess_data(coord: str,
 
         img_stack, pixel_size = amira_import.get_image()
 
+        # Crop image around coordinates
         crop_tiff = Crop2D3D(image=img_stack,
                              size=size,
                              normalization=normalization,
                              memory_save=False)  # Z x Y x X
 
+        # Load images patches into an array
         if len(size) == 2:
             img = np.zeros((len(coords), size[0] * size[1]))
 
@@ -222,12 +230,10 @@ class MinMaxNormalize:
     """
     NORMALIZE IMAGE VALUE USING MIN/MAX APPROACH
 
-    Input:
-        x: image or target 3D or 4D arrays
-
     Args:
         min: Minimal value for initialize normalization e.g. 0
         max: Maximal value for initialize normalization e.g. 255
+        x: image or target 3D or 4D arrays
     """
 
     def __init__(self,
@@ -249,15 +255,13 @@ class Crop2D3D:
     useful while loading several big tiff files. The module using zarr object
     with pre-loaded image object from tifffile library.
 
-    Input:
-        center_point: 2D or 3D coordinates around which image should be cropped
-            expect coordinate in shape [X x Y x Z]
-
     Args:
         image: Image object with pre-loaded image file
         size: Size of cropping frame for 2D or 3D images
         normalization: Normalization object, to normalize image value between 0,1
         memory_save: If True image object is used except of image loaded into memory
+        center_point: 2D or 3D coordinates around which image should be cropped
+            expect coordinate in shape [X x Y x Z]
     """
 
     def __init__(self,

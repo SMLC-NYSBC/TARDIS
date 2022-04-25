@@ -5,26 +5,27 @@ from typing import Optional
 import numpy as np
 import torch
 from tardis.sis_graphformer.utils.augmentation import preprocess_data
-from torch.utils.data import Dataset
-
 from tardis.sis_graphformer.utils.voxal import VoxalizeDataSetV2
+from torch.utils.data import Dataset
 
 
 class GraphDataset(Dataset):
     """
-    MODULE TO LOAD 2D/3D COORDINATES AND IMAGE PATCHES
+    MODULE TO LOAD 2D/3D COORDINATES AND IMAGE PATCHES FOR TRAINING
 
-     This module accepts point cloud in shape [X x Y]/[X x Y x Z]
-     and output dataset that are expected by graphformer (coord, graph
-     and image patches for each coordinate).
+    This module accepts point cloud in shape [X x Y]/[X x Y x Z]
+    and output dataset that are expected by graphformer (coord, graph
+    and image patches for each coordinate).
 
     Args:
         coord_dir: source of the 3D .tif images masks.
         coord_format: call for random transformation on img and mask data.
-        coord_downsample: Define downsampling method.
-        downsample_setting: Define setting for given downsampling method.
         img_dir: source of the 3D .tif file.
         prefix: Prefix name of coordinate file.
+        voxal_size: Initial voxal size
+        downsampling_if: Number of points in a cloud after which downsamling is run
+        drop_rate: Drop rate for voxal size during optimization of voxal size
+        downsampling_rate: Value used for downsamling with open3D
         size: numeric value between 0 and 1 for scaling px.
         normalize: type of normalization for img data ["simple", "minmax"]
         memory_save: If True data are loaded with memory save mode on
@@ -40,7 +41,7 @@ class GraphDataset(Dataset):
                  voxal_size=500,
                  downsampling_if=500,
                  drop_rate=1,
-                 downsampling_rate=2.1,
+                 downsampling_rate: Optional[float] = None,
                  normalize="simple",
                  memory_save=True):
         # Coord setting
@@ -139,6 +140,29 @@ class PredictDataset(Dataset):
                  downsampling_rate=2,
                  normalize="simple",
                  memory_save=True):
+        """
+        MODULE TO LOAD 2D/3D COORDINATES AND IMAGE PATCHES FOR PREDICTIONS
+
+        This module accepts point cloud in shape [X x Y]/[X x Y x Z]
+        and output dataset that are expected by graphformer (coord, graph
+        and image patches for each coordinate).
+
+        Build dataset without graph
+
+        Args:
+            coord_dir: source of the 3D .tif images masks.
+            coord_format: call for random transformation on img and mask data.
+            img_dir: source of the 3D .tif file.
+            prefix: Prefix name of coordinate file.
+            voxal_size: Initial voxal size
+            downsampling_if: Number of points in a cloud after which downsamling is run
+            drop_rate: Drop rate for voxal size during optimization of voxal size
+            downsampling_rate: Value used for downsamling with open3D
+            size: numeric value between 0 and 1 for scaling px.
+            normalize: type of normalization for img data ["simple", "minmax"]
+            memory_save: If True data are loaded with memory save mode on
+                (~10x faster computation).
+        """
         # Coord setting
         self.coord_dir = coord_dir
         self.coord_format = coord_format

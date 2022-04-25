@@ -4,7 +4,7 @@ import numpy as np
 def number_of_features_per_level(init_channel_number=64,
                                  num_levels=5):
     """
-    Compute list of output_channels for CNN features
+    COMPUTE LIST OF OUTPUT_CHANNELS FOR CNN FEATURES
 
     Args:
         init_channel_number: Number of initial input channels for CNN
@@ -24,6 +24,8 @@ def max_number_of_conv_layer(img=None,
                              pool_stride=2,
                              first_max_pool=False):
     """
+    CALCULATION OF MAXIMUM POSSIBLE LAYERS IN CNN
+
     Based on the torch input automatically select number of convolution blocks,
     based on a standard settings.
 
