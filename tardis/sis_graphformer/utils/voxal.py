@@ -305,9 +305,6 @@ class VoxalizeDataSetV2:
                          out_idx=False):
         """
         Main function used to build voxalized dataset
-
-        Returns:
-            coord: _description_
         """
         # Build voxal dataset
         voxals_centers, voxals_idx = self.optimize_voxal_size()

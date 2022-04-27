@@ -10,7 +10,7 @@ with open('requirements.txt') as r:
 setup(
     author=["Robert Kiewisz", "Tristan Bepler"],
     author_email='rkiewisz@nysbc.com',
-    python_requires='>=3.8',
+    python_requires='>=3.7.*',
     install_requires=required,
     classifiers=['Development Status :: Alpha Release',
                  'Intended Audience :: Developers/Research',
@@ -18,7 +18,7 @@ setup(
                  'Environment :: GPU :: NVIDIA CUDA :: >=11.3',
                  'License :: OSI Approved :: MIT License',
                  'Natural Language :: English',
-                 'Programming Language :: Python :: 3.8-3.9'],
+                 'Programming Language :: Python :: 3.7'],
     description="PyTorch segmentation of 2D/3D images such as electron tomography "
                 "(ET), Cryo-EM or fluorescent microscopy data into 3D segmented "
                 "point cloud.",
@@ -38,7 +38,7 @@ setup(
     keywords=['spindletorch', 'semantic segmentation', 'point cloud segmentation',
               'MT segmentation', 'UNet', 'Unet3Plus'],
     name='tardis-pytorch',
-    packages=find_packages(include=['tardis'],
+    packages=find_packages(include=['tardis', 'tardis.*'],
                            exclude=['tests']),
     url='https://github.com/SMLC-NYSBC/tardis-pytorch',
     version=version,

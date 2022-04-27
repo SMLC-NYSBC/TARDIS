@@ -5,8 +5,7 @@ from typing import Optional
 import click
 import numpy as np
 import tifffile.tifffile as tif
-from scipy.spatial.distance import cdist
-
+import open3d as o3d
 from tardis.sis_graphformer.graphformer.network import CloudToGraph
 from tardis.sis_graphformer.utils.utils import cal_node_input
 from tardis.sis_graphformer.utils.voxal import VoxalizeDataSetV2
@@ -22,7 +21,7 @@ from tardis.spindletorch.unet.predictor import Predictor
 from tardis.spindletorch.utils.build_network import build_network
 from tardis.spindletorch.utils.dataset_loader import PredictionDataSet
 from tardis.utils.setup_envir import build_temp_dir, clean_up
-from tardis.utils.utils import check_uint8
+from tardis.utils.utils import check_uint8, pc_median_dist
 from tardis.utils.device import get_device
 from tardis.version import version
 
@@ -47,6 +46,11 @@ from tardis.version import version
               default=0.5,
               type=float,
               help='Threshold use for graph segmentation.',
+              show_default=True)
+@click.option('-pv', '--points_in_voxal',
+              default=1000,
+              type=int,
+              help='Number of point per voxal.',
               show_default=True)
 @click.option('-ch', '--checkpoints',
               default=False,
@@ -91,6 +95,7 @@ def main(prediction_dir: str,
          patch_size: int,
          cnn_threshold: float,
          gt_threshold: float,
+         points_in_voxal: int,
          checkpoints: bool,
          device: str,
          tqdm: bool,
@@ -242,7 +247,7 @@ def main(prediction_dir: str,
         """CNN post-process"""
         # Stitch predicted image patches
         if tqdm:
-            batch_iter.set_description(f'Postprocessing for {i}')
+            batch_iter.set_description(f'Stitching for {i}')
 
         image = check_uint8(stitcher(image_dir=output,
                                      output=None,
@@ -263,7 +268,7 @@ def main(prediction_dir: str,
 
         # Post-process predicted image patches
         if tqdm:
-            batch_iter.set_description(f'Building voxal for {i}')
+            batch_iter.set_description(f'Postprocessing for {i}')
 
         point_cloud = post_processer(image=image,
                                      euclidean_transform=True,
@@ -278,28 +283,31 @@ def main(prediction_dir: str,
                     point_cloud)
 
         """Graphformer prediction"""
-        # Find downsampling value
-        dist = cdist(point_cloud, point_cloud)
-        dist = [sorted(d)[1] for d in dist if sorted(d)[1] != 0]
+        if tqdm:
+            batch_iter.set_description(f'Building voxal for {i}')
 
+        # Find downsampling value
+        dist = pc_median_dist(pc=point_cloud)
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(point_cloud)
+        point_cloud = np.asarray(pcd.voxel_down_sample(dist * 5).points)
+        
         # Build voxalized dataset with
         VD = VoxalizeDataSetV2(coord=point_cloud,
                                image=None,
                                init_voxal_size=5000,
                                drop_rate=50,
-                               downsampling_threshold=5000,
+                               downsampling_threshold=points_in_voxal,
                                downsampling_rate=None,
                                graph=False)
         coords_df, _, output_idx, = VD.voxalize_dataset(out_idx=True)
 
         # Calculate sigma for graphformer from mean of nearest point dist
+        if tqdm:
+            batch_iter.set_description(f'Compute sigma for {i}')
+
         gf = GraphInstanceV2(threshold=0)
-        coord = gf._stitch_coord(coord=coords_df,
-                                 idx=output_idx)
-        dist = cdist(coord, coord)
-        dist = [sorted(d)[1] for d in dist if sorted(d)[1] != 0]
-        dist = round(np.mean(dist), 0)
-        sigma = dist * 1.5
+        sigma = (dist * 5) * 1.5
 
         # Predict point cloud
         predict_gf = Predictor(model=CloudToGraph(n_out=1,
@@ -322,7 +330,7 @@ def main(prediction_dir: str,
             if device == 'cpu':
                 np.save(join(am_output,
                              f'{i[:-out_format]}_coord_voxal.npy'),
-                        [c.detach().numpy() for c in coords_df],
+                        np.array([c.detach().numpy() for c in coords_df]),
                         allow_pickle=True)
                 np.save(join(am_output,
                              f'{i[:-out_format]}_idx_voxal.npy'),
@@ -331,7 +339,7 @@ def main(prediction_dir: str,
             else:
                 np.save(join(am_output,
                              f'{i[:-out_format]}_coord_voxal.npy'),
-                        [c.cpu().detach().numpy() for c in coords_df],
+                        np.array([c.cpu().detach().numpy() for c in coords_df]),
                         allow_pickle=True)
                 np.save(join(am_output,
                              f'{i[:-out_format]}_idx_voxal.npy'),
@@ -344,7 +352,7 @@ def main(prediction_dir: str,
                          'Voxals',
                          leave=False)
 
-            batch_iter.set_description(f'GF prediction for {i}')
+            batch_iter.set_description(f'GF prediction for {i} with sigma {sigma}')
         else:
             dl_iter = coords_df
 
@@ -369,7 +377,6 @@ def main(prediction_dir: str,
         if tqdm:
             batch_iter.set_description(f'Graph segmentation for {i}')
 
-        # Segment graph
         segments = GraphToSegment.graph_to_segments(graph=graphs,
                                                     coord=coords,
                                                     idx=output_idx)

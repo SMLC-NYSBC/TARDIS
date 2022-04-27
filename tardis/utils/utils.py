@@ -3,6 +3,28 @@ from os.path import isdir, join
 from shutil import move
 
 import numpy as np
+from scipy.spatial.distance import cdist
+
+
+def pc_median_dist(pc: np.ndarray):
+    if pc.shape[0] > 5000:
+        iter = pc.shape[0] // 5000
+        dist = []
+
+        for i in range(1, iter):
+            if i == 0:
+                df = cdist(pc[0:5000, :], pc[0:5000, :])
+            else:
+                start = i * 5000
+                stop = (i + 1) * 5000
+                df = cdist(pc[start:stop, :], pc[start:stop, :])
+
+            df = [sorted(d)[1] for d in df if sorted(d)[1] != 0]
+            dist.append(round(np.median(df), 0))
+
+            if i == 5:
+                break
+    return np.mean(dist)
 
 
 class EarlyStopping():
@@ -36,7 +58,8 @@ class EarlyStopping():
             self.counter = 0
         elif self.best_loss - val_loss < self.min_delta:
             self.counter += 1
-            print(f"INFO: Early stopping counter {self.counter} of {self.patience}")
+            print(
+                f"INFO: Early stopping counter {self.counter} of {self.patience}")
 
             if self.counter >= self.patience:
                 print('INFO: Early stopping')

@@ -78,9 +78,13 @@ class MinMaxNormalize:
     def __init__(self,
                  min: int,
                  max: int):
-        assert max > min
+        assert max >= min
         self.min = int(min)
         self.max = int(max)
+
+        if max == min:
+            self.min = 0
+            self.max = 255
 
         self.range = self.max - self.min
 

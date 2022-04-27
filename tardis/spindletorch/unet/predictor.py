@@ -34,6 +34,7 @@ class Predictor:
                                                  save_weights=False),
                                  map_location=device)
             model.load_state_dict(weights['model_state_dict'])
+
         else:
             weights = torch.load(checkpoint,
                                  map_location=device)
@@ -41,7 +42,6 @@ class Predictor:
             model.load_state_dict(weights['model_state_dict'])
 
         weights = None
-        self.model.eval()
 
         self.network = network
         self.device = device
@@ -50,8 +50,10 @@ class Predictor:
     def _predict(self,
                  x: torch.Tensor):
         with torch.no_grad():
+            self.model.eval()
+
             if self.network == 'graphformer':
-                out = self.model(coords=x,
+                out = self.model(coords=x.to(self.device),
                                  node_features=None,
                                  padding_mask=None)
                 return out.cpu().detach().numpy()[0, 0, :]
