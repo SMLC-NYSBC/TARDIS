@@ -291,7 +291,7 @@ def main(prediction_dir: str,
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(point_cloud)
         point_cloud = np.asarray(pcd.voxel_down_sample(dist * 5).points)
-        
+
         # Build voxalized dataset with
         VD = VoxalizeDataSetV2(coord=point_cloud,
                                image=None,
@@ -306,7 +306,6 @@ def main(prediction_dir: str,
         if tqdm:
             batch_iter.set_description(f'Compute sigma for {i}')
 
-        gf = GraphInstanceV2(threshold=0)
         sigma = (dist * 5) * 1.5
 
         # Predict point cloud

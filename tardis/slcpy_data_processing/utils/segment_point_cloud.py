@@ -1,5 +1,3 @@
-from typing import Optional
-
 import numpy as np
 from scipy.spatial.distance import cdist
 from sklearn.neighbors import KDTree
@@ -212,7 +210,8 @@ class GraphInstanceV2:
                 segment_id += 1
 
             # Update adjacency list
-            adjacency_id = [i for id, i in enumerate(adjacency_id) if id not in mask]
+            adjacency_id = [i for id, i in enumerate(
+                adjacency_id) if id not in mask]
 
             if sum([sum(i) for i in adjacency_id]) == 0:
                 stop = True
