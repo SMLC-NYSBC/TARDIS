@@ -160,18 +160,14 @@ class GraphInstanceV2:
                         [sum(i) for i in cdist(coord, coord)]))[0]
 
                 new_c.append(coord[id[0]])
-                new_i.append(idx[id[0]])
                 coord = np.delete(coord, id[0], 0)
-                del idx[id[0]]
 
             kd = KDTree(coord)
             points = kd.query(np.expand_dims(
                 new_c[len(new_c) - 1], 0), 1)[1][0][0]
 
             new_c.append(coord[points])
-            new_i.append(idx[points])
             coord = np.delete(coord, points, 0)
-            del idx[points]
 
         return np.stack(new_c)
 
@@ -188,12 +184,13 @@ class GraphInstanceV2:
                                        idx=idx)
 
         """Build Adjacency list from graph representation"""
-        adjacency_id, adjacency_prop = self.adjacency_list(graph=graph)
+        adjacency_id, _ = self.adjacency_list(graph=graph)
 
         """Find Segments"""
         coord_segment = []
         stop = False
         segment_id = 0
+
         while not stop:
             idx, mask = self._find_segment(adj_ids=adjacency_id)
 
@@ -210,8 +207,7 @@ class GraphInstanceV2:
                 segment_id += 1
 
             # Update adjacency list
-            adjacency_id = [i for id, i in enumerate(
-                adjacency_id) if id not in mask]
+            adjacency_id = [i for id, i in enumerate(adjacency_id) if id not in mask]
 
             if sum([sum(i) for i in adjacency_id]) == 0:
                 stop = True
