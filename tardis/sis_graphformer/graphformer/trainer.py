@@ -88,9 +88,9 @@ class Trainer:
 
     def run_training(self):
         if self.tqdm:
-            from tqdm import tqdm
+            from tqdm.auto import tqdm as tq
 
-            progressbar = tqdm(range(self.epochs),
+            progressbar = tq(range(self.epochs),
                                'Epochs:',
                                total=self.epochs,
                                leave=False)
@@ -140,9 +140,8 @@ class Trainer:
 
     def train(self):
         if self.tqdm:
-            from tqdm import tqdm
-
-            train_progress = tqdm(enumerate(self.training_DataLoader),
+            from tqdm.auto import tqdm as tq2
+            train_progress = tq2(enumerate(self.training_DataLoader),
                                   'Training:',
                                   total=len(self.training_DataLoader),
                                   leave=False)

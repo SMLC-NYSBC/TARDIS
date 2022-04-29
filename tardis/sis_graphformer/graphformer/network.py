@@ -38,7 +38,6 @@ class CloudToGraph(nn.Module):
                  num_layers=6,
                  num_heads=8,
                  dropout_rate=0,
-                 coord_embed_sigma=16,
                  predict=False):
         super().__init__()
 
@@ -50,8 +49,7 @@ class CloudToGraph(nn.Module):
             self.node_embed = nn.Linear(in_features=node_input,
                                         out_features=node_dim)
 
-        self.coord_embed = DistEmbedding(n_out=edge_dim,
-                                         sigma=coord_embed_sigma)
+        self.coord_embed = DistEmbedding(n_out=edge_dim)
 
         self.layers = GraphFormerStack(node_dim=node_dim,
                                        pairs_dim=edge_dim,

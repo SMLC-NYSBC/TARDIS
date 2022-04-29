@@ -3,9 +3,11 @@ from os.path import join, splitext
 from typing import Optional
 
 import numpy as np
+import open3d as o3d
 import torch
 from tardis.sis_graphformer.utils.augmentation import preprocess_data
 from tardis.sis_graphformer.utils.voxal import VoxalizeDataSetV2
+from tardis.utils.utils import pc_median_dist
 from torch.utils.data import Dataset
 
 
@@ -105,12 +107,18 @@ class GraphDataset(Dataset):
                                      memory_save=self.memory_save)
 
         if self.img_dir is None:
+            dist = pc_median_dist(pc=coord)
+
+            pcd = o3d.geometry.PointCloud()
+            pcd.points = o3d.utility.Vector3dVector(coord/dist)
+            coord = np.asarray(pcd.voxel_down_sample(self.downsampling_rate).points)
+
             VD = VoxalizeDataSetV2(coord=coord,
                                    image=None,
                                    init_voxal_size=self.voxal_size,
                                    drop_rate=self.drop_rate,
                                    downsampling_threshold=self.downsampling,
-                                   downsampling_rate=self.downsampling_rate,
+                                   downsampling_rate=None,
                                    graph=True)
         else:
             VD = VoxalizeDataSetV2(coord=coord,
@@ -118,7 +126,7 @@ class GraphDataset(Dataset):
                                    init_voxal_size=self.voxal_size,
                                    drop_rate=self.drop_rate,
                                    downsampling_threshold=self.downsampling,
-                                   downsampling_rate=self.downsampling_rate,
+                                   downsampling_rate=None,
                                    graph=True)
 
         coords_v, imgs_v, graph_v, output_idx = VD.voxalize_dataset(

@@ -16,23 +16,33 @@ class DistEmbedding(nn.Module):
     """
 
     def __init__(self,
-                 n_out: int,
-                 sigma=16):
+                 n_out: int):
         super().__init__()
-        self.sigma = sigma
         self.linear = nn.Linear(1, n_out, bias=False)
+        self.n_out = n_out
 
     def forward(self, x):
         if x is None:
             return 0
+        # dist = torch.cdist(x, x)
+        # kernel = torch.exp(-dist ** 2 / (self.sigma ** 2 * 2))
+        # isnan = torch.isnan(kernel)
+        # kernel = torch.where(isnan, torch.zeros_like(kernel), kernel)
+        # kernel = kernel.unsqueeze(3)
 
+        # Scaling by sigma
+        shape = x.shape
+        kernels = torch.zeros((shape[0], shape[1], shape[1], self.n_out))
         dist = torch.cdist(x, x)
-        kernel = torch.exp(-dist ** 2 / (self.sigma ** 2 * 2))  # TODO scaling by sigma not linear
-        isnan = torch.isnan(kernel)
-        kernel = torch.where(isnan, torch.zeros_like(kernel), kernel)
-        kernel = kernel.unsqueeze(3)
+        sigma = torch.abs(self.linear(torch.Tensor([self.n_out]).to(x.device)))
+        
+        for id, s in enumerate(sigma):
+            kernel = torch.exp(-dist ** 2 / (s ** 2 * 2))
+            isnan = torch.isnan(kernel)
+            kernel = torch.where(isnan, torch.zeros_like(kernel), kernel)
+            kernels[:, :, :, id] = kernel
 
-        return self.linear(kernel)
+        return kernels.to(x.device)
 
 
 @torch.jit.script

@@ -47,57 +47,57 @@ from tardis.version import version
               type=float,
               help='Percentage value of train dataset that will become test.',
               show_default=True)
-@click.option('-go', '--GF_out',
+@click.option('-go', '--gf_out',
               default=1,
               type=int,
               help='Number of output channels in GF.',
               show_default=True)
-@click.option('-gn', '--GF_node_dim',
+@click.option('-gn', '--gf_node_dim',
               default=256,
               type=int,
               help='Number embedding channels for nodes.',
               show_default=True)
-@click.option('-ge', '--GF_edge_dim',
+@click.option('-ge', '--gf_edge_dim',
               default=128,
               type=int,
               help='Number embedding channels for edges.',
               show_default=True)
-@click.option('-gl', '--GF_layers',
+@click.option('-gl', '--gf_layers',
               default=6,
               type=int,
               help='Number of GF layers',
               show_default=True)
-@click.option('-gh', '--GF_heads',
+@click.option('-gh', '--gf_heads',
               default=8,
               type=int,
               help='Number of GF heads in MHA',
               show_default=True)
-@click.option('-gd', '--GF_dropout',
+@click.option('-gd', '--gf_dropout',
               default=0,
               type=float,
               help='If 0, dropout is turn-off. Else indicate dropout rate',
               show_default=True)
-@click.option('-gds', '--GF_dist_sigma',
+@click.option('-gds', '--gf_dist_sigma',
               default=16,
               type=int,
               help='Distance embedding sigma value used for initial distance embedding of distances',
               show_default=True)
-@click.option('-dv', '--DL_voxal_size',
+@click.option('-dv', '--dl_voxal_size',
               default=500,
               type=int,
               help='Max voxal size for point cloud with number of point greater then threshold',
               show_default=True)
-@click.option('-dd', '--DL_drop_rate',
+@click.option('-dd', '--dl_drop_rate',
               default=10,
               type=int,
               help='Drop rate of voxal size used for optimizing voxal size',
               show_default=True)
-@click.option('-dds', '--DL_downsampling',
-              default=10,
+@click.option('-dds', '--dl_downsampling',
+              default=500,
               type=int,
               help='Number of point threshold for voxal optimization',
               show_default=True)
-@click.option('-ddsr', '--DL_downsampling_rate',
+@click.option('-ddsr', '--dl_downsampling_rate',
               default=5,
               type=float,
               help='Downsampling value for each point cloud',
@@ -107,7 +107,7 @@ from tardis.version import version
               type=float,
               help='Downsampling value for each point cloud',
               show_default=True)
-@click.option('-glo', '--GF_loss',
+@click.option('-glo', '--gf_loss',
               default='bce',
               type=click.Choice(['bce', 'dice', 'sfl']),
               help='Type of loss function use for training',
@@ -122,7 +122,7 @@ from tardis.version import version
               type=bool,
               help='If True, use learning rate scheduler [StepLR]',
               show_default=True)
-@click.option('-gch', '--GF_checkpoint',
+@click.option('-gch', '--gf_checkpoint',
               default=None,
               type=str,
               help='If not None, directory to checkpoint',
@@ -276,7 +276,6 @@ def main(pointcloud_dir: str,
                          num_layers=gf_layers,
                          num_heads=gf_heads,
                          dropout_rate=gf_dropout,
-                         coord_embed_sigma=gf_dist_sigma,
                          predict=False)
 
     coord, img, graph, _ = next(iter(dl_train_graph))
@@ -322,7 +321,7 @@ def main(pointcloud_dir: str,
     print(f"Network: Graphformer, "
           f"No. of Layers: {gf_layers} with {gf_heads} heads, "
           f"Each layer is build of {gf_node_dim} nodes, {gf_edge_dim} edges embedding, "
-          f"Image patch size: {patch_size}, ")
+          f"Image patch size: {patch_size}")
 
     """Train"""
     train = Trainer(model=model.to(device),

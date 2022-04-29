@@ -306,7 +306,8 @@ def main(prediction_dir: str,
         if tqdm:
             batch_iter.set_description(f'Compute sigma for {i}')
 
-        sigma = (dist * 5)
+        sigma = pc_median_dist(GraphToSegment._stitch_coord(coords_df,
+                                                            output_idx))
 
         # Predict point cloud
         predict_gf = Predictor(model=CloudToGraph(n_out=1,
@@ -338,7 +339,8 @@ def main(prediction_dir: str,
             else:
                 np.save(join(am_output,
                              f'{i[:-out_format]}_coord_voxal.npy'),
-                        np.array([c.cpu().detach().numpy() for c in coords_df]),
+                        np.array([c.cpu().detach().numpy()
+                                 for c in coords_df]),
                         allow_pickle=True)
                 np.save(join(am_output,
                              f'{i[:-out_format]}_idx_voxal.npy'),
@@ -351,7 +353,8 @@ def main(prediction_dir: str,
                          'Voxals',
                          leave=False)
 
-            batch_iter.set_description(f'GF prediction for {i} with sigma {sigma}')
+            batch_iter.set_description(
+                f'GF prediction for {i} with sigma {sigma}')
         else:
             dl_iter = coords_df
 

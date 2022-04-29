@@ -24,7 +24,11 @@ def pc_median_dist(pc: np.ndarray):
 
             if i == 5:
                 break
-    return np.mean(dist)
+    else:
+        dist = cdist(pc, pc)
+        dist = [sorted(d)[1] for d in dist if sorted(d)[1] != 0]
+
+    return round(np.mean(dist), 0)
 
 
 class EarlyStopping():
