@@ -306,7 +306,7 @@ def main(prediction_dir: str,
         if tqdm:
             batch_iter.set_description(f'Compute sigma for {i}')
 
-        sigma = (dist * 5) * 1.5
+        sigma = (dist * 5)
 
         # Predict point cloud
         predict_gf = Predictor(model=CloudToGraph(n_out=1,
