@@ -1,4 +1,6 @@
 import numpy as np
+from tardis.version import version
+from datetime import datetime
 
 
 class NumpyToAmira:
@@ -37,7 +39,8 @@ class NumpyToAmira:
         with open(file_dir, 'w') as f:
             f.write('# ASCII Spatial Graph \r\n')
             f.write('# TARDIS - Transformer And Rapid Dimensionless Instance Segmentation (R) \r\n')
-            f.write('# MIT License * 2022 * Robert Kiewisz & Tristan Bepler \r\n')
+            f.write(f'# tardis-pytorch v{version} \r\n')
+            f.write(f'# MIT License * 2021-{datetime.now().year} * Robert Kiewisz & Tristan Bepler \r\n')
             f.write('\r\n')
             f.write(f'define VERTEX {vertex} \r\n')
             f.write(f'define EDGE {edge} \r\n')
