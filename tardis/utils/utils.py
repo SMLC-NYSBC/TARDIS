@@ -11,7 +11,7 @@ def pc_median_dist(pc: np.ndarray):
         iter = pc.shape[0] // 5000
         dist = []
 
-        for i in range(1, iter):
+        for i in range(iter):
             if i == 0:
                 df = cdist(pc[0:5000, :], pc[0:5000, :])
             else:
@@ -20,7 +20,7 @@ def pc_median_dist(pc: np.ndarray):
                 df = cdist(pc[start:stop, :], pc[start:stop, :])
 
             df = [sorted(d)[1] for d in df if sorted(d)[1] != 0]
-            dist.append(round(np.median(df), 0))
+            dist.append(np.median(df))
 
             if i == 5:
                 break
@@ -28,7 +28,7 @@ def pc_median_dist(pc: np.ndarray):
         dist = cdist(pc, pc)
         dist = [sorted(d)[1] for d in dist if sorted(d)[1] != 0]
 
-    return round(np.mean(dist), 0)
+    return np.mean(dist)
 
 
 class EarlyStopping():
@@ -113,8 +113,7 @@ def check_dir(dir: str,
         if with_img:
             # Check if train img and coord exist and have same files
             if isdir(train_img) and isdir(train_mask):
-                if len([f for f in listdir(train_img) if f.endswith(img_format)]) == \
-                        len([f for f in listdir(train_mask) if f.endswith(mask_format)]):
+                if len([f for f in listdir(train_img) if f.endswith(img_format)]) == len([f for f in listdir(train_mask) if f.endswith(mask_format)]):
                     if len([f for f in listdir(train_img) if f.endswith(img_format)]) == 0:
                         dataset_test = False
                 else:

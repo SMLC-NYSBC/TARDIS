@@ -77,10 +77,10 @@ from tardis.version import version
               type=float,
               help='If 0, dropout is turn-off. Else indicate dropout rate',
               show_default=True)
-@click.option('-gds', '--gf_dist_sigma',
-              default=16,
+@click.option('-gs', '--gf_sigma',
+              default=5,
               type=int,
-              help='Distance embedding sigma value used for initial distance embedding of distances',
+              help='Sigma value for distance embading',
               show_default=True)
 @click.option('-dv', '--dl_voxal_size',
               default=500,
@@ -102,17 +102,12 @@ from tardis.version import version
               type=float,
               help='Downsampling value for each point cloud',
               show_default=True)
-@click.option('-b', '--batch_size',
-              default=25,
-              type=float,
-              help='Downsampling value for each point cloud',
-              show_default=True)
 @click.option('-glo', '--gf_loss',
               default='bce',
               type=click.Choice(['bce', 'dice', 'sfl']),
               help='Type of loss function use for training',
               show_default=True)
-@click.option('-lr', '--loss_lr_rate',
+@click.option('-lr', '--loss_lr',
               default=0.001,
               type=float,
               help='Learning rate',
@@ -157,14 +152,13 @@ def main(pointcloud_dir: str,
          gf_layers: int,
          gf_heads: int,
          gf_dropout: float,
-         gf_dist_sigma: int,
+         gf_sigma: int,
          dl_voxal_size: int,
          dl_drop_rate: float,
          dl_downsampling,
          dl_downsampling_rate,
-         batch_size: int,
          gf_loss: str,
-         loss_lr_rate: float,
+         loss_lr: float,
          lr_rate_schedule: bool,
          gf_checkpoint,
          device: str,
@@ -227,8 +221,7 @@ def main(pointcloud_dir: str,
         build_test.__builddataset__()
 
     else:
-        coord_format = [f for f in coord_format if listdir(train_coords_dir)[
-            0].endswith(f)]
+        coord_format = [f for f in coord_format if listdir(train_coords_dir)[0].endswith(f)]
 
     if with_img:
         coord_format.append(
@@ -267,17 +260,6 @@ def main(pointcloud_dir: str,
                                shuffle=False,
                                pin_memory=True)
 
-    """Setup training"""
-    device = get_device(device)
-    model = CloudToGraph(n_out=gf_out,
-                         node_input=cal_node_input(patch_size),
-                         node_dim=gf_node_dim,
-                         edge_dim=gf_edge_dim,
-                         num_layers=gf_layers,
-                         num_heads=gf_heads,
-                         dropout_rate=gf_dropout,
-                         predict=False)
-
     coord, img, graph, _ = next(iter(dl_train_graph))
     print(f'cord = shape: {coord[0].shape}; '
           f'type: {coord[0].dtype}')
@@ -287,6 +269,24 @@ def main(pointcloud_dir: str,
           f'class: {graph[0].unique()}; '
           f'type: {graph[0].dtype}')
 
+    if with_img and patch_size is not None:
+        if coord[0].shape[2] == 2:
+            patch_size = (patch_size, patch_size)
+        elif coord[0].shape[2] == 3:
+            patch_size = (patch_size, patch_size, patch_size)
+
+    """Setup training"""
+    device = get_device(device)
+    model = CloudToGraph(n_out=gf_out,
+                         node_input=cal_node_input(patch_size),
+                         node_dim=gf_node_dim,
+                         edge_dim=gf_edge_dim,
+                         num_layers=gf_layers,
+                         num_heads=gf_heads,
+                         coord_embed_sigma=gf_sigma,
+                         dropout_rate=gf_dropout,
+                         predict=False)
+
     if gf_loss == "dice":
         loss_fn = DiceLoss()
     if gf_loss == "bce":
@@ -294,14 +294,17 @@ def main(pointcloud_dir: str,
     if gf_loss == 'sfl':
         loss_fn = SigmoidFocalLoss()
 
-    optimizer = optim.Adam(params=model.parameters(),
-                           lr=loss_lr_rate)
+    """Checkpoint model and optimizer"""
     if gf_checkpoint is not None:
         save_train = join(gf_checkpoint)
 
-        save_train = torch.load(join(save_train))
+        save_train = torch.load(join(save_train), map_location=device)
         model.load_state_dict(save_train['model_state_dict'])
+        model = model.to(device)
 
+    optimizer = optim.Adam(params=model.parameters(),
+                           lr=loss_lr)
+    if gf_checkpoint is not None:
         optimizer.load_state_dict(save_train['optimizer_state_dict'])
 
         save_train = None
@@ -327,12 +330,10 @@ def main(pointcloud_dir: str,
     train = Trainer(model=model.to(device),
                     node_input=with_img,
                     device=device,
-                    batch=batch_size,
                     criterion=loss_fn,
                     optimizer=optimizer,
                     training_DataLoader=dl_train_graph,
                     validation_DataLoader=dl_test_graph,
-                    validation_step=1,
                     epochs=epochs,
                     checkpoint_name='GF',
                     lr_scheduler=learning_rate_scheduler,

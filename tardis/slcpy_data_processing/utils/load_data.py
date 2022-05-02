@@ -30,7 +30,7 @@ class ImportDataFromAmira:
             if not self.src_img[-3:] == '.am':
                 raise Warning("Not a .am file...")
 
-            if src_img[:-3] != src_am[:-20]:
+            if src_img.split('/')[-1:][:-3] != src_am.split('/')[-1:][:-20]:
                 raise Warning(
                     f'Image file {src_img} has wrong extension for {src_am}!')
 
@@ -140,12 +140,9 @@ class ImportDataFromAmira:
             self.transformation = [0, 0, 0]
         points_coord = self.__find_points()
 
-        points_coord[0:len(points_coord), 0] = points_coord[0:len(
-            points_coord), 0] - self.transformation[0]
-        points_coord[0:len(points_coord), 1] = points_coord[0:len(
-            points_coord), 1] - self.transformation[1]
-        points_coord[0:len(points_coord), 2] = points_coord[0:len(
-            points_coord), 2] - self.transformation[2]
+        points_coord[:, 0] = points_coord[:, 0] - self.transformation[0]
+        points_coord[:, 1] = points_coord[:, 1] - self.transformation[1]
+        points_coord[:, 2] = points_coord[:, 2] - self.transformation[2]
 
         return points_coord / self.pixel_size
 

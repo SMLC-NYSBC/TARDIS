@@ -3,7 +3,6 @@ from os.path import join, splitext
 from typing import Optional
 
 import numpy as np
-import open3d as o3d
 import torch
 from tardis.sis_graphformer.utils.augmentation import preprocess_data
 from tardis.sis_graphformer.utils.voxal import VoxalizeDataSetV2
@@ -33,7 +32,6 @@ class GraphDataset(Dataset):
         memory_save: If True data are loaded with memory save mode on
             (~10x faster computation).
     """
-
     def __init__(self,
                  coord_dir: str,
                  coord_format=[".csv"],
@@ -107,11 +105,8 @@ class GraphDataset(Dataset):
                                      memory_save=self.memory_save)
 
         if self.img_dir is None:
-            dist = pc_median_dist(pc=coord)
-
-            pcd = o3d.geometry.PointCloud()
-            pcd.points = o3d.utility.Vector3dVector(coord/dist)
-            coord = np.asarray(pcd.voxel_down_sample(self.downsampling_rate).points)
+            dist = pc_median_dist(pc=coord[:, 1:])
+            coord[:, 1:] = coord[:, 1:] / dist
 
             VD = VoxalizeDataSetV2(coord=coord,
                                    image=None,
@@ -129,8 +124,10 @@ class GraphDataset(Dataset):
                                    downsampling_rate=None,
                                    graph=True)
 
-        coords_v, imgs_v, graph_v, output_idx = VD.voxalize_dataset(
-            out_idx=True)
+        coords_v, imgs_v, graph_v, output_idx = VD.voxalize_dataset(out_idx=True)
+        if self.img_dir is not None:
+            for id, c in enumerate(coords_v):
+                coords_v[id] = c / pc_median_dist(pc=c)
 
         return coords_v, imgs_v, graph_v, output_idx
 

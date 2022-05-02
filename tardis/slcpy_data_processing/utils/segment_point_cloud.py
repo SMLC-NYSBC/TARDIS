@@ -150,21 +150,19 @@ class GraphInstanceV2:
             idx: idx of point included in the segment
         """
         new_c = []
-        new_i = []
 
         for i in range(len(coord) - 1):
             if i == 0:
                 id = [id for id, e in enumerate(idx) if len(e) == 1]
+
                 if len(id) == 0:
-                    id = np.where([sum(i) for i in cdist(coord, coord)] == max(
-                        [sum(i) for i in cdist(coord, coord)]))[0]
+                    id = np.where([sum(i) for i in cdist(coord, coord)] == max([sum(i) for i in cdist(coord, coord)]))[0]
 
                 new_c.append(coord[id[0]])
                 coord = np.delete(coord, id[0], 0)
 
             kd = KDTree(coord)
-            points = kd.query(np.expand_dims(
-                new_c[len(new_c) - 1], 0), 1)[1][0][0]
+            points = kd.query(np.expand_dims(new_c[len(new_c) - 1], 0), 1)[1][0][0]
 
             new_c.append(coord[points])
             coord = np.delete(coord, points, 0)

@@ -5,6 +5,7 @@ from shutil import rmtree
 import numpy as np
 import torch
 from tardis.utils.utils import EarlyStopping
+from tqdm.auto import tqdm
 
 
 class Trainer:
@@ -30,12 +31,10 @@ class Trainer:
                  model,
                  node_input: bool,
                  device: str,
-                 batch: int,
                  criterion,
                  optimizer,
                  training_DataLoader,
                  validation_DataLoader,
-                 validation_step: int,
                  epochs: int,
                  checkpoint_name: str,
                  lr_scheduler=None,
@@ -51,12 +50,10 @@ class Trainer:
         self.model = model
         self.node_input = node_input
         self.device = device
-        self.batch = batch
         self.criterion = criterion
         self.optimizer = optimizer
         self.training_DataLoader = training_DataLoader
         self.validation_DataLoader = validation_DataLoader
-        self.validation_step = validation_step * batch
         self.lr_scheduler = lr_scheduler
         self.epochs = epochs
         self.checkpoint_name = checkpoint_name
@@ -88,16 +85,14 @@ class Trainer:
 
     def run_training(self):
         if self.tqdm:
-            from tqdm.auto import tqdm as tq
-
-            progressbar = tq(range(self.epochs),
+            progressbar = tqdm(range(self.epochs),
                                'Epochs:',
                                total=self.epochs,
-                               leave=False)
+                               leave=True, ascii=True)
         else:
             progressbar = range(self.epochs)
 
-        early_stoping = EarlyStopping(patience=25, min_delta=0)
+        early_stoping = EarlyStopping(patience=50, min_delta=0)
 
         if isdir('GF_checkpoint'):
             rmtree('GF_checkpoint')
@@ -140,11 +135,10 @@ class Trainer:
 
     def train(self):
         if self.tqdm:
-            from tqdm.auto import tqdm as tq2
-            train_progress = tq2(enumerate(self.training_DataLoader),
+            train_progress = tqdm(enumerate(self.training_DataLoader),
                                   'Training:',
                                   total=len(self.training_DataLoader),
-                                  leave=False)
+                                  leave=True, ascii=True)
         else:
             train_progress = enumerate(self.training_DataLoader)
 
