@@ -2,10 +2,12 @@
 History
 =======
 
-0.1.0a2 (2022-04-25)
+0.1.0a2-a4 (2022-04-25)
 ------------------
-- Fix for better handling graph prediction
-- Fix for #4-#6 issues
+* Fix for better handling graph prediction
+* Fix for #4-#6 issues
+* Small bugfixes for GraphFormer while training
+* Add point cloud normalization before training/prediction
 
 0.1.0a1 (2022-04-13)
 ------------------
@@ -24,7 +26,7 @@ History
         * Build standard workflows for training and prediction of 2D and 3D images
 
     * GRAPHFORMER
-        *
+        * Included all graphformer modules
 
 0.0.1 (2022-03-24)
 ------------------
