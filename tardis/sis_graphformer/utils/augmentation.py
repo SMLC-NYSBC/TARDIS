@@ -1,7 +1,9 @@
+
 from typing import Optional
 
 import numpy as np
 import tifffile.tifffile as tiff
+from skimage import exposure
 from tardis.slcpy_data_processing.utils.load_data import ImportDataFromAmira
 
 
@@ -74,6 +76,8 @@ def preprocess_data(coord: str,
             normalization = SimpleNormalize()
         elif normalization == 'minmax':
             normalization = MinMaxNormalize(0, 255)
+        elif normalization == 'rescale':
+            normalization = ResaleNormalize()
 
         # Crop images size around coordinates
         if memory_save:
@@ -208,7 +212,7 @@ class SimpleNormalize:
     NORMALIZE IMAGE VALUE USING ASSUMED VALUES
 
     Inputs:
-        x: image or target 3D or 4D arrays
+        x: image or target nD arrays
     """
 
     def __call__(self,
@@ -223,7 +227,20 @@ class SimpleNormalize:
 
         return norm
 
-# %%
+
+class ResaleNormalize:
+    """
+    NORMALIZE IMAGE VALUE USING Skimage rescale internsity with 98% AND 2% percentiles
+
+    Args:
+        x: image or target nD arrays
+    """
+
+    def __call__(self,
+                 x: np.ndarray):
+        p2, p98 = np.percentile(x, (2, 98))
+
+        return exposure.rescale_intensity(x, in_range=(p2, p98))
 
 
 class MinMaxNormalize:
@@ -233,7 +250,7 @@ class MinMaxNormalize:
     Args:
         min: Minimal value for initialize normalization e.g. 0
         max: Maximal value for initialize normalization e.g. 255
-        x: image or target 3D or 4D arrays
+        x: image or target nD arrays
     """
 
     def __init__(self,
@@ -243,7 +260,8 @@ class MinMaxNormalize:
         self.min = min
         self.range = max - min
 
-    def __call__(self, x):
+    def __call__(self,
+                 x: np.ndarray):
         return (x - self.min) / self.range
 
 

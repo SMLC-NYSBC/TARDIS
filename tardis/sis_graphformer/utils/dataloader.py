@@ -28,7 +28,7 @@ class GraphDataset(Dataset):
         drop_rate: Drop rate for voxal size during optimization of voxal size
         downsampling_rate: Value used for downsamling with open3D
         size: numeric value between 0 and 1 for scaling px.
-        normalize: type of normalization for img data ["simple", "minmax"]
+        normalize: type of normalization for img data ["simple", "minmax", "rescale"]
         memory_save: If True data are loaded with memory save mode on
             (~10x faster computation).
     """
@@ -103,9 +103,9 @@ class GraphDataset(Dataset):
                                      size=self.size,
                                      normalization=self.normalize,
                                      memory_save=self.memory_save)
+        dist = pc_median_dist(pc=coord[:, 1:])
 
         if self.img_dir is None:
-            dist = pc_median_dist(pc=coord[:, 1:])
             coord[:, 1:] = coord[:, 1:] / dist
 
             VD = VoxalizeDataSetV2(coord=coord,
@@ -127,7 +127,7 @@ class GraphDataset(Dataset):
         coords_v, imgs_v, graph_v, output_idx = VD.voxalize_dataset(out_idx=True)
         if self.img_dir is not None:
             for id, c in enumerate(coords_v):
-                coords_v[id] = c / pc_median_dist(pc=c)
+                coords_v[id] = c / dist
 
         return coords_v, imgs_v, graph_v, output_idx
 
@@ -225,7 +225,7 @@ class PredictDataset(Dataset):
                                    init_voxal_size=self.voxal_size,
                                    drop_rate=self.drop_rate,
                                    downsampling_threshold=self.downsampling,
-                                   downsampling_rate=self.downsampling_rate,
+                                   downsampling_rate=None,
                                    graph=False)
         else:
             VD = VoxalizeDataSetV2(coord=coord,
@@ -233,7 +233,7 @@ class PredictDataset(Dataset):
                                    init_voxal_size=self.voxal_size,
                                    drop_rate=self.drop_rate,
                                    downsampling_threshold=self.downsampling,
-                                   downsampling_rate=self.downsampling_rate,
+                                   downsampling_rate=None,
                                    graph=False)
 
         coords_v, imgs_v, output_idx = VD.voxalize_dataset(out_idx=True)
