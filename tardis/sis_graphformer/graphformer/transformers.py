@@ -19,7 +19,6 @@ class PairBiasSelfAttention(nn.Module):
         num_heads: Number of heads for multi-head attention
         init_scaling: Initial scaling factor used for reset parameters
     """
-
     def __init__(self,
                  embed_dim,
                  pairs_dim,
@@ -73,8 +72,8 @@ class PairBiasSelfAttention(nn.Module):
             pairs: Batch x Length x Length x Channel
 
         Args:
-            query: Tensor with image patches.
-            pairs: Tensor with embedded coordinates.
+            query: Tensor with embedded coordinates.
+            pairs: Tensor with image patches.
             key_padding_mask (ByteTensor, optional): mask to exclude
                 keys that are pads, of shape `(batch, src_len)`, where
                 padding elements are indicated by 1s.
