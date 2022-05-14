@@ -79,8 +79,13 @@ from tardis.version import version
               show_default=True)
 @click.option('-gs', '--gf_sigma',
               default=5,
-              type=int,
-              help='Sigma value for distance embading',
+              type=float,
+              help='Sigma value for distance embedding',
+              show_default=True)
+@click.option('-gst', '--gf_structure',
+              default='full',
+              type=click.Choice(['full', 'full_af', 'self_attn', 'triang']),
+              help='Structure of the graphformer',
               show_default=True)
 @click.option('-dv', '--dl_voxal_size',
               default=500,
@@ -158,6 +163,7 @@ def main(pointcloud_dir: str,
          dl_downsampling,
          dl_downsampling_rate,
          gf_loss: str,
+         gf_structure: str,
          loss_lr: float,
          lr_rate_schedule: bool,
          gf_checkpoint,
@@ -236,7 +242,7 @@ def main(pointcloud_dir: str,
                                                      prefix=prefix,
                                                      size=patch_size,
                                                      drop_rate=dl_drop_rate,
-                                                     normalize="minmax",
+                                                     normalize="rescale",
                                                      downsampling_if=dl_downsampling,
                                                      downsampling_rate=dl_downsampling_rate,
                                                      voxal_size=dl_voxal_size,
@@ -250,7 +256,7 @@ def main(pointcloud_dir: str,
                                                     img_dir=train_imgs_dir,
                                                     prefix=prefix,
                                                     size=patch_size,
-                                                    normalize="minmax",
+                                                    normalize="rescale",
                                                     voxal_size=dl_voxal_size,
                                                     downsampling_if=dl_downsampling,
                                                     downsampling_rate=dl_downsampling_rate,
@@ -269,7 +275,7 @@ def main(pointcloud_dir: str,
           f'class: {graph[0].unique()}; '
           f'type: {graph[0].dtype}')
 
-    if with_img and patch_size is not None:
+    if patch_size is not None:
         if coord[0].shape[2] == 2:
             patch_size = (patch_size, patch_size)
         elif coord[0].shape[2] == 3:
@@ -285,6 +291,7 @@ def main(pointcloud_dir: str,
                          num_heads=gf_heads,
                          coord_embed_sigma=gf_sigma,
                          dropout_rate=gf_dropout,
+                         structure=gf_structure,
                          predict=False)
 
     if gf_loss == "dice":

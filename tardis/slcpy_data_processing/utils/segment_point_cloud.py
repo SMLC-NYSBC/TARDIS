@@ -21,11 +21,13 @@ class GraphInstanceV2:
         for idx_voxal, graph_voxal in zip(idx, graph_pred):
             for k, _ in enumerate(idx_voxal):
                 row = graph_voxal[k, :]
-                row_v = [np.max((graph[i, idx_voxal[k]], row[id]))
+                row_v = [row[id] if graph[i, idx_voxal[k]] == 0
+                         else np.mean((graph[i, idx_voxal[k]], row[id]))
                          for id, i in enumerate(idx_voxal)]
 
                 column = graph_voxal[:, k]
-                column_v = [np.max((graph[i, idx_voxal[k]], column[id]))
+                column_v = [row[id] if graph[i, idx_voxal[k]] == 0
+                            else np.mean((graph[i, idx_voxal[k]], column[id]))
                             for id, i in enumerate(idx_voxal)]
 
                 graph[list(idx_voxal), idx_voxal[k]] = row_v
@@ -97,6 +99,49 @@ class GraphInstanceV2:
 
         return adjacency_list_id, adjacency_list_prop
 
+    def _adjacency_matrix(self,
+                          graphs: list,
+                          coord: np.ndarray) -> list:
+        """
+        Builder of adjacency matrix from stitched coord and and graph voxels
+        The output of the adjacency matrix is list containing:
+        id][coord][interactions][interaction propability]
+
+        Args:
+            graphs: graph voxal output from GraphFormer
+            coord: stitched coord output from GraphFormer or input given to Graphformer
+        """
+        # Build Adjacency_list
+        all_prop = [[id, list(i), [], []] for id, i in enumerate(coord)]
+
+        for g, o in zip(graphs, output_idx):
+            df = np.where(g > 0)
+
+            col = list(df[0])
+            row = list(df[1])
+            int = [[c, r] for c, r in zip(col, row) if c != r]
+            prop = [g[i[0], i[1]] for i in int]
+            int = [[o[i[0]], o[i[1]]] for i in int]
+
+            for i, p in zip(int, prop):
+                if i in all_prop[i[0]][2]:
+                    id = [id for id, j in enumerate(
+                        all_prop[i[0]][2]) if i == j][0]
+
+                    if all_prop[i[0]][3][id] < p:
+                        all_prop[i[0]][2] = [j for idx, j in enumerate(
+                            all_prop[i[0]][2]) if id != idx]
+                        all_prop[i[0]][2].append(i)
+
+                        all_prop[i[0]][3] = [j for idx, j in enumerate(
+                            all_prop[i[0]][3]) if id != idx]
+                        all_prop[i[0]][3].append(p)
+                else:
+                    all_prop[i[0]][2].append(i)
+                    all_prop[i[0]][3].append(p)
+
+        return all_prop
+
     @staticmethod
     def _find_segment(adj_ids: list):
         """
@@ -156,13 +201,15 @@ class GraphInstanceV2:
                 id = [id for id, e in enumerate(idx) if len(e) == 1]
 
                 if len(id) == 0:
-                    id = np.where([sum(i) for i in cdist(coord, coord)] == max([sum(i) for i in cdist(coord, coord)]))[0]
+                    id = np.where([sum(i) for i in cdist(coord, coord)] == max(
+                        [sum(i) for i in cdist(coord, coord)]))[0]
 
                 new_c.append(coord[id[0]])
                 coord = np.delete(coord, id[0], 0)
 
             kd = KDTree(coord)
-            points = kd.query(np.expand_dims(new_c[len(new_c) - 1], 0), 1)[1][0][0]
+            points = kd.query(np.expand_dims(
+                new_c[len(new_c) - 1], 0), 1)[1][0][0]
 
             new_c.append(coord[points])
             coord = np.delete(coord, points, 0)
@@ -205,7 +252,8 @@ class GraphInstanceV2:
                 segment_id += 1
 
             # Update adjacency list
-            adjacency_id = [i for id, i in enumerate(adjacency_id) if id not in mask]
+            adjacency_id = [i for id, i in enumerate(
+                adjacency_id) if id not in mask]
 
             if sum([sum(i) for i in adjacency_id]) == 0:
                 stop = True

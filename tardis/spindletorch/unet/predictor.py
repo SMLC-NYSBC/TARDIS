@@ -48,14 +48,21 @@ class Predictor:
         self.tqdm = tqdm
 
     def _predict(self,
-                 x: torch.Tensor):
+                 x: torch.Tensor,
+                 y: Optional[torch.Tensor] = None):
         with torch.no_grad():
             self.model.eval()
 
             if self.network == 'graphformer':
-                out = self.model(coords=x.to(self.device),
-                                 node_features=None,
-                                 padding_mask=None)
+                if y is None:
+                    out = self.model(coords=x.to(self.device),
+                                     node_features=None,
+                                     padding_mask=None)
+                else:
+                    out = self.model(coords=x.to(self.device),
+                                     node_features=y.to(self.device),
+                                     padding_mask=None)
+
                 return out.cpu().detach().numpy()[0, 0, :]
             else:
                 out = self.model(x.to(self.device))

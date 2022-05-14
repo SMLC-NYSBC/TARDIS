@@ -29,6 +29,7 @@ setup(
             'tardis_postprocessing = tardis.cnn_postprocess:main',
             'tardis_pointcloud_train = tardis.train_pointcloud_segmentation:main',
             'tardis_mt = tardis.predict_MTs:main',
+            'tardis_gf_score = tardis.graphformer_score:main',
         ],
     },
     license="MIT License",

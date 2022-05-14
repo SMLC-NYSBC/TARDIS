@@ -311,7 +311,8 @@ def main(prediction_dir: str,
 
         # Predict point cloud
         predict_gf = Predictor(model=CloudToGraph(n_out=1,
-                                                  node_input=cal_node_input((10, 10, 10)),
+                                                  node_input=cal_node_input(
+                                                      (10, 10, 10)),
                                                   node_dim=128,
                                                   edge_dim=64,
                                                   num_layers=3,
@@ -402,3 +403,7 @@ def main(prediction_dir: str,
             batch_iter.set_description(f'Clean-up temp for {i}')
 
         clean_up(dir=prediction_dir)
+
+
+if __name__ == '__main__':
+    main()
