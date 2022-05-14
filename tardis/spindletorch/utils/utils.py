@@ -72,3 +72,24 @@ def max_number_of_conv_layer(img=None,
         max_layers -= 1
 
     return max_layers
+
+
+def normalize_image(image: np.ndarray):
+    """
+    Simple image data normalizer between 0,1
+
+    Args:
+        image: Image data set
+    """
+    image_min = np.min(image)
+    image_max = np.max(image)
+
+    if image_min == 0 and image_max == 1:
+        return image
+
+    if image_min == 0:
+        image = np.where(image > image_min, 1, 0)
+    elif image_max == 0:
+        image = np.where(image < image_max, 1, 0)
+
+    return image
