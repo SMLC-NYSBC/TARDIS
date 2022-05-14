@@ -2,8 +2,8 @@ from typing import Optional
 
 import torch
 import torch.nn as nn
-from tardis.sis_graphformer.graphformer.layers import GraphFormerStack
-from tardis.sis_graphformer.graphformer.modules import DistEmbedding
+from tardis.dist_pytorch.transformer.layers import GraphFormerStack
+from tardis.dist_pytorch.transformer.modules import DistEmbedding
 
 
 class CloudToGraph(nn.Module):

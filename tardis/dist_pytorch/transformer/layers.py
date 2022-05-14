@@ -1,8 +1,8 @@
 from typing import Optional
 
 import torch
-from tardis.sis_graphformer.graphformer.transformers import ComparisonLayer, \
-    GeluFeedForward, PairBiasSelfAttention, SelfAttention2D, TriangularEdgeUpdate
+from tardis.dist_pytorch.transformer.transformers import ComparisonLayer, GeluFeedForward, \
+    PairBiasSelfAttention, SelfAttention2D, TriangularEdgeUpdate
 from torch import nn
 
 

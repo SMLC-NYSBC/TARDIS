@@ -4,8 +4,8 @@ from typing import Optional
 
 import numpy as np
 import torch
-from tardis.sis_graphformer.utils.augmentation import preprocess_data
-from tardis.sis_graphformer.utils.voxal import VoxalizeDataSetV2
+from tardis.dist.utils.augmentation import preprocess_data
+from tardis.dist.utils.voxal import VoxalizeDataSetV2
 from tardis.utils.utils import pc_median_dist
 from torch.utils.data import Dataset
 

@@ -1,6 +1,6 @@
 from os.path import join
-from tardis.sis_graphformer.utils.dataloader import GraphDataset
-from tardis.sis_graphformer.utils.augmentation import preprocess_data
+from tardis.dist_pytorch.utils.dataloader import GraphDataset
+from tardis.dist_pytorch.utils.augmentation import preprocess_data
 
 import numpy as np
 
@@ -16,7 +16,7 @@ class TestDataLoader:
                                      include_label=True,
                                      size=64,
                                      pixel_size=None,
-                                     normalization='simple',
+                                     normalization='rescale',
                                      memory_save=False)
         assert coord.ndim == 2
         assert coord.shape == (10, 4), \
@@ -30,7 +30,7 @@ class TestDataLoader:
                                      include_label=True,
                                      size=64,
                                      pixel_size=None,
-                                     normalization='simple',
+                                     normalization='rescale',
                                      memory_save=False)
         assert coord.ndim == 2
         assert coord.shape == (10, 4), \
@@ -45,7 +45,7 @@ class TestDataLoader:
                                             include_label=False,
                                             size=64,
                                             pixel_size=None,
-                                            normalization='simple',
+                                            normalization='rescale',
                                             memory_save=False)
         assert coord.ndim == 2, 'Incorrect no. of dimension'
         assert coord.shape == (10, 3), \
@@ -62,7 +62,7 @@ class TestDataLoader:
                                 downsampling_if=500,
                                 drop_rate=1,
                                 downsampling_rate=None,
-                                normalize="minmax",
+                                normalize="rescale",
                                 memory_save=False)
 
         coords_v, imgs_v, graph_v, output_idx = train_DL.__getitem__(0)
@@ -83,7 +83,7 @@ class TestDataLoader:
                                 downsampling_if=500,
                                 drop_rate=1,
                                 downsampling_rate=None,
-                                normalize="simple",
+                                normalize="rescale",
                                 memory_save=False)
 
         coords_v, imgs_v, graph_v, output_idx = train_DL.__getitem__(0)

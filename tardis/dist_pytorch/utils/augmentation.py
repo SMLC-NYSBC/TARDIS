@@ -25,7 +25,7 @@ def preprocess_data(coord: str,
         coord_downsample:
         image: Directory for image file.
         size: Size of the image patches.
-        normalization: ['simple', 'minmax'] Type of normalization for image data.
+        normalization: ['simple', 'minmax', 'rescale'] Type of normalization for image data.
         memory_save: If True image patches are build slower but with memory
             preservation.
 

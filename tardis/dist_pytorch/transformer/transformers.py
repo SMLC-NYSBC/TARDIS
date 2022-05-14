@@ -4,7 +4,7 @@ import torch
 import torch.distributions
 import torch.nn as nn
 import torch.nn.functional as F
-from tardis.sis_graphformer.graphformer.modules import gelu
+from tardis.dist_pytorch.transformer.modules import gelu
 
 
 class PairBiasSelfAttention(nn.Module):

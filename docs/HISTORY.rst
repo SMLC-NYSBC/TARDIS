@@ -2,6 +2,15 @@
 History
 =======
 
+0.1.0a5 (2022-04-25)
+* Rename GraphFormer to DIST (Dimensionless instance Segmentation Transformer)
+* Updates for DIST
+    * SetUp metric evaluation
+    * Changes in handling point cloud
+        * Normalization based on K-NN distance
+    * Setup for easy dissection of the model
+    * Dist version to 0.1.5
+
 0.1.0a2-a4 (2022-04-25)
 ------------------
 * Fix for better handling graph prediction

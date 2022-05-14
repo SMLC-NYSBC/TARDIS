@@ -1,5 +1,5 @@
-from tardis.sis_graphformer.graphformer.network import CloudToGraph
-from tardis.sis_graphformer.utils.utils import cal_node_input
+from tardis.dist_pytorch.transformer.network import CloudToGraph
+from tardis.dist_pytorch.utils.utils import cal_node_input
 import torch
 
 

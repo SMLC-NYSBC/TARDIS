@@ -4,11 +4,12 @@ from typing import Optional
 
 import click
 import numpy as np
-import tifffile.tifffile as tif
 import open3d as o3d
-from tardis.sis_graphformer.graphformer.network import CloudToGraph
-from tardis.sis_graphformer.utils.utils import cal_node_input
-from tardis.sis_graphformer.utils.voxal import VoxalizeDataSetV2
+import tifffile.tifffile as tif
+
+from tardis.dist_pytorch.transformer.network import CloudToGraph
+from tardis.dist_pytorch.utils.utils import cal_node_input
+from tardis.dist_pytorch.utils.voxal import VoxalizeDataSetV2
 from tardis.slcpy_data_processing.image_postprocess import ImageToPointCloud
 from tardis.slcpy_data_processing.utils.export_data import NumpyToAmira
 from tardis.slcpy_data_processing.utils.load_data import (import_am,
@@ -20,9 +21,9 @@ from tardis.slcpy_data_processing.utils.trim import trim_image
 from tardis.spindletorch.unet.predictor import Predictor
 from tardis.spindletorch.utils.build_network import build_network
 from tardis.spindletorch.utils.dataset_loader import PredictionDataSet
+from tardis.utils.device import get_device
 from tardis.utils.setup_envir import build_temp_dir, clean_up
 from tardis.utils.utils import check_uint8, pc_median_dist
-from tardis.utils.device import get_device
 from tardis.version import version
 
 

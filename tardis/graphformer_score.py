@@ -5,12 +5,11 @@ from shutil import rmtree
 import click
 import numpy as np
 
-from tardis.sis_graphformer.graphformer.network import CloudToGraph
-from tardis.sis_graphformer.utils.augmentation import preprocess_data
-from tardis.sis_graphformer.utils.voxal import VoxalizeDataSetV2
+from tardis.dist_pytorch.transformer.network import CloudToGraph
+from tardis.dist_pytorch.utils.augmentation import preprocess_data
+from tardis.dist_pytorch.utils.voxal import VoxalizeDataSetV2
 from tardis.slcpy_data_processing.utils.export_data import NumpyToAmira
-from tardis.slcpy_data_processing.utils.segment_point_cloud import \
-    GraphInstanceV2
+from tardis.slcpy_data_processing.utils.segment_point_cloud import GraphInstanceV2
 from tardis.spindletorch.unet.predictor import Predictor
 from tardis.utils.device import get_device
 from tardis.utils.metrics import F1_metric, IoU, mCov
