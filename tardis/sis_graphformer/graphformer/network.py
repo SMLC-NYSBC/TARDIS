@@ -39,6 +39,7 @@ class CloudToGraph(nn.Module):
                  num_heads=8,
                  coord_embed_sigma=16,
                  dropout_rate=0,
+                 structure='full',
                  predict=False):
         super().__init__()
 
@@ -57,7 +58,8 @@ class CloudToGraph(nn.Module):
                                        pairs_dim=edge_dim,
                                        dropout=dropout_rate,
                                        num_layers=num_layers,
-                                       num_heads=num_heads)
+                                       num_heads=num_heads,
+                                       structure=structure)
         self.decoder = nn.Linear(in_features=edge_dim,
                                  out_features=n_out)
 
@@ -92,8 +94,8 @@ class CloudToGraph(nn.Module):
             x = x.transpose(0, 1)
 
         """ Encode throughout the transformer layers """
-        _, z = self.layers(z=z,
-                           x=x,
+        _, z = self.layers(x=x,
+                           z=z,
                            src_key_padding_mask=padding_mask)
 
         """ Predict the graph edges """

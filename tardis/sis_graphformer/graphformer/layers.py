@@ -26,7 +26,8 @@ class GraphFormerStack(nn.Module):
                  num_layers=1,
                  dropout=0,
                  ff_factor=4,
-                 num_heads=8):
+                 num_heads=8,
+                 structure='full'):
         super().__init__()
         self.layers = nn.ModuleList()
         for _ in range(num_layers):
@@ -34,7 +35,8 @@ class GraphFormerStack(nn.Module):
                                      node_dim=node_dim,
                                      dropout=dropout,
                                      ff_factor=ff_factor,
-                                     num_heads=num_heads)
+                                     num_heads=num_heads,
+                                     structure=structure)
             self.layers.append(layer)
 
     def __len__(self):
@@ -70,8 +72,10 @@ class GraphFormerLayer(nn.Module):
     Args:
         pairs_dim: Output feature for pairs and nodes representation
         node_dim: Input feature for pairs and nodes representation
-        ff_factor:
-        num_heads:
+        dropout:
+        ff_factor: 
+        num_heads: Number of heads in self-attention
+        structure: Structure of layer ['full', 'full_af', 'self_attn', 'triang']
     """
 
     def __init__(self,
@@ -79,11 +83,14 @@ class GraphFormerLayer(nn.Module):
                  node_dim: Optional[int] = None,
                  dropout=0,
                  ff_factor=4,
-                 num_heads=8):
+                 num_heads=8,
+                 structure='full'):
         super().__init__()
 
         self.pairs_dim = pairs_dim
         self.node_dim = node_dim
+        self.structure = structure
+
         if node_dim is not None:
             self.input_attn = PairBiasSelfAttention(embed_dim=node_dim,
                                                     pairs_dim=pairs_dim,
@@ -93,21 +100,23 @@ class GraphFormerLayer(nn.Module):
             self.pair_update = ComparisonLayer(input_dim=node_dim,
                                                output_dim=pairs_dim,
                                                channel_dim=pairs_dim)
+        if structure in ['full', 'self_attn']:
+            self.row_attention = SelfAttention2D(embed_dim=pairs_dim,
+                                                num_heads=num_heads,
+                                                dropout=dropout,
+                                                axis=1)
+            self.col_attention = SelfAttention2D(embed_dim=pairs_dim,
+                                                num_heads=num_heads,
+                                                dropout=dropout,
+                                                axis=0)
 
-        self.row_attention = SelfAttention2D(embed_dim=pairs_dim,
-                                             num_heads=num_heads,
-                                             dropout=dropout,
-                                             axis=1)
-        self.col_attention = SelfAttention2D(embed_dim=pairs_dim,
-                                             num_heads=num_heads,
-                                             dropout=dropout,
-                                             axis=0)
-        self.row_update = TriangularEdgeUpdate(input_dim=pairs_dim,
-                                               channel_dim=32,
-                                               axis=1)
-        self.col_update = TriangularEdgeUpdate(input_dim=pairs_dim,
-                                               channel_dim=32,
-                                               axis=0)
+        if structure in ['full', 'triang']:
+            self.row_update = TriangularEdgeUpdate(input_dim=pairs_dim,
+                                                channel_dim=32,
+                                                axis=1)
+            self.col_update = TriangularEdgeUpdate(input_dim=pairs_dim,
+                                                channel_dim=32,
+                                                axis=0)
 
         self.pair_ffn = GeluFeedForward(input_dim=pairs_dim,
                                         ff_dim=pairs_dim * ff_factor)
@@ -154,29 +163,43 @@ class GraphFormerLayer(nn.Module):
 
         mask = None
         if src_key_padding_mask is not None:
-            mask = src_key_padding_mask.unsqueeze(
-                2) | src_key_padding_mask.unsqueeze(1)
-        row_att = self.row_attention(x=h_nodes, padding_mask=mask)
-        col_att = self.col_attention(x=h_nodes, padding_mask=mask)
-        row_upd = self.row_update(z=h_nodes, mask=mask)
-        col_upd = self.col_update(z=h_nodes, mask=mask)
+            mask = src_key_padding_mask.unsqueeze(2) | src_key_padding_mask.unsqueeze(1)
 
-        h_nodes = h_nodes + row_upd + col_upd + row_att + col_att
-        h_nodes = h_nodes + self.pair_ffn(x=h_nodes)
+        if self.structure == 'full':
+            row_att = self.row_attention(x=h_nodes, padding_mask=mask)
+            col_att = self.col_attention(x=h_nodes, padding_mask=mask)
+            row_upd = self.row_update(z=h_nodes, mask=mask)
+            col_upd = self.col_update(z=h_nodes, mask=mask)
 
-        return h_nodes
+            h_nodes = h_nodes + row_upd + col_upd + row_att + col_att
+        elif self.structure == 'full_af':
+            h_nodes = self.row_attention(x=h_nodes, padding_mask=mask) + h_nodes
+            h_nodes = self.col_attention(x=h_nodes, padding_mask=mask) + h_nodes
+            h_nodes = self.row_update(z=h_nodes, mask=mask) + h_nodes
+            h_nodes = self.col_update(z=h_nodes, mask=mask) + h_nodes
+        elif self.structure == 'self_attn':
+            row_att = self.row_attention(x=h_nodes, padding_mask=mask)
+            col_att = self.col_attention(x=h_nodes, padding_mask=mask)
+            h_nodes = h_nodes + row_att + col_att
+        elif self.structure == 'triang':
+            row_upd = self.row_update(z=h_nodes, mask=mask)
+            col_upd = self.col_update(z=h_nodes, mask=mask)
+
+            h_nodes = h_nodes + row_upd + col_upd
+
+        return h_nodes + self.pair_ffn(x=h_nodes)
 
     def forward(self,
                 h_nodes: torch.Tensor,
                 h_pairs: Optional[torch.Tensor] = None,
                 src_mask=None,
                 src_key_padding_mask=None):
-        h_pairs = self.update_nodes(h_nodes=h_nodes,
-                                    h_pairs=h_pairs,
+        h_pairs = self.update_nodes(h_pairs=h_pairs,
+                                    h_nodes=h_nodes,
                                     src_mask=src_mask,
                                     src_key_padding_mask=src_key_padding_mask)
 
-        h_nodes = self.update_edges(h_nodes=h_nodes,
-                                    h_pairs=h_pairs,
+        h_nodes = self.update_edges(h_pairs=h_pairs,
+                                    h_nodes=h_nodes,
                                     src_key_padding_mask=src_key_padding_mask)
         return h_pairs, h_nodes
