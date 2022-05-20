@@ -4,17 +4,24 @@ from shutil import rmtree
 
 import click
 import numpy as np
+import torch
 
 from tardis.dist_pytorch.transformer.network import CloudToGraph
 from tardis.dist_pytorch.utils.augmentation import preprocess_data
 from tardis.dist_pytorch.utils.voxal import VoxalizeDataSetV2
-from tardis.slcpy_data_processing.utils.export_data import NumpyToAmira
+#  from tardis.slcpy_data_processing.utils.export_data import NumpyToAmira
 from tardis.slcpy_data_processing.utils.segment_point_cloud import GraphInstanceV2
 from tardis.spindletorch.unet.predictor import Predictor
 from tardis.utils.device import get_device
-from tardis.utils.metrics import F1_metric, IoU, mCov
+from tardis.utils.metrics import AUC, F1_metric, IoU, distAUC, mAP, mCov
 from tardis.utils.utils import pc_median_dist
 from tardis.version import version
+
+torch.backends.cudnn.enabled = False
+torch.backends.cudnn.benchmark = True
+torch.autograd.set_detect_anomaly(mode=False)
+torch.autograd.profiler.profile(enabled=False)
+torch.autograd.profiler.emit_nvtx(enabled=False)
 
 
 @click.command()
@@ -22,6 +29,11 @@ from tardis.version import version
               default=getcwd(),
               type=str,
               help='Directory with images for prediction with GF model.',
+              show_default=True)
+@click.option('-gst', '--gf_structure',
+              default='full',
+              type=click.Choice(['full', 'full_af', 'self_attn', 'triang']),
+              help='Structure of the graphformer',
               show_default=True)
 @click.option('-gni', '--gf_ninput',
               default=2500,
@@ -68,6 +80,11 @@ from tardis.version import version
               type=float,
               help='Threshold value for the prediction',
               show_default=True)
+@click.option('-piv', '--point_in_voxal',
+              default=500,
+              type=int,
+              help='Max number of point per voxal',
+              show_default=True)
 @click.option('-gch', '--checkpoint',
               default=None,
               type=str,
@@ -98,6 +115,7 @@ from tardis.version import version
               show_default=True)
 @click.version_option(version=version)
 def main(gf_dir: str,
+         gf_structure: str,
          gf_ninput: int,
          gf_ndim: int,
          gf_edim: int,
@@ -106,6 +124,7 @@ def main(gf_dir: str,
          gf_dropout,
          gf_sigma: float,
          with_img: bool,
+         point_in_voxal: int,
          gf_threshold,
          checkpoint,
          model,
@@ -119,11 +138,13 @@ def main(gf_dir: str,
     available_format = ('.csv', '.CorrelationLines.am', '.npy')
     GF_list = [f for f in listdir(gf_dir) if f.endswith(available_format)]
     assert len(GF_list) > 0, 'No file found in given direcotry!'
-    macc, mprec, mrecall, mf1, miou, mcov_score = [], [], [], [], [], []
+    macc, mprec, mrecall, mf1, miou, mauc = [], [], [], [], [], []
+    seg_prec, seg_rec, mcov_score = [], [], []
+    distauc, AP = [], []
 
     # Build handlers
     GraphToSegment = GraphInstanceV2(threshold=gf_threshold)
-    BuildAmira = NumpyToAmira()
+    #  BuildAmira = NumpyToAmira()
 
     GF = Predictor(model=CloudToGraph(n_out=1,
                                       node_input=gf_ninput,
@@ -133,6 +154,7 @@ def main(gf_dir: str,
                                       num_heads=gf_heads,
                                       dropout_rate=gf_dropout,
                                       coord_embed_sigma=gf_sigma,
+                                      structure=gf_structure,
                                       predict=True),
                    checkpoint=checkpoint,
                    network='graphformer',
@@ -160,13 +182,13 @@ def main(gf_dir: str,
                                       normalization='simple',
                                       memory_save=False)
         dist = pc_median_dist(pc=target[:, 1:])
-        
+
         target[:, 1:] = target[:, 1:] / dist
         VD = VoxalizeDataSetV2(coord=target,
                                image=None,
                                init_voxal_size=5000,
                                drop_rate=1,
-                               downsampling_threshold=500,
+                               downsampling_threshold=point_in_voxal,
                                downsampling_rate=None,
                                graph=True)
         coords, img, graph_target, output_idx = VD.voxalize_dataset(
@@ -189,6 +211,7 @@ def main(gf_dir: str,
             coords.append(coord.cpu().detach().numpy())
 
         graph_target = GraphToSegment._stitch_graph(graph_target, output_idx)
+        graph_target = np.where(graph_target > 0, 1, 0)
         graph_logits = GraphToSegment._stitch_graph(graphs, output_idx)
         coord = GraphToSegment._stitch_coord(coords, output_idx)
 
@@ -225,16 +248,40 @@ def main(gf_dir: str,
         print(f'Recall of {rec}')
         print(f'F1 of {f1}')
 
-        iou = IoU(graph_target.flatten(),
-                                       np.where(graph_logits >= gf_threshold, 1, 0).flatten())
+        map = mAP(graph_target,
+                  graph_logits)
+        print(f'mAP of {map}')
+        AP.append(map)
+
+        iou = IoU(graph_target,
+                  np.where(graph_logits >= gf_threshold, 1, 0))
 
         miou.append(iou)
         print(f'IoU of {iou}')
+
+        """AUC evaluation"""
+        auc = AUC(graph_target,
+                  graph_logits,
+                  graph=True)
+        mauc.append(auc)
+        print(f'AUC of {round(np.mean(auc), 3)}')
+
+        """Dist AUC"""
+        dist_auc = distAUC(coord=target[:, 1:],
+                           target=graph_target)
+        distauc.append(dist_auc)
+        print(f'-Dist AUC: {dist_auc}')
+
         """Segmentation evaluation"""
-        mcov = mCov(target,
-                    segments)
+        mcov, prec, rec = mCov(target,
+                               segments)
         mcov_score.append(mcov)
+        seg_prec.append(prec)
+        seg_rec.append(rec)
+
         print(f'mCov of {round(np.mean(mcov), 3)}')
+        print(f'mPrec of {round(np.mean(prec), 3)}')
+        print(f'mRec of {round(np.mean(rec), 3)}')
 
     if export:
         if isdir(join(gf_dir, 'scores')):
@@ -266,8 +313,13 @@ def main(gf_dir: str,
     print(f'Mean precision of {round(np.mean(mprec), 3)}')
     print(f'Mean recall of {round(np.mean(mrecall), 3)}')
     print(f'Mean F1 of {round(np.mean(mf1), 3)}')
+    print(f'Mean AP of {round(np.mean(AP), 3)}')
     print(f'Mean IoU of {round(np.mean(miou), 3)}')
+    print(f'Mean mAUC of {round(np.mean(mauc), 3)}')
+    print(f'Mean dist mAUC of {round(np.mean(distauc), 3)}')
     print(f'Mean mCov of {round(np.mean(mcov_score), 3)}')
+    print(f'Mean Seg_mPrec of {round(np.mean(seg_prec), 3)}')
+    print(f'Mean Seg_mRec of {round(np.mean(seg_rec), 3)}')
 
 
 if __name__ == '__main__':

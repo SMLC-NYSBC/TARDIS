@@ -9,12 +9,11 @@ from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
 
 from tardis.dist_pytorch.transformer.losses import (BCELoss, DiceLoss,
-                                                       SigmoidFocalLoss)
+                                                    SigmoidFocalLoss)
 from tardis.dist_pytorch.transformer.network import CloudToGraph
 from tardis.dist_pytorch.transformer.trainer import Trainer
 from tardis.dist_pytorch.utils.dataloader import GraphDataset
-from tardis.dist_pytorch.utils.utils import (BuildTrainDataSet,
-                                                cal_node_input)
+from tardis.dist_pytorch.utils.utils import BuildTrainDataSet, cal_node_input
 from tardis.utils.device import get_device
 from tardis.utils.utils import BuildTestDataSet, check_dir
 from tardis.version import version
@@ -227,7 +226,8 @@ def main(pointcloud_dir: str,
         build_test.__builddataset__()
 
     else:
-        coord_format = [f for f in coord_format if listdir(train_coords_dir)[0].endswith(f)]
+        coord_format = [f for f in coord_format if listdir(train_coords_dir)[
+            0].endswith(f)]
 
     if with_img:
         coord_format.append(

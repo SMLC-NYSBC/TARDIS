@@ -1,8 +1,10 @@
 from typing import Optional
 
 import numpy as np
+import sklearn.metrics as metric
 import torch
 from tardis.spindletorch.utils.utils import normalize_image
+from scipy.spatial.distance import cdist
 
 
 def calculate_F1(input: Optional[np.ndarray] = torch.Tensor,
@@ -99,8 +101,7 @@ def calculate_F1(input: Optional[np.ndarray] = torch.Tensor,
         recall_score = tp / (tp + fn + smooth)
 
         # F1 Score - 2 * [(Prec * Rec) / (Prec + Rec)]
-        F1_score = 2 * ((precision_score * recall_score) /
-                        (precision_score + recall_score + smooth))
+        F1_score = 2 * ((precision_score * recall_score) / (precision_score + recall_score + smooth))
 
         return accuracy_score, precision_score, recall_score, F1_score
 
@@ -126,14 +127,15 @@ def F1_metric(target: np.ndarray,
     recall_score = tp / (tp + fn + 1e-8)
 
     """F1 Score - 2 * [(Prec * Rec) / (Prec + Rec)]"""
-    F1_score = 2 * ((precision_score * recall_score) /
-                    (precision_score + recall_score + 1e-8))
+    F1_score = 2 * ((precision_score * recall_score) / (precision_score + recall_score + 1e-8))
 
     return accuracy_score, precision_score, recall_score, F1_score
 
+
 def mCov(target: np.ndarray,
          logits: np.ndarray):
-    iou = []
+    iou, prec, rec = [], [], []
+
     for j in np.unique(target[:, 0]):
         true_c = target[np.where(target[:, 0] == j)[0], 1:]
         df = []
@@ -142,16 +144,57 @@ def mCov(target: np.ndarray,
             pred = logits[np.where(logits[:, 0] == i)[0]]
 
             intersection = np.sum([True for i in true_c if i in pred[:, 1:]])
-            union = len(pred)
+            union = np.unique(
+                np.vstack((true_c, pred[:, 1:])), axis=0).shape[0]
 
             df.append(intersection / union)
 
-        iou.append(np.max(df))
+        id = np.where(df == np.max(df))[0]
+        pred = logits[np.where(logits[:, 0] == id)[0]][:, 1:]
 
-    return np.mean(iou)
+        tp = np.sum([True for i in true_c if i in pred])
+        fn = np.sum([True for i in true_c if i not in pred])
+        fp = np.sum([True for i in pred if i not in true_c])
+
+        """Precision Score - tp / (tp + fp)"""
+        precision_score = tp / (tp + fp + 1e-8)
+
+        """Recall Score - tp / (tp + tn)"""
+        recall_score = tp / (tp + fn + 1e-8)
+
+        """IoU score"""
+        iou.append(np.max(df))
+        prec.append(precision_score)
+        rec.append(recall_score)
+
+    return np.mean(iou), np.mean(prec), np.mean(rec)
+
+
+def mPrec_Rec(target: np.ndarray,
+              logits: np.ndarray):
+    """ Calculate confusion matrix """
+    with np.errstate(divide='ignore', invalid='ignore'):
+        confusion_vector = logits / target
+
+    tp = np.sum(confusion_vector == 1).item()
+    fp = np.sum(confusion_vector == float('inf')).item()
+    fn = np.sum(confusion_vector == 0).item()
+
+    """Precision Score - tp / (tp + fp)"""
+    precision_score = tp / (tp + fp + 1e-8)
+
+    """Recall Score - tp / (tp + tn)"""
+    recall_score = tp / (tp + fn + 1e-8)
+
+    return precision_score, recall_score
+
 
 def IoU(target: np.ndarray,
-         logits: np.ndarray):
+        logits: np.ndarray):
+    index = np.triu_indices(target.shape[0], k=1)
+    target = target[index]
+    logits = logits[index]
+
     intersection = np.logical_and(target, logits)
     union = np.logical_or(target, logits)
 
@@ -159,4 +202,48 @@ def IoU(target: np.ndarray,
 
     return iou_score
 
-# Table for mPrec
+
+def AUC(target: np.ndarray,
+        logits: np.ndarray,
+        graph=True):
+    index = np.triu_indices(target.shape[0], k=1)
+    target = target[index]
+    logits = logits[index]
+
+    if graph:
+        fpr, tpr, _ = metric.roc_curve(target,
+                                       logits)
+
+        return metric.auc(fpr, tpr)
+    else:
+        prec, rec, _ = metric.precision_recall_curve(target,
+                                                     logits)
+
+        return metric.auc(rec, prec)
+
+
+def distAUC(coord: np.ndarray,
+            target: np.ndarray):
+    index = np.triu_indices(target.shape[0], k=1)
+    target = target[index]
+
+    dist = cdist(coord, coord)[index]
+
+    prec, rec, _ = metric.precision_recall_curve(target,
+                                                 -dist)
+
+    return metric.auc(rec, prec)
+
+
+def mAP(target: np.ndarray,
+        logits: np.ndarray):
+    index = np.triu_indices(target.shape[0], k=1)
+    target = target[index]
+    logits = logits[index]
+    prec, rec, _ = metric.precision_recall_curve(target,
+                                                 logits)
+
+    prec = np.array(prec)
+    rec = np.array(rec)
+
+    return np.sum((rec[:-1] - rec[1:]) * prec[:-1])

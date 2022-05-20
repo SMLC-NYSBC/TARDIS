@@ -4,7 +4,7 @@ from shutil import rmtree
 
 import numpy as np
 import torch
-from tardis.spindletorch.utils.metrics import calculate_F1
+from tardis.utils.metrics import calculate_F1
 from tardis.utils.utils import EarlyStopping
 from torch import nn
 

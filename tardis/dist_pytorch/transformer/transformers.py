@@ -19,6 +19,7 @@ class PairBiasSelfAttention(nn.Module):
         num_heads: Number of heads for multi-head attention
         init_scaling: Initial scaling factor used for reset parameters
     """
+
     def __init__(self,
                  embed_dim,
                  pairs_dim,

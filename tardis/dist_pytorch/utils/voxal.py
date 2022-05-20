@@ -3,7 +3,7 @@ from typing import Optional
 import numpy as np
 import torch
 from scipy.spatial import distance
-from tardis.dist.utils.augmentation import BuildGraph
+from tardis.dist_pytorch.utils.augmentation import BuildGraph
 
 
 class VoxalizeDataSetV2:

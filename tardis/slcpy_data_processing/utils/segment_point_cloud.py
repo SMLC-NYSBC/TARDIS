@@ -101,7 +101,8 @@ class GraphInstanceV2:
 
     def _adjacency_matrix(self,
                           graphs: list,
-                          coord: np.ndarray) -> list:
+                          coord: np.ndarray,
+                          output_idx) -> list:
         """
         Builder of adjacency matrix from stitched coord and and graph voxels
         The output of the adjacency matrix is list containing:

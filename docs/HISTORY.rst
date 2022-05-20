@@ -10,7 +10,8 @@ History
         * Normalization based on K-NN distance
     * Setup for easy dissection of the model
     * Dist version to 0.1.5
-
+    * Added evaluation pipeline
+    
 0.1.0a2-a4 (2022-04-25)
 ------------------
 * Fix for better handling graph prediction

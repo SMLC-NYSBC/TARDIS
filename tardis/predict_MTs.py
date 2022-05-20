@@ -289,12 +289,12 @@ def main(prediction_dir: str,
 
         # Find downsampling value
         dist = pc_median_dist(pc=point_cloud)
-        pcd = o3d.geometry.PointCloud()
-        pcd.points = o3d.utility.Vector3dVector(point_cloud)
-        point_cloud = np.asarray(pcd.voxel_down_sample(dist * 5).points)
+        # pcd = o3d.geometry.PointCloud()
+        # pcd.points = o3d.utility.Vector3dVector(point_cloud)
+        # point_cloud = np.asarray(pcd.voxel_down_sample(dist * 5).points)
 
         # Build voxalized dataset with
-        VD = VoxalizeDataSetV2(coord=point_cloud,
+        VD = VoxalizeDataSetV2(coord=point_cloud/dist,
                                image=None,
                                init_voxal_size=5000,
                                drop_rate=50,
@@ -307,26 +307,22 @@ def main(prediction_dir: str,
         if tqdm:
             batch_iter.set_description(f'Compute sigma for {i}')
 
-        sigma = pc_median_dist(GraphToSegment._stitch_coord(coords_df,
-                                                            output_idx))
-
         # Predict point cloud
         predict_gf = Predictor(model=CloudToGraph(n_out=1,
-                                                  node_input=cal_node_input(
-                                                      (10, 10, 10)),
-                                                  node_dim=128,
-                                                  edge_dim=64,
-                                                  num_layers=3,
-                                                  num_heads=4,
+                                                  node_input=2500,
+                                                  node_dim=258,
+                                                  edge_dim=128,
+                                                  num_layers=6,
+                                                  num_heads=8,
                                                   dropout_rate=0,
-                                                  coord_embed_sigma=sigma,
+                                                  coord_embed_sigma=0.6,
                                                   predict=True),
-                               checkpoint=checkpoints[2],
-                               network='graphformer',
-                               subtype='without_img',
-                               model_type='microtubules',
-                               device=device,
-                               tqdm=tqdm)
+                               checkpoint = checkpoints[2],
+                               network = 'graphformer',
+                               subtype = 'without_img',
+                               model_type = 'cryo_membrane',
+                               device = device,
+                               tqdm = tqdm)
 
         if debug:
             if device == 'cpu':

@@ -72,8 +72,8 @@ class GraphFormerLayer(nn.Module):
     Args:
         pairs_dim: Output feature for pairs and nodes representation
         node_dim: Input feature for pairs and nodes representation
-        dropout:
-        ff_factor: 
+        dropout: Dropout rate
+        ff_factor: Feed forward factor used for GeLuFFN
         num_heads: Number of heads in self-attention
         structure: Structure of layer ['full', 'full_af', 'self_attn', 'triang']
     """
@@ -100,23 +100,23 @@ class GraphFormerLayer(nn.Module):
             self.pair_update = ComparisonLayer(input_dim=node_dim,
                                                output_dim=pairs_dim,
                                                channel_dim=pairs_dim)
-        if structure in ['full', 'self_attn']:
+        if structure in ['full', 'full_af', 'self_attn']:
             self.row_attention = SelfAttention2D(embed_dim=pairs_dim,
-                                                num_heads=num_heads,
-                                                dropout=dropout,
-                                                axis=1)
+                                                 num_heads=num_heads,
+                                                 dropout=dropout,
+                                                 axis=1)
             self.col_attention = SelfAttention2D(embed_dim=pairs_dim,
-                                                num_heads=num_heads,
-                                                dropout=dropout,
-                                                axis=0)
+                                                 num_heads=num_heads,
+                                                 dropout=dropout,
+                                                 axis=0)
 
-        if structure in ['full', 'triang']:
+        if structure in ['full', 'full_af', 'triang']:
             self.row_update = TriangularEdgeUpdate(input_dim=pairs_dim,
-                                                channel_dim=32,
-                                                axis=1)
+                                                   channel_dim=32,
+                                                   axis=1)
             self.col_update = TriangularEdgeUpdate(input_dim=pairs_dim,
-                                                channel_dim=32,
-                                                axis=0)
+                                                   channel_dim=32,
+                                                   axis=0)
 
         self.pair_ffn = GeluFeedForward(input_dim=pairs_dim,
                                         ff_dim=pairs_dim * ff_factor)
@@ -163,7 +163,8 @@ class GraphFormerLayer(nn.Module):
 
         mask = None
         if src_key_padding_mask is not None:
-            mask = src_key_padding_mask.unsqueeze(2) | src_key_padding_mask.unsqueeze(1)
+            mask = src_key_padding_mask.unsqueeze(
+                2) | src_key_padding_mask.unsqueeze(1)
 
         if self.structure == 'full':
             row_att = self.row_attention(x=h_nodes, padding_mask=mask)
@@ -173,8 +174,10 @@ class GraphFormerLayer(nn.Module):
 
             h_nodes = h_nodes + row_upd + col_upd + row_att + col_att
         elif self.structure == 'full_af':
-            h_nodes = self.row_attention(x=h_nodes, padding_mask=mask) + h_nodes
-            h_nodes = self.col_attention(x=h_nodes, padding_mask=mask) + h_nodes
+            h_nodes = self.row_attention(
+                x=h_nodes, padding_mask=mask) + h_nodes
+            h_nodes = self.col_attention(
+                x=h_nodes, padding_mask=mask) + h_nodes
             h_nodes = self.row_update(z=h_nodes, mask=mask) + h_nodes
             h_nodes = self.col_update(z=h_nodes, mask=mask) + h_nodes
         elif self.structure == 'self_attn':
