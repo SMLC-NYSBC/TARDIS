@@ -8,14 +8,14 @@ import open3d as o3d
 import tifffile.tifffile as tif
 
 from tardis.dist_pytorch.transformer.network import CloudToGraph
-from tardis.dist_pytorch.utils.utils import cal_node_input
 from tardis.dist_pytorch.utils.voxal import VoxalizeDataSetV2
 from tardis.slcpy_data_processing.image_postprocess import ImageToPointCloud
 from tardis.slcpy_data_processing.utils.export_data import NumpyToAmira
 from tardis.slcpy_data_processing.utils.load_data import (import_am,
                                                           import_mrc,
                                                           import_tiff)
-from tardis.slcpy_data_processing.utils.segment_point_cloud import GraphInstanceV2
+from tardis.slcpy_data_processing.utils.segment_point_cloud import \
+    GraphInstanceV2
 from tardis.slcpy_data_processing.utils.stitch import StitchImages
 from tardis.slcpy_data_processing.utils.trim import trim_image
 from tardis.spindletorch.unet.predictor import Predictor
@@ -275,6 +275,9 @@ def main(prediction_dir: str,
                                      euclidean_transform=True,
                                      label_size=3,
                                      down_sampling_voxal_size=None)
+        # Downsample data by 5? or 2.5 to reduce noise 
+        # Transform for xyz and pixel size for coord
+
         image = None
         del(image)
 
@@ -297,7 +300,7 @@ def main(prediction_dir: str,
         VD = VoxalizeDataSetV2(coord=point_cloud/dist,
                                image=None,
                                init_voxal_size=5000,
-                               drop_rate=50,
+                               drop_rate=1,
                                downsampling_threshold=points_in_voxal,
                                downsampling_rate=None,
                                graph=False)
@@ -309,8 +312,8 @@ def main(prediction_dir: str,
 
         # Predict point cloud
         predict_gf = Predictor(model=CloudToGraph(n_out=1,
-                                                  node_input=2500,
-                                                  node_dim=258,
+                                                  node_input=None,
+                                                  node_dim=256,
                                                   edge_dim=128,
                                                   num_layers=6,
                                                   num_heads=8,
@@ -352,7 +355,7 @@ def main(prediction_dir: str,
                          leave=False)
 
             batch_iter.set_description(
-                f'GF prediction for {i} with sigma {sigma}')
+                f'GF prediction for {i} with sigma {0.6}')
         else:
             dl_iter = coords_df
 

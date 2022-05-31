@@ -71,7 +71,7 @@ def preprocess_data(coord: str,
 
     """ Collect Image Patches [Channels x Length] """
     # Normalize image between 0,1
-    if image is not None and coord[-3:] != ".am":
+    if image is not None:
         if normalization == "simple":
             normalization = SimpleNormalize()
         elif normalization == 'minmax':
@@ -79,6 +79,7 @@ def preprocess_data(coord: str,
         elif normalization == 'rescale':
             normalization = ResaleNormalize()
 
+    if image is not None and coord[-3:] != ".am":
         # Crop images size around coordinates
         if memory_save:
             img_df = tiff.imread(image, aszarr=True)
@@ -109,12 +110,6 @@ def preprocess_data(coord: str,
             img_df.close()
     elif image is not None and image.endswith('.am'):
         """Collect Image Patches for .am binnary files"""
-        # Normalize image values between 0 and 1
-        if normalization == "simple":
-            normalization = SimpleNormalize()
-        else:
-            normalization = MinMaxNormalize(0, 255)
-
         img_stack, pixel_size = amira_import.get_image()
 
         # Crop image around coordinates
@@ -159,7 +154,6 @@ class BuildGraph:
         coord: Coordinate with label from which graph is build
         pixel_size: Pixel size of image used for calculating distance
     """
-
     def __init__(self,
                  coord: np.ndarray,
                  pixel_size: Optional[int] = None):
@@ -195,14 +189,9 @@ class BuildGraph:
             ends_distance = np.linalg.norm(
                 self.coord[points_in_contour[0]][1:] - self.coord[points_in_contour[-1]][1:])
 
-            if self.pixel_size is not None:
-                if ends_distance < round(10 / self.pixel_size):
-                    self.graph[points_in_contour[0], points_in_contour[-1]] = 1
-                    self.graph[points_in_contour[-1], points_in_contour[0]] = 1
-            else:
-                if ends_distance < 5:  # Assuming around 2 nm pixel size
-                    self.graph[points_in_contour[0], points_in_contour[-1]] = 1
-                    self.graph[points_in_contour[-1], points_in_contour[0]] = 1
+            if ends_distance < 1.1:  # Assuming around 2 nm pixel size
+                self.graph[points_in_contour[0], points_in_contour[-1]] = 1
+                self.graph[points_in_contour[-1], points_in_contour[0]] = 1
 
         return self.graph
 
@@ -235,10 +224,10 @@ class ResaleNormalize:
     Args:
         x: image or target nD arrays
     """
-
     def __call__(self,
-                 x: np.ndarray):
-        p2, p98 = np.percentile(x, (2, 98))
+                 x: np.ndarray,
+                 range = (2, 98)):
+        p2, p98 = np.percentile(x, range)
 
         return exposure.rescale_intensity(x, in_range=(p2, p98))
 
@@ -252,7 +241,6 @@ class MinMaxNormalize:
         max: Maximal value for initialize normalization e.g. 255
         x: image or target nD arrays
     """
-
     def __init__(self,
                  min: int,
                  max: int):

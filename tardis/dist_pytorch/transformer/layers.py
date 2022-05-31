@@ -100,6 +100,7 @@ class GraphFormerLayer(nn.Module):
             self.pair_update = ComparisonLayer(input_dim=node_dim,
                                                output_dim=pairs_dim,
                                                channel_dim=pairs_dim)
+
         if structure in ['full', 'full_af', 'self_attn']:
             self.row_attention = SelfAttention2D(embed_dim=pairs_dim,
                                                  num_heads=num_heads,
@@ -167,12 +168,11 @@ class GraphFormerLayer(nn.Module):
                 2) | src_key_padding_mask.unsqueeze(1)
 
         if self.structure == 'full':
-            row_att = self.row_attention(x=h_nodes, padding_mask=mask)
-            col_att = self.col_attention(x=h_nodes, padding_mask=mask)
-            row_upd = self.row_update(z=h_nodes, mask=mask)
-            col_upd = self.col_update(z=h_nodes, mask=mask)
-
-            h_nodes = h_nodes + row_upd + col_upd + row_att + col_att
+            h_nodes = h_nodes + \
+                self.row_attention(x=h_nodes, padding_mask=mask) + \
+                self.col_attention(x=h_nodes, padding_mask=mask) + \
+                self.row_update(z=h_nodes, mask=mask) + \
+                self.col_update(z=h_nodes, mask=mask)
         elif self.structure == 'full_af':
             h_nodes = self.row_attention(
                 x=h_nodes, padding_mask=mask) + h_nodes
@@ -181,14 +181,13 @@ class GraphFormerLayer(nn.Module):
             h_nodes = self.row_update(z=h_nodes, mask=mask) + h_nodes
             h_nodes = self.col_update(z=h_nodes, mask=mask) + h_nodes
         elif self.structure == 'self_attn':
-            row_att = self.row_attention(x=h_nodes, padding_mask=mask)
-            col_att = self.col_attention(x=h_nodes, padding_mask=mask)
-            h_nodes = h_nodes + row_att + col_att
+            h_nodes = h_nodes + \
+                self.row_attention(x=h_nodes, padding_mask=mask) + \
+                self.col_attention(x=h_nodes, padding_mask=mask)
         elif self.structure == 'triang':
-            row_upd = self.row_update(z=h_nodes, mask=mask)
-            col_upd = self.col_update(z=h_nodes, mask=mask)
-
-            h_nodes = h_nodes + row_upd + col_upd
+            h_nodes = h_nodes + \
+                self.row_update(z=h_nodes, mask=mask) + \
+                self.col_update(z=h_nodes, mask=mask)
 
         return h_nodes + self.pair_ffn(x=h_nodes)
 
@@ -197,10 +196,11 @@ class GraphFormerLayer(nn.Module):
                 h_pairs: Optional[torch.Tensor] = None,
                 src_mask=None,
                 src_key_padding_mask=None):
-        h_pairs = self.update_nodes(h_pairs=h_pairs,
-                                    h_nodes=h_nodes,
-                                    src_mask=src_mask,
-                                    src_key_padding_mask=src_key_padding_mask)
+        if self.node_dim is not None:
+            h_pairs = self.update_nodes(h_pairs=h_pairs,
+                                        h_nodes=h_nodes,
+                                        src_mask=src_mask,
+                                        src_key_padding_mask=src_key_padding_mask)
 
         h_nodes = self.update_edges(h_pairs=h_pairs,
                                     h_nodes=h_nodes,

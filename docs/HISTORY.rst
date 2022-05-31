@@ -2,7 +2,15 @@
 History
 =======
 
+0.1.0a6 (2022-05-xx)
+--------------------
+* TODO: Check pipeline for image embedding (normalization to enhance features)
+* TODO: Model retraining for MTs
+* TODO: Model retraining for MTs with real image data
+
+
 0.1.0a5 (2022-04-25)
+--------------------
 * Rename GraphFormer to DIST (Dimensionless instance Segmentation Transformer)
 * Updates for DIST
     * SetUp metric evaluation
@@ -11,16 +19,16 @@ History
     * Setup for easy dissection of the model
     * Dist version to 0.1.5
     * Added evaluation pipeline
-    
+
 0.1.0a2-a4 (2022-04-25)
-------------------
+-----------------------
 * Fix for better handling graph prediction
 * Fix for #4-#6 issues
 * Small bugfixes for GraphFormer while training
 * Add point cloud normalization before training/prediction
 
 0.1.0a1 (2022-04-13)
-------------------
+--------------------
 * Rename tardis to tardis-pytorch
 * Build tests for all modules
 * Integrated slcpy, spindletorch and graphformer

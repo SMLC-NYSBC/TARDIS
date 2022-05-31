@@ -12,14 +12,14 @@ def get_device(device: Optional[str] = 0):
     if device == "gpu":  # Load GPU ID 0
         torch.set_num_threads(4)
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        device = 'cuda:0'
+        device = torch.device('cuda:0')
     elif device == 'cpu':  # Load CPU
-        device = 'cpu'
+        device = torch.device('cpu')
     elif device_is_str(device):  # Load specific GPU ID
         torch.set_num_threads(4)
-        device = f'cuda:{int(device)}'
+        device = torch.device(f'cuda:{int(device)}')
     elif device == 'mps':  # Load Apple silicon
-        device = 'mps'
+        device = torch.device('mps')
     return device
 
 

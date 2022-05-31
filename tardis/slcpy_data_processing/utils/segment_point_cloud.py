@@ -106,7 +106,7 @@ class GraphInstanceV2:
         """
         Builder of adjacency matrix from stitched coord and and graph voxels
         The output of the adjacency matrix is list containing:
-        id][coord][interactions][interaction propability]
+        id][coord][interactions][interaction probability]
 
         Args:
             graphs: graph voxal output from GraphFormer

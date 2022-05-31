@@ -10,7 +10,7 @@ with open('requirements.txt') as r:
 setup(
     author=["Robert Kiewisz", "Tristan Bepler"],
     author_email='rkiewisz@nysbc.com',
-    python_requires='>=3.7.*',
+    python_requires='>=3.7',
     install_requires=required,
     classifiers=['Development Status :: Alpha Release',
                  'Intended Audience :: Developers/Research',

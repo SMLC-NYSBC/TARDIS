@@ -56,9 +56,10 @@ class ImportDataFromAmira:
         segment_start = [int(i) for i in segment_start.split()]
 
         # Find in the line directory that starts with @..
-        segment_start = int(self.spatial_graph.index(
-            "@" + str(segment_start[0]))) + 1
-
+        try:
+            segment_start = int(self.spatial_graph.index("@" + str(segment_start[0]))) + 1
+        except ValueError:
+            segment_start = int(self.spatial_graph.index("@" + str(segment_start[0]) + " ")) + 1
         # Find line define EDGE ... <- number indicate number of segments
         segments = str(
             [word for word in self.spatial_graph if word.startswith('define EDGE')])
@@ -89,8 +90,10 @@ class ImportDataFromAmira:
                                for ch in points)
         points_start = [int(i) for i in points_start.split()]
         # Find line that start with the directory @.. and select last one
-        points_start = int(self.spatial_graph.index(
-            "@" + str(points_start[1]))) + 1
+        try:
+            points_start = int(self.spatial_graph.index("@" + str(points_start[1]))) + 1
+        except ValueError:
+            points_start = int(self.spatial_graph.index("@" + str(points_start[1]) + " ")) + 1
 
         # Find line define POINT ... <- number indicate number of points
         points = str([word for word in self.spatial_graph

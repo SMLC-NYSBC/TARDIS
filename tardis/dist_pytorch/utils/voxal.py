@@ -302,7 +302,8 @@ class VoxalizeDataSetV2:
         return data
 
     def voxalize_dataset(self,
-                         out_idx=False):
+                         out_idx=False,
+                         connect_ends=False):
         """
         Main function used to build voxalized dataset
         """
@@ -362,8 +363,7 @@ class VoxalizeDataSetV2:
 
                 if self.graph_output:
                     segment_voxal = self.segments_id[df_voxal_keep, :]
-                    segment_voxal = self.normalize_idx(
-                        segment_voxal[coord_ds, :])
+                    segment_voxal = self.normalize_idx(segment_voxal[coord_ds, :])
                     build_graph = BuildGraph(coord=segment_voxal,
                                              pixel_size=None)
                     graph_voxal.append(self.output_format(build_graph()))
