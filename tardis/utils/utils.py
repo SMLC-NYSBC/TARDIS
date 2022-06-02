@@ -7,26 +7,50 @@ from scipy.spatial.distance import cdist
 
 
 def pc_median_dist(pc: np.ndarray):
+    dist = []
+
     if pc.shape[0] > 5000:
-        iter = pc.shape[0] // 5000
-        dist = []
+        # Build BB and offset by 10% from the border
+        box_dim = pc.shape[1]
 
-        for i in range(iter):
-            if i == 0:
-                df = cdist(pc[0:5000, :], pc[0:5000, :])
-            else:
-                start = i * 5000
-                stop = (i + 1) * 5000
-                df = cdist(pc[start:stop, :], pc[start:stop, :])
+        if box_dim in [2, 3]:
+            min_x = np.min(pc[:, 0])
+            max_x = np.max(pc[:, 0])
+            offset_x = (max_x - min_x) * 0.1
 
-            df = [sorted(d)[1] for d in df if sorted(d)[1] != 0]
-            dist.append(np.median(df))
+            min_y = np.min(pc[:, 1])
+            max_y = np.max(pc[:, 1])
+            offset_y = (max_y - min_y) * 0.1
 
-            if i == 5:
-                break
+        if box_dim == 3 and np.min(pc[:, 2]) != 0:
+            min_z = np.min(pc[:, 2])
+            max_z = np.max(pc[:, 2])
+            offset_z = (max_z - min_z) * 0.1
+        else:
+            min_z, max_z = 0, 0
+            offset_z = 0
+
+        bb = np.array([(min_x + offset_x, min_y + offset_y, min_z + offset_z),
+                       (max_x - offset_x, max_y - offset_y, max_z - offset_z)])
+
+        # randomly select 10 centers
+        rand_x = np.random.randint(range(min_x, max_x), size=10)
+        rand_y = np.random.randint(range(min_y, max_y), size=10)
+        rand_z = np.random.randint(range(min_z, max_z), size=10)
+
+        # Pick point in voxals
+        # voxel =
+
+        # Calculate KNN dist
+        knn = cdist(voxel, voxel)
+
+        # AVG KNN dist
+        df = [sorted(d)[1] for d in df if sorted(d)[1] != 0]
+        dist.append(np.median(df))
     else:
-        dist = cdist(pc, pc)
-        dist = [sorted(d)[1] for d in dist if sorted(d)[1] != 0]
+        knn = cdist(pc, pc)
+        df = [sorted(d)[1] for d in knn if sorted(d)[1] != 0]
+        dist.append(np.median(df))
 
     return np.mean(dist)
 

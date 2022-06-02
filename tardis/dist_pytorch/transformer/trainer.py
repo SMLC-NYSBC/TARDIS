@@ -4,7 +4,7 @@ from shutil import rmtree
 
 import numpy as np
 import torch
-from tardis.utils.utils import EarlyStopping
+from tardis.utils.utils import EarlyStopping, pc_median_dist
 from tqdm.auto import tqdm
 
 
@@ -147,6 +147,10 @@ class Trainer:
         for i, (x, y, z, _) in train_progress:
             for j in range(len(x)):
                 self.optimizer.zero_grad(set_to_none=True)
+
+                with torch.no_grad():
+                    dist = pc_median_dist(x[j])
+                    x[j] = x[j] / dist
 
                 if self.node_input:
                     logits = self.model(coords=x[j].to(self.device),
