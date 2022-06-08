@@ -83,7 +83,7 @@ class CloudToGraph(nn.Module):
                 coords: torch.Tensor,
                 node_features: Optional[torch.Tensor] = None,
                 padding_mask: Optional[torch.Tensor] = None):
-        """ Check if image patche exist """
+        """ Check if image patches exist """
         if node_features is not None and len(node_features.shape) != 3:
             node_features = None
 
@@ -99,11 +99,10 @@ class CloudToGraph(nn.Module):
                            src_key_padding_mask=padding_mask)
 
         """ Predict the graph edges """
-        z = z + z.transpose(1, 2)  # symmetries z
-        logits = self.decoder(z)
+        logits = self.decoder(z + z.transpose(1, 2))  # symmetries z
+        logits = logits.permute(0, 3, 1, 2)
 
         if self.predict:
-            logits = logits.permute(0, 3, 1, 2)
-            logits = self.logits_sigmoid(logits)
-            return logits
+            logits = self.logits_sigmoid(logits.permute(0, 3, 1, 2))
+
         return logits
