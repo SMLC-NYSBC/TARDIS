@@ -147,6 +147,11 @@ class BuildTrainDataSet:
                                       delimiter=',')  # [ID x X x Y x Z]
                 if str(coord[0, 0]) == 'nan':
                     coord = coord[1:, :]
+                if coord.shape[1] == 3:
+                    coord = np.array((coord[:, 0],
+                                      coord[:, 1],
+                                      coord[:, 2],
+                                      np.zeros((coord.shape[0], )))).T
             elif self.is_am:
                 if img_name.endswith('.tif') and pixel_size == 1:
                     raise TypeError('Data are incompatible in this version. '
