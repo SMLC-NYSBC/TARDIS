@@ -47,8 +47,6 @@ class GraphDataset(Dataset):
         # Coord setting
         self.coord_dir = coord_dir
         self.coord_format = coord_format[0]
-        if self.coord_format == '.CorrelationLines.am':
-            self.coord_format == '.am'
 
         # Image setting
         self.img_dir = img_dir
@@ -103,7 +101,7 @@ class GraphDataset(Dataset):
                                      size=self.size,
                                      normalization=self.normalize,
                                      memory_save=self.memory_save)
-        dist = pc_median_dist(pc=coord[:, 1:])
+        dist = pc_median_dist(pc=coord[:, 1:], avg_over=2)
 
         if self.img_dir is None:
             coord[:, 1:] = coord[:, 1:] / dist
@@ -124,12 +122,13 @@ class GraphDataset(Dataset):
                                    downsampling_rate=None,
                                    graph=True)
 
-        coords_v, imgs_v, graph_v, output_idx = VD.voxalize_dataset(out_idx=True)
+        coords_v, imgs_v, graph_v, output_idx = VD.voxalize_dataset(out_idx=True,
+                                                                    prune=True)
         if self.img_dir is not None:
             for id, c in enumerate(coords_v):
                 coords_v[id] = c / dist
 
-        return coords_v, imgs_v, graph_v, output_idx
+        return [c / pc_median_dist(c) for c in coords_v], imgs_v, graph_v, output_idx
 
 
 class PredictDataset(Dataset):
