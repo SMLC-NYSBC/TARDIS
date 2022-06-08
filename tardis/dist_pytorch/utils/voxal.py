@@ -22,14 +22,16 @@ class VoxalizeDataSetV2:
     Args:
         coord: Coordinates dataset in a shape [Dim, X, Y, (Z)].
             where Dim are segment ids
-        img: Image dataset in a shape of [Channels x Length].
+        imgage: Image dataset in a shape of [Channels x Length].
         downsampling_threshold: Max number of point in voxal
         downsampling_rate: Downsampling voxal size for open3d voxal_downsampling
         init_voxal_size: Initial voxal size used for voxalization of the point
             cloud. This voxal size will be 'optimize' until each voxal contains
             number of points below downsampling_threshold
+        drop_rate: Voxal size optimization drop rate factor.
         graph: If true, graph is output. If True, coord in shape [Dim, X, Y, (Z)],
             else [X, Y, (Z)]
+        tensor: If True return all output as Tensors
     Usage:
         VD = VoxalizeDataSetV2(...
                                graph=True)
@@ -77,11 +79,6 @@ class VoxalizeDataSetV2:
     def boundary_box(self):
         """
         DEFINE BOUNDARY BOX FOR 2D OR 3D COORD
-
-        Args:
-            coord: Input coordinate in shape (X, Y, Z) or (X, Y)
-            size_expand: Small factor to expand boundary box to make suer all
-                coords are included
         """
         box_dim = self.coord.shape[1]
 
@@ -107,7 +104,6 @@ class VoxalizeDataSetV2:
 
         Args:
             boundary_box: Coordinate boundary box
-            voxal_patch_size: Size of the voxal
         """
         voxal_positions_x = []
         voxal_positions_y = []
@@ -148,7 +144,7 @@ class VoxalizeDataSetV2:
         BOOLEAN INDEXING FOR FILTERING POINT CLOUD IN VOXAL
 
         Args:
-            voxal_center: [description]
+            voxal_center: Numpy array [3, 1] with voxal center coordinate
 
         Return:
             coord_idx: Boolen list of point in voxal to keep
@@ -173,14 +169,15 @@ class VoxalizeDataSetV2:
             coord: Coordinates of points found in voxal
 
         Return:
-            inx_bool: Boolen list of point to keep after downsampling
+            idx_bool: Boolen list of point to keep after downsampling
         """
         if self.downsampling_rate is not None:
             from open3d import geometry, utility
 
             pcd = geometry.PointCloud()
             pcd.points = utility.Vector3dVector(coord)
-            pcd = np.asarray(pcd.voxel_down_sample(self.downsampling_rate).points)
+            pcd = np.asarray(pcd.voxel_down_sample(
+                self.downsampling_rate).points)
 
             idx_ds = []
             dist_matrix = distance.cdist(pcd, coord, 'euclidean')
@@ -201,6 +198,9 @@ class VoxalizeDataSetV2:
                           voxals):
         """
         SELECT NOT EMPTY VOXAL WITH UNIQUE SET OF POINTS
+
+        Args:
+            voxals: XYZ coord array of voxal centers
         """
 
         not_empty_voxal = []
@@ -302,10 +302,14 @@ class VoxalizeDataSetV2:
         return data
 
     def voxalize_dataset(self,
-                         out_idx=False,
-                         connect_ends=False):
+                         out_idx=True,
+                         prune=False):
         """
         Main function used to build voxalized dataset
+
+        Args:
+            out_idx: If True, return point id of points in each voxal
+            prune: If True, return voxal with more then 5 point each
         """
         # Build voxal dataset
         voxals_centers, voxals_idx = self.optimize_voxal_size()
@@ -361,21 +365,25 @@ class VoxalizeDataSetV2:
 
                 coord_ds = self.voxal_downsampling(coord_ds)
 
-                if self.graph_output:
-                    segment_voxal = self.segments_id[df_voxal_keep, :]
-                    segment_voxal = self.normalize_idx(segment_voxal[coord_ds, :])
-                    build_graph = BuildGraph(coord=segment_voxal,
-                                             pixel_size=None)
-                    graph_voxal.append(self.output_format(build_graph()))
+                if prune and np.sum(coord_ds) > 5:
+                    if self.graph_output:
+                        segment_voxal = self.segments_id[df_voxal_keep, :]
+                        segment_voxal = self.normalize_idx(
+                            segment_voxal[coord_ds, :])
+                        build_graph = BuildGraph(coord=segment_voxal,
+                                                 pixel_size=None)
+                        graph_voxal.append(self.output_format(build_graph()))
 
-                coord_voxal.append(self.output_format(df_voxal[coord_ds, :]))
-                if self.image is not None:
-                    img_voxal.append(self.output_format(df_img[coord_ds, :]))
-                else:
-                    img_voxal.append(self.output_format(df_img))
+                    coord_voxal.append(
+                        self.output_format(df_voxal[coord_ds, :]))
+                    if self.image is not None:
+                        img_voxal.append(
+                            self.output_format(df_img[coord_ds, :]))
+                    else:
+                        img_voxal.append(self.output_format(df_img))
 
-                if out_idx:
-                    output_idx.append(output_df[coord_ds])
+                    if out_idx:
+                        output_idx.append(output_df[coord_ds])
 
         if self.graph_output:
             return coord_voxal, img_voxal, graph_voxal, output_idx
