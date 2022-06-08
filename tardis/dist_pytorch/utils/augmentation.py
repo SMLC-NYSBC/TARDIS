@@ -226,7 +226,7 @@ class ResaleNormalize:
     """
     def __call__(self,
                  x: np.ndarray,
-                 range = (2, 98)):
+                 range=(2, 98)):
         p2, p98 = np.percentile(x, range)
 
         return exposure.rescale_intensity(x, in_range=(p2, p98))
