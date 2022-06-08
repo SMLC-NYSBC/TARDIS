@@ -4,8 +4,8 @@ from shutil import rmtree
 
 import numpy as np
 import torch
-from tardis.utils.utils import EarlyStopping, pc_median_dist
-from tqdm.auto import tqdm
+from tardis.utils.utils import EarlyStopping
+from tqdm import tqdm as tq
 
 
 class Trainer:
@@ -48,6 +48,8 @@ class Trainer:
         self.training_loss = []
 
         self.model = model
+        self.model.to(device)
+
         self.node_input = node_input
         self.device = device
         self.criterion = criterion
@@ -85,10 +87,10 @@ class Trainer:
 
     def run_training(self):
         if self.tqdm:
-            progressbar = tqdm(range(self.epochs),
-                               'Epochs:',
-                               total=self.epochs,
-                               leave=True, ascii=True)
+            progressbar = tq(range(self.epochs),
+                             'Epochs:',
+                             total=self.epochs,
+                             leave=True, ascii=True)
         else:
             progressbar = range(self.epochs)
 
@@ -101,15 +103,23 @@ class Trainer:
             mkdir('GF_checkpoint')
 
         for i in progressbar:
-            """ For each Epoch load be t model from previous run"""
+            """For each Epoch load be t model from previous run"""
+            self.model.train()
             self.train()
 
+            self.model.eval()
             self.validate()
+
             early_stoping(
                 val_loss=self.validation_loss[len(self.validation_loss) - 1])
-
+            np.savetxt('GF_checkpoint/training_losses.csv',
+                       self.training_loss,
+                       delimiter=',')
             np.savetxt('GF_checkpoint/validation_losses.csv',
                        self.validation_loss,
+                       delimiter=',')
+            np.savetxt('GF_checkpoint/lr_rates.csv',
+                       self.learning_rate,
                        delimiter=',')
             np.savetxt('GF_checkpoint/accuracy.csv',
                        np.column_stack([self.accuracy,
@@ -135,88 +145,75 @@ class Trainer:
 
     def train(self):
         if self.tqdm:
-            train_progress = tqdm(enumerate(self.training_DataLoader),
-                                  'Training:',
-                                  total=len(self.training_DataLoader),
-                                  leave=True, ascii=True)
+            train_progress = tq(enumerate(self.training_DataLoader),
+                                'Training:',
+                                total=len(self.training_DataLoader),
+                                leave=True, ascii=True)
         else:
             train_progress = enumerate(self.training_DataLoader)
 
-        self.model.train()
+        for _, (x, y, z, _) in train_progress:
+            for c, i, g in zip(x, y, z):
+                c, g = c.to(self.device), g.to(self.device)
 
-        for i, (x, y, z, _) in train_progress:
-            for j in range(len(x)):
-                self.optimizer.zero_grad(set_to_none=True)
-
-                with torch.no_grad():
-                    dist = pc_median_dist(x[j])
-                    x[j] = x[j] / dist
-
+                self.optimizer.zero_grad()
                 if self.node_input:
-                    logits = self.model(coords=x[j].to(self.device),
-                                        node_features=y[j].to(self.device),
-                                        padding_mask=None)
+                    i = i.to(self.device)
+                    out = self.model(coords=c,
+                                     node_features=i,
+                                     padding_mask=None)
                 else:
-                    logits = self.model(coords=x[j].to(self.device),
-                                        node_features=None,
-                                        padding_mask=None)
+                    out = self.model(coords=c,
+                                     node_features=None,
+                                     padding_mask=None)
 
-                loss = self.criterion(logits.permute(0, 3, 1, 2)[0, :],
-                                      z[j].to(self.device))
+                loss = self.criterion(out[0, :],
+                                      g)
+                loss.backward()  # one backward pass
+                self.optimizer.step()  # update the parameters
 
-                loss.backward()
-                self.optimizer.step()
-
-                self.training_loss.append(loss.item())
-                np.savetxt('GF_checkpoint/training_losses.csv',
-                           self.training_loss,
-                           delimiter=',')
+                loss_value = loss.item()
+                self.training_loss.append(loss_value)
 
                 train_progress.set_description(
-                    f'Training: (loss {loss.item():.4f})')
+                    f'Training: loss {loss.item():.4f}')
 
         """ Save current learning rate """
         self.learning_rate.append(self.optimizer.param_groups[0]['lr'])
-        np.savetxt('GF_checkpoint/lr_rates.csv',
-                   self.learning_rate,
-                   delimiter=',')
 
         """Learning rate scheduler block"""
         if self.lr_scheduler is not None:
             self.lr_scheduler.step()
 
-        train_progress.close()
-
     def validate(self):
-        self.model.eval()
         valid_losses = []
         accuracy_mean = []
         precision_mean = []
         recall_mean = []
         F1_mean = []
 
-        validate_progress = enumerate(self.validation_DataLoader)
-        self.model.eval()
-
-        for i, (x, y, z, _) in validate_progress:
-            with torch.no_grad():
-                for j in range(len(x)):
+        with torch.no_grad():
+            for x, y, z, _ in self.validation_DataLoader:
+                for c, i, g in zip(x, y, z):
+                    c, g = c.to(self.device), g.to(self.device)
                     if self.node_input:
-                        logits = self.model(coords=x[j].to(self.device),
-                                            node_features=y[j].to(self.device),
-                                            padding_mask=None)
+                        i = i.to(self.device)
+                        out = self.model(coords=c,
+                                         node_features=i,
+                                         padding_mask=None)
                     else:
-                        logits = self.model(coords=x[j].to(self.device),
-                                            node_features=None,
-                                            padding_mask=None)
+                        out = self.model(coords=c,
+                                         node_features=None,
+                                         padding_mask=None)
 
-                    loss = self.criterion(logits.permute(0, 3, 1, 2)[0, :],
-                                          z[j].to(self.device))
+                    target = g
+                    out = out[0, :]
+                    loss = self.criterion(out,
+                                          target)
+                    out = torch.where(torch.sigmoid(out) > 0.5, 1, 0)
 
-                    logits = torch.sigmoid(logits.permute(0, 3, 1, 2)[0, :])
-                    logits = torch.where(logits > 0.5, 1, 0)
-                    acc, prec, recall, f1 = self.calculate_F1(logits=logits,
-                                                              targets=z[j].to(self.device))
+                    acc, prec, recall, f1 = self.calculate_F1(logits=out,
+                                                              targets=target)
                     # Avg. precision score
                     valid_losses.append(loss.item())
                     accuracy_mean.append(acc)
