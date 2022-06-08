@@ -275,7 +275,7 @@ def main(prediction_dir: str,
                                      euclidean_transform=True,
                                      label_size=3,
                                      down_sampling_voxal_size=None)
-        # Downsample data by 5? or 2.5 to reduce noise 
+        # Downsample data by 5? or 2.5 to reduce noise
         # Transform for xyz and pixel size for coord
 
         image = None
@@ -292,12 +292,13 @@ def main(prediction_dir: str,
 
         # Find downsampling value
         dist = pc_median_dist(pc=point_cloud)
-        # pcd = o3d.geometry.PointCloud()
-        # pcd.points = o3d.utility.Vector3dVector(point_cloud)
-        # point_cloud = np.asarray(pcd.voxel_down_sample(dist * 5).points)
+        point_cloud = point_cloud / dist
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(point_cloud)
+        point_cloud = np.asarray(pcd.voxel_down_sample(dist * 5).points)
 
         # Build voxalized dataset with
-        VD = VoxalizeDataSetV2(coord=point_cloud/dist,
+        VD = VoxalizeDataSetV2(coord=point_cloud,
                                image=None,
                                init_voxal_size=5000,
                                drop_rate=1,
@@ -305,6 +306,8 @@ def main(prediction_dir: str,
                                downsampling_rate=None,
                                graph=False)
         coords_df, _, output_idx, = VD.voxalize_dataset(out_idx=True)
+        #  TODO need testing !!!
+        coords_df = [c * dist for c in coords_df]  # Restore correct coordinates value
 
         # Calculate sigma for graphformer from mean of nearest point dist
         if tqdm:
@@ -320,12 +323,12 @@ def main(prediction_dir: str,
                                                   dropout_rate=0,
                                                   coord_embed_sigma=0.6,
                                                   predict=True),
-                               checkpoint = checkpoints[2],
-                               network = 'graphformer',
-                               subtype = 'without_img',
-                               model_type = 'cryo_membrane',
-                               device = device,
-                               tqdm = tqdm)
+                               checkpoint=checkpoints[2],
+                               network='graphformer',
+                               subtype='without_img',
+                               model_type='cryo_membrane',
+                               device=device,
+                               tqdm=tqdm)
 
         if debug:
             if device == 'cpu':

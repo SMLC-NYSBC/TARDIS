@@ -1,15 +1,16 @@
 from os import listdir
 from os.path import isdir, join
 from shutil import move
+from typing import Optional
 
 import numpy as np
 from scipy.spatial.distance import cdist
 
 
-def pc_median_dist(pc: np.ndarray):
+def pc_median_dist(pc: np.ndarray,
+                   avg_over: Optional[int] = None):
     dist = []
-
-    if pc.shape[0] > 5000:
+    if avg_over is not None:
         # Build BB and offset by 10% from the border
         box_dim = pc.shape[1]
 
@@ -22,7 +23,7 @@ def pc_median_dist(pc: np.ndarray):
             max_y = np.max(pc[:, 1])
             offset_y = (max_y - min_y) * 0.1
 
-        if box_dim == 3 and np.min(pc[:, 2]) != 0:
+        if box_dim == 3:
             min_z = np.min(pc[:, 2])
             max_z = np.max(pc[:, 2])
             offset_z = (max_z - min_z) * 0.1
@@ -30,29 +31,39 @@ def pc_median_dist(pc: np.ndarray):
             min_z, max_z = 0, 0
             offset_z = 0
 
-        bb = np.array([(min_x + offset_x, min_y + offset_y, min_z + offset_z),
-                       (max_x - offset_x, max_y - offset_y, max_z - offset_z)])
+        # bb = np.array([(min_x + offset_x, min_y + offset_y, min_z + offset_z),
+        #                (max_x - offset_x, max_y - offset_y, max_z - offset_z)])
 
-        # randomly select 10 centers
-        rand_x = np.random.randint(range(min_x, max_x), size=10)
-        rand_y = np.random.randint(range(min_y, max_y), size=10)
-        rand_z = np.random.randint(range(min_z, max_z), size=10)
+        x = np.mean(pc[:, 0])
+        y = np.mean(pc[:, 1])
+        if box_dim == 3:
+            z = np.mean(pc[:, 2])
+        else:
+            z = 0
 
-        # Pick point in voxals
-        # voxel =
+        voxel = point_in_bb(pc,
+                            min_x=x - offset_x, max_x=x + offset_x,
+                            min_y=y - offset_y, max_y=y + offset_y,
+                            min_z=z - offset_z, max_z=z + offset_z)
+        voxel = pc[voxel]
 
         # Calculate KNN dist
         knn = cdist(voxel, voxel)
 
         # AVG KNN dist
-        df = [sorted(d)[1] for d in df if sorted(d)[1] != 0]
-        dist.append(np.median(df))
+        df = [sorted(d)[1] for d in knn if sorted(d)[1] != 0]
+        dist = np.nanmedian(df)
+
+        return dist
     else:
+        if pc.shape[0] < 2:
+            return 1.0
+
         knn = cdist(pc, pc)
         df = [sorted(d)[1] for d in knn if sorted(d)[1] != 0]
-        dist.append(np.median(df))
+        df.append(1.0)
 
-    return np.mean(dist)
+        return np.nanmedian(df)
 
 
 class EarlyStopping():
@@ -240,3 +251,31 @@ class BuildTestDataSet:
                 # Move mask file to test dir
                 move(join(self.dataset, 'train', 'masks', test_mask_idx[i]),
                      join(self.dataset, 'test', 'masks', test_mask_idx[i]))
+
+
+def point_in_bb(points: np.ndarray,
+                min_x: np.inf, max_x: np.inf,
+                min_y: np.inf, max_y: np.inf,
+                min_z: Optional[np.float32] = None, max_z: Optional[np.float32] = None):
+    """ Compute a bounding_box filter on the given points
+
+    Args:
+        points: (n,3) array
+        min_i, max_i: The bounding box limits for each coordinate. If some limits are missing,
+        the default values are -infinite for the min_i and infinite for the max_i.
+
+    Returns
+    -------
+    bb_filter : boolean array
+        The boolean mask indicating wherever a point should be keep or not.
+    """
+    bound_x = np.logical_and(points[:, 0] > min_x, points[:, 0] < max_x)
+    bound_y = np.logical_and(points[:, 1] > min_y, points[:, 1] < max_y)
+    if min_z is not None or max_z is not None:
+        bound_z = np.logical_and(points[:, 2] > min_z, points[:, 2] < max_z)
+    else:
+        bound_z = np.asarray([True for _ in points[:, 2]])
+
+    bb_filter = np.logical_and(np.logical_and(bound_x, bound_y), bound_z)
+
+    return bb_filter
