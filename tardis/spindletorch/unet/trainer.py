@@ -7,6 +7,7 @@ import torch
 from tardis.utils.metrics import calculate_F1
 from tardis.utils.utils import EarlyStopping
 from torch import nn
+from tqdm import tqdm as tq
 
 
 class Trainer:
@@ -128,9 +129,8 @@ class Trainer:
     def _train(self):
 
         if self.tqdm:
-            from tqdm import tqdm
-            batch_iter = tqdm(enumerate(self.training_DataLoader),
-                              'Training')
+            batch_iter = tq(enumerate(self.training_DataLoader),
+                            'Training')
         else:
             batch_iter = enumerate(self.training_DataLoader)
 
@@ -144,7 +144,8 @@ class Trainer:
                 out, out_cls = self.model(input)  # one forward pass
             else:
                 out = self.model(input)  # one forward pass
-                loss = self.criterion(out, target)
+
+            loss = self.criterion(out, target)
 
             loss.backward()  # one backward pass
             self.optimizer.step()  # update the parameters
@@ -170,7 +171,7 @@ class Trainer:
         batch_iter = enumerate(self.validation_DataLoader)
         SM = torch.nn.Softmax(1)
 
-        for i, (x, y) in batch_iter:
+        for _, (x, y) in batch_iter:
             input, target = x.to(self.device), y.to(self.device)
             with torch.no_grad():
                 out = self.model(input)

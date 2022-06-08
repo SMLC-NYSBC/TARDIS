@@ -145,6 +145,7 @@ def train(train_dataloader: DataLoader,
                       classification=classification)
 
     trainer.run_trainer()
+
     if not isdir('model'):
         mkdir('model')
     torch.save({'model_state_dict': model.state_dict(),

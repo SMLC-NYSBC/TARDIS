@@ -86,7 +86,6 @@ class GraphFormerLayer(nn.Module):
                  num_heads=8,
                  structure='full'):
         super().__init__()
-
         self.pairs_dim = pairs_dim
         self.node_dim = node_dim
         self.structure = structure
@@ -101,7 +100,7 @@ class GraphFormerLayer(nn.Module):
                                                output_dim=pairs_dim,
                                                channel_dim=pairs_dim)
 
-        if structure in ['full', 'full_af', 'self_attn']:
+        if self.structure in ['full', 'full_af', 'self_attn']:
             self.row_attention = SelfAttention2D(embed_dim=pairs_dim,
                                                  num_heads=num_heads,
                                                  dropout=dropout,
@@ -111,7 +110,7 @@ class GraphFormerLayer(nn.Module):
                                                  dropout=dropout,
                                                  axis=0)
 
-        if structure in ['full', 'full_af', 'triang']:
+        if self.structure in ['full', 'full_af', 'triang']:
             self.row_update = TriangularEdgeUpdate(input_dim=pairs_dim,
                                                    channel_dim=32,
                                                    axis=1)
@@ -137,12 +136,12 @@ class GraphFormerLayer(nn.Module):
         Output:
             h_pairs -> Length x Batch x Channels
         """
-        if self.node_dim is not None and h_pairs is not None:
-            h_pairs = h_pairs + self.input_attn(query=h_pairs,
-                                                pairs=h_nodes,
-                                                attn_mask=src_mask,
-                                                key_padding_mask=src_key_padding_mask)
-            h_pairs = h_pairs + self.input_ffn(x=h_pairs)
+        h_pairs = h_pairs + self.input_attn(query=h_pairs,
+                                            pairs=h_nodes,
+                                            attn_mask=src_mask,
+                                            key_padding_mask=src_key_padding_mask)
+        h_pairs = h_pairs + self.input_ffn(x=h_pairs)
+
         return h_pairs
 
     def update_edges(self,
@@ -181,13 +180,15 @@ class GraphFormerLayer(nn.Module):
             h_nodes = self.row_update(z=h_nodes, mask=mask) + h_nodes
             h_nodes = self.col_update(z=h_nodes, mask=mask) + h_nodes
         elif self.structure == 'self_attn':
-            h_nodes = h_nodes + \
-                self.row_attention(x=h_nodes, padding_mask=mask) + \
-                self.col_attention(x=h_nodes, padding_mask=mask)
+            h_nodes = h_nodes + self.row_attention(x=h_nodes,
+                                                   padding_mask=mask) + \
+                self.col_attention(x=h_nodes,
+                                   padding_mask=mask)
         elif self.structure == 'triang':
-            h_nodes = h_nodes + \
-                self.row_update(z=h_nodes, mask=mask) + \
-                self.col_update(z=h_nodes, mask=mask)
+            h_nodes = h_nodes + self.row_update(z=h_nodes,
+                                                mask=mask) + \
+                self.col_update(z=h_nodes,
+                                mask=mask)
 
         return h_nodes + self.pair_ffn(x=h_nodes)
 
@@ -196,11 +197,13 @@ class GraphFormerLayer(nn.Module):
                 h_pairs: Optional[torch.Tensor] = None,
                 src_mask=None,
                 src_key_padding_mask=None):
-        if self.node_dim is not None:
+        if self.node_dim is not None and h_pairs is not None:
             h_pairs = self.update_nodes(h_pairs=h_pairs,
                                         h_nodes=h_nodes,
                                         src_mask=src_mask,
                                         src_key_padding_mask=src_key_padding_mask)
+        else:
+            h_pairs = None
 
         h_nodes = self.update_edges(h_pairs=h_pairs,
                                     h_nodes=h_nodes,

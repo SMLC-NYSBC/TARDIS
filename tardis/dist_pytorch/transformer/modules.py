@@ -33,22 +33,6 @@ class DistEmbedding(nn.Module):
 
         return self.linear(kernel)
 
-        # # Build kernels
-        # shape = x.shape
-        # kernels = torch.zeros((shape[0], shape[1], shape[1], self.n_out))
-        # dist = torch.cdist(x, x)
-
-        # # Scaling by sigma
-        # sigma = self.linear(torch.Tensor([self.n_out]).to(x.device))
-
-        # for id, s in enumerate(sigma):
-        #     kernel = torch.exp(-dist ** 2 / (s ** 2 * 2))
-        #     isnan = torch.isnan(kernel)
-        #     kernel = torch.where(isnan, torch.zeros_like(kernel), kernel)
-        #     kernels[:, :, :, id] = kernel
-
-        # return kernels.to(x.device)
-
 
 @torch.jit.script
 def gelu(x: torch.Tensor):

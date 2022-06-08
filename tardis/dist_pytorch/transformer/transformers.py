@@ -1,3 +1,4 @@
+import math
 from typing import Optional
 
 import torch
@@ -24,7 +25,7 @@ class PairBiasSelfAttention(nn.Module):
                  embed_dim,
                  pairs_dim,
                  num_heads,
-                 init_scaling=1 / 1.4142135623730951):
+                 init_scaling=math.sqrt(2)):
         super().__init__()
         self.embed_dim = self.kdim = self.vdim = embed_dim
         self.qkv_same_dim = self.kdim == embed_dim and self.vdim == embed_dim
@@ -210,10 +211,8 @@ class GeluFeedForward(nn.Module):
 
     def forward(self,
                 x: torch.Tensor):
-        x = self.norm(x)
-        x = self.linear1(x)
-        x = self.linear2(gelu(x))
-        return x
+
+        return self.linear2(gelu(self.linear1(self.norm(x))))
 
 
 class ComparisonLayer(nn.Module):
@@ -281,6 +280,7 @@ class TriangularEdgeUpdate(nn.Module):
         self.input_dim = input_dim
         self.channel_dim = channel_dim
         self.axis = axis
+        self.init_scaling = math.sqrt(2)
 
         self.norm_input = nn.LayerNorm(input_dim)
 
@@ -297,12 +297,10 @@ class TriangularEdgeUpdate(nn.Module):
         self.reset_parameters()
 
     def reset_parameters(self):
-        s = 1.41421356237
-
-        nn.init.xavier_uniform_(self.linear_a.weight, gain=s)
+        nn.init.xavier_uniform_(self.linear_a.weight, gain=self.init_scaling)
         nn.init.constant_(self.linear_a.bias, 0.0)
 
-        nn.init.xavier_uniform_(self.linear_b.weight, gain=s)
+        nn.init.xavier_uniform_(self.linear_b.weight, gain=self.init_scaling)
         nn.init.constant_(self.linear_b.bias, 0.0)
 
         nn.init.constant_(self.linear_o.weight, 0.0)
@@ -317,8 +315,10 @@ class TriangularEdgeUpdate(nn.Module):
         b = torch.sigmoid(self.gate_b(z)) * self.linear_b(z)  # B x L x L x O
 
         if mask is not None:
-            mask = mask.unsqueeze(3).expand(
-                mask.size(0), mask.size(1), mask.size(2), a.size(3))
+            mask = mask.unsqueeze(3).expand(mask.size(0),
+                                            mask.size(1),
+                                            mask.size(2),
+                                            a.size(3))
             a = torch.where(mask, torch.zeros_like(a), a)
             b = torch.where(mask, torch.zeros_like(b), b)
 
@@ -328,9 +328,7 @@ class TriangularEdgeUpdate(nn.Module):
         elif self.axis == 0:
             k = torch.einsum('bkio,bkjo->bijo', a, b)
 
-        k = self.norm_o(k)
-        o = torch.sigmoid(self.gate_o(z)) * self.linear_o(k)
-        return o
+        return torch.sigmoid(self.gate_o(z)) * self.linear_o(self.norm_o(k))
 
 
 class MultiHeadAttention(nn.Module):
@@ -365,7 +363,7 @@ class MultiHeadAttention(nn.Module):
                  add_zero_attn=False,
                  self_attention=False,
                  encoder_decoder_attention=False,
-                 init_scaling=1 / 1.4142135623730951):
+                 init_scaling=math.sqrt(2)):
 
         super().__init__()
         self.embed_dim = embed_dim

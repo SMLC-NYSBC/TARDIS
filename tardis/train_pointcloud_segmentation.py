@@ -243,9 +243,9 @@ def main(pointcloud_dir: str,
                                                      size=patch_size,
                                                      drop_rate=dl_drop_rate,
                                                      normalize="rescale",
+                                                     voxal_size=dl_voxal_size,
                                                      downsampling_if=dl_downsampling,
                                                      downsampling_rate=dl_downsampling_rate,
-                                                     voxal_size=dl_voxal_size,
                                                      memory_save=False),
                                 batch_size=1,
                                 shuffle=True,
@@ -256,11 +256,11 @@ def main(pointcloud_dir: str,
                                                     img_dir=train_imgs_dir,
                                                     prefix=prefix,
                                                     size=patch_size,
+                                                    drop_rate=dl_drop_rate,
                                                     normalize="rescale",
                                                     voxal_size=dl_voxal_size,
                                                     downsampling_if=dl_downsampling,
                                                     downsampling_rate=dl_downsampling_rate,
-                                                    drop_rate=dl_drop_rate,
                                                     memory_save=False),
                                batch_size=1,
                                shuffle=False,
@@ -307,7 +307,7 @@ def main(pointcloud_dir: str,
 
         save_train = torch.load(join(save_train), map_location=device)
         model.load_state_dict(save_train['model_state_dict'])
-        model = model.to(device)
+    model.to(device)
 
     optimizer = optim.Adam(params=model.parameters(),
                            lr=loss_lr)
@@ -315,7 +315,6 @@ def main(pointcloud_dir: str,
         optimizer.load_state_dict(save_train['optimizer_state_dict'])
 
         save_train = None
-        del(save_train)
 
     if lr_rate_schedule:
         learning_rate_scheduler = StepLR(optimizer, step_size=2, gamma=0.5)
@@ -334,7 +333,7 @@ def main(pointcloud_dir: str,
           f"Image patch size: {patch_size}")
 
     """Train"""
-    train = Trainer(model=model.to(device),
+    train = Trainer(model=model,
                     node_input=with_img,
                     device=device,
                     criterion=loss_fn,
