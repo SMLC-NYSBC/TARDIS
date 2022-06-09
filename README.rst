@@ -20,7 +20,7 @@ is used for instance segmentation of 2D/3D and 4D/5D fluorescent images in the f
         :target: /resources/workflow.png
         :alt: TARDIS workflow
 
-* Documentation: https://tardis-pytorch.readthedocs.io/en/latest/
+Documentation: https://tardis-pytorch.readthedocs.io/en/latest/
 
 Features
 --------
@@ -29,6 +29,29 @@ Features
         * Training of DIST ML model for instance segmentation of 2D and 3D point clouds
                 * 4D and 5D point clouds segmentation in the future
         * Point cloud instance segmentation by point cloud graph representation
+
+============
+Requirements
+============
+::
+
+  $ conda install --file requirements.txt
+  
+or install following requirements::
+
+        click>=8.0.4D=
+        edt>=2.1.2
+        imagecodecs>=2021.8.26
+        numpy>=1.21.0
+        open3d>=0.9.0
+        scikit-image>=0.19.2
+        scikit-learn >=1.0.2
+        scipy>=1.7.3
+        tifffile>=2021.11.2
+        torch>=1.11.0
+        tqdm>=4.63.0
+        zarr>=2.8.1
+
 
 ============
 Installation
@@ -53,4 +76,74 @@ You can either clone the public repository:
 =====
 Usage
 =====
+**!IMPORTANT!** Training expect to be in a directory which contains 2 folders: 
+data/train/ and data/test both of which should have ./imgs and ./masks folders
 
+Training modules:
+        Semantic Segmentation:
+
+        tardis_cnn_train -dir str -ttr float -ps int -cnn str -co int -b -cl int -cm int -cs str -ck int -cp int -cmxk int -l str -la None/float -lr float -lrs bool -d device -e int -es int -cch None/str -dr None/float -tq bool
+
+        int    [-dir]   Directory for training and test dataset.
+                [-default]      None
+        float  [-ttr]   Percentage value of train dataset that will become test.
+                [-default]      10
+        int    [-ps]    Image size used for perdition.
+                [-default]      64
+        str    [-cnn]   Type of NN used for training.
+                [-default]      'Unet'
+                [-choice]       'unet', 'resunet', 'unet3plus'
+        int    [-co]    Number of output channels for the NN.
+                [-default]      1
+        int    [-b]     Batch size.
+                [-default]      25
+        int    [-cl]    Number of convolution layer for NN.
+                [-default]      5
+        int    [-cm]    Convolution multiplayer for CNN layers.
+                [-default]      64
+        str    [-cs]    Define structure of the convolution layer.
+                [-default]      '3gcl'
+                [-choice]       '2 or 3 - dimension in 2D or 3D'
+                                'c - convolution'
+                                'g - group normalization'
+                                'b - batch normalization'
+                                'r - ReLU'
+                                'l - LeakyReLU'
+        int    [-ck]    Kernel size for 2D or 3D convolution.
+                [-default]      3
+        int    [-cp]    Padding size for convolution.
+                [-default]      1
+        int    [-cmxk]    Maxpooling kernel
+                [-default]      2
+        str    [-l]    Loss function use for training.
+                [-default]      'bce'
+                [-choice]       'bce', 'dice', 'hybrid', 'adaptive_dice'
+        float    [-la]    Value of alpha used for adaptive dice loss.
+                [-default]      None
+        float    [-lr]    Learning rate for NN.
+                [-default]      0.001
+        bool    [-lrs]    If True learning rate scheduler is used.
+                 [-default]      False
+        str    [-lrs]    Define which device use for training:
+                [-default]      0
+                [-choice]       'gpu: Use ID 0 gpus'
+                                'cpu: Usa CPU'
+                                'mps: Apple silicon'
+                                '0-9 - specified gpu device id to use'
+        int    [-e]    Number of epoches
+                [-default]      100
+        int    [-es]    Number of epoches without improvement after which early stop is initiated.
+                [-default]      10
+        str    [-cch]    If indicated, dir to training checkpoint to reinitialized training.
+                [-default]      None
+        float  [-dr]    If indicated, value of dropout for CNN.
+                [-default]      None
+        bool  [-tq]    If True, build with progress bar.
+                [-default]      True
+tardis_cnn_predict
+
+tardis_postprocessing
+
+tardis_pointcloud_train
+tardis_gf_score
+tardis_mt

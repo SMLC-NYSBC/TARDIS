@@ -29,7 +29,7 @@ from tardis.version import version
 @click.option('-ps', '--patch_size',
               default=64,
               type=int,
-              help='Size of image size used for prediction.',
+              help='Image size used for prediction.',
               show_default=True)
 @click.option('-cnn', '--cnn_type',
               default='unet',
@@ -68,6 +68,21 @@ from tardis.version import version
               'r - ReLU'
               'l - LeakyReLU',
               show_default=True)
+@click.option('-ck', '--conv_kernel',
+              default=3,
+              type=int,
+              help='Kernel size for 2D or 3D convolution.',
+              show_default=True)
+@click.option('-cp', '--conv_padding',
+              default=1,
+              type=int,
+              help='Padding size for convolution.',
+              show_default=True)
+@click.option('-cmxk', '--pool_kernel',
+              default=2,
+              type=int,
+              help='Maxpooling kernel.',
+              show_default=True)
 @click.option('-l', '--cnn_loss',
               default='bce',
               type=click.Choice(['bce', 'dice', 'hybrid', 'adaptive_dice'],
@@ -95,6 +110,7 @@ from tardis.version import version
               help='Define which device use for training: '
               'gpu: Use ID 0 gpus'
               'cpu: Usa CPU'
+              'mps: Apple silicon'
               '0-9 - specified gpu device id to use',
               show_default=True)
 @click.option('-e', '--epochs',
@@ -111,7 +127,7 @@ from tardis.version import version
 @click.option('-cch', '--cnn_checkpoint',
               default=None,
               type=str,
-              help='If indicated, dir to training checkpoint to reinitialized trainign.',
+              help='If indicated, dir to training checkpoint to reinitialized training.',
               show_default=True)
 @click.option('-dr', '--dropout_rate',
               default=None,
@@ -121,7 +137,7 @@ from tardis.version import version
 @click.option('-tq', '--tqdm',
               default=True,
               type=bool,
-              help='If True, build with progressbar.',
+              help='If True, build with progress bar.',
               show_default=True)
 @click.version_option(version=version)
 def main(training_dataset: str,
