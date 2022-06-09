@@ -81,7 +81,7 @@ Training modules:
         Semantic Segmentation:
 .. code-block:: console
 
-        tardis_cnn_train -dir str -ttr float -ps int -cnn str -co int -b -cl int -cm int -cs str -ck int -cp int -cmxk int -l str -la None/float -lr float -lrs bool -d device -e int -es int -cch None/str -dr None/float -tq bool
+        tardis_cnn_train -dir str -ttr float -ps int -cnn str -co int -b -cl int -cm int -cs str -ck int -cp int -cmxk int -dp None/float -l str -la None/float -lr float -lrs bool -d str -e int -es int -cch None/str -tq bool
 
         int    [-dir]   Directory for training and test dataset.
                 [-default]      None
@@ -114,16 +114,18 @@ Training modules:
                 [-default]      1
         int    [-cmxk]    Maxpooling kernel
                 [-default]      2
+        float  [-dp]    If indicated, value of dropout for CNN.
+                [-default]      None
         str    [-l]    Loss function use for training.
                 [-default]      'bce'
                 [-choice]       'bce', 'dice', 'hybrid', 'adaptive_dice'
-        float    [-la]    Value of alpha used for adaptive dice loss.
+        float  [-la]    Value of alpha used for adaptive dice loss.
                 [-default]      None
-        float    [-lr]    Learning rate for NN.
+        float  [-lr]    Learning rate for NN.
                 [-default]      0.001
-        bool    [-lrs]    If True learning rate scheduler is used.
+        bool   [-lrs]    If True learning rate scheduler is used.
                  [-default]      False
-        str    [-lrs]    Define which device use for training:
+        str    [-d]    Define which device use for training:
                 [-default]      0
                 [-choice]       'gpu: Use ID 0 gpus'
                                 'cpu: Usa CPU'
@@ -135,7 +137,54 @@ Training modules:
                 [-default]      10
         str    [-cch]    If indicated, dir to training checkpoint to reinitialized training.
                 [-default]      None
-        float  [-dr]    If indicated, value of dropout for CNN.
+        bool   [-tq]    If True, build with progress bar.
+                [-default]      True
+
+.. code-block:: console
+
+        tardis_cnn_predict -dir str -ps int -cnn str -co int -cl int -cm int -cs str -ck int -cp int -cmxk int -dp None/float -cch (None, None)/ (str, str) -d str -th float -tq bool
+
+        int    [-dir]   Directory for training and test dataset.
                 [-default]      None
+        int    [-ps]    Image size used for perdition.
+                [-default]      64
+        str    [-cnn]   Type of NN used for training.
+                [-default]      'Unet'
+                [-choice]       'unet', 'resunet', 'unet3plus'
+        int    [-co]    Number of output channels for the NN.
+                [-default]      1
+        int    [-b]     Batch size.
+                [-default]      25
+        int    [-cl]    Number of convolution layer for NN.
+                [-default]      5
+        int    [-cm]    Convolution multiplayer for CNN layers.
+                [-default]      64
+        str    [-cs]    Define structure of the convolution layer.
+                [-default]      '3gcl'
+                [-choice]       '2 or 3 - dimension in 2D or 3D'
+                                'c - convolution'
+                                'g - group normalization'
+                                'b - batch normalization'
+                                'r - ReLU'
+                                'l - LeakyReLU'
+        int    [-ck]    Kernel size for 2D or 3D convolution.
+                [-default]      3
+        int    [-cp]    Padding size for convolution.
+                [-default]      1
+        int    [-cmxk]    Maxpooling kernel
+                [-default]      2
+        float  [-dp]    If indicated, value of dropout for CNN.
+                [-default]      None
+        str    [-cch]    If indicated, dir to training checkpoint to reinitialized training.
+                         None value force to download most up-to-data weights
+                [-default]      (None, None)
+        str    [-d]    Define which device use for training:
+                [-default]      0
+                [-choice]       'gpu: Use ID 0 gpus'
+                                'cpu: Usa CPU'
+                                'mps: Apple silicon'
+                                '0-9 - specified gpu device id to use'
+        float  [-th]    Threshold use for model prediction.
+                [-default]      0.5
         bool  [-tq]    If True, build with progress bar.
                 [-default]      True

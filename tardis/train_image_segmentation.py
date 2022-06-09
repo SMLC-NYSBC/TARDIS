@@ -129,7 +129,7 @@ from tardis.version import version
               type=str,
               help='If indicated, dir to training checkpoint to reinitialized training.',
               show_default=True)
-@click.option('-dr', '--dropout_rate',
+@click.option('-dp', '--dropout_rate',
               default=None,
               type=float,
               help='If indicated, value of dropout for CNN.',
