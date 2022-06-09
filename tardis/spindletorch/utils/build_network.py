@@ -9,7 +9,10 @@ def build_network(network_type: str,
                   dropout=None,
                   no_conv_layers=5,
                   conv_multiplayer=64,
-                  layer_components='gcl',
+                  conv_kernel=3,
+                  conv_padding=1,
+                  maxpool_kernel=2,
+                  layer_components='3gcl',
                   no_groups=8,
                   prediction=False):
     """
@@ -24,15 +27,20 @@ def build_network(network_type: str,
         dropout: If float dropout is used
         no_conv_layers: Number of convoltion layers
         conv_multiplayer: Convolution multiplayer used in each layer
-        layer_components: b,g,c,l,r type of operation and order for each convolution
+        layer_components: (2 or 3),b,g,c,l,r type of operation and order for each convolution
         no_groups: Number of group used for groupnorm
         prediction: If True, network output softmax of the prediction
     """
+
     if network_type == 'unet':
         model = UNet(in_channels=in_channel,
                      out_channels=out_channel,
                      patch_size=img_size,
                      dropout=dropout,
+                     conv_kernel=conv_kernel,
+                     padding=conv_padding,
+                     pool_kernel=maxpool_kernel,
+                     no_groups=no_groups,
                      no_conv_layer=no_conv_layers,
                      conv_layer_multiplayer=conv_multiplayer,
                      layer_components=layer_components,
@@ -44,6 +52,9 @@ def build_network(network_type: str,
                         dropout=dropout,
                         no_conv_layer=no_conv_layers,
                         conv_layer_multiplayer=conv_multiplayer,
+                        conv_kernel=conv_kernel,
+                        padding=conv_padding,
+                        pool_kernel=maxpool_kernel,
                         layer_components=layer_components,
                         prediction=prediction)
     elif network_type == 'unet3plus':
@@ -51,6 +62,9 @@ def build_network(network_type: str,
                           out_channels=out_channel,
                           classifies=classification,
                           patch_size=img_size,
+                          conv_kernel=conv_kernel,
+                          padding=conv_padding,
+                          pool_kernel=maxpool_kernel,
                           no_conv_layer=no_conv_layers,
                           conv_layer_multiplayer=conv_multiplayer,
                           layer_components=layer_components,

@@ -53,6 +53,7 @@ from tardis.version import version
               default='gcl',
               type=str,
               help='Define structure of the convolution layer.'
+              '2 or 3 - dimensions in 2D or 3D'
               'c - convolution'
               'g - group normalization'
               'b - batch normalization'

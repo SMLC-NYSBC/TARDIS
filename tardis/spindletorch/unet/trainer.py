@@ -140,8 +140,7 @@ class Trainer:
             self.optimizer.zero_grad(set_to_none=True)
 
             if self.classification:
-                # TODO: Include double loss function for classes and final output
-                out, out_cls = self.model(input)  # one forward pass
+                out, _ = self.model(input)  # one forward pass
             else:
                 out = self.model(input)  # one forward pass
 

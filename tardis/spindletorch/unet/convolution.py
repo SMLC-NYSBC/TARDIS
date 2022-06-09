@@ -1,5 +1,29 @@
+from typing import Optional
 import torch
 import torch.nn as nn
+import math
+
+
+class GeLU(nn.Module):
+    """
+    CUSTOM GAUSSIAN ERROR LINEAR UNITS ACTIVATION FUNCTION
+
+    Args:
+        tanh: hyperbolic tangent value for GeLU
+        x: torch input for activation.
+    """
+    def __init__(self,
+                 tanh: Optional[float] = None):
+        super(GeLU, self).__init__()
+
+        if tanh is not None:
+            self.tanh = math.sqrt(tanh)
+        else:
+            self.tanh = math.sqrt(2)
+
+    def forward(self,
+                x: torch.Tensor):
+        return x * 0.5 * (1.0 + torch.erf(x / self.tanh))
 
 
 def convolution(in_ch: int,
@@ -10,7 +34,7 @@ def convolution(in_ch: int,
                 no_group=None):
     """
     Build an convolution block with a specified components:
-    conv (c), ReLu (r), LeakyReLu (l), GroupNorm (g), BatchNorm (b).
+    (2 or 3) dimension, conv (c), ReLu (r), LeakyReLu (l), GroupNorm (g), BatchNorm (b).
 
     Args:
         in_ch: Number of input channels
@@ -30,18 +54,32 @@ def convolution(in_ch: int,
         if "c" in letter:
             conv = True
 
-            if 'g' in components or 'b' in components:
-                modules.append(("Conv3D", nn.Conv3d(in_channels=in_ch,
-                                                    out_channels=out_ch,
-                                                    kernel_size=kernel,
-                                                    padding=padding,
-                                                    bias=False)))
-            else:
-                modules.append(("Conv3D", nn.Conv3d(in_channels=in_ch,
-                                                    out_channels=out_ch,
-                                                    kernel_size=kernel,
-                                                    padding=padding,
-                                                    bias=True)))
+            if '3' in components:
+                if 'g' in components or 'b' in components:
+                    modules.append(("Conv3D", nn.Conv3d(in_channels=in_ch,
+                                                        out_channels=out_ch,
+                                                        kernel_size=kernel,
+                                                        padding=padding,
+                                                        bias=False)))
+                else:
+                    modules.append(("Conv3D", nn.Conv3d(in_channels=in_ch,
+                                                        out_channels=out_ch,
+                                                        kernel_size=kernel,
+                                                        padding=padding,
+                                                        bias=True)))
+            if '2' in components:
+                if 'g' in components or 'b' in components:
+                    modules.append(("Conv2D", nn.Conv2d(in_channels=in_ch,
+                                                        out_channels=out_ch,
+                                                        kernel_size=kernel,
+                                                        padding=padding,
+                                                        bias=False)))
+                else:
+                    modules.append(("Conv2D", nn.Conv2d(in_channels=in_ch,
+                                                        out_channels=out_ch,
+                                                        kernel_size=kernel,
+                                                        padding=padding,
+                                                        bias=True)))
 
         if "g" == letter:
             assert no_group is not None, \
@@ -57,15 +95,23 @@ def convolution(in_ch: int,
                                                            num_channels=in_ch)))
 
         if "b" == letter:
-            if conv:
-                modules.append(("BatchNorm1", nn.BatchNorm3d(out_ch)))
-            else:
-                modules.append(("BatchNorm2", nn.BatchNorm3d(in_ch)))
+            if '3' in components:
+                if conv:
+                    modules.append(("BatchNorm1", nn.BatchNorm3d(out_ch)))
+                else:
+                    modules.append(("BatchNorm2", nn.BatchNorm3d(in_ch)))
+            if '2' in components:
+                if conv:
+                    modules.append(("BatchNorm1", nn.BatchNorm2d(out_ch)))
+                else:
+                    modules.append(("BatchNorm2", nn.BatchNorm2d(in_ch)))
 
         if "r" in letter:
             modules.append(("ReLu", nn.ReLU(inplace=True)))
         if "l" in letter:
             modules.append(("LeakyReLu", nn.LeakyReLU(inplace=True)))
+        if 'e' in letter:
+            modules.append(('GeLU', GeLU(tanh=2)))
 
     return modules
 
@@ -94,15 +140,27 @@ class SingleConvolution(nn.Sequential):
                  padding: int or tuple,
                  no_group=None):
         super(SingleConvolution, self).__init__()
-        conv3d = convolution(in_ch=in_ch,
-                             out_ch=out_ch,
-                             components=components,
-                             kernel=kernel,
-                             padding=padding,
-                             no_group=no_group)
+        if '3' in components:
+            conv3d = convolution(in_ch=in_ch,
+                                 out_ch=out_ch,
+                                 components=components,
+                                 kernel=kernel,
+                                 padding=padding,
+                                 no_group=no_group)
 
-        for name, module in conv3d:
-            self.add_module(name, module)
+            for name, module in conv3d:
+                self.add_module(name, module)
+
+        if '2' in components:
+            conv2d = convolution(in_ch=in_ch,
+                                 out_ch=out_ch,
+                                 components=components,
+                                 kernel=kernel,
+                                 padding=padding,
+                                 no_group=no_group)
+
+            for name, module in conv2d:
+                self.add_module(name, module)
 
 
 class DoubleConvolution(nn.Sequential):

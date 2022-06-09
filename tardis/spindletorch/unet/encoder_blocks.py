@@ -26,18 +26,21 @@ class EncoderBlock(nn.Module):
                  in_ch: int,
                  out_ch: int,
                  conv_module,
-                 conv_kernel=(3, 3, 3),
+                 conv_kernel=3,
                  max_pool=True,
                  dropout: Optional[float] = None,
-                 pool_kernel=(2, 2, 2),
-                 padding=(1, 1, 1),
-                 conv_component="gcr",
+                 pool_kernel=2,
+                 padding=1,
+                 conv_component="3gcr",
                  no_groups=8):
         super(EncoderBlock, self).__init__()
         self.dropout = dropout
 
         if max_pool:
-            self.max_pool = nn.MaxPool3d(kernel_size=pool_kernel)
+            if '3' in conv_component:
+                self.max_pool = nn.MaxPool3d(kernel_size=pool_kernel)
+            elif '2' in conv_component:
+                self.max_pool = nn.MaxPool2d(kernel_size=pool_kernel)
         else:
             self.max_pool = None
 

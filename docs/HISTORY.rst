@@ -4,10 +4,13 @@ History
 
 0.1.0a6 (2022-05-xx)
 --------------------
-* TODO: Check pipeline for image embedding (normalization to enhance features)
-* TODO: Model retraining for MTs
+* Check pipeline for image embedding (normalization to enhance features)
+    * Introduce new normalization ResaleNormalize that spread histogram from 
+        2-98 projectile of intensity distribution
+* Model retraining for MTs
 * TODO: Model retraining for MTs with real image data
-
+* Closed #7 issue
+* SpidleTorch rebuild to work on 2D and 3D datasets
 
 0.1.0a5 (2022-04-25)
 --------------------

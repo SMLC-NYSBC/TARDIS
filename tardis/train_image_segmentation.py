@@ -61,6 +61,7 @@ from tardis.version import version
               default='gcl',
               type=str,
               help='Define structure of the convolution layer.'
+              '2 or 3 - dimension in 2D or 3D'
               'c - convolution'
               'g - group normalization'
               'b - batch normalization'
@@ -131,6 +132,9 @@ def main(training_dataset: str,
          taining_batch_size: int,
          cnn_layers: int,
          cnn_multiplayer: int,
+         conv_kernel: int,
+         conv_padding: int,
+         pool_kernel: int,
          cnn_structure: str,
          cnn_loss: str,
          loss_lr_rate: float,
@@ -237,6 +241,9 @@ def main(training_dataset: str,
           convolution_layer=cnn_layers,
           convolution_multiplayer=cnn_multiplayer,
           convolution_structure=cnn_structure,
+          conv_kernel=conv_kernel,
+          padding=conv_padding,
+          pool_kernel=pool_kernel,
           cnn_checkpoint=cnn_checkpoint,
           loss_function=cnn_loss,
           loss_alpha=loss_alpha,

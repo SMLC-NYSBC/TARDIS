@@ -8,6 +8,10 @@ def weights_init_kaiming(m):
         init.kaiming_normal_(tensor=m.weight.data,
                              a=0,
                              mode='fan_in')
+    elif classname.find('Conv2d') != -1:
+        init.kaiming_normal_(tensor=m.weight.data,
+                             a=0,
+                             mode='fan_in')
     elif classname.find('BatchNorm') != -1:
         init.normal_(tensor=m.weight.data,
                      mean=1.0,

@@ -18,25 +18,25 @@ class UNet(nn.Module):
 
     Args:
         in_channels: Number of input channels for first convolution
-            default: 1
         out_channels: Number of output channels for last deconvolution
-            default: 2 <- binary 0-1 segmentation
         sigmoid: If True, use nn.Sigmoid or nn.Softmax if False. Use True if
-        nn.BCELoss is used as loss function for (two-class segmentation).
-            default: True
-        conv_module: Convolution module used for build network
+            nn.BCELoss is used as loss function for (two-class segmentation)
         no_conv_layer: Number of convolution and deconvolution steps. Number of
-        input channels for convolution is calculated as a linear progression.
-        E.g. [64, 128, 256, 512]
-            default: 4
-        no_groups: Number of group for nn.GroupNorm
-            default: 8
+            input channels for convolution is calculated as a linear progression.
+            E.g. [64, 128, 256, 512]
+        conv_layer_multiplayer: Feature output of first layer
         conv_kernel: Kernel size for the convolution
-            default: 3
         padding: Padding size for convolution
-            default: 1
+        maxpool_kernel: kernel size for max_pooling
+        patch_size: Image patch size used for calculation network structure
+        layer_components: Convolution module used for build network
+        dropout: If float, dropout layer is build with given drop out rate
+        no_groups: Number of group for nn.GroupNorm
+        prediction: If True, prediction mode is on
+
     Returns if Training:
         5D torch without final activation
+
     Returns if Prediction:
         If sigmoid is True
             5D torch with final activation from nn.Sigmoid()
@@ -53,15 +53,18 @@ class UNet(nn.Module):
                  sigmoid=True,
                  no_conv_layer=5,
                  conv_layer_multiplayer=64,
+                 conv_kernel=3,
+                 padding=1,
+                 pool_kernel=2,
                  patch_size=64,
-                 layer_components="gcl",
+                 layer_components="3gcl",
                  dropout=None,
                  no_groups=8,
                  prediction=False):
         super(UNet, self).__init__()
 
         patch_sizes = [patch_size]
-        for i in range(no_conv_layer):
+        for _ in range(no_conv_layer):
             patch_size = int(patch_size / 2)
             patch_sizes.append(patch_size)
         patch_sizes = list(reversed(patch_sizes))[2:]
@@ -70,12 +73,12 @@ class UNet(nn.Module):
         self.encoder = build_encoder(in_ch=in_channels,
                                      conv_layers=no_conv_layer,
                                      conv_layer_multiplayer=conv_layer_multiplayer,
-                                     conv_kernel=3,
-                                     padding=1,
+                                     conv_kernel=conv_kernel,
+                                     padding=padding,
                                      dropout=dropout,
                                      no_groups=no_groups,
                                      components=layer_components,
-                                     pool_kernel=2,
+                                     pool_kernel=pool_kernel,
                                      conv_module=DoubleConvolution)
 
         self.decoder = build_decoder(conv_layers=no_conv_layer,
@@ -85,9 +88,14 @@ class UNet(nn.Module):
                                      no_groups=no_groups,
                                      deconv_module='CNN')
 
-        self.final_conv_layer = nn.Conv3d(in_channels=conv_layer_multiplayer,
-                                          out_channels=out_channels,
-                                          kernel_size=(1, 1, 1))
+        if '3' in layer_components:
+            self.final_conv_layer = nn.Conv3d(in_channels=conv_layer_multiplayer,
+                                              out_channels=out_channels,
+                                              kernel_size=1)
+        elif '2' in layer_components:
+            self.final_conv_layer = nn.Conv2d(in_channels=conv_layer_multiplayer,
+                                              out_channels=out_channels,
+                                              kernel_size=1)
 
         if sigmoid:
             self.activation = nn.Sigmoid()
@@ -131,29 +139,33 @@ class ResUNet(nn.Module):
                  sigmoid=True,
                  patch_size=64,
                  no_conv_layer=4,
+                 conv_kernel=3,
+                 padding=1,
+                 pool_kernel=2,
                  conv_layer_multiplayer=64,
-                 layer_components="cgl",
+                 layer_components="3cgl",
                  dropout: Optional[float] = None,
                  no_groups=8,
                  prediction=False):
         super(ResUNet, self).__init__()
 
         patch_sizes = [patch_size]
-        for i in range(no_conv_layer):
+        for _ in range(no_conv_layer):
             patch_size = int(patch_size / 2)
             patch_sizes.append(patch_size)
+
         patch_sizes = list(reversed(patch_sizes))[2:]
 
         self.prediction = prediction
         self.encoder = build_encoder(in_ch=in_channels,
                                      conv_layers=no_conv_layer,
                                      conv_layer_multiplayer=conv_layer_multiplayer,
-                                     conv_kernel=3,
-                                     padding=1,
+                                     conv_kernel=conv_kernel,
+                                     padding=padding,
                                      dropout=dropout,
                                      no_groups=no_groups,
                                      components=layer_components,
-                                     pool_kernel=2,
+                                     pool_kernel=pool_kernel,
                                      conv_module=RecurrentDoubleConvolution)
 
         self.decoder = build_decoder(conv_layers=no_conv_layer,
@@ -164,9 +176,14 @@ class ResUNet(nn.Module):
                                      no_groups=no_groups,
                                      deconv_module='RCNN')
 
-        self.final_conv_layer = nn.Conv3d(in_channels=conv_layer_multiplayer,
-                                          out_channels=out_channels,
-                                          kernel_size=(1, 1, 1))
+        if '3' in layer_components:
+            self.final_conv_layer = nn.Conv3d(in_channels=conv_layer_multiplayer,
+                                              out_channels=out_channels,
+                                              kernel_size=1)
+        elif '2' in layer_components:
+            self.final_conv_layer = nn.Conv2d(in_channels=conv_layer_multiplayer,
+                                              out_channels=out_channels,
+                                              kernel_size=1)
 
         if sigmoid:
             self.activation = nn.Sigmoid()
@@ -221,9 +238,10 @@ class UNet3Plus(nn.Module):
         super(UNet3Plus, self).__init__()
 
         patch_sizes = [patch_size]
-        for i in range(no_conv_layer):
+        for _ in range(no_conv_layer):
             patch_size = int(patch_size / 2)
             patch_sizes.append(patch_size)
+
         patch_sizes = list(reversed(patch_sizes))[2:]
 
         feature_map = number_of_features_per_level(conv_layer_multiplayer,
@@ -241,12 +259,20 @@ class UNet3Plus(nn.Module):
                                      conv_module=DoubleConvolution)
 
         if classifies:
-            self.cls = nn.Sequential(nn.Dropout(p=0.5),
-                                     nn.Conv3d(in_channels=feature_map[len(feature_map) - 1],
-                                               out_channels=2,
-                                               kernel_size=1),
-                                     nn.AdaptiveAvgPool3d(output_size=1),
-                                     nn.Sigmoid())
+            if '3' in layer_components:
+                self.cls = nn.Sequential(nn.Dropout(p=0.5),
+                                         nn.Conv3d(in_channels=feature_map[len(feature_map) - 1],
+                                                   out_channels=2,
+                                                   kernel_size=1),
+                                         nn.AdaptiveAvgPool3d(output_size=1),
+                                         nn.Sigmoid())
+            elif '2' in layer_components:
+                self.cls = nn.Sequential(nn.Dropout(p=0.5),
+                                         nn.Conv2d(in_channels=feature_map[len(feature_map) - 1],
+                                                   out_channels=2,
+                                                   kernel_size=1),
+                                         nn.AdaptiveAvgPool2d(output_size=1),
+                                         nn.Sigmoid())
         else:
             self.cls = None
 
@@ -257,9 +283,14 @@ class UNet3Plus(nn.Module):
                                      no_groups=no_groups,
                                      deconv_module='unet3plus')
 
-        self.final_conv_layer = nn.Conv3d(in_channels=conv_layer_multiplayer,
-                                          out_channels=out_channels,
-                                          kernel_size=(1, 1, 1))
+        if '3' in layer_components:
+            self.final_conv_layer = nn.Conv3d(in_channels=conv_layer_multiplayer,
+                                              out_channels=out_channels,
+                                              kernel_size=1)
+        elif '2' in layer_components:
+            self.final_conv_layer = nn.Conv2d(in_channels=conv_layer_multiplayer,
+                                              out_channels=out_channels,
+                                              kernel_size=1)
 
         if sigmoid:
             self.activation = nn.Sigmoid()

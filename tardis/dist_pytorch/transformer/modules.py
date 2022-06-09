@@ -1,5 +1,7 @@
+import math
 import torch
 import torch.nn as nn
+import math
 
 
 class DistEmbedding(nn.Module):
@@ -42,4 +44,4 @@ def gelu(x: torch.Tensor):
     Args:
         x: torch input for activation.
     """
-    return x * 0.5 * (1.0 + torch.erf(x / 1.41421356237))
+    return x * 0.5 * (1.0 + torch.erf(x / math.sqrt(2)))

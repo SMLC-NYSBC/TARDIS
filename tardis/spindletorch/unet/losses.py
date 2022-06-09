@@ -4,10 +4,10 @@ import torch.nn as nn
 
 class BCEDiceLoss(nn.Module):
     def __init__(self,
-                 alpha: float):
+                 alpha=1.0):
         super(BCEDiceLoss, self).__init__()
         self.bce = BCELoss()
-        self.dice = AdaptiveDiceLoss(alpha=1)
+        self.dice = AdaptiveDiceLoss(alpha=alpha)
 
     def forward(self,
                 inputs: torch.Tensor,

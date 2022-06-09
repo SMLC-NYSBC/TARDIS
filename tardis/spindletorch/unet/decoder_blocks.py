@@ -27,14 +27,20 @@ class DecoderBlockCNN(nn.Module):
                  out_ch: int,
                  size: int,
                  dropout: Optional[float] = None,
-                 components="gcr",
+                 components="3gcr",
                  no_group=8):
         super(DecoderBlockCNN, self).__init__()
         self.dropout = dropout
 
-        self.upsample = nn.Upsample(size=size,
-                                    mode='trilinear',
-                                    align_corners=True)
+        if '3' in components:
+            self.upsample = nn.Upsample(size=size,
+                                        mode='trilinear',
+                                        align_corners=True)
+        elif '2' in components:
+            self.upsample = nn.Upsample(size=size,
+                                        mode='bilinear',
+                                        align_corners=True)
+
         self.deconv_module = DoubleConvolution(in_ch=in_ch,
                                                out_ch=out_ch,
                                                block_type="decoder",
@@ -48,6 +54,8 @@ class DecoderBlockCNN(nn.Module):
         # initialise the blocks
         for m in self.children():
             if m.__class__.__name__.find('Conv3d') != -1:
+                init_weights(m, init_type='kaiming')
+            if m.__class__.__name__.find('Conv2d') != -1:
                 init_weights(m, init_type='kaiming')
             if m.__class__.__name__.find('GroupNorm') != -1:
                 init_weights(m, init_type='kaiming')
@@ -84,14 +92,20 @@ class DecoderBlockRCNN(nn.Module):
                  out_ch: int,
                  size: int,
                  dropout: Optional[float] = None,
-                 components="gcr",
+                 components="3gcr",
                  no_group=8):
         super(DecoderBlockRCNN, self).__init__()
         self.dropout = dropout
 
-        self.upsampling = nn.Upsample(size=size,
-                                      mode='trilinear',
-                                      align_corners=True)
+        if '3' in components:
+            self.upsample = nn.Upsample(size=size,
+                                        mode='trilinear',
+                                        align_corners=True)
+        elif '2' in components:
+            self.upsample = nn.Upsample(size=size,
+                                        mode='bilinear',
+                                        align_corners=True)
+
         self.deconv_module = DoubleConvolution(in_ch=in_ch,
                                                out_ch=out_ch,
                                                block_type="decoder",
@@ -115,13 +129,15 @@ class DecoderBlockRCNN(nn.Module):
         for m in self.children():
             if m.__class__.__name__.find('Conv3d') != -1:
                 init_weights(m, init_type='kaiming')
+            if m.__class__.__name__.find('Conv2d') != -1:
+                init_weights(m, init_type='kaiming')
             if m.__class__.__name__.find('GroupNorm') != -1:
                 init_weights(m, init_type='kaiming')
 
     def forward(self,
                 encoder_features: torch.Tensor,
                 x: torch.Tensor):
-        x = self.upsampling(x)
+        x = self.upsample(x)
         x = self.deconv_module(x)
 
         x = encoder_features + x
@@ -161,9 +177,14 @@ class DecoderBlockUnet3Plus(nn.Module):
         self.dropout = dropout
 
         # Main Block Up Convolution
-        self.Upsample = nn.Upsample(size=size,
-                                    mode='trilinear',
-                                    align_corners=True)
+        if '3' in components:
+            self.upsample = nn.Upsample(size=size,
+                                        mode='trilinear',
+                                        align_corners=True)
+        elif '2' in components:
+            self.upsample = nn.Upsample(size=size,
+                                        mode='bilinear',
+                                        align_corners=True)
         self.deconv = DoubleConvolution(in_ch=in_ch,
                                         out_ch=out_ch,
                                         block_type='decoder',
@@ -182,8 +203,13 @@ class DecoderBlockUnet3Plus(nn.Module):
         for i, en_in_channel in enumerate(encoder_feature_ch):
             pool_kernel = pool_kernels[i]
 
-            if pool_kernel is not None:
+            if pool_kernel is not None and '3' in components:
                 max_pool = nn.MaxPool3d(kernel_size=pool_kernel,
+                                        stride=pool_kernel,
+                                        dilation=1,
+                                        ceil_mode=True)
+            elif pool_kernel is not None and '2' in components:
+                max_pool = nn.MaxPool2d(kernel_size=pool_kernel,
                                         stride=pool_kernel,
                                         dilation=1,
                                         ceil_mode=True)
@@ -205,9 +231,15 @@ class DecoderBlockUnet3Plus(nn.Module):
         self.decoder_feature_upsample = nn.ModuleList([])
         self.decoder_feature_conv = nn.ModuleList([])
         for de_in_channel in decoder_feature_ch:
-            upsample = nn.Upsample(size=size,
-                                   mode='trilinear',
-                                   align_corners=True)
+            if '3' in components:
+                upsample = nn.Upsample(size=size,
+                                       mode='trilinear',
+                                       align_corners=True)
+            elif '2' in components:
+                upsample = nn.Upsample(size=size,
+                                       mode='bilinear',
+                                       align_corners=True)
+
             deconv_module = DoubleConvolution(in_ch=de_in_channel,
                                               out_ch=out_ch,
                                               block_type="decoder",
@@ -226,6 +258,8 @@ class DecoderBlockUnet3Plus(nn.Module):
         for m in self.children():
             if m.__class__.__name__.find('Conv3d') != -1:
                 continue
+            if m.__class__.__name__.find('Conv2d') != -1:
+                continue
             if m.__class__.__name__.find('GroupNorm') != -1:
                 continue
 
@@ -237,7 +271,7 @@ class DecoderBlockUnet3Plus(nn.Module):
                 encoder_features: list):
 
         # Main Block
-        x = self.Upsample(x)
+        x = self.upsample(x)
         x = self.deconv(x)
 
         # Skip-Connections Encoder
@@ -316,6 +350,7 @@ def build_decoder(conv_layers: int,
             in_ch = feature_map[i]
             out_ch = feature_map[i + 1]
             size = sizes[i]
+
             decoder = DecoderBlockCNN(in_ch=in_ch,
                                       out_ch=out_ch,
                                       size=size,

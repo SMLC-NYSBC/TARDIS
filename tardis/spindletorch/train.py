@@ -1,5 +1,6 @@
 from os import mkdir
 from os.path import isdir, join
+from re import A
 from typing import Optional
 
 import torch
@@ -26,7 +27,10 @@ def train(train_dataloader: DataLoader,
           dropout: Optional[float] = None,
           convolution_layer=5,
           convolution_multiplayer=64,
-          convolution_structure='gcl',
+          conv_kernel=3,
+          padding=1,
+          pool_kernel=2,
+          convolution_structure='3gcl',
           cnn_checkpoint: Optional[str] = None,
           loss_function='bce',
           loss_alpha: Optional[float] = None,
@@ -75,6 +79,9 @@ def train(train_dataloader: DataLoader,
                           out_channel=1,
                           img_size=img_size,
                           dropout=dropout,
+                          conv_kernel=conv_kernel,
+                          conv_padding=padding,
+                          maxpool_kernel=pool_kernel,
                           no_conv_layers=convolution_layer,
                           conv_multiplayer=convolution_multiplayer,
                           layer_components=convolution_structure,
