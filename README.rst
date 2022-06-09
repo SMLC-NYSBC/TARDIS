@@ -16,8 +16,8 @@ Python based software for generali instance segmentation of object from electron
 cryo-EM micrographs. Software package is builded on general workflow where predicted semantic segmentation 
 is used for instance segmentation of 2D/3D and 4D/5D fluorescent images in the future.
 
-.. image:: /resources/workflow.png
-        :target: /resources/workflow.png
+.. image:: /resources/workflow.jpg
+        :target: /resources/workflow.jgg
         :alt: TARDIS workflow
 
 Documentation: https://tardis-pytorch.readthedocs.io/en/latest/
