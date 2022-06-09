@@ -24,22 +24,20 @@ Documentation: https://tardis-pytorch.readthedocs.io/en/latest/
 
 Features
 --------
-        * Training of Unet/ResNet/Unet3Plus for 2D and 3D images [.tif, .mrc, .rec, .am]
-        * Prediction of binary semantic segmentation of 2D and 3D images [.tif, .mrc, .rec, .am]
-        * Training of DIST ML model for instance segmentation of 2D and 3D point clouds
-                * 4D and 5D point clouds segmentation in the future
-        * Point cloud instance segmentation by point cloud graph representation
+* Training of Unet/ResNet/Unet3Plus for 2D and 3D images [.tif, .mrc, .rec, .am]
+* Prediction of binary semantic segmentation of 2D and 3D images [.tif, .mrc, .rec, .am]
+* Training of DIST ML model for instance segmentation of 2D and 3D point clouds
+        * 4D and 5D point clouds segmentation in the future
+* Point cloud instance segmentation by point cloud graph representation
 
 ============
 Requirements
 ============
-::
-
   $ conda install --file requirements.txt
   
 or install following requirements::
 
-        click>=8.0.4D=
+        click>=8.0.4
         edt>=2.1.2
         imagecodecs>=2021.8.26
         numpy>=1.21.0
@@ -81,6 +79,7 @@ data/train/ and data/test both of which should have ./imgs and ./masks folders
 
 Training modules:
         Semantic Segmentation:
+.. code-block:: console
 
         tardis_cnn_train -dir str -ttr float -ps int -cnn str -co int -b -cl int -cm int -cs str -ck int -cp int -cmxk int -l str -la None/float -lr float -lrs bool -d device -e int -es int -cch None/str -dr None/float -tq bool
 
@@ -140,10 +139,3 @@ Training modules:
                 [-default]      None
         bool  [-tq]    If True, build with progress bar.
                 [-default]      True
-tardis_cnn_predict
-
-tardis_postprocessing
-
-tardis_pointcloud_train
-tardis_gf_score
-tardis_mt
