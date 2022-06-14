@@ -271,11 +271,15 @@ def point_in_bb(points: np.ndarray,
     """
     bound_x = np.logical_and(points[:, 0] > min_x, points[:, 0] < max_x)
     bound_y = np.logical_and(points[:, 1] > min_y, points[:, 1] < max_y)
-    if min_z is not None or max_z is not None:
-        bound_z = np.logical_and(points[:, 2] > min_z, points[:, 2] < max_z)
-    else:
-        bound_z = np.asarray([True for _ in points[:, 2]])
 
-    bb_filter = np.logical_and(np.logical_and(bound_x, bound_y), bound_z)
+    if points.shape[0] == 3:
+        if min_z is not None or max_z is not None:
+            bound_z = np.logical_and(points[:, 2] > min_z, points[:, 2] < max_z)
+        else:
+            bound_z = np.asarray([True for _ in points[:, 2]])
+    
+        bb_filter = np.logical_and(np.logical_and(bound_x, bound_y), bound_z)
+    else:
+        bb_filter = np.logical_and(bound_x, bound_y)
 
     return bb_filter

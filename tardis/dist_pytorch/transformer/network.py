@@ -103,6 +103,6 @@ class CloudToGraph(nn.Module):
         logits = logits.permute(0, 3, 1, 2)
 
         if self.predict:
-            logits = self.logits_sigmoid(logits.permute(0, 3, 1, 2))
+            logits = self.logits_sigmoid(logits)
 
         return logits
