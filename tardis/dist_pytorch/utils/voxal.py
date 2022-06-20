@@ -47,7 +47,7 @@ class VoxalizeDataSetV2:
                  image: Optional[np.ndarray] = None,
                  downsampling_threshold=500,
                  downsampling_rate: Optional[float] = None,
-                 init_voxal_size=500,
+                 init_voxal_size=10000,
                  drop_rate=1,
                  graph=True,
                  tensor=True):
