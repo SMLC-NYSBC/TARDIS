@@ -57,13 +57,13 @@ class GraphDataset(Dataset):
         self.normalize = normalize
         self.memory_save = memory_save
 
+        self.ids = [f for f in listdir(
+            coord_dir) if f.endswith(f'{self.coord_format}')]
+
         # Voxal setting
         self.downsampling = downsampling_if
         self.downsampling_rate = downsampling_rate
         self.voxal_size = np.zeros((len(self.ids), 1))
-
-        self.ids = [f for f in listdir(
-            coord_dir) if f.endswith(f'{self.coord_format}')]
 
     def __len__(self):
         return len(self.ids)
@@ -141,7 +141,7 @@ class GraphDataset(Dataset):
         coords_v, imgs_v, graph_v, output_idx = VD.voxalize_dataset(out_idx=True,
                                                                     prune=True)
         if self.voxal_size[i, 0] == 0:
-            self.voxal_size[i, 0] = VoxalizeDataSetV2.voxal_patch_size()
+            self.voxal_size[i, 0] = VD.voxal_patch_size
 
         if self.img_dir is not None:
             for id, c in enumerate(coords_v):

@@ -58,9 +58,9 @@ class TestDataLoader:
                                 img_dir=self.dir,
                                 prefix=None,
                                 size=12,
-                                voxal_size=500,
+                                # voxal_size=500,
                                 downsampling_if=500,
-                                drop_rate=1,
+                                # drop_rate=1,
                                 downsampling_rate=None,
                                 normalize="rescale",
                                 memory_save=False)
@@ -79,9 +79,9 @@ class TestDataLoader:
                                 img_dir=None,
                                 prefix=None,
                                 size=None,
-                                voxal_size=500,
+                                # voxal_size=500,
                                 downsampling_if=500,
-                                drop_rate=1,
+                                # drop_rate=1,
                                 downsampling_rate=None,
                                 normalize="rescale",
                                 memory_save=False)
