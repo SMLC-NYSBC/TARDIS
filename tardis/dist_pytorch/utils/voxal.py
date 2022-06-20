@@ -301,6 +301,9 @@ class VoxalizeDataSetV2:
 
         return data
 
+    def voxal_patch_size(self):
+        return self.voxal_patch_size
+
     def voxalize_dataset(self,
                          out_idx=True,
                          prune=False):

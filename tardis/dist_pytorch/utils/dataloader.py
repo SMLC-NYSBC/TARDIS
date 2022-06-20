@@ -32,15 +32,14 @@ class GraphDataset(Dataset):
         memory_save: If True data are loaded with memory save mode on
             (~10x faster computation).
     """
+
     def __init__(self,
                  coord_dir: str,
                  coord_format=[".csv"],
                  img_dir: Optional[str] = None,
                  prefix: Optional[str] = None,
                  size: Optional[int] = 12,
-                 voxal_size=500,
                  downsampling_if=500,
-                 drop_rate=1,
                  downsampling_rate: Optional[float] = None,
                  normalize="simple",
                  memory_save=True):
@@ -59,10 +58,9 @@ class GraphDataset(Dataset):
         self.memory_save = memory_save
 
         # Voxal setting
-        self.drop_rate = drop_rate
         self.downsampling = downsampling_if
         self.downsampling_rate = downsampling_rate
-        self.voxal_size = voxal_size
+        self.voxal_size = np.zeros((len(self.ids), 1))
 
         self.ids = [f for f in listdir(
             coord_dir) if f.endswith(f'{self.coord_format}')]
@@ -106,24 +104,45 @@ class GraphDataset(Dataset):
         if self.img_dir is None:
             coord[:, 1:] = coord[:, 1:] / dist
 
-            VD = VoxalizeDataSetV2(coord=coord,
-                                   image=None,
-                                   init_voxal_size=self.voxal_size,
-                                   drop_rate=self.drop_rate,
-                                   downsampling_threshold=self.downsampling,
-                                   downsampling_rate=None,
-                                   graph=True)
+            if self.voxal_size[i, 0] == 0:
+                VD = VoxalizeDataSetV2(coord=coord,
+                                       image=None,
+                                       init_voxal_size=10000,
+                                       drop_rate=1,
+                                       downsampling_threshold=self.downsampling,
+                                       downsampling_rate=None,
+                                       graph=True)
+            else:
+                VD = VoxalizeDataSetV2(coord=coord,
+                                       image=None,
+                                       init_voxal_size=self.voxal_size[i, 0],
+                                       drop_rate=1,
+                                       downsampling_threshold=self.downsampling,
+                                       downsampling_rate=None,
+                                       graph=True)
         else:
-            VD = VoxalizeDataSetV2(coord=coord,
-                                   image=img,
-                                   init_voxal_size=self.voxal_size,
-                                   drop_rate=self.drop_rate,
-                                   downsampling_threshold=self.downsampling,
-                                   downsampling_rate=None,
-                                   graph=True)
+            if self.voxal_size[i, 0] == 0:
+                VD = VoxalizeDataSetV2(coord=coord,
+                                       image=img,
+                                       init_voxal_size=10000,
+                                       drop_rate=1,
+                                       downsampling_threshold=self.downsampling,
+                                       downsampling_rate=None,
+                                       graph=True)
+            else:
+                VD = VoxalizeDataSetV2(coord=coord,
+                                       image=None,
+                                       init_voxal_size=self.voxal_size[i, 0],
+                                       drop_rate=1,
+                                       downsampling_threshold=self.downsampling,
+                                       downsampling_rate=None,
+                                       graph=True)
 
         coords_v, imgs_v, graph_v, output_idx = VD.voxalize_dataset(out_idx=True,
                                                                     prune=True)
+        if self.voxal_size[i, 0] == 0:
+            self.voxal_size[i, 0] = VoxalizeDataSetV2.voxal_patch_size()
+
         if self.img_dir is not None:
             for id, c in enumerate(coords_v):
                 coords_v[id] = c / dist
