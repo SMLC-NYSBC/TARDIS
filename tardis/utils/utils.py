@@ -17,16 +17,16 @@ def pc_median_dist(pc: np.ndarray,
         if box_dim in [2, 3]:
             min_x = np.min(pc[:, 0])
             max_x = np.max(pc[:, 0])
-            offset_x = (max_x - min_x) * 0.1
+            offset_x = (max_x - min_x) * 0.33
 
             min_y = np.min(pc[:, 1])
             max_y = np.max(pc[:, 1])
-            offset_y = (max_y - min_y) * 0.1
+            offset_y = (max_y - min_y) * 0.33
 
         if box_dim == 3:
             min_z = np.min(pc[:, 2])
             max_z = np.max(pc[:, 2])
-            offset_z = (max_z - min_z) * 0.1
+            offset_z = (max_z - min_z) * 0.33
         else:
             min_z, max_z = 0, 0
             offset_z = 0
@@ -60,10 +60,10 @@ def pc_median_dist(pc: np.ndarray,
             return 1.0
 
         knn = cdist(pc, pc)
-        df = [sorted(d)[1] for d in knn if sorted(d)[1] != 0]
-        df.append(1.0)
-
-        return np.nanmedian(df)
+        df_1 = [sorted(d)[1] for d in knn if sorted(d)[1] != 0]
+        df_2 = [sorted(d)[2] for d in knn if sorted(d)[2] != 0]
+        
+        return np.mean(df_1 + df_2)
 
 
 class EarlyStopping():

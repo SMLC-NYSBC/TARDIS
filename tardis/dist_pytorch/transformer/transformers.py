@@ -266,6 +266,8 @@ class TriangularEdgeUpdate(nn.Module):
     This module take node feature representation and perform triangular
     attention for each points. Similar as in Alphafold 2 approach.
 
+    TODO quadro edge update
+
     Args:
         input_dim: Number of input channels
         channel_dim: Number of output channels

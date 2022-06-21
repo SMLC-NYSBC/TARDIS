@@ -18,6 +18,9 @@ class GraphDataset(Dataset):
     and output dataset that are expected by graphformer (coord, graph
     and image patches for each coordinate).
 
+    TODO Point cloud scaling normalizer need to be fix. KNN may onacuratly trace avg
+        distance between closest KNN's. dens point cloud giving dfferent normalization 
+
     Args:
         coord_dir: source of the 3D .tif images masks.
         coord_format: call for random transformation on img and mask data.

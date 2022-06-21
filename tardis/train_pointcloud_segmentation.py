@@ -91,16 +91,6 @@ from tardis.version import version
               type=bool,
               help='If True use distance embedding as an input',
               show_default=True)
-# @click.option('-dv', '--dl_voxal_size',
-#               default=500,
-#               type=int,
-#               help='Max voxal size for point cloud with number of point greater then threshold',
-#               show_default=True)
-# @click.option('-dd', '--dl_drop_rate',
-#               default=10,
-#               type=int,
-#               help='Drop rate of voxal size used for optimizing voxal size',
-#               show_default=True)
 @click.option('-dds', '--dl_downsampling',
               default=500,
               type=int,
@@ -162,8 +152,6 @@ def main(pointcloud_dir: str,
          gf_heads: int,
          gf_dropout: float,
          gf_sigma: int,
-         #  dl_voxal_size: int,
-         #  dl_drop_rate: float,
          dl_downsampling,
          dl_downsampling_rate,
          gf_loss: str,
@@ -247,9 +235,7 @@ def main(pointcloud_dir: str,
                                                      img_dir=train_imgs_dir,
                                                      prefix=prefix,
                                                      size=patch_size,
-                                                     # drop_rate=dl_drop_rate,
                                                      normalize="rescale",
-                                                     # voxal_size=dl_voxal_size,
                                                      downsampling_if=dl_downsampling,
                                                      downsampling_rate=dl_downsampling_rate,
                                                      memory_save=False),
@@ -262,9 +248,7 @@ def main(pointcloud_dir: str,
                                                     img_dir=train_imgs_dir,
                                                     prefix=prefix,
                                                     size=patch_size,
-                                                    # drop_rate=dl_drop_rate,
                                                     normalize="rescale",
-                                                    # voxal_size=dl_voxal_size,
                                                     downsampling_if=dl_downsampling,
                                                     downsampling_rate=dl_downsampling_rate,
                                                     memory_save=False),
@@ -313,8 +297,10 @@ def main(pointcloud_dir: str,
         save_train = join(gf_checkpoint)
 
         save_train = torch.load(join(save_train), map_location=device)
+        model.to(device)
         model.load_state_dict(save_train['model_state_dict'])
-    model.to(device)
+    else:
+        model.to(device)
 
     optimizer = optim.Adam(params=model.parameters(),
                            lr=loss_lr)
