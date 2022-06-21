@@ -86,6 +86,11 @@ from tardis.version import version
               type=click.Choice(['full', 'full_af', 'self_attn', 'triang']),
               help='Structure of the graphformer',
               show_default=True)
+@click.option('-gde', '--gf_dist',
+              default=True,
+              type=bool,
+              help='If True use distance embedding as an input',
+              show_default=True)
 # @click.option('-dv', '--dl_voxal_size',
 #               default=500,
 #               type=int,
@@ -163,6 +168,7 @@ def main(pointcloud_dir: str,
          dl_downsampling_rate,
          gf_loss: str,
          gf_structure: str,
+         gf_dist: bool,
          loss_lr: float,
          lr_rate_schedule: bool,
          gf_checkpoint,
@@ -292,6 +298,7 @@ def main(pointcloud_dir: str,
                          coord_embed_sigma=gf_sigma,
                          dropout_rate=gf_dropout,
                          structure=gf_structure,
+                         dist_embed=gf_dist,
                          predict=False)
 
     if gf_loss == "dice":

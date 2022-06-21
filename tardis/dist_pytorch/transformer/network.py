@@ -40,6 +40,7 @@ class CloudToGraph(nn.Module):
                  coord_embed_sigma=16,
                  dropout_rate=0,
                  structure='full',
+                 dist_embed=True,
                  predict=False):
         super().__init__()
 
@@ -52,7 +53,8 @@ class CloudToGraph(nn.Module):
                                         out_features=node_dim)
 
         self.coord_embed = DistEmbedding(n_out=edge_dim,
-                                         sigma=coord_embed_sigma)
+                                         sigma=coord_embed_sigma,
+                                         dist=dist_embed)
 
         self.layers = GraphFormerStack(node_dim=node_dim,
                                        pairs_dim=edge_dim,

@@ -9,7 +9,8 @@ History
         2-98 projectile of intensity distribution
 * Model retraining for MTs
 * TODO: Model retraining for MTs with real image data
-* Closed #7 issue
+* Closed #7 an #9 issue
+* Added removal of dist_embedding as an input
 * SpidleTorch rebuild to work on 2D and 3D datasets
 
 0.1.0a5 (2022-04-25)
