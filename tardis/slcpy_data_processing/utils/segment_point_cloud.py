@@ -246,10 +246,16 @@ class GraphInstanceV2:
                 segment = self._sort_segment(coord=coord[idx],
                                              idx=[i for id, i in enumerate(adjacency_id) if id in idx])
 
-                coord_segment.append(np.stack((np.repeat(segment_id, segment.shape[0]),
-                                               segment[:, 0],
-                                               segment[:, 1],
-                                               segment[:, 2])).T)
+                if segment.shape[1] == 3:
+                    coord_segment.append(np.stack((np.repeat(segment_id, segment.shape[0]),
+                                                   segment[:, 0],
+                                                   segment[:, 1],
+                                                   segment[:, 2])).T)
+                elif segment.shape[1] == 2:
+                    coord_segment.append(np.stack((np.repeat(segment_id, segment.shape[0]),
+                                                   segment[:, 0],
+                                                   segment[:, 1],
+                                                   np.zeros((segment.shape[0], )))).T)
                 segment_id += 1
 
             # Update adjacency list
