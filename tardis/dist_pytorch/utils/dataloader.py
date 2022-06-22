@@ -19,7 +19,7 @@ class GraphDataset(Dataset):
     and image patches for each coordinate).
 
     TODO Point cloud scaling normalizer need to be fix. KNN may onacuratly trace avg
-        distance between closest KNN's. dens point cloud giving dfferent normalization 
+        distance between closest KNN's. dens point cloud giving dfferent normalization
 
     Args:
         coord_dir: source of the 3D .tif images masks.
@@ -39,7 +39,7 @@ class GraphDataset(Dataset):
     def __init__(self,
                  coord_dir: str,
                  coord_format=(".csv"),
-                 img_format=(".tif"),
+                 img_format='.tif',
                  img_dir: Optional[str] = None,
                  prefix: Optional[str] = None,
                  size: Optional[int] = 12,
@@ -83,11 +83,14 @@ class GraphDataset(Dataset):
         elif ".CorrelationLines.am" in self.coord_format:
             coord_file = join(self.coord_dir, str(idx))
 
+        if self.img_dir is not None:
+            filetype = [ft for ft in self.coord_format if idx.endswith(ft)][0]
+
         if self.img_dir is not None and self.prefix is not None:
-            img_idx = idx[:-len(self.prefix + self.coord_format)]
+            img_idx = idx[:-len(self.prefix + filetype)]
             img_idx = f'{img_idx}{self.img_format}'
         elif self.img_dir is not None and self.prefix is None:
-            img_idx = idx[:-len(self.coord_format)]
+            img_idx = idx[:-len(filetype)]
             img_idx = f'{img_idx}{self.img_format}'
         else:
             img_idx = None

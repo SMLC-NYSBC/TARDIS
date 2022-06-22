@@ -1,8 +1,9 @@
 import math
+from typing import Optional
+
 import torch
 import torch.nn as nn
-import math
-from typing import Optional
+
 
 class DistEmbedding(nn.Module):
     """
@@ -25,19 +26,20 @@ class DistEmbedding(nn.Module):
         self.sigma = sigma
         self.dist = dist
 
-    def forward(self, 
+    def forward(self,
                 x: torch.Tensor):
         if x is None:
             return 0
 
         if self.dist:
             dist = torch.cdist(x, x)
-            
+
             if isinstance(self.sigma, tuple):
                 kernel = torch.exp(-dist ** 2 / (self.sigma[0] ** 2 * 2))
 
                 for i in range(1, len(self.sigma)):
-                    kernel = kernel + torch.exp(-dist ** 2 / (self.sigma[i] ** 2 * 2))
+                    kernel = kernel + \
+                        torch.exp(-dist ** 2 / (self.sigma[i] ** 2 * 2))
                 kernel = kernel / len(self.sigma)
             else:
                 kernel = torch.exp(-dist ** 2 / (self.sigma ** 2 * 2))
@@ -49,14 +51,15 @@ class DistEmbedding(nn.Module):
             return self.linear(kernel)
         else:
             size = x.shape[1]
-            kernel = torch.zeros((1, size, size)).to(x.device) # may explode!!!!!!
+            kernel = torch.zeros((1, size, size)).to(
+                x.device)  # may explode!!!!!!
 
             for i in range(size):
                 kernel[0, i, i] = 1
 
             kernel = kernel.unsqueeze(3)
 
-            return  self.linear(kernel)
+            return self.linear(kernel)
 
 
 @torch.jit.script

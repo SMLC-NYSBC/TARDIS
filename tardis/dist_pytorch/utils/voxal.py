@@ -257,13 +257,13 @@ class VoxalizeDataSetV2:
         if self.voxal_patch_size == 0:
             self.voxal_patch_size = int(np.max(b_box))
         voxal_size = self.voxal_patch_size
-            
+
         voxals_coord = self.voxal_centers(boundary_box=b_box)
         voxal_idx, piv = self.collect_voxal_idx(voxals=voxals_coord)
 
         # Optimize voxal size based on no_point threshold
         break_if = 0
-        
+
         drop_rate = self.drop_rate
         while not all(i <= self.downsampling_threshold for i in piv):
             self.voxal_patch_size = self.voxal_patch_size - self.drop_rate

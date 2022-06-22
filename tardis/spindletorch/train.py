@@ -1,6 +1,5 @@
 from os import mkdir
 from os.path import isdir, join
-from re import A
 from typing import Optional
 
 import torch

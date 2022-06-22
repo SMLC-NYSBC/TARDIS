@@ -210,9 +210,9 @@ def main(pointcloud_dir: str,
 
         """Move data to setuped dir"""
         _ = BuildTrainDataSet(dir=pointcloud_dir,
-                                         coord_format=coord_format,
-                                         with_img=with_img,
-                                         img_format=img_format)
+                              coord_format=coord_format,
+                              with_img=with_img,
+                              img_format=img_format)
 
         build_test = BuildTestDataSet(dataset_dir=pointcloud_dir,
                                       train_test_ration=train_test_ratio,
