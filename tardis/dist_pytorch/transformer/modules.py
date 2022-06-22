@@ -2,7 +2,7 @@ import math
 import torch
 import torch.nn as nn
 import math
-
+from typing import Optional
 
 class DistEmbedding(nn.Module):
     """
@@ -17,8 +17,8 @@ class DistEmbedding(nn.Module):
 
     def __init__(self,
                  n_out: int,
-                 sigma: int,
-                 dist: bool):
+                 dist: bool,
+                 sigma: Optional[tuple] = int):
         super().__init__()
         self.linear = nn.Linear(1, n_out, bias=False)
         self.n_out = n_out
@@ -32,7 +32,16 @@ class DistEmbedding(nn.Module):
 
         if self.dist:
             dist = torch.cdist(x, x)
-            kernel = torch.exp(-dist ** 2 / (self.sigma ** 2 * 2))
+            
+            if isinstance(self.sigma, tuple):
+                kernel = torch.exp(-dist ** 2 / (self.sigma[0] ** 2 * 2))
+
+                for i in range(1, len(self.sigma)):
+                    kernel = kernel + torch.exp(-dist ** 2 / (self.sigma[i] ** 2 * 2))
+                kernel = kernel / len(self.sigma)
+            else:
+                kernel = torch.exp(-dist ** 2 / (self.sigma ** 2 * 2))
+
             isnan = torch.isnan(kernel)
             kernel = torch.where(isnan, torch.zeros_like(kernel), kernel)
             kernel = kernel.unsqueeze(3)

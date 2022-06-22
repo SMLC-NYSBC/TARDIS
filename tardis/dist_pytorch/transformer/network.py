@@ -37,7 +37,7 @@ class CloudToGraph(nn.Module):
                  edge_dim=128,
                  num_layers=6,
                  num_heads=8,
-                 coord_embed_sigma=16,
+                 coord_embed_sigma: Optional[tuple] = 1.0,
                  dropout_rate=0,
                  structure='full',
                  dist_embed=True,
