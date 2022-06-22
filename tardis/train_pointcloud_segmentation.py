@@ -209,7 +209,7 @@ def main(pointcloud_dir: str,
         mkdir(test_coords_dir)
 
         """Move data to setuped dir"""
-        coord_format = BuildTrainDataSet(dir=pointcloud_dir,
+        _ = BuildTrainDataSet(dir=pointcloud_dir,
                                          coord_format=coord_format,
                                          with_img=with_img,
                                          img_format=img_format)
@@ -220,7 +220,7 @@ def main(pointcloud_dir: str,
         build_test.__builddataset__()
 
     else:
-        coord_format = [f for f in coord_format if listdir(train_coords_dir)[
+        _ = [f for f in coord_format if listdir(train_coords_dir)[
             0].endswith(f)]
 
     if with_img:

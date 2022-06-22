@@ -54,7 +54,7 @@ class TestDataLoader:
 
     def test_training_DL_w_img(self):
         train_DL = GraphDataset(coord_dir=self.dir,
-                                coord_format=[".CorrelationLines.am", '.am'],
+                                coord_format=(".CorrelationLines.am", '.am'),
                                 img_dir=self.dir,
                                 prefix=None,
                                 size=12,
@@ -75,13 +75,11 @@ class TestDataLoader:
 
     def test_training_DL_no_img(self):
         train_DL = GraphDataset(coord_dir=join('tests', 'test_data', 'data_loader'),
-                                coord_format=[".CorrelationLines.am"],
+                                coord_format=(".CorrelationLines.am", '.csv'),
                                 img_dir=None,
                                 prefix=None,
                                 size=None,
-                                # voxal_size=500,
                                 downsampling_if=500,
-                                # drop_rate=1,
                                 downsampling_rate=None,
                                 normalize="rescale",
                                 memory_save=False)
@@ -93,3 +91,12 @@ class TestDataLoader:
         assert imgs_v[0].shape == (1, 1)
         assert graph_v[0].shape == (10, 10)
         assert output_idx[0].shape == (10, )
+
+
+        coords_v, imgs_v, graph_v, output_idx = train_DL.__getitem__(1)
+
+        assert len(coords_v) == 1
+        assert coords_v[0].shape == (122, 2)
+        assert imgs_v[0].shape == (1, 1)
+        assert graph_v[0].shape == (122, 122)
+        assert output_idx[0].shape == (122, )
