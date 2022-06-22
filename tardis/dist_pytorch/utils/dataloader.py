@@ -38,7 +38,8 @@ class GraphDataset(Dataset):
 
     def __init__(self,
                  coord_dir: str,
-                 coord_format=[".csv"],
+                 coord_format=(".csv"),
+                 img_format=(".tif"),
                  img_dir: Optional[str] = None,
                  prefix: Optional[str] = None,
                  size: Optional[int] = 12,
@@ -48,12 +49,12 @@ class GraphDataset(Dataset):
                  memory_save=True):
         # Coord setting
         self.coord_dir = coord_dir
-        self.coord_format = coord_format[0]
+        self.coord_format = coord_format
 
         # Image setting
         self.img_dir = img_dir
         if self.img_dir is not None:
-            self.img_format = coord_format[1]
+            self.img_format = img_format
 
         self.prefix = prefix
         self.size = size
@@ -61,7 +62,7 @@ class GraphDataset(Dataset):
         self.memory_save = memory_save
 
         self.ids = [f for f in listdir(
-            coord_dir) if f.endswith(f'{self.coord_format}')]
+            coord_dir) if f.endswith(self.coord_format)]
 
         # Voxal setting
         self.downsampling = downsampling_if
@@ -75,11 +76,11 @@ class GraphDataset(Dataset):
         """ Get list of all coordinates and image patches """
         idx = self.ids[i]
 
-        if self.coord_format == ".csv":
+        if ".csv" in self.coord_format:
             coord_file = join(self.coord_dir, str(idx))
-        elif self.coord_format == ".npy":
+        elif ".npy" in self.coord_format:
             coord_file = join(self.coord_dir, str(idx))
-        elif self.coord_format == ".CorrelationLines.am":
+        elif ".CorrelationLines.am" in self.coord_format:
             coord_file = join(self.coord_dir, str(idx))
 
         if self.img_dir is not None and self.prefix is not None:
@@ -102,7 +103,7 @@ class GraphDataset(Dataset):
                                      size=self.size,
                                      normalization=self.normalize,
                                      memory_save=self.memory_save)
-        dist = pc_median_dist(pc=coord[:, 1:], avg_over=2)
+        dist = pc_median_dist(pc=coord[:, 1:], avg_over=True)
 
         if self.img_dir is None:
             coord[:, 1:] = coord[:, 1:] / dist
@@ -110,7 +111,7 @@ class GraphDataset(Dataset):
             if self.voxal_size[i, 0] == 0:
                 VD = VoxalizeDataSetV2(coord=coord,
                                        image=None,
-                                       init_voxal_size=10000,
+                                       init_voxal_size=0,
                                        drop_rate=1,
                                        downsampling_threshold=self.downsampling,
                                        downsampling_rate=None,
@@ -127,7 +128,7 @@ class GraphDataset(Dataset):
             if self.voxal_size[i, 0] == 0:
                 VD = VoxalizeDataSetV2(coord=coord,
                                        image=img,
-                                       init_voxal_size=10000,
+                                       init_voxal_size=0,
                                        drop_rate=1,
                                        downsampling_threshold=self.downsampling,
                                        downsampling_rate=None,
@@ -143,14 +144,16 @@ class GraphDataset(Dataset):
 
         coords_v, imgs_v, graph_v, output_idx = VD.voxalize_dataset(out_idx=True,
                                                                     prune=True)
+
+        # Store iinitial patch size for each data to speed up computation
         if self.voxal_size[i, 0] == 0:
-            self.voxal_size[i, 0] = VD.voxal_patch_size
+            self.voxal_size[i, 0] = VD.voxal_patch_size + 1
 
         if self.img_dir is not None:
             for id, c in enumerate(coords_v):
                 coords_v[id] = c / dist
 
-        return [c / pc_median_dist(c) for c in coords_v], imgs_v, graph_v, output_idx
+        return [c / pc_median_dist(c, False) for c in coords_v], imgs_v, graph_v, output_idx
 
 
 class PredictDataset(Dataset):

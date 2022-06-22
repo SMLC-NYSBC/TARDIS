@@ -231,11 +231,12 @@ class VoxalizeDataSetV2:
             voxals_idx: List of voxal that contains points
         """
         # Initial check for voxalization
+        b_box = self.boundary_box()
+
         if self.downsampling_rate is not None:
             self.coord = self.coord[self.voxal_downsampling(self.coord), :]
 
         if self.coord.shape[0] <= self.downsampling_threshold:
-            b_box = self.boundary_box()
             voxal_coord_x = b_box[1][0] - \
                 ((abs(b_box[0][0]) + abs(b_box[1][0])) / 2)
             voxal_coord_y = b_box[1][1] - \
@@ -253,12 +254,16 @@ class VoxalizeDataSetV2:
             return voxals_coord, voxal_idx
 
         # Initial voxalization with self.voxal_patch_size
-        voxals_coord = self.voxal_centers(boundary_box=self.boundary_box())
+        if self.voxal_patch_size == 0:
+            self.voxal_patch_size = int(np.max(b_box))
+        voxal_size = self.voxal_patch_size
+            
+        voxals_coord = self.voxal_centers(boundary_box=b_box)
         voxal_idx, piv = self.collect_voxal_idx(voxals=voxals_coord)
 
         # Optimize voxal size based on no_point threshold
         break_if = 0
-        voxal_size = self.voxal_patch_size
+        
         drop_rate = self.drop_rate
         while not all(i <= self.downsampling_threshold for i in piv):
             self.voxal_patch_size = self.voxal_patch_size - self.drop_rate
