@@ -8,36 +8,33 @@ from scipy.spatial.distance import cdist
 
 
 def pc_median_dist(pc: np.ndarray,
-                   avg_over: Optional[int] = None):
-    dist = []
-    if avg_over is not None:
+                   avg_over=False):
+    if avg_over:
         # Build BB and offset by 10% from the border
         box_dim = pc.shape[1]
 
         if box_dim in [2, 3]:
             min_x = np.min(pc[:, 0])
             max_x = np.max(pc[:, 0])
-            offset_x = (max_x - min_x) * 0.33
+            offset_x = (max_x - min_x) * 0.15
 
             min_y = np.min(pc[:, 1])
             max_y = np.max(pc[:, 1])
-            offset_y = (max_y - min_y) * 0.33
+            offset_y = (max_y - min_y) * 0.15
 
         if box_dim == 3:
             min_z = np.min(pc[:, 2])
             max_z = np.max(pc[:, 2])
-            offset_z = (max_z - min_z) * 0.33
+            offset_z = (max_z - min_z) * 0.15
         else:
             min_z, max_z = 0, 0
             offset_z = 0
 
-        # bb = np.array([(min_x + offset_x, min_y + offset_y, min_z + offset_z),
-        #                (max_x - offset_x, max_y - offset_y, max_z - offset_z)])
+        x = np.median(pc[:, 0])
+        y = np.median(pc[:, 1])
 
-        x = np.mean(pc[:, 0])
-        y = np.mean(pc[:, 1])
         if box_dim == 3:
-            z = np.mean(pc[:, 2])
+            z = np.median(pc[:, 2])
         else:
             z = 0
 
@@ -49,21 +46,16 @@ def pc_median_dist(pc: np.ndarray,
 
         # Calculate KNN dist
         knn = cdist(voxel, voxel)
-
-        # AVG KNN dist
-        df = [sorted(d)[1] for d in knn if sorted(d)[1] != 0]
-        dist = np.nanmedian(df)
-
-        return dist
     else:
-        if pc.shape[0] < 2:
-            return 1.0
-
         knn = cdist(pc, pc)
-        df_1 = [sorted(d)[1] for d in knn if sorted(d)[1] != 0]
-        df_2 = [sorted(d)[2] for d in knn if sorted(d)[2] != 0]
-        
-        return np.mean(df_1 + df_2)
+
+    if knn.shape[0] < 3:
+        return 1.0
+
+    df_1 = [sorted(d)[1] for d in knn if sorted(d)[1] != 0]  # Fist KNN
+    df_2 = [sorted(d)[2] for d in knn if sorted(d)[2] != 0]  # Second KNN
+
+    return np.mean(df_1 + df_2)
 
 
 class EarlyStopping():
@@ -274,10 +266,11 @@ def point_in_bb(points: np.ndarray,
 
     if points.shape[0] == 3:
         if min_z is not None or max_z is not None:
-            bound_z = np.logical_and(points[:, 2] > min_z, points[:, 2] < max_z)
+            bound_z = np.logical_and(
+                points[:, 2] > min_z, points[:, 2] < max_z)
         else:
             bound_z = np.asarray([True for _ in points[:, 2]])
-    
+
         bb_filter = np.logical_and(np.logical_and(bound_x, bound_y), bound_z)
     else:
         bb_filter = np.logical_and(bound_x, bound_y)
