@@ -87,12 +87,12 @@ class Trainer:
 
     def run_training(self):
         if self.tqdm:
-            progressbar = tq(range(self.epochs),
-                             'Epochs:',
-                             total=self.epochs,
-                             leave=True, ascii=True)
+            epoch_progress = tq(range(self.epochs),
+                                'Epochs:',
+                                total=self.epochs,
+                                leave=True, ascii=True)
         else:
-            progressbar = range(self.epochs)
+            epoch_progress = range(self.epochs)
 
         early_stoping = EarlyStopping(patience=50, min_delta=0)
 
@@ -102,7 +102,7 @@ class Trainer:
         else:
             mkdir('GF_checkpoint')
 
-        for i in progressbar:
+        for i in epoch_progress:
             """For each Epoch load be t model from previous run"""
             self.model.train()
             self.train()
@@ -139,6 +139,9 @@ class Trainer:
             torch.save({'model_state_dict': self.model.state_dict(),
                         'optimizer_state_dict': self.optimizer.state_dict()},
                        join(getcwd(), 'GF_checkpoint', 'model_weights.pth'))
+
+            epoch_progress.set_description(
+                f'Epochs: stop counter {early_stoping.counter}, best F1 {np.max(self.f1)}')
 
             if early_stoping.early_stop:
                 break

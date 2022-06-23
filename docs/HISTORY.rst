@@ -7,11 +7,14 @@ History
 * Check pipeline for image embedding (normalization to enhance features)
     * Introduce new normalization ResaleNormalize that spread histogram from 
         2-98 projectile of intensity distribution
-* Model retraining for MTs
+* Model retraining for MTs and membranes (generalization)
+* Redone PC normalization
+* Additional work on speed up training by optimizing DataLoader
 * TODO: Model retraining for MTs with real image data
 * Closed #7 an #9 issue
 * Added removal of dist_embedding as an input
-* SpidleTorch rebuild to work on 2D and 3D datasets
+* SpindleTorch rebuild to work on 2D and 3D datasets
+* DIST training progress bar update (simplified output and removed prints)
 
 0.1.0a5 (2022-04-25)
 --------------------

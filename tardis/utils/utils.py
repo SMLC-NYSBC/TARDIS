@@ -89,8 +89,6 @@ class EarlyStopping():
             self.counter = 0
         elif self.best_loss - val_loss < self.min_delta:
             self.counter += 1
-            print(
-                f"INFO: Early stopping counter {self.counter} of {self.patience}")
 
             if self.counter >= self.patience:
                 print('INFO: Early stopping')
@@ -121,15 +119,15 @@ def check_dir(dir: str,
               mask_format: tuple,
               with_img: bool):
     """
-    CHECK LIST USED TO EVALUATE IF DIRECOTRY CONTAIN CORRECT DATA TYPE FOR CNN
+    CHECK LIST USED TO EVALUATE IF DIRECTORY CONTAIN CORRECT DATA TYPE FOR CNN
 
     Args:
-        dir: Main direcotry with all files
-        train_img: Direcotry name with images for training
-        train_mask: Direcotry name with mask images for training
+        dir: Main directory with all files
+        train_img: Directory name with images for training
+        train_mask: Directory name with mask images for training
         img_format: Allowed image format
-        test_img: Direcotry name with images for validation
-        test_mask: Direcotry name with mask images for validation
+        test_img: Directory name with images for validation
+        test_mask: Directory name with mask images for validation
         mask_format: Allowed mask image format
         with_img: GraphFormer bool value for training with/without images
     """
@@ -248,7 +246,8 @@ class BuildTestDataSet:
 def point_in_bb(points: np.ndarray,
                 min_x: np.inf, max_x: np.inf,
                 min_y: np.inf, max_y: np.inf,
-                min_z: Optional[np.float32] = None, max_z: Optional[np.float32] = None):
+                min_z: Optional[np.float32] = None,
+                max_z: Optional[np.float32] = None):
     """ Compute a bounding_box filter on the given points
 
     Args:
