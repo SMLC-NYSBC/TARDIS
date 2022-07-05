@@ -120,7 +120,9 @@ def main(prediction_dir: str,
     # Build handler's
     stitcher = StitchImages(tqdm=False)
     post_processer = ImageToPointCloud(tqdm=False)
-    GraphToSegment = GraphInstanceV2(threshold=gt_threshold)
+    GraphToSegment = GraphInstanceV2(threshold=gt_threshold,
+                                     connection=2,
+                                     prune=3)
     BuildAmira = NumpyToAmira()
 
     # Build CNN from checkpoints
@@ -275,7 +277,6 @@ def main(prediction_dir: str,
                                      euclidean_transform=True,
                                      label_size=3,
                                      down_sampling_voxal_size=None)
-        # Downsample data by 5? or 2.5 to reduce noise
         # Transform for xyz and pixel size for coord
 
         image = None
@@ -291,23 +292,20 @@ def main(prediction_dir: str,
             batch_iter.set_description(f'Building voxal for {i}')
 
         # Find downsampling value
-        dist = pc_median_dist(pc=point_cloud)
-        point_cloud = point_cloud / dist
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(point_cloud)
-        point_cloud = np.asarray(pcd.voxel_down_sample(dist * 5).points)
+        point_cloud = np.asarray(pcd.voxel_down_sample(voxel_size=10).points)
 
         # Build voxalized dataset with
         VD = VoxalizeDataSetV2(coord=point_cloud,
-                               image=None,
                                init_voxal_size=5000,
                                drop_rate=1,
                                downsampling_threshold=points_in_voxal,
-                               downsampling_rate=None,
                                graph=False)
-        coords_df, _, output_idx, = VD.voxalize_dataset(out_idx=True)
-        #  TODO need testing !!!
-        coords_df = [c * dist for c in coords_df]  # Restore correct coordinates value
+
+        coords_df, _, output_idx = VD.voxalize_dataset(prune=5,
+                                                       out_idx=True)
+        coords_df = [c / pc_median_dist(c) for c in coords_df]
 
         # Calculate sigma for graphformer from mean of nearest point dist
         if tqdm:
@@ -321,12 +319,14 @@ def main(prediction_dir: str,
                                                   num_layers=6,
                                                   num_heads=8,
                                                   dropout_rate=0,
-                                                  coord_embed_sigma=0.6,
+                                                  coord_embed_sigma=2,
+                                                  structure='triang',
+                                                  dist_embed=True,
                                                   predict=True),
                                checkpoint=checkpoints[2],
                                network='graphformer',
                                subtype='without_img',
-                               model_type='cryo_membrane',
+                               model_type='microtubules',
                                device=device,
                                tqdm=tqdm)
 
@@ -358,7 +358,7 @@ def main(prediction_dir: str,
                          leave=False)
 
             batch_iter.set_description(
-                f'GF prediction for {i} with sigma {0.6}')
+                f'GF prediction for {i} with sigma {2}')
         else:
             dl_iter = coords_df
 
@@ -367,7 +367,7 @@ def main(prediction_dir: str,
         for coord in dl_iter:
             graph = predict_gf._predict(x=coord[None, :])
             graphs.append(graph)
-            coords.append(coord.cpu().detach().numpy())
+            # coords.append(coord.cpu().detach().numpy())
 
         if debug:
             np.save(join(am_output,
@@ -383,9 +383,9 @@ def main(prediction_dir: str,
         if tqdm:
             batch_iter.set_description(f'Graph segmentation for {i}')
 
-        segments = GraphToSegment.graph_to_segments(graph=graphs,
-                                                    coord=coords,
-                                                    idx=output_idx)
+        segments = GraphToSegment.voxal_to_segment(graph=graphs,
+                                                   coord=point_cloud,
+                                                   idx=output_idx)
 
         if debug:
             np.save(join(am_output,
