@@ -52,7 +52,7 @@ def SegmentToGraph(coord: np.ndarray):
                 graph_list.append([start + (itter + 1), start + (itter + 2)])
             itter += 1
 
-        graph_list.append([start + (itter + 1),  start + itter])
+        graph_list.append([start + (itter + 1), start + itter])
 
     return graph_list
 

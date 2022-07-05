@@ -1,5 +1,4 @@
 import numpy as np
-from pandas import array
 from scipy.spatial.distance import cdist
 from sklearn.neighbors import KDTree
 from tardis.slcpy_data_processing.utils.export_data import NumpyToAmira
@@ -20,6 +19,13 @@ class GraphInstanceV2:
     @staticmethod
     def _stitch_graph(graph_pred: list,
                       idx: list):
+        """
+        STITCHER FOR GRAPH REPRESENTATION
+
+        Args:
+            graph_pred: Voxals of graph predictions
+            idx: Idx for each node in voxals
+        """
         # Build empty graph
         graph = max([max(f) for f in idx]) + 1
         graph = np.zeros((graph, graph),
@@ -45,6 +51,13 @@ class GraphInstanceV2:
     @staticmethod
     def _stitch_coord(coord: list,
                       idx: list):
+        """
+        STITCHER FOR NODES IN VOXAL
+
+        Args:
+            coord: Coords in each voxal
+            idx: Idx for each node in voxals
+        """
         # Build empty coord array
         dim = coord[0].shape[1]
         coord_df = max([max(f) for f in idx]) + 1
@@ -160,51 +173,15 @@ class GraphInstanceV2:
 
         return all_prop
 
-    # @staticmethod
-    # def _find_segment_list(adj_ids: list):
-    #     """
-    #     DEPRECIATED
-
-    #     Iterative search mechanism that search for connected points in the
-    #     adjacency list.
-
-    #     Args:
-    #         adj_ids: adjacency list of graph connections
-    #     """
-    #     idx_df = []
-    #     x = 0
-
-    #     while len(idx_df) == 0:
-    #         idx_df = list(adj_ids[x])
-    #         x += 1
-
-    #         if x > len(adj_ids):
-    #             break
-
-    #     past = list(np.unique(idx_df))
-    #     stop_iter = False
-
-    #     new = idx_df
-    #
-        # while not stop_iter:
-        #     [idx_df.extend(p) for p in adj_ids if p[0] in new or p[1] in new]
-        #     idx_df = list(np.unique(idx_df))
-        #     new = [n for n in idx_df if n not in past]
-
-        #     if len(past) == len(idx_df):
-        #         stop_iter = True
-
-        #     past = list(np.unique(idx_df))
-
-        # mask = []
-        # for p in idx_df:
-        #     mask.extend([id for id, i in enumerate(adj_ids) if p in i])
-        # mask = list(np.unique(mask))
-
-        # return idx_df, mask
-
     @staticmethod
     def _find_segment_matrix(adj_matrix: list):
+        """
+        Iterative search mechanism that search for connected points in the
+        adjacency list.
+
+        Args:
+            adj_matrix: adjacency matrix of graph connections
+        """
         idx_df = [0]
         x = 0
 
@@ -257,59 +234,6 @@ class GraphInstanceV2:
             coord = np.delete(coord, points, 0)
         return np.stack(new_c)
 
-    # def graph_to_segments(self,
-    #                       graph: list,
-    #                       coord: list,
-    #                       idx: list):
-    #     """
-    #     DEPRECIATED
-    #     """
-    #     """Stitch voxals"""
-    #     if isinstance(graph, list):
-    #         graph = self._stitch_graph(graph_pred=graph,
-    #                                    idx=idx)
-    #     if isinstance(coord, list):
-    #         coord = self._stitch_coord(coord=coord,
-    #                                    idx=idx)
-
-    #     """Build Adjacency list from graph representation"""
-    #     adjacency_id, _ = self.adjacency_list(graph=graph)
-
-    #     """Find Segments"""
-    #     coord_segment = []
-    #     stop = False
-    #     segment_id = 0
-
-    #     while not stop:
-    #         idx, mask = self._find_segment_list(adj_ids=adjacency_id)
-
-    #         """Select segment longer then 3 points"""
-    #         if len(idx) >= self.prune:
-    #             # Sort points in segment
-    #             segment = self._sort_segment(coord=coord[idx],
-    #                                          idx=[i for id, i in enumerate(adjacency_id) if id in idx])
-
-    #             if segment.shape[1] == 3:
-    #                 coord_segment.append(np.stack((np.repeat(segment_id, segment.shape[0]),
-    #                                                segment[:, 0],
-    #                                                segment[:, 1],
-    #                                                segment[:, 2])).T)
-    #             elif segment.shape[1] == 2:
-    #                 coord_segment.append(np.stack((np.repeat(segment_id, segment.shape[0]),
-    #                                                segment[:, 0],
-    #                                                segment[:, 1],
-    #                                                np.zeros((segment.shape[0], )))).T)
-    #             segment_id += 1
-
-    #         # Update adjacency list
-    #         adjacency_id = [i for id, i in enumerate(
-    #             adjacency_id) if id not in mask]
-
-    #         if sum([sum(i) for i in adjacency_id]) == 0:
-    #             stop = True
-
-    #     return np.vstack(coord_segment)
-
     def voxal_to_segment(self,
                          graph: list,
                          coord: np.ndarray,
@@ -317,7 +241,7 @@ class GraphInstanceV2:
         """
         SEGMENTER FOR VOXALS
 
-        From each point cloud (voaxl) segmenter first build adjacency matrix. 
+        From each point cloud (voaxl) segmenter first build adjacency matrix.
         Matrix is then used to iteratively search for new segments.
         For each initial node algorithm search for 2 edges with highest prop. with
         given threshold. For each found edges, algorithm check if found node creates
@@ -328,7 +252,7 @@ class GraphInstanceV2:
         0
         |
         151_
-        |   \    
+        |   \
         515_  0
         |   \
         600  151
@@ -347,7 +271,8 @@ class GraphInstanceV2:
         if not isinstance(idx, list) and isinstance(idx, np.ndarray):
             idx = [idx]
 
-        assert isinstance(coord, np.ndarray), 'Coord must be an array of all nodes!'
+        assert isinstance(
+            coord, np.ndarray), 'Coord must be an array of all nodes!'
 
         """Build Adjacency list from graph representation"""
         adjacency_matrix = self._adjacency_matrix(graphs=graph,

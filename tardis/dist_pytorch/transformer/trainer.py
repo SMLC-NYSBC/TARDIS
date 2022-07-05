@@ -94,7 +94,7 @@ class Trainer:
         else:
             epoch_progress = range(self.epochs)
 
-        early_stoping = EarlyStopping(patience=50, min_delta=0)
+        early_stopping = EarlyStopping(patience=50, min_delta=0)
 
         if isdir('GF_checkpoint'):
             rmtree('GF_checkpoint')
@@ -110,7 +110,7 @@ class Trainer:
             self.model.eval()
             self.validate()
 
-            early_stoping(
+            early_stopping(
                 val_loss=self.validation_loss[len(self.validation_loss) - 1])
             np.savetxt('GF_checkpoint/training_losses.csv',
                        self.training_loss,
@@ -139,9 +139,9 @@ class Trainer:
                        join(getcwd(), 'GF_checkpoint', 'model_weights.pth'))
 
             epoch_progress.set_description(
-                f'Epochs: stop counter {early_stoping.counter}, best F1 {round(np.max(self.f1), 3)}')
+                f'Epochs: stop counter {early_stopping.counter}, best F1 {round(np.max(self.f1), 3)}')
 
-            if early_stoping.early_stop:
+            if early_stopping.early_stop:
                 break
 
     def train(self):
@@ -176,9 +176,8 @@ class Trainer:
                 loss_value = loss.item()
                 self.training_loss.append(loss_value)
 
-                train_progress.set_description(
-                    f'Training: loss {loss.item():.4f}')
-        train_progress.close() 
+                train_progress.set_description(f'Training: loss {loss.item():.4f}')
+        train_progress.close()
 
         """ Save current learning rate """
         self.learning_rate.append(self.optimizer.param_groups[0]['lr'])
