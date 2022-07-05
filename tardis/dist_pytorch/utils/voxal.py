@@ -311,13 +311,13 @@ class VoxalizeDataSetV2:
 
     def voxalize_dataset(self,
                          out_idx=True,
-                         prune=False):
+                         prune=0):
         """
         Main function used to build voxalized dataset
 
         Args:
             out_idx: If True, return point id of points in each voxal
-            prune: If True, return voxal with more then 5 point each
+            prune: Prune voxal with less then given number of nodes
         """
         # Build voxal dataset
         voxals_centers, voxals_idx = self.optimize_voxal_size()
@@ -373,7 +373,26 @@ class VoxalizeDataSetV2:
 
                 coord_ds = self.voxal_downsampling(coord_ds)
 
-                if prune and np.sum(coord_ds) > 5:
+                if np.sum(coord_ds) > prune:
+                    if self.graph_output:
+                        segment_voxal = self.segments_id[df_voxal_keep, :]
+                        segment_voxal = self.normalize_idx(
+                            segment_voxal[coord_ds, :])
+                        build_graph = BuildGraph(coord=segment_voxal,
+                                                 pixel_size=None)
+                        graph_voxal.append(self.output_format(build_graph()))
+
+                    coord_voxal.append(
+                        self.output_format(df_voxal[coord_ds, :]))
+                    if self.image is not None:
+                        img_voxal.append(
+                            self.output_format(df_img[coord_ds, :]))
+                    else:
+                        img_voxal.append(self.output_format(df_img))
+
+                    if out_idx:
+                        output_idx.append(output_df[coord_ds])
+                elif not prune:
                     if self.graph_output:
                         segment_voxal = self.segments_id[df_voxal_keep, :]
                         segment_voxal = self.normalize_idx(
