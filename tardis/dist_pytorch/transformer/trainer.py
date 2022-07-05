@@ -133,15 +133,13 @@ class Trainer:
                 torch.save({'model_state_dict': self.model.state_dict(),
                             'optimizer_state_dict': self.optimizer.state_dict()},
                            'GF_checkpoint/checkpoint_{}.pth'.format(self.checkpoint_name))
-                print(
-                    f'Saved model checkpoint no. {i} for F1 {self.f1[len(self.f1) - 1]:.2f}')
 
             torch.save({'model_state_dict': self.model.state_dict(),
                         'optimizer_state_dict': self.optimizer.state_dict()},
                        join(getcwd(), 'GF_checkpoint', 'model_weights.pth'))
 
             epoch_progress.set_description(
-                f'Epochs: stop counter {early_stoping.counter}, best F1 {np.max(self.f1)}')
+                f'Epochs: stop counter {early_stoping.counter}, best F1 {round(np.max(self.f1), 3)}')
 
             if early_stoping.early_stop:
                 break
@@ -180,6 +178,7 @@ class Trainer:
 
                 train_progress.set_description(
                     f'Training: loss {loss.item():.4f}')
+        train_progress.close() 
 
         """ Save current learning rate """
         self.learning_rate.append(self.optimizer.param_groups[0]['lr'])
