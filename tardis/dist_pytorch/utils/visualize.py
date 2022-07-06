@@ -2,29 +2,45 @@ import open3d as o3d
 import numpy as np
 
 
-def _DataSetFormat(coord: np.ndarray):
+def _DataSetFormat(coord: np.ndarray,
+                   segmented: bool):
     check = True
 
-    if coord.shape[1] not in [3, 4]:
-        check = False
-        print('Coord data must be 2D/3D with labels (4D/5D)')
+    if segmented:
+        if coord.shape[1] not in [3, 4]:
+            check = False
+            print('Coord data must be 2D/3D with labels (4D/5D)')
 
-    # Correct 2D to 3D
-    if coord.shape[1] == 3:
-        coord = np.vstack(
-            (coord[:, 0], coord[:, 1], np.zeros((coord.shape[0], )))).T
+        # Correct 2D to 3D
+        if coord.shape[1] == 3:
+            coord = np.vstack((coord[:, 0], coord[:, 1], coord[:, 2], np.zeros((coord.shape[0], )))).T
+    else:
+        if coord.shape[1] not in [2, 3]:
+            check = False
+            print('Coord data must be 2D/3D with labels (2D/3D)')
+
+        # Correct 2D to 3D
+        if coord.shape[1] == 2:
+            coord = np.vstack((coord[:, 0], coord[:, 1], np.zeros((coord.shape[0], )))).T
 
     return coord, check
 
 
-def _rgb(coord: np.ndarray):
+def _rgb(coord: np.ndarray,
+         segmented: bool):
     rgb = np.zeros((coord.shape[0], 3), dtype=np.float64)
-    rgb_list = [np.array((np.random.rand(),
-                          np.random.rand(),
-                          np.random.rand())) for _ in np.unique(coord[:, 0])]
+    if segmented:
+        rgb_list = [np.array((np.random.rand(),
+                            np.random.rand(),
+                            np.random.rand())) for _ in np.unique(coord[:, 0])]
 
-    for id, _ in enumerate(rgb):
-        rgb[id, :] = rgb_list[int(coord[id, 0])]
+        for id, _ in enumerate(rgb):
+            rgb[id, :] = rgb_list[int(coord[id, 0])]
+    else:
+        rgb_list = [[1, 0, 0]]
+
+        for id, _ in enumerate(rgb):
+            rgb[id, :] = rgb_list[0]
 
     return rgb
 
@@ -57,20 +73,26 @@ def SegmentToGraph(coord: np.ndarray):
     return graph_list
 
 
-def VisualizePointCloud(coord: np.ndarray):
-    coord, check = _DataSetFormat(coord)
+def VisualizePointCloud(coord: np.ndarray,
+                        segmented: True):
+    coord, check = _DataSetFormat(coord=coord, 
+                                  segmented=segmented)
 
     if check:
         pcd = o3d.geometry.PointCloud()
 
-        pcd.points = o3d.utility.Vector3dVector(coord[:, 1:])
-        pcd.colors = o3d.utility.Vector3dVector(_rgb(coord))
+        if segmented:
+            pcd.points = o3d.utility.Vector3dVector(coord[:, 1:])
+        else:
+            pcd.points = o3d.utility.Vector3dVector(coord)
+        pcd.colors = o3d.utility.Vector3dVector(_rgb(coord, segmented))
 
         o3d.visualization.draw_geometries([pcd],)
 
 
 def VisualizeFilaments(coord: np.ndarray):
-    coord, check = _DataSetFormat(coord)
+    coord, check = _DataSetFormat(coord=coord, 
+                                  segmented=True)
 
     if check:
         graph = SegmentToGraph(coord=coord)
