@@ -139,7 +139,7 @@ class GraphInstanceV2:
             output_idx = np.arange(graphs[0].shape[0])
 
         for g, o in zip(graphs, output_idx):
-            df = np.where(g > self.threshold)
+            df = np.where(g >= self.threshold)
 
             col = list(df[0])
             row = list(df[1])
@@ -167,14 +167,14 @@ class GraphInstanceV2:
         for id, a in enumerate(all_prop):
             if len(a[2]) > 0:
                 prop, inter = zip(*sorted(zip(a[3], a[2]), reverse=True))
-
+                
                 all_prop[id][2] = [[j for j in i if j != id][0] for i in inter]
                 all_prop[id][3] = prop
 
         return all_prop
 
-    @staticmethod
-    def _find_segment_matrix(adj_matrix: list):
+    def _find_segment_matrix(self,
+                             adj_matrix: list):
         """
         Iterative search mechanism that search for connected points in the
         adjacency list.
@@ -199,7 +199,7 @@ class GraphInstanceV2:
         while len(new_df) != 0:
             for i in new:
                 # check new elements
-                reverse_int = adj_matrix[i][2][:2]
+                reverse_int = adj_matrix[i][2][:self.connection]
 
                 new_df = [j for j in reverse_int if j not in idx_df]
 
@@ -287,7 +287,7 @@ class GraphInstanceV2:
             idx = self._find_segment_matrix(adjacency_matrix)
 
             """Select segment longer then 3 points"""
-            if len(idx) >= 2:
+            if len(idx) >= self.prune:
                 # Sort points in segment
                 segment = self._sort_segment(coord=coord[idx])
 
