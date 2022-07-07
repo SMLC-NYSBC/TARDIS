@@ -188,18 +188,21 @@ def main(prediction_dir: str,
 
         # Cut image for smaller image
         if i.endswith(('.tif', '.tiff')):
-            image, _ = import_tiff(img=join(prediction_dir, i),
-                                   dtype=np.uint8)
+            image, px = import_tiff(img=join(prediction_dir, i),
+                                    dtype=np.uint8)
             if i.endswith('.tif'):
                 out_format = 4
             else:
                 out_format = 5
+            format = 'tif'
         elif i.endswith(('.mrc', '.rec')):
-            image, _ = import_mrc(img=join(prediction_dir, i))
+            image, px = import_mrc(img=join(prediction_dir, i))
             out_format = 4
+            format = 'mrc'
         elif i.endswith('.am'):
-            image, _ = import_am(img=join(prediction_dir, i))
+            image, px, transformation = import_am(img=join(prediction_dir, i))
             out_format = 3
+            format = 'amira'
 
         org_shape = image.shape
 
@@ -382,6 +385,15 @@ def main(prediction_dir: str,
         """Graphformer post-processing"""
         if tqdm:
             batch_iter.set_description(f'Graph segmentation for {i}')
+
+        if format == 'mrc':
+            point_cloud = point_cloud * px
+        elif format == 'amira':
+            point_cloud = point_cloud * px
+
+            point_cloud[:, 0] = point_cloud[:, 0] + transformation[0]
+            point_cloud[:, 1] = point_cloud[:, 1] + transformation[1]
+            point_cloud[:, 2] = point_cloud[:, 2] + transformation[2]
 
         segments = GraphToSegment.voxal_to_segment(graph=graphs,
                                                    coord=point_cloud,
