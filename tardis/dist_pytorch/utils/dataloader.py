@@ -18,18 +18,15 @@ class GraphDataset(Dataset):
     and output dataset that are expected by graphformer (coord, graph
     and image patches for each coordinate).
 
-    TODO Point cloud scaling normalizer need to be fix. KNN may onacuratly trace avg
-        distance between closest KNN's. dens point cloud giving dfferent normalization
-
     Args:
         coord_dir: source of the 3D .tif images masks.
         coord_format: call for random transformation on img and mask data.
         img_dir: source of the 3D .tif file.
         prefix: Prefix name of coordinate file.
         voxal_size: Initial voxal size
-        downsampling_if: Number of points in a cloud after which downsamling is run
+        downsampling_if: Number of points in a cloud after which downsampling is run
         drop_rate: Drop rate for voxal size during optimization of voxal size
-        downsampling_rate: Value used for downsamling with open3D
+        downsampling_rate: Value used for downsampling with open3D
         size: numeric value between 0 and 1 for scaling px.
         normalize: type of normalization for img data ["simple", "minmax", "rescale"]
         memory_save: If True data are loaded with memory save mode on
@@ -187,9 +184,9 @@ class PredictDataset(Dataset):
             img_dir: source of the 3D .tif file.
             prefix: Prefix name of coordinate file.
             voxal_size: Initial voxal size
-            downsampling_if: Number of points in a cloud after which downsamling is run
+            downsampling_if: Number of points in a cloud after which downsampling is run
             drop_rate: Drop rate for voxal size during optimization of voxal size
-            downsampling_rate: Value used for downsamling with open3D
+            downsampling_rate: Value used for downsampling with open3D
             size: numeric value between 0 and 1 for scaling px.
             normalize: type of normalization for img data ["simple", "minmax"]
             memory_save: If True data are loaded with memory save mode on

@@ -1,12 +1,12 @@
 click>=8.0.4
 edt>=2.1.2
 imagecodecs>=2021.8.26
-numpy>=1.21.0
+numpy>=1.22.3
 open3d>=0.9.0
 scikit-image>=0.19.2
 scikit-learn >=1.0.2
-scipy>=1.7.3
-tifffile>=2021.11.2
-torch>=1.11.0
+scipy>=1.8.0
+tifffile>=2022.5.4
+torch>=1.13.0
 tqdm>=4.63.0
 zarr>=2.8.1

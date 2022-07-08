@@ -15,14 +15,14 @@ class VoxalizeDataSetV2:
 
     Coordinates in each voxal can be further downsample if they reach pre-defined
     threshold. In that case, voxal downsampling from open3d library is used to
-    downsample pointcloud as close as possible to defined threshold and output
+    downsample point cloud as close as possible to defined threshold and output
     points from the original dataset that are closes to the downsample points
     in order to preserve coordinates.
 
     Args:
         coord: Coordinates dataset in a shape [Dim, X, Y, (Z)].
             where Dim are segment ids
-        imgage: Image dataset in a shape of [Channels x Length].
+        image: Image dataset in a shape of [Channels x Length].
         downsampling_threshold: Max number of point in voxal
         downsampling_rate: Downsampling voxal size for open3d voxal_downsampling
         init_voxal_size: Initial voxal size used for voxalization of the point
@@ -147,7 +147,7 @@ class VoxalizeDataSetV2:
             voxal_center: Numpy array [3, 1] with voxal center coordinate
 
         Return:
-            coord_idx: Boolen list of point in voxal to keep
+            coord_idx: Boolean list of point in voxal to keep
         """
         voxal_size = self.voxal_patch_size + self.voxal_stride
 

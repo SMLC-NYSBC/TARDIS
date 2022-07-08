@@ -31,7 +31,7 @@ def BuildTrainDataSet(dir: str,
     STANDARD BUILDER FOR TRAINING DATASETS
 
     Args:
-        dir: Direcotry where the file should outputted
+        dir: Directory where the file should outputted
         coord_format: Format of the coordinate files
         with_img: If True, expect corresponding image files
         img_format: Allowed format that can be used

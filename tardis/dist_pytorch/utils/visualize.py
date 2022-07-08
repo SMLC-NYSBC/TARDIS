@@ -4,6 +4,13 @@ import numpy as np
 
 def _DataSetFormat(coord: np.ndarray,
                    segmented: bool):
+    """
+    CHECK FOR ARRAY FORMAT AND CORRECT FOR 2D DATASETS
+
+    Args:
+        coord: 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y]
+        segmented: If True expect (s) in data format as segmented values
+    """
     check = True
 
     if segmented:
@@ -13,7 +20,8 @@ def _DataSetFormat(coord: np.ndarray,
 
         # Correct 2D to 3D
         if coord.shape[1] == 3:
-            coord = np.vstack((coord[:, 0], coord[:, 1], coord[:, 2], np.zeros((coord.shape[0], )))).T
+            coord = np.vstack(
+                (coord[:, 0], coord[:, 1], coord[:, 2], np.zeros((coord.shape[0], )))).T
     else:
         if coord.shape[1] not in [2, 3]:
             check = False
@@ -29,6 +37,13 @@ def _DataSetFormat(coord: np.ndarray,
 
 def _rgb(coord: np.ndarray,
          segmented: bool):
+    """
+    OUTPUT RGB VALUES FOR EACH SEGMENT OR POINT IN POINT CLOUD
+
+    Args:
+        coord: 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y]
+        segmented: If True expect (s) in data format as segmented values
+    """
     rgb = np.zeros((coord.shape[0], 3), dtype=np.float64)
     if segmented:
         rgb_list = [np.array((np.random.rand(),
@@ -47,6 +62,12 @@ def _rgb(coord: np.ndarray,
 
 
 def SegmentToGraph(coord: np.ndarray):
+    """
+    TRANSFORMATION FOR POINT CLOUD ARRAY TO GRAPH LIST
+
+    Args:
+        coord: 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y]
+    """
     graph_list = []
     start = 0
     stop = 0
@@ -55,27 +76,37 @@ def SegmentToGraph(coord: np.ndarray):
         id = np.where(coord[:, 0] == i)[0]
         id = coord[id]
 
-        itter = 0
+        x = 0  # Iterator checking if current point is a first on in the list
         start = stop
         stop += len(id)
 
-        if itter == 0:
+        if x == 0:
             graph_list.append([start, start + 1])
-        length = stop - start
+
+        length = stop - start  # Number of point in a segment
         for j in range(1, length - 1):
-            graph_list.append([start + (itter + 1), start + itter])
+            graph_list.append([start + (x + 1), start + x])
 
             if j != (stop - 1):
-                graph_list.append([start + (itter + 1), start + (itter + 2)])
-            itter += 1
+                graph_list.append([start + (x + 1), start + (x + 2)])
+            x += 1
 
-        graph_list.append([start + (itter + 1), start + itter])
+        graph_list.append([start + (x + 1), start + x])
 
     return graph_list
 
 
 def VisualizePointCloud(coord: np.ndarray,
                         segmented: True):
+    """
+    SEGMENTER FOR POINT CLOUDS AS POINTS
+
+    Output color coded point cloud. Color values indicate individual segment
+
+    Args:
+        coord: 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y]
+        segmented: If True expect (s) in data format as segmented values
+    """
     coord, check = _DataSetFormat(coord=coord,
                                   segmented=segmented)
 
@@ -92,6 +123,15 @@ def VisualizePointCloud(coord: np.ndarray,
 
 
 def VisualizeFilaments(coord: np.ndarray):
+    """
+    SEGMENTER FOR POINT CLOUDS AS SPLINES
+
+    Output color coded point cloud. Color values indicate individual segment
+
+    Args:
+        coord: 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y]
+    """
+
     coord, check = _DataSetFormat(coord=coord,
                                   segmented=True)
 
