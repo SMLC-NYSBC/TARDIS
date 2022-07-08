@@ -135,7 +135,7 @@ def train(train_dataloader: DataLoader,
         print('No dropout layer are used.')
     else:
         print(
-            f'Dropout with {dropout} propability is used for each conv. layer')
+            f'Dropout with {dropout} probability is used for each conv. layer')
 
     trainer = Trainer(model=model.to(device),
                       device=device,

@@ -397,7 +397,7 @@ def import_am(img: str):
     pixel_size = round(physical_size[0] / (nx - 1), 3)
 
     img = np.fromfile(img, dtype=np.uint8)
-    
+
     if nz == 1:
         return img[binary_start:-1].reshape((ny, nx)), pixel_size, physical_size
     else:

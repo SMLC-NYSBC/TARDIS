@@ -6,7 +6,7 @@ from shutil import rmtree
 
 def build_new_dir(dir: str):
     """
-    STANDRAD SET-UP FOR CREATING NEW DIRECOTORY FOR STORING ALL DATA
+    STANDARD SET-UP FOR CREATING NEW DIRECTORY FOR STORING ALL DATA
 
     Args:
         dir: Directory where folder will be build
@@ -28,7 +28,7 @@ def build_new_dir(dir: str):
 
 def build_temp_dir(dir: str):
     """
-    STANDRAD SET-UP FOR CREATING NEW TEMP DIR FOR CNN PREDICTION
+    STANDARD SET-UP FOR CREATING NEW TEMP DIR FOR CNN PREDICTION
 
     Args:
         dir: Directory where folder will be build
@@ -57,6 +57,6 @@ def clean_up(dir: str):
     CLEAN-UP TEMP FILES
 
     Args:
-        dir: Main direcotry where temp dir is located
+        dir: Main directory where temp dir is located
     """
     rmtree(join(dir, 'temp'))

@@ -7,7 +7,7 @@ import numpy as np
 import open3d as o3d
 import tifffile.tifffile as tif
 
-from tardis.dist_pytorch.transformer.network import CloudToGraph
+from tardis.dist_pytorch.transformer.network import DIST
 from tardis.dist_pytorch.utils.voxal import VoxalizeDataSetV2
 from tardis.slcpy_data_processing.image_postprocess import ImageToPointCloud
 from tardis.slcpy_data_processing.utils.export_data import NumpyToAmira
@@ -315,17 +315,17 @@ def main(prediction_dir: str,
             batch_iter.set_description(f'Compute sigma for {i}')
 
         # Predict point cloud
-        predict_gf = Predictor(model=CloudToGraph(n_out=1,
-                                                  node_input=None,
-                                                  node_dim=256,
-                                                  edge_dim=128,
-                                                  num_layers=6,
-                                                  num_heads=8,
-                                                  dropout_rate=0,
-                                                  coord_embed_sigma=2,
-                                                  structure='triang',
-                                                  dist_embed=True,
-                                                  predict=True),
+        predict_gf = Predictor(model=DIST(n_out=1,
+                                          node_input=None,
+                                          node_dim=256,
+                                          edge_dim=128,
+                                          num_layers=6,
+                                          num_heads=8,
+                                          dropout_rate=0,
+                                          coord_embed_sigma=2,
+                                          structure='triang',
+                                          dist_embed=True,
+                                          predict=True),
                                checkpoint=checkpoints[2],
                                network='graphformer',
                                subtype='without_img',

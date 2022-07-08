@@ -21,7 +21,8 @@ def _DataSetFormat(coord: np.ndarray,
 
         # Correct 2D to 3D
         if coord.shape[1] == 2:
-            coord = np.vstack((coord[:, 0], coord[:, 1], np.zeros((coord.shape[0], )))).T
+            coord = np.vstack(
+                (coord[:, 0], coord[:, 1], np.zeros((coord.shape[0], )))).T
 
     return coord, check
 
@@ -31,8 +32,8 @@ def _rgb(coord: np.ndarray,
     rgb = np.zeros((coord.shape[0], 3), dtype=np.float64)
     if segmented:
         rgb_list = [np.array((np.random.rand(),
-                            np.random.rand(),
-                            np.random.rand())) for _ in np.unique(coord[:, 0])]
+                              np.random.rand(),
+                              np.random.rand())) for _ in np.unique(coord[:, 0])]
 
         for id, _ in enumerate(rgb):
             rgb[id, :] = rgb_list[int(coord[id, 0])]
@@ -75,7 +76,7 @@ def SegmentToGraph(coord: np.ndarray):
 
 def VisualizePointCloud(coord: np.ndarray,
                         segmented: True):
-    coord, check = _DataSetFormat(coord=coord, 
+    coord, check = _DataSetFormat(coord=coord,
                                   segmented=segmented)
 
     if check:
@@ -91,7 +92,7 @@ def VisualizePointCloud(coord: np.ndarray,
 
 
 def VisualizeFilaments(coord: np.ndarray):
-    coord, check = _DataSetFormat(coord=coord, 
+    coord, check = _DataSetFormat(coord=coord,
                                   segmented=True)
 
     if check:

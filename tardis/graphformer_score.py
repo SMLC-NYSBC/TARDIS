@@ -6,10 +6,9 @@ import click
 import numpy as np
 import torch
 
-from tardis.dist_pytorch.transformer.network import CloudToGraph
+from tardis.dist_pytorch.transformer.network import DIST
 from tardis.dist_pytorch.utils.augmentation import preprocess_data
 from tardis.dist_pytorch.utils.voxal import VoxalizeDataSetV2
-#  from tardis.slcpy_data_processing.utils.export_data import NumpyToAmira
 from tardis.slcpy_data_processing.utils.segment_point_cloud import GraphInstanceV2
 from tardis.spindletorch.unet.predictor import Predictor
 from tardis.utils.device import get_device
@@ -146,16 +145,16 @@ def main(gf_dir: str,
     GraphToSegment = GraphInstanceV2(threshold=gf_threshold)
     #  BuildAmira = NumpyToAmira()
 
-    GF = Predictor(model=CloudToGraph(n_out=1,
-                                      node_input=gf_ninput,
-                                      node_dim=gf_ndim,
-                                      edge_dim=gf_edim,
-                                      num_layers=gf_layer,
-                                      num_heads=gf_heads,
-                                      dropout_rate=gf_dropout,
-                                      coord_embed_sigma=gf_sigma,
-                                      structure=gf_structure,
-                                      predict=True),
+    GF = Predictor(model=DIST(n_out=1,
+                              node_input=gf_ninput,
+                              node_dim=gf_ndim,
+                              edge_dim=gf_edim,
+                              num_layers=gf_layer,
+                              num_heads=gf_heads,
+                              dropout_rate=gf_dropout,
+                              coord_embed_sigma=gf_sigma,
+                              structure=gf_structure,
+                              predict=True),
                    checkpoint=checkpoint,
                    network='graphformer',
                    subtype='without_img',

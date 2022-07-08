@@ -9,6 +9,15 @@ from scipy.spatial.distance import cdist
 
 def pc_median_dist(pc: np.ndarray,
                    avg_over=False):
+    """
+    CALCULATE AVERAGE DISTANCE BETWEEN K-NN POINTS IN POINT CLOUD
+
+    Args:
+        pc: 2D/3D array of point cloud
+        avg_over: If True, calculate median position of all point and calculate
+            average k-NN for selected set of point in that area (speed up for
+            big point clouds)
+    """
     if avg_over:
         # Build BB and offset by 10% from the border
         box_dim = pc.shape[1]
@@ -248,7 +257,8 @@ def point_in_bb(points: np.ndarray,
                 min_y: np.inf, max_y: np.inf,
                 min_z: Optional[np.float32] = None,
                 max_z: Optional[np.float32] = None):
-    """ Compute a bounding_box filter on the given points
+    """
+    Compute a bounding_box filter on the given points
 
     Args:
         points: (n,3) array

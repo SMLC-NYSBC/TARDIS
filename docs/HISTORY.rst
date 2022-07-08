@@ -15,6 +15,9 @@ History
 * Added removal of dist_embedding as an input
 * SpindleTorch rebuild to work on 2D and 3D datasets
 * DIST training progress bar update (simplified output and removed prints)
+* Add Visualizer module for point clouds
+* Added hotfix for output of coordinates to fit Amira coordinates transformation
+* Spellings and documentation fixes
 
 0.1.0a5 (2022-04-25)
 --------------------

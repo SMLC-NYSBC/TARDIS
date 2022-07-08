@@ -6,7 +6,7 @@ from tardis.dist_pytorch.transformer.layers import GraphFormerStack
 from tardis.dist_pytorch.transformer.modules import DistEmbedding
 
 
-class CloudToGraph(nn.Module):
+class DIST(nn.Module):
     """
     MAIN CLASS OF SPATIAL-INSTANCE-SEGMENTATION TRANSFORMER
 

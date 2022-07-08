@@ -25,7 +25,7 @@ def build_network(network_type: str,
         out_channel: Number of output channels
         img_size: Image size used for training inference
         dropout: If float dropout is used
-        no_conv_layers: Number of convoltion layers
+        no_conv_layers: Number of convolution layers
         conv_multiplayer: Convolution multiplayer used in each layer
         layer_components: (2 or 3),b,g,c,l,r type of operation and order for each convolution
         no_groups: Number of group used for groupnorm

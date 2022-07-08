@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 
 from tardis.dist_pytorch.transformer.losses import (BCELoss, DiceLoss,
                                                     SigmoidFocalLoss)
-from tardis.dist_pytorch.transformer.network import CloudToGraph
+from tardis.dist_pytorch.transformer.network import DIST
 from tardis.dist_pytorch.transformer.trainer import Trainer
 from tardis.dist_pytorch.utils.dataloader import GraphDataset
 from tardis.dist_pytorch.utils.utils import BuildTrainDataSet, cal_node_input
@@ -166,7 +166,7 @@ def main(pointcloud_dir: str,
     """
     MAIN MODULE FOR GRAPHFORMER TRAINING
 
-    Training unit for GrapFormer with 2D/3D dataset of point cloud with or without
+    Training unit for DIST with 2D/3D dataset of point cloud with or without
     images.
     """
     """Check directory for data compatibility"""
@@ -273,17 +273,17 @@ def main(pointcloud_dir: str,
 
     """Setup training"""
     device = get_device(device)
-    model = CloudToGraph(n_out=gf_out,
-                         node_input=cal_node_input(patch_size),
-                         node_dim=gf_node_dim,
-                         edge_dim=gf_edge_dim,
-                         num_layers=gf_layers,
-                         num_heads=gf_heads,
-                         coord_embed_sigma=gf_sigma,
-                         dropout_rate=gf_dropout,
-                         structure=gf_structure,
-                         dist_embed=gf_dist,
-                         predict=False)
+    model = DIST(n_out=gf_out,
+                 node_input=cal_node_input(patch_size),
+                 node_dim=gf_node_dim,
+                 edge_dim=gf_edge_dim,
+                 num_layers=gf_layers,
+                 num_heads=gf_heads,
+                 coord_embed_sigma=gf_sigma,
+                 dropout_rate=gf_dropout,
+                 structure=gf_structure,
+                 dist_embed=gf_dist,
+                 predict=False)
 
     if gf_loss == "dice":
         loss_fn = DiceLoss()

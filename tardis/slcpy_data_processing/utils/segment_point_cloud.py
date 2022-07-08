@@ -149,8 +149,7 @@ class GraphInstanceV2:
 
             for i, p in zip(int, prop):
                 if i in all_prop[i[0]][2]:
-                    id = [id for id, j in enumerate(
-                        all_prop[i[0]][2]) if i == j][0]
+                    id = [id for id, j in enumerate(all_prop[i[0]][2]) if i == j][0]
 
                     if all_prop[i[0]][3][id] < p:
                         all_prop[i[0]][2] = [j for idx, j in enumerate(
@@ -167,7 +166,7 @@ class GraphInstanceV2:
         for id, a in enumerate(all_prop):
             if len(a[2]) > 0:
                 prop, inter = zip(*sorted(zip(a[3], a[2]), reverse=True))
-                
+
                 all_prop[id][2] = [[j for j in i if j != id][0] for i in inter]
                 all_prop[id][3] = prop
 
