@@ -83,7 +83,7 @@ from tardis.version import version
               show_default=True)
 @click.option('-gst', '--gf_structure',
               default='full',
-              type=click.Choice(['full', 'full_af', 'self_attn', 'triang']),
+              type=click.Choice(['full', 'full_af', 'self_attn', 'triang', 'quad']),
               help='Structure of the graphformer',
               show_default=True)
 @click.option('-gde', '--gf_dist',
