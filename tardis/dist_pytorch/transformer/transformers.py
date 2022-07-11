@@ -259,11 +259,11 @@ class ComparisonLayer(nn.Module):
         return z
 
 
-class QuadralarEdgeUpdate(nn.Module):
+class QuadraticEdgeUpdate(nn.Module):
     """
-    QUADRALAR UPDATE MODEL FOR NODES FEATURES
+    QUADRATIC UPDATE MODEL FOR NODES FEATURES
 
-    This module take node feature representation and perform quadralation
+    This module take node feature representation and perform quadratic
     attention for each points.
 
     Args:

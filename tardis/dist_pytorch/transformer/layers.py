@@ -2,7 +2,7 @@ from typing import Optional
 
 import torch
 from tardis.dist_pytorch.transformer.transformers import ComparisonLayer, GeluFeedForward, \
-    PairBiasSelfAttention, SelfAttention2D, TriangularEdgeUpdate
+    PairBiasSelfAttention, SelfAttention2D, TriangularEdgeUpdate, QuadraticEdgeUpdate
 from torch import nn
 
 
@@ -118,6 +118,14 @@ class GraphFormerLayer(nn.Module):
                                                    channel_dim=32,
                                                    axis=0)
 
+        if self.structure == 'quad':
+            self.row_update = QuadraticEdgeUpdate(input_dim=pairs_dim,
+                                                  channel_dim=32,
+                                                  axis=1)
+            self.row_update = QuadraticEdgeUpdate(input_dim=pairs_dim,
+                                                  channel_dim=32,
+                                                  axis=0)
+
         self.pair_ffn = GeluFeedForward(input_dim=pairs_dim,
                                         ff_dim=pairs_dim * ff_factor)
 
@@ -163,32 +171,21 @@ class GraphFormerLayer(nn.Module):
 
         mask = None
         if src_key_padding_mask is not None:
-            mask = src_key_padding_mask.unsqueeze(
-                2) | src_key_padding_mask.unsqueeze(1)
+            mask = src_key_padding_mask.unsqueeze(2) | src_key_padding_mask.unsqueeze(1)
 
         if self.structure == 'full':
             h_nodes = h_nodes + \
-                self.row_attention(x=h_nodes, padding_mask=mask) + \
-                self.col_attention(x=h_nodes, padding_mask=mask) + \
-                self.row_update(z=h_nodes, mask=mask) + \
-                self.col_update(z=h_nodes, mask=mask)
+                self.row_attention(x=h_nodes, padding_mask=mask) + self.col_attention(x=h_nodes, padding_mask=mask) + \
+                self.row_update(z=h_nodes, mask=mask) + self.col_update(z=h_nodes, mask=mask)
         elif self.structure == 'full_af':
-            h_nodes = self.row_attention(
-                x=h_nodes, padding_mask=mask) + h_nodes
-            h_nodes = self.col_attention(
-                x=h_nodes, padding_mask=mask) + h_nodes
-            h_nodes = self.row_update(z=h_nodes, mask=mask) + h_nodes
-            h_nodes = self.col_update(z=h_nodes, mask=mask) + h_nodes
+            h_nodes = h_nodes + self.row_attention(x=h_nodes, padding_mask=mask)
+            h_nodes = h_nodes + self.col_attention(x=h_nodes, padding_mask=mask)
+            h_nodes = h_nodes + self.row_update(z=h_nodes, mask=mask)
+            h_nodes = h_nodes + self.col_update(z=h_nodes, mask=mask)
         elif self.structure == 'self_attn':
-            h_nodes = h_nodes + self.row_attention(x=h_nodes,
-                                                   padding_mask=mask) + \
-                self.col_attention(x=h_nodes,
-                                   padding_mask=mask)
+            h_nodes = h_nodes + self.row_attention(x=h_nodes, padding_mask=mask) + self.col_attention(x=h_nodes, padding_mask=mask)
         elif self.structure == 'triang':
-            h_nodes = h_nodes + self.row_update(z=h_nodes,
-                                                mask=mask) + \
-                self.col_update(z=h_nodes,
-                                mask=mask)
+            h_nodes = h_nodes + self.row_update(z=h_nodes, mask=mask) + self.col_update(z=h_nodes, mask=mask)
 
         return h_nodes + self.pair_ffn(x=h_nodes)
 
