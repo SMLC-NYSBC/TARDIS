@@ -75,7 +75,7 @@ class GraphFormerLayer(nn.Module):
         dropout: Dropout rate
         ff_factor: Feed forward factor used for GeLuFFN
         num_heads: Number of heads in self-attention
-        structure: Structure of layer ['full', 'full_af', 'self_attn', 'triang']
+        structure: Structure of layer ['full', 'full_af', 'self_attn', 'triang', 'quad']
     """
 
     def __init__(self,
