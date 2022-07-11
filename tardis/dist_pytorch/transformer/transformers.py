@@ -259,14 +259,100 @@ class ComparisonLayer(nn.Module):
         return z
 
 
+class QuadralarEdgeUpdate(nn.Module):
+    """
+    QUADRALAR UPDATE MODEL FOR NODES FEATURES
+
+    This module take node feature representation and perform quadralation
+    attention for each points.
+
+    Args:
+        input_dim: Number of input channels
+        channel_dim: Number of output channels
+        axis: Indicate axis around which the attention is given
+    """
+
+    def __init__(self,
+                 input_dim,
+                 channel_dim=128,
+                 axis=1):
+        super().__init__()
+        self.input_dim = input_dim
+        self.channel_dim = channel_dim
+        self.axis = axis
+        self.init_scaling = math.sqrt(2)
+
+        self.norm_input = nn.LayerNorm(input_dim)
+
+        self.linear_a = nn.Linear(input_dim, channel_dim)
+        self.gate_a = nn.Linear(input_dim, channel_dim)
+
+        self.linear_b = nn.Linear(input_dim, channel_dim)
+        self.gate_b = nn.Linear(input_dim, channel_dim)
+
+        self.linear_c = nn.Linear(input_dim, channel_dim)
+        self.gate_c = nn.Linear(input_dim, channel_dim)
+
+        self.linear_d = nn.Linear(input_dim, channel_dim)
+        self.gate_d = nn.Linear(input_dim, channel_dim)
+
+        self.norm_o = nn.LayerNorm(channel_dim)
+        self.gate_o = nn.Linear(input_dim, input_dim)
+        self.linear_o = nn.Linear(channel_dim, input_dim)
+
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        nn.init.xavier_uniform_(self.linear_a.weight, gain=self.init_scaling)
+        nn.init.constant_(self.linear_a.bias, 0.0)
+
+        nn.init.xavier_uniform_(self.linear_b.weight, gain=self.init_scaling)
+        nn.init.constant_(self.linear_b.bias, 0.0)
+
+        nn.init.xavier_uniform_(self.linear_c.weight, gain=self.init_scaling)
+        nn.init.constant_(self.linear_c.bias, 0.0)
+
+        nn.init.xavier_uniform_(self.linear_d.weight, gain=self.init_scaling)
+        nn.init.constant_(self.linear_d.bias, 0.0)
+
+        nn.init.constant_(self.linear_o.weight, 0.0)
+        nn.init.constant_(self.linear_o.bias, 0.0)
+
+    def forward(self,
+                z: torch.Tensor,
+                mask: Optional[torch.Tensor] = None):
+        z = self.norm_input(z)
+
+        a = torch.sigmoid(self.gate_a(z)) * self.linear_a(z)  # B x L x L x O
+        b = torch.sigmoid(self.gate_b(z)) * self.linear_b(z)  # B x L x L x O
+        c = torch.sigmoid(self.gate_c(z)) * self.linear_c(z)  # B x L x L x O
+        d = torch.sigmoid(self.gate_d(z)) * self.linear_d(z)  # B x L x L x O
+
+        if mask is not None:
+            mask = mask.unsqueeze(3).expand(mask.size(0),
+                                            mask.size(1),
+                                            mask.size(2),
+                                            a.size(3))
+            a = torch.where(mask, torch.zeros_like(a), a)
+            b = torch.where(mask, torch.zeros_like(b), b)
+            c = torch.where(mask, torch.zeros_like(c), c)
+            d = torch.where(mask, torch.zeros_like(d), d)
+
+        # i,j -> i,k j,k, il, jl
+        if self.axis == 1:
+            k = torch.einsum('biko,bjko,bilo,bjlo->bijo', a, b, c, d)
+        elif self.axis == 0:
+            k = torch.einsum('bkio,bkjo,blio,bljo->bijo', a, b, c, d)
+
+        return torch.sigmoid(self.gate_o(z)) * self.linear_o(self.norm_o(k))
+
+
 class TriangularEdgeUpdate(nn.Module):
     """
     TRIANGULAR UPDATE MODEL FOR NODES FEATURES
 
     This module take node feature representation and perform triangular
     attention for each points. Similar as in Alphafold 2 approach.
-
-    TODO quadro edge update
 
     Args:
         input_dim: Number of input channels
@@ -671,17 +757,22 @@ class MultiHeadAttention(nn.Module):
                 """in_proj_weight used to be q + k + v with same dimensions"""
                 dim = int(state_dict[k].shape[0] / 3)
                 items_to_add[prefix + "q_proj.weight"] = state_dict[k][:dim]
-                items_to_add[prefix + "k_proj.weight"] = state_dict[k][dim: 2 * dim]
-                items_to_add[prefix + "v_proj.weight"] = state_dict[k][2 * dim:]
+                items_to_add[prefix +
+                             "k_proj.weight"] = state_dict[k][dim: 2 * dim]
+                items_to_add[prefix +
+                             "v_proj.weight"] = state_dict[k][2 * dim:]
 
                 keys_to_remove.append(k)
 
                 k_bias = prefix + "in_proj_bias"
                 if k_bias in state_dict.keys():
                     dim = int(state_dict[k].shape[0] / 3)
-                    items_to_add[prefix + "q_proj.bias"] = state_dict[k_bias][:dim]
-                    items_to_add[prefix + "k_proj.bias"] = state_dict[k_bias][dim: 2 * dim]
-                    items_to_add[prefix + "v_proj.bias"] = state_dict[k_bias][2 * dim:]
+                    items_to_add[prefix +
+                                 "q_proj.bias"] = state_dict[k_bias][:dim]
+                    items_to_add[prefix +
+                                 "k_proj.bias"] = state_dict[k_bias][dim: 2 * dim]
+                    items_to_add[prefix +
+                                 "v_proj.bias"] = state_dict[k_bias][2 * dim:]
 
                     keys_to_remove.append(prefix + "in_proj_bias")
 
