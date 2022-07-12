@@ -1,13 +1,13 @@
 ================================
 Transformer And Rapid Dimensionless Instance Segmentation [TARDIS]
 ================================
-.. image:: https://img.shields.io/github/v/release/SMLC-NYSBC/tardis
-        :target: https://img.shields.io/github/v/release/SMLC-NYSBC/tardis
+.. image:: https://img.shields.io/badge/release-0.1.0_alpha-success
+        :target: https://img.shields.io/badge/release-0.1.0_alpha-success
 
 .. image:: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python-package.yml/badge.svg
         :target: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python-package.yml
 
-.. image:: https://readthedocs.org/projects/tardis/badge/?version=latest
+.. image:: https://readthedocs.org/projects/tardis-pytorch/badge/?version=latest
         :target: https://tardis-pytorch.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 ....
