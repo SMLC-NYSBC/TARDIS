@@ -75,7 +75,7 @@ class GraphFormerLayer(nn.Module):
         dropout: Dropout rate
         ff_factor: Feed forward factor used for GeLuFFN
         num_heads: Number of heads in self-attention
-        structure: Structure of layer ['full', 'full_af', 'self_attn', 'triang', 'quad']
+        structure: Structure of layer ['full', 'full_af', 'self_attn', 'triang', 'dualtraing', 'quad']
     """
 
     def __init__(self,
@@ -122,10 +122,23 @@ class GraphFormerLayer(nn.Module):
             self.row_update = QuadraticEdgeUpdate(input_dim=pairs_dim,
                                                   channel_dim=32,
                                                   axis=1)
-            self.row_update = QuadraticEdgeUpdate(input_dim=pairs_dim,
+            self.col_update = QuadraticEdgeUpdate(input_dim=pairs_dim,
+                                                  channel_dim=32,
+                                                  axis=0)
+        if self.structure == 'dualtriang':
+            self.row_update_1 = TriangularEdgeUpdate(input_dim=pairs_dim,
+                                                  channel_dim=32,
+                                                  axis=1)
+            self.col_update_1 = TriangularEdgeUpdate(input_dim=pairs_dim,
                                                   channel_dim=32,
                                                   axis=0)
 
+            self.row_update_2 = TriangularEdgeUpdate(input_dim=pairs_dim,
+                                                  channel_dim=32,
+                                                  axis=1)
+            self.col_update_2 = TriangularEdgeUpdate(input_dim=pairs_dim,
+                                                  channel_dim=32,
+                                                  axis=0)
         self.pair_ffn = GeluFeedForward(input_dim=pairs_dim,
                                         ff_dim=pairs_dim * ff_factor)
 
@@ -184,8 +197,11 @@ class GraphFormerLayer(nn.Module):
             h_nodes = h_nodes + self.col_update(z=h_nodes, mask=mask)
         elif self.structure == 'self_attn':
             h_nodes = h_nodes + self.row_attention(x=h_nodes, padding_mask=mask) + self.col_attention(x=h_nodes, padding_mask=mask)
-        elif self.structure == 'triang':
+        elif self.structure in ['triang', 'quad']:
             h_nodes = h_nodes + self.row_update(z=h_nodes, mask=mask) + self.col_update(z=h_nodes, mask=mask)
+        elif self.structure == 'dualtriang':
+            h_nodes = h_nodes + self.row_update_1(z=h_nodes, mask=mask) + self.col_update_1(z=h_nodes, mask=mask)
+            h_nodes = h_nodes + self.row_update_2(z=h_nodes, mask=mask) + self.col_update_2(z=h_nodes, mask=mask)
 
         return h_nodes + self.pair_ffn(x=h_nodes)
 
