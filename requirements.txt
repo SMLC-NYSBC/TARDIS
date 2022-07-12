@@ -9,4 +9,5 @@ scipy>=1.8.0
 tifffile>=2022.5.4
 torch>=1.12.0
 tqdm>=4.63.0
+requests>=2.27.1
 zarr>=2.8.1
