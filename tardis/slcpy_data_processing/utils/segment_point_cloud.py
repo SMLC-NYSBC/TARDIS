@@ -193,16 +193,21 @@ class GraphInstanceV2:
                 break
 
         x -= 1
-        new = new_df = adj_matrix[x][2]
+        new = new_df = adj_matrix[x][2][:self.connection]
 
         while len(new_df) != 0:
+            # check only new elements
+            new_df = []
             for i in new:
-                # check new elements
-                reverse_int = adj_matrix[i][2][:self.connection]
+                # Pick secondary interaction for i
+                reverse_int = adj_matrix[i][2][:2]
 
-                new_df = [j for j in reverse_int if j not in idx_df]
+                # Check if picked new interaction show up secondary interaction with anything already on the list
+                if np.any([True for i in reverse_int if i in idx_df]):
+                    new_df = new_df + [j for j in reverse_int if j not in idx_df] 
 
             new = new_df
+
             idx_df = idx_df + new
         return idx_df
 
@@ -304,7 +309,7 @@ class GraphInstanceV2:
 
             # Update adjacency list
             for id in idx:
-                adjacency_matrix[id][2] = []
+                adjacency_matrix[id][2], adjacency_matrix[id][3] = [], []
 
             if sum([sum(i[2]) for i in adjacency_matrix]) == 0:
                 stop = True
