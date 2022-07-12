@@ -24,13 +24,13 @@ class DIST(nn.Module):
         num_heads: Number of heads for MHA.
         coord_embed_sigma: Sigma value used to embed coordinate distance features.
         dropout_rate: Dropout factor used in MHA dropout layer
-        structure: DIST network structure (full, traing, quad, attn)
+        structure: DIST network structure (full, traing, dualtriang, quad, attn)
         dist_embed: If True build dist embedding on single sigma.
         predict: If True sigmoid output
 
         coords: Coordinates input of a shape Batch x Channels x Length
         node_features: Image patch input of a shape Batch x Length x Dimensions
-        padding_mask: Mask for additionall padding of input data
+        padding_mask: Mask for additionally padding of input data
     """
 
     def __init__(self,

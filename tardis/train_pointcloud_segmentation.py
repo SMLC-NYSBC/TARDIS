@@ -8,15 +8,14 @@ from torch import optim
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
 
-from tardis.dist_pytorch.transformer.losses import (BCELoss, DiceLoss,
-                                                    SigmoidFocalLoss)
+from tardis.dist_pytorch.transformer.losses import BCELoss, DiceLoss, SigmoidFocalLoss
 from tardis.dist_pytorch.transformer.network import DIST
 from tardis.dist_pytorch.transformer.trainer import Trainer
 from tardis.dist_pytorch.utils.dataloader import GraphDataset
 from tardis.dist_pytorch.utils.utils import BuildTrainDataSet, cal_node_input
 from tardis.utils.device import get_device
 from tardis.utils.utils import BuildTestDataSet, check_dir
-from tardis.version import version
+from tardis._version import version
 
 
 @click.command()
@@ -162,7 +161,7 @@ def main(pointcloud_dir: str,
          gf_checkpoint,
          device: str,
          epochs: int,
-         tqdm: bool,):
+         tqdm: bool):
     """
     MAIN MODULE FOR GRAPHFORMER TRAINING
 

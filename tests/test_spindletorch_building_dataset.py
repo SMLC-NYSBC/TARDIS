@@ -2,8 +2,8 @@ from os import listdir, mkdir
 from os.path import join
 from shutil import rmtree
 
+from tardis.slcpy.build_training_dataset import BuildTrainDataSet
 from tardis.utils.utils import BuildTestDataSet
-from tardis.slcpy_data_processing.build_training_dataset import BuildTrainDataSet
 
 
 class TestDataSetBuilder:

@@ -21,7 +21,8 @@ class Trainer:
         training_DataLoader: DataLoader with training dataset
         validation_DataLoader: DataLoader with validation dataset
         validation_step: Number of step after each validation is performed
-        downsampling: Threshold number of points in point cloud before downsampling
+        downsampling: Threshold number of points in point cloud before
+            downsampling
         lr_scheduler: Learning rate scheduler if used.
         epochs: Number of epochs used for training.
         checkpoint_name: Checkpoint prefix name.

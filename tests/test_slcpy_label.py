@@ -1,5 +1,5 @@
 import numpy as np
-from tardis.slcpy_data_processing.utils.build_semantic_mask import draw_semantic
+from tardis.slcpy.utils.build_semantic_mask import draw_semantic
 
 
 class TestLabelDrawing:

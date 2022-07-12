@@ -19,7 +19,8 @@ class StitchImages:
 
     Args:
         dir_path: Directory where all images are stored.
-        mask: If True treat image as binary mask and sum-up overlay zones, else do replacement
+        mask: If True treat image as binary mask and sum-up overlay zones,
+            else do replacement
         prefix: Optional prefix at the end of image file
         dtype: Numpy dtype for output
     """

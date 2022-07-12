@@ -6,12 +6,12 @@ from typing import Optional
 import click
 from torch.utils.data import DataLoader
 
-from tardis.slcpy_data_processing.build_training_dataset import BuildTrainDataSet
+from tardis.slcpy.build_training_dataset import BuildTrainDataSet
 from tardis.spindletorch.train import train
 from tardis.spindletorch.utils.dataset_loader import VolumeDataset
 from tardis.utils.device import get_device
-from tardis.utils.utils import check_dir, BuildTestDataSet
-from tardis.version import version
+from tardis.utils.utils import BuildTestDataSet, check_dir
+from tardis._version import version
 
 
 @click.command()
@@ -42,7 +42,7 @@ from tardis.version import version
               type=int,
               help='Number of output channels for the NN.',
               show_default=True)
-@click.option('-b', '--taining_batch_size',
+@click.option('-b', '--training_batch_size',
               default=25,
               type=int,
               help='Batch size.',
@@ -145,7 +145,7 @@ def main(training_dataset: str,
          patch_size: int,
          cnn_type: str,
          cnn_out_channel: int,
-         taining_batch_size: int,
+         training_batch_size: int,
          cnn_layers: int,
          cnn_multiplayer: int,
          conv_kernel: int,
@@ -227,7 +227,7 @@ def main(training_dataset: str,
                                                 normalize='simple',
                                                 transform=True,
                                                 out_channels=cnn_out_channel),
-                          batch_size=taining_batch_size,
+                          batch_size=training_batch_size,
                           shuffle=True,
                           num_workers=8,
                           pin_memory=True)

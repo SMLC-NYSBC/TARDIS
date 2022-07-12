@@ -1,7 +1,8 @@
+import math
 from typing import Optional
+
 import torch
 import torch.nn as nn
-import math
 
 
 class GeLU(nn.Module):
@@ -33,8 +34,9 @@ def convolution(in_ch: int,
                 padding: int or tuple,
                 no_group=None):
     """
-    Build an convolution block with a specified components:
-    (2 or 3) dimension, conv (c), ReLu (r), LeakyReLu (l), GroupNorm (g), BatchNorm (b).
+    Build an convolution block with a specified components and order:
+    dimension (2 or 3), conv (c), ReLu (r), LeakyReLu (l), GeLu (e),
+    GroupNorm (g), BatchNorm (b).
 
     Args:
         in_ch: Number of input channels

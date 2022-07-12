@@ -4,7 +4,7 @@ from typing import Optional
 import numpy as np
 import tifffile.tifffile as tiff
 from skimage import exposure
-from tardis.slcpy_data_processing.utils.load_data import ImportDataFromAmira
+from tardis.slcpy.utils.load_data import ImportDataFromAmira
 
 
 def preprocess_data(coord: str,
@@ -25,7 +25,8 @@ def preprocess_data(coord: str,
         coord_downsample:
         image: Directory for image file.
         size: Size of the image patches.
-        normalization: ['simple', 'minmax', 'rescale'] Type of normalization for image data.
+        normalization: ['simple', 'minmax', 'rescale'] Type of normalization for
+            image data.
         memory_save: If True image patches are build slower but with memory
             preservation.
 
@@ -219,7 +220,9 @@ class SimpleNormalize:
 
 class ResaleNormalize:
     """
-    NORMALIZE IMAGE VALUE USING Skimage rescale internsity with 98% AND 2% percentiles
+    NORMALIZE IMAGE VALUE USING Skimage
+
+    Rescale intensity with 98% and 2% percentiles as default
 
     Args:
         x: image or target nD arrays
@@ -264,8 +267,10 @@ class Crop2D3D:
     Args:
         image: Image object with pre-loaded image file
         size: Size of cropping frame for 2D or 3D images
-        normalization: Normalization object, to normalize image value between 0,1
-        memory_save: If True image object is used except of image loaded into memory
+        normalization: Normalization object, to normalize image value
+            between 0,1
+        memory_save: If True image object is used except of image loaded
+            into memory
         center_point: 2D or 3D coordinates around which image should be cropped
             expect coordinate in shape [X x Y x Z]
     """

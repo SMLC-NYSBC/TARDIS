@@ -27,7 +27,8 @@ def build_network(network_type: str,
         dropout: If float dropout is used
         no_conv_layers: Number of convolution layers
         conv_multiplayer: Convolution multiplayer used in each layer
-        layer_components: (2 or 3),b,g,c,l,r type of operation and order for each convolution
+        layer_components: (2 or 3),b,g,c,l,r type of operation and order for
+            each convolution
         no_groups: Number of group used for groupnorm
         prediction: If True, network output softmax of the prediction
     """

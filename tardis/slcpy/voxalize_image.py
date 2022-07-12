@@ -4,7 +4,7 @@ from shutil import rmtree
 from typing import Optional
 
 import tifffile.tifffile as tif
-from tardis.slcpy_data_processing.utils.trim import trim_image, trim_with_stride
+from tardis.slcpy.utils.trim import trim_image, trim_with_stride
 
 
 def ImageVoxalizer(images_dir: str,
@@ -26,7 +26,7 @@ def ImageVoxalizer(images_dir: str,
             same ids as images
         mask_prefix: Prefix name at the end of mask file name
         trim_xy: Voxal size in X and Y
-        trim_z: Voxal size in Z. 1 if image is 2D (autocorrected for 2D)
+        trim_z: Voxal size in Z. 1 if image is 2D (auto-corrected for 2D)
         stride: Optional stride value for building voxals
         tqdm: If True, voxalize with progressbar
     """

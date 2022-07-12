@@ -2,12 +2,10 @@ from os import listdir
 from os.path import join
 
 import numpy as np
-from tardis.slcpy_data_processing.utils.build_semantic_mask import draw_semantic
-from tardis.slcpy_data_processing.utils.load_data import (ImportDataFromAmira,
-                                                          import_am,
-                                                          import_mrc,
-                                                          import_tiff)
-from tardis.slcpy_data_processing.utils.trim import trim_with_stride
+from tardis.slcpy.utils.build_semantic_mask import draw_semantic
+from tardis.slcpy.utils.load_data import (ImportDataFromAmira, import_am,
+                                          import_mrc, import_tiff)
+from tardis.slcpy.utils.trim import trim_with_stride
 
 
 class BuildTrainDataSet:

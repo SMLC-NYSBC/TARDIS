@@ -11,7 +11,7 @@ from tardis.spindletorch.utils.utils import number_of_features_per_level
 class DecoderBlockCNN(nn.Module):
     """
     Create decoder block consist of indicated number of deconvolution followed
-    by upsampling and connection with torch.cat().
+    by up-sampling and connection with torch.cat().
 
     Args:
         in_ch: Number of input channels
@@ -152,7 +152,7 @@ class DecoderBlockRCNN(nn.Module):
 class DecoderBlockUnet3Plus(nn.Module):
     """
     Create decoder block consist of indicated number of deconvolution followed
-    by upsampling and connection with torch.cat().
+    by up-sampling and connection with torch.cat().
 
     Args:
         in_ch: Number of input channels
@@ -335,7 +335,7 @@ def build_decoder(conv_layers: int,
         padding: Padding size for deconvolution
         components: String of components for building deconvolution
         no_groups: Number of groups for nn.GroupNorm
-        up_sampling: If True the upsampling is applied
+        up_sampling: If True the up-sampling is applied
         deconv_module: Module of the deconvolution for decoder
 
     Returns: nn.ModuleList

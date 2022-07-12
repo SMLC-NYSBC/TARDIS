@@ -16,11 +16,11 @@ def trim_image(image: np.ndarray,
     """
     MODULE FOR TRIMMING DATA TO SPECIFIED SIZES
 
-    Output images are saved as tiff with naming shame 1_1_1_25. Refering to:
+    Output images are saved as tiff with naming shame 1_1_1_25. Referring to:
         Number of image, z, y, x and stride
 
     Args:
-        image: Image for triming of a shape [Z,Y,X,C]/[Z,Y,X]/[Y,X,C]/[Y,X],
+        image: Image for trimming of a shape [Z,Y,X,C]/[Z,Y,X]/[Y,X,C]/[Y,X],
             where C==3 indicate number of channels (RGB)
         label_mask: Empty label mask or None if image mask is not included
         trim_size_xy: Size of trimming in xy dimension
@@ -353,7 +353,7 @@ def trim_label_mask(points: np.ndarray,
                     image: np.ndarray,
                     label_mask: np.ndarray):
     """
-    MODULE TO TRIM CREATED IMAGES AND MASK TO BOUNDARYBOX OF POINT CLOUD
+    MODULE TO TRIM CREATED IMAGES AND MASK TO BOUNDARY BOX OF POINT CLOUD
 
     Args:
         points: 3D coordinates of pitons

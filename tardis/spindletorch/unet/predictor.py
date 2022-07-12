@@ -9,9 +9,9 @@ class Predictor:
     WRAPPER FOR PREDICTION
 
      Args:
-         model: Model with loaded pretrained weights.
+         model: Model with loaded pre-trained weights.
          device: Device on which to predict.
-         threshold: Threshold parameater for output binary prediction.
+         threshold: Threshold parameter for output binary prediction.
          tqdm: Build with progressbar
      """
 

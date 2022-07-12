@@ -6,10 +6,10 @@ import click
 import numpy as np
 import tifffile.tifffile as tif
 
-from tardis.slcpy_data_processing.image_postprocess import ImageToPointCloud
-from tardis.slcpy_data_processing.utils.export_data import NumpyToAmira
+from tardis.slcpy.image_postprocess import ImageToPointCloud
+from tardis.slcpy.utils.export_data import NumpyToAmira
 from tardis.utils.utils import check_uint8
-from tardis.version import version
+from tardis._version import version
 
 
 @click.command()
@@ -26,7 +26,7 @@ from tardis.version import version
 @click.option('-fs', '--feature_size',
               default=25,
               type=int,
-              help='Mask feature size in [nm] used for thresholding euclidean distance transform.',
+              help='Mask feature size in [nm] used for threshold euclidean distance transform.',
               show_default=True)
 @click.option('-ds', '--downsample',
               default=None,
@@ -59,7 +59,7 @@ def main(postprocess_dataset: str,
     """Check dir for compatible files"""
     idx_img = [f for f in listdir(postprocess_dataset) if f.endswith('.tif')]
     assert len(idx_img) > 0, \
-        f'{postprocess_dataset} direcotry do not contain .tif files'
+        f'{postprocess_dataset} directory do not contain .tif files'
 
     """Setting up pos-processing"""
     post_processer = ImageToPointCloud(tqdm=True)
@@ -77,7 +77,7 @@ def main(postprocess_dataset: str,
 
     """For each file run post-processing"""
     for idx in batch_iter:
-        """Check file type and correct to uin8 (aka 01 binnary type"""
+        """Check file type and correct to uin8 (aka 01 binary type"""
         image = check_uint8(tif.imread(join(postprocess_dataset, idx)))
 
         """Post-processing"""

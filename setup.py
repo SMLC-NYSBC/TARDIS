@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-from tardis.version import version
+from tardis._version import version
 
 with open('README.rst') as readme_file:
     readme = readme_file.read()

@@ -9,10 +9,11 @@ import tifffile.tifffile as tif
 
 class ImportDataFromAmira:
     """
-    HANDLEER for loading 3D .AM DATA
+    HANDLER for loading 3D .AM DATA
 
     Loading of Amira 3D spatial graph and/or image data (.tif/.mrc).
-    In case of including image data, coordinates from spatial graph are corrected for Amira transformation.
+    In case of including image data, coordinates from spatial graph are
+    corrected for Amira transformation.
     Ensuring matching of the coordinates with image data
 
     Args:
@@ -36,7 +37,7 @@ class ImportDataFromAmira:
 
             try:
                 # Image file [Z x Y x X]
-                self.image, self.pixel_size = import_am(src_img)
+                self.image, self.pixel_size, _ = import_am(src_img)
             except RuntimeWarning:
                 raise Warning(
                     "Directory or input .am image file is not correct...")

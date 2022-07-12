@@ -51,7 +51,7 @@ class DistEmbedding(nn.Module):
             return self.linear(kernel)
         else:
             size = x.shape[1]
-            kernel = torch.zeros((1, size, size)).to(x.device)  # may explode!!!!!!
+            kernel = torch.zeros((1, size, size)).to(x.device)
 
             for i in range(size):
                 kernel[0, i, i] = 1

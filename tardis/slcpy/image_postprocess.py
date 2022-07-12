@@ -1,7 +1,7 @@
 from typing import Optional
 
 import numpy as np
-from tardis.slcpy_data_processing.utils.image_to_point_cloud import BuildPointCloud
+from tardis.slcpy.utils.image_to_point_cloud import BuildPointCloud
 
 
 class ImageToPointCloud:

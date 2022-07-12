@@ -757,22 +757,17 @@ class MultiHeadAttention(nn.Module):
                 """in_proj_weight used to be q + k + v with same dimensions"""
                 dim = int(state_dict[k].shape[0] / 3)
                 items_to_add[prefix + "q_proj.weight"] = state_dict[k][:dim]
-                items_to_add[prefix +
-                             "k_proj.weight"] = state_dict[k][dim: 2 * dim]
-                items_to_add[prefix +
-                             "v_proj.weight"] = state_dict[k][2 * dim:]
+                items_to_add[prefix + "k_proj.weight"] = state_dict[k][dim: 2 * dim]
+                items_to_add[prefix + "v_proj.weight"] = state_dict[k][2 * dim:]
 
                 keys_to_remove.append(k)
 
                 k_bias = prefix + "in_proj_bias"
                 if k_bias in state_dict.keys():
                     dim = int(state_dict[k].shape[0] / 3)
-                    items_to_add[prefix +
-                                 "q_proj.bias"] = state_dict[k_bias][:dim]
-                    items_to_add[prefix +
-                                 "k_proj.bias"] = state_dict[k_bias][dim: 2 * dim]
-                    items_to_add[prefix +
-                                 "v_proj.bias"] = state_dict[k_bias][2 * dim:]
+                    items_to_add[prefix + "q_proj.bias"] = state_dict[k_bias][:dim]
+                    items_to_add[prefix + "k_proj.bias"] = state_dict[k_bias][dim: 2 * dim]
+                    items_to_add[prefix + "v_proj.bias"] = state_dict[k_bias][2 * dim:]
 
                     keys_to_remove.append(prefix + "in_proj_bias")
 

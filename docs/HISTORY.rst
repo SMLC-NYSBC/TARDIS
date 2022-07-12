@@ -18,6 +18,8 @@ History
 * Add Visualizer module for point clouds
 * Added hotfix for output of coordinates to fit Amira coordinates transformation
 * Spellings and documentation fixes
+* Bumped version for DIST and slcpy
+* Cleaned code and documentation
 
 0.1.0a5 (2022-04-25)
 --------------------

@@ -1,4 +1,5 @@
 from typing import Optional
+
 import torch
 from tardis.spindletorch.utils.build_network import build_network
 

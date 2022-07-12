@@ -1,6 +1,6 @@
-import tardis.utils.utils as t_utils
-import tardis.spindletorch.utils.utils as sp_utils
 import tardis.dist_pytorch.utils.utils as sis_utils
+import tardis.spindletorch.utils.utils as sp_utils
+import tardis.utils.utils as t_utils
 import torch
 
 

@@ -10,10 +10,10 @@ class VoxalizeDataSetV2:
     """
     CLASS TO REDUCE DATASET TO OVERLAPPING VOXAL
 
-    Build voxal grid from the given point cloud and output coordinates/graph/image
-    in each voxal as a list of numpy arrays
+    Build voxal grid from the given point cloud and output
+    coordinates/graph/image in each voxal as a list of numpy arrays
 
-    Coordinates in each voxal can be further downsample if they reach pre-defined
+    Coordinates in each voxal can be downsample if they reach pre-defined
     threshold. In that case, voxal downsampling from open3d library is used to
     downsample point cloud as close as possible to defined threshold and output
     points from the original dataset that are closes to the downsample points
@@ -29,7 +29,7 @@ class VoxalizeDataSetV2:
             cloud. This voxal size will be 'optimize' until each voxal contains
             number of points below downsampling_threshold
         drop_rate: Voxal size optimization drop rate factor.
-        graph: If true, graph is output. If True, coord in shape [Dim, X, Y, (Z)],
+        graph: If True, graph is output, as coord in shape [Dim, X, Y, (Z)]
             else [X, Y, (Z)]
         tensor: If True return all output as Tensors
     Usage:
@@ -163,7 +163,7 @@ class VoxalizeDataSetV2:
         """
         VOXAL DOWNSAMPLE MODULE
         The module downsample point cloud based on voxal method then finds
-        nearest point in the input cloud which are outputted as downsampled PC.
+        nearest point in the input cloud which are outputted as down-sampled PC.
 
         Args:
             coord: Coordinates of points found in voxal

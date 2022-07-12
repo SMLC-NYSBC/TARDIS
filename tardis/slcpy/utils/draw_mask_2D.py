@@ -17,7 +17,7 @@ def draw_2D(r: int,
     """
     assert type(segment_color) == list
     assert label_mask.ndim in [2, 3, 4], \
-        f'Unsupported dimmensions given {label_mask.ndim} expected [2, 3]!'
+        f'Unsupported dimensions given {label_mask.ndim} expected [2, 3]!'
 
     if label_mask.ndim == 4:  # 3D multi label
         nz, ny, nx, nc = label_mask.shape

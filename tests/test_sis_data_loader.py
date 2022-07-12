@@ -1,8 +1,8 @@
 from os.path import join
-from tardis.dist_pytorch.utils.dataloader import GraphDataset
-from tardis.dist_pytorch.utils.augmentation import preprocess_data
 
 import numpy as np
+from tardis.dist_pytorch.utils.augmentation import preprocess_data
+from tardis.dist_pytorch.utils.dataloader import GraphDataset
 
 
 class TestDataLoader:

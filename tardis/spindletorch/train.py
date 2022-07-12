@@ -52,7 +52,7 @@ def train(train_dataloader: DataLoader,
         convolution_layer: Number of convolution layers
         convolution_multiplayer: Number of output channels in first CNN layer
         convolution_structure: Structure and order of CNN layer components
-        cnn_checkpoint: If not None, indicate dir. with a checpoint weights
+        cnn_checkpoint: If not None, indicate dir. with a checkpoint weights
         loss_function: Name of loss function used for evaluation
         loss_alpha: Alpha value for Adaptive_Dice loss function
         learning_rate: Float value of learning rate

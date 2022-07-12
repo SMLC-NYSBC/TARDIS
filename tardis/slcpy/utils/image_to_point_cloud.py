@@ -11,10 +11,10 @@ class BuildPointCloud:
 
     Module build point cloud from semantic mask based on skeletonization in 3D.
     Optionally, user can trigger point cloud correction with euclidean distance
-    transformation to correct for skeletonization artefact. It will not fix issue
-    with heavily overlaping objects.
+    transformation to correct for skeletonization artefact. It will not fix
+    issue with heavily overlapping objects.
 
-    The workflow follows: (edt_2d -> edt_thresholding -> edt_bianary) ->
+    The workflow follows: optional(edt_2d -> edt_thresholds -> edt_binary) ->
         skeletonization_3d -> output point cloud -> (downsampling)
 
     Args:
@@ -41,7 +41,7 @@ class BuildPointCloud:
         except RuntimeWarning:
             raise Warning("Directory or input .tiff file is not correct...")
 
-        if np.any(np.unique(image) > 1):  # Fix uint8 formating
+        if np.any(np.unique(image) > 1):  # Fix uint8 formatting
             image = image / 255
 
         assert np.unique(image)[1] == 1, \

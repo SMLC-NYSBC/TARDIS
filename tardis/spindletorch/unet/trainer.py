@@ -15,7 +15,7 @@ class Trainer:
     WRAPPER FOR TRAINER
 
      Args:
-        model: Model with loaded pretrained weights
+        model: Model with loaded pre-trained weights
         device: Device on which to predict
         criterion: Loss function
         optimizer: Optimizer
@@ -23,7 +23,7 @@ class Trainer:
         validation_DataLoader: DataLoader object with data sets for training
         lr_scheduler: learning rete scheduler
         epochs: Number of epoches for training
-        early_stop_rate: Number of epoches witout improvement for early stop
+        early_stop_rate: Number of epoches without improvement for early stop
         tqdm: If True plot progress bar in Jupyter else console
         checkpoint_name: Name for saving checkpoint
         classification: If True Unet3Plus use classification before loss evaluation
@@ -116,8 +116,7 @@ class Trainer:
                 torch.save({'model_state_dict': self.model.state_dict(),
                             'optimizer_state_dict': self.optimizer.state_dict()},
                            join(getcwd(), 'cnn_checkpoint', 'checkpoint_{}.pth'.format(self.checkpoint_name)))
-                print(
-                    f'Saved model checkpoint no. {i} for F1 {self.f1[len(self.f1) - 1]:.2f}')
+                print(f'Saved model checkpoint no. {i} for F1 {self.f1[len(self.f1) - 1]:.2f}')
 
             torch.save({'model_state_dict': self.model.state_dict(),
                         'optimizer_state_dict': self.optimizer.state_dict()},

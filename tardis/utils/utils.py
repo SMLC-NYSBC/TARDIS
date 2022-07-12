@@ -155,8 +155,7 @@ def check_dir(dir: str,
 
             # Check if test img and mask exist and have same files
             if isdir(test_img) and isdir(test_mask):
-                if len([f for f in listdir(test_img) if f.endswith(img_format)]) == \
-                        len([f for f in listdir(test_mask) if f.endswith(mask_format)]):
+                if len([f for f in listdir(test_img) if f.endswith(img_format)]) == len([f for f in listdir(test_mask) if f.endswith(mask_format)]):
                     if len([f for f in listdir(test_img) if f.endswith(img_format)]) == 0:
                         dataset_test = False
                 else:
@@ -262,8 +261,9 @@ def point_in_bb(points: np.ndarray,
 
     Args:
         points: (n,3) array
-        min_i, max_i: The bounding box limits for each coordinate. If some limits are missing,
-        the default values are -infinite for the min_i and infinite for the max_i.
+        min_i, max_i: The bounding box limits for each coordinate. If some
+        limits are missing, the default values are -infinite for the min_i and
+        infinite for the max_i.
 
     Returns
     -------

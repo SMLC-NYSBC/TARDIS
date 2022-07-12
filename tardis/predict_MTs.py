@@ -9,22 +9,19 @@ import tifffile.tifffile as tif
 
 from tardis.dist_pytorch.transformer.network import DIST
 from tardis.dist_pytorch.utils.voxal import VoxalizeDataSetV2
-from tardis.slcpy_data_processing.image_postprocess import ImageToPointCloud
-from tardis.slcpy_data_processing.utils.export_data import NumpyToAmira
-from tardis.slcpy_data_processing.utils.load_data import (import_am,
-                                                          import_mrc,
-                                                          import_tiff)
-from tardis.slcpy_data_processing.utils.segment_point_cloud import \
-    GraphInstanceV2
-from tardis.slcpy_data_processing.utils.stitch import StitchImages
-from tardis.slcpy_data_processing.utils.trim import trim_image
+from tardis.slcpy.image_postprocess import ImageToPointCloud
+from tardis.slcpy.utils.export_data import NumpyToAmira
+from tardis.slcpy.utils.load_data import import_am, import_mrc, import_tiff
+from tardis.slcpy.utils.segment_point_cloud import GraphInstanceV2
+from tardis.slcpy.utils.stitch import StitchImages
+from tardis.slcpy.utils.trim import trim_image
 from tardis.spindletorch.unet.predictor import Predictor
 from tardis.spindletorch.utils.build_network import build_network
 from tardis.spindletorch.utils.dataset_loader import PredictionDataSet
 from tardis.utils.device import get_device
 from tardis.utils.setup_envir import build_temp_dir, clean_up
 from tardis.utils.utils import check_uint8, pc_median_dist
-from tardis.version import version
+from tardis._version import version
 
 
 @click.command()
@@ -228,7 +225,7 @@ def main(prediction_dir: str,
                          'Images',
                          leave=False)
 
-            batch_iter.set_description(f'CNN prediction for {i}')
+            batch_iter.set_description(f'CNN prediction for {i} at pixel size {px}')
         else:
             dl_iter = range(dl_len)
 
@@ -386,9 +383,7 @@ def main(prediction_dir: str,
         if tqdm:
             batch_iter.set_description(f'Graph segmentation for {i}')
 
-        if format == 'mrc':
-            point_cloud = point_cloud * px
-        elif format == 'amira':
+        if format == 'amira':
             point_cloud = point_cloud * px
 
             point_cloud[:, 0] = point_cloud[:, 0] + transformation[0]

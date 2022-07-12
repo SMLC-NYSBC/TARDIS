@@ -127,18 +127,18 @@ class GraphFormerLayer(nn.Module):
                                                   axis=0)
         if self.structure == 'dualtriang':
             self.row_update_1 = TriangularEdgeUpdate(input_dim=pairs_dim,
-                                                  channel_dim=32,
-                                                  axis=1)
+                                                     channel_dim=32,
+                                                     axis=1)
             self.col_update_1 = TriangularEdgeUpdate(input_dim=pairs_dim,
-                                                  channel_dim=32,
-                                                  axis=0)
+                                                     channel_dim=32,
+                                                     axis=0)
 
             self.row_update_2 = TriangularEdgeUpdate(input_dim=pairs_dim,
-                                                  channel_dim=32,
-                                                  axis=1)
+                                                     channel_dim=32,
+                                                     axis=1)
             self.col_update_2 = TriangularEdgeUpdate(input_dim=pairs_dim,
-                                                  channel_dim=32,
-                                                  axis=0)
+                                                     channel_dim=32,
+                                                     axis=0)
         self.pair_ffn = GeluFeedForward(input_dim=pairs_dim,
                                         ff_dim=pairs_dim * ff_factor)
 

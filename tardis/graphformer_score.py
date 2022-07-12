@@ -9,12 +9,12 @@ import torch
 from tardis.dist_pytorch.transformer.network import DIST
 from tardis.dist_pytorch.utils.augmentation import preprocess_data
 from tardis.dist_pytorch.utils.voxal import VoxalizeDataSetV2
-from tardis.slcpy_data_processing.utils.segment_point_cloud import GraphInstanceV2
+from tardis.slcpy.utils.segment_point_cloud import GraphInstanceV2
 from tardis.spindletorch.unet.predictor import Predictor
 from tardis.utils.device import get_device
 from tardis.utils.metrics import AUC, F1_metric, IoU, distAUC, mAP, mCov
 from tardis.utils.utils import pc_median_dist
-from tardis.version import version
+from tardis._version import version
 
 torch.backends.cudnn.enabled = False
 torch.backends.cudnn.benchmark = True
@@ -31,7 +31,7 @@ torch.autograd.profiler.emit_nvtx(enabled=False)
               show_default=True)
 @click.option('-gst', '--gf_structure',
               default='full',
-              type=click.Choice(['full', 'full_af', 'self_attn', 'triang']),
+              type=click.Choice(['full', 'full_af', 'self_attn', 'triang', 'dualtriang', 'quad']),
               help='Structure of the graphformer',
               show_default=True)
 @click.option('-gni', '--gf_ninput',
@@ -136,7 +136,7 @@ def main(gf_dir: str,
     """Initial setup"""
     available_format = ('.csv', '.CorrelationLines.am', '.npy')
     GF_list = [f for f in listdir(gf_dir) if f.endswith(available_format)]
-    assert len(GF_list) > 0, 'No file found in given direcotry!'
+    assert len(GF_list) > 0, 'No file found in given directory!'
     macc, mprec, mrecall, mf1, miou, mauc = [], [], [], [], [], []
     seg_prec, seg_rec, mcov_score = [], [], []
     distauc, AP = [], []

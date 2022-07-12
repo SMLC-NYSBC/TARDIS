@@ -6,15 +6,13 @@ import click
 import numpy as np
 import tifffile.tifffile as tif
 
-from tardis.slcpy_data_processing.utils.load_data import (import_am,
-                                                          import_mrc,
-                                                          import_tiff)
-from tardis.slcpy_data_processing.utils.stitch import StitchImages
-from tardis.slcpy_data_processing.utils.trim import trim_image
+from tardis.slcpy.utils.load_data import import_am, import_mrc, import_tiff
+from tardis.slcpy.utils.stitch import StitchImages
+from tardis.slcpy.utils.trim import trim_image
 from tardis.spindletorch.predict import predict
 from tardis.spindletorch.utils.dataset_loader import PredictionDataSet
 from tardis.utils.setup_envir import build_temp_dir, clean_up
-from tardis.version import version
+from tardis._version import version
 
 
 @click.command()
@@ -128,7 +126,7 @@ def main(prediction_dir: str,
     available_format = ('.tif', '.mrc', '.rec', '.am')
     predict_list = [f for f in listdir(
         prediction_dir) if f.endswith(available_format)]
-    assert len(predict_list) > 0, 'No file found in given direcotry!'
+    assert len(predict_list) > 0, 'No file found in given directory!'
 
     if cnn_type == 'multi':
         cnn_type = ['unet', 'unet3plus']

@@ -2,7 +2,7 @@ from os.path import join
 
 import numpy as np
 import torch
-from tardis.slcpy_data_processing.utils.segment_point_cloud import GraphInstance
+from tardis.slcpy.utils.segment_point_cloud import GraphInstance
 from tqdm import tqdm
 
 

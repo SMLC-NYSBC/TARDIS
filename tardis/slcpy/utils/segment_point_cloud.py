@@ -1,8 +1,9 @@
+from typing import Optional
+
 import numpy as np
 from scipy.spatial.distance import cdist
 from sklearn.neighbors import KDTree
-from tardis.slcpy_data_processing.utils.export_data import NumpyToAmira
-from typing import Optional
+from tardis.slcpy.utils.export_data import NumpyToAmira
 
 
 class GraphInstanceV2:
@@ -131,7 +132,8 @@ class GraphInstanceV2:
 
         Args:
             graphs: graph voxal output from GraphFormer
-            coord: stitched coord output from GraphFormer or input given to Graphformer
+            coord: stitched coord output from GraphFormer or input given to
+                Graphformer
         """
         all_prop = [[id, list(i), [], []] for id, i in enumerate(coord)]
 
@@ -202,9 +204,10 @@ class GraphInstanceV2:
                 # Pick secondary interaction for i
                 reverse_int = adj_matrix[i][2][:2]
 
-                # Check if picked new interaction show up secondary interaction with anything already on the list
+                # Check if picked new interaction show up secondary interaction
+                # with anything already on the list
                 if np.any([True for i in reverse_int if i in idx_df]):
-                    new_df = new_df + [j for j in reverse_int if j not in idx_df] 
+                    new_df = new_df + [j for j in reverse_int if j not in idx_df]
 
             new = new_df
 
@@ -245,12 +248,12 @@ class GraphInstanceV2:
         """
         SEGMENTER FOR VOXALS
 
-        From each point cloud (voaxl) segmenter first build adjacency matrix.
+        From each point cloud (voxal) segmenter first build adjacency matrix.
         Matrix is then used to iteratively search for new segments.
-        For each initial node algorithm search for 2 edges with highest prop. with
-        given threshold. For each found edges, algorithm check if found node creates
-        an edge with previous node within 2 highest probability. If not alg.
-        search for new edge that fulfill the statement.
+        For each initial node algorithm search for 2 edges with highest prop.
+        with given threshold. For each found edges, algorithm check if found
+        node creates an edge with previous node within 2 highest probability.
+        If not alg. search for new edge that fulfill the statement.
 
         E.g.
         0

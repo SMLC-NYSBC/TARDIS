@@ -2,7 +2,7 @@ from os import mkdir, rename
 from os.path import isdir, join
 from shutil import rmtree
 
-from tardis.slcpy_data_processing.utils.stitch import StitchImages
+from tardis.slcpy.utils.stitch import StitchImages
 
 
 def ImageStitcher(image_dir: str,
@@ -23,7 +23,7 @@ def ImageStitcher(image_dir: str,
         prefix: if not None, indicate additional file prefix.
         binary: If True transform date to binary format.
         dtype: Data format type.
-        tqdm: Stitch with progessbar.
+        tqdm: Stitch with progressbar.
     """
     """Check all directory"""
     if isdir(output_dir):

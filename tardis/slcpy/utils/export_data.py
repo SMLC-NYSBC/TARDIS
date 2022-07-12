@@ -1,5 +1,5 @@
 import numpy as np
-from tardis.version import version
+from tardis._version import version
 from datetime import datetime
 
 
@@ -11,7 +11,7 @@ class NumpyToAmira:
 
     coord: Numpy array [Label x X x Y x Z] or [Label x X x Y] of
         shape [Length x Dim] / [x, (3,4)]
-    file_dir: Full direcotry for saving .am file
+    file_dir: Full directory for saving .am file
     """
 
     @staticmethod
