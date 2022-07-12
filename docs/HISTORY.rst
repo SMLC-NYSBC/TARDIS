@@ -2,7 +2,7 @@
 History
 =======
 
-0.1.0a (2022-05-xx)
+0.1.0a (2022-07-12)
 --------------------
 * Check pipeline for image embedding (normalization to enhance features)
     * Introduce new normalization ResaleNormalize that spread histogram from 
