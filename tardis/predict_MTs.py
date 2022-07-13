@@ -46,7 +46,7 @@ from tardis._version import version
               help='Threshold use for graph segmentation.',
               show_default=True)
 @click.option('-pv', '--points_in_voxal',
-              default=1000,
+              default=500,
               type=int,
               help='Number of point per voxal.',
               show_default=True)
@@ -68,7 +68,7 @@ from tardis._version import version
 @click.option('-chg', '--checkpoints_gf',
               default=None,
               type=str,
-              help='If not None, str checkpoints for graphormer',
+              help='If not None, str checkpoints for DIST',
               show_default=True)
 @click.option('-d', '--device',
               default='0',
@@ -225,7 +225,8 @@ def main(prediction_dir: str,
                          'Images',
                          leave=False)
 
-            batch_iter.set_description(f'CNN prediction for {i} at pixel size {px}')
+            batch_iter.set_description(
+                f'CNN prediction for {i} at pixel size {px}')
         else:
             dl_iter = range(dl_len)
 
