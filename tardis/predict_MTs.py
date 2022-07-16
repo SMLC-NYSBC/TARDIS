@@ -295,17 +295,17 @@ def main(prediction_dir: str,
         # Find downsampling value
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(point_cloud)
-        point_cloud = np.asarray(pcd.voxel_down_sample(voxel_size=10).points)
+        point_cloud = np.asarray(pcd.voxel_down_sample(voxel_size=5).points)
 
         # Build voxalized dataset with
         VD = VoxalizeDataSetV2(coord=point_cloud,
+                               downsampling_rate=None,
                                init_voxal_size=5000,
                                drop_rate=1,
                                downsampling_threshold=points_in_voxal,
                                graph=False)
 
-        coords_df, _, output_idx = VD.voxalize_dataset(prune=5,
-                                                       out_idx=True)
+        coords_df, _, output_idx = VD.voxalize_dataset(prune=5, out_idx=True)
         coords_df = [c / pc_median_dist(c) for c in coords_df]
 
         # Calculate sigma for graphformer from mean of nearest point dist
@@ -344,8 +344,7 @@ def main(prediction_dir: str,
             else:
                 np.save(join(am_output,
                              f'{i[:-out_format]}_coord_voxal.npy'),
-                        np.array([c.cpu().detach().numpy()
-                                 for c in coords_df]),
+                        np.array([c.cpu().detach().numpy() for c in coords_df]),
                         allow_pickle=True)
                 np.save(join(am_output,
                              f'{i[:-out_format]}_idx_voxal.npy'),
@@ -368,7 +367,6 @@ def main(prediction_dir: str,
         for coord in dl_iter:
             graph = predict_gf._predict(x=coord[None, :])
             graphs.append(graph)
-            # coords.append(coord.cpu().detach().numpy())
 
         if debug:
             np.save(join(am_output,
