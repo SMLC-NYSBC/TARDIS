@@ -94,7 +94,7 @@ class GraphInstanceV2:
 
             all_prop.append([i for i in prop if i[1] != id])
 
-        # Current ID edge for which interacion is search
+        # Current ID edge for which interaction is search
         for id, i in enumerate(all_prop):
             edges = 0  # Number of edges found
             prop_id = 0  # Id in order list, take 1st, 2nd etc highest value
@@ -151,7 +151,8 @@ class GraphInstanceV2:
 
             for i, p in zip(int, prop):
                 if i in all_prop[i[0]][2]:
-                    id = [id for id, j in enumerate(all_prop[i[0]][2]) if i == j][0]
+                    id = [id for id, j in enumerate(
+                        all_prop[i[0]][2]) if i == j][0]
 
                     if all_prop[i[0]][3][id] < p:
                         all_prop[i[0]][2] = [j for idx, j in enumerate(
@@ -207,7 +208,8 @@ class GraphInstanceV2:
                 # Check if picked new interaction show up secondary interaction
                 # with anything already on the list
                 if np.any([True for i in reverse_int if i in idx_df]):
-                    new_df = new_df + [j for j in reverse_int if j not in idx_df]
+                    if np.any([j for j in reverse_int if len(adj_matrix[j][2]) not in idx_df]):
+                        new_df = new_df + [j for j in reverse_int if j not in idx_df]
 
             new = new_df
 
