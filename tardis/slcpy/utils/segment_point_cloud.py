@@ -3,6 +3,7 @@ from typing import Optional
 import numpy as np
 from scipy.spatial.distance import cdist
 from sklearn.neighbors import KDTree
+from tardis.dist_pytorch.utils.visualize import VisualizeFilaments, VisualizePointCloud
 from tardis.slcpy.utils.export_data import NumpyToAmira
 
 
@@ -150,28 +151,32 @@ class GraphInstanceV2:
             int = [[o[i[0]], o[i[1]]] for i in int]
 
             for i, p in zip(int, prop):
-                if i in all_prop[i[0]][2]:
-                    id = [id for id, j in enumerate(
-                        all_prop[i[0]][2]) if i == j][0]
+                all_prop[i[0]][2].append(i[1])
+                all_prop[i[0]][3].append(p)
 
-                    if all_prop[i[0]][3][id] < p:
-                        all_prop[i[0]][2] = [j for idx, j in enumerate(
-                            all_prop[i[0]][2]) if id != idx]
-                        all_prop[i[0]][2].append(i)
+        # Take mean value of all repeated interactions
+        for p_id, i in enumerate(all_prop):
+            inter = i[2]
+            prop = i[3]
 
-                        all_prop[i[0]][3] = [j for idx, j in enumerate(
-                            all_prop[i[0]][3]) if id != idx]
-                        all_prop[i[0]][3].append(p)
-                else:
-                    all_prop[i[0]][2].append(i)
-                    all_prop[i[0]][3].append(p)
+            if len(inter) > 1:
+                all_prop[p_id][2] = list(np.unique(inter))
+                all_prop[p_id][3] = [np.max([x for idx, x in enumerate(prop)
+                                             if idx in [id for id, j in enumerate(inter)
+                                                        if j == k]])
+                                     for k in np.unique(inter)]
 
+        # Sort each interactions based on the probability
+        # Highest value are first
         for id, a in enumerate(all_prop):
-            if len(a[2]) > 0:
+            # Sort only, if there are more then 1 interaction
+            if len(a[2]) > 1:
+                # Sort
                 prop, inter = zip(*sorted(zip(a[3], a[2]), reverse=True))
 
-                all_prop[id][2] = [[j for j in i if j != id][0] for i in inter]
-                all_prop[id][3] = prop
+                # Replace for sorted value
+                all_prop[id][2] = list(inter)
+                all_prop[id][3] = list(prop)
 
         return all_prop
 
@@ -208,7 +213,7 @@ class GraphInstanceV2:
                 # Check if picked new interaction show up secondary interaction
                 # with anything already on the list
                 if np.any([True for i in reverse_int if i in idx_df]):
-                    if np.any([j for j in reverse_int if len(adj_matrix[j][2]) not in idx_df]):
+                    if np.any([True for j in reverse_int if len(adj_matrix[j][2]) > 0]):
                         new_df = new_df + [j for j in reverse_int if j not in idx_df]
 
             new = new_df
@@ -246,7 +251,8 @@ class GraphInstanceV2:
     def voxal_to_segment(self,
                          graph: list,
                          coord: np.ndarray,
-                         idx: list):
+                         idx: list,
+                         visualize: Optional[str] = None):
         """
         SEGMENTER FOR VOXALS
 
@@ -272,6 +278,7 @@ class GraphInstanceV2:
             graph: Graph voxal output from Dist
             coord: Coordinates for each unsorted point idx
             idx: idx of point included in the segment
+            visualize: If not None, visualize output with open3D
         """
         """Check data"""
         if not isinstance(graph, list) and isinstance(graph, np.ndarray):
@@ -280,8 +287,8 @@ class GraphInstanceV2:
         if not isinstance(idx, list) and isinstance(idx, np.ndarray):
             idx = [idx]
 
-        assert isinstance(
-            coord, np.ndarray), 'Coord must be an array of all nodes!'
+        assert isinstance(coord, np.ndarray), \
+            'Coord must be an array of all nodes!'
 
         """Build Adjacency list from graph representation"""
         adjacency_matrix = self._adjacency_matrix(graphs=graph,
@@ -318,5 +325,13 @@ class GraphInstanceV2:
 
             if sum([sum(i[2]) for i in adjacency_matrix]) == 0:
                 stop = True
+
+        if visualize is not None:
+            assert visualize in ['f', 'p'], 'To visualize output use "f" for filament or "p" for point cloud!'
+
+            if visualize == 'p':
+                VisualizePointCloud(np.vstack(coord_segment), True)
+            elif visualize == 'f':
+                VisualizeFilaments(np.vstack(coord_segment))
 
         return np.vstack(coord_segment)
