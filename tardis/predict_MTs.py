@@ -88,6 +88,13 @@ from tardis._version import version
               type=bool,
               help='If True, save output from each step for debugging.',
               show_default=True)
+@click.option('-v', '--visualizer',
+              default=None,
+              type=str,
+              help='If not None, output visualization of the prediction'
+              'f: Output as filaments'
+              'p: Output as segmented point cloud',
+              show_default=True)
 @click.version_option(version=version)
 def main(prediction_dir: str,
          patch_size: int,
@@ -98,6 +105,7 @@ def main(prediction_dir: str,
          device: str,
          tqdm: bool,
          debug: bool,
+         visualizer: Optional[str] = None,
          checkpoints_unet: Optional[str] = None,
          checkpoints_unetplus: Optional[str] = None,
          checkpoints_gf: Optional[str] = None,):
@@ -292,7 +300,7 @@ def main(prediction_dir: str,
         if tqdm:
             batch_iter.set_description(f'Building voxal for {i}')
 
-        # Find downsampling value
+        # Find downsampling value by 5 to reduce noise
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(point_cloud)
         point_cloud = np.asarray(pcd.voxel_down_sample(voxel_size=5).points)
@@ -300,12 +308,12 @@ def main(prediction_dir: str,
         # Build voxalized dataset with
         VD = VoxalizeDataSetV2(coord=point_cloud,
                                downsampling_rate=None,
-                               init_voxal_size=5000,
+                               init_voxal_size=1000,
                                drop_rate=1,
                                downsampling_threshold=points_in_voxal,
                                graph=False)
 
-        coords_df, _, output_idx = VD.voxalize_dataset(prune=5, out_idx=True)
+        coords_df, _, output_idx = VD.voxalize_dataset(prune=10, out_idx=True)
         coords_df = [c / pc_median_dist(c) for c in coords_df]
 
         # Calculate sigma for graphformer from mean of nearest point dist
@@ -391,7 +399,8 @@ def main(prediction_dir: str,
 
         segments = GraphToSegment.voxal_to_segment(graph=graphs,
                                                    coord=point_cloud,
-                                                   idx=output_idx)
+                                                   idx=output_idx,
+                                                   visualize=visualizer)
 
         if debug:
             np.save(join(am_output,
