@@ -309,7 +309,7 @@ def main(pointcloud_dir: str,
         save_train = None
 
     if lr_rate_schedule:
-        learning_rate_scheduler = StepLR(optimizer, step_size=2, gamma=0.5)
+        learning_rate_scheduler = StepLR(optimizer, step_size=50, gamma=0.5)
     else:
         learning_rate_scheduler = None
 
