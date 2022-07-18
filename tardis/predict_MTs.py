@@ -286,6 +286,7 @@ def main(prediction_dir: str,
                                      euclidean_transform=True,
                                      label_size=3,
                                      down_sampling_voxal_size=None)
+
         # Transform for xyz and pixel size for coord
 
         image = None
@@ -371,7 +372,6 @@ def main(prediction_dir: str,
             dl_iter = coords_df
 
         graphs = []
-        coords = []
         for coord in dl_iter:
             graph = predict_gf._predict(x=coord[None, :])
             graphs.append(graph)
@@ -381,21 +381,17 @@ def main(prediction_dir: str,
                          f'{i[:-out_format]}_graph_voxal.npy'),
                     graphs,
                     allow_pickle=True)
-            np.save(join(am_output,
-                         f'{i[:-out_format]}_coord_voxal.npy'),
-                    coords,
-                    allow_pickle=True)
 
         """Graphformer post-processing"""
         if tqdm:
             batch_iter.set_description(f'Graph segmentation for {i}')
 
-        if format == 'amira':
-            point_cloud = point_cloud * px
+        # if format == 'amira':
+        #     coord = coord * px
 
-            point_cloud[:, 0] = point_cloud[:, 0] + transformation[0]
-            point_cloud[:, 1] = point_cloud[:, 1] + transformation[1]
-            point_cloud[:, 2] = point_cloud[:, 2] + transformation[2]
+        #     coord[:, 0] = coord[:, 0] + transformation[0]
+        #     coord[:, 1] = coord[:, 1] + transformation[1]
+        #     coord[:, 2] = coord[:, 2] + transformation[2]
 
         segments = GraphToSegment.voxal_to_segment(graph=graphs,
                                                    coord=point_cloud,

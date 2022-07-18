@@ -192,6 +192,7 @@ class GraphInstanceV2:
         idx_df = [0]
         x = 0
 
+        # Find initial point
         while len(idx_df) == 1:
             idx_df = adj_matrix[x][2][:2]
             idx_df.append(x)
@@ -203,23 +204,23 @@ class GraphInstanceV2:
         x -= 1
         new = new_df = adj_matrix[x][2][:self.connection]
 
+        # Pick all point associated with the initial point
         while len(new_df) != 0:
             # check only new elements
             new_df = []
             for i in new:
                 # Pick secondary interaction for i
-                reverse_int = adj_matrix[i][2][:2]
+                reverse_int = adj_matrix[i][2][:self.connection]
 
                 # Check if picked new interaction show up secondary interaction
-                # with anything already on the list
                 if np.any([True for i in reverse_int if i in idx_df]):
-                    if np.any([True for j in reverse_int if len(adj_matrix[j][2]) > 0]):
-                        new_df = new_df + [j for j in reverse_int if j not in idx_df]
+                    # Check if selection are already on the list
+                    new_df = new_df + [j for j in reverse_int if j not in idx_df and len(adj_matrix[j][2]) > 0]
 
             new = new_df
-
             idx_df = idx_df + new
-        return idx_df
+
+        return np.unique(idx_df)
 
     @ staticmethod
     def _sort_segment(coord: np.ndarray):
