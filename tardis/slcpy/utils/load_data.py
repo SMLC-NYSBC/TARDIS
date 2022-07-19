@@ -37,10 +37,9 @@ class ImportDataFromAmira:
 
             try:
                 # Image file [Z x Y x X]
-                self.image, self.pixel_size, _ = import_am(src_img)
+                self.image, self.pixel_size, _, self.transformation = import_am(src_img)
             except RuntimeWarning:
-                raise Warning(
-                    "Directory or input .am image file is not correct...")
+                raise Warning("Directory or input .am image file is not correct...")
         else:
             self.pixel_size = 1
         self.spatial_graph = open(src_am,
@@ -121,8 +120,8 @@ class ImportDataFromAmira:
         """
         This method read the header of ET (.am) file and determines global
         transformation for all coordinates
+        !DEPRECIATED!
         """
-
         with open(self.src_img, "r", encoding="iso-8859-1") as et:
             lines_in_et = et.read(50000).split("\n")
 
@@ -138,9 +137,7 @@ class ImportDataFromAmira:
         """
         Output for point cloud as array of a shape [X, Y, Z]
         """
-        if self.src_img is not None:
-            self.transformation = self.__read_am_transformation()
-        else:
+        if self.src_img is None:
             self.transformation = [0, 0, 0]
         points_coord = self.__find_points()
 
@@ -361,10 +358,6 @@ def import_am(img: str):
 
     Args:
         img: Source of image file
-
-    Returns:
-        image: Image array of [Z, Y, X] shape
-        pixel_size: float value of the pixel size
     """
     if not isfile(img):
         raise Warning(f"Indicated .am {img} file does not exist...")
@@ -378,6 +371,8 @@ def import_am(img: str):
 
     nx, ny, nz = int(size[0]), int(size[1]), int(size[2])
 
+    # Fix for ET that were trimmed
+    # Trimmed ET boundarybox is has wrong size
     physical_size = str([word for word in am.split('\n') if
                          word.startswith('    BoundingBox')]).split(" ")
     if len(physical_size) == 0:
@@ -393,13 +388,17 @@ def import_am(img: str):
         physical_size = np.array((float(physical_size[6]),
                                   float(physical_size[8]),
                                   float(physical_size[10][:-3])))
+        
+        transformation = np.array((float(physical_size[5]),
+                                   float(physical_size[7]),
+                                   float(physical_size[9])))
         binary_start = str.find(am, "\n@1\n") + 4
 
-    pixel_size = round(physical_size[0] / (nx - 1), 3)
+    pixel_size = round((physical_size[0] - transformation[0]) / (nx - 1), 3)
 
     img = np.fromfile(img, dtype=np.uint8)
 
     if nz == 1:
-        return img[binary_start:-1].reshape((ny, nx)), pixel_size, physical_size
+        return img[binary_start:-1].reshape((ny, nx)), pixel_size, physical_size, transformation
     else:
-        return img[binary_start:-1].reshape((nz, ny, nx)), pixel_size, physical_size
+        return img[binary_start:-1].reshape((nz, ny, nx)), pixel_size, physical_size, transformation
