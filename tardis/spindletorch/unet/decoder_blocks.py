@@ -35,11 +35,11 @@ class DecoderBlockCNN(nn.Module):
         if '3' in components:
             self.upsample = nn.Upsample(size=size,
                                         mode='trilinear',
-                                        align_corners=True)
+                                        align_corners=False)
         elif '2' in components:
             self.upsample = nn.Upsample(size=size,
                                         mode='bilinear',
-                                        align_corners=True)
+                                        align_corners=False)
 
         self.deconv_module = DoubleConvolution(in_ch=in_ch,
                                                out_ch=out_ch,
@@ -100,11 +100,11 @@ class DecoderBlockRCNN(nn.Module):
         if '3' in components:
             self.upsample = nn.Upsample(size=size,
                                         mode='trilinear',
-                                        align_corners=True)
+                                        align_corners=False)
         elif '2' in components:
             self.upsample = nn.Upsample(size=size,
                                         mode='bilinear',
-                                        align_corners=True)
+                                        align_corners=False)
 
         self.deconv_module = DoubleConvolution(in_ch=in_ch,
                                                out_ch=out_ch,
@@ -180,11 +180,11 @@ class DecoderBlockUnet3Plus(nn.Module):
         if '3' in components:
             self.upsample = nn.Upsample(size=size,
                                         mode='trilinear',
-                                        align_corners=True)
+                                        align_corners=False)
         elif '2' in components:
             self.upsample = nn.Upsample(size=size,
                                         mode='bilinear',
-                                        align_corners=True)
+                                        align_corners=False)
         self.deconv = DoubleConvolution(in_ch=in_ch,
                                         out_ch=out_ch,
                                         block_type='decoder',
@@ -234,11 +234,11 @@ class DecoderBlockUnet3Plus(nn.Module):
             if '3' in components:
                 upsample = nn.Upsample(size=size,
                                        mode='trilinear',
-                                       align_corners=True)
+                                       align_corners=False)
             elif '2' in components:
                 upsample = nn.Upsample(size=size,
                                        mode='bilinear',
-                                       align_corners=True)
+                                       align_corners=False)
 
             deconv_module = DoubleConvolution(in_ch=de_in_channel,
                                               out_ch=out_ch,
