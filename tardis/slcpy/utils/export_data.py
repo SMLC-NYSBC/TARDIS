@@ -38,9 +38,11 @@ class NumpyToAmira:
 
         with open(file_dir, 'w') as f:
             f.write('# ASCII Spatial Graph \r\n')
-            f.write('# TARDIS - Transformer And Rapid Dimensionless Instance Segmentation (R) \r\n')
+            f.write(
+                '# TARDIS - Transformer And Rapid Dimensionless Instance Segmentation (R) \r\n')
             f.write(f'# tardis-pytorch v{version} \r\n')
-            f.write(f'# MIT License * 2021-{datetime.now().year} * Robert Kiewisz & Tristan Bepler \r\n')
+            f.write(
+                f'# MIT License * 2021-{datetime.now().year} * Robert Kiewisz & Tristan Bepler \r\n')
             f.write('\r\n')
             f.write(f'define VERTEX {vertex} \r\n')
             f.write(f'define EDGE {edge} \r\n')
@@ -88,15 +90,12 @@ class NumpyToAmira:
         for i in range(segments_idx):
             # Collect segment coord and idx
             segment = coord[np.where(coord[:, 0] == i)[0]][:, 1:]
-            # segment = self._sort_segment(coord=segment)
 
             # Get Coord for vertex #1 and vertex #2
             vertex = np.array((segment[0], segment[-1:][0]), dtype=object)
 
-            vertex_coord.append(
-                f'{vertex[0][0]:.2e} {vertex[0][1]:.2e} {vertex[0][2]:.2e}')
-            vertex_coord.append(
-                f'{vertex[1][0]:.2e} {vertex[1][1]:.2e} {vertex[1][2]:.2e}')
+            vertex_coord.append(f'{vertex[0][0]:.15e} {vertex[0][1]:.15e} {vertex[0][2]:.15e}')
+            vertex_coord.append(f'{vertex[1][0]:.15e} {vertex[1][1]:.15e} {vertex[1][2]:.15e}')
 
             # Get Update id number of vertex #1 and #2
             vertex_id_1 += 2
@@ -108,7 +107,7 @@ class NumpyToAmira:
 
             # Get coord of points in edge
             for j in segment:
-                point_coord.append(f'{j[0]:.2e} {j[1]:.2e} {j[2]:.2e}')
+                point_coord.append(f'{j[0]:.15e} {j[1]:.15e} {j[2]:.15e}')
 
         self._write_to_amira(data=vertex_coord,
                              file_dir=file_dir)
