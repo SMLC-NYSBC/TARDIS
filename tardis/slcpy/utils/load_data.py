@@ -373,25 +373,24 @@ def import_am(img: str):
 
     # Fix for ET that were trimmed
     # Trimmed ET boundarybox is has wrong size
-    physical_size = str([word for word in am.split('\n') if
-                         word.startswith('    BoundingBox')]).split(" ")
-    if len(physical_size) == 0:
-        physical_size = np.array((float(physical_size[6]),
-                                  float(physical_size[8]),
-                                  float(physical_size[10][:-3])))
+    bb = str([word for word in am.split('\n') if word.startswith('    BoundingBox')]).split(" ")
+
+    if len(bb) == 0:
+        physical_size = np.array((float(bb[6]),
+                                  float(bb[8]),
+                                  float(bb[10][:-3])))
         binary_start = str.find(am, "\n@1\n") + 4
     else:
         am = open(img, 'r', encoding="iso-8859-1").read(20000)
-        physical_size = str([word for word in am.split('\n') if
-                             word.startswith('    BoundingBox')]).split(" ")
+        bb = str([word for word in am.split('\n') if word.startswith('    BoundingBox')]).split(" ")
 
-        physical_size = np.array((float(physical_size[6]),
-                                  float(physical_size[8]),
-                                  float(physical_size[10][:-3])))
-        
-        transformation = np.array((float(physical_size[5]),
-                                   float(physical_size[7]),
-                                   float(physical_size[9])))
+        physical_size = np.array((float(bb[6]),
+                                  float(bb[8]),
+                                  float(bb[10][:-3])))
+
+        transformation = np.array((float(bb[5]),
+                                   float(bb[7]),
+                                   float(bb[9])))
         binary_start = str.find(am, "\n@1\n") + 4
 
     pixel_size = round((physical_size[0] - transformation[0]) / (nx - 1), 3)

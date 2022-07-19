@@ -77,16 +77,16 @@ class TestLoader:
         self.check_pixel_size(pixel_size)
 
     def test_am2D(self):
-        image, pixel_size, _ = loader.import_am(join('tests',
-                                                     self.dir,
-                                                     'am2D.am'))
+        image, pixel_size, _, _ = loader.import_am(join('tests',
+                                                        self.dir,
+                                                        'am2D.am'))
         self.check_size2D(image)
         self.check_pixel_size(pixel_size)
 
     def test_am3D(self):
-        image, pixel_size, _ = loader.import_am(join('tests',
-                                                     self.dir,
-                                                     'am3D.am'))
+        image, pixel_size, _, _ = loader.import_am(join('tests',
+                                                        self.dir,
+                                                        'am3D.am'))
         assert image.shape == (8, 256, 256), \
             'Error while loading file. Incorrect image shape or orientation!'
         assert pixel_size == 92.8, \
