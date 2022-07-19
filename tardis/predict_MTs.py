@@ -205,7 +205,7 @@ def main(prediction_dir: str,
             out_format = 4
             format = 'mrc'
         elif i.endswith('.am'):
-            image, px, transformation = import_am(img=join(prediction_dir, i))
+            image, px, _, transformation = import_am(img=join(prediction_dir, i))
             out_format = 3
             format = 'amira'
 
@@ -243,11 +243,7 @@ def main(prediction_dir: str,
             input, name = patches_DL.__getitem__(j)
 
             """Predict"""
-            out_unet = predict_unet._predict(input[None, :])
-
-            out_unet3plus = predict_unet3plus._predict(input[None, :])
-
-            out = (out_unet + out_unet3plus) / 2
+            out = (predict_unet._predict(input[None, :]) + predict_unet3plus._predict(input[None, :])) / 2
 
             """Threshold"""
             out = np.where(out >= cnn_threshold, 1, 0)
@@ -386,12 +382,12 @@ def main(prediction_dir: str,
         if tqdm:
             batch_iter.set_description(f'Graph segmentation for {i}')
 
-        # if format == 'amira':
-        #     coord = coord * px
+        if format == 'amira':
+            coord = coord * px
 
-        #     coord[:, 0] = coord[:, 0] + transformation[0]
-        #     coord[:, 1] = coord[:, 1] + transformation[1]
-        #     coord[:, 2] = coord[:, 2] + transformation[2]
+            coord[:, 0] = coord[:, 0] + transformation[0]
+            coord[:, 1] = coord[:, 1] + transformation[1]
+            coord[:, 2] = coord[:, 2] + transformation[2]
 
         segments = GraphToSegment.voxal_to_segment(graph=graphs,
                                                    coord=point_cloud,
