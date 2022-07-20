@@ -195,12 +195,12 @@ def trim_with_stride(image: np.ndarray,
 
         image = np.transpose(F.interpolate(torch.Tensor(np.transpose(image, (2, 0, 1)))[None, :],
                              scale_factor=scale,
-                             mode='bilinear',
+                             mode='bicubic',
                              align_corners=False).cpu().detach().numpy()[0, :],
                              (1, 2, 0))
         mask = np.transpose(F.interpolate(torch.Tensor(np.transpose(mask, (2, 0, 1)))[None, :],
                             scale_factor=scale,
-                            mode='bilinear',
+                            mode='bicubic',
                             align_corners=False).cpu().detach().numpy()[0, :],
                             (1, 2, 0))
 
@@ -225,11 +225,11 @@ def trim_with_stride(image: np.ndarray,
 
         image = F.interpolate(torch.Tensor(image)[None, None, :],
                               scale_factor=scale,
-                              mode='bilinear',
+                              mode='bicubic',
                               align_corners=False).cpu().detach().numpy()[0, 0, :]
         mask = F.interpolate(torch.Tensor(mask)[None, None, :],
                              scale_factor=scale,
-                             mode='bilinear',
+                             mode='bicubic',
                              align_corners=False).cpu().detach().numpy()[0, 0, :]
 
         ny, nx = image.shape
