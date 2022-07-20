@@ -20,8 +20,7 @@ class NumpyToAmira:
 
         # Add dummy Z dimension
         if coord.shape[1] == 3:
-            coord = np.hstack((coord,
-                               np.zeros((coord.shape[0], 1))))
+            coord = np.hstack((coord, np.zeros((coord.shape[0], 1))))
 
         return coord
 

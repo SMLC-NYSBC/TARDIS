@@ -3,6 +3,8 @@ from os.path import join
 from typing import Optional
 
 import numpy as np
+import torch
+import torch.nn.functional as F
 from tifffile import tifffile as tif
 
 
@@ -143,6 +145,7 @@ def empty_mask(size: tuple):
 
 
 def trim_with_stride(image: np.ndarray,
+                     scale: float,
                      trim_size_xy: int,
                      trim_size_z: int,
                      output: str,
@@ -159,33 +162,79 @@ def trim_with_stride(image: np.ndarray,
 
     Args:
         image: Corresponding image for the labels
-        label_mask: Empty label mask
+        scale: Scale factor for resizing
         trim_size_xy: Size of trimming in xy dimension
         trim_size_z: Size of trimming in z dimension
         output: Name of the output directory for saving
         image_counter: Number id of image
         prefix: Prefix name at the end of the file
+        clean_empty: Remove empty patches
         stride: Trimming step size
+        mask: Label mask
     """
     if mask is not None:
         assert image.shape == mask.shape, \
             f'Image {image.shape} has different shape from mask {mask.shape}'
     if image.ndim == 4:  # 3D with RGB
-        nz, ny, nx, nc = image.shape
         dim = 3
+
+        image = np.transpose(F.interpolate(torch.Tensor(np.transpose(image, (3, 0, 1, 2)))[None, :],
+                             scale_factor=scale,
+                             mode='trilinear',
+                             align_corners=False).cpu().detach().numpy()[0, :],
+                             (1, 2, 3, 0))
+        mask = np.transpose(F.interpolate(torch.Tensor(np.transpose(mask, (3, 0, 1, 2)))[None, :],
+                            scale_factor=scale,
+                            mode='trilinear',
+                            align_corners=False).cpu().detach().numpy()[0, :],
+                            (1, 2, 3, 0))
+
+        nz, ny, nx, nc = image.shape
     elif image.ndim == 3 and image.shape[2] == 3:  # 2D with RGB
+        dim = 2
+
+        image = np.transpose(F.interpolate(torch.Tensor(np.transpose(image, (2, 0, 1)))[None, :],
+                             scale_factor=scale,
+                             mode='bilinear',
+                             align_corners=False).cpu().detach().numpy()[0, :],
+                             (1, 2, 0))
+        mask = np.transpose(F.interpolate(torch.Tensor(np.transpose(mask, (2, 0, 1)))[None, :],
+                            scale_factor=scale,
+                            mode='bilinear',
+                            align_corners=False).cpu().detach().numpy()[0, :],
+                            (1, 2, 0))
+
         ny, nx, nc = image.shape
         nz = 0
-        dim = 2
     elif image.ndim == 3 and image.shape[2] != 3:  # 3D with Gray
+        dim = 3
+
+        image = F.interpolate(torch.Tensor(image)[None, None, :],
+                              scale_factor=scale,
+                              mode='trilinear',
+                              align_corners=False).cpu().detach().numpy()[0, 0, :]
+        mask = F.interpolate(torch.Tensor(mask)[None, None, :],
+                             scale_factor=scale,
+                             mode='trilinear',
+                             align_corners=False).cpu().detach().numpy()[0, 0, :]
+
         nz, ny, nx = image.shape
         nc = None
-        dim = 3
     else:  # 2D with Gray
+        dim = 2
+
+        image = F.interpolate(torch.Tensor(image)[None, None, :],
+                              scale_factor=scale,
+                              mode='bilinear',
+                              align_corners=False).cpu().detach().numpy()[0, 0, :]
+        mask = F.interpolate(torch.Tensor(mask)[None, None, :],
+                             scale_factor=scale,
+                             mode='bilinear',
+                             align_corners=False).cpu().detach().numpy()[0, 0, :]
+
         ny, nx = image.shape
         nc = None
         nz = 0
-        dim = 2
 
     if trim_size_xy is not None or trim_size_z is not None:
         assert nx >= trim_size_xy, \

@@ -27,7 +27,8 @@ class BuildTrainDataSet:
     Args:
         dataset_dir: Directory with train test folders
         circle_size: Size of the segmented object in nm
-        multi_layer: If True mask is build in RGB channel insted of gray (0-1)
+        multi_layer: If True mask is build in RGB channel instead of gray (0-1)
+        resize_pixel_size: Pixel size for image resizing
         tqdm: If True build with progressbar
     """
 
@@ -35,10 +36,12 @@ class BuildTrainDataSet:
                  dataset_dir: str,
                  circle_size: int,
                  multi_layer: bool,
+                 resize_pixel_size: float,
                  tqdm: bool):
         self.dataset_dir = dataset_dir
         self.circle_size = circle_size
         self.multi_layer = multi_layer
+        self.resize_pixel_size = resize_pixel_size
         self.tqdm = tqdm
 
         self.file_formats = ('.tif', '.am', '.mrc', '.rec')
@@ -63,7 +66,8 @@ class BuildTrainDataSet:
                 assert len(is_mask_image) == (len(self.idx_img) / 2), \
                     'Not all image file in directory has corresponding _mask.* file...'
                 self.is_mask_image = True
-            else:  # Expect .am as coordinate
+            else:
+                # Expect .am as coordinate
                 assert len([f for f in self.idx_img if f.endswith('.CorrelationLines.am')]) == (len(self.idx_img) / 2), \
                     'Not all image file in directory has corresponding .CorrelationLines.am file...'
                 self.is_am = True
@@ -77,8 +81,7 @@ class BuildTrainDataSet:
         elif self.is_mask_image:
             idx_mask = [f.endswith(self.mask_format) for f in self.idx_img]
         elif self.is_am:
-            idx_mask = [f.endswith(('.CorrelationLines.am'))
-                        for f in self.idx_img]
+            idx_mask = [f.endswith(('.CorrelationLines.am')) for f in self.idx_img]
 
         self.idx_mask = list(np.array(self.idx_img)[idx_mask])
         self.idx_img = list(np.array(self.idx_img)[np.logical_not(idx_mask)])
@@ -117,7 +120,7 @@ class BuildTrainDataSet:
             if img_name.endswith('.tif'):
                 image, _ = import_tiff(join(self.dataset_dir, img_name),
                                        dtype=np.uint8)
-                pixel_size = 1
+                pixel_size = 0
             elif img_name.endswith(('.mrc', '.rec')):
                 image, pixel_size = import_mrc(join(self.dataset_dir,
                                                     img_name))
@@ -151,7 +154,7 @@ class BuildTrainDataSet:
                                       coord[:, 2],
                                       np.zeros((coord.shape[0], )))).T
             elif self.is_am:
-                if img_name.endswith('.tif') and pixel_size == 1:
+                if img_name.endswith('.tif') and pixel_size == 0:
                     raise TypeError('Data are incompatible in this version. '
                                     '.tif image and .am coordinate file are incompatible '
                                     'pixel size was {pixel_size} which may yeald '
@@ -169,9 +172,15 @@ class BuildTrainDataSet:
                                          multi_layer=self.multi_layer,
                                          tqdm=self.tqdm)
 
+            if pixel_size == 0:
+                scale_factor = 1
+            else:
+                scale_factor = pixel_size / self.resize_pixel_size
+
             """Voxalize Image and Mask"""
             trim_with_stride(image=image,
                              mask=mask,
+                             scale=scale_factor,
                              trim_size_xy=trim_xy,
                              trim_size_z=trim_z,
                              output=join(self.dataset_dir, 'train'),

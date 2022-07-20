@@ -31,8 +31,7 @@ class BuildPointCloud:
                    image):
         try:
             if isinstance(image, str):
-                from tardis.slcpy_data_processing.utils.load_data import \
-                    import_tiff
+                from tardis.slcpy.utils.load_data import import_tiff
 
                 image = import_tiff(img=image,
                                     dtype=np.int8)

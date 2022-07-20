@@ -32,8 +32,7 @@ class ImportDataFromAmira:
                 raise Warning("Not a .am file...")
 
             if src_img.split('/')[-1:][:-3] != src_am.split('/')[-1:][:-20]:
-                raise Warning(
-                    f'Image file {src_img} has wrong extension for {src_am}!')
+                raise Warning(f'Image file {src_img} has wrong extension for {src_am}!')
 
             try:
                 # Image file [Z x Y x X]
