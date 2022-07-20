@@ -74,6 +74,7 @@ class GraphDataset(Dataset):
         """ Get list of all coordinates and image patches """
         idx = self.ids[i]
 
+        # Define what coordinate format are available
         if ".csv" in self.coord_format:
             coord_file = join(self.coord_dir, str(idx))
         elif ".npy" in self.coord_format:
@@ -84,6 +85,7 @@ class GraphDataset(Dataset):
         if self.img_dir is not None:
             filetype = [ft for ft in self.coord_format if idx.endswith(ft)][0]
 
+        # Define what image format are available if non set to None
         if self.img_dir is not None and self.prefix is not None:
             img_idx = idx[:-len(self.prefix + filetype)]
             img_idx = f'{img_idx}{self.img_format}'
@@ -98,12 +100,18 @@ class GraphDataset(Dataset):
         else:
             img_file = None
 
+        # Pre process coord and image data also, if exist remove duplicates
         coord, img = preprocess_data(coord=coord_file,
                                      image=img_file,
                                      include_label=True,
                                      size=self.size,
                                      normalization=self.normalize,
                                      memory_save=self.memory_save)
+        coord, uq_idx = np.unique(coord, axis=0, return_index=True)
+        if img_file is not None:
+            img = img[uq_idx, :]
+
+        # Normalize point cloud
         dist = pc_median_dist(pc=coord[:, 1:], avg_over=True)
 
         if self.img_dir is None:
@@ -146,7 +154,7 @@ class GraphDataset(Dataset):
         coords_v, imgs_v, graph_v, output_idx = VD.voxalize_dataset(out_idx=True,
                                                                     prune=True)
 
-        # Store iinitial patch size for each data to speed up computation
+        # Store initial patch size for each data to speed up computation
         if self.voxal_size[i, 0] == 0:
             self.voxal_size[i, 0] = VD.voxal_patch_size + 1
 
