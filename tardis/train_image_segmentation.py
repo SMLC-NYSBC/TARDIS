@@ -31,6 +31,11 @@ from tardis._version import version
               type=int,
               help='Image size used for prediction.',
               show_default=True)
+@click.option('-px', '--pixel_size',
+              default=23.2,
+              type=float,
+              help='Pixel size to which all images are resize.',
+              show_default=True)
 @click.option('-cnn', '--cnn_type',
               default='unet',
               type=click.Choice(['unet', 'resunet', 'unet3plus'],
@@ -143,6 +148,7 @@ from tardis._version import version
 def main(training_dataset: str,
          train_test_ratio: float,
          patch_size: int,
+         pixel_size: float,
          cnn_type: str,
          cnn_out_channel: int,
          training_batch_size: int,
@@ -209,6 +215,7 @@ def main(training_dataset: str,
         dataset_builder = BuildTrainDataSet(dataset_dir=training_dataset,
                                             circle_size=250,
                                             multi_layer=False,
+                                            resize_pixel_size=pixel_size,
                                             tqdm=True)
         dataset_builder.__builddataset__(trim_xy=patch_size,
                                          trim_z=patch_size)

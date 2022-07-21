@@ -24,6 +24,9 @@ def draw_semantic(mask_size: tuple,
         'Included coordinate array is not of a correct shape.'
 
     label_mask = np.zeros(mask_size)
+    if pixel_size == 0:
+        pixel_size = 1
+
     r = round((circle_size / 2) / pixel_size)
 
     if multi_layer:
@@ -31,7 +34,8 @@ def draw_semantic(mask_size: tuple,
     else:
         segment_color = [1]
 
-    segments = np.unique(coordinate[:, 0])  # Number of segments in coordinates
+    # Number of segments in coordinates
+    segments = np.unique(coordinate[:, 0])
 
     if tqdm:
         from tqdm import tqdm
