@@ -212,7 +212,7 @@ def import_mrc(img: str):
     header = mrc_header(img)
 
     pixel_size = round(header.xlen / header.nx, 3)
-    dtype = get_mode(header.mode)
+    dtype = get_mode(header.mode, header.amin)
     nz, ny, nx = header.nz, header.ny, header.nx
 
     if nz == 1:
@@ -331,9 +331,12 @@ def mrc_header(img: str):
     return MRCHeader._make(header_struct.unpack(header))
 
 
-def get_mode(mode):
+def get_mode(mode, amin):
     if mode == 0:
-        dtype = np.int8
+        if amin == 0:
+            dtype = np.uint8
+        elif amin < 0:
+            dtype = np.int8
     elif mode == 1:
         dtype = np.int16
     elif mode == 2:
