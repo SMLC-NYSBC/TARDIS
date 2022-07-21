@@ -1,10 +1,9 @@
 from os import listdir
-from os.path import join
+from os.path import isfile, join
 
 import numpy as np
 from tardis.slcpy.utils.build_semantic_mask import draw_semantic
-from tardis.slcpy.utils.load_data import (ImportDataFromAmira, import_am,
-                                          import_mrc, import_tiff)
+from tardis.slcpy.utils.load_data import ImportDataFromAmira, import_mrc, import_tiff
 from tardis.slcpy.utils.trim import trim_with_stride
 
 
@@ -48,11 +47,9 @@ class BuildTrainDataSet:
         self.mask_format = ('_mask.tif', "_mask.mrc", '_mask.rec', '_mask.am')
 
         """Check what file are in the folder to build dataset"""
-        self.idx_img = [f for f in listdir(
-            dataset_dir) if f.endswith(self.file_formats)]
+        self.idx_img = [f for f in listdir(dataset_dir) if f.endswith(self.file_formats)]
         is_csv = [f for f in self.idx_img if f.endswith('.csv')]
-        is_mask_image = [
-            f for f in self.idx_img if f.endswith(self.mask_format)]
+        is_mask_image = [f for f in self.idx_img if f.endswith(self.mask_format)]
 
         self.is_csv = False
         self.is_mask_image = False
@@ -112,9 +109,19 @@ class BuildTrainDataSet:
 
         for i in batch_iter:
             """Load image data"""
-            img_name = self.idx_img[i]
-            mask_name = self.idx_mask[i]
             mask = None
+            mask_name = self.idx_mask[i]
+            if mask_name.endswith('.CorrelationLines.am'):
+                if isfile(join(self.dataset_dir, f'{mask_name[:-20]}.am')):
+                    img_name = f'{mask_name[:-20]}.am'  # .am image file
+                elif isfile(join(self.dataset_dir, f'{mask_name[:-20]}.rec')):
+                    img_name = f'{mask_name[:-20]}.rec'  # .rec image file
+                elif isfile(join(self.dataset_dir, f'{mask_name[:-20]}.mrc')):
+                    img_name = f'{mask_name[:-20]}.mrc'  # .mrc image file
+                elif isfile(join(self.dataset_dir, f'{mask_name[:-20]}.tif')):
+                    img_name = f'{mask_name[:-20]}.tif'  # .tif image file
+                else:
+                    raise NameError(f'No image file found for {mask_name}')
 
             """Load image file"""
             if img_name.endswith('.tif'):
@@ -131,34 +138,6 @@ class BuildTrainDataSet:
                                                             img_name))
                 image, pixel_size = importer.get_image()
                 coord = importer.get_segmented_points()  # [ID x X x Y x Z]
-
-            """Load mask/coord data"""
-            if self.is_mask_image:
-                if mask_name.endswith('_mask.tif'):
-                    mask, _ = import_tiff(join(self.dataset_dir, img_name),
-                                          dtype=np.uint8)
-                elif mask_name.endswith(('_mask.mrc', '_mask.rec')):
-                    mask, _ = import_mrc(join(self.dataset_dir,
-                                              img_name))
-                elif mask_name.endswith('_mask.am'):
-                    mask, _ = import_am(join(self.dataset_dir,
-                                             img_name))
-            elif self.is_csv:
-                coord = np.genfromtxt(mask_name,
-                                      delimiter=',')  # [ID x X x Y x Z]
-                if str(coord[0, 0]) == 'nan':
-                    coord = coord[1:, :]
-                if coord.shape[1] == 3:
-                    coord = np.array((coord[:, 0],
-                                      coord[:, 1],
-                                      coord[:, 2],
-                                      np.zeros((coord.shape[0], )))).T
-            elif self.is_am:
-                if img_name.endswith('.tif') and pixel_size == 0:
-                    raise TypeError('Data are incompatible in this version. '
-                                    '.tif image and .am coordinate file are incompatible '
-                                    'pixel size was {pixel_size} which may yeald '
-                                    'incorrect drawing of the mask!')
 
             """Draw mask"""
             if coord is not None:
@@ -188,3 +167,4 @@ class BuildTrainDataSet:
                              clean_empty=True,
                              prefix='',
                              stride=25)
+            img_counter += 1

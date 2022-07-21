@@ -71,7 +71,8 @@ from tardis._version import version
               'g - group normalization'
               'b - batch normalization'
               'r - ReLU'
-              'l - LeakyReLU',
+              'l - LeakyReLU'
+              'e - GeLu',
               show_default=True)
 @click.option('-ck', '--conv_kernel',
               default=3,
@@ -83,10 +84,10 @@ from tardis._version import version
               type=int,
               help='Padding size for convolution.',
               show_default=True)
-@click.option('-cmxk', '--pool_kernel',
+@click.option('-cmpk', '--pool_kernel',
               default=2,
               type=int,
-              help='Maxpooling kernel.',
+              help='Max_pooling kernel.',
               show_default=True)
 @click.option('-l', '--cnn_loss',
               default='bce',
@@ -113,10 +114,10 @@ from tardis._version import version
               default=0,
               type=str,
               help='Define which device use for training: '
-              'gpu: Use ID 0 gpus'
-              'cpu: Usa CPU'
-              'mps: Apple silicon'
-              '0-9 - specified gpu device id to use',
+                    'gpu: Use ID 0 gpus'
+                    'cpu: Usa CPU'
+                    'mps: Apple silicon'
+                    '0-9 - specified gpu device id to use',
               show_default=True)
 @click.option('-e', '--epochs',
               default=100,
