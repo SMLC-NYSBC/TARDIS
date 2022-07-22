@@ -2,6 +2,27 @@
 History
 =======
 
+0.1.0b (2022-07-**)
+--------------------
+* Unet and Unet3Plus model
+    * Standardized pixel size input. Now all data are reshaped to the pixel 
+        size of 2.32
+    * Change up-sampling from align_corners=True to align_corners=False
+    * Added new data for training from @Stefanie Redemann and @Gunar
+* Unet/Unet3Plus re-trained
+* Bugfixes for segmentation of point cloud from graph probabilities
+    * Speed-up boost with simplifying the building and reading adjacency matrix
+    * Fix in masking adjacency matrix for points already connected
+    * Moved from greedy segmentation to 1-step-back segmentation
+* Bugfixes for floating point precision in Amira output
+    * Change floating point from 3 to 15
+* Improvements from importing data from binary Amira file format
+    * Change how pixel size is calculated. Amira has weird behavior whenever ET 
+        is trimmed. Include this in pixel size calculation
+* Improvements in .rec, .mrc file loader
+    * .rec and .mrc file are format with uint8 (value from -128 to 128) or 
+        int8 (value from 0 to 255). Fix reading of these files
+
 0.1.0a (2022-07-12)
 --------------------
 * Check pipeline for image embedding (normalization to enhance features)
