@@ -114,7 +114,6 @@ class Trainer:
                 torch.save({'model_state_dict': self.model.state_dict(),
                             'optimizer_state_dict': self.optimizer.state_dict()},
                            join(getcwd(), 'cnn_checkpoint', 'checkpoint_{}.pth'.format(self.checkpoint_name)))
-                print(f'Saved model checkpoint no. {i} for F1 {self.f1[len(self.f1) - 1]:.2f}')
 
             torch.save({'model_state_dict': self.model.state_dict(),
                         'optimizer_state_dict': self.optimizer.state_dict()},
