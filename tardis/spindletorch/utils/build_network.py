@@ -1,4 +1,4 @@
-from tardis.spindletorch.unet.network import ResUNet, UNet, UNet3Plus
+from tardis.spindletorch.unet.network import ResUNet, UNet, UNet3Plus, Big_UNet
 
 
 def build_network(network_type: str,
@@ -71,6 +71,18 @@ def build_network(network_type: str,
                           layer_components=layer_components,
                           no_groups=no_groups,
                           prediction=prediction)
+    elif network_type == 'big_unet':
+        model = Big_UNet(in_channels=in_channel,
+                         out_channels=out_channel,
+                         patch_size=img_size,
+                         conv_kernel=conv_kernel,
+                         padding=conv_padding,
+                         pool_kernel=maxpool_kernel,
+                         no_conv_layer=no_conv_layers,
+                         conv_layer_multiplayer=conv_multiplayer,
+                         layer_components=layer_components,
+                         no_groups=no_groups,
+                         prediction=prediction)
     else:
         model = None
 

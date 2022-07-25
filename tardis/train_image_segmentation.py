@@ -38,7 +38,7 @@ from tardis._version import version
               show_default=True)
 @click.option('-cnn', '--cnn_type',
               default='unet',
-              type=click.Choice(['unet', 'resunet', 'unet3plus'],
+              type=click.Choice(['unet', 'resunet', 'unet3plus', 'big_unet'],
                                 case_sensitive=True),
               help='Type of NN used for training.',
               show_default=True)
