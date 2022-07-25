@@ -91,7 +91,7 @@ def train(train_dataloader: DataLoader,
     if cnn_checkpoint is not None:
         save_train = join(cnn_checkpoint)
 
-        save_train = torch.load(join(save_train))
+        save_train = torch.load(join(save_train), map_location=device)
         model.load_state_dict(save_train['model_state_dict'])
 
     """Define loss function for training"""

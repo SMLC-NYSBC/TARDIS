@@ -80,8 +80,7 @@ class Trainer:
         else:
             mkdir('cnn_checkpoint')
 
-        early_stoping = EarlyStopping(
-            patience=self.early_stop_rate, min_delta=0)
+        early_stopping = EarlyStopping(patience=self.early_stop_rate, min_delta=0)
         for i in progressbar:
             """Training block"""
             self._train()
@@ -89,8 +88,7 @@ class Trainer:
             """Validation block"""
             if self.validation_DataLoader is not None:
                 self._validate()
-                early_stoping(
-                    val_loss=self.validation_loss[len(self.validation_loss) - 1])
+                early_stopping(val_loss=self.validation_loss[len(self.validation_loss) - 1])
 
             """Learning rate scheduler block"""
             if self.lr_scheduler is not None:
@@ -122,7 +120,10 @@ class Trainer:
                         'optimizer_state_dict': self.optimizer.state_dict()},
                        join(getcwd(), 'cnn_checkpoint', 'model_weights.pth'))
 
-            if early_stoping.early_stop:
+            progressbar.set_description(
+                f'Epochs: stop counter {early_stopping.counter}, best F1 {round(np.max(self.f1), 3)}')
+
+            if early_stopping.early_stop:
                 break
 
     def _train(self):
@@ -199,10 +200,6 @@ class Trainer:
                 recall_mean.append(recall_score)
                 F1_mean.append(F1_score)
                 threshold_mean.append(threshold)
-
-        print(f'Validation: (loss {np.mean(valid_losses):.4f}) & '
-              f'F1: {np.mean(F1_mean):.2f} '
-              f'at Threshold {np.mean(threshold_mean):.2f}')
 
         self.threshold.append(np.mean(threshold_mean))
         self.validation_loss.append(np.mean(valid_losses))

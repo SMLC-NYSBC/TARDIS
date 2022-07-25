@@ -63,7 +63,7 @@ from tardis._version import version
               help='Convolution multiplayer for CNN layers.',
               show_default=True)
 @click.option('-cs', '--cnn_structure',
-              default='gcl',
+              default='3gcl',
               type=str,
               help='Define structure of the convolution layer.'
               '2 or 3 - dimension in 2D or 3D'

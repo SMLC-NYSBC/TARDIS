@@ -48,8 +48,7 @@ class Trainer:
         self.validation_loss = []
         self.training_loss = []
 
-        self.model = model
-        self.model.to(device)
+        self.model = model.to(device)
 
         self.node_input = node_input
         self.device = device
@@ -111,8 +110,8 @@ class Trainer:
             self.model.eval()
             self.validate()
 
-            early_stopping(
-                val_loss=self.validation_loss[len(self.validation_loss) - 1])
+            early_stopping(val_loss=self.validation_loss[len(self.validation_loss) - 1])
+
             np.savetxt('GF_checkpoint/training_losses.csv',
                        self.training_loss,
                        delimiter=',')
@@ -157,8 +156,8 @@ class Trainer:
         for _, (x, y, z, _) in train_progress:
             for c, i, g in zip(x, y, z):
                 c, g = c.to(self.device), g.to(self.device)
-
                 self.optimizer.zero_grad()
+
                 if self.node_input:
                     i = i.to(self.device)
                     out = self.model(coords=c,
@@ -169,8 +168,8 @@ class Trainer:
                                      node_features=None,
                                      padding_mask=None)
 
-                loss = self.criterion(out[0, :],
-                                      g)
+                loss = self.criterion(out[0, :], g)
+
                 loss.backward()  # one backward pass
                 self.optimizer.step()  # update the parameters
 
