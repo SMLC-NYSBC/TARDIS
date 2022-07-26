@@ -147,7 +147,9 @@ def check_dir(dir: str,
         if with_img:
             # Check if train img and coord exist and have same files
             if isdir(train_img) and isdir(train_mask):
-                if len([f for f in listdir(train_img) if f.endswith(img_format)]) == len([f for f in listdir(train_mask) if f.endswith(mask_format)]):
+                if len([f for f in listdir(train_img)
+                        if f.endswith(img_format)]) == len([f for f in listdir(train_mask)
+                                                            if f.endswith(mask_format)]):
                     if len([f for f in listdir(train_img) if f.endswith(img_format)]) == 0:
                         dataset_test = False
                 else:
@@ -155,7 +157,9 @@ def check_dir(dir: str,
 
             # Check if test img and mask exist and have same files
             if isdir(test_img) and isdir(test_mask):
-                if len([f for f in listdir(test_img) if f.endswith(img_format)]) == len([f for f in listdir(test_mask) if f.endswith(mask_format)]):
+                if len([f for f in listdir(test_img)
+                        if f.endswith(img_format)]) == len([f for f in listdir(test_mask)
+                                                            if f.endswith(mask_format)]):
                     if len([f for f in listdir(test_img) if f.endswith(img_format)]) == 0:
                         dataset_test = False
                 else:

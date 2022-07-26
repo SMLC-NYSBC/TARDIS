@@ -29,8 +29,7 @@ def get_weights_aws(network: str,
         assert subtype in ['with_img', 'without_img'], \
             'For Graphformer, pre train subtype of model must be selected!'
 
-        weight = requests.get(
-            f'https://tardis-weigths.s3.amazonaws.com/{network}/{model}/{subtype}/model_weights.pth')
+        weight = requests.get(f'https://tardis-weigths.s3.amazonaws.com/{network}/{model}/{subtype}/model_weights.pth')
 
     if save_weights:
         dir = join(getcwd(), 'model')
