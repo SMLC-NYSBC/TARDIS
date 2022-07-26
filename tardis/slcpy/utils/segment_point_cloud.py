@@ -215,7 +215,8 @@ class GraphInstanceV2:
                 # Check if picked new interaction show up secondary interaction
                 if np.any([True for i in reverse_int if i in idx_df]):
                     # Check if selection are already on the list
-                    new_df = new_df + [j for j in reverse_int if j not in idx_df and len(adj_matrix[j][2]) > 0]
+                    new_df = new_df + [j for j in reverse_int
+                                       if j not in idx_df and len(adj_matrix[j][2]) > 0]
 
             new = new_df
             idx_df = idx_df + new
@@ -328,7 +329,8 @@ class GraphInstanceV2:
                 stop = True
 
         if visualize is not None:
-            assert visualize in ['f', 'p'], 'To visualize output use "f" for filament or "p" for point cloud!'
+            assert visualize in ['f', 'p'], \
+                'To visualize output use "f" for filament or "p" for point cloud!'
 
             if visualize == 'p':
                 VisualizePointCloud(np.vstack(coord_segment), True)

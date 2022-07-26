@@ -40,8 +40,7 @@ class NumpyToAmira:
             f.write(
                 '# TARDIS - Transformer And Rapid Dimensionless Instance Segmentation (R) \r\n')
             f.write(f'# tardis-pytorch v{version} \r\n')
-            f.write(
-                f'# MIT License * 2021-{datetime.now().year} * Robert Kiewisz & Tristan Bepler \r\n')
+            f.write(f'# MIT License * 2021-{datetime.now().year} * Robert Kiewisz & Tristan Bepler \r\n')
             f.write('\r\n')
             f.write(f'define VERTEX {vertex} \r\n')
             f.write(f'define EDGE {edge} \r\n')

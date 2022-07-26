@@ -139,7 +139,8 @@ class Trainer:
                        join(getcwd(), 'GF_checkpoint', 'model_weights.pth'))
 
             epoch_progress.set_description(
-                f'Epochs: stop counter {early_stopping.counter}, best F1 {round(np.max(self.f1), 3)}')
+                f'Epochs: stop counter {early_stopping.counter}, \
+                best F1 {round(np.max(self.f1), 3)}')
 
             if early_stopping.early_stop:
                 break

@@ -376,7 +376,7 @@ class Big_UNet(nn.Module):
     """
     New Unet model combining Unet and Unet3Plus
     Model shares encoder path which is splitted for decoding patch Unet and Unet3Plus
-    style. Final layers from each are summed and sigmoid 
+    style. Final layers from each are summed and sigmoid
 
     Args:
         in_channels: Number of input channels for first convolution

@@ -65,7 +65,8 @@ class BuildTrainDataSet:
                 self.is_mask_image = True
             else:
                 # Expect .am as coordinate
-                assert len([f for f in self.idx_img if f.endswith('.CorrelationLines.am')]) == (len(self.idx_img) / 2), \
+                assert len([f for f in self.idx_img
+                            if f.endswith('.CorrelationLines.am')]) == (len(self.idx_img) / 2), \
                     'Not all image file in directory has corresponding .CorrelationLines.am file...'
                 self.is_am = True
 

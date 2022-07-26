@@ -75,7 +75,8 @@ class GraphFormerLayer(nn.Module):
         dropout: Dropout rate
         ff_factor: Feed forward factor used for GeLuFFN
         num_heads: Number of heads in self-attention
-        structure: Structure of layer ['full', 'full_af', 'self_attn', 'triang', 'dualtraing', 'quad']
+        structure: Structure of layer ['full', 'full_af', 'self_attn',
+                                       'triang', 'dualtraing', 'quad']
     """
 
     def __init__(self,
@@ -188,20 +189,26 @@ class GraphFormerLayer(nn.Module):
 
         if self.structure == 'full':
             h_nodes = h_nodes + \
-                self.row_attention(x=h_nodes, padding_mask=mask) + self.col_attention(x=h_nodes, padding_mask=mask) + \
-                self.row_update(z=h_nodes, mask=mask) + self.col_update(z=h_nodes, mask=mask)
+                self.row_attention(x=h_nodes, padding_mask=mask) + \
+                self.col_attention(x=h_nodes, padding_mask=mask) + \
+                self.row_update(z=h_nodes, mask=mask) + \
+                self.col_update(z=h_nodes, mask=mask)
         elif self.structure == 'full_af':
             h_nodes = h_nodes + self.row_attention(x=h_nodes, padding_mask=mask)
             h_nodes = h_nodes + self.col_attention(x=h_nodes, padding_mask=mask)
             h_nodes = h_nodes + self.row_update(z=h_nodes, mask=mask)
             h_nodes = h_nodes + self.col_update(z=h_nodes, mask=mask)
         elif self.structure == 'self_attn':
-            h_nodes = h_nodes + self.row_attention(x=h_nodes, padding_mask=mask) + self.col_attention(x=h_nodes, padding_mask=mask)
+            h_nodes = h_nodes + self.row_attention(x=h_nodes, padding_mask=mask) + \
+                self.col_attention(x=h_nodes, padding_mask=mask)
         elif self.structure in ['triang', 'quad']:
-            h_nodes = h_nodes + self.row_update(z=h_nodes, mask=mask) + self.col_update(z=h_nodes, mask=mask)
+            h_nodes = h_nodes + self.row_update(z=h_nodes, mask=mask) + \
+                self.col_update(z=h_nodes, mask=mask)
         elif self.structure == 'dualtriang':
-            h_nodes = h_nodes + self.row_update_1(z=h_nodes, mask=mask) + self.col_update_1(z=h_nodes, mask=mask)
-            h_nodes = h_nodes + self.row_update_2(z=h_nodes, mask=mask) + self.col_update_2(z=h_nodes, mask=mask)
+            h_nodes = h_nodes + self.row_update_1(z=h_nodes, mask=mask) + \
+                self.col_update_1(z=h_nodes, mask=mask)
+            h_nodes = h_nodes + self.row_update_2(z=h_nodes, mask=mask) + \
+                self.col_update_2(z=h_nodes, mask=mask)
 
         return h_nodes + self.pair_ffn(x=h_nodes)
 

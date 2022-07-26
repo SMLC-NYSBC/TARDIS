@@ -113,14 +113,17 @@ class Trainer:
             if (np.array(self.f1)[:len(self.f1) - 1] < self.f1[len(self.f1) - 1]).all():
                 torch.save({'model_state_dict': self.model.state_dict(),
                             'optimizer_state_dict': self.optimizer.state_dict()},
-                           join(getcwd(), 'cnn_checkpoint', 'checkpoint_{}.pth'.format(self.checkpoint_name)))
+                           join(getcwd(),
+                                'cnn_checkpoint',
+                                'checkpoint_{}.pth'.format(self.checkpoint_name)))
 
             torch.save({'model_state_dict': self.model.state_dict(),
                         'optimizer_state_dict': self.optimizer.state_dict()},
                        join(getcwd(), 'cnn_checkpoint', 'model_weights.pth'))
 
             progressbar.set_description(
-                f'Epochs: stop counter {early_stopping.counter}, best F1 {round(np.max(self.f1), 3)}')
+                f'Epochs: stop counter {early_stopping.counter}, \
+                    best F1 {round(np.max(self.f1), 3)}')
 
             if early_stopping.early_stop:
                 break

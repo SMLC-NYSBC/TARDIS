@@ -55,7 +55,8 @@ class TestDataSetBuilder:
                                       prefix='_mask')
         test_build.__builddataset__()
 
-        assert [f'{f[:-4]}_mask.tif' for f in listdir(join('tests', 'test_data', 'data_loader', 'test', 'imgs'))] == \
+        assert [f'{f[:-4]}_mask.tif' for f in
+                listdir(join('tests', 'test_data', 'data_loader', 'test', 'imgs'))] == \
             listdir(join('tests', 'test_data', 'data_loader', 'test', 'masks'))
 
         rmtree(join('tests', 'test_data', 'data_loader', 'train'))

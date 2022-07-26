@@ -80,7 +80,8 @@ class StitchImages:
 
         for idx in batch_iter_idx:
             self._find_xyz(file_list, idx)
-            self._calculate_dim(tif.imread(join(image_dir, f'{idx}_0_0_0_{self.stride}{prefix}.tif')))
+            self._calculate_dim(tif.imread(join(image_dir,
+                                                f'{idx}_0_0_0_{self.stride}{prefix}.tif')))
 
             x_dim = self.nx + ((self.nx - self.stride) * (self.x - 1))
             y_dim = self.ny + ((self.ny - self.stride) * (self.y - 1))

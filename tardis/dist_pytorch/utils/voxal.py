@@ -408,7 +408,8 @@ class VoxalizeDataSetV2:
                         output_idx.append(output_df[coord_ds])
         # Find voxal that have more then 50% unique points
         unique_idx = [False if np.any([True for k in [len(set(output_idx[id]).intersection(j))
-                                                      for idx, j in enumerate(output_idx) if idx != id]
+                                                      for idx, j in enumerate(output_idx)
+                                                      if idx != id]
                                        if k > len(output_idx[id]) / 1.5])
                       else True for id, _ in enumerate(output_idx)]
 

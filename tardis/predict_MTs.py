@@ -243,7 +243,8 @@ def main(prediction_dir: str,
             input, name = patches_DL.__getitem__(j)
 
             """Predict"""
-            out = (predict_unet._predict(input[None, :]) + predict_unet3plus._predict(input[None, :])) / 2
+            out = (predict_unet._predict(input[None, :]) +
+                   predict_unet3plus._predict(input[None, :])) / 2
 
             """Threshold"""
             out = np.where(out >= cnn_threshold, 1, 0)

@@ -88,10 +88,11 @@ def main(postprocess_dataset: str,
                                             down_sampling_voxal_size=None)
             point_cloud_LD = None
         else:
-            point_cloud_HD, point_cloud_LD = post_processer(image=image,
-                                                            euclidean_transform=euclidean_distance_transform,
-                                                            label_size=feature_size,
-                                                            down_sampling_voxal_size=downsample)
+            point_cloud_HD, \
+                point_cloud_LD = post_processer(image=image,
+                                                euclidean_transform=euclidean_distance_transform,
+                                                label_size=feature_size,
+                                                down_sampling_voxal_size=downsample)
 
         """Save point cloud"""
         if save_format in ['csv', 'all']:
