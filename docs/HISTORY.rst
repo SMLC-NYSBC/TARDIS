@@ -4,34 +4,38 @@ History
 
 0.1.0b (2022-07-**)
 --------------------
-* Unet and Unet3Plus model
+* SpindleTorch changes:
     * Standardized pixel size input. Now all data are reshaped to the pixel 
         size of 2.32
     * Change up-sampling from align_corners=True to align_corners=False
     * Added new data for training from @Stefanie Redemann and @Gunar
-
-* SpindleTorch Improvements
     * Ground-up rebuild spindletorch model
         * New Big UNet model combining both UNet and UNet3Plus
         * Unet/Unet3Plus re-trained
         * Train Big UNet
     * Speed-up prediction with new Big UNet model
 
-* Bugfixes for segmentation of point cloud from graph probabilities
-    * Speed-up boost with simplifying the building and reading adjacency matrix
-    * Fix in masking adjacency matrix for points already connected
-    * Moved from greedy segmentation to 1-step-back segmentation
+* DIST module changes:
+    * Added support for .ply file format and meshes
+    * Re-train model on different DIST structure for the paper and for searching 
+        of the best approach
 
-* Bugfixes for floating point precision in Amira output
-    * Change floating point from 3 to 15
+    * Bugfixes for segmentation of point cloud from graph probabilities
+        * Speed-up boost with simplifying the building and reading adjacency matrix
+        * Fix in masking adjacency matrix for points already connected
+        * Moved from greedy segmentation to 1-step-back segmentation
 
-* Improvements from importing data from binary Amira file format
-    * Change how pixel size is calculated. Amira has weird behavior whenever ET 
-        is trimmed. Include this in pixel size calculation
+* SLCPY module changes:
+    * Bugfixes for floating point precision in Amira output
+        * Change floating point from 3 to 15
 
-* Improvements in .rec, .mrc file loader
-    * .rec and .mrc file are format with uint8 (value from -128 to 128) or 
-        int8 (value from 0 to 255). Fix reading of these files
+    * Improvements from importing data from binary Amira file format
+        * Change how pixel size is calculated. Amira has weird behavior whenever ET 
+            is trimmed. Include this in pixel size calculation
+
+    * Improvements in .rec, .mrc file loader
+        * .rec and .mrc file are format with uint8 (value from -128 to 128) or 
+            int8 (value from 0 to 255). Fix reading of these files
 
 0.1.0a (2022-07-12)
 --------------------
