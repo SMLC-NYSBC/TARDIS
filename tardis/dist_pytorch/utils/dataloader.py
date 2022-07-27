@@ -109,7 +109,10 @@ class GraphDataset(Dataset):
             img = img[uq_idx, :]
 
         # Normalize point cloud
-        dist = pc_median_dist(pc=coord[:, 1:], avg_over=True)
+        if coord_file.endswith('.ply'):
+            dist = pc_median_dist(pc=coord[:, 1:], avg_over=True, box_size=0.05)
+        else:
+            dist = pc_median_dist(pc=coord[:, 1:], avg_over=True)
 
         if self.img_dir is None:
             coord[:, 1:] = coord[:, 1:] / dist  # Normalize point cloud
