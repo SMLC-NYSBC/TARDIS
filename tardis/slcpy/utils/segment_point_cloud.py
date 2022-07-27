@@ -212,11 +212,10 @@ class GraphInstanceV2:
                 # Pick secondary interaction for i
                 reverse_int = adj_matrix[i][2][:self.connection]
 
-                # Check if picked new interaction show up secondary interaction
-                if np.any([True for i in reverse_int if i in idx_df]):
-                    # Check if selection are already on the list
-                    new_df = new_df + [j for j in reverse_int
-                                       if j not in idx_df and len(adj_matrix[j][2]) > 0]
+                new_df = new_df + [j for j in reverse_int 
+                                   if j not in idx_df and # Check if node is not already on the list
+                                   i in adj_matrix[j][2][:self.connection]] # Check if new interaction show up secondary interaction
+                new_df = list(np.unique(new_df))
 
             new = new_df
             idx_df = idx_df + new
@@ -321,9 +320,9 @@ class GraphInstanceV2:
                                                    np.zeros((segment.shape[0], )))).T)
                 segment_id += 1
 
-            # Update adjacency list
+            # Mask point assigned to the instance
             for id in idx:
-                adjacency_matrix[id][2], adjacency_matrix[id][3] = [], []
+                adjacency_matrix[id][1], adjacency_matrix[id][2], adjacency_matrix[id][3] = [], [], []
 
             if sum([sum(i[2]) for i in adjacency_matrix]) == 0:
                 stop = True

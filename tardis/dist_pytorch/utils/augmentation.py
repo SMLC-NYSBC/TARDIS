@@ -4,8 +4,8 @@ from typing import Optional
 import numpy as np
 import tifffile.tifffile as tiff
 from skimage import exposure
-from tardis.slcpy.utils.load_data import ImportDataFromAmira
-
+from tardis.slcpy.utils.load_data import ImportDataFromAmira, load_ply
+from sklearn.neighbors import NearestNeighbors
 
 def preprocess_data(coord: str,
                     image: Optional[str] = None,
@@ -39,15 +39,15 @@ def preprocess_data(coord: str,
         import zarr
 
     """ Collect Coordinates [Length x Dimension] """
-    if coord[-3:] == "csv":
+    if coord[-4:] == ".csv":
         coord_label = np.genfromtxt(coord, delimiter=',')
         if str(coord_label[0, 0]) == 'nan':
             coord_label = coord_label[1:, :]
-
-    if coord[-3:] == "npy":
+        pixel_size = None
+    elif coord[-4:] == ".npy":
         coord_label = np.load(coord)
-
-    if coord[-3:] == ".am":
+        pixel_size = None
+    elif coord[-3:] == ".am":
         if image is None:
             amira_import = ImportDataFromAmira(src_am=coord,
                                                src_img=None)
@@ -58,6 +58,9 @@ def preprocess_data(coord: str,
                                                src_img=image)
             coord_label = amira_import.get_segmented_points()
             pixel_size = amira_import.get_pixel_size()
+    elif coord[-4:] == '.ply':
+        coord_label = load_ply(ply=coord)
+        pixel_size = None
 
     """Coordinates without labels"""
     coords = coord_label[:, 1:]
@@ -110,7 +113,7 @@ def preprocess_data(coord: str,
         if memory_save:
             img_df.close()
     elif image is not None and image.endswith('.am'):
-        """Collect Image Patches for .am binnary files"""
+        """Collect Image Patches for .am binary files"""
         img_stack, pixel_size = amira_import.get_image()
 
         # Crop image around coordinates
@@ -140,8 +143,14 @@ def preprocess_data(coord: str,
         return coord_label, img
     else:
         """ Collect Graph [Length x Length] """
-        build = BuildGraph(coord=coord_label,
-                           pixel_size=pixel_size)
+        if coord[-4:] == '.ply':
+            build = BuildGraph(coord=coord_label,
+                            pixel_size=pixel_size,
+                            mesh=True)
+        else:
+            build = BuildGraph(coord=coord_label,
+                            pixel_size=pixel_size,
+                            mesh=False)
         graph = build()
 
         return coords, img, graph
@@ -157,42 +166,63 @@ class BuildGraph:
     """
     def __init__(self,
                  coord: np.ndarray,
-                 pixel_size: Optional[int] = None):
+                 pixel_size: Optional[int] = None,
+                 mesh=False):
         self.coord = coord
         self.pixel_size = pixel_size
+        self.mesh = mesh
         self.graph = np.zeros((len(coord), len(coord)))
         self.all_idx = np.unique(coord[:, 0])
 
     def __call__(self):
         for i in self.all_idx:
-            points_in_contour = np.where(self.coord[:, 0] == i)
-            points_in_contour = points_in_contour[0].tolist()
+            points_in_contour = np.where(self.coord[:, 0] == i)[0].tolist()
+            
+            if self.mesh:
+                coord_df = self.coord[points_in_contour]
+                nbrs = NearestNeighbors(n_neighbors=4, algorithm='ball_tree').fit(coord_df)
+                _, indices = nbrs.kneighbors(coord_df)
+                indices = indices[:, 1:]  # 3 KNN for each node
 
-            for j in points_in_contour:
-                self.graph[j, j] = 1
-                # First point in contour
-                if j == points_in_contour[0]:  # First point
-                    if (j + 1) <= (len(self.coord) - 1):
+                for j, id in zip(points_in_contour, indices):
+                    # Self connection
+                    self.graph[j, j] = 1
+
+                    # Triangular connection 
+                    self.graph[j, points_in_contour[id[0]]] = 1
+                    self.graph[points_in_contour[id[0]], j] = 1
+                    
+                    self.graph[j, points_in_contour[id[1]]] = 1
+                    self.graph[points_in_contour[id[1]], j] = 1
+
+                    self.graph[j, points_in_contour[id[2]]] = 1
+                    self.graph[points_in_contour[id[2]], j] = 1
+            else:
+                for j in points_in_contour:
+                    self.graph[j, j] = 1
+                    # First point in contour
+                    if j == points_in_contour[0]:  # First point
+                        if (j + 1) <= (len(self.coord) - 1):
+                            self.graph[j, j + 1] = 1
+                            self.graph[j + 1, j] = 1
+                    # Last point
+                    elif j == points_in_contour[len(points_in_contour) - 1]:
+                        self.graph[j, j - 1] = 1
+                        self.graph[j - 1, j] = 1
+                    else:  # Point in the middle
                         self.graph[j, j + 1] = 1
                         self.graph[j + 1, j] = 1
-                # Last point
-                elif j == points_in_contour[len(points_in_contour) - 1]:
-                    self.graph[j, j - 1] = 1
-                    self.graph[j - 1, j] = 1
-                else:  # Point in the middle
-                    self.graph[j, j + 1] = 1
-                    self.graph[j + 1, j] = 1
-                    self.graph[j, j - 1] = 1
-                    self.graph[j - 1, j] = 1
+                        self.graph[j, j - 1] = 1
+                        self.graph[j - 1, j] = 1
 
-            # Check euclidian distance between fist and last point. if shorter then
-            #  10 nm then connect
-            ends_distance = np.linalg.norm(
-                self.coord[points_in_contour[0]][1:] - self.coord[points_in_contour[-1]][1:])
+                # Check euclidian distance between fist and last point. if shorter then
+                #  10 nm then connect
+                ends_distance = np.linalg.norm(
+                    self.coord[points_in_contour[0]][1:] - self.coord[points_in_contour[-1]][1:])
 
-            if ends_distance < 1.1:  # Assuming around 2 nm pixel size
-                self.graph[points_in_contour[0], points_in_contour[-1]] = 1
-                self.graph[points_in_contour[-1], points_in_contour[0]] = 1
+                if ends_distance < 1.1:  # Assuming around 2 nm pixel size
+                    self.graph[points_in_contour[0], points_in_contour[-1]] = 1
+                    self.graph[points_in_contour[-1], points_in_contour[0]] = 1
 
         return self.graph
 

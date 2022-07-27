@@ -175,7 +175,7 @@ def main(pointcloud_dir: str,
     test_coords_dir = join(pointcloud_dir, 'test', 'masks')
 
     img_format = ('.tif', '.tiff', '.am', '.mrc', '.rec')
-    coord_format = ('.CorrelationLines.am', '.npy', '.csv')
+    coord_format = ('.CorrelationLines.am', '.npy', '.csv', '.ply')
     dataset_test = False
 
     # Check if dir has train/test folder and if folder have data
@@ -207,20 +207,21 @@ def main(pointcloud_dir: str,
         mkdir(test_imgs_dir)
         mkdir(test_coords_dir)
 
-        """Move data to setuped dir"""
+        """Move data to set-up dir"""
         _ = BuildTrainDataSet(dir=pointcloud_dir,
                               coord_format=coord_format,
                               with_img=with_img,
                               img_format=img_format)
 
+        """Split train for train and test"""
         build_test = BuildTestDataSet(dataset_dir=pointcloud_dir,
                                       train_test_ration=train_test_ratio,
                                       prefix=prefix)
         build_test.__builddataset__()
 
-    else:
-        _ = [f for f in coord_format if listdir(train_coords_dir)[
-            0].endswith(f)]
+    # else:
+    #     _ = [f for f in coord_format if listdir(train_coords_dir)[
+    #         0].endswith(f)]
 
     if with_img:
         coord_format.append(

@@ -4,6 +4,7 @@ from os.path import isfile
 from typing import Optional
 
 import numpy as np
+import open3d as o3d
 import tifffile.tifffile as tif
 
 
@@ -403,3 +404,21 @@ def import_am(img: str):
         return img[binary_start:-1].reshape((ny, nx)), pixel_size, physical_size, transformation
     else:
         return img[binary_start:-1].reshape((nz, ny, nx)), pixel_size, physical_size, transformation
+
+
+def load_ply(ply):
+    """
+    Loader for .ply files. .ply converted to point cloud and colors are used as labeling
+
+    Args:
+        ply: Directory for .ply file
+
+    Return:
+        np.ndarray of shape [Length x Dimension] dim are [L x X x Y x Z]
+    """
+    coord = np.asarray(o3d.io.read_point_cloud(ply).points)
+    label = np.asarray(o3d.io.read_point_cloud(ply).colors)
+
+    unique_label = np.unique(label, axis=0)
+
+    return np.hstack((np.array(([np.where(i == unique_label)[0][0] for i in label],)).T, coord))

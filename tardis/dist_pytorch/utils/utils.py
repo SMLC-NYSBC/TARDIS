@@ -35,9 +35,6 @@ def BuildTrainDataSet(dir: str,
         coord_format: Format of the coordinate files
         with_img: If True, expect corresponding image files
         img_format: Allowed format that can be used
-
-    Returns:
-        _type_: _description_
     """
     assert len([f for f in listdir(dir) if f.endswith(coord_format)]) > 0, \
         f'No file found in given dir {dir}'

@@ -73,8 +73,8 @@ class VoxalizeDataSetV2:
 
         # Voxal setting
         self.voxal_patch_size = init_voxal_size
-        self.size_expand = init_voxal_size * 0.25  # 25% of voxal size
-        self.voxal_stride = init_voxal_size * 0.15  # 10% of voxal size
+        self.size_expand = init_voxal_size * 0.05  # 25% of voxal size
+        self.voxal_stride = init_voxal_size * 0.25  # 10% of voxal size
         self.drop_rate = drop_rate
 
     def boundary_box(self):

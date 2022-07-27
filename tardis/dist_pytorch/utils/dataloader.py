@@ -59,13 +59,12 @@ class GraphDataset(Dataset):
         self.normalize = normalize
         self.memory_save = memory_save
 
-        self.ids = [f for f in listdir(
-            coord_dir) if f.endswith(self.coord_format)]
+        self.ids = [f for f in listdir(coord_dir) if f.endswith(self.coord_format)]
 
         # Voxal setting
         self.downsampling = downsampling_if
         self.downsampling_rate = downsampling_rate
-        self.voxal_size = np.zeros((len(self.ids), 1))
+        self.voxal_size = np.zeros((len(self.ids), 1))  # Save voxal size value for speed-up
 
     def __len__(self):
         return len(self.ids)
@@ -75,12 +74,7 @@ class GraphDataset(Dataset):
         idx = self.ids[i]
 
         # Define what coordinate format are available
-        if ".csv" in self.coord_format:
-            coord_file = join(self.coord_dir, str(idx))
-        elif ".npy" in self.coord_format:
-            coord_file = join(self.coord_dir, str(idx))
-        elif ".CorrelationLines.am" in self.coord_format:
-            coord_file = join(self.coord_dir, str(idx))
+        coord_file = join(self.coord_dir, str(idx))
 
         if self.img_dir is not None:
             filetype = [ft for ft in self.coord_format if idx.endswith(ft)][0]
@@ -107,7 +101,10 @@ class GraphDataset(Dataset):
                                      size=self.size,
                                      normalization=self.normalize,
                                      memory_save=self.memory_save)
+
+        # Remove coord and img patch duplicates
         coord, uq_idx = np.unique(coord, axis=0, return_index=True)
+
         if img_file is not None:
             img = img[uq_idx, :]
 
@@ -115,7 +112,7 @@ class GraphDataset(Dataset):
         dist = pc_median_dist(pc=coord[:, 1:], avg_over=True)
 
         if self.img_dir is None:
-            coord[:, 1:] = coord[:, 1:] / dist
+            coord[:, 1:] = coord[:, 1:] / dist  # Normalize point cloud
 
             if self.voxal_size[i, 0] == 0:
                 VD = VoxalizeDataSetV2(coord=coord,
