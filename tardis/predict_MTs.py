@@ -306,7 +306,7 @@ def main(prediction_dir: str,
         # Build voxalized dataset with
         VD = VoxalizeDataSetV2(coord=point_cloud,
                                downsampling_rate=None,
-                               init_voxal_size=1000,
+                               init_voxal_size=0,
                                drop_rate=1,
                                downsampling_threshold=points_in_voxal,
                                graph=False)

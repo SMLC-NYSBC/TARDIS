@@ -6,6 +6,7 @@ import click
 import numpy as np
 import torch
 
+from tardis._version import version
 from tardis.dist_pytorch.transformer.network import DIST
 from tardis.dist_pytorch.utils.augmentation import preprocess_data
 from tardis.dist_pytorch.utils.voxal import VoxalizeDataSetV2
@@ -14,7 +15,6 @@ from tardis.spindletorch.unet.predictor import Predictor
 from tardis.utils.device import get_device
 from tardis.utils.metrics import AUC, F1_metric, IoU, distAUC, mAP, mCov
 from tardis.utils.utils import pc_median_dist
-from tardis._version import version
 
 torch.backends.cudnn.enabled = False
 torch.backends.cudnn.benchmark = True
@@ -35,7 +35,7 @@ torch.autograd.profiler.emit_nvtx(enabled=False)
               help='Structure of the graphformer',
               show_default=True)
 @click.option('-gni', '--gf_ninput',
-              default=2500,
+              default=None,
               type=int,
               help='Node input feature.',
               show_default=True)
@@ -137,13 +137,14 @@ def main(gf_dir: str,
     available_format = ('.csv', '.CorrelationLines.am', '.npy')
     GF_list = [f for f in listdir(gf_dir) if f.endswith(available_format)]
     assert len(GF_list) > 0, 'No file found in given directory!'
-    macc, mprec, mrecall, mf1, miou, mauc = [], [], [], [], [], []
+    macc, mprec, mrecall, mf1, miou = [], [], [], [], []
     seg_prec, seg_rec, mcov_score = [], [], []
-    distauc, AP = [], []
+    dice_AUC, AP = [], []
 
     # Build handlers
-    GraphToSegment = GraphInstanceV2(threshold=gf_threshold)
-    #  BuildAmira = NumpyToAmira()
+    GraphToSegment = GraphInstanceV2(threshold=gf_threshold,
+                                     connection=2,
+                                     prune=2)
 
     GF = Predictor(model=DIST(n_out=1,
                               node_input=gf_ninput,
@@ -174,64 +175,52 @@ def main(gf_dir: str,
         if tqdm:
             batch_iter.set_description(f'Predicting {i}')
 
-        target, img = preprocess_data(coord=join(gf_dir, i),
-                                      image=None,
-                                      include_label=True,
-                                      size=50,
-                                      normalization='simple',
-                                      memory_save=False)
-        dist = pc_median_dist(pc=target[:, 1:])
+        # coord <- array of all point with labels
+        # coord_dist <- array of all points with labels after normalization
+        # coords <- voxal of coord
+        # coord_vx <- voxals for prediction
+        coord, img = preprocess_data(coord=join(gf_dir, i),
+                                     image=None,
+                                     include_label=True,
+                                     size=None)
 
-        target[:, 1:] = target[:, 1:] / dist
-        VD = VoxalizeDataSetV2(coord=target,
-                               image=None,
-                               init_voxal_size=5000,
+        dist = pc_median_dist(pc=coord[:, 1:], avg_over=True)
+        coord_dist = coord
+        coord_dist[:, 1:] = coord[:, 1:] / dist
+
+        VD = VoxalizeDataSetV2(coord=coord_dist,
+                               init_voxal_size=0,
                                drop_rate=1,
                                downsampling_threshold=point_in_voxal,
                                downsampling_rate=None,
                                graph=True)
-        coords, img, graph_target, output_idx = VD.voxalize_dataset(
-            out_idx=True)
+        coords, img, graph_target, output_idx = VD.voxalize_dataset(prune=5)
+        coord_vx = [c / pc_median_dist(c) for c in coords]
 
-        dl_iter = tq(zip(coords, img),
+        dl_iter = tq(zip(coord_vx, img),
                      'Voxals',
                      leave=False)
 
         graphs = []
         coords = []
-        for coord, img in dl_iter:
+        for c, img in dl_iter:
             if with_img:
-                graph = GF._predict(x=coord[None, :],
+                graph = GF._predict(x=c[None, :],
                                     y=img[None, :])
             else:
-                graph = GF._predict(x=coord[None, :],
+                graph = GF._predict(x=c[None, :],
                                     y=None)
             graphs.append(graph)
-            coords.append(coord.cpu().detach().numpy())
 
         graph_target = GraphToSegment._stitch_graph(graph_target, output_idx)
         graph_target = np.where(graph_target > 0, 1, 0)
         graph_logits = GraphToSegment._stitch_graph(graphs, output_idx)
-        coord = GraphToSegment._stitch_coord(coords, output_idx)
 
-        if coord.shape[1] == 2:
-            coord = np.stack((np.zeros((len(coord))),
-                              coord[:, 0],
-                              coord[:, 1])).T
-
-            segments = GraphToSegment.graph_to_segments(graph=graph_logits,
-                                                        coord=coord,
-                                                        idx=output_idx)
-            segments = np.stack((segments[:, 0],
-                                 segments[:, 2],
-                                 segments[:, 3])).T
-        else:
-            segments = GraphToSegment.graph_to_segments(graph=graph_logits,
-                                                        coord=coord,
-                                                        idx=output_idx)
-
-        segments[:, 1:] = np.round(segments[:, 1:] * dist)
-        target[:, 1:] = np.round(target[:, 1:] * dist)
+        segments = GraphToSegment.voxal_to_segment(graph=graphs,
+                                                   coord=coord[:, 1:],
+                                                   idx=output_idx,
+                                                   sort=True,
+                                                   visualize=None)
 
         """Prediction evaluation"""
         acc, prec, rec, f1 = F1_metric(graph_target.flatten(),
@@ -258,22 +247,15 @@ def main(gf_dir: str,
         miou.append(iou)
         print(f'IoU of {iou}')
 
-        """AUC evaluation"""
-        auc = AUC(graph_target,
-                  graph_logits,
-                  graph=True)
-        mauc.append(auc)
-        print(f'AUC of {round(np.mean(auc), 3)}')
-
         """Dist AUC"""
-        dist_auc = distAUC(coord=target[:, 1:],
+        dist_auc = distAUC(coord=coord[:, 1:],
                            target=graph_target)
-        distauc.append(dist_auc)
-        print(f'-Dist AUC: {dist_auc}')
+        dice_AUC.append(dist_auc)
+        print(f'Dist AUC: {dist_auc}')
 
         """Segmentation evaluation"""
-        mcov, prec, rec = mCov(target,
-                               segments)
+        mcov, prec, rec = mCov(coord,
+                               segments[:, :3])
         mcov_score.append(mcov)
         seg_prec.append(prec)
         seg_rec.append(rec)
@@ -314,8 +296,7 @@ def main(gf_dir: str,
     print(f'Mean F1 of {round(np.mean(mf1), 3)}')
     print(f'Mean AP of {round(np.mean(AP), 3)}')
     print(f'Mean IoU of {round(np.mean(miou), 3)}')
-    print(f'Mean mAUC of {round(np.mean(mauc), 3)}')
-    print(f'Mean dist mAUC of {round(np.mean(distauc), 3)}')
+    print(f'Mean dist mAUC of {round(np.mean(dice_AUC), 3)}')
     print(f'Mean mCov of {round(np.mean(mcov_score), 3)}')
     print(f'Mean Seg_mPrec of {round(np.mean(seg_prec), 3)}')
     print(f'Mean Seg_mRec of {round(np.mean(seg_rec), 3)}')

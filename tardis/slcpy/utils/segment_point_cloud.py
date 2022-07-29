@@ -213,16 +213,18 @@ class GraphInstanceV2:
                 reverse_int = adj_matrix[i][2][:self.connection]
 
                 new_df = new_df + [j for j in reverse_int 
-                                   if j not in idx_df and # Check if node is not already on the list
-                                   i in adj_matrix[j][2][:self.connection]] # Check if new interaction show up secondary interaction
+                                   if j not in idx_df and  # Check if node is not already on the list
+                                   i in adj_matrix[j][2][:self.connection]]  # Check if new interaction show up secondary interaction
                 new_df = list(np.unique(new_df))
 
             new = new_df
             idx_df = idx_df + new
 
-        return np.unique(idx_df)
+        idx_df = np.unique(idx_df)
 
-    @ staticmethod
+        return [i for i in idx_df if adj_matrix[i][2] != []]
+
+    @staticmethod
     def _sort_segment(coord: np.ndarray):
         """
         Sorting of the point cloud based on number of connections followed by
@@ -253,6 +255,7 @@ class GraphInstanceV2:
                          graph: list,
                          coord: np.ndarray,
                          idx: list,
+                         sort= True,
                          visualize: Optional[str] = None):
         """
         SEGMENTER FOR VOXALS
@@ -279,6 +282,7 @@ class GraphInstanceV2:
             graph: Graph voxal output from Dist
             coord: Coordinates for each unsorted point idx
             idx: idx of point included in the segment
+            sort: If True sort output 
             visualize: If not None, visualize output with open3D
         """
         """Check data"""
@@ -306,7 +310,10 @@ class GraphInstanceV2:
             """Select segment longer then 3 points"""
             if len(idx) >= self.prune:
                 # Sort points in segment
-                segment = self._sort_segment(coord=coord[idx])
+                if sort:
+                    segment = self._sort_segment(coord=coord[idx])
+                else:
+                    segment = coord[idx]
 
                 if segment.shape[1] == 3:
                     coord_segment.append(np.stack((np.repeat(segment_id, segment.shape[0]),
