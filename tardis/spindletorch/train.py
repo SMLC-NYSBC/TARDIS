@@ -91,6 +91,7 @@ def train(train_dataloader: DataLoader,
     if cnn_checkpoint is not None:
         save_train = torch.load(cnn_checkpoint, map_location=device)
         model.load_state_dict(save_train['model_state_dict'])
+    model = model.to(device)
 
     """Define loss function for training"""
     if loss_function == "dice":
@@ -135,7 +136,7 @@ def train(train_dataloader: DataLoader,
         print(
             f'Dropout with {dropout} probability is used for each conv. layer')
 
-    trainer = Trainer(model=model.to(device),
+    trainer = Trainer(model=model,
                       device=device,
                       criterion=loss_fn,
                       optimizer=optimizer,

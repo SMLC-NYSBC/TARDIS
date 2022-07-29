@@ -59,7 +59,7 @@ def preprocess_data(coord: str,
             coord_label = amira_import.get_segmented_points()
             pixel_size = amira_import.get_pixel_size()
     elif coord[-4:] == '.ply':
-        coord_label = load_ply(ply=coord)
+        coord_label = load_ply(ply=coord, downsample=0.035)
         pixel_size = None
 
     """Coordinates without labels"""
@@ -177,26 +177,34 @@ class BuildGraph:
     def __call__(self):
         for i in self.all_idx:
             points_in_contour = np.where(self.coord[:, 0] == i)[0].tolist()
-            
+
             if self.mesh:
                 coord_df = self.coord[points_in_contour]
-                nbrs = NearestNeighbors(n_neighbors=4, algorithm='ball_tree').fit(coord_df)
-                _, indices = nbrs.kneighbors(coord_df)
-                indices = indices[:, 1:]  # 3 KNN for each node
 
-                for j, id in zip(points_in_contour, indices):
-                    # Self connection
-                    self.graph[j, j] = 1
+                if coord_df.shape[0] > 5:
+                    nbrs = NearestNeighbors(n_neighbors=5, algorithm='ball_tree').fit(coord_df)
+                    _, indices = nbrs.kneighbors(coord_df)
+                    indices = indices[:, 1:]  # 5 KNN for each node
 
-                    # Triangular connection 
-                    self.graph[j, points_in_contour[id[0]]] = 1
-                    self.graph[points_in_contour[id[0]], j] = 1
-                    
-                    self.graph[j, points_in_contour[id[1]]] = 1
-                    self.graph[points_in_contour[id[1]], j] = 1
+                    for j, id in zip(points_in_contour, indices):
+                        # Self connection
+                        self.graph[j, j] = 1
 
-                    self.graph[j, points_in_contour[id[2]]] = 1
-                    self.graph[points_in_contour[id[2]], j] = 1
+                        # Triangular connection 
+                        self.graph[j, points_in_contour[id[0]]] = 1
+                        self.graph[points_in_contour[id[0]], j] = 1
+                        
+                        self.graph[j, points_in_contour[id[1]]] = 1
+                        self.graph[points_in_contour[id[1]], j] = 1
+
+                        self.graph[j, points_in_contour[id[2]]] = 1
+                        self.graph[points_in_contour[id[2]], j] = 1
+                else:
+                    for j in points_in_contour:
+                        self.graph[j, j] = 1
+
+                        self.graph[j, points_in_contour] = 1
+                        self.graph[points_in_contour, j] = 1
             else:
                 for j in points_in_contour:
                     self.graph[j, j] = 1

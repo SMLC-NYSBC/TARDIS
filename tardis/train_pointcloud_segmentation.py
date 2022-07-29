@@ -220,12 +220,14 @@ def main(pointcloud_dir: str,
         build_test.__builddataset__()
 
     # else:
-    #     _ = [f for f in coord_format if listdir(train_coords_dir)[
-    #         0].endswith(f)]
+    mesh = [True for f in ['.ply'] if listdir(train_coords_dir)[0].endswith(f)]
+    if len(mesh) > 0:
+        mesh = True
+    else:
+        mesh = False
 
     if with_img:
-        coord_format.append(
-            [f for f in img_format if listdir(train_imgs_dir)[0].endswith(f)][0])
+        coord_format.append([f for f in img_format if listdir(train_imgs_dir)[0].endswith(f)][0])
     else:
         train_imgs_dir = None
 
@@ -236,6 +238,7 @@ def main(pointcloud_dir: str,
                                                      prefix=prefix,
                                                      size=patch_size,
                                                      normalize="rescale",
+                                                     mesh=mesh,
                                                      downsampling_if=dl_downsampling,
                                                      downsampling_rate=dl_downsampling_rate,
                                                      memory_save=False),
@@ -249,6 +252,7 @@ def main(pointcloud_dir: str,
                                                     prefix=prefix,
                                                     size=patch_size,
                                                     normalize="rescale",
+                                                    mesh=mesh,
                                                     downsampling_if=dl_downsampling,
                                                     downsampling_rate=dl_downsampling_rate,
                                                     memory_save=False),

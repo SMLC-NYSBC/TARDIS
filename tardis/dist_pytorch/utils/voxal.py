@@ -46,6 +46,7 @@ class VoxalizeDataSetV2:
     def __init__(self,
                  coord: np.ndarray,
                  image: Optional[np.ndarray] = None,
+                 voxal_3d=False,
                  downsampling_threshold=500,
                  downsampling_rate: Optional[float] = None,
                  init_voxal_size=10000,
@@ -72,9 +73,10 @@ class VoxalizeDataSetV2:
         self.downsampling_rate = downsampling_rate
 
         # Voxal setting
+        self.voxal_3d = voxal_3d
         self.voxal_patch_size = init_voxal_size
-        self.size_expand = init_voxal_size * 0.05  # 25% of voxal size
-        self.voxal_stride = init_voxal_size * 0.25  # 10% of voxal size
+        self.size_expand = init_voxal_size * 0.05  # 5% of voxal size
+        self.voxal_stride = init_voxal_size * 0.15  # 10% of voxal size
         self.drop_rate = drop_rate
 
     def boundary_box(self):
@@ -106,6 +108,7 @@ class VoxalizeDataSetV2:
         Args:
             boundary_box: Coordinate boundary box
         """
+        voxal = []
         voxal_positions_x = []
         voxal_positions_y = []
 
@@ -132,13 +135,29 @@ class VoxalizeDataSetV2:
             voxal_positions_y.append(y_pos)
 
         # Bind X and Y voxal positions
-        voxal = []
         voxal_positions_x = voxal_positions_x[::2]
         voxal_positions_y = voxal_positions_y[::2]
-        for i in voxal_positions_x:
-            voxal.append(np.vstack(([i] * len(voxal_positions_y),
-                                    voxal_positions_y,
-                                    [z_mean] * len(voxal_positions_y))).T)
+
+        if not self.voxal_3d:
+            for i in voxal_positions_x:
+                voxal.append(np.vstack(([i] * len(voxal_positions_y),
+                                        voxal_positions_y,
+                                        [z_mean] * len(voxal_positions_y))).T)
+        else:
+            # Find Z positions for voxal
+            voxal_positions_z = []
+
+            z_pos = bb_min[2] + (self.voxal_patch_size / 2)
+            voxal_positions_z.append(y_pos)
+            while bb_max[2] > z_pos:
+                z_pos = z_pos + self.voxal_patch_size
+                voxal_positions_z.append(z_pos)
+
+            for i in voxal_positions_x:
+                for j in voxal_positions_z:
+                    voxal.append(np.vstack(([i] * len(voxal_positions_y),
+                                            voxal_positions_y,
+                                            [j] * len(voxal_positions_y))).T)
 
         return np.vstack(voxal)
 
@@ -310,6 +329,7 @@ class VoxalizeDataSetV2:
         return self.voxal_patch_size
 
     def voxalize_dataset(self,
+                         mesh=False,
                          out_idx=True,
                          prune=0):
         """
@@ -373,11 +393,13 @@ class VoxalizeDataSetV2:
 
                 coord_ds = self.voxal_downsampling(coord_ds)
 
-                if np.sum(coord_ds) > prune:
+                if len(coord_ds) > prune:
                     if self.graph_output:
                         segment_voxal = self.segments_id[df_voxal_keep, :]
                         segment_voxal = self.normalize_idx(segment_voxal[coord_ds, :])
+
                         build_graph = BuildGraph(coord=segment_voxal,
+                                                 mesh=mesh,
                                                  pixel_size=None)
                         graph_voxal.append(self.output_format(build_graph()))
 
@@ -389,23 +411,7 @@ class VoxalizeDataSetV2:
 
                     if out_idx:
                         output_idx.append(output_df[coord_ds])
-                elif not prune:
-                    if self.graph_output:
-                        segment_voxal = self.segments_id[df_voxal_keep, :]
-                        segment_voxal = self.normalize_idx(
-                            segment_voxal[coord_ds, :])
-                        build_graph = BuildGraph(coord=segment_voxal,
-                                                 pixel_size=None)
-                        graph_voxal.append(self.output_format(build_graph()))
 
-                    coord_voxal.append(self.output_format(df_voxal[coord_ds, :]))
-                    if self.image is not None:
-                        img_voxal.append(self.output_format(df_img[coord_ds, :]))
-                    else:
-                        img_voxal.append(self.output_format(df_img))
-
-                    if out_idx:
-                        output_idx.append(output_df[coord_ds])
         # Find voxal that have more then 50% unique points
         unique_idx = [False if np.any([True for k in [len(set(output_idx[id]).intersection(j))
                                                       for idx, j in enumerate(output_idx)

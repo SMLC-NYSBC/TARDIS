@@ -6,6 +6,7 @@ from typing import Optional
 import numpy as np
 import open3d as o3d
 import tifffile.tifffile as tif
+from scipy.spatial import KDTree
 
 
 class ImportDataFromAmira:
@@ -406,19 +407,28 @@ def import_am(img: str):
         return img[binary_start:-1].reshape((nz, ny, nx)), pixel_size, physical_size, transformation
 
 
-def load_ply(ply):
+def load_ply(ply,
+             downsample=0):
     """
     Loader for .ply files. .ply converted to point cloud and colors are used as labeling
 
     Args:
         ply: Directory for .ply file
-
+        downsampling: Float value for .ply downsampling
     Return:
         np.ndarray of shape [Length x Dimension] dim are [L x X x Y x Z]
     """
-    coord = np.asarray(o3d.io.read_point_cloud(ply).points)
-    label = np.asarray(o3d.io.read_point_cloud(ply).colors)
+    pcd = o3d.io.read_point_cloud(ply)
+    label_org = np.unique(np.asarray(pcd.colors), axis=0)
+    
+    if downsample > 0:
+        pcd = pcd.voxel_down_sample(voxel_size=downsample)
 
-    unique_label = np.unique(label, axis=0)
+    coord = np.asarray(pcd.points)
+    label = np.asarray(pcd.colors)
 
-    return np.hstack((np.array(([np.where(i == unique_label)[0][0] for i in label],)).T, coord))
+    label_id = []
+    for i in label:
+        label_id.append(np.where(label_org == label_org[KDTree(label_org).query(i)[1]])[0][0])
+
+    return np.hstack((np.asarray(label_id)[:, None], coord))
