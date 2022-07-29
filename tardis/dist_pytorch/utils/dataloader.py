@@ -44,6 +44,7 @@ class GraphDataset(Dataset):
                  downsampling_if=500,
                  downsampling_rate: Optional[float] = None,
                  normalize="simple",
+                 mesh=False,
                  memory_save=True):
         # Coord setting
         self.coord_dir = coord_dir
@@ -66,6 +67,8 @@ class GraphDataset(Dataset):
         self.downsampling_rate = downsampling_rate
         self.voxal_size = np.zeros((len(self.ids), 1))  # Save voxal size value for speed-up
 
+        # Graph setting
+        self.mesh = mesh
     def __len__(self):
         return len(self.ids)
 
@@ -136,12 +139,12 @@ class GraphDataset(Dataset):
         else:
             if self.voxal_size[i, 0] == 0:
                 VD = VoxalizeDataSetV2(coord=coord,
-                                       image=img,
-                                       init_voxal_size=0,
-                                       drop_rate=1,
-                                       downsampling_threshold=self.downsampling,
-                                       downsampling_rate=None,
-                                       graph=True)
+                                        image=img,
+                                        init_voxal_size=0,
+                                        drop_rate=1,
+                                        downsampling_threshold=self.downsampling,
+                                        downsampling_rate=None,
+                                        graph=True)
             else:
                 VD = VoxalizeDataSetV2(coord=coord,
                                        image=None,
@@ -151,8 +154,9 @@ class GraphDataset(Dataset):
                                        downsampling_rate=None,
                                        graph=True)
 
-        coords_v, imgs_v, graph_v, output_idx = VD.voxalize_dataset(out_idx=True,
-                                                                    prune=True)
+        coords_v, imgs_v, graph_v, output_idx = VD.voxalize_dataset(mesh=self.mesh,
+                                                                    out_idx=True,
+                                                                    prune=50)
 
         # Store initial patch size for each data to speed up computation
         if self.voxal_size[i, 0] == 0:
