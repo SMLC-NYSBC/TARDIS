@@ -7,6 +7,7 @@ from skimage import exposure
 from tardis.slcpy.utils.load_data import ImportDataFromAmira, load_ply
 from sklearn.neighbors import NearestNeighbors
 
+
 def preprocess_data(coord: str,
                     image: Optional[str] = None,
                     size: Optional[int] = None,
@@ -145,12 +146,12 @@ def preprocess_data(coord: str,
         """ Collect Graph [Length x Length] """
         if coord[-4:] == '.ply':
             build = BuildGraph(coord=coord_label,
-                            pixel_size=pixel_size,
-                            mesh=True)
+                               pixel_size=pixel_size,
+                               mesh=True)
         else:
             build = BuildGraph(coord=coord_label,
-                            pixel_size=pixel_size,
-                            mesh=False)
+                               pixel_size=pixel_size,
+                               mesh=False)
         graph = build()
 
         return coords, img, graph
@@ -164,6 +165,7 @@ class BuildGraph:
         coord: Coordinate with label from which graph is build
         pixel_size: Pixel size of image used for calculating distance
     """
+
     def __init__(self,
                  coord: np.ndarray,
                  pixel_size: Optional[int] = None,
@@ -190,10 +192,10 @@ class BuildGraph:
                         # Self connection
                         self.graph[j, j] = 1
 
-                        # Triangular connection 
+                        # Triangular connection
                         self.graph[j, points_in_contour[id[0]]] = 1
                         self.graph[points_in_contour[id[0]], j] = 1
-                        
+
                         self.graph[j, points_in_contour[id[1]]] = 1
                         self.graph[points_in_contour[id[1]], j] = 1
 
@@ -265,6 +267,7 @@ class ResaleNormalize:
     Args:
         x: image or target nD arrays
     """
+
     def __call__(self,
                  x: np.ndarray,
                  range=(2, 98)):
@@ -282,6 +285,7 @@ class MinMaxNormalize:
         max: Maximal value for initialize normalization e.g. 255
         x: image or target nD arrays
     """
+
     def __init__(self,
                  min: int,
                  max: int):

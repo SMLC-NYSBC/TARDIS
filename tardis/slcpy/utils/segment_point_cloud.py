@@ -205,6 +205,9 @@ class GraphInstanceV2:
         new = new_df = adj_matrix[x][2][:self.connection]
 
         # Pick all point associated with the initial point
+        # Check 1: Check if node is not already on the list
+        # Check 2: Check if new interaction show up secondary interaction
+        # Check 3: Check if found idx's were not associated to previous instance
         while len(new_df) != 0:
             # check only new elements
             new_df = []
@@ -212,9 +215,9 @@ class GraphInstanceV2:
                 # Pick secondary interaction for i
                 reverse_int = adj_matrix[i][2][:self.connection]
 
-                new_df = new_df + [j for j in reverse_int 
-                                   if j not in idx_df and  # Check if node is not already on the list
-                                   i in adj_matrix[j][2][:self.connection]]  # Check if new interaction show up secondary interaction
+                new_df = new_df + [j for j in reverse_int
+                                   if j not in idx_df and  # Check 1
+                                   i in adj_matrix[j][2][:self.connection]]  # Check 2
                 new_df = list(np.unique(new_df))
 
             new = new_df
@@ -222,7 +225,8 @@ class GraphInstanceV2:
 
         idx_df = np.unique(idx_df)
 
-        return [i for i in idx_df if adj_matrix[i][2] != []]
+        idx_df = [i for i in idx_df if adj_matrix[i][2] != []]  # Check 3
+        return idx_df
 
     @staticmethod
     def _sort_segment(coord: np.ndarray):
@@ -255,7 +259,7 @@ class GraphInstanceV2:
                          graph: list,
                          coord: np.ndarray,
                          idx: list,
-                         sort= True,
+                         sort=True,
                          visualize: Optional[str] = None):
         """
         SEGMENTER FOR VOXALS
@@ -282,7 +286,7 @@ class GraphInstanceV2:
             graph: Graph voxal output from Dist
             coord: Coordinates for each unsorted point idx
             idx: idx of point included in the segment
-            sort: If True sort output 
+            sort: If True sort output
             visualize: If not None, visualize output with open3D
         """
         """Check data"""

@@ -69,6 +69,7 @@ class GraphDataset(Dataset):
 
         # Graph setting
         self.mesh = mesh
+
     def __len__(self):
         return len(self.ids)
 
@@ -139,12 +140,12 @@ class GraphDataset(Dataset):
         else:
             if self.voxal_size[i, 0] == 0:
                 VD = VoxalizeDataSetV2(coord=coord,
-                                        image=img,
-                                        init_voxal_size=0,
-                                        drop_rate=1,
-                                        downsampling_threshold=self.downsampling,
-                                        downsampling_rate=None,
-                                        graph=True)
+                                       image=img,
+                                       init_voxal_size=0,
+                                       drop_rate=1,
+                                       downsampling_threshold=self.downsampling,
+                                       downsampling_rate=None,
+                                       graph=True)
             else:
                 VD = VoxalizeDataSetV2(coord=coord,
                                        image=None,

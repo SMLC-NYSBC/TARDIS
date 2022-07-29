@@ -9,7 +9,7 @@ from scipy.spatial.distance import cdist
 
 def pc_median_dist(pc: np.ndarray,
                    avg_over=False,
-                   box_size = 0.15):
+                   box_size=0.15):
     """
     CALCULATE AVERAGE DISTANCE BETWEEN K-NN POINTS IN POINT CLOUD
 

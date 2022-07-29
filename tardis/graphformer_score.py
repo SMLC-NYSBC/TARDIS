@@ -13,7 +13,7 @@ from tardis.dist_pytorch.utils.voxal import VoxalizeDataSetV2
 from tardis.slcpy.utils.segment_point_cloud import GraphInstanceV2
 from tardis.spindletorch.unet.predictor import Predictor
 from tardis.utils.device import get_device
-from tardis.utils.metrics import AUC, F1_metric, IoU, distAUC, mAP, mCov
+from tardis.utils.metrics import F1_metric, IoU, distAUC, mAP, mCov
 from tardis.utils.utils import pc_median_dist
 
 torch.backends.cudnn.enabled = False
@@ -254,8 +254,11 @@ def main(gf_dir: str,
         print(f'Dist AUC: {dist_auc}')
 
         """Segmentation evaluation"""
+        if segments.shape[1] > coord.shape[1]:
+            segments = segments[:, :3]  # Hotfix for 2D segments
+
         mcov, prec, rec = mCov(coord,
-                               segments[:, :3])
+                               segments)
         mcov_score.append(mcov)
         seg_prec.append(prec)
         seg_rec.append(rec)

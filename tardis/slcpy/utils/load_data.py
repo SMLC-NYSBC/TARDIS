@@ -420,7 +420,7 @@ def load_ply(ply,
     """
     pcd = o3d.io.read_point_cloud(ply)
     label_org = np.unique(np.asarray(pcd.colors), axis=0)
-    
+
     if downsample > 0:
         pcd = pcd.voxel_down_sample(voxel_size=downsample)
 
