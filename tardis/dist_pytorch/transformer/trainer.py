@@ -102,7 +102,7 @@ class Trainer:
         else:
             mkdir('GF_checkpoint')
 
-        for i in epoch_progress:
+        for _ in epoch_progress:
             """For each Epoch load be t model from previous run"""
             self.model.train()
             self.train()
@@ -197,7 +197,8 @@ class Trainer:
         with torch.no_grad():
             for x, y, z, _ in self.validation_DataLoader:
                 for c, i, g in zip(x, y, z):
-                    c, g = c.to(self.device), g.to(self.device)
+                    c, target = c.to(self.device), g.to(self.device)
+
                     if self.node_input:
                         i = i.to(self.device)
                         out = self.model(coords=c,
@@ -208,7 +209,6 @@ class Trainer:
                                          node_features=None,
                                          padding_mask=None)
 
-                    target = g
                     out = out[0, :]
                     loss = self.criterion(out,
                                           target)

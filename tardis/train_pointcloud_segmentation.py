@@ -81,7 +81,7 @@ from tardis._version import version
               help='Sigma value for distance embedding',
               show_default=True)
 @click.option('-gst', '--gf_structure',
-              default='full',
+              default='triang',
               type=click.Choice(['full', 'full_af', 'self_attn', 'triang', 'dualtriang', 'quad']),
               help='Structure of the graphformer',
               show_default=True)
@@ -230,6 +230,7 @@ def main(pointcloud_dir: str,
         coord_format.append([f for f in img_format if listdir(train_imgs_dir)[0].endswith(f)][0])
     else:
         train_imgs_dir = None
+        test_imgs_dir = None
 
     """Build dataset for training/validation"""
     dl_train_graph = DataLoader(dataset=GraphDataset(coord_dir=train_coords_dir,
@@ -246,9 +247,9 @@ def main(pointcloud_dir: str,
                                 shuffle=True,
                                 pin_memory=True)
 
-    dl_test_graph = DataLoader(dataset=GraphDataset(coord_dir=train_coords_dir,
+    dl_test_graph = DataLoader(dataset=GraphDataset(coord_dir=test_coords_dir,
                                                     coord_format=coord_format,
-                                                    img_dir=train_imgs_dir,
+                                                    img_dir=test_imgs_dir,
                                                     prefix=prefix,
                                                     size=patch_size,
                                                     normalize="rescale",
@@ -268,6 +269,7 @@ def main(pointcloud_dir: str,
     print(f'graph = shape: {graph[0].shape}; '
           f'class: {graph[0].unique()}; '
           f'type: {graph[0].dtype}')
+    print(mesh)
 
     if patch_size is not None:
         if coord[0].shape[2] == 2:

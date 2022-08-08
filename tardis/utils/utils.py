@@ -4,6 +4,7 @@ from shutil import move
 from typing import Optional
 
 import numpy as np
+import torch
 from scipy.spatial.distance import cdist
 
 
@@ -20,6 +21,9 @@ def pc_median_dist(pc: np.ndarray,
             big point clouds)
     """
     if avg_over:
+        if isinstance(pc, torch.Tensor):
+            pc = pc.cpu().detach().numpy()
+
         # Build BB and offset by 10% from the border
         box_dim = pc.shape[1]
 
@@ -114,7 +118,7 @@ def check_uint8(image: np.ndarray):
     """
     if np.all(np.unique(image) == [0, 1]):
         return image
-    elif np.all(np.unique(image) == [0, 254]) or np.all(np.unique(image) == [0, 255]):
+    elif np.all(np.unique(image) == [0, 254]) or len(np.unique(image) > 2):
         return np.array(np.where(image > 1, 1, 0), dtype=np.int8)
     else:
         return None  # Image is empty

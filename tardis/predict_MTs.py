@@ -1,4 +1,4 @@
-from os import getcwd, listdir
+from os import getcwd, listdir, system
 from os.path import join
 from typing import Optional
 
@@ -6,7 +6,9 @@ import click
 import numpy as np
 import open3d as o3d
 import tifffile.tifffile as tif
+from tqdm import tqdm
 
+from tardis._version import version
 from tardis.dist_pytorch.transformer.network import DIST
 from tardis.dist_pytorch.utils.voxal import VoxalizeDataSetV2
 from tardis.slcpy.image_postprocess import ImageToPointCloud
@@ -14,14 +16,13 @@ from tardis.slcpy.utils.export_data import NumpyToAmira
 from tardis.slcpy.utils.load_data import import_am, import_mrc, import_tiff
 from tardis.slcpy.utils.segment_point_cloud import GraphInstanceV2
 from tardis.slcpy.utils.stitch import StitchImages
-from tardis.slcpy.utils.trim import trim_image
+from tardis.slcpy.utils.trim import trim_with_stride
 from tardis.spindletorch.unet.predictor import Predictor
 from tardis.spindletorch.utils.build_network import build_network
 from tardis.spindletorch.utils.dataset_loader import PredictionDataSet
 from tardis.utils.device import get_device
 from tardis.utils.setup_envir import build_temp_dir, clean_up
 from tardis.utils.utils import check_uint8, pc_median_dist
-from tardis._version import version
 
 
 @click.command()
@@ -36,7 +37,7 @@ from tardis._version import version
               help='Size of image size used for prediction.',
               show_default=True)
 @click.option('-ct', '--cnn_threshold',
-              default=0.2,
+              default=0.5,
               type=float,
               help='Threshold use for model prediction.',
               show_default=True)
@@ -55,15 +56,10 @@ from tardis._version import version
               type=bool,
               help='If True, include offline checkpoints',
               show_default=True)
-@click.option('-chu', '--checkpoints_unet',
+@click.option('-chu', '--checkpoints_big_unet',
               default=None,
               type=str,
-              help='If not None, str checkpoints for Unet',
-              show_default=True)
-@click.option('-chup', '--checkpoints_unetplus',
-              default=None,
-              type=str,
-              help='If not None, str checkpoints for Unet3Plus',
+              help='If not None, str checkpoints for Big_Unet',
               show_default=True)
 @click.option('-chg', '--checkpoints_gf',
               default=None,
@@ -77,11 +73,6 @@ from tardis._version import version
               'gpu: Use ID 0 GPUs '
               'cpu: Usa CPU '
               '0-9 - specified GPU device id to use',
-              show_default=True)
-@click.option('-tq', '--tqdm',
-              default=True,
-              type=bool,
-              help='If True, build with progressbar.',
               show_default=True)
 @click.option('-db', '--debug',
               default=False,
@@ -103,24 +94,27 @@ def main(prediction_dir: str,
          points_in_voxal: int,
          checkpoints: bool,
          device: str,
-         tqdm: bool,
          debug: bool,
          visualizer: Optional[str] = None,
-         checkpoints_unet: Optional[str] = None,
-         checkpoints_unetplus: Optional[str] = None,
+         checkpoints_big_unet: Optional[str] = None,
          checkpoints_gf: Optional[str] = None,):
     """
     MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
     """
-    """Initial setup"""
+    """Initial Setup"""
+    clear = lambda: system('clear')
+    clear()
+
+    tardis_logo()
+
     # Searching for available images for prediction
     available_format = ('.tif', '.mrc', '.rec', '.am')
     output = join(prediction_dir, 'temp', 'Predictions')
     am_output = join(prediction_dir, 'Predictions')
 
-    predict_list = [f for f in listdir(
-        prediction_dir) if f.endswith(available_format)]
-    assert len(predict_list) > 0, 'No file found in given direcotry!'
+    predict_list = [f for f in listdir(prediction_dir) if f.endswith(available_format)]
+    assert len(predict_list) > 0, 'No file found in given directory!'
+    print(f'Found {len(predict_list)} images to predict!')
 
     # Build handler's
     stitcher = StitchImages(tqdm=False)
@@ -132,61 +126,37 @@ def main(prediction_dir: str,
 
     # Build CNN from checkpoints
     if checkpoints:
-        checkpoints = (checkpoints_unet, checkpoints_unetplus, checkpoints_gf)
+        checkpoints = (checkpoints_big_unet, checkpoints_gf)
     else:
         checkpoints = (None, None, None)
 
     device = get_device(device)
 
-    predict_unet = Predictor(model=build_network(network_type='unet',
-                                                 classification=False,
-                                                 in_channel=1,
-                                                 out_channel=1,
-                                                 img_size=patch_size,
-                                                 dropout=None,
-                                                 no_conv_layers=5,
-                                                 conv_multiplayer=32,
-                                                 layer_components='3gcl',
-                                                 no_groups=8,
-                                                 prediction=True),
-                             checkpoint=checkpoints[0],
-                             network='unet',
-                             subtype=str(32),
-                             device=device,
-                             tqdm=tqdm)
+    predict = Predictor(model=build_network(network_type='big_unet',
+                                            classification=False,
+                                            in_channel=1,
+                                            out_channel=1,
+                                            img_size=patch_size,
+                                            dropout=None,
+                                            no_conv_layers=5,
+                                            conv_multiplayer=32,
+                                            layer_components='3gcl',
+                                            no_groups=8,
+                                            prediction=True),
+                        checkpoint=checkpoints[0],
+                        network='big_unet',
+                        subtype=str(32),
+                        device=device)
 
-    predict_unet3plus = Predictor(model=build_network(network_type='unet3plus',
-                                                      classification=False,
-                                                      in_channel=1,
-                                                      out_channel=1,
-                                                      img_size=patch_size,
-                                                      dropout=None,
-                                                      no_conv_layers=5,
-                                                      conv_multiplayer=32,
-                                                      layer_components='3gcl',
-                                                      no_groups=8,
-                                                      prediction=True),
-                                  checkpoint=checkpoints[1],
-                                  network='unet3plus',
-                                  subtype=str(32),
-                                  device=device,
-                                  tqdm=tqdm)
-
-    if tqdm:
-        from tqdm import tqdm as tq
-
-        batch_iter = tq(predict_list)
-    else:
-        batch_iter = predict_list
+    batch_iter = tqdm(predict_list)
 
     """Process each image with CNN and GF"""
     for i in batch_iter:
-        """CNN prediction"""
+        """Pre-Processing"""
         if i.endswith('CorrelationLines.am'):
             continue
 
-        if tqdm:
-            batch_iter.set_description(f'Preprocessing for CNN {i}')
+        batch_iter.set_description(f'Preprocessing for CNN {i}')
 
         # Build temp dir
         build_temp_dir(dir=prediction_dir)
@@ -209,16 +179,18 @@ def main(prediction_dir: str,
             out_format = 3
             format = 'amira'
 
+        scale_factor = px / 23.2
         org_shape = image.shape
 
-        trim_image(image=image,
-                   trim_size_xy=patch_size,
-                   trim_size_z=patch_size,
-                   output=join(prediction_dir, 'temp', 'Patches'),
-                   image_counter=0,
-                   clean_empty=False,
-                   prefix='')
-
+        trim_with_stride(image=image,
+                         scale=scale_factor,
+                         trim_size_xy=patch_size,
+                         trim_size_z=patch_size,
+                         output=join(prediction_dir, 'temp', 'Patches'),
+                         image_counter=0,
+                         clean_empty=False,
+                         stride=0,
+                         prefix='')
         image = None
         del(image)
 
@@ -226,58 +198,47 @@ def main(prediction_dir: str,
         patches_DL = PredictionDataSet(img_dir=join(prediction_dir, 'temp', 'Patches'),
                                        size=patch_size,
                                        out_channels=1)
-        dl_len = patches_DL.__len__()
 
-        if tqdm:
-            dl_iter = tq(range(dl_len),
-                         'Images',
-                         leave=False)
+        batch_iter.set_description(f'CNN prediction for {i} with org. pixel size {px}')
 
-            batch_iter.set_description(
-                f'CNN prediction for {i} at pixel size {px}')
-        else:
-            dl_iter = range(dl_len)
-
-        # Predict image patches
-        for j in dl_iter:
+        """CNN prediction"""
+        for j in range(patches_DL.__len__()):
             input, name = patches_DL.__getitem__(j)
 
-            """Predict"""
-            out = (predict_unet._predict(input[None, :]) +
-                   predict_unet3plus._predict(input[None, :])) / 2
-
-            """Threshold"""
-            out = np.where(out >= cnn_threshold, 1, 0)
+            """Predict & Threshold"""
+            out = np.where(predict._predict(input[None, :]) >= cnn_threshold, 1, 0)
 
             """Save"""
             tif.imwrite(join(output, f'{name}.tif'),
                         np.array(out, dtype=np.int8))
 
-        """CNN post-process"""
+        """Post-Processing"""
         # Stitch predicted image patches
-        if tqdm:
-            batch_iter.set_description(f'Stitching for {i}')
+        batch_iter.set_description(f'Stitching for {i}')
 
+        scale_factor = 23.2 / px
         image = check_uint8(stitcher(image_dir=output,
                                      output=None,
                                      mask=True,
                                      prefix='',
+                                     scale=scale_factor,
                                      dtype=np.int8)[:org_shape[0],
                                                     :org_shape[1],
                                                     :org_shape[2]])
+        if org_shape != image.shape:
+            print('Image after transformation showing different shape')
+            break
 
         # Check if predicted image is not empty
         if debug:
-            tif.imwrite(join(am_output,
-                             f'{i[:-out_format]}_CNN.tif'),
+            tif.imwrite(join(am_output, f'{i[:-out_format]}_CNN.tif'),
                         image)
 
         if image is None:
             continue
 
         # Post-process predicted image patches
-        if tqdm:
-            batch_iter.set_description(f'Postprocessing for {i}')
+        batch_iter.set_description(f'Postprocessing for {i}')
 
         point_cloud = post_processer(image=image,
                                      euclidean_transform=True,
@@ -285,26 +246,26 @@ def main(prediction_dir: str,
                                      down_sampling_voxal_size=None)
 
         # Transform for xyz and pixel size for coord
-
         image = None
         del(image)
 
         if debug:
-            np.save(join(am_output,
-                         f'{i[:-out_format]}_raw_pc.npy'),
+            np.save(join(am_output, f'{i[:-out_format]}_raw_pc.npy'),
                     point_cloud)
 
-        """Graphformer prediction"""
-        if tqdm:
-            batch_iter.set_description(f'Building voxal for {i}')
+        """DIST Prediction"""
+        batch_iter.set_description(f'Building voxal for {i}')
 
         # Find downsampling value by 5 to reduce noise
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(point_cloud)
         point_cloud = np.asarray(pcd.voxel_down_sample(voxel_size=5).points)
 
+        # Normalize point cloud KNN distance
+        dist = pc_median_dist(point_cloud, avg_over=True)
+
         # Build voxalized dataset with
-        VD = VoxalizeDataSetV2(coord=point_cloud,
+        VD = VoxalizeDataSetV2(coord=point_cloud / dist,
                                downsampling_rate=None,
                                init_voxal_size=0,
                                drop_rate=1,
@@ -313,10 +274,6 @@ def main(prediction_dir: str,
 
         coords_df, _, output_idx = VD.voxalize_dataset(prune=10, out_idx=True)
         coords_df = [c / pc_median_dist(c) for c in coords_df]
-
-        # Calculate sigma for graphformer from mean of nearest point dist
-        if tqdm:
-            batch_iter.set_description(f'Compute sigma for {i}')
 
         # Predict point cloud
         predict_gf = Predictor(model=DIST(n_out=1,
@@ -334,8 +291,7 @@ def main(prediction_dir: str,
                                network='graphformer',
                                subtype='without_img',
                                model_type='microtubules',
-                               device=device,
-                               tqdm=tqdm)
+                               device=device)
 
         if debug:
             if device == 'cpu':
@@ -358,15 +314,11 @@ def main(prediction_dir: str,
                         allow_pickle=True)
 
         # Predict point cloud
-        if tqdm:
-            dl_iter = tq(coords_df,
-                         'Voxals',
-                         leave=False)
+        dl_iter = tqdm(coords_df,
+                       'Voxals',
+                       leave=False)
 
-            batch_iter.set_description(
-                f'GF prediction for {i} with sigma {2}')
-        else:
-            dl_iter = coords_df
+        batch_iter.set_description(f'DIST prediction for {i}')
 
         graphs = []
         for coord in dl_iter:
@@ -374,21 +326,22 @@ def main(prediction_dir: str,
             graphs.append(graph)
 
         if debug:
-            np.save(join(am_output,
-                         f'{i[:-out_format]}_graph_voxal.npy'),
+            np.save(join(am_output, f'{i[:-out_format]}_graph_voxal.npy'),
                     graphs,
                     allow_pickle=True)
 
         """Graphformer post-processing"""
-        if tqdm:
-            batch_iter.set_description(f'Graph segmentation for {i}')
+        batch_iter.set_description(f'Graph segmentation for {i}')
 
         if format == 'amira':
-            coord = coord * px
+            print('MTs segmentation is fitted to: \n'
+                  f'- pixel size: {px} \n'
+                  f'- transformation: {transformation}')
 
-            coord[:, 0] = coord[:, 0] + transformation[0]
-            coord[:, 1] = coord[:, 1] + transformation[1]
-            coord[:, 2] = coord[:, 2] + transformation[2]
+            point_cloud = point_cloud * px
+            point_cloud[:, 0] = point_cloud[:, 0] + transformation[0]
+            point_cloud[:, 1] = point_cloud[:, 1] + transformation[1]
+            point_cloud[:, 2] = point_cloud[:, 2] + transformation[2]
 
         segments = GraphToSegment.voxal_to_segment(graph=graphs,
                                                    coord=point_cloud,
@@ -401,20 +354,26 @@ def main(prediction_dir: str,
                     segments)
 
         """Save as .am"""
-        if tqdm:
-            n_ele = np.max(segments[:, 0])
-            batch_iter.set_description(f'Saving .am {i} with {n_ele}')
+        batch_iter.set_description(f'Saving .am {i} with {np.max(segments[:, 0])} MTs')
 
         BuildAmira.export_amira(coord=segments,
-                                file_dir=join(am_output,
-                                              f'{i[:-out_format]}_SpatialGraph.am'))
+                                file_dir=join(am_output, f'{i[:-out_format]}_SpatialGraph.am'))
 
         """Clean-up temp dir"""
-        if tqdm:
-            batch_iter.set_description(f'Clean-up temp for {i}')
+        batch_iter.set_description(f'Clean-up temp for {i}')
 
         clean_up(dir=prediction_dir)
+        clear()
+        tardis_logo()
 
 
 if __name__ == '__main__':
     main()
+
+
+def tardis_logo():
+    print('=====================================================================\n')
+    print(f'TARDIS {version} (C)')
+    print('Robert Kiewisz and Tristan Bepler - NYSBC/SMLC')
+    print('\n')
+    print('=====================================================================\n')

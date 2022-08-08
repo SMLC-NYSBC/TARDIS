@@ -21,8 +21,7 @@ class Predictor:
                  checkpoint: Optional[str] = None,
                  network: Optional[str] = None,
                  subtype: Optional[str] = None,
-                 model_type: Optional[str] = None,
-                 tqdm=False):
+                 model_type: Optional[str] = None):
         self.model = model.to(device)
 
         if checkpoint is None:
@@ -45,7 +44,6 @@ class Predictor:
 
         self.network = network
         self.device = device
-        self.tqdm = tqdm
 
     def _predict(self,
                  x: torch.Tensor,
