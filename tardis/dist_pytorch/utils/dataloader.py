@@ -107,10 +107,10 @@ class GraphDataset(Dataset):
                                      memory_save=self.memory_save)
 
         # Remove coord and img patch duplicates
-        coord, uq_idx = np.unique(coord, axis=0, return_index=True)
+        # coord, uq_idx = np.unique(coord, axis=0, return_index=True)
 
-        if img_file is not None:
-            img = img[uq_idx, :]
+        # if img_file is not None:
+        #     img = img[uq_idx, :]
 
         # Normalize point cloud
         if coord_file.endswith('.ply'):
@@ -157,7 +157,7 @@ class GraphDataset(Dataset):
 
         coords_v, imgs_v, graph_v, output_idx = VD.voxalize_dataset(mesh=self.mesh,
                                                                     out_idx=True,
-                                                                    prune=50)
+                                                                    prune=10)
 
         # Store initial patch size for each data to speed up computation
         if self.voxal_size[i, 0] == 0:

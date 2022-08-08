@@ -13,7 +13,7 @@ from tardis.dist_pytorch.utils.voxal import VoxalizeDataSetV2
 from tardis.slcpy.utils.segment_point_cloud import GraphInstanceV2
 from tardis.spindletorch.unet.predictor import Predictor
 from tardis.utils.device import get_device
-from tardis.utils.metrics import F1_metric, IoU, distAUC, mAP, mCov
+from tardis.utils.metrics import F1_metric, IoU, distAUC, mCov
 from tardis.utils.utils import pc_median_dist
 
 torch.backends.cudnn.enabled = False
@@ -139,7 +139,8 @@ def main(gf_dir: str,
     assert len(GF_list) > 0, 'No file found in given directory!'
     macc, mprec, mrecall, mf1, miou = [], [], [], [], []
     seg_prec, seg_rec, mcov_score = [], [], []
-    dice_AUC, AP = [], []
+    dice_AUC, AP50 = [], []
+    n_crop = []
 
     # Build handlers
     GraphToSegment = GraphInstanceV2(threshold=gf_threshold,
@@ -195,7 +196,7 @@ def main(gf_dir: str,
                                downsampling_rate=None,
                                graph=True)
         coords, img, graph_target, output_idx = VD.voxalize_dataset(prune=5)
-        coord_vx = [c / pc_median_dist(c) for c in coords]
+        coord_vx = [c / pc_median_dist(c, avg_over=True) for c in coords]
 
         dl_iter = tq(zip(coord_vx, img),
                      'Voxals',
@@ -211,6 +212,9 @@ def main(gf_dir: str,
                 graph = GF._predict(x=c[None, :],
                                     y=None)
             graphs.append(graph)
+
+        n_crop.append(len(graphs))
+        print(f'No. of crops {len(graphs)}')
 
         graph_target = GraphToSegment._stitch_graph(graph_target, output_idx)
         graph_target = np.where(graph_target > 0, 1, 0)
@@ -236,16 +240,16 @@ def main(gf_dir: str,
         print(f'Recall of {rec}')
         print(f'F1 of {f1}')
 
-        map = mAP(graph_target,
-                  graph_logits)
-        print(f'mAP of {map}')
-        AP.append(map)
+        # map = AP(graph_target,
+        #          graph_logits)
+        # print(f'AP50 of {map}')
+        # AP50.append(map)
 
         iou = IoU(graph_target,
-                  np.where(graph_logits >= gf_threshold, 1, 0))
+                  graph_logits)
 
         miou.append(iou)
-        print(f'IoU of {iou}')
+        print(f'mAP of {iou}')
 
         """Dist AUC"""
         dist_auc = distAUC(coord=coord[:, 1:],
@@ -257,11 +261,13 @@ def main(gf_dir: str,
         if segments.shape[1] > coord.shape[1]:
             segments = segments[:, :3]  # Hotfix for 2D segments
 
-        mcov, prec, rec = mCov(coord,
-                               segments)
+        mcov, prec, rec, map = mCov(coord,
+                                    segments)
         mcov_score.append(mcov)
         seg_prec.append(prec)
         seg_rec.append(rec)
+        print(f'AP50 of {map}')
+        AP50.append(map)
 
         print(f'mCov of {round(np.mean(mcov), 3)}')
         print(f'mPrec of {round(np.mean(prec), 3)}')
@@ -297,9 +303,11 @@ def main(gf_dir: str,
     print(f'Mean precision of {round(np.mean(mprec), 3)}')
     print(f'Mean recall of {round(np.mean(mrecall), 3)}')
     print(f'Mean F1 of {round(np.mean(mf1), 3)}')
-    print(f'Mean AP of {round(np.mean(AP), 3)}')
-    print(f'Mean IoU of {round(np.mean(miou), 3)}')
+    print(f'Mean AP50 of {round(np.mean(AP50), 3)}')
+    print(f'Mean mAP of {round(np.mean(miou), 3)}')
     print(f'Mean dist mAUC of {round(np.mean(dice_AUC), 3)}')
+    print('')
+    print(f'Mean n_crop {np.mean(n_crop)}')
     print(f'Mean mCov of {round(np.mean(mcov_score), 3)}')
     print(f'Mean Seg_mPrec of {round(np.mean(seg_prec), 3)}')
     print(f'Mean Seg_mRec of {round(np.mean(seg_rec), 3)}')

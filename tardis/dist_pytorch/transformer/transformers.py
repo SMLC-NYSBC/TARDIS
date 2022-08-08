@@ -562,7 +562,6 @@ class MultiHeadAttention(nn.Module):
             else:
                 k = self.k_proj(key)
                 v = self.v_proj(key)
-
         else:
             assert key is not None and value is not None
             q = self.q_proj(query)
@@ -792,7 +791,6 @@ class SelfAttention2D(MultiHeadAttention):
         dropout: Dropout probability
         max_size: Maximum size of batch
     """
-
     def __init__(self,
                  embed_dim: int,
                  num_heads: int,

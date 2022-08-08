@@ -136,6 +136,7 @@ def F1_metric(target: np.ndarray,
 def mCov(target: np.ndarray,
          logits: np.ndarray):
     iou, prec, rec = [], [], []
+    ap50 = []
 
     for j in np.unique(target[:, 0]):
         true_c = target[np.where(target[:, 0] == j)[0], 1:]
@@ -145,11 +146,11 @@ def mCov(target: np.ndarray,
             pred = logits[np.where(logits[:, 0] == i)[0]]
 
             intersection = np.sum([True for i in true_c if i in pred[:, 1:]])
-            union = np.unique(
-                np.vstack((true_c, pred[:, 1:])), axis=0).shape[0]
+            union = np.unique(np.vstack((true_c, pred[:, 1:])), axis=0).shape[0]
 
             df.append(intersection / union)
 
+        ap50.append(np.max(df))
         id = np.where(df == np.max(df))[0]
         pred = logits[np.where(logits[:, 0] == id)[0]][:, 1:]
 
@@ -168,7 +169,7 @@ def mCov(target: np.ndarray,
         prec.append(precision_score)
         rec.append(recall_score)
 
-    return np.mean(iou), np.mean(prec), np.mean(rec)
+    return np.mean(iou), np.mean(prec), np.mean(rec), np.mean(ap50)
 
 
 def mPrec_Rec(target: np.ndarray,
@@ -192,16 +193,20 @@ def mPrec_Rec(target: np.ndarray,
 
 def IoU(target: np.ndarray,
         logits: np.ndarray):
-    index = np.triu_indices(target.shape[0], k=1)
-    target = target[index]
-    logits = logits[index]
+    miou = []
+    for i in np.append(np.arange(0.5, 0.95, 0.05), 0.25):
+        logits_df = np.where(logits >= i, 1, 0)
 
-    intersection = np.logical_and(target, logits)
-    union = np.logical_or(target, logits)
+        target = target.flatten()
+        logits_df = logits_df.flatten()
 
-    iou_score = np.sum(intersection) / np.sum(union)
+        intersection = np.logical_and(target, logits_df)
+        union = np.logical_or(target, logits_df)
 
-    return iou_score
+        iou = np.sum(intersection) / np.sum(union)
+        miou.append(iou)
+
+    return np.mean(miou)
 
 
 def AUC(target: np.ndarray,
@@ -236,15 +241,18 @@ def distAUC(coord: np.ndarray,
     return metric.auc(rec, prec)
 
 
-def mAP(target: np.ndarray,
-        logits: np.ndarray):
+def AP(target: np.ndarray,
+       logits: np.ndarray,
+       threshold=0.5):
+    _ = np.where(logits >= threshold, 1, 0)
+
     index = np.triu_indices(target.shape[0], k=1)
     target = target[index]
     logits = logits[index]
-    prec, rec, _ = metric.precision_recall_curve(target,
-                                                 logits)
 
-    prec = np.array(prec)
-    rec = np.array(rec)
+    intersection = np.logical_and(target, logits)
+    union = np.logical_or(target, logits)
 
-    return np.sum((rec[:-1] - rec[1:]) * prec[:-1])
+    iou = np.sum(intersection) / np.sum(union)
+
+    return iou

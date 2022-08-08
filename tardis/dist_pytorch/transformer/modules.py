@@ -38,8 +38,7 @@ class DistEmbedding(nn.Module):
                 kernel = torch.exp(-dist ** 2 / (self.sigma[0] ** 2 * 2))
 
                 for i in range(1, len(self.sigma)):
-                    kernel = kernel + \
-                        torch.exp(-dist ** 2 / (self.sigma[i] ** 2 * 2))
+                    kernel = kernel + torch.exp(-dist ** 2 / (self.sigma[i] ** 2 * 2))
                 kernel = kernel / len(self.sigma)
             else:
                 kernel = torch.exp(-dist ** 2 / (self.sigma ** 2 * 2))

@@ -24,10 +24,6 @@ class NumpyToAmira:
 
         return coord
 
-    def _sort_segment(self,
-                      coord: np.ndarray):
-        pass
-
     def _build_header(self,
                       coord: np.ndarray,
                       file_dir: str):
