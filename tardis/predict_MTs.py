@@ -1,7 +1,7 @@
 import platform
+import warnings
 from os import getcwd, listdir, system
 from os.path import join
-from turtle import position
 from typing import Optional
 
 import click
@@ -26,7 +26,7 @@ from tardis.utils.device import get_device
 from tardis.utils.setup_envir import build_temp_dir, clean_up
 from tardis.utils.utils import check_uint8, pc_median_dist
 
-
+warnings.simplefilter("ignore", UserWarning)
 @click.command()
 @click.option('-dir', '--prediction_dir',
               default=getcwd(),
@@ -147,7 +147,7 @@ def main(prediction_dir: str,
                         subtype=str(32),
                         device=device)
 
-    batch_iter = tqdm(predict_list,
+    batch_iter = tqdm(sorted(predict_list),
                       position=0,
                       ascii=True,
                       leave=True)
@@ -206,7 +206,7 @@ def main(prediction_dir: str,
         """CNN prediction"""
         cnn_batch = tqdm(range(patches_DL.__len__()),
                          position=1,
-                         leave=True,
+                         leave=False,
                          ascii=True,
                          desc='CNN prediction')
         for j in cnn_batch:
@@ -228,13 +228,10 @@ def main(prediction_dir: str,
                                      output=None,
                                      mask=True,
                                      prefix='',
-                                     scale=scale_factor,
-                                     dtype=np.int8)[:org_shape[0],
-                                                    :org_shape[1],
-                                                    :org_shape[2]])
-        if org_shape != image.shape:
-            print('Image after transformation showing different shape')
-            break
+                                     dtype=np.int8))
+        # if org_shape != image.shape:
+        #     print('Image after transformation showing different shape')
+        #     break
 
         # Check if predicted image is not empty
         if debug:
@@ -248,9 +245,10 @@ def main(prediction_dir: str,
         batch_iter.set_description(f'Postprocessing for {i}')
 
         point_cloud = post_processer(image=image,
-                                     euclidean_transform=True,
+                                     euclidean_transform=False,
                                      label_size=3,
                                      down_sampling_voxal_size=None)
+        point_cloud = point_cloud * scale_factor
 
         # Transform for xyz and pixel size for coord
         image = None
@@ -324,7 +322,7 @@ def main(prediction_dir: str,
         dist_batch = tqdm(coords_df,
                           position=1,
                           ascii=True,
-                          leave=True,
+                          leave=False,
                           desc='DIST prediction')
         batch_iter.set_description(f'DIST prediction for {i}')
 

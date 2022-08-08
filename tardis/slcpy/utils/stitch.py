@@ -62,7 +62,6 @@ class StitchImages:
                  image_dir: str,
                  mask: bool,
                  prefix='',
-                 scale: Optional[float] = None,
                  output: Optional[str] = None,
                  dtype=np.int8):
         """Extract information about images in dir_path"""
@@ -142,10 +141,13 @@ class StitchImages:
                                            x_start:x_stop] = img
 
             """Scale image to fit to original pixel size"""
-            if scale is not None:
-                stitched_image, _ = scale_image(image=stitched_image,
-                                                mask=None,
-                                                scale=scale)
+            assert np.all(np.unique(stitched_image) == [0, 1]), \
+                'Incorrect values not in 0 or 1'
+
+            # if scale is not None:
+            #     stitched_image, _ = scale_image(image=stitched_image,
+            #                                     mask=None,
+            #                                     scale=scale)
 
             if output is None:
                 return np.array(stitched_image, dtype=dtype)
