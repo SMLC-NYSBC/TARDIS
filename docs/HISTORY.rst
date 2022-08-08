@@ -8,10 +8,10 @@ History
     * Standardized pixel size input. Now all data are reshaped to the pixel 
         size of 2.32
     * Change up-sampling from align_corners=True to align_corners=False
-    * Added new data for training from @Stefanie Redemann and @Gunar
+    * Added new data for training from @Stefanie_Redemann and @Gunar
     * Ground-up rebuild spindletorch model
         * New Big UNet model combining both UNet and UNet3Plus
-        * Unet/Unet3Plus re-trained
+        * Unet/Unet3Plus re-trained <- rejected big_unet is better
         * Train Big UNet
     * Speed-up prediction with new Big UNet model
 
@@ -19,7 +19,6 @@ History
     * Added support for .ply file format and meshes
     * Re-train model on different DIST structure for the paper and for searching 
         of the best approach
-
     * Bugfixes for segmentation of point cloud from graph probabilities
         * Speed-up boost with simplifying the building and reading adjacency matrix
         * Fix in masking adjacency matrix for points already connected
