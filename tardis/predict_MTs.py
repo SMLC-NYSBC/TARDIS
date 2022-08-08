@@ -1,3 +1,4 @@
+import platform
 from os import getcwd, listdir, system
 from os.path import join
 from typing import Optional
@@ -102,9 +103,6 @@ def main(prediction_dir: str,
     MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
     """
     """Initial Setup"""
-    clear = lambda: system('clear')
-    clear()
-
     tardis_logo()
 
     # Searching for available images for prediction
@@ -372,6 +370,12 @@ if __name__ == '__main__':
 
 
 def tardis_logo():
+    if platform.system() in ['Darwin', 'Linux']:
+        clear = lambda: system('clear')
+    else:
+        clear = lambda: system('cls')
+
+    clear()
     print('=====================================================================\n')
     print(f'TARDIS {version} (C)')
     print('Robert Kiewisz and Tristan Bepler - NYSBC/SMLC')

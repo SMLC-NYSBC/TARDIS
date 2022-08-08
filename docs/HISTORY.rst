@@ -2,7 +2,7 @@
 History
 =======
 
-0.1.0b (2022-07-**)
+0.1.0pre-beta (2022-08-08)
 --------------------
 * SpindleTorch changes:
     * Standardized pixel size input. Now all data are reshaped to the pixel 
@@ -35,6 +35,9 @@ History
     * Improvements in .rec, .mrc file loader
         * .rec and .mrc file are format with uint8 (value from -128 to 128) or 
             int8 (value from 0 to 255). Fix reading of these files
+
+* TARDIS
+    * Cleaned log output for easier reading
 
 0.1.0a (2022-07-12)
 --------------------
