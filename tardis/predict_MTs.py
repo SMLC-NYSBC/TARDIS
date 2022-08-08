@@ -1,13 +1,14 @@
 import platform
 from os import getcwd, listdir, system
 from os.path import join
+from turtle import position
 from typing import Optional
 
 import click
 import numpy as np
 import open3d as o3d
 import tifffile.tifffile as tif
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from tardis._version import version
 from tardis.dist_pytorch.transformer.network import DIST
@@ -38,7 +39,7 @@ from tardis.utils.utils import check_uint8, pc_median_dist
               help='Size of image size used for prediction.',
               show_default=True)
 @click.option('-ct', '--cnn_threshold',
-              default=0.5,
+              default=0.35,
               type=float,
               help='Threshold use for model prediction.',
               show_default=True)
@@ -98,7 +99,7 @@ def main(prediction_dir: str,
          debug: bool,
          visualizer: Optional[str] = None,
          checkpoints_big_unet: Optional[str] = None,
-         checkpoints_gf: Optional[str] = None,):
+         checkpoints_gf: Optional[str] = None):
     """
     MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
     """
@@ -146,7 +147,10 @@ def main(prediction_dir: str,
                         subtype=str(32),
                         device=device)
 
-    batch_iter = tqdm(predict_list)
+    batch_iter = tqdm(predict_list,
+                      position=0,
+                      ascii=True,
+                      leave=True)
 
     """Process each image with CNN and GF"""
     for i in batch_iter:
@@ -200,7 +204,12 @@ def main(prediction_dir: str,
         batch_iter.set_description(f'CNN prediction for {i} with org. pixel size {px}')
 
         """CNN prediction"""
-        for j in range(patches_DL.__len__()):
+        cnn_batch = tqdm(range(patches_DL.__len__()),
+                         position=1,
+                         leave=True,
+                         ascii=True,
+                         desc='CNN prediction')
+        for j in cnn_batch:
             input, name = patches_DL.__getitem__(j)
 
             """Predict & Threshold"""
@@ -312,14 +321,15 @@ def main(prediction_dir: str,
                         allow_pickle=True)
 
         # Predict point cloud
-        dl_iter = tqdm(coords_df,
-                       'Voxals',
-                       leave=False)
-
+        dist_batch = tqdm(coords_df,
+                          position=1,
+                          ascii=True,
+                          leave=True,
+                          desc='DIST prediction')
         batch_iter.set_description(f'DIST prediction for {i}')
 
         graphs = []
-        for coord in dl_iter:
+        for coord in dist_batch:
             graph = predict_gf._predict(x=coord[None, :])
             graphs.append(graph)
 
@@ -361,7 +371,6 @@ def main(prediction_dir: str,
         batch_iter.set_description(f'Clean-up temp for {i}')
 
         clean_up(dir=prediction_dir)
-        clear()
         tardis_logo()
 
 
@@ -377,7 +386,9 @@ def tardis_logo():
 
     clear()
     print('=====================================================================\n')
-    print(f'TARDIS {version} (C)')
-    print('Robert Kiewisz and Tristan Bepler - NYSBC/SMLC')
-    print('\n')
+    print(f'TARDIS {version}')
+    print('New York Structural Biology Center - Simons Machine Learning Center\n')
+    print('TARDIS-pytorch Copyright Information:\n')
+    print('Copyright (c) 2021 Robert Kiewisz, Tristan Bepler')
+    print('MIT License\n')
     print('=====================================================================\n')
