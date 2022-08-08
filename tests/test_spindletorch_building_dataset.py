@@ -11,6 +11,7 @@ class TestDataSetBuilder:
     def test_main_class(self):
         builder = BuildTrainDataSet(dataset_dir=join('tests', 'test_data', 'data_loader'),
                                     circle_size=250,
+                                    resize_pixel_size=92,
                                     multi_layer=False,
                                     tqdm=True)
 
@@ -24,11 +25,12 @@ class TestDataSetBuilder:
 
         builder = BuildTrainDataSet(dataset_dir=join('tests', 'test_data', 'data_loader'),
                                     circle_size=250,
+                                    resize_pixel_size=92,
                                     multi_layer=False,
                                     tqdm=True)
 
-        builder.__builddataset__(trim_xy=128,
-                                 trim_z=128)
+        builder.__builddataset__(trim_xy=64,
+                                 trim_z=64)
         assert len(listdir(join('tests', 'test_data', 'data_loader', 'train', 'imgs'))) == \
             len(listdir(join('tests', 'test_data', 'data_loader', 'train', 'masks')))
 
@@ -44,11 +46,12 @@ class TestDataSetBuilder:
 
         builder = BuildTrainDataSet(dataset_dir=join('tests', 'test_data', 'data_loader'),
                                     circle_size=1250,
+                                    resize_pixel_size=23.2,
                                     multi_layer=False,
                                     tqdm=True)
 
-        builder.__builddataset__(trim_xy=128,
-                                 trim_z=128)
+        builder.__builddataset__(trim_xy=64,
+                                 trim_z=64)
 
         test_build = BuildTestDataSet(dataset_dir=join('tests', 'test_data', 'data_loader'),
                                       train_test_ration=10,
@@ -56,8 +59,8 @@ class TestDataSetBuilder:
         test_build.__builddataset__()
 
         assert [f'{f[:-4]}_mask.tif' for f in
-                listdir(join('tests', 'test_data', 'data_loader', 'test', 'imgs'))] == \
-            listdir(join('tests', 'test_data', 'data_loader', 'test', 'masks'))
+                sorted(listdir(join('tests', 'test_data', 'data_loader', 'test', 'imgs')))] == \
+            sorted(listdir(join('tests', 'test_data', 'data_loader', 'test', 'masks')))
 
         rmtree(join('tests', 'test_data', 'data_loader', 'train'))
         rmtree(join('tests', 'test_data', 'data_loader', 'test'))

@@ -1,9 +1,9 @@
 from click.testing import CliRunner
-from tardis.cnn_postprocess import main as cnn_postprocess
-from tardis.predict_image_segmentation import main as cnn_predictor
+from tardis.spindletorch_postprocess import main as cnn_postprocess
+from tardis.predict_spindletorch import main as cnn_predictor
 from tardis.predict_MTs import main as t_mt
-from tardis.train_image_segmentation import main as cnn_trainer
-from tardis.train_pointcloud_segmentation import main as gf_trainer
+from tardis.train_spindletorch import main as cnn_trainer
+from tardis.train_DIST import main as gf_trainer
 
 
 class TestClick:

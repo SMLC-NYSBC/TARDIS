@@ -334,7 +334,7 @@ def mrc_header(img: str):
 
 def get_mode(mode, amin):
     if mode == 0:
-        if amin == 0:
+        if amin >= 0:
             dtype = np.uint8
         elif amin < 0:
             dtype = np.int8

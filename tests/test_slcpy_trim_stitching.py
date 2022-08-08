@@ -183,6 +183,7 @@ class TestTrimming:
                               trim_size_z=self.trim_z,
                               output=self.temp_dir,
                               image_counter=0,
+                              scale=1,
                               stride=25,
                               clean_empty=False,
                               prefix='_test')
@@ -191,8 +192,7 @@ class TestTrimming:
             y = np.random.choice(9, size=1)[0]
             x = np.random.choice(10, size=1)[0]
 
-            image = tif.imread(
-                join(self.temp_dir, f'{0}_{0}_{y}_{x}_25_test.tif'))
+            image = tif.imread(join(self.temp_dir, f'{0}_{0}_{y}_{x}_25_test.tif'))
             assert image.shape == (self.trim_xy, self.trim_xy), \
                 'Wrong output size!'
         rmtree(self.temp_dir)
@@ -208,6 +208,7 @@ class TestTrimming:
                               trim_size_z=self.trim_z,
                               output=self.temp_dir,
                               image_counter=0,
+                              scale=1,
                               stride=25,
                               prefix='_test')
 
@@ -233,6 +234,7 @@ class TestTrimming:
                               trim_size_z=self.trim_z,
                               output=self.temp_dir,
                               image_counter=0,
+                              scale=1,
                               stride=25,
                               prefix='_test')
 
@@ -257,6 +259,7 @@ class TestTrimming:
                               trim_size_z=self.trim_z,
                               output=self.temp_dir,
                               image_counter=0,
+                              scale=1,
                               stride=25,
                               prefix='_test')
 
@@ -331,6 +334,7 @@ class TestTrimming:
                               trim_size_z=self.trim_z,
                               output=self.temp_dir,
                               image_counter=0,
+                              scale=1,
                               stride=25,
                               prefix='_test')
 
@@ -349,6 +353,7 @@ class TestTrimming:
                               trim_size_z=self.trim_z,
                               output=self.temp_dir,
                               image_counter=0,
+                              scale=1,
                               stride=25,
                               prefix='_test')
 

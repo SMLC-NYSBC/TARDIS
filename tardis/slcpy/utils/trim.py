@@ -32,7 +32,7 @@ def trim_image(image: np.ndarray,
         clean_empty: Omit saving images with all values at 0 aka empty
         prefix: Prefix name added at the end of each trimmed file
     """
-    if image.ndim == 4:  # 3D with RGB
+    if image.ndim == 4 and image.shape[3] == 3:  # 3D with RGB
         nz, ny, nx, nc = image.shape
         dim = 3
     elif image.ndim == 3 and image.shape[2] == 3:  # 2D with RGB
@@ -52,7 +52,7 @@ def trim_image(image: np.ndarray,
     """Count number of trimming in z, y and x with padding"""
     x_axis, y_axis, z_axis = ceil(nx / trim_size_xy), ceil(ny / trim_size_xy), \
         ceil(nz / trim_size_z)
-    if nz == 0:  # Hardfix for 2D data when nz == 0
+    if nz == 0:  # Hard-fix for 2D data when nz == 0
         z_axis = 1
 
     """Zero-out Z axis counter"""
@@ -122,7 +122,7 @@ def trim_image(image: np.ndarray,
                         trim_image[0:trim_df.shape[0],
                                    0:trim_df.shape[1]] = trim_df
 
-                """0 refere to stride == 0"""
+                """0 refers to stride == 0"""
                 img_name = str(f'{image_counter}_{z}_{y}_{x}_0{prefix}.tif')
 
                 if clean_empty:
@@ -162,7 +162,7 @@ def scale_image(image: np.ndarray,
                                 align_corners=False).cpu().detach().numpy()[0, :],
                                 (1, 2, 3, 0))
     elif image.ndim == 3 and image.shape[2] == 3:  # 2D with RGB
-        dim = 2
+        dim = 3
 
         image = np.transpose(F.interpolate(torch.Tensor(np.transpose(image, (2, 0, 1)))[None, :],
                              scale_factor=scale,
@@ -176,7 +176,7 @@ def scale_image(image: np.ndarray,
                                 align_corners=False).cpu().detach().numpy()[0, :],
                                 (1, 2, 0))
     elif image.ndim == 3 and image.shape[2] != 3:  # 3D with Gray
-        dim = 3
+        dim = 1
 
         image = F.interpolate(torch.Tensor(image)[None, None, :],
                               scale_factor=scale,
@@ -188,7 +188,7 @@ def scale_image(image: np.ndarray,
                                  mode='trilinear',
                                  align_corners=False).cpu().detach().numpy()[0, 0, :]
     else:  # 2D with Gray
-        dim = 2
+        dim = 1
 
         image = F.interpolate(torch.Tensor(image)[None, None, :],
                               scale_factor=scale,
@@ -240,7 +240,6 @@ def trim_with_stride(image: np.ndarray,
 
     if mask is not None:
         image, mask, dim = scale_image(image=image,
-                                       ndim=image.shape[1],
                                        mask=mask,
                                        scale=scale)
     else:
@@ -248,18 +247,18 @@ def trim_with_stride(image: np.ndarray,
                                  mask=None,
                                  scale=scale)
 
-        if image.ndim == 4 and dim == 3:  # 3D RGB
-            nz, ny, nx, nc = image.shape
-        elif image.ndim == 3 and image.shape[2] == 3:  # 2D RGB
-            ny, nx, nc = image.shape
-            nz = 0
-        elif image.ndim == 3 and image.shape[2] != 3:  # 3D gray
-            nz, ny, nx = image.shape
-            nc = None
-        else:  # 2D gray
-            ny, nx = image.shape
-            nc = None
-            nz = 0
+    if image.ndim == 4 and dim == 3:  # 3D RGB
+        nz, ny, nx, nc = image.shape
+    elif image.ndim == 3 and dim == 3:  # 2D RGB
+        ny, nx, nc = image.shape
+        nz = 0  # 2D
+    elif image.ndim == 3 and dim == 1:  # 3D gray
+        nz, ny, nx = image.shape
+        nc = None  # Gray
+    elif image.ndim == 2 and dim == 1:  # 2D gray
+        ny, nx = image.shape
+        nc = None  # 2D
+        nz = 0  # Gray
 
     if trim_size_xy is not None or trim_size_z is not None:
         assert nx >= trim_size_xy, \
@@ -276,7 +275,7 @@ def trim_with_stride(image: np.ndarray,
     x, y, z = ceil(nx / trim_size_xy), ceil(ny / trim_size_xy), \
         ceil(nz / trim_size_z)
 
-    if dim == 3:
+    if nz > 0:
         x_pad, y_pad, z_pad = (trim_size_xy + ((trim_size_xy - stride) * (x - 1))) - nx, \
             (trim_size_xy + ((trim_size_xy - stride) * (y - 1))) - ny, \
             (trim_size_z + (trim_size_z - stride) * (z - 1)) - nz
@@ -293,7 +292,7 @@ def trim_with_stride(image: np.ndarray,
         while y_pad < 0:
             y += 1
             y_pad += trim_size_xy - stride
-        if dim == 3:
+        if nz > 0:
             while z_pad < 0:
                 z += 1
                 z_pad += trim_size_z - stride
@@ -303,7 +302,7 @@ def trim_with_stride(image: np.ndarray,
             x_pad = (trim_size_xy + ((trim_size_xy - stride) * (x - 1))) - nx
             y_pad = (trim_size_xy + ((trim_size_xy - stride) * (y - 1))) - ny
 
-        if dim == 3:
+        if nz > 0:
             while z_pad < 0:
                 trim_size_z += 1
                 z_pad = (trim_size_z + ((trim_size_z - stride) * (z - 1))) - nz
@@ -311,7 +310,7 @@ def trim_with_stride(image: np.ndarray,
             z_pad = 0
 
     """Expand image of a patch"""
-    if dim == 3:
+    if nz > 0:
         if nc is not None:
             image_padded = np.pad(image,
                                   [(0, z_pad), (0, y_pad), (0, x_pad), (0, 0)],
@@ -363,7 +362,7 @@ def trim_with_stride(image: np.ndarray,
                     f'{image_counter}_{i}_{j}_{k}_{stride}{prefix}.tif')
 
                 if nc is None:
-                    if dim == 3:
+                    if nz > 0:
                         trim_img = image_padded[z_start:z_stop,
                                                 y_start:y_stop,
                                                 x_start:x_stop]
@@ -371,14 +370,14 @@ def trim_with_stride(image: np.ndarray,
                             trim_mask = mask_padded[z_start:z_stop,
                                                     y_start:y_stop,
                                                     x_start:x_stop]
-                    elif dim == 2:
+                    else:
                         trim_img = image_padded[y_start:y_stop,
                                                 x_start:x_stop]
                         if mask is not None:
                             trim_mask = mask_padded[y_start:y_stop,
                                                     x_start:x_stop]
                 else:
-                    if dim == 3:
+                    if nz > 0:
                         trim_img = image_padded[z_start:z_stop,
                                                 y_start:y_stop,
                                                 x_start:x_stop,
@@ -387,7 +386,7 @@ def trim_with_stride(image: np.ndarray,
                             trim_mask = mask_padded[z_start:z_stop,
                                                     y_start:y_stop,
                                                     x_start:x_stop]
-                    elif dim == 2:
+                    else:
                         trim_img = image_padded[y_start:y_stop,
                                                 x_start:x_stop,
                                                 :]
