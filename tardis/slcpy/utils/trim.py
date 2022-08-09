@@ -147,6 +147,29 @@ def empty_mask(size: tuple):
 def scale_image(image: np.ndarray,
                 scale: float,
                 mask: Optional[np.ndarray] = None):
+    """
+    Scale image module using torch GPU interpolation
+
+    Args:
+        image: image data
+        mask: Optional binary mask image data
+        scale: scale value for image
+    """
+    if scale == 1:
+        if image.ndim == 4:  # 3D with RGB
+            dim = 3
+        elif image.ndim == 3 and image.shape[2] == 3:  # 2D with RGB
+            dim = 3
+        elif image.ndim == 3 and image.shape[2] != 3:  # 3D with Gray
+            dim = 1
+        else:  # 2D with Gray
+            dim = 1
+
+        if mask is not None:
+            return image, mask, dim
+        else:
+            return image, dim
+
     if image.ndim == 4:  # 3D with RGB
         dim = 3
 
@@ -201,13 +224,12 @@ def scale_image(image: np.ndarray,
                                  align_corners=False).cpu().detach().numpy()[0, 0, :]
 
     if mask is not None:
-        return image, mask, dim
+        return image, np.where(mask > 0.5, 1, 0), dim
     else:
         return image, dim
 
 
 def trim_with_stride(image: np.ndarray,
-                     scale: float,
                      trim_size_xy: int,
                      trim_size_z: int,
                      output: str,
@@ -215,6 +237,7 @@ def trim_with_stride(image: np.ndarray,
                      prefix='',
                      clean_empty=True,
                      stride=25,
+                     scale: Optional[float] = 1.0,
                      mask: Optional[np.ndarray] = None):
     """
     FUNCTION TO TRIMMED IMAGE AND MASKS TO SPECIFIED SIZE
@@ -224,7 +247,6 @@ def trim_with_stride(image: np.ndarray,
 
     Args:
         image: Corresponding image for the labels
-        scale: Scale factor for resizing
         trim_size_xy: Size of trimming in xy dimension
         trim_size_z: Size of trimming in z dimension
         output: Name of the output directory for saving
@@ -237,28 +259,30 @@ def trim_with_stride(image: np.ndarray,
     if mask is not None:
         assert image.shape == mask.shape, \
             f'Image {image.shape} has different shape from mask {mask.shape}'
-
-    if mask is not None:
         image, mask, dim = scale_image(image=image,
                                        mask=mask,
                                        scale=scale)
     else:
         image, dim = scale_image(image=image,
-                                 mask=None,
                                  scale=scale)
 
     if image.ndim == 4 and dim == 3:  # 3D RGB
         nz, ny, nx, nc = image.shape
+        min_px_count = trim_size_xy * trim_size_xy * trim_size_z
     elif image.ndim == 3 and dim == 3:  # 2D RGB
         ny, nx, nc = image.shape
         nz = 0  # 2D
+        min_px_count = trim_size_xy * trim_size_xy
     elif image.ndim == 3 and dim == 1:  # 3D gray
         nz, ny, nx = image.shape
         nc = None  # Gray
-    elif image.ndim == 2 and dim == 1:  # 2D gray
+        min_px_count = trim_size_xy * trim_size_xy * trim_size_z
+    elif image.ndim == 2:  # 2D gray
         ny, nx = image.shape
         nc = None  # 2D
         nz = 0  # Gray
+        min_px_count = trim_size_xy * trim_size_xy
+    min_px_count = min_px_count * 0.0005  # 0.1% of mask must be occupied 
 
     if trim_size_xy is not None or trim_size_z is not None:
         assert nx >= trim_size_xy, \
@@ -272,8 +296,7 @@ def trim_with_stride(image: np.ndarray,
         trim_size_z = 64
 
     """Calculate number of patches and stride for xyz"""
-    x, y, z = ceil(nx / trim_size_xy), ceil(ny / trim_size_xy), \
-        ceil(nz / trim_size_z)
+    x, y, z = ceil(nx / trim_size_xy), ceil(ny / trim_size_xy), ceil(nz / trim_size_z)
 
     if nz > 0:
         x_pad, y_pad, z_pad = (trim_size_xy + ((trim_size_xy - stride) * (x - 1))) - nx, \
@@ -396,7 +419,7 @@ def trim_with_stride(image: np.ndarray,
                                                     x_start:x_stop]
 
                 if clean_empty and mask is not None:
-                    if not np.all(trim_mask == 0):
+                    if not np.sum(trim_mask) > min_px_count:
                         """Hard transform between int8 and uint8"""
                         if np.min(trim_img) < 0:
                             trim_img = trim_img + 128

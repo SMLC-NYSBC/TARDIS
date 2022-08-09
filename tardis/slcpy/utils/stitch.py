@@ -139,10 +139,6 @@ class StitchImages:
                                            y_start:y_stop,
                                            x_start:x_stop] = img
 
-            """Scale image to fit to original pixel size"""
-            assert np.all(np.unique(stitched_image) == [0, 1]), \
-                'Incorrect values not in 0 or 1'
-
             # if scale is not None:
             #     stitched_image, _ = scale_image(image=stitched_image,
             #                                     mask=None,

@@ -353,7 +353,6 @@ class TestTrimming:
                               trim_size_z=self.trim_z,
                               output=self.temp_dir,
                               image_counter=0,
-                              scale=1,
                               stride=25,
                               prefix='_test')
 

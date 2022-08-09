@@ -4,7 +4,7 @@ from os.path import isfile, join
 import numpy as np
 from tardis.slcpy.utils.build_semantic_mask import draw_semantic
 from tardis.slcpy.utils.load_data import ImportDataFromAmira, import_mrc, import_tiff
-from tardis.slcpy.utils.trim import trim_with_stride
+from tardis.slcpy.utils.trim import scale_image, trim_with_stride
 
 
 class BuildTrainDataSet:
@@ -140,6 +140,11 @@ class BuildTrainDataSet:
                 image, pixel_size = importer.get_image()
                 coord = importer.get_segmented_points()  # [ID x X x Y x Z]
 
+            if pixel_size == 0:
+                scale_factor = 1
+            else:
+                scale_factor = pixel_size / self.resize_pixel_size
+
             """Draw mask"""
             if coord is not None:
                 assert coord.shape[1] == 4, \
@@ -152,17 +157,12 @@ class BuildTrainDataSet:
                                          multi_layer=self.multi_layer,
                                          tqdm=self.tqdm)
 
-            if pixel_size == 0:
-                scale_factor = 1
-            else:
-                scale_factor = pixel_size / self.resize_pixel_size
-
             """Voxalize Image and Mask"""
             trim_with_stride(image=image,
                              mask=mask,
-                             scale=scale_factor,
                              trim_size_xy=trim_xy,
                              trim_size_z=trim_z,
+                             scale=scale_factor,
                              output=join(self.dataset_dir, 'train'),
                              image_counter=img_counter,
                              clean_empty=True,
