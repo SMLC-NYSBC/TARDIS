@@ -52,7 +52,7 @@ class BuildPointCloud:
 
     def build_point_cloud(self,
                           image: Optional[str] = np.ndarray,
-                          edt=False,
+                          EDT=False,
                           label_size=2.5,
                           down_sampling: Optional[float] = None):
         if self.tqdm:
@@ -60,7 +60,7 @@ class BuildPointCloud:
 
         image = self.check_data(image)
 
-        if edt:
+        if EDT:
             import edt
 
             """Calculate EDT and apply threshold based on predefine mask size"""
@@ -98,7 +98,6 @@ class BuildPointCloud:
             coordinates_HD = np.stack((image_point[1],
                                        image_point[0],
                                        np.zeros(image_point[0].shape))).T
-
         elif len(image_point) == 3:
             coordinates_HD = np.stack((image_point[2],
                                        image_point[1],

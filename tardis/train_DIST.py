@@ -15,7 +15,7 @@ from tardis.dist_pytorch.utils.dataloader import GraphDataset
 from tardis.dist_pytorch.utils.utils import BuildTrainDataSet, cal_node_input
 from tardis.utils.device import get_device
 from tardis.utils.utils import BuildTestDataSet, check_dir
-from tardis._version import version
+from tardis.version import version
 
 
 @click.command()

@@ -11,7 +11,7 @@ from tardis.spindletorch.train import train
 from tardis.spindletorch.utils.dataset_loader import VolumeDataset
 from tardis.utils.device import get_device
 from tardis.utils.utils import BuildTestDataSet, check_dir
-from tardis._version import version
+from tardis.version import version
 
 
 @click.command()

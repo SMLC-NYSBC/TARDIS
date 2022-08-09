@@ -10,7 +10,6 @@ import open3d as o3d
 import tifffile.tifffile as tif
 from tqdm.auto import tqdm
 
-from tardis._version import version
 from tardis.dist_pytorch.transformer.network import DIST
 from tardis.dist_pytorch.utils.voxal import VoxalizeDataSetV2
 from tardis.slcpy.image_postprocess import ImageToPointCloud
@@ -25,8 +24,12 @@ from tardis.spindletorch.utils.dataset_loader import PredictionDataSet
 from tardis.utils.device import get_device
 from tardis.utils.setup_envir import build_temp_dir, clean_up
 from tardis.utils.utils import check_uint8, pc_median_dist
+from tardis.version import version
+
 
 warnings.simplefilter("ignore", UserWarning)
+
+
 @click.command()
 @click.option('-dir', '--prediction_dir',
               default=getcwd(),
@@ -182,7 +185,7 @@ def main(prediction_dir: str,
             format = 'amira'
 
         scale_factor = px / 23.2
-        org_shape = image.shape
+        # org_shape = image.shape
 
         trim_with_stride(image=image,
                          scale=scale_factor,

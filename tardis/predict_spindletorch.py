@@ -12,7 +12,7 @@ from tardis.slcpy.utils.trim import trim_image
 from tardis.spindletorch.predict import predict
 from tardis.spindletorch.utils.dataset_loader import PredictionDataSet
 from tardis.utils.setup_envir import build_temp_dir, clean_up
-from tardis._version import version
+from tardis.version import version
 
 
 @click.command()

@@ -16,6 +16,6 @@ class ImageToPointCloud:
                  down_sampling_voxal_size=None):
 
         return self.postprocess.build_point_cloud(image=image,
-                                                  edt=euclidean_transform,
+                                                  EDT=euclidean_transform,
                                                   label_size=label_size,
                                                   down_sampling=down_sampling_voxal_size)

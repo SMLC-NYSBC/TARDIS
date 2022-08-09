@@ -1,5 +1,5 @@
 import numpy as np
-from tardis._version import version
+from tardis.version import version
 from datetime import datetime
 
 

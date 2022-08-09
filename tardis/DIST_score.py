@@ -6,7 +6,6 @@ import click
 import numpy as np
 import torch
 
-from tardis._version import version
 from tardis.dist_pytorch.transformer.network import DIST
 from tardis.dist_pytorch.utils.augmentation import preprocess_data
 from tardis.dist_pytorch.utils.voxal import VoxalizeDataSetV2
@@ -15,6 +14,7 @@ from tardis.spindletorch.unet.predictor import Predictor
 from tardis.utils.device import get_device
 from tardis.utils.metrics import F1_metric, IoU, distAUC, mCov
 from tardis.utils.utils import pc_median_dist
+from tardis.version import version
 
 torch.backends.cudnn.enabled = False
 torch.backends.cudnn.benchmark = True

@@ -4,7 +4,6 @@ from typing import Optional
 
 import numpy as np
 import tifffile.tifffile as tif
-from tardis.slcpy.utils.trim import scale_image
 
 
 class StitchImages:
