@@ -1,6 +1,6 @@
-import platform
+from turtle import title
 import warnings
-from os import getcwd, listdir, system
+from os import getcwd, listdir
 from os.path import join
 from typing import Optional
 
@@ -22,14 +22,12 @@ from tardis.spindletorch.unet.predictor import Predictor
 from tardis.spindletorch.utils.build_network import build_network
 from tardis.spindletorch.utils.dataset_loader import PredictionDataSet
 from tardis.utils.device import get_device
+from tardis.utils.logo import tardis_logo
 from tardis.utils.setup_envir import build_temp_dir, clean_up
 from tardis.utils.utils import check_uint8, pc_median_dist
 from tardis.version import version
 
-
 warnings.simplefilter("ignore", UserWarning)
-
-
 @click.command()
 @click.option('-dir', '--prediction_dir',
               default=getcwd(),
@@ -107,7 +105,7 @@ def main(prediction_dir: str,
     MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
     """
     """Initial Setup"""
-    tardis_logo()
+    tardis_logo(title='Fully-automatic MT segmentation module')
 
     # Searching for available images for prediction
     available_format = ('.tif', '.mrc', '.rec', '.am')
@@ -267,7 +265,7 @@ def main(prediction_dir: str,
         # Find downsampling value by 5 to reduce noise
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(point_cloud)
-        point_cloud = np.asarray(pcd.voxel_down_sample(voxel_size=5).points)
+        point_cloud = np.asarray(pcd.voxel_down_sample(voxel_size=2.5).points)
 
         # Normalize point cloud KNN distance
         dist = pc_median_dist(point_cloud, avg_over=True)
@@ -372,24 +370,8 @@ def main(prediction_dir: str,
         batch_iter.set_description(f'Clean-up temp for {i}')
 
         clean_up(dir=prediction_dir)
-        tardis_logo()
+        tardis_logo(title='Fully-automatic MT segmentation module')
 
 
 if __name__ == '__main__':
     main()
-
-
-def tardis_logo():
-    if platform.system() in ['Darwin', 'Linux']:
-        clear = lambda: system('clear')
-    else:
-        clear = lambda: system('cls')
-
-    clear()
-    print('=====================================================================\n')
-    print(f'TARDIS {version}')
-    print('New York Structural Biology Center - Simons Machine Learning Center\n')
-    print('TARDIS-pytorch Copyright Information:\n')
-    print('Copyright (c) 2021 Robert Kiewisz, Tristan Bepler')
-    print('MIT License\n')
-    print('=====================================================================\n')

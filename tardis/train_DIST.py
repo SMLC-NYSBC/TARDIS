@@ -8,12 +8,14 @@ from torch import optim
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
 
-from tardis.dist_pytorch.transformer.losses import BCELoss, DiceLoss, SigmoidFocalLoss
+from tardis.dist_pytorch.transformer.losses import (BCELoss, DiceLoss,
+                                                    SigmoidFocalLoss)
 from tardis.dist_pytorch.transformer.network import DIST
 from tardis.dist_pytorch.transformer.trainer import Trainer
 from tardis.dist_pytorch.utils.dataloader import GraphDataset
 from tardis.dist_pytorch.utils.utils import BuildTrainDataSet, cal_node_input
 from tardis.utils.device import get_device
+from tardis.utils.logo import tardis_logo
 from tardis.utils.utils import BuildTestDataSet, check_dir
 from tardis.version import version
 
@@ -168,6 +170,8 @@ def main(pointcloud_dir: str,
     Training unit for DIST with 2D/3D dataset of point cloud with or without
     images.
     """
+    tardis_logo(title='DIST training module')
+
     """Check directory for data compatibility"""
     train_imgs_dir = join(pointcloud_dir, 'train', 'imgs')
     train_coords_dir = join(pointcloud_dir, 'train', 'masks')

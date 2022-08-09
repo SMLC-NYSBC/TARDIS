@@ -12,6 +12,7 @@ from tardis.dist_pytorch.utils.voxal import VoxalizeDataSetV2
 from tardis.slcpy.utils.segment_point_cloud import GraphInstanceV2
 from tardis.spindletorch.unet.predictor import Predictor
 from tardis.utils.device import get_device
+from tardis.utils.logo import tardis_logo
 from tardis.utils.metrics import F1_metric, IoU, distAUC, mCov
 from tardis.utils.utils import pc_median_dist
 from tardis.version import version
@@ -134,6 +135,8 @@ def main(gf_dir: str,
     MAIN MODULE FOR GF for metric evaluation
     """
     """Initial setup"""
+    tardis_logo(title='Metric evaluation for DIST')
+    
     available_format = ('.csv', '.CorrelationLines.am', '.npy')
     GF_list = [f for f in listdir(gf_dir) if f.endswith(available_format)]
     assert len(GF_list) > 0, 'No file found in given directory!'

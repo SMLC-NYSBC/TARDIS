@@ -92,7 +92,9 @@ def predict(image_DL: DataLoader,
     if tqdm:
         from tqdm import tqdm
         dl_iter = tqdm(range(dl_len),
-                       'Predicting images: ')
+                       'Predicting images: ',
+                       ascii=True,
+                       leave=True)
     else:
         dl_iter = range(dl_iter)
 

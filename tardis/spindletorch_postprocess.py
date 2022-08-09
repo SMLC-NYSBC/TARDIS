@@ -8,6 +8,7 @@ import tifffile.tifffile as tif
 
 from tardis.slcpy.image_postprocess import ImageToPointCloud
 from tardis.slcpy.utils.export_data import NumpyToAmira
+from tardis.utils.logo import tardis_logo
 from tardis.utils.utils import check_uint8
 from tardis.version import version
 
@@ -56,6 +57,8 @@ def main(postprocess_dataset: str,
 
     Post-process dataset from Unet segmentation and save them as .csv, .npy or .am
     """
+    tardis_logo(title='Semantic binary mask post-processing module')
+    
     """Check dir for compatible files"""
     idx_img = [f for f in listdir(postprocess_dataset) if f.endswith('.tif')]
     assert len(idx_img) > 0, \
@@ -117,7 +120,7 @@ def main(postprocess_dataset: str,
             if downsample is not None:
                 am_convert.export_amira(coord=point_cloud_HD,
                                         file_dir=join(postprocess_dataset, f'{idx[:-4]}_LD.am'))
-
+        tardis_logo(title='Semantic binary mask post-processing module')
 
 if __name__ == '__main__':
     main()

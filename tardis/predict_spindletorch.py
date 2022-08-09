@@ -11,6 +11,7 @@ from tardis.slcpy.utils.stitch import StitchImages
 from tardis.slcpy.utils.trim import trim_image
 from tardis.spindletorch.predict import predict
 from tardis.spindletorch.utils.dataset_loader import PredictionDataSet
+from tardis.utils.logo import tardis_logo
 from tardis.utils.setup_envir import build_temp_dir, clean_up
 from tardis.version import version
 
@@ -122,6 +123,8 @@ def main(prediction_dir: str,
 
     Supported 3D images only!
     """
+    tardis_logo(title='Semantic MT prediction module')
+    
     """Searching for available images for prediction"""
     available_format = ('.tif', '.mrc', '.rec', '.am')
     predict_list = [f for f in listdir(
@@ -205,6 +208,7 @@ def main(prediction_dir: str,
 
         """Clean-up temp dir"""
         clean_up(dir=prediction_dir)
+        tardis_logo(title='Semantic MT prediction module')
 
 
 if __name__ == '__main__':

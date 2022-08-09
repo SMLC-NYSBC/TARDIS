@@ -70,7 +70,8 @@ class Trainer:
         if self.tqdm:
             from tqdm import trange
 
-            progressbar = trange(self.epochs, desc='Progress')
+            progressbar = trange(self.epochs, desc='Progress',
+                                 ascii=True, leave=True)
         else:
             progressbar = range(self.epochs)
 
@@ -132,7 +133,9 @@ class Trainer:
 
         if self.tqdm:
             batch_iter = tq(enumerate(self.training_DataLoader),
-                            'Training')
+                            'Training',
+                            ascii=True,
+                            leave=True)
         else:
             batch_iter = enumerate(self.training_DataLoader)
 

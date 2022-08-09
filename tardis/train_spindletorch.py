@@ -10,6 +10,7 @@ from tardis.slcpy.build_training_dataset import BuildTrainDataSet
 from tardis.spindletorch.train import train
 from tardis.spindletorch.utils.dataset_loader import VolumeDataset
 from tardis.utils.device import get_device
+from tardis.utils.logo import tardis_logo
 from tardis.utils.utils import BuildTestDataSet, check_dir
 from tardis.version import version
 
@@ -174,6 +175,8 @@ def main(training_dataset: str,
 
     Supported 3D images only!
     """
+    tardis_logo(title='CNN training module')
+
     """Set environment"""
     train_imgs_dir = join(training_dataset, 'train', 'imgs')
     train_masks_dir = join(training_dataset, 'train', 'masks')
@@ -254,6 +257,8 @@ def main(training_dataset: str,
 
     """Get device"""
     device = get_device(device)
+
+    tardis_logo(title='CNN training module')
 
     """Run Training loop"""
     train(train_dataloader=train_DL,

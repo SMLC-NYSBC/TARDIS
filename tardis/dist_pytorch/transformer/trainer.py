@@ -90,7 +90,9 @@ class Trainer:
             epoch_progress = tq(range(self.epochs),
                                 'Epochs:',
                                 total=self.epochs,
-                                leave=True, ascii=True)
+                                leave=True, 
+                                ascii=True,
+                                position=0)
         else:
             epoch_progress = range(self.epochs)
 
@@ -150,7 +152,9 @@ class Trainer:
             train_progress = tq(enumerate(self.training_DataLoader),
                                 'Training:',
                                 total=len(self.training_DataLoader),
-                                leave=True, ascii=True)
+                                leave=True, 
+                                ascii=True,
+                                position=1)
         else:
             train_progress = enumerate(self.training_DataLoader)
 
