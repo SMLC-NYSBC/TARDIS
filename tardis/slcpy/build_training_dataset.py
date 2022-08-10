@@ -104,7 +104,9 @@ class BuildTrainDataSet:
             from tqdm import tqdm
 
             batch_iter = tqdm(range(self.__len__()),
-                              'Building Training dataset')
+                              'Building Training dataset',
+                              leave=True,
+                              ascii=True)
         else:
             batch_iter = range(self.__len__())
 
@@ -144,7 +146,10 @@ class BuildTrainDataSet:
                 scale_factor = 1
             else:
                 scale_factor = pixel_size / self.resize_pixel_size
-
+            batch_iter.set_description(f'Building Training dataset: \n'
+                                       f'{img_name}'
+                                       f'px: {pixel_size}\n'
+                                       f'scale {round(scale_factor, 2)}')
             """Draw mask"""
             if coord is not None:
                 assert coord.shape[1] == 4, \
