@@ -4,6 +4,7 @@ from typing import Optional
 
 import numpy as np
 import tifffile.tifffile as tif
+from tardis.slcpy.utils.trim import scale_image
 
 
 class StitchImages:
@@ -61,6 +62,7 @@ class StitchImages:
                  image_dir: str,
                  mask: bool,
                  prefix='',
+                 scale: Optional[float] = 1.0,
                  output: Optional[str] = None,
                  dtype=np.int8):
         """Extract information about images in dir_path"""
@@ -139,10 +141,10 @@ class StitchImages:
                                            y_start:y_stop,
                                            x_start:x_stop] = img
 
-            # if scale is not None:
-            #     stitched_image, _ = scale_image(image=stitched_image,
-            #                                     mask=None,
-            #                                     scale=scale)
+            if scale is not None:
+                stitched_image, _ = scale_image(image=stitched_image,
+                                                mask=None,
+                                                scale=scale)
 
             if output is None:
                 return np.array(stitched_image, dtype=dtype)

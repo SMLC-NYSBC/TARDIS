@@ -1,7 +1,9 @@
 import gc
 from typing import Optional
 
+import cv2
 import numpy as np
+import pandas as pd
 from skimage.morphology import skeletonize_3d
 
 
@@ -35,18 +37,32 @@ class BuildPointCloud:
 
                 image = import_tiff(img=image,
                                     dtype=np.int8)
-            else:
-                image = image
         except RuntimeWarning:
             raise Warning("Directory or input .tiff file is not correct...")
 
-        if np.any(np.unique(image) > 1):  # Fix uint8 formatting
-            image = image / 255
+        assert image.ndim in [2, 3], 'File must be 2D or 3D array!'
 
-        assert np.unique(image)[1] == 1, \
+        unique_val = pd.unique(image.flatten())
+        if len(unique_val) == 2:
+            if np.any(unique_val > 253):  # Fix uint8 formatting
+                image = image / 255
+
+        assert unique_val[1] == 1, \
             'Array or file directory loaded properly but image is not semantic mask...'
 
-        assert image.ndim in [2, 3], 'File must be 2D or 3D array!'
+        """Fill gaps in binary mask"""
+        for id, _ in enumerate(image):
+            des = np.array(image[id, :], dtype=np.uint8)
+            contour, _ = cv2.findContours(des, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+
+            for cnt in contour:
+                cv2.drawContours(des,[cnt], 0, 1, -1)
+
+            gray = cv2.bitwise_not(des)
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))
+            res = cv2.morphologyEx(gray, cv2.MORPH_OPEN, kernel) / 255
+            res = np.where(res == 1, 0, 1)
+            image[id, :] = res
 
         return image
 
@@ -82,10 +98,34 @@ class BuildPointCloud:
                     image_edt[i, :] = np.where(edt.edt(image[i, :]) > label_size, 1, 0)
 
             """Skeletonization"""
-            image_point = np.where(skeletonize_3d(image_edt) > 0)
+            if image_edt.flatten().shape[0] > 1000000000:
+                image_point = np.zeros(image_edt.shape, dtype=np.int8)
+                start = 0
+
+                for i in range(10, image_edt.shape[0], 10):
+                    if (image_edt.shape[0] - i) // 10 == 0:
+                        i = image_edt.shape[0]
+
+                    image_point[start:i, :] += skeletonize_3d(image_edt[start:i, :])
+                    start = i
+                image_point = np.where(image_point > 0)
+            else:
+                image_point = np.where(skeletonize_3d(image_edt) > 0)
         else:
             """Skeletonization"""
-            image_point = np.where(skeletonize_3d(image) > 0)
+            if image.flatten().shape[0] > 1000000000:
+                image_point = np.zeros(image.shape, dtype=np.int8)
+                start = 0
+
+                for i in range(10, image.shape[0], 10):
+                    if (image.shape[0] - i) // 10 == 0:
+                        i = image.shape[0]
+
+                    image_point[start:i, :] += skeletonize_3d(image[start:i, :])
+                    start = i
+                image_point = np.where(image_point > 0)
+            else:
+                image_point = np.where(skeletonize_3d(image) > 0)
 
         """CleanUp to avoid memory loss"""
         image = None

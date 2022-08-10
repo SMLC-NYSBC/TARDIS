@@ -183,7 +183,7 @@ def main(prediction_dir: str,
             format = 'amira'
 
         scale_factor = px / 23.2
-        # org_shape = image.shape
+        org_shape = image.shape
 
         trim_with_stride(image=image,
                          scale=scale_factor,
@@ -192,7 +192,7 @@ def main(prediction_dir: str,
                          output=join(prediction_dir, 'temp', 'Patches'),
                          image_counter=0,
                          clean_empty=False,
-                         stride=0,
+                         stride=20,
                          prefix='')
         image = None
         del(image)
@@ -222,17 +222,20 @@ def main(prediction_dir: str,
 
         """Post-Processing"""
         # Stitch predicted image patches
-        batch_iter.set_description(f'Stitching for {i}')
-
         scale_factor = 23.2 / px
+        batch_iter.set_description(f'Stitching for {i} re-scale {scale_factor}')
+
         image = check_uint8(stitcher(image_dir=output,
                                      output=None,
                                      mask=True,
+                                     scale=scale_factor,
                                      prefix='',
-                                     dtype=np.int8))
-        # if org_shape != image.shape:
-        #     print('Image after transformation showing different shape')
-        #     break
+                                     dtype=np.int8)[:org_shape[0],
+                                                    :org_shape[1],
+                                                    :org_shape[2]])
+        if org_shape != image.shape:
+            print('Image after transformation showing different shape')
+            break
 
         # Check if predicted image is not empty
         if debug:
@@ -246,7 +249,7 @@ def main(prediction_dir: str,
         batch_iter.set_description(f'Postprocessing for {i}')
 
         point_cloud = post_processer(image=image,
-                                     euclidean_transform=False,
+                                     euclidean_transform=True,
                                      label_size=3,
                                      down_sampling_voxal_size=None)
         point_cloud = point_cloud * scale_factor
@@ -265,7 +268,7 @@ def main(prediction_dir: str,
         # Find downsampling value by 5 to reduce noise
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(point_cloud)
-        point_cloud = np.asarray(pcd.voxel_down_sample(voxel_size=2.5).points)
+        point_cloud = np.asarray(pcd.voxel_down_sample(voxel_size=5).points)
 
         # Normalize point cloud KNN distance
         dist = pc_median_dist(point_cloud, avg_over=True)
