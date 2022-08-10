@@ -28,6 +28,8 @@ from tardis.utils.utils import check_uint8, pc_median_dist
 from tardis.version import version
 
 warnings.simplefilter("ignore", UserWarning)
+
+
 @click.command()
 @click.option('-dir', '--prediction_dir',
               default=getcwd(),
@@ -119,9 +121,6 @@ def main(prediction_dir: str,
     # Build handler's
     stitcher = StitchImages(tqdm=False)
     post_processer = ImageToPointCloud(tqdm=False)
-    GraphToSegment = GraphInstanceV2(threshold=gt_threshold,
-                                     connection=2,
-                                     prune=3)
     BuildAmira = NumpyToAmira()
 
     # Build CNN from checkpoints
@@ -264,10 +263,22 @@ def main(prediction_dir: str,
         """DIST Prediction"""
         batch_iter.set_description(f'Building voxal for {i}')
 
+        down_sample = 2.5
+        if point_cloud.shape[0] > 25000:
+            down_sample = 1.5
+        if point_cloud.shape[0] > 30000:
+            down_sample = 2.5
+        if point_cloud.shape[0] > 40000:
+            down_sample = 3
+        if point_cloud.shape[0] > 50000:
+            down_sample = 4
+        if point_cloud.shape[0] > 80000:
+            down_sample = 5
+
         # Find downsampling value by 5 to reduce noise
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(point_cloud)
-        point_cloud = np.asarray(pcd.voxel_down_sample(voxel_size=5).points)
+        point_cloud = np.asarray(pcd.voxel_down_sample(voxel_size=down_sample).points)
 
         # Normalize point cloud KNN distance
         dist = pc_median_dist(point_cloud, avg_over=True)
@@ -352,11 +363,32 @@ def main(prediction_dir: str,
             point_cloud[:, 1] = point_cloud[:, 1] + transformation[1]
             point_cloud[:, 2] = point_cloud[:, 2] + transformation[2]
 
+        GraphToSegment = GraphInstanceV2(threshold=gt_threshold,
+                                         connection=2,
+                                         prune=5)
+
         segments = GraphToSegment.voxal_to_segment(graph=graphs,
                                                    coord=point_cloud,
                                                    idx=output_idx,
                                                    visualize=visualizer)
 
+        """Threshold drop for hard datasets"""
+        if 100 - ((segments.shape[0] * 100) / point_cloud.shape[0]) > 25:
+            GraphToSegment = GraphInstanceV2(threshold=0.25,
+                                            connection=2,
+                                            prune=5)
+            segments = GraphToSegment.voxal_to_segment(graph=graphs,
+                                                       coord=point_cloud,
+                                                       idx=output_idx,
+                                                       visualize=visualizer)
+        if 100 - ((segments.shape[0] * 100) / point_cloud.shape[0]) > 25:
+            GraphToSegment = GraphInstanceV2(threshold=0.1,
+                                            connection=2,
+                                            prune=5)
+            segments = GraphToSegment.voxal_to_segment(graph=graphs,
+                                                       coord=point_cloud,
+                                                       idx=output_idx,
+                                                       visualize=visualizer)
         if debug:
             np.save(join(am_output,
                          f'{i[:-out_format]}_segments.npy'),
