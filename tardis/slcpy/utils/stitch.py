@@ -141,6 +141,9 @@ class StitchImages:
                                            y_start:y_stop,
                                            x_start:x_stop] = img
 
+            if mask:
+                stitched_image = np.where(stitched_image > 0, 1, 0)
+
             if scale is not None:
                 stitched_image, _ = scale_image(image=stitched_image,
                                                 mask=None,

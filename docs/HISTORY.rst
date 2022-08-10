@@ -2,8 +2,22 @@
 History
 =======
 
-0.1.0pre-beta (2022-08-08)
---------------------
+0.1.0 beta (2022-08-08)
+--------------------------
+* SpindleTorch changes:
+    * Quick retrained model on hand-curated dataset
+
+* SLCPY module changes:
+    * Fix interpolation handling for up-sampled datasets
+    * Post-processing improvements and speeds-up
+
+* TARDIS
+    * Clean-up
+    * Flake8 and pyteset fixes
+    * Global tunning for segmentation quality 
+
+0.1.0 pre-beta (2022-08-08)
+--------------------------
 * SpindleTorch changes:
     * Standardized pixel size input. Now all data are reshaped to the pixel 
         size of 2.32

@@ -192,7 +192,7 @@ def main(prediction_dir: str,
                          output=join(prediction_dir, 'temp', 'Patches'),
                          image_counter=0,
                          clean_empty=False,
-                         stride=20,
+                         stride=10,
                          prefix='')
         image = None
         del(image)
@@ -233,21 +233,20 @@ def main(prediction_dir: str,
                                      dtype=np.int8)[:org_shape[0],
                                                     :org_shape[1],
                                                     :org_shape[2]])
-        if org_shape != image.shape:
-            print('Image after transformation showing different shape')
-            break
 
         # Check if predicted image is not empty
         if debug:
             tif.imwrite(join(am_output, f'{i[:-out_format]}_CNN.tif'),
                         image)
 
+        # If prediction fail aka no prediction was produces continue with next image
         if image is None:
             continue
 
         # Post-process predicted image patches
         batch_iter.set_description(f'Postprocessing for {i}')
-
+        import pandas as pd
+        print(pd.unique(image.flatten()))
         point_cloud = post_processer(image=image,
                                      euclidean_transform=True,
                                      label_size=3,

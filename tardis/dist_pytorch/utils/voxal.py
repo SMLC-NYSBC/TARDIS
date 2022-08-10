@@ -75,8 +75,10 @@ class VoxalizeDataSetV2:
         # Voxal setting
         self.voxal_3d = voxal_3d
         self.voxal_patch_size = init_voxal_size
-        self.size_expand = init_voxal_size * 0.05  # 5% of voxal size
-        self.voxal_stride = init_voxal_size * 0.25  # 25% of voxal size
+        self.expand = 0.025  # Expand boundary box by 2.5%
+        self.size_expand = init_voxal_size * self.expand
+        self.voxal_size = 0.1  # Create 25% overlaps between voxals
+        self.voxal_stride = init_voxal_size * self.voxal_size
         self.drop_rate = drop_rate
 
     def boundary_box(self):
@@ -297,8 +299,8 @@ class VoxalizeDataSetV2:
                 print('Could not find valid voxal size, prediction of full point cloud!')
                 return [voxals_coord[0]], [voxal_idx[0]]
 
-            self.size_expand = self.voxal_patch_size * 0.25
-            self.voxal_stride = self.voxal_patch_size * 0.15
+            self.size_expand = self.voxal_patch_size * self.expand
+            self.voxal_stride = self.voxal_patch_size * self.voxal_size
 
             voxals_coord = self.voxal_centers(boundary_box=self.boundary_box())
             voxal_idx, piv = self.collect_voxal_idx(voxals=voxals_coord)

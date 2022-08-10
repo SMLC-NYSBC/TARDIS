@@ -43,9 +43,10 @@ class BuildPointCloud:
         assert image.ndim in [2, 3], 'File must be 2D or 3D array!'
 
         unique_val = pd.unique(image.flatten())
-        if len(unique_val) == 2:
-            if np.any(unique_val > 253):  # Fix uint8 formatting
-                image = image / 255
+        assert len(unique_val) == 2, 'Not binary image'
+
+        if np.any(unique_val > 253):  # Fix uint8 formatting
+            image = image / 255
 
         assert unique_val[1] == 1, \
             'Array or file directory loaded properly but image is not semantic mask...'
