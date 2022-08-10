@@ -256,3 +256,72 @@ def AP(target: np.ndarray,
     iou = np.sum(intersection) / np.sum(union)
 
     return iou
+
+
+def AP50_ScanNet(target: np.ndarray,
+                 logits: np.ndarray,
+                 coord: np.ndarray):
+    prec, rec = [], []
+    ap50 = []
+    label = []
+    CLASS_LABELS = ('wall', 'chair', 'floor', 'table', 'door', 'couch', 'cabinet', 'shelf', 'desk', 'office chair', 'bed', 'pillow', 'sink', 'picture', 'window', 'toilet', 'bookshelf', 'monitor', 'curtain', 'book', 'armchair', 'coffee table', 'box', 'refrigerator', 'lamp', 'kitchen cabinet', 'towel', 'clothes', 'tv', 'nightstand', 'counter', 'dresser', 'stool', 'cushion', 'plant', 'ceiling', 'bathtub', 'end table', 'dining table', 'keyboard', 'bag', 'backpack', 'toilet paper', 'printer', 'tv stand', 'whiteboard', 'blanket', 'shower curtain', 'trash can', 'closet', 'stairs', 'microwave', 'stove', 'shoe', 'computer tower', 'bottle', 'bin', 'ottoman', 'bench', 'board', 'washing machine', 'mirror', 'copier', 'basket', 'sofa chair', 'file cabinet', 'fan', 'laptop', 'shower', 'paper', 'person', 'paper towel dispenser', 'oven', 'blinds', 'rack', 'plate', 'blackboard', 'piano', 'suitcase', 'rail', 'radiator', 'recycling bin', 'container', 'wardrobe', 'soap dispenser', 'telephone', 'bucket', 'clock', 'stand', 'light', 'laundry basket', 'pipe', 'clothes dryer', 'guitar', 'toilet paper holder', 'seat', 'speaker', 'column', 'ladder', 'bathroom stall', 'shower wall', 'cup', 'jacket', 'storage bin', 'coffee maker',
+                    'dishwasher', 'paper towel roll', 'machine', 'mat', 'windowsill', 'bar', 'toaster', 'bulletin board', 'ironing board', 'fireplace', 'soap dish', 'kitchen counter', 'doorframe', 'toilet paper dispenser', 'mini fridge', 'fire extinguisher', 'ball', 'hat', 'shower curtain rod', 'water cooler', 'paper cutter', 'tray', 'shower door', 'pillar', 'ledge', 'toaster oven', 'mouse', 'toilet seat cover dispenser', 'furniture', 'cart', 'scale', 'tissue box', 'light switch', 'crate', 'power outlet', 'decoration', 'sign', 'projector', 'closet door', 'vacuum cleaner', 'plunger', 'stuffed animal', 'headphones', 'dish rack', 'broom', 'range hood', 'dustpan', 'hair dryer', 'water bottle', 'handicap bar', 'vent', 'shower floor', 'water pitcher', 'mailbox', 'bowl', 'paper bag', 'projector screen', 'divider', 'laundry detergent', 'bathroom counter', 'object', 'bathroom vanity', 'closet wall', 'laundry hamper', 'bathroom stall door', 'ceiling light', 'trash bin', 'dumbbell', 'stair rail', 'tube', 'bathroom cabinet', 'closet rod', 'coffee kettle', 'shower head', 'keyboard piano', 'case of water bottles', 'coat rack', 'folded chair', 'fire alarm', 'power strip', 'calendar', 'poster', 'potted plant', 'mattress')
+
+    VALID_CLASS_IDS = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 24, 26, 27, 28, 29, 31, 32, 33, 34, 35, 36, 38, 39, 40, 41, 42, 44, 45, 46, 47, 48, 49, 50, 51, 52, 54, 55, 56, 57, 58, 59, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 82, 84, 86, 87, 88, 89, 90, 93, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 110, 112, 115, 116, 118, 120, 122, 125, 128, 130, 131, 132, 134,
+                       136, 138, 139, 140, 141, 145, 148, 154, 155, 156, 157, 159, 161, 163, 165, 166, 168, 169, 170, 177, 180, 185, 188, 191, 193, 195, 202, 208, 213, 214, 229, 230, 232, 233, 242, 250, 261, 264, 276, 283, 300, 304, 312, 323, 325, 342, 356, 370, 392, 395, 408, 417, 488, 540, 562, 570, 609, 748, 776, 1156, 1163, 1164, 1165, 1166, 1167, 1168, 1169, 1170, 1171, 1172, 1173, 1175, 1176, 1179, 1180, 1181, 1182, 1184, 1185, 1186, 1187, 1188, 1189, 1191)
+
+    for j in np.unique(logits[:, 0]):
+        """For each predicted instance find all point"""
+        pred = target[np.where(logits[:, 0] == j)[0], 1:]
+
+        """Find beset mach for instance"""
+        df = []
+        for i in np.unique(target[:, 0]):
+            gt = target[np.where(target[:, 0] == i)[0]]
+
+            intersection = np.sum([True for i in pred if i in gt[:, 1:]])
+            union = np.unique(np.vstack((pred, gt[:, 1:])), axis=0).shape[0]
+
+            df.append(intersection / union)
+
+        """Get gt2pred label"""
+        id = np.where(df == np.max(df))[0][0]
+        gt = logits[np.where(logits[:, 0] == id)[0]][:, 1:]
+
+        """Get gt2pred label"""
+        df_label = int(round(np.median(target[np.where(target[:, 0] == id)[0]][:, 0]), 0))
+        if len(np.where(VALID_CLASS_IDS == df_label)[0]) > 0:
+            label.append(CLASS_LABELS[np.where(VALID_CLASS_IDS == df_label)[0][0]])
+        else:
+            label.append('Not_Valid_Label')
+
+        """Calculate metrics"""
+        tp = np.sum([True for i in gt if i in pred])
+        fn = np.sum([True for i in gt if i not in pred])
+        fp = np.sum([True for i in pred if i not in gt])
+
+        """Precision Score - tp / (tp + fp)"""
+        precision_score = tp / (tp + fp + 1e-8)
+
+        """Recall Score - tp / (tp + tn)"""
+        recall_score = tp / (tp + fn + 1e-8)
+
+        """IoU score"""
+        ap50.append(np.max(df))
+        prec.append(precision_score)
+        rec.append(recall_score)
+
+    uniq_ap50 = []
+    uniq_prec = []
+    uniq_rec = []
+    uniq_label = []
+    for i in np.unique(label):
+        ids = [id for id, j in enumerate(label) if j == i]
+        ap50s = np.where(ap50 == np.max([a for id, a in enumerate(ap50) if id in ids]))[0][0]
+        uniq_ap50.append(ap50[ap50s])
+        precs = np.where(prec == np.max([a for id, a in enumerate(prec) if id in ids]))[0][0]
+        uniq_prec.append(prec[precs])
+        recs = np.where(rec == np.max([a for id, a in enumerate(rec) if id in ids]))[0][0]
+        uniq_rec.append(rec[recs])
+        uniq_label.append(i)
+    return uniq_ap50, uniq_prec, uniq_rec, uniq_label
