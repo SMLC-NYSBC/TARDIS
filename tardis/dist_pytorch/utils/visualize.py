@@ -119,7 +119,7 @@ def VisualizePointCloud(coord: np.ndarray,
             pcd.points = o3d.utility.Vector3dVector(coord)
         pcd.colors = o3d.utility.Vector3dVector(_rgb(coord, segmented))
 
-        o3d.visualization.draw_geometries([pcd],)
+        o3d.visualization.draw_geometries([pcd])
 
 
 def VisualizeFilaments(coord: np.ndarray):
