@@ -1,3 +1,4 @@
+from turtle import forward
 from typing import Optional
 
 import numpy as np
@@ -126,9 +127,146 @@ class UNet(nn.Module):
 
         """ Prediction """
         if self.prediction:
-            x = self.activation(x)
+            return self.activation(self.final_conv_layer(x))
+        else:
+            return self.final_conv_layer(x)
 
-        return x
+
+class WNet(nn.Module):
+    """
+    WNet 
+
+    author: Robert Kiewisz
+        modified of <10.1016/j.isprsjprs.2020.01.013>
+    """
+
+    def __init__(self,
+                 in_channels=1,
+                 out_channels=1,
+                 sigmoid=True,
+                 no_conv_layer=5,
+                 conv_layer_multiplayer=64,
+                 conv_kernel=3,
+                 padding=1,
+                 pool_kernel=2,
+                 patch_size=64,
+                 layer_components="3gcl",
+                 dropout=None,
+                 no_groups=8,
+                 prediction=False):
+        super(WNet, self).__init__()
+        self.prediction = prediction
+
+        patch_sizes = [patch_size]
+        for _ in range(no_conv_layer):
+            patch_size = int(patch_size / 2)
+            patch_sizes.append(patch_size)
+        patch_sizes = list(reversed(patch_sizes))[2:]
+
+        """ Encoder - Encoder """
+        self.E_encoder = build_encoder(in_ch=in_channels,
+                                       conv_layers=no_conv_layer,
+                                       conv_layer_multiplayer=conv_layer_multiplayer,
+                                       conv_kernel=conv_kernel,
+                                       padding=padding,
+                                       dropout=dropout,
+                                       no_groups=no_groups,
+                                       components=layer_components,
+                                       pool_kernel=pool_kernel,
+                                       conv_module=DoubleConvolution)
+
+        """ Encoder - Decoder """
+        self.E_decoder = build_decoder(conv_layers=no_conv_layer,
+                                       conv_layer_multiplayer=conv_layer_multiplayer,
+                                       components=layer_components,
+                                       sizes=patch_sizes,
+                                       no_groups=no_groups,
+                                       deconv_module='CNN')
+
+        """ Encoder - Final Layer """
+        if '3' in layer_components:
+            self.E_final_conv_layer = nn.Conv3d(in_channels=conv_layer_multiplayer,
+                                                out_channels=out_channels,
+                                                kernel_size=1)
+        elif '2' in layer_components:
+            self.E_final_conv_layer = nn.Conv2d(in_channels=conv_layer_multiplayer,
+                                                out_channels=out_channels,
+                                                kernel_size=1)
+        self.E_activation = nn.Softmax(dim=1)
+
+        """ Decoder - Encoder """
+        self.D_encoder = build_encoder(in_ch=in_channels,
+                                       conv_layers=no_conv_layer,
+                                       conv_layer_multiplayer=conv_layer_multiplayer,
+                                       conv_kernel=conv_kernel,
+                                       padding=padding,
+                                       dropout=dropout,
+                                       no_groups=no_groups,
+                                       components=layer_components,
+                                       pool_kernel=pool_kernel,
+                                       conv_module=DoubleConvolution)
+
+        """ Decoder - Decoder """
+        self.D_decoder = build_decoder(conv_layers=no_conv_layer,
+                                       conv_layer_multiplayer=conv_layer_multiplayer,
+                                       components=layer_components,
+                                       sizes=patch_sizes,
+                                       no_groups=no_groups,
+                                       deconv_module='CNN')
+
+        """ Decoder - Final Layer """
+        if '3' in layer_components:
+            self.D_final_conv_layer = nn.Conv3d(in_channels=conv_layer_multiplayer,
+                                                out_channels=out_channels,
+                                                kernel_size=1)
+        elif '2' in layer_components:
+            self.D_final_conv_layer = nn.Conv2d(in_channels=conv_layer_multiplayer,
+                                                out_channels=out_channels,
+                                                kernel_size=1)
+
+        """ Prediction """
+        if sigmoid:
+            self.D_activation = nn.Sigmoid()
+        else:
+            self.D_activation = nn.Softmax(dim=1)
+
+    def forward(self,
+                x: torch.Tensor):
+        """ WUnet - Encoder """
+        encoder_features = []
+
+        # Encoder
+        for i, encoder in enumerate(self.E_encoder):
+            x = encoder(x)
+
+            if (len(self.E_encoder) - 1) != i:
+                encoder_features.insert(0, x)
+
+        # Decoder
+        for decoder, encoder_features in zip(self.E_decoder, encoder_features):
+            x = decoder(encoder_features, x)
+
+        x = self.E_activation(self.E_final_conv_layer(x))
+
+        """ WUnet - Decoder """
+        encoder_features = []
+
+        # Encoder
+        for i, encoder in enumerate(self.D_encoder):
+            x = encoder(x)
+
+            if (len(self.D_encoder) - 1) != i:
+                encoder_features.insert(0, x)
+
+        # Decoder
+        for decoder, encoder_features in zip(self.D_decoder, encoder_features):
+            x = decoder(encoder_features, x)
+
+        """ Prediction """
+        if self.prediction:
+            return self.D_activation(self.D_final_conv_layer(x))
+        else:
+            return self.D_final_conv_layer(x)
 
 
 class ResUNet(nn.Module):
@@ -219,9 +357,9 @@ class ResUNet(nn.Module):
 
         """ Prediction """
         if self.prediction:
-            x = self.activation(x)
-
-        return x
+            return self.activation(self.final_conv_layer(x))
+        else:
+            return self.final_conv_layer(x)
 
 
 class UNet3Plus(nn.Module):
@@ -356,20 +494,17 @@ class UNet3Plus(nn.Module):
 
         """ Final Layer / Prediction"""
         if self.cls is not None:
-            x = self.final_conv_layer(x)
-            x = self.dotProduct(x, x_cls_max)
+            x = self.dotProduct(self.final_conv_layer(x), x_cls_max)
 
             if self.prediction:
                 x = self.activation(x)
 
             return x, x_cls
         else:
-            x = self.final_conv_layer(x)
-
             if self.prediction:
-                x = self.activation(x)
-
-            return x
+                return self.activation(self.final_conv_layer(x))
+            else:
+                return self.final_conv_layer(x)
 
 
 class Big_UNet(nn.Module):

@@ -1,4 +1,4 @@
-from tardis.spindletorch.unet.network import ResUNet, UNet, UNet3Plus, Big_UNet
+from tardis.spindletorch.unet.network import ResUNet, UNet, UNet3Plus, Big_UNet, WNet
 
 
 def build_network(network_type: str,
@@ -19,7 +19,7 @@ def build_network(network_type: str,
     MAIN MODULE FOR BUILDING CNN
 
     Args:
-        network_type: Name of network
+        network_type: Name of network [unet, resunet, unet3plus, big_unet, wnet]
         classification: If True Unet3Plus classified network output before loss
         in_channel: Number of input channels
         out_channel: Number of output channels
@@ -34,46 +34,34 @@ def build_network(network_type: str,
     """
 
     if network_type == 'unet':
-        model = UNet(in_channels=in_channel,
-                     out_channels=out_channel,
-                     patch_size=img_size,
-                     dropout=dropout,
-                     conv_kernel=conv_kernel,
-                     padding=conv_padding,
-                     pool_kernel=maxpool_kernel,
-                     no_groups=no_groups,
-                     no_conv_layer=no_conv_layers,
-                     conv_layer_multiplayer=conv_multiplayer,
-                     layer_components=layer_components,
-                     prediction=prediction)
+        return UNet(in_channels=in_channel,
+                    out_channels=out_channel,
+                    patch_size=img_size,
+                    dropout=dropout,
+                    conv_kernel=conv_kernel,
+                    padding=conv_padding,
+                    pool_kernel=maxpool_kernel,
+                    no_groups=no_groups,
+                    no_conv_layer=no_conv_layers,
+                    conv_layer_multiplayer=conv_multiplayer,
+                    layer_components=layer_components,
+                    prediction=prediction)
     elif network_type == 'resunet':
-        model = ResUNet(in_channels=in_channel,
-                        out_channels=out_channel,
-                        patch_size=img_size,
-                        dropout=dropout,
-                        no_conv_layer=no_conv_layers,
-                        conv_layer_multiplayer=conv_multiplayer,
-                        conv_kernel=conv_kernel,
-                        padding=conv_padding,
-                        pool_kernel=maxpool_kernel,
-                        layer_components=layer_components,
-                        prediction=prediction)
+        return ResUNet(in_channels=in_channel,
+                       out_channels=out_channel,
+                       patch_size=img_size,
+                       dropout=dropout,
+                       no_conv_layer=no_conv_layers,
+                       conv_layer_multiplayer=conv_multiplayer,
+                       conv_kernel=conv_kernel,
+                       padding=conv_padding,
+                       pool_kernel=maxpool_kernel,
+                       layer_components=layer_components,
+                       prediction=prediction)
     elif network_type == 'unet3plus':
-        model = UNet3Plus(in_channels=in_channel,
-                          out_channels=out_channel,
-                          classifies=classification,
-                          patch_size=img_size,
-                          conv_kernel=conv_kernel,
-                          padding=conv_padding,
-                          pool_kernel=maxpool_kernel,
-                          no_conv_layer=no_conv_layers,
-                          conv_layer_multiplayer=conv_multiplayer,
-                          layer_components=layer_components,
-                          no_groups=no_groups,
-                          prediction=prediction)
-    elif network_type == 'big_unet':
-        model = Big_UNet(in_channels=in_channel,
+        return UNet3Plus(in_channels=in_channel,
                          out_channels=out_channel,
+                         classifies=classification,
                          patch_size=img_size,
                          conv_kernel=conv_kernel,
                          padding=conv_padding,
@@ -83,7 +71,29 @@ def build_network(network_type: str,
                          layer_components=layer_components,
                          no_groups=no_groups,
                          prediction=prediction)
+    elif network_type == 'big_unet':
+        return Big_UNet(in_channels=in_channel,
+                        out_channels=out_channel,
+                        patch_size=img_size,
+                        conv_kernel=conv_kernel,
+                        padding=conv_padding,
+                        pool_kernel=maxpool_kernel,
+                        no_conv_layer=no_conv_layers,
+                        conv_layer_multiplayer=conv_multiplayer,
+                        layer_components=layer_components,
+                        no_groups=no_groups,
+                        prediction=prediction)
+    elif network_type == 'wnet':
+        return WNet(in_channels=in_channel,
+                    out_channels=out_channel,
+                    patch_size=img_size,
+                    conv_kernel=conv_kernel,
+                    padding=conv_padding,
+                    pool_kernel=maxpool_kernel,
+                    no_conv_layer=no_conv_layers,
+                    conv_layer_multiplayer=conv_multiplayer,
+                    layer_components=layer_components,
+                    no_groups=no_groups,
+                    prediction=prediction)
     else:
-        model = None
-
-    return model
+        return None
