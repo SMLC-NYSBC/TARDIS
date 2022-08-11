@@ -258,8 +258,7 @@ def AP(target: np.ndarray,
     return iou
 
 
-def AP50_ScanNet(target: np.ndarray,
-                 logits: np.ndarray,
+def AP50_ScanNet(logits: np.ndarray,
                  coord: np.ndarray):
     prec, rec = [], []
     ap50 = []
@@ -272,26 +271,27 @@ def AP50_ScanNet(target: np.ndarray,
 
     for j in np.unique(logits[:, 0]):
         """For each predicted instance find all point"""
-        pred = target[np.where(logits[:, 0] == j)[0], 1:]
+        pred = logits[np.where(logits[:, 0] == j)[0], 1:]
 
         """Find beset mach for instance"""
         df = []
-        for i in np.unique(target[:, 0]):
-            gt = target[np.where(target[:, 0] == i)[0]]
+        gt_uniqe_id = np.unique(coord[:, 0])
+        for i in np.unique(coord[:, 0]):
+            gt = coord[np.where(coord[:, 0] == i)[0]][:, 1:]
 
-            intersection = np.sum([True for i in pred if i in gt[:, 1:]])
-            union = np.unique(np.vstack((pred, gt[:, 1:])), axis=0).shape[0]
+            intersection = np.sum([True for i in pred if i in gt])
+            union = np.unique(np.vstack((pred, gt)), axis=0).shape[0]
 
             df.append(intersection / union)
 
         """Get gt2pred label"""
         id = np.where(df == np.max(df))[0][0]
-        gt = logits[np.where(logits[:, 0] == id)[0]][:, 1:]
+        id = gt_uniqe_id[id]
+        gt = coord[np.where(coord[:, 0] == id)[0]][:, 1:]
 
         """Get gt2pred label"""
-        df_label = int(round(np.median(target[np.where(target[:, 0] == id)[0]][:, 0]), 0))
-        if len(np.where(VALID_CLASS_IDS == df_label)[0]) > 0:
-            label.append(CLASS_LABELS[np.where(VALID_CLASS_IDS == df_label)[0][0]])
+        if id in VALID_CLASS_IDS:
+            label.append(CLASS_LABELS[[idx for idx, k in enumerate(VALID_CLASS_IDS) if k == id][0]])
         else:
             label.append('Not_Valid_Label')
 
@@ -317,11 +317,11 @@ def AP50_ScanNet(target: np.ndarray,
     uniq_label = []
     for i in np.unique(label):
         ids = [id for id, j in enumerate(label) if j == i]
-        ap50s = np.where(ap50 == np.max([a for id, a in enumerate(ap50) if id in ids]))[0][0]
-        uniq_ap50.append(ap50[ap50s])
-        precs = np.where(prec == np.max([a for id, a in enumerate(prec) if id in ids]))[0][0]
-        uniq_prec.append(prec[precs])
-        recs = np.where(rec == np.max([a for id, a in enumerate(rec) if id in ids]))[0][0]
-        uniq_rec.append(rec[recs])
+        ap50s = np.sum([a for id, a in enumerate(ap50) if id in ids])
+        uniq_ap50.append(ap50s)
+        precs = np.mean([a for id, a in enumerate(prec) if id in ids])
+        uniq_prec.append(precs)
+        recs = np.sum([a for id, a in enumerate(rec) if id in ids])
+        uniq_rec.append(recs)
         uniq_label.append(i)
     return uniq_ap50, uniq_prec, uniq_rec, uniq_label
