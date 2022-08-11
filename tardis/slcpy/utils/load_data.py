@@ -333,23 +333,34 @@ def mrc_header(img: str):
 
 
 def get_mode(mode, amin):
+    """
+    File formats for MRC2014
+
+    Args:
+        mode: MRC2014 mode
+        amin: Optional min value to detect uint8
+    """
     if mode == 0:
         if amin >= 0:
-            dtype = np.uint8
+            dtype = np.uint8  # Unassigned 8-bit integer (-128 to 127)
         elif amin < 0:
-            dtype = np.int8
+            dtype = np.int8  # Signed 8-bit integer (0 - 254)
     elif mode == 1:
-        dtype = np.int16
+        dtype = np.int16  # Signed 16-bit integer 
     elif mode == 2:
-        dtype = np.float32
+        dtype = np.float32  # Signed 32-bit real
     elif mode == 3:
-        dtype = '2h'  # complex number from 2 shorts
+        dtype = '2h'  # Complex 16-bit integers
     elif mode == 4:
-        dtype = np.complex64
+        dtype = np.complex64  # Complex 32-bit reals
     elif mode == 6:
-        dtype = np.uint16
+        dtype = np.uint16  # Unassigned int16
+    elif mode == 12:
+        dtype == np.float16 # Signed 16-bit half-precision real
     elif mode == 16:
         dtype = '3B'  # RGB values
+    elif mode == 101:
+        raise Exception('4 bit .mrc file are not supported. Ask Dev if you need it!')
     else:
         raise Exception('Unknown dtype mode:' + str(mode))
 
