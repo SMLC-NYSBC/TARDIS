@@ -10,6 +10,7 @@ History
 * SLCPY module changes:
     * Fix interpolation handling for up-sampled datasets
     * Post-processing improvements and speeds-up
+    * MRC2014 file format expand readable formats
 
 * TARDIS
     * Clean-up
