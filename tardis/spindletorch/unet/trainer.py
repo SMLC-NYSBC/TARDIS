@@ -82,7 +82,7 @@ class Trainer:
             mkdir('cnn_checkpoint')
 
         early_stopping = EarlyStopping(patience=self.early_stop_rate, min_delta=0)
-        for i in progressbar:
+        for _ in progressbar:
             """Training block"""
             self._train()
 
@@ -133,9 +133,9 @@ class Trainer:
 
         if self.tqdm:
             batch_iter = tq(enumerate(self.training_DataLoader),
-                            'Training',
+                            desc='Training',
                             ascii=True,
-                            leave=True)
+                            leave=False)
         else:
             batch_iter = enumerate(self.training_DataLoader)
 

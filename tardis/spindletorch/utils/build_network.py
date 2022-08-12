@@ -19,7 +19,7 @@ def build_network(network_type: str,
     MAIN MODULE FOR BUILDING CNN
 
     Args:
-        network_type: Name of network [unet, resunet, unet3plus, big_unet, wnet]
+        network_type: Name of network [unet, resunet, unet3plus, big_unet, fnet]
         classification: If True Unet3Plus classified network output before loss
         in_channel: Number of input channels
         out_channel: Number of output channels
@@ -83,7 +83,7 @@ def build_network(network_type: str,
                         layer_components=layer_components,
                         no_groups=no_groups,
                         prediction=prediction)
-    elif network_type == 'wnet':
+    elif network_type == 'fnet':
         return WNet(in_channels=in_channel,
                     out_channels=out_channel,
                     patch_size=img_size,

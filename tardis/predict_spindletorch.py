@@ -29,7 +29,7 @@ from tardis.version import version
               show_default=True)
 @click.option('-cnn', '--cnn_type',
               default='unet',
-              type=click.Choice(['unet', 'resunet', 'unet3plus', 'multi'],
+              type=click.Choice(['unet', 'resunet', 'unet3plus', 'big_unet', 'fnet'],
                                 case_sensitive=True),
               help='Type of NN used for training.',
               show_default=True)
