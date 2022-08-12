@@ -134,7 +134,7 @@ def main(prediction_dir: str,
 
     device = get_device(device)
 
-    predict = Predictor(model=build_network(network_type='big_unet',
+    predict = Predictor(model=build_network(network_type='fnet',
                                             classification=False,
                                             in_channel=1,
                                             out_channel=1,
@@ -146,7 +146,7 @@ def main(prediction_dir: str,
                                             no_groups=8,
                                             prediction=True),
                         checkpoint=checkpoints[0],
-                        network='big_unet',
+                        network='fnet',
                         subtype=str(32),
                         device=device)
 

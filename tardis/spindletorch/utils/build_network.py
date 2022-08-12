@@ -1,4 +1,4 @@
-from tardis.spindletorch.unet.network import ResUNet, UNet, UNet3Plus, Big_UNet, WNet
+from tardis.spindletorch.unet.network import ResUNet, UNet, UNet3Plus, Big_UNet, FNet
 
 
 def build_network(network_type: str,
@@ -84,7 +84,7 @@ def build_network(network_type: str,
                         no_groups=no_groups,
                         prediction=prediction)
     elif network_type == 'fnet':
-        return WNet(in_channels=in_channel,
+        return FNet(in_channels=in_channel,
                     out_channels=out_channel,
                     patch_size=img_size,
                     conv_kernel=conv_kernel,
