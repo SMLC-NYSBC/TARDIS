@@ -6,6 +6,7 @@ import numpy as np
 import torch
 from tardis.utils.utils import EarlyStopping
 from tqdm import tqdm as tq
+from tardis.utils.logo import Tardis_Logo, printProgressBar
 
 
 class Trainer:
@@ -38,8 +39,7 @@ class Trainer:
                  validation_DataLoader,
                  epochs: int,
                  checkpoint_name: str,
-                 lr_scheduler=None,
-                 tqdm=True):
+                 lr_scheduler=None):
         self.f1 = []
         self.recall = []
         self.precision = []
@@ -47,6 +47,9 @@ class Trainer:
         self.learning_rate = []
         self.validation_loss = []
         self.training_loss = []
+
+        self.progress_epoch = Tardis_Logo()
+        self.progress_train = Tardis_Logo()
 
         self.model = model.to(device)
 
@@ -59,7 +62,6 @@ class Trainer:
         self.lr_scheduler = lr_scheduler
         self.epochs = epochs
         self.checkpoint_name = checkpoint_name
-        self.tqdm = tqdm
 
     @ staticmethod
     def calculate_F1(logits,
@@ -86,15 +88,9 @@ class Trainer:
         return accuracy_score, precision_score, recall_score, F1_score
 
     def run_training(self):
-        if self.tqdm:
-            epoch_progress = tq(range(self.epochs),
-                                'Epochs:',
-                                total=self.epochs,
-                                leave=True, 
-                                ascii=True,
-                                position=0)
-        else:
-            epoch_progress = range(self.epochs)
+        self.progress_epoch(title='DIST training module',
+                            text_2='Epoch:',
+                            text_3=printProgressBar(0, self.epochs))
 
         early_stopping = EarlyStopping(patience=50, min_delta=0)
 
@@ -104,8 +100,17 @@ class Trainer:
         else:
             mkdir('GF_checkpoint')
 
-        for _ in epoch_progress:
+        for id in range(self.epochs):
             """For each Epoch load be t model from previous run"""
+            if id == 0:
+                epoch_desc = f'Epochs: stop counter 0; best F1: NaN'
+            else:
+                epoch_desc = f'Epochs: stop counter {early_stopping.counter}; best F1 {round(np.max(self.f1), 3)}'
+
+            self.progress_epoch(title='DIST training module',
+                                text_2=epoch_desc,
+                                text_3=printProgressBar(id, self.epochs))
+
             self.model.train()
             self.train()
 
@@ -140,25 +145,19 @@ class Trainer:
                         'optimizer_state_dict': self.optimizer.state_dict()},
                        join(getcwd(), 'GF_checkpoint', 'model_weights.pth'))
 
-            epoch_progress.set_description(
-                f'Epochs: stop counter {early_stopping.counter}, \
-                best F1 {round(np.max(self.f1), 3)}')
-
             if early_stopping.early_stop:
                 break
 
-    def train(self):
-        if self.tqdm:
-            train_progress = tq(enumerate(self.training_DataLoader),
-                                'Training:',
-                                total=len(self.training_DataLoader),
-                                leave=True, 
-                                ascii=True,
-                                position=1)
-        else:
-            train_progress = enumerate(self.training_DataLoader)
+    def train(self,
+              epoch_desc,
+              progress_epoch):
+        self.progress_train(title='DIST training module',
+                            text_2=epoch_desc,
+                            text_3=progress_epoch,
+                            text_4='Training: (loss 1.000)',
+                            text_5=printProgressBar(0, self.training_DataLoader.__len__()))
 
-        for _, (x, y, z, _) in train_progress:
+        for idx, (x, y, z, _) in enumerate(self.training_DataLoader):
             for c, i, g in zip(x, y, z):
                 c, g = c.to(self.device), g.to(self.device)
                 self.optimizer.zero_grad()
@@ -181,8 +180,12 @@ class Trainer:
                 loss_value = loss.item()
                 self.training_loss.append(loss_value)
 
-                train_progress.set_description(f'Training: loss {loss.item():.4f}')
-        train_progress.close()
+
+                self.progress_train(title='DIST training module',
+                                    text_2=epoch_desc,
+                                    text_3=progress_epoch,
+                                    text_4=f'Training: (loss {loss_value:.4f})',
+                                    text_5=printProgressBar(idx, self.training_DataLoader.__len__()))
 
         """ Save current learning rate """
         self.learning_rate.append(self.optimizer.param_groups[0]['lr'])

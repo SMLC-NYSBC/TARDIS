@@ -1,3 +1,4 @@
+import enum
 from turtle import title
 import warnings
 from os import getcwd, listdir
@@ -22,7 +23,7 @@ from tardis.spindletorch.unet.predictor import Predictor
 from tardis.spindletorch.utils.build_network import build_network
 from tardis.spindletorch.utils.dataset_loader import PredictionDataSet
 from tardis.utils.device import get_device
-from tardis.utils.logo import tardis_logo
+from tardis.utils.logo import Tardis_Logo, printProgressBar
 from tardis.utils.setup_envir import build_temp_dir, clean_up
 from tardis.utils.utils import check_uint8, pc_median_dist
 from tardis.version import version
@@ -107,7 +108,8 @@ def main(prediction_dir: str,
     MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
     """
     """Initial Setup"""
-    tardis_logo(title='Fully-automatic MT segmentation module')
+    tardis_progress = Tardis_Logo()
+    tardis_progress(title='Fully-automatic MT segmentation module')
 
     # Searching for available images for prediction
     available_format = ('.tif', '.mrc', '.rec', '.am')
@@ -116,7 +118,8 @@ def main(prediction_dir: str,
 
     predict_list = [f for f in listdir(prediction_dir) if f.endswith(available_format)]
     assert len(predict_list) > 0, 'No file found in given directory!'
-    print(f'Found {len(predict_list)} images to predict!')
+    tardis_progress(title='Fully-automatic MT segmentation module',
+                    text_1=f'Found {len(predict_list)} images to predict!')
 
     # Build handler's
     stitcher = StitchImages(tqdm=False)
@@ -147,18 +150,16 @@ def main(prediction_dir: str,
                         subtype=str(32),
                         device=device)
 
-    batch_iter = tqdm(sorted(predict_list),
-                      position=0,
-                      ascii=True,
-                      leave=True)
-
     """Process each image with CNN and GF"""
-    for i in batch_iter:
+    tardis_progress = Tardis_Logo()
+    for id, i in enumerate(sorted(predict_list)):
         """Pre-Processing"""
         if i.endswith('CorrelationLines.am'):
             continue
-
-        batch_iter.set_description(f'Preprocessing for CNN {i}')
+        tardis_progress(title='Fully-automatic MT segmentation module',
+                        text_1=f'Found {len(predict_list)} images to predict!',
+                        text_3=f'Image: {i[:20]}',
+                        text_4='Current Task: Preprocessing for CNN...')
 
         # Build temp dir
         build_temp_dir(dir=prediction_dir)
@@ -201,15 +202,14 @@ def main(prediction_dir: str,
                                        size=patch_size,
                                        out_channels=1)
 
-        batch_iter.set_description(f'CNN prediction for {i} with org. pixel size {px}')
-
         """CNN prediction"""
-        cnn_batch = tqdm(range(patches_DL.__len__()),
-                         position=1,
-                         leave=False,
-                         ascii=True,
-                         desc='CNN prediction')
-        for j in cnn_batch:
+        for j in range(patches_DL.__len__()):
+            tardis_progress(title='Fully-automatic MT segmentation module',
+                            text_1=f'Found {len(predict_list)} images to predict!',
+                            text_3=f'Image: {i[:20]} ; pixel size: {px}',
+                            text_4='Current Task: CNN prediction...',
+                            text_5=printProgressBar(j, patches_DL.__len__()))
+
             input, name = patches_DL.__getitem__(j)
 
             """Predict & Threshold"""
@@ -222,7 +222,11 @@ def main(prediction_dir: str,
         """Post-Processing"""
         # Stitch predicted image patches
         scale_factor = 23.2 / px
-        batch_iter.set_description(f'Stitching for {i} re-scale {scale_factor}')
+
+        tardis_progress(title='Fully-automatic MT segmentation module',
+                        text_1=f'Found {len(predict_list)} images to predict!',
+                        text_3=f'Image: {i[:20]}; pixel size: {px}',
+                        text_4='Current Task: Stitching...')
 
         image = check_uint8(stitcher(image_dir=output,
                                      output=None,
@@ -243,9 +247,11 @@ def main(prediction_dir: str,
             continue
 
         # Post-process predicted image patches
-        batch_iter.set_description(f'Postprocessing for {i}')
-        import pandas as pd
-        print(pd.unique(image.flatten()))
+        tardis_progress(title='Fully-automatic MT segmentation module',
+                        text_1=f'Found {len(predict_list)} images to predict!',
+                        text_3=f'Image: {i[:20]}; pixel size: {px}',
+                        text_4='Current Task: Image Postprocessing...')
+
         point_cloud = post_processer(image=image,
                                      euclidean_transform=True,
                                      label_size=3,
@@ -261,8 +267,7 @@ def main(prediction_dir: str,
                     point_cloud)
 
         """DIST Prediction"""
-        batch_iter.set_description(f'Building voxal for {i}')
-
+        # Post-process predicted image patches
         down_sample = 2.5
         if point_cloud.shape[0] > 25000:
             down_sample = 1.5
@@ -279,6 +284,11 @@ def main(prediction_dir: str,
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(point_cloud)
         point_cloud = np.asarray(pcd.voxel_down_sample(voxel_size=down_sample).points)
+
+        tardis_progress(title='Fully-automatic MT segmentation module',
+                        text_1=f'Found {len(predict_list)} images to predict!',
+                        text_3=f'Point cloud: {i[:20]}; nodes: {px}',
+                        text_4='Current Task: Preparing for MT segmentation...')
 
         # Normalize point cloud KNN distance
         dist = pc_median_dist(point_cloud, avg_over=True)
@@ -333,15 +343,14 @@ def main(prediction_dir: str,
                         allow_pickle=True)
 
         # Predict point cloud
-        dist_batch = tqdm(coords_df,
-                          position=1,
-                          ascii=True,
-                          leave=False,
-                          desc='DIST prediction')
-        batch_iter.set_description(f'DIST prediction for {i}')
-
         graphs = []
-        for coord in dist_batch:
+        for id, coord in enumerate(coords_df):
+            tardis_progress(title='Fully-automatic MT segmentation module',
+                            text_1=f'Found {len(predict_list)} images to predict!',
+                            text_3=f'Point cloud: {i[:20]}; nodes: {px}',
+                            text_4='Current Task: DIST prediction...',
+                            text_5=printProgressBar(id, len(coords_df)))
+
             graph = predict_gf._predict(x=coord[None, :])
             graphs.append(graph)
 
@@ -351,17 +360,24 @@ def main(prediction_dir: str,
                     allow_pickle=True)
 
         """Graphformer post-processing"""
-        batch_iter.set_description(f'Graph segmentation for {i}')
-
         if format == 'amira':
-            print('MTs segmentation is fitted to: \n'
-                  f'- pixel size: {px} \n'
-                  f'- transformation: {transformation}')
+            tardis_progress(title='Fully-automatic MT segmentation module',
+                            text_1=f'Found {len(predict_list)} images to predict!',
+                            text_3=f'Point cloud: {i[:20]}; nodes: {px}',
+                            text_4='Current Task: MT Segmentation...',
+                            text_5='MTs segmentation is fitted to:',
+                            text_6=f'- pixel size: {px}',
+                            text_7=f'- transformation: {transformation}')
 
             point_cloud = point_cloud * px
             point_cloud[:, 0] = point_cloud[:, 0] + transformation[0]
             point_cloud[:, 1] = point_cloud[:, 1] + transformation[1]
             point_cloud[:, 2] = point_cloud[:, 2] + transformation[2]
+        else:
+            tardis_progress(title='Fully-automatic MT segmentation module',
+                            text_1=f'Found {len(predict_list)} images to predict!',
+                            text_3=f'Point cloud: {i[:20]}; nodes: {px}',
+                            text_4='Current Task: MT Segmentation...')
 
         GraphToSegment = GraphInstanceV2(threshold=gt_threshold,
                                          connection=2,
@@ -375,16 +391,16 @@ def main(prediction_dir: str,
         """Threshold drop for hard datasets"""
         if 100 - ((segments.shape[0] * 100) / point_cloud.shape[0]) > 25:
             GraphToSegment = GraphInstanceV2(threshold=0.25,
-                                            connection=2,
-                                            prune=5)
+                                             connection=2,
+                                             prune=5)
             segments = GraphToSegment.voxal_to_segment(graph=graphs,
                                                        coord=point_cloud,
                                                        idx=output_idx,
                                                        visualize=visualizer)
         if 100 - ((segments.shape[0] * 100) / point_cloud.shape[0]) > 25:
             GraphToSegment = GraphInstanceV2(threshold=0.1,
-                                            connection=2,
-                                            prune=5)
+                                             connection=2,
+                                             prune=5)
             segments = GraphToSegment.voxal_to_segment(graph=graphs,
                                                        coord=point_cloud,
                                                        idx=output_idx,
@@ -394,17 +410,17 @@ def main(prediction_dir: str,
                          f'{i[:-out_format]}_segments.npy'),
                     segments)
 
-        """Save as .am"""
-        batch_iter.set_description(f'Saving .am {i} with {np.max(segments[:, 0])} MTs')
+        tardis_progress(title='Fully-automatic MT segmentation module',
+                        text_1=f'Found {len(predict_list)} images to predict!',
+                        text_3=f'Point cloud: {i[:20]}; Found MTs: {np.max(segments[:, 0])}',
+                        text_4='Current Task: Segmentation finished!')
 
+        """Save as .am"""
         BuildAmira.export_amira(coord=segments,
                                 file_dir=join(am_output, f'{i[:-out_format]}_SpatialGraph.am'))
 
         """Clean-up temp dir"""
-        batch_iter.set_description(f'Clean-up temp for {i}')
-
         clean_up(dir=prediction_dir)
-        tardis_logo(title='Fully-automatic MT segmentation module')
 
 
 if __name__ == '__main__':

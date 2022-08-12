@@ -4,10 +4,10 @@ from shutil import rmtree
 
 import numpy as np
 import torch
+from tardis.utils.logo import Tardis_Logo, printProgressBar
 from tardis.utils.metrics import calculate_F1
 from tardis.utils.utils import EarlyStopping
 from torch import nn
-from tqdm import tqdm as tq
 
 
 class Trainer:
@@ -57,6 +57,9 @@ class Trainer:
         if classification:
             self.criterion_cls = nn.BCEWithLogitsLoss()
 
+        self.progress_epoch = Tardis_Logo()
+        self.progress_train = Tardis_Logo()
+
         self.training_loss = []
         self.validation_loss = []
         self.learning_rate = []
@@ -67,13 +70,9 @@ class Trainer:
         self.threshold = []
 
     def run_trainer(self):
-        if self.tqdm:
-            from tqdm import trange
-
-            progressbar = trange(self.epochs, desc='Progress',
-                                 ascii=True, leave=True)
-        else:
-            progressbar = range(self.epochs)
+        self.progress_epoch(title='CNN training module',
+                            text_2='Epoch:',
+                            text_3=printProgressBar(0, self.epochs))
 
         if isdir('cnn_checkpoint'):
             rmtree('cnn_checkpoint')
@@ -82,9 +81,19 @@ class Trainer:
             mkdir('cnn_checkpoint')
 
         early_stopping = EarlyStopping(patience=self.early_stop_rate, min_delta=0)
-        for _ in progressbar:
+        for id in range(self.epochs):
             """Training block"""
-            self._train()
+            if id == 0:
+                epoch_desc = f'Epochs: stop counter 0; best F1: NaN'
+            else:
+                epoch_desc = f'Epochs: stop counter {early_stopping.counter}; best F1 {round(np.max(self.f1), 3)}'
+
+            self.progress_epoch(title='CNN training module',
+                                text_2=epoch_desc,
+                                text_3=printProgressBar(id, self.epochs))
+
+            self._train(epoch_desc,
+                        printProgressBar(id, self.epochs))
 
             """Validation block"""
             if self.validation_DataLoader is not None:
@@ -122,24 +131,20 @@ class Trainer:
                         'optimizer_state_dict': self.optimizer.state_dict()},
                        join(getcwd(), 'cnn_checkpoint', 'model_weights.pth'))
 
-            progressbar.set_description(
-                f'Epochs: stop counter {early_stopping.counter}, \
-                    best F1 {round(np.max(self.f1), 3)}')
-
             if early_stopping.early_stop:
                 break
 
-    def _train(self):
+    def _train(self,
+               epoch_desc,
+               progress_epoch):
 
-        if self.tqdm:
-            batch_iter = tq(enumerate(self.training_DataLoader),
-                            desc='Training',
-                            ascii=True,
-                            leave=False)
-        else:
-            batch_iter = enumerate(self.training_DataLoader)
+        self.progress_train(title='CNN training module',
+                            text_2=epoch_desc,
+                            text_3=progress_epoch,
+                            text_4='Training: (loss 1.000)',
+                            text_5=printProgressBar(0, self.training_DataLoader.__len__()))
 
-        for _, (x, y) in batch_iter:
+        for idx, (x, y) in enumerate(self.training_DataLoader):
             self.model.train()
             input, target = x.to(self.device), y.to(self.device)
             self.optimizer.zero_grad(set_to_none=True)
@@ -157,11 +162,13 @@ class Trainer:
             loss_value = loss.item()
             self.training_loss.append(loss_value)
 
-            batch_iter.set_description(f'Training: (loss {loss_value:.4f})')
+            self.progress_train(title='CNN training module',
+                                text_2=epoch_desc,
+                                text_3=progress_epoch,
+                                text_4=f'Training: (loss {loss_value:.4f})',
+                                text_5=printProgressBar(idx, self.training_DataLoader.__len__()))
 
         self.learning_rate.append(self.optimizer.param_groups[0]['lr'])
-
-        batch_iter.close()
 
     def _validate(self):
         self.model.eval()  # evaluation mode
@@ -172,10 +179,9 @@ class Trainer:
         F1_mean = []
         threshold_mean = []
 
-        batch_iter = enumerate(self.validation_DataLoader)
         SM = torch.nn.Softmax(1)
 
-        for _, (x, y) in batch_iter:
+        for _, (x, y) in enumerate(self.validation_DataLoader):
             input, target = x.to(self.device), y.to(self.device)
             with torch.no_grad():
                 out = self.model(input)
@@ -184,12 +190,10 @@ class Trainer:
 
                 if out.shape[1] != 1:
                     out = SM(out)
-                    # out = torch.argmax(out, 1)
                     out = out[0, 1, :]
                     target = target[0, 1, :]
                 else:
                     out = torch.sigmoid(out)
-                    # out = torch.where(out[0, 0, :] > 0.5, 1, 0)
                     out = out[0, 0, :]
                     target = target[0, 0, :]
 

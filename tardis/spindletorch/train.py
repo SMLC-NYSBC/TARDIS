@@ -145,7 +145,6 @@ def train(train_dataloader: DataLoader,
                       epochs=epochs,
                       lr_scheduler=learning_rate_scheduler,
                       early_stop_rate=early_stop_rate,
-                      tqdm=tqdm,
                       checkpoint_name=cnn_type,
                       classification=classification)
 

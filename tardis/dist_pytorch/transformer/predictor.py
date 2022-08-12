@@ -44,8 +44,9 @@ class Predictor:
     def predict(self):
         predict_progress = tqdm(enumerate(self.prediction_DataLoader),
                                 "Prediction:",
-                                total=len(self.prediction_DataLoader),
-                                leave=False)
+                                ascii=True,
+                                leave=True,
+                                dynamic_ncols=True)
         for i, (x, y, name) in predict_progress:
             with torch.no_grad():
                 coord_pred = []

@@ -10,7 +10,7 @@ from tardis.slcpy.build_training_dataset import BuildTrainDataSet
 from tardis.spindletorch.train import train
 from tardis.spindletorch.utils.dataset_loader import VolumeDataset
 from tardis.utils.device import get_device
-from tardis.utils.logo import tardis_logo
+from tardis.utils.logo import Tardis_Logo
 from tardis.utils.utils import BuildTestDataSet, check_dir
 from tardis.version import version
 
@@ -141,11 +141,6 @@ from tardis.version import version
               type=float,
               help='If indicated, value of dropout for CNN.',
               show_default=True)
-@click.option('-tq', '--tqdm',
-              default=True,
-              type=bool,
-              help='If True, build with progress bar.',
-              show_default=True)
 @click.version_option(version=version)
 def main(training_dataset: str,
          train_test_ratio: float,
@@ -166,7 +161,6 @@ def main(training_dataset: str,
          device: str,
          epochs: int,
          early_stop: int,
-         tqdm: bool,
          loss_alpha: Optional[float] = None,
          cnn_checkpoint: Optional[str] = None,
          dropout_rate: Optional[float] = None):
@@ -175,6 +169,7 @@ def main(training_dataset: str,
 
     Supported 3D images only!
     """
+    tardis_logo = Tardis_Logo()
     tardis_logo(title='CNN training module')
 
     """Set environment"""
@@ -279,7 +274,6 @@ def main(training_dataset: str,
           learning_rate=loss_lr_rate,
           learning_rate_scheduler=lr_rate_schedule,
           early_stop_rate=early_stop,
-          tqdm=tqdm,
           device=device,
           epochs=epochs)
 

@@ -15,7 +15,7 @@ from tardis.dist_pytorch.transformer.trainer import Trainer
 from tardis.dist_pytorch.utils.dataloader import GraphDataset
 from tardis.dist_pytorch.utils.utils import BuildTrainDataSet, cal_node_input
 from tardis.utils.device import get_device
-from tardis.utils.logo import tardis_logo
+from tardis.utils.logo import Tardis_Logo
 from tardis.utils.utils import BuildTestDataSet, check_dir
 from tardis.version import version
 
@@ -135,11 +135,6 @@ from tardis.version import version
               type=int,
               help='Number of epoches.',
               show_default=True)
-@click.option('-tq', '--tqdm',
-              default=True,
-              type=bool,
-              help='If True, build with progressbar.',
-              show_default=True)
 @click.version_option(version=version)
 def main(pointcloud_dir: str,
          with_img: bool,
@@ -162,14 +157,14 @@ def main(pointcloud_dir: str,
          lr_rate_schedule: bool,
          gf_checkpoint,
          device: str,
-         epochs: int,
-         tqdm: bool):
+         epochs: int):
     """
     MAIN MODULE FOR GRAPHFORMER TRAINING
 
     Training unit for DIST with 2D/3D dataset of point cloud with or without
     images.
     """
+    tardis_logo = Tardis_Logo()
     tardis_logo(title='DIST training module')
 
     """Check directory for data compatibility"""
@@ -345,8 +340,7 @@ def main(pointcloud_dir: str,
                     validation_DataLoader=dl_test_graph,
                     epochs=epochs,
                     checkpoint_name='GF',
-                    lr_scheduler=learning_rate_scheduler,
-                    tqdm=tqdm)
+                    lr_scheduler=learning_rate_scheduler)
 
     train.run_training()
 
