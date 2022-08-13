@@ -36,7 +36,6 @@ def train(train_dataloader: DataLoader,
           learning_rate=0.001,
           learning_rate_scheduler=False,
           early_stop_rate=10,
-          tqdm=True,
           device='gpu',
           epochs=100):
     """

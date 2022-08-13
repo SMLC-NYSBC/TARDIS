@@ -39,7 +39,6 @@ class Trainer:
                  lr_scheduler=False,
                  epochs=100,
                  early_stop_rate=10,
-                 tqdm=False,
                  checkpoint_name="Unet",
                  classification=False):
         self.model = model.to(device)
@@ -51,7 +50,6 @@ class Trainer:
         self.lr_scheduler = lr_scheduler
         self.epochs = epochs
         self.early_stop_rate = early_stop_rate
-        self.tqdm = tqdm
         self.checkpoint_name = checkpoint_name
         self.classification = classification
         if classification:
