@@ -83,8 +83,9 @@ class Tardis_Logo:
     |  Example  | Title and text are optional
     |           | Ex. log = Tardis_Logo()
     =============     log(title='Example',
-                          title_1='Progress bar:',
-                          title_2=printProgressBar(value=i, max=len(range(10))))
+                          text_1='Progress bar:',
+                          text_2=printProgressBar(value=i, max=len(range(10))),
+                          ....)
     """
     def __init__(self):
         clear = None
