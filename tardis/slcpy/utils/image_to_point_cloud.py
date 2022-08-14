@@ -52,19 +52,30 @@ class BuildPointCloud:
             'Array or file directory loaded properly but image is not semantic mask...'
 
         """Fill gaps in binary mask"""
-        for id, _ in enumerate(image):
-            des = np.array(image[id, :], dtype=np.uint8)
+        if image.ndim == 3:
+            for id, _ in enumerate(image):
+                des = np.array(image[id, :], dtype=np.uint8)
+                contour, _ = cv2.findContours(des, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+
+                for cnt in contour:
+                    cv2.drawContours(des, [cnt], 0, 1, -1)
+
+                gray = cv2.bitwise_not(des)
+                kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+                res = cv2.morphologyEx(gray, cv2.MORPH_OPEN, kernel) / 255
+                res = np.where(res == 1, 0, 1)
+                image[id, :] = res
+        else:
+            des = np.array(image, dtype=np.uint8)
             contour, _ = cv2.findContours(des, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
 
             for cnt in contour:
-                cv2.drawContours(des,[cnt], 0, 1, -1)
+                cv2.drawContours(des, [cnt], 0, 1, -1)
 
             gray = cv2.bitwise_not(des)
-            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
             res = cv2.morphologyEx(gray, cv2.MORPH_OPEN, kernel) / 255
             res = np.where(res == 1, 0, 1)
-            image[id, :] = res
-
         return image
 
     def build_point_cloud(self,
