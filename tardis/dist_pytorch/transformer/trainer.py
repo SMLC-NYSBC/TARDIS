@@ -114,7 +114,7 @@ class Trainer:
             self.train(epoch_desc, id)
 
             self.model.eval()
-            self.validate()
+            self.validate(epoch_desc, id)
 
             early_stopping(val_loss=self.validation_loss[len(self.validation_loss) - 1])
 

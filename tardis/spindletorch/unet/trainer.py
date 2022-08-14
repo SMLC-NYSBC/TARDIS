@@ -91,12 +91,13 @@ class Trainer:
                                 text_3=printProgressBar(id, self.epochs))
 
             self._train(epoch_desc,
-                        printProgressBar(id, self.epochs))
+                        id)
 
             """Validation block"""
             if self.validation_DataLoader is not None:
-                self._validate()
-                early_stopping(val_loss=self.validation_loss[len(self.validation_loss) - 1])
+                self._validate(epoch_desc,
+                               id)
+                early_stopping(val_loss=self.f1[len(self.f1) - 1])
 
             """Learning rate scheduler block"""
             if self.lr_scheduler is not None:
@@ -138,7 +139,7 @@ class Trainer:
 
         self.progress_train(title='CNN training module',
                             text_2=epoch_desc,
-                            text_3=progress_epoch,
+                            text_3=printProgressBar(progress_epoch, self.epochs),
                             text_4='Training: (loss 1.000)',
                             text_5=printProgressBar(0, self.training_DataLoader.__len__()))
 
@@ -162,13 +163,15 @@ class Trainer:
 
             self.progress_train(title='CNN training module',
                                 text_2=epoch_desc,
-                                text_3=progress_epoch,
+                                text_3=printProgressBar(progress_epoch, self.epochs),
                                 text_4=f'Training: (loss {loss_value:.4f})',
                                 text_5=printProgressBar(idx, self.training_DataLoader.__len__()))
 
         self.learning_rate.append(self.optimizer.param_groups[0]['lr'])
 
-    def _validate(self):
+    def _validate(self,
+                  epoch_desc,
+                  progress_epoch):
         self.model.eval()  # evaluation mode
         valid_losses = []  # accumulate the losses
         accuracy_mean = []  # accumulate the accuracy
@@ -199,6 +202,12 @@ class Trainer:
                     F1_score, threshold = calculate_F1(input=out,
                                                        target=target,
                                                        best_f1=True)
+
+                self.progress_train(title='CNN training module',
+                                    text_2=epoch_desc,
+                                    text_3=printProgressBar(progress_epoch, self.epochs),
+                                    text_4=f'Validation: (loss {loss_value:.4f})',
+                                    text_5=printProgressBar(0, self.validation_DataLoader.__len__()))
 
                 # Avg. precision score
                 valid_losses.append(loss_value)

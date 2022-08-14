@@ -161,7 +161,7 @@ def main(prediction_dir: str,
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image: {i}',
-                        text_4='Pixel size: Nan',
+                        text_4='Pixel size: Nan A',
                         text_5='Point Cloud: In processing...',
                         text_7='Current Task: Preprocessing for CNN...')
 
@@ -186,7 +186,7 @@ def main(prediction_dir: str,
             out_format = 3
             format = 'amira'
 
-        scale_factor = px / 23.2
+        scale_factor = px / 25
         org_shape = image.shape
 
         trim_with_stride(image=image,
@@ -208,13 +208,14 @@ def main(prediction_dir: str,
 
         """CNN prediction"""
         for j in range(patches_DL.__len__()):
-            tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
-                            text_1=f'Found {len(predict_list)} images to predict!',
-                            text_3=f'Image: {i}',
-                            text_4=f'Pixel size: {px}; Image re-sample to 23.2',
-                            text_5='Point Cloud: In processing...',
-                            text_7='Current Task: CNN prediction...',
-                            text_8=printProgressBar(j, patches_DL.__len__()))
+            if j // 10:
+                tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
+                                text_1=f'Found {len(predict_list)} images to predict!',
+                                text_3=f'Image: {i}',
+                                text_4=f'Pixel size: {px} A; Image re-sample to 25 A',
+                                text_5='Point Cloud: In processing...',
+                                text_7='Current Task: CNN prediction...',
+                                text_8=printProgressBar(j, patches_DL.__len__()))
 
             input, name = patches_DL.__getitem__(j)
 
@@ -227,12 +228,12 @@ def main(prediction_dir: str,
 
         """Post-Processing"""
         # Stitch predicted image patches
-        scale_factor = 23.2 / px
+        scale_factor = 25 / px
 
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image: {i}',
-                        text_4=f'Original pixel size: {px}; Image re-sample to 23.2',
+                        text_4=f'Original pixel size: {px} A; Image re-sample to 25 A',
                         text_5='Point Cloud: In processing...',
                         text_7='Current Task: Stitching...')
 
@@ -258,7 +259,7 @@ def main(prediction_dir: str,
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image: {i}',
-                        text_4=f'Original pixel size: {px}; Image re-sample to 23.2',
+                        text_4=f'Original pixel size: {px} A; Image re-sample to 25 A',
                         text_5='Point Cloud: In processing...',
                         text_7='Current Task: Image Postprocessing...')
 
@@ -298,7 +299,7 @@ def main(prediction_dir: str,
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image: {i}',
-                        text_4=f'Original pixel size: {px}; Image re-sample to 23.2',
+                        text_4=f'Original pixel size: {px} A; Image re-sample to 25 A',
                         text_5=f'Point Cloud: {point_cloud.shape[0]} Nodes; NaN Segments',
                         text_7='Current Task: Preparing for MT segmentation...')
 
@@ -356,14 +357,23 @@ def main(prediction_dir: str,
 
         # Predict point cloud
         graphs = []
+        tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
+                        text_1=f'Found {len(predict_list)} images to predict!',
+                        text_3=f'Image: {i}',
+                        text_4=f'Original pixel size: {px} A; Image re-sample to 25 A',
+                        text_5=f'Point Cloud: {point_cloud.shape[0]} Nodes; NaN Segments',
+                        text_7='Current Task: DIST prediction...',
+                        text_8=printProgressBar(0, len(coords_df)))
+
         for id, coord in enumerate(coords_df):
-            tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
-                            text_1=f'Found {len(predict_list)} images to predict!',
-                            text_3=f'Image: {i}',
-                            text_4=f'Original pixel size: {px}; Image re-sample to 23.2',
-                            text_5=f'Point Cloud: {point_cloud.shape[0]} Nodes; NaN Segments',
-                            text_7='Current Task: DIST prediction...',
-                            text_8=printProgressBar(id, len(coords_df)))
+            if id // 25:
+                tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
+                                text_1=f'Found {len(predict_list)} images to predict!',
+                                text_3=f'Image: {i}',
+                                text_4=f'Original pixel size: {px} A; Image re-sample to 25 A',
+                                text_5=f'Point Cloud: {point_cloud.shape[0]} Nodes; NaN Segments',
+                                text_7='Current Task: DIST prediction...',
+                                text_8=printProgressBar(id, len(coords_df)))
 
             graph = predict_gf._predict(x=coord[None, :])
             graphs.append(graph)
@@ -378,7 +388,7 @@ def main(prediction_dir: str,
             tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                             text_1=f'Found {len(predict_list)} images to predict!',
                             text_3=f'Image: {i}',
-                            text_4=f'Original pixel size: {px}; Image re-sample to 23.2',
+                            text_4=f'Original pixel size: {px} A; Image re-sample to 25 A',
                             text_5=f'Point Cloud: {point_cloud.shape[0]} Nodes; NaN Segments',
                             text_7='Current Task: MT Segmentation...',
                             text_8='MTs segmentation is fitted to:',
@@ -392,7 +402,7 @@ def main(prediction_dir: str,
             tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                             text_1=f'Found {len(predict_list)} images to predict!',
                             text_3=f'Image: {i}',
-                            text_4=f'Original pixel size: {px}; Image re-sample to 23.2',
+                            text_4=f'Original pixel size: {px} A; Image re-sample to 25 A',
                             text_5=f'Point Cloud: {point_cloud.shape[0]} Nodes; NaN Segments',
                             text_7='Current Task: MT Segmentation...')
 
@@ -430,7 +440,7 @@ def main(prediction_dir: str,
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image: {i}',
-                        text_4=f'Original pixel size: {px}; Image re-sample to 23.2',
+                        text_4=f'Original pixel size: {px} A; Image re-sample to 25 A',
                         text_5=f'Point Cloud: {point_cloud.shape[0]} Nodes; {np.max(segments[:, 0])} Segments',
                         text_7='Current Task: Segmentation finished!')
 

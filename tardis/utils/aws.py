@@ -18,7 +18,7 @@ def get_weights_aws(network: str,
         model: Additional dataset name use for the graphformer
         save_weights: If True model is saved in temp repository
     """
-    if network in ['unet', 'unet3plus', 'big_unet']:
+    if network in ['unet', 'unet3plus', 'big_unet', 'fnet']:
         assert subtype in ['32', '64'], \
             'For Graphformer, pre train model must be selected!'
 
