@@ -142,11 +142,10 @@ class C_DIST(nn.Module):
 
     def __init__(self,
                  n_out=1,
-                 node_input=None,
-                 node_dim=256,
                  edge_dim=128,
                  num_layers=6,
                  num_heads=8,
+                 num_cls=200,
                  coord_embed_sigma: Optional[tuple] = 1.0,
                  dropout_rate=0,
                  structure='full',
@@ -154,29 +153,28 @@ class C_DIST(nn.Module):
                  predict=False):
         super().__init__()
 
-        self.node_dim = node_dim
         self.edge_dim = edge_dim
         self.predict = predict
-
-        if node_input is not None:
-            self.node_embed = nn.Linear(in_features=node_input,
-                                        out_features=node_dim)
 
         self.coord_embed = DistEmbedding(n_out=edge_dim,
                                          sigma=coord_embed_sigma,
                                          dist=dist_embed)
 
-        self.layers = GraphFormerStack(node_dim=node_dim,
+        self.layers = GraphFormerStack(node_dim=None,
                                        pairs_dim=edge_dim,
                                        dropout=dropout_rate,
                                        num_layers=num_layers,
                                        num_heads=num_heads,
                                        structure=structure)
+
         self.decoder = nn.Linear(in_features=edge_dim,
                                  out_features=n_out)
+        self.decoder_cls = nn.Linear(in_features=edge_dim,
+                                     out_features=num_cls)
 
         if self.predict:
             self.logits_sigmoid = nn.Sigmoid()
+            self.logits_cls_softmax = nn.Softmax(dim=1)
 
     def embed_input(self,
                     coords: torch.Tensor,
@@ -193,28 +191,22 @@ class C_DIST(nn.Module):
 
     def forward(self,
                 coords: torch.Tensor,
-                node_features: Optional[torch.Tensor] = None,
                 padding_mask: Optional[torch.Tensor] = None):
-        """ Check if image patches exist """
-        if node_features is not None and len(node_features.shape) != 3:
-            node_features = None
-
-        x, z = self.embed_input(coords=coords,
-                                node_features=node_features)
-        if x is not None:
-            """ Length x Batch x Embedded_Dim """
-            x = x.transpose(0, 1)
+        _, z = self.embed_input(coords=coords,
+                                node_features=None)
 
         """ Encode throughout the transformer layers """
-        _, z = self.layers(x=x,
-                           z=z,
+        _, z = self.layers(z=z,
                            src_key_padding_mask=padding_mask)
-        print(z.shape)
+
         """ Predict the graph edges """
         logits = self.decoder(z + z.transpose(1, 2))  # symmetries z
-        logits = logits.permute(0, 3, 1, 2)
+
+        logits_cls = self.decoder_cls((z + z.transpose(1, 2))[:, 0, :])  # Batch x Channels x Length
+        logits = logits.permute(0, 3, 1, 2)  # Batch x Channels x Length x Length
 
         if self.predict:
+            logits_cls = self.logits_cls_softmax(logits_cls)
             logits = self.logits_sigmoid(logits)
 
-        return logits
+        return logits, logits_cls

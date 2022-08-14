@@ -21,8 +21,8 @@ class GraphFormerStack(nn.Module):
     """
 
     def __init__(self,
-                 node_dim: int,
                  pairs_dim: int,
+                 node_dim: Optional[int] = None,
                  num_layers=1,
                  dropout=0,
                  ff_factor=4,
