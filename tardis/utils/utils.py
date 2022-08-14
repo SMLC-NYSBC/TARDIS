@@ -94,19 +94,35 @@ class EarlyStopping():
         self.early_stop = False
 
     def __call__(self,
-                 val_loss: float):
-        if self.best_loss is None:
-            self.best_loss = val_loss
-        elif self.best_loss - val_loss > self.min_delta:
-            self.best_loss = val_loss
-            # reset counter if validation loss improves
-            self.counter = 0
-        elif self.best_loss - val_loss < self.min_delta:
-            self.counter += 1
+                 val_loss: Optional[float] = None,
+                 f1_score: Optional[float] = None):
+        assert val_loss is not None or f1_score is not None, \
+            'Validation loss or F1 score is missing!'
 
-            if self.counter >= self.patience:
-                print('INFO: Early stopping')
-                self.early_stop = True
+        if val_loss is not None:
+            if self.best_loss is None:
+                self.best_loss = val_loss
+            elif self.best_loss - val_loss > self.min_delta:
+                self.best_loss = val_loss
+                self.counter = 0  # Reset counter if validation loss improves
+            elif self.best_loss - val_loss < self.min_delta:
+                self.counter += 1
+
+                if self.counter >= self.patience:
+                    print('INFO: Early stopping')
+                    self.early_stop = True
+        elif f1_score is not None:
+            if self.best_loss is None:
+                self.best_loss = f1_score
+            elif self.best_loss - f1_score < self.min_delta:
+                self.best_loss = f1_score
+                self.counter = 0  # Reset counter if validation loss improves
+            elif self.best_loss - f1_score > self.min_delta:
+                self.counter += 1
+
+                if self.counter >= self.patience:
+                    print('INFO: Early stopping')
+                    self.early_stop = True
 
 
 def check_uint8(image: np.ndarray):

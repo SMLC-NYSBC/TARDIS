@@ -97,7 +97,7 @@ class Trainer:
             if self.validation_DataLoader is not None:
                 self._validate(epoch_desc,
                                id)
-                early_stopping(val_loss=self.f1[len(self.f1) - 1])
+                early_stopping(f1_score=self.f1[len(self.f1) - 1])
 
             """Learning rate scheduler block"""
             if self.lr_scheduler is not None:
