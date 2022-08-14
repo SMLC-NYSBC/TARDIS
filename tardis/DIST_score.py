@@ -1,3 +1,4 @@
+import enum
 from os import getcwd, listdir, mkdir
 from os.path import isdir, join
 from shutil import rmtree
@@ -12,7 +13,7 @@ from tardis.dist_pytorch.utils.voxal import VoxalizeDataSetV2
 from tardis.slcpy.utils.segment_point_cloud import GraphInstanceV2
 from tardis.spindletorch.unet.predictor import Predictor
 from tardis.utils.device import get_device
-from tardis.utils.logo import tardis_logo
+from tardis.utils.logo import Tardis_Logo, printProgressBar
 from tardis.utils.metrics import F1_metric, IoU, distAUC, mCov
 from tardis.utils.utils import pc_median_dist
 from tardis.version import version
@@ -108,11 +109,6 @@ torch.autograd.profiler.emit_nvtx(enabled=False)
               'cpu: Usa CPU '
               '0-9 - specified gpu device id to use',
               show_default=True)
-@click.option('-tq', '--tqdm',
-              default=True,
-              type=bool,
-              help='If True, build with progressbar.',
-              show_default=True)
 @click.version_option(version=version)
 def main(gf_dir: str,
          gf_structure: str,
@@ -129,14 +125,14 @@ def main(gf_dir: str,
          checkpoint,
          model,
          export: bool,
-         device: str,
-         tqdm: bool):
+         device: str):
     """
     MAIN MODULE FOR GF for metric evaluation
     """
     """Initial setup"""
+    tardis_logo = Tardis_Logo()
     tardis_logo(title='Metric evaluation for DIST')
-    
+
     available_format = ('.csv', '.CorrelationLines.am', '.npy')
     GF_list = [f for f in listdir(gf_dir) if f.endswith(available_format)]
     assert len(GF_list) > 0, 'No file found in given directory!'
@@ -167,17 +163,12 @@ def main(gf_dir: str,
                    device=get_device(device),
                    tqdm=tqdm)
 
-    if tqdm:
-        from tqdm import tqdm as tq
-
-        batch_iter = tq(GF_list)
-    else:
-        batch_iter = GF_list
-
     """Process each image with CNN and GF"""
-    for i in batch_iter:
-        if tqdm:
-            batch_iter.set_description(f'Predicting {i}')
+    for id, i in enumerate(GF_list):
+        tardis_logo(title='Metric evaluation for DIST',
+                    text_2=f'Predicting {i}',
+                    text_3=printProgressBar(id, len(GF_list)),
+                    text_4='Current task: Preprocessing image...')
 
         # coord <- array of all point with labels
         # coord_dist <- array of all points with labels after normalization
@@ -201,13 +192,14 @@ def main(gf_dir: str,
         coords, img, graph_target, output_idx = VD.voxalize_dataset(prune=5)
         coord_vx = [c / pc_median_dist(c, avg_over=True) for c in coords]
 
-        dl_iter = tq(zip(coord_vx, img),
-                     'Voxals',
-                     leave=False)
-
         graphs = []
         coords = []
-        for c, img in dl_iter:
+        for idx, (c, img) in enumerate(zip(coord_vx, img)):
+            tardis_logo(title='Metric evaluation for DIST',
+                        text_2=f'Predicting {i}',
+                        text_3=printProgressBar(id, len(GF_list)),
+                        text_4='Current task: Voxals prediction...',
+                        text_5=printProgressBar(idx, len(img)))
             if with_img:
                 graph = GF._predict(x=c[None, :],
                                     y=img[None, :])
@@ -218,6 +210,11 @@ def main(gf_dir: str,
 
         n_crop.append(len(graphs))
         print(f'No. of crops {len(graphs)}')
+
+        tardis_logo(title='Metric evaluation for DIST',
+                    text_2=f'Predicting {i}',
+                    text_3=printProgressBar(id, len(GF_list)),
+                    text_4='Current task: Graph prediction...')
 
         graph_target = GraphToSegment._stitch_graph(graph_target, output_idx)
         graph_target = np.where(graph_target > 0, 1, 0)
@@ -230,6 +227,10 @@ def main(gf_dir: str,
                                                    visualize=None)
 
         """Prediction evaluation"""
+        tardis_logo(title='Metric evaluation for DIST',
+                    text_2=f'Predicting {i}',
+                    text_3=printProgressBar(id, len(GF_list)),
+                    text_4='Current task: Calculating metrics...')
         acc, prec, rec, f1 = F1_metric(graph_target.flatten(),
                                        np.where(graph_logits >= gf_threshold, 1, 0).flatten())
         macc.append(acc)

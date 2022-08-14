@@ -11,7 +11,7 @@ from tardis.slcpy.utils.stitch import StitchImages
 from tardis.slcpy.utils.trim import trim_image
 from tardis.spindletorch.predict import predict
 from tardis.spindletorch.utils.dataset_loader import PredictionDataSet
-from tardis.utils.logo import tardis_logo
+from tardis.utils.logo import Tardis_Logo, printProgressBar
 from tardis.utils.setup_envir import build_temp_dir, clean_up
 from tardis.version import version
 
@@ -97,11 +97,6 @@ from tardis.version import version
               type=float,
               help='Threshold use for model prediction.',
               show_default=True)
-@click.option('-tq', '--tqdm',
-              default=True,
-              type=bool,
-              help='If True, build with progressbar.',
-              show_default=True)
 @click.version_option(version=version)
 def main(prediction_dir: str,
          patch_size: int,
@@ -115,7 +110,6 @@ def main(prediction_dir: str,
          cnn_structure: str,
          checkpoints: tuple,
          device: str,
-         tqdm: bool,
          threshold: float,
          dropout: Optional[float] = None):
     """
@@ -123,6 +117,7 @@ def main(prediction_dir: str,
 
     Supported 3D images only!
     """
+    tardis_logo = Tardis_Logo()
     tardis_logo(title='Semantic MT prediction module')
     
     """Searching for available images for prediction"""
@@ -136,7 +131,7 @@ def main(prediction_dir: str,
     else:
         cnn_type = [cnn_type]
 
-    stitcher = StitchImages(tqdm=tqdm)
+    stitcher = StitchImages(tqdm=False)
 
     for i in predict_list:
         """Build temp dir"""
@@ -193,7 +188,6 @@ def main(prediction_dir: str,
                 conv_padding=conv_padding,
                 pool_kernel=pool_kernel,
                 checkpoints=checkpoints,
-                tqdm=tqdm,
                 device=device,
                 threshold=threshold,
                 cnn_dropout=dropout)
@@ -208,7 +202,6 @@ def main(prediction_dir: str,
 
         """Clean-up temp dir"""
         clean_up(dir=prediction_dir)
-        tardis_logo(title='Semantic MT prediction module')
 
 
 if __name__ == '__main__':

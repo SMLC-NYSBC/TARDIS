@@ -7,6 +7,7 @@ import torch
 from tardis.spindletorch.unet.predictor import Predictor
 from tardis.spindletorch.utils.build_network import build_network
 from torch.utils.data import DataLoader
+from tardis.utils.logo import Tardis_Logo, printProgressBar
 
 # Setting for stable release to turn off all debug APIs
 torch.backends.cudnn.benchmark = True
@@ -49,6 +50,9 @@ def predict(image_DL: DataLoader,
         threshold: Threshold for image prediction
         cnn_dropout: If not None, float use as dropout rate in CNN
     """
+    tardis_logo = Tardis_Logo()
+    tardis_logo(title='Semantic MT prediction module')
+
     """Build NN"""
     image_predict = Predictor(model=build_network(network_type=cnn_type[0],
                                                   classification=False,
@@ -98,7 +102,10 @@ def predict(image_DL: DataLoader,
     else:
         dl_iter = range(dl_iter)
 
-    for i in dl_iter:
+    for i in range(dl_len):
+        tardis_logo(title='Semantic MT prediction module',
+                    text_2='Predicting images: ',
+                    text_3=printProgressBar(i, len(range(dl_len))))
         input, name = image_DL.__getitem__(i)
 
         """Predict"""

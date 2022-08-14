@@ -349,10 +349,7 @@ class ResUNet(nn.Module):
         for decoder, encoder_features in zip(self.decoder, encoder_features):
             x = decoder(encoder_features, x)
 
-        """ Final Layer """
-        x = self.final_conv_layer(x)
-
-        """ Prediction """
+        """ Final layer and Prediction """
         if self.prediction:
             return self.activation(self.final_conv_layer(x))
         else:

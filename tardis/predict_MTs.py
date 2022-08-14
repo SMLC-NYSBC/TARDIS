@@ -1,5 +1,3 @@
-import enum
-from turtle import title
 import warnings
 from os import getcwd, listdir
 from os.path import join
@@ -9,7 +7,6 @@ import click
 import numpy as np
 import open3d as o3d
 import tifffile.tifffile as tif
-from tqdm.auto import tqdm
 
 from tardis.dist_pytorch.transformer.network import DIST
 from tardis.dist_pytorch.utils.voxal import VoxalizeDataSetV2

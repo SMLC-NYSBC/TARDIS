@@ -8,7 +8,7 @@ import tifffile.tifffile as tif
 
 from tardis.slcpy.image_postprocess import ImageToPointCloud
 from tardis.slcpy.utils.export_data import NumpyToAmira
-from tardis.utils.logo import tardis_logo
+from tardis.utils.logo import Tardis_Logo, printProgressBar
 from tardis.utils.utils import check_uint8
 from tardis.version import version
 
@@ -57,6 +57,7 @@ def main(postprocess_dataset: str,
 
     Post-process dataset from Unet segmentation and save them as .csv, .npy or .am
     """
+    tardis_logo = Tardis_Logo()
     tardis_logo(title='Semantic binary mask post-processing module')
     
     """Check dir for compatible files"""
@@ -79,9 +80,12 @@ def main(postprocess_dataset: str,
         batch_iter = idx_img
 
     """For each file run post-processing"""
-    for idx in batch_iter:
+    for idx, img in enumerate(idx_img):
+        tardis_logo(title='Semantic binary mask post-processing module',
+                    text_2='Current task: Image post-processing to point clouds...',
+                    text_3=printProgressBar(idx, len(idx_img)))
         """Check file type and correct to uin8 (aka 01 binary type"""
-        image = check_uint8(tif.imread(join(postprocess_dataset, idx)))
+        image = check_uint8(tif.imread(join(postprocess_dataset, img)))
 
         """Post-processing"""
         if downsample is None:

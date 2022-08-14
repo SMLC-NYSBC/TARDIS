@@ -5,7 +5,6 @@ from shutil import rmtree
 import numpy as np
 import torch
 from tardis.utils.utils import EarlyStopping
-from tqdm import tqdm as tq
 from tardis.utils.logo import Tardis_Logo, printProgressBar
 
 
@@ -112,7 +111,7 @@ class Trainer:
                                 text_3=printProgressBar(id, self.epochs))
 
             self.model.train()
-            self.train()
+            self.train(epoch_desc, id)
 
             self.model.eval()
             self.validate()
@@ -153,7 +152,7 @@ class Trainer:
               progress_epoch):
         self.progress_train(title='DIST training module',
                             text_2=epoch_desc,
-                            text_3=progress_epoch,
+                            text_3=printProgressBar(progress_epoch, self.epochs),
                             text_4='Training: (loss 1.000)',
                             text_5=printProgressBar(0, self.training_DataLoader.__len__()))
 
@@ -180,10 +179,9 @@ class Trainer:
                 loss_value = loss.item()
                 self.training_loss.append(loss_value)
 
-
                 self.progress_train(title='DIST training module',
                                     text_2=epoch_desc,
-                                    text_3=progress_epoch,
+                                    text_3=printProgressBar(progress_epoch, self.epochs),
                                     text_4=f'Training: (loss {loss_value:.4f})',
                                     text_5=printProgressBar(idx, self.training_DataLoader.__len__()))
 
@@ -194,7 +192,9 @@ class Trainer:
         if self.lr_scheduler is not None:
             self.lr_scheduler.step()
 
-    def validate(self):
+    def validate(self,
+                 epoch_desc,
+                 progress_epoch):
         valid_losses = []
         accuracy_mean = []
         precision_mean = []
@@ -203,7 +203,7 @@ class Trainer:
 
         with torch.no_grad():
             for x, y, z, _ in self.validation_DataLoader:
-                for c, i, g in zip(x, y, z):
+                for idx, (c, i, g) in enumerate(zip(x, y, z)):
                     c, target = c.to(self.device), g.to(self.device)
 
                     if self.node_input:
@@ -223,6 +223,11 @@ class Trainer:
 
                     acc, prec, recall, f1 = self.calculate_F1(logits=out,
                                                               targets=target)
+                    self.progress_train(title='DIST training module',
+                                        text_2=epoch_desc,
+                                        text_3=printProgressBar(progress_epoch, self.epochs),
+                                        text_4=f'Validation: (loss {loss.item():.4f})',
+                                        text_5=printProgressBar(idx, self.validation_DataLoader.__len__()))
                     # Avg. precision score
                     valid_losses.append(loss.item())
                     accuracy_mean.append(acc)
