@@ -15,7 +15,7 @@ from tardis.slcpy.utils.export_data import NumpyToAmira
 from tardis.slcpy.utils.load_data import import_am, import_mrc, import_tiff
 from tardis.slcpy.utils.segment_point_cloud import GraphInstanceV2
 from tardis.slcpy.utils.stitch import StitchImages
-from tardis.slcpy.utils.trim import trim_with_stride
+from tardis.slcpy.utils.trim import scale_image, trim_with_stride
 from tardis.spindletorch.unet.predictor import Predictor
 from tardis.spindletorch.utils.build_network import build_network
 from tardis.spindletorch.utils.dataset_loader import PredictionDataSet
@@ -40,7 +40,7 @@ warnings.simplefilter("ignore", UserWarning)
               help='Size of image size used for prediction.',
               show_default=True)
 @click.option('-ct', '--cnn_threshold',
-              default=0.35,
+              default=0.15,
               type=float,
               help='Threshold use for model prediction.',
               show_default=True)
@@ -188,6 +188,7 @@ def main(prediction_dir: str,
 
         scale_factor = px / 25
         org_shape = image.shape
+        scale_shape = np.multiply(org_shape, scale_factor).astype(np.int16)
 
         trim_with_stride(image=image,
                          scale=scale_factor,
@@ -240,11 +241,14 @@ def main(prediction_dir: str,
         image = check_uint8(stitcher(image_dir=output,
                                      output=None,
                                      mask=True,
-                                     scale=scale_factor,
+                                     scale=None,
                                      prefix='',
-                                     dtype=np.int8)[:org_shape[0],
-                                                    :org_shape[1],
-                                                    :org_shape[2]])
+                                     dtype=np.int8)[:scale_shape[0],
+                                                    :scale_shape[1],
+                                                    :scale_shape[2]])
+        image, _ = scale_image(image=image,
+                               mask=None,
+                               scale=scale_factor)
 
         # Check if predicted image is not empty
         if debug:

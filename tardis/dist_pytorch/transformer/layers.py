@@ -27,7 +27,8 @@ class GraphFormerStack(nn.Module):
                  dropout=0,
                  ff_factor=4,
                  num_heads=8,
-                 structure='full'):
+                 structure='full',
+                 normalize=False):
         super().__init__()
         self.layers = nn.ModuleList()
         for _ in range(num_layers):
@@ -36,7 +37,8 @@ class GraphFormerStack(nn.Module):
                                      dropout=dropout,
                                      ff_factor=ff_factor,
                                      num_heads=num_heads,
-                                     structure=structure)
+                                     structure=structure,
+                                     normalize=normalize)
             self.layers.append(layer)
 
     def __len__(self):
@@ -85,7 +87,8 @@ class GraphFormerLayer(nn.Module):
                  dropout=0,
                  ff_factor=4,
                  num_heads=8,
-                 structure='full'):
+                 structure='full',
+                 normalize=False):
         super().__init__()
         self.pairs_dim = pairs_dim
         self.node_dim = node_dim
@@ -114,10 +117,12 @@ class GraphFormerLayer(nn.Module):
         if self.structure in ['full', 'full_af', 'triang']:
             self.row_update = TriangularEdgeUpdate(input_dim=pairs_dim,
                                                    channel_dim=32,
-                                                   axis=1)
+                                                   axis=1,
+                                                   normalize=normalize)
             self.col_update = TriangularEdgeUpdate(input_dim=pairs_dim,
                                                    channel_dim=32,
-                                                   axis=0)
+                                                   axis=0,
+                                                   normalize=normalize)
 
         if self.structure == 'quad':
             self.row_update = QuadraticEdgeUpdate(input_dim=pairs_dim,

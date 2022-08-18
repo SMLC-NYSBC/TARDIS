@@ -1,4 +1,3 @@
-import enum
 import struct
 from collections import namedtuple
 from os.path import isfile
@@ -220,8 +219,13 @@ def import_mrc(img: str):
     if nz == 1:
         image = np.fromfile(img, dtype=dtype)[1024:].reshape((ny, nx))
     else:
-        image = np.fromfile(img, dtype=dtype)[1024:].reshape((nz, ny, nx))
-
+        try:
+            image = np.fromfile(img, dtype=dtype)[1024:].reshape((nz, ny, nx))
+        except:
+            try:
+                image = np.fromfile(img, dtype=dtype)[512:].reshape((nz, ny, nx))
+            except:
+                image = np.fromfile(img, dtype=dtype)[256:].reshape((nz, ny, nx))
     return image, pixel_size
 
 
@@ -420,7 +424,7 @@ def import_am(img: str):
 
 
 def load_ply(ply,
-             downsample=0):
+             downsample):
     """
     Loader for .ply files. .ply converted to point cloud and colors are used as labeling
 
@@ -637,7 +641,19 @@ def load_ply(ply,
         1191: (42., 94., 198.),
     }
 
-    if downsample > 0:
+    if downsample:
+        num_pcd = len(np.asarray(pcd.points))
+
+        # downsample = 0.035
+        # if num_pcd > 50000:
+        #     downsample = 0.035
+        # if num_pcd > 100000:
+        #     downsample = 0.0375
+        # if num_pcd > 150000:
+        #     downsample = 0.04
+        # if num_pcd > 200000:
+        #     downsample = 0.045
+
         pcd = pcd.voxel_down_sample(voxel_size=downsample)
 
     coord = np.asarray(pcd.points)

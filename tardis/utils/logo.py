@@ -24,7 +24,7 @@ def printProgressBar(value: int,
     bar = '█' * int(n_bar * j)
     bar = bar + '-' * int(n_bar * (1 - j))
 
-    return f"[{bar:{n_bar}s}] {int(100 * j)}%"
+    return f"[{bar:{n_bar}s}] {int(100 * j)}%  [{value} / {max}]"
 
 
 def build_text(max=80,
@@ -115,7 +115,7 @@ class Tardis_Logo:
                 f' | {build_text(max_width, "New York Structural Biology Center")}|\n'
                 f' | {build_text(max_width - 13, "Simons Machine Learning Center")} ___         |\n'
                 f' | {build_text(max_width - 21, " ", True)} _______(_@_)_______ |\n'
-                f' | {build_text(max_width - 21, " ", True)} | POLICE      BOX | |\n'
+                f' | {build_text(max_width - 21, " ", True)} |  TARDIS-pytorch | |\n'
                 f' | {build_text(max_width - 21, text_1)} |_________________| |\n'
                 f' | {build_text(max_width - 21, text_2)}  | _____ | _____ |  |\n'
                 f' | {build_text(max_width - 21, text_3)}  | |###| | |###| |  |\n'

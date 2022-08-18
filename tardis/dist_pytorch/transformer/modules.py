@@ -1,6 +1,6 @@
-import math
+from math import sqrt
 from typing import Optional
-
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -33,7 +33,9 @@ class DistEmbedding(nn.Module):
 
         if self.dist:
             dist = torch.cdist(x, x)
-
+            diag = np.arange(dist.shape[1])
+            dist[:, diag, diag] = 0
+            
             if isinstance(self.sigma, tuple):
                 kernel = torch.exp(-dist ** 2 / (self.sigma[0] ** 2 * 2))
 
@@ -45,9 +47,6 @@ class DistEmbedding(nn.Module):
 
             isnan = torch.isnan(kernel)
             kernel = torch.where(isnan, torch.zeros_like(kernel), kernel)
-            kernel = kernel.unsqueeze(3)
-
-            return self.linear(kernel)
         else:
             size = x.shape[1]
             kernel = torch.zeros((1, size, size)).to(x.device)
@@ -55,9 +54,9 @@ class DistEmbedding(nn.Module):
             for i in range(size):
                 kernel[0, i, i] = 1
 
-            kernel = kernel.unsqueeze(3)
+        kernel = kernel.unsqueeze(3)
 
-            return self.linear(kernel)
+        return self.linear(kernel)
 
 
 @torch.jit.script
@@ -68,4 +67,4 @@ def gelu(x: torch.Tensor):
     Args:
         x: torch input for activation.
     """
-    return x * 0.5 * (1.0 + torch.erf(x / math.sqrt(2)))
+    return x * 0.5 * (1.0 + torch.erf(x / sqrt(2)))

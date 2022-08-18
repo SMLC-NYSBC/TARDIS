@@ -202,8 +202,8 @@ class Trainer:
         F1_mean = []
 
         with torch.no_grad():
-            for x, y, z, _ in self.validation_DataLoader:
-                for idx, (c, i, g) in enumerate(zip(x, y, z)):
+            for idx, (x, y, z, _) in enumerate(self.validation_DataLoader):
+                for c, i, g in zip(x, y, z):
                     c, target = c.to(self.device), g.to(self.device)
 
                     if self.node_input:
@@ -223,17 +223,19 @@ class Trainer:
 
                     acc, prec, recall, f1 = self.calculate_F1(logits=out,
                                                               targets=target)
-                    self.progress_train(title='DIST training module',
-                                        text_2=epoch_desc,
-                                        text_3=printProgressBar(progress_epoch, self.epochs),
-                                        text_4=f'Validation: (loss {loss.item():.4f})',
-                                        text_5=printProgressBar(idx, self.validation_DataLoader.__len__()))
+
                     # Avg. precision score
                     valid_losses.append(loss.item())
                     accuracy_mean.append(acc)
                     precision_mean.append(prec)
                     recall_mean.append(recall)
                     F1_mean.append(f1)
+
+                self.progress_train(title='DIST training module',
+                                    text_2=epoch_desc,
+                                    text_3=printProgressBar(progress_epoch, self.epochs),
+                                    text_4=f'Validation: (loss {loss.item():.4f})',
+                                    text_5=printProgressBar(idx, self.validation_DataLoader.__len__()))
 
         self.validation_loss.append(np.mean(valid_losses))
         self.accuracy.append(np.mean(accuracy_mean))

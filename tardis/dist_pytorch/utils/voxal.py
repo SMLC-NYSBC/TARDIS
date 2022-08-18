@@ -77,7 +77,7 @@ class VoxalizeDataSetV2:
         self.voxal_patch_size = init_voxal_size
         self.expand = 0.025  # Expand boundary box by 2.5%
         self.size_expand = init_voxal_size * self.expand
-        self.voxal_size = 0.1  # Create 25% overlaps between voxals
+        self.voxal_size = 0.15  # Create 25% overlaps between voxals
         self.voxal_stride = init_voxal_size * self.voxal_size
         self.drop_rate = drop_rate
 
@@ -415,18 +415,23 @@ class VoxalizeDataSetV2:
                         output_idx.append(output_df[coord_ds])
 
         # Find voxal that have more then 50% unique points
-        unique_idx = [False if np.any([True for k in [len(set(output_idx[id]).intersection(j))
-                                                      for idx, j in enumerate(output_idx)
-                                                      if idx != id]
-                                       if k > len(output_idx[id]) / 1.5])
-                      else True for id, _ in enumerate(output_idx)]
+        # unique_idx = [False if np.any([True for k in [len(set(output_idx[id]).intersection(j))
+        #                                               for idx, j in enumerate(output_idx)
+        #                                               if idx != id]
+        #                                if k > len(output_idx[id]) / 1.5])
+        #               else True for id, _ in enumerate(output_idx)]
 
+        # if self.graph_output:
+        #     return list(compress(coord_voxal, unique_idx)), \
+        #         list(compress(img_voxal, unique_idx)), \
+        #         list(compress(graph_voxal, unique_idx)), \
+        #         list(compress(output_idx, unique_idx))
+        # else:
+        #     return list(compress(coord_voxal, unique_idx)), \
+        #         list(compress(img_voxal, unique_idx)), \
+        #         list(compress(output_idx, unique_idx))
+        
         if self.graph_output:
-            return list(compress(coord_voxal, unique_idx)), \
-                list(compress(img_voxal, unique_idx)), \
-                list(compress(graph_voxal, unique_idx)), \
-                list(compress(output_idx, unique_idx))
+            return coord_voxal, img_voxal, graph_voxal, output_idx
         else:
-            return list(compress(coord_voxal, unique_idx)), \
-                list(compress(img_voxal, unique_idx)), \
-                list(compress(output_idx, unique_idx))
+            return coord_voxal, img_voxal, output_idx

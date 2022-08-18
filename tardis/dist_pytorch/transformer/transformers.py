@@ -1,4 +1,4 @@
-import math
+from math import sqrt
 from typing import Optional
 
 import torch
@@ -25,7 +25,7 @@ class PairBiasSelfAttention(nn.Module):
                  embed_dim,
                  pairs_dim,
                  num_heads,
-                 init_scaling=math.sqrt(2)):
+                 init_scaling=sqrt(2)):
         super().__init__()
         self.embed_dim = self.kdim = self.vdim = embed_dim
         self.qkv_same_dim = self.kdim == embed_dim and self.vdim == embed_dim
@@ -280,7 +280,7 @@ class QuadraticEdgeUpdate(nn.Module):
         self.input_dim = input_dim
         self.channel_dim = channel_dim
         self.axis = axis
-        self.init_scaling = math.sqrt(2)
+        self.init_scaling = sqrt(2)
 
         self.norm_input = nn.LayerNorm(input_dim)
 
@@ -363,12 +363,14 @@ class TriangularEdgeUpdate(nn.Module):
     def __init__(self,
                  input_dim,
                  channel_dim=128,
-                 axis=1):
+                 axis=1,
+                 normalize=False):
         super().__init__()
         self.input_dim = input_dim
         self.channel_dim = channel_dim
         self.axis = axis
-        self.init_scaling = math.sqrt(2)
+        self.normalize = normalize
+        self.init_scaling = sqrt(2)
 
         self.norm_input = nn.LayerNorm(input_dim)
 
@@ -398,9 +400,16 @@ class TriangularEdgeUpdate(nn.Module):
                 z: torch.Tensor,
                 mask: Optional[torch.Tensor] = None):
         z = self.norm_input(z)
-
+        
         a = torch.sigmoid(self.gate_a(z)) * self.linear_a(z)  # B x L x L x O
         b = torch.sigmoid(self.gate_b(z)) * self.linear_b(z)  # B x L x L x O
+
+        if self.normalize:
+            l = z.shape[1]
+
+            # Normalize for length of point cloud
+            a = a / sqrt(l)
+            b = b / sqrt(l)
 
         if mask is not None:
             mask = mask.unsqueeze(3).expand(mask.size(0),
@@ -451,7 +460,7 @@ class MultiHeadAttention(nn.Module):
                  add_zero_attn=False,
                  self_attention=False,
                  encoder_decoder_attention=False,
-                 init_scaling=math.sqrt(2)):
+                 init_scaling=sqrt(2)):
 
         super().__init__()
         self.embed_dim = embed_dim

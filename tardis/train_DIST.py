@@ -53,7 +53,7 @@ from tardis.version import version
               help='Number of output channels in GF.',
               show_default=True)
 @click.option('-gn', '--gf_node_dim',
-              default=256,
+              default=None,
               type=int,
               help='Number embedding channels for nodes.',
               show_default=True)

@@ -238,7 +238,8 @@ def trim_with_stride(image: np.ndarray,
                      clean_empty=True,
                      stride=25,
                      scale: Optional[float] = 1.0,
-                     mask: Optional[np.ndarray] = None):
+                     mask: Optional[np.ndarray] = None,
+                     dtype=np.uint8):
     """
     FUNCTION TO TRIMMED IMAGE AND MASKS TO SPECIFIED SIZE
 
@@ -425,23 +426,23 @@ def trim_with_stride(image: np.ndarray,
                             trim_img = trim_img + 128
 
                         tif.imwrite(join(output, 'imgs', img_name),
-                                    np.array(trim_img, 'uint8'),
+                                    np.array(trim_img, dtype),
                                     shape=trim_img.shape)
                         tif.imwrite(join(output, 'masks', f'{img_name[:-4]}_mask.tif'),
-                                    np.array(trim_mask, 'uint8'),
+                                    np.array(trim_mask, dtype),
                                     shape=trim_mask.shape)
                 else:
                     if mask is None:
                         tif.imwrite(join(output, img_name),
-                                    np.array(trim_img, 'uint8'),
+                                    np.array(trim_img, dtype),
                                     shape=trim_img.shape)
 
                     else:
                         tif.imwrite(join(output, 'imgs', img_name),
-                                    np.array(trim_img, 'uint8'),
+                                    np.array(trim_img, dtype),
                                     shape=trim_img.shape)
                         tif.imwrite(join(output, 'masks', f'{img_name[:-4]}_mask.tif'),
-                                    np.array(trim_mask, 'uint8'),
+                                    np.array(trim_mask, dtype),
                                     shape=trim_mask.shape)
 
 

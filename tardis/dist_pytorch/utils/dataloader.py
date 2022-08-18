@@ -167,7 +167,8 @@ class GraphDataset(Dataset):
             for id, c in enumerate(coords_v):
                 coords_v[id] = c / dist
 
-        return [c / pc_median_dist(c, False) for c in coords_v], imgs_v, graph_v, output_idx
+        # return [c / pc_median_dist(c, False) for c in coords_v], imgs_v, graph_v, output_idx
+        return coords_v, imgs_v, graph_v, output_idx
 
 
 class PredictDataset(Dataset):

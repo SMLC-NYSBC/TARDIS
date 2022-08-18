@@ -1,5 +1,5 @@
 from typing import Optional
-
+import numpy as np
 import torch
 import torch.nn as nn
 from tardis.dist_pytorch.transformer.layers import GraphFormerStack
@@ -64,6 +64,7 @@ class DIST(nn.Module):
                                        dropout=dropout_rate,
                                        num_layers=num_layers,
                                        num_heads=num_heads,
+                                       normalize=True,
                                        structure=structure)
         self.decoder = nn.Linear(in_features=edge_dim,
                                  out_features=n_out)
@@ -105,12 +106,11 @@ class DIST(nn.Module):
 
         """ Predict the graph edges """
         logits = self.decoder(z + z.transpose(1, 2))  # symmetries z
-        logits = logits.permute(0, 3, 1, 2)
 
         if self.predict:
-            logits = self.logits_sigmoid(logits)
-
-        return logits
+            return self.logits_sigmoid(logits.permute(0, 3, 1, 2))
+        else:
+            return logits.permute(0, 3, 1, 2)
 
 
 class C_DIST(nn.Module):
@@ -202,7 +202,13 @@ class C_DIST(nn.Module):
         """ Predict the graph edges """
         logits = self.decoder(z + z.transpose(1, 2))  # symmetries z
 
-        logits_cls = self.decoder_cls((z + z.transpose(1, 2))[:, 0, :])  # Batch x Channels x Length
+        # Diagonal of edge f.
+        # If node project to f. and sum
+
+        diag = np.arange(logits_cls.shape[1])
+        logits_cls = (z + z.transpose(1, 2))  # Batch x Length x Length x Channels
+        logits_cls = self.decoder_cls(logits_cls[:, diag, diag, :])  # Batch x Length x Channels
+
         logits = logits.permute(0, 3, 1, 2)  # Batch x Channels x Length x Length
 
         if self.predict:
