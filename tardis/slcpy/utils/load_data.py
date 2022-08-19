@@ -424,7 +424,7 @@ def import_am(img: str):
 
 
 def load_ply(ply,
-             downsample):
+             downsample: Optional[None] = 0.035):
     """
     Loader for .ply files. .ply converted to point cloud and colors are used as labeling
 
@@ -641,19 +641,7 @@ def load_ply(ply,
         1191: (42., 94., 198.),
     }
 
-    if downsample:
-        num_pcd = len(np.asarray(pcd.points))
-
-        # downsample = 0.035
-        # if num_pcd > 50000:
-        #     downsample = 0.035
-        # if num_pcd > 100000:
-        #     downsample = 0.0375
-        # if num_pcd > 150000:
-        #     downsample = 0.04
-        # if num_pcd > 200000:
-        #     downsample = 0.045
-
+    if downsample is not None:
         pcd = pcd.voxel_down_sample(voxel_size=downsample)
 
     coord = np.asarray(pcd.points)

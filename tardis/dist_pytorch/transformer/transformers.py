@@ -400,16 +400,16 @@ class TriangularEdgeUpdate(nn.Module):
                 z: torch.Tensor,
                 mask: Optional[torch.Tensor] = None):
         z = self.norm_input(z)
-        
+
         a = torch.sigmoid(self.gate_a(z)) * self.linear_a(z)  # B x L x L x O
         b = torch.sigmoid(self.gate_b(z)) * self.linear_b(z)  # B x L x L x O
 
         if self.normalize:
-            l = z.shape[1]
+            z_shape = z.shape[1]
 
             # Normalize for length of point cloud
-            a = a / sqrt(l)
-            b = b / sqrt(l)
+            a = a / sqrt(z_shape)
+            b = b / sqrt(z_shape)
 
         if mask is not None:
             mask = mask.unsqueeze(3).expand(mask.size(0),

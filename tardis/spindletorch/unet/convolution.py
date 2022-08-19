@@ -1,4 +1,4 @@
-import math
+from math import sqrt
 from typing import Optional
 
 import torch
@@ -18,9 +18,9 @@ class GeLU(nn.Module):
         super(GeLU, self).__init__()
 
         if tanh is not None:
-            self.tanh = math.sqrt(tanh)
+            self.tanh = sqrt(tanh)
         else:
-            self.tanh = math.sqrt(2)
+            self.tanh = sqrt(2)
 
     def forward(self,
                 x: torch.Tensor):

@@ -283,7 +283,7 @@ def trim_with_stride(image: np.ndarray,
         nc = None  # 2D
         nz = 0  # Gray
         min_px_count = trim_size_xy * trim_size_xy
-    min_px_count = min_px_count * 0.0005  # 0.1% of mask must be occupied 
+    min_px_count = min_px_count * 0.0005  # 0.1% of mask must be occupied
 
     if trim_size_xy is not None or trim_size_z is not None:
         assert nx >= trim_size_xy, \

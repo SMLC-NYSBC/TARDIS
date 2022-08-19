@@ -40,18 +40,12 @@ from tardis.version import version
                                 case_sensitive=True),
               help='Output file format.',
               show_default=True)
-@click.option('-t', '--tqdm',
-              default=True,
-              type=bool,
-              help='If True, process with progress bar.',
-              show_default=True)
 @click.version_option(version=version)
 def main(postprocess_dataset: str,
          euclidean_distance_transform: bool,
          feature_size: int,
          downsample: Optional[float] = None,
-         save_format: Optional[str] = 'all',
-         tqdm=True):
+         save_format: Optional[str] = 'all'):
     """
     MAIN MODULE FOR IMAGE POST-PROCESSING
 
@@ -59,25 +53,18 @@ def main(postprocess_dataset: str,
     """
     tardis_logo = Tardis_Logo()
     tardis_logo(title='Semantic binary mask post-processing module')
-    
+
     """Check dir for compatible files"""
     idx_img = [f for f in listdir(postprocess_dataset) if f.endswith('.tif')]
     assert len(idx_img) > 0, \
         f'{postprocess_dataset} directory do not contain .tif files'
 
     """Setting up pos-processing"""
-    post_processer = ImageToPointCloud(tqdm=True)
+    post_processer = ImageToPointCloud(tqdm=False)
     feature_size = feature_size / 10  # Value for edt threshold
 
     if save_format in ['am', 'all']:
         am_convert = NumpyToAmira()
-
-    if tqdm:
-        from tqdm import tqdm
-        batch_iter = tqdm(idx_img,
-                          'Image post-processing to point clouds')
-    else:
-        batch_iter = idx_img
 
     """For each file run post-processing"""
     for idx, img in enumerate(idx_img):
@@ -125,6 +112,7 @@ def main(postprocess_dataset: str,
                 am_convert.export_amira(coord=point_cloud_HD,
                                         file_dir=join(postprocess_dataset, f'{idx[:-4]}_LD.am'))
         tardis_logo(title='Semantic binary mask post-processing module')
+
 
 if __name__ == '__main__':
     main()

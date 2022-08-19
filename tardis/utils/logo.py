@@ -76,7 +76,7 @@ def clear_output(wait=True):
 
 class Tardis_Logo:
     """
-    BUILDER FOR LOG OUTPUT 
+    BUILDER FOR LOG OUTPUT
 
     ============= The log output is build to fit into given window (cmd or Jupyter)
     |           | Side Logo is optional and can be removed upon; set logo to False
@@ -87,6 +87,7 @@ class Tardis_Logo:
                           text_2=printProgressBar(value=i, max=len(range(10))),
                           ....)
     """
+
     def __init__(self):
         clear = None
 
@@ -97,6 +98,8 @@ class Tardis_Logo:
 
         if clear is None and is_interactive():
             self.clear = clear_output
+        self.fn = "TARDIS-pytorch Copyright Information:"
+        self.c = "Copyright (c) 2021 Robert Kiewisz, Tristan Bepler"
 
     def __call__(self,
                  title='', text_1='', text_2='', text_3='', text_4='',
@@ -110,49 +113,49 @@ class Tardis_Logo:
         self.clear()
         if logo:
             print(f'  {build_text(max_width + 1, "=", True)}\n'
-                f' | {build_text(max_width, "TARDIS  " + version + "  " + title)}|\n'
-                f' | {build_text(max_width, " ", True)}|\n'
-                f' | {build_text(max_width, "New York Structural Biology Center")}|\n'
-                f' | {build_text(max_width - 13, "Simons Machine Learning Center")} ___         |\n'
-                f' | {build_text(max_width - 21, " ", True)} _______(_@_)_______ |\n'
-                f' | {build_text(max_width - 21, " ", True)} |  TARDIS-pytorch | |\n'
-                f' | {build_text(max_width - 21, text_1)} |_________________| |\n'
-                f' | {build_text(max_width - 21, text_2)}  | _____ | _____ |  |\n'
-                f' | {build_text(max_width - 21, text_3)}  | |###| | |###| |  |\n'
-                f' | {build_text(max_width - 21, text_4)}  | |###| | |###| |  |\n'
-                f' | {build_text(max_width - 21, text_5)}  | _____ | _____ |  |\n'
-                f' | {build_text(max_width - 21, text_6)}  | || || | || || |  |\n'
-                f' | {build_text(max_width - 21, text_7)}  | ||_|| | ||_|| |  |\n'
-                f' | {build_text(max_width - 21, text_8)}  | _____ |$_____ |  |\n'
-                f' | {build_text(max_width - 21, text_9)}  | || || | || || |  |\n'
-                f' | {build_text(max_width - 21, text_10)}  | ||_|| | ||_|| |  |\n'
-                f' | {build_text(max_width - 21, " ",  True)}  | _____ | _____ |  |\n'
-                f' | {build_text(max_width - 21, " ",  True)}  | || || | || || |  |\n'
-                f' | {build_text(max_width - 21, "TARDIS-pytorch Copyright Information:")}  | ||_|| | ||_|| |  |\n'
-                f' | {build_text(max_width - 21, "Copyright (c) 2021 Robert Kiewisz, Tristan Bepler")}  |       |       |  |\n'
-                f' | {build_text(max_width - 21, "MIT License")}  *****************  |\n'
-                f'  {build_text(max_width + 1, "=", True)}\n')
+                  f' | {build_text(max_width, "TARDIS  " + version + "  " + title)}|\n'
+                  f' | {build_text(max_width, " ", True)}|\n'
+                  f' | {build_text(max_width, "New York Structural Biology Center")}|\n'
+                  f' | {build_text(max_width - 13, "Simons Machine Learning Center")} ___         |\n'
+                  f' | {build_text(max_width - 21, " ", True)} _______(_@_)_______ |\n'
+                  f' | {build_text(max_width - 21, " ", True)} |  TARDIS-pytorch | |\n'
+                  f' | {build_text(max_width - 21, text_1)} |_________________| |\n'
+                  f' | {build_text(max_width - 21, text_2)}  | _____ | _____ |  |\n'
+                  f' | {build_text(max_width - 21, text_3)}  | |###| | |###| |  |\n'
+                  f' | {build_text(max_width - 21, text_4)}  | |###| | |###| |  |\n'
+                  f' | {build_text(max_width - 21, text_5)}  | _____ | _____ |  |\n'
+                  f' | {build_text(max_width - 21, text_6)}  | || || | || || |  |\n'
+                  f' | {build_text(max_width - 21, text_7)}  | ||_|| | ||_|| |  |\n'
+                  f' | {build_text(max_width - 21, text_8)}  | _____ |$_____ |  |\n'
+                  f' | {build_text(max_width - 21, text_9)}  | || || | || || |  |\n'
+                  f' | {build_text(max_width - 21, text_10)}  | ||_|| | ||_|| |  |\n'
+                  f' | {build_text(max_width - 21, " ",  True)}  | _____ | _____ |  |\n'
+                  f' | {build_text(max_width - 21, " ",  True)}  | || || | || || |  |\n'
+                  f' | {build_text(max_width - 21, self.fn)}  | ||_|| | ||_|| |  |\n'
+                  f' | {build_text(max_width - 21, self.c)}  |       |       |  |\n'
+                  f' | {build_text(max_width - 21, "MIT License")}  *****************  |\n'
+                  f'  {build_text(max_width + 1, "=", True)}\n')
         else:
             print(f'  {build_text(max_width + 1, "=", True)}\n'
-                f' | {build_text(max_width, "TARDIS  " + version + "  " + title)}|\n'
-                f' | {build_text(max_width, " ", True)}|\n'
-                f' | {build_text(max_width, "New York Structural Biology Center")}|\n'
-                f' | {build_text(max_width, "Simons Machine Learning Center")}|\n'
-                f' | {build_text(max_width, " ", True)}|\n'
-                f' | {build_text(max_width, " ", True)}|\n'
-                f' | {build_text(max_width, text_1)}|\n'
-                f' | {build_text(max_width, text_2)}|\n'
-                f' | {build_text(max_width, text_3)}|\n'
-                f' | {build_text(max_width, text_4)}|\n'
-                f' | {build_text(max_width, text_5)}|\n'
-                f' | {build_text(max_width, text_6)}|\n'
-                f' | {build_text(max_width, text_7)}|\n'
-                f' | {build_text(max_width, text_8)}|\n'
-                f' | {build_text(max_width, text_9)}|\n'
-                f' | {build_text(max_width, text_10)}|\n'
-                f' | {build_text(max_width, " ",  True)}|\n'
-                f' | {build_text(max_width, " ",  True)}|\n'
-                f' | {build_text(max_width, "TARDIS-pytorch Copyright Information:")}|\n'
-                f' | {build_text(max_width, "Copyright (c) 2021 Robert Kiewisz, Tristan Bepler")}|\n'
-                f' | {build_text(max_width, "MIT License")}|\n'
-                f'  {build_text(max_width + 1, "=", True)}\n')
+                  f' | {build_text(max_width, "TARDIS  " + version + "  " + title)}|\n'
+                  f' | {build_text(max_width, " ", True)}|\n'
+                  f' | {build_text(max_width, "New York Structural Biology Center")}|\n'
+                  f' | {build_text(max_width, "Simons Machine Learning Center")}|\n'
+                  f' | {build_text(max_width, " ", True)}|\n'
+                  f' | {build_text(max_width, " ", True)}|\n'
+                  f' | {build_text(max_width, text_1)}|\n'
+                  f' | {build_text(max_width, text_2)}|\n'
+                  f' | {build_text(max_width, text_3)}|\n'
+                  f' | {build_text(max_width, text_4)}|\n'
+                  f' | {build_text(max_width, text_5)}|\n'
+                  f' | {build_text(max_width, text_6)}|\n'
+                  f' | {build_text(max_width, text_7)}|\n'
+                  f' | {build_text(max_width, text_8)}|\n'
+                  f' | {build_text(max_width, text_9)}|\n'
+                  f' | {build_text(max_width, text_10)}|\n'
+                  f' | {build_text(max_width, " ",  True)}|\n'
+                  f' | {build_text(max_width, " ",  True)}|\n'
+                  f' | {build_text(max_width, self.fn)}|\n'
+                  f' | {build_text(max_width, self.c)}|\n'
+                  f' | {build_text(max_width, "MIT License")}|\n'
+                  f'  {build_text(max_width + 1, "=", True)}\n')

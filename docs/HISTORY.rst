@@ -4,6 +4,9 @@ History
 
 0.1.0 beta (2022-08-08)
 --------------------------
+* DIST
+    * Simplified logic for patching big point cloud + reduction of number of patches
+
 * SpindleTorch changes:
     * Quick retrained model on hand-curated dataset
 

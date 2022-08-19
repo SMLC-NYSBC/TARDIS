@@ -1,11 +1,10 @@
-
 from typing import Optional
 
 import numpy as np
 import tifffile.tifffile as tiff
 from skimage import exposure
-from tardis.slcpy.utils.load_data import ImportDataFromAmira, load_ply
 from sklearn.neighbors import NearestNeighbors
+from tardis.slcpy.utils.load_data import ImportDataFromAmira, load_ply
 
 
 def preprocess_data(coord: str,

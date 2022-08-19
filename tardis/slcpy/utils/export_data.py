@@ -1,6 +1,7 @@
+from datetime import datetime
+
 import numpy as np
 from tardis.version import version
-from datetime import datetime
 
 
 class NumpyToAmira:

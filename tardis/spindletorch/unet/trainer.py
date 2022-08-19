@@ -82,7 +82,7 @@ class Trainer:
         for id in range(self.epochs):
             """Training block"""
             if id == 0:
-                epoch_desc = f'Epochs: stop counter 0; best F1: NaN'
+                epoch_desc = 'Epochs: stop counter 0; best F1: NaN'
             else:
                 epoch_desc = f'Epochs: stop counter {early_stopping.counter}; best F1 {round(np.max(self.f1), 3)}'
 

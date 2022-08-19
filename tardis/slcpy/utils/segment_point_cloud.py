@@ -3,7 +3,8 @@ from typing import Optional
 import numpy as np
 from scipy.spatial.distance import cdist
 from sklearn.neighbors import KDTree
-from tardis.dist_pytorch.utils.visualize import VisualizeFilaments, VisualizePointCloud
+from tardis.dist_pytorch.utils.visualize import (VisualizeFilaments,
+                                                 VisualizePointCloud)
 from tardis.slcpy.utils.export_data import NumpyToAmira
 
 

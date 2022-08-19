@@ -1,4 +1,5 @@
 from typing import Optional
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -201,15 +202,11 @@ class C_DIST(nn.Module):
 
         """ Predict the graph edges """
         logits = self.decoder(z + z.transpose(1, 2))  # symmetries z
-
-        # Diagonal of edge f.
-        # If node project to f. and sum
-
-        diag = np.arange(logits_cls.shape[1])
-        logits_cls = (z + z.transpose(1, 2))  # Batch x Length x Length x Channels
-        logits_cls = self.decoder_cls(logits_cls[:, diag, diag, :])  # Batch x Length x Channels
-
         logits = logits.permute(0, 3, 1, 2)  # Batch x Channels x Length x Length
+
+        diag = np.arange(logits.shape[1])
+        # Batch x Length x Channels
+        logits_cls = self.decoder_cls((z + z.transpose(1, 2))[:, diag, diag, :])
 
         if self.predict:
             logits_cls = self.logits_cls_softmax(logits_cls)

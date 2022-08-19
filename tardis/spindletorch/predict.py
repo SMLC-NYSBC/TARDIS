@@ -6,8 +6,8 @@ import tifffile.tifffile as tif
 import torch
 from tardis.spindletorch.unet.predictor import Predictor
 from tardis.spindletorch.utils.build_network import build_network
-from torch.utils.data import DataLoader
 from tardis.utils.logo import Tardis_Logo, printProgressBar
+from torch.utils.data import DataLoader
 
 # Setting for stable release to turn off all debug APIs
 torch.backends.cudnn.benchmark = True

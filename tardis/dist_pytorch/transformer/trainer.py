@@ -4,8 +4,8 @@ from shutil import rmtree
 
 import numpy as np
 import torch
-from tardis.utils.utils import EarlyStopping
 from tardis.utils.logo import Tardis_Logo, printProgressBar
+from tardis.utils.utils import EarlyStopping
 
 
 class Trainer:
@@ -102,7 +102,7 @@ class Trainer:
         for id in range(self.epochs):
             """For each Epoch load be t model from previous run"""
             if id == 0:
-                epoch_desc = f'Epochs: stop counter 0; best F1: NaN'
+                epoch_desc = 'Epochs: stop counter 0; best F1: NaN'
             else:
                 epoch_desc = f'Epochs: stop counter {early_stopping.counter}; best F1 {round(np.max(self.f1), 3)}'
 

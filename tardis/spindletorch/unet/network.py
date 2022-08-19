@@ -1,4 +1,3 @@
-from base64 import decode
 from typing import Optional
 
 import numpy as np
@@ -131,7 +130,7 @@ class UNet(nn.Module):
 
 class WNet(nn.Module):
     """
-    WNet 
+    WNet (Test and stuff)
 
     author: Robert Kiewisz
         modified of <10.1016/j.isprsjprs.2020.01.013>
