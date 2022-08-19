@@ -1,4 +1,3 @@
-from itertools import compress
 from typing import Optional
 
 import numpy as np
@@ -375,8 +374,34 @@ class VoxalizeDataSetV2:
             if out_idx:
                 output_idx.append(np.where(coord_ds)[0])
         else:
+            all_voxal = []
             for i in voxals_idx:
-                df_voxal_keep = self.points_in_voxal(voxals_centers[i])
+                all_voxal.append(self.points_in_voxal(voxals_centers[i]))
+
+            # Combine smaller patches
+            new_voxal = []
+            while len(all_voxal) > 2:
+                df = all_voxal[0]
+                i = 1
+
+                if df.sum() >= self.downsampling_threshold:
+                    new_voxal.append(df)
+                    all_voxal.pop(0)
+                else:
+                    while df.sum() <= self.downsampling_threshold:
+                        if len(all_voxal) == 1:
+                            break
+                        if df.sum() + all_voxal[1].sum() > self.downsampling_threshold:
+                            break
+                        df += all_voxal[1]
+                        all_voxal.pop(1)
+                    new_voxal.append(df)
+                    all_voxal.pop(0)
+
+            voxals_idx = new_voxal
+
+            for i in voxals_idx:
+                df_voxal_keep = i
 
                 if self.image is not None:
                     df_img = self.image[df_voxal_keep, :]
@@ -414,23 +439,6 @@ class VoxalizeDataSetV2:
                     if out_idx:
                         output_idx.append(output_df[coord_ds])
 
-        # Find voxal that have more then 50% unique points
-        # unique_idx = [False if np.any([True for k in [len(set(output_idx[id]).intersection(j))
-        #                                               for idx, j in enumerate(output_idx)
-        #                                               if idx != id]
-        #                                if k > len(output_idx[id]) / 1.5])
-        #               else True for id, _ in enumerate(output_idx)]
-
-        # if self.graph_output:
-        #     return list(compress(coord_voxal, unique_idx)), \
-        #         list(compress(img_voxal, unique_idx)), \
-        #         list(compress(graph_voxal, unique_idx)), \
-        #         list(compress(output_idx, unique_idx))
-        # else:
-        #     return list(compress(coord_voxal, unique_idx)), \
-        #         list(compress(img_voxal, unique_idx)), \
-        #         list(compress(output_idx, unique_idx))
-        
         if self.graph_output:
             return coord_voxal, img_voxal, graph_voxal, output_idx
         else:
