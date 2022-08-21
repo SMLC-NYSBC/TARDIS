@@ -145,6 +145,8 @@ class GraphDataset(Dataset):
                                        label_cls=classes,
                                        graph=True)
         else:
+            classes = None
+
             if self.voxal_size[i, 0] == 0:
                 VD = VoxalizeDataSetV2(coord=coord,
                                        image=img,

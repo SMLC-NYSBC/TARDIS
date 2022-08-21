@@ -447,9 +447,10 @@ class VoxalizeDataSetV2:
 
                     if self.label_cls is not None:
                         cls_df = self.label_cls[df_voxal_keep]
-                        cls_new = np.empty((cls_df.shape[0], 200))
+                        cls_new = np.zeros((cls_df.shape[0], 200))
+
                         for id, i in enumerate(cls_df):
-                            df = np.empty((1, 200))
+                            df = np.zeros((1, 200))
                             df[0, int(i)] = 1
                             cls_new[id, :] = df
 

@@ -201,7 +201,6 @@ class Trainer:
                     loss = self.criterion(out[0, :], g) + self.criterion(out_cls, cls)
 
                     loss.backward()  # one backward pass
-                    loss.backward()  # one backward pass
                     self.optimizer.step()  # update the parameters
 
                     loss_value = loss.item()
