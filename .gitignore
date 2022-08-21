@@ -5,6 +5,9 @@ __pycache__/
 # C extensions
 *.so
 
+# Adobe Illustrator
+*.ai
+
 # Distribution / packaging
 .Python
 GF_checkpoint/
