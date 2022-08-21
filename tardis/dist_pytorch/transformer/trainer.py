@@ -197,6 +197,7 @@ class Trainer:
                     out, out_cls = self.model(coords=c,
                                               padding_mask=None)
 
+                    cls = cls.to(self.device)
                     loss = self.criterion(out[0, :], g) + self.criterion(out_cls, cls)
 
                     loss.backward()  # one backward pass
@@ -271,6 +272,7 @@ class Trainer:
                         out, out_cls = self.model(coords=c,
                                                   padding_mask=None)
 
+                        cls = cls.to(self.device)
                         loss = self.criterion(out[0, :], target) + self.criterion(out_cls, cls)
 
                         acc, \
