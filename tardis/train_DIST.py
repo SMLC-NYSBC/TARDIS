@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 
 from tardis.dist_pytorch.transformer.losses import (BCELoss, DiceLoss,
                                                     SigmoidFocalLoss)
-from tardis.dist_pytorch.transformer.network import DIST
+from tardis.dist_pytorch.transformer.network import C_DIST, DIST
 from tardis.dist_pytorch.transformer.trainer import Trainer
 from tardis.dist_pytorch.utils.dataloader import GraphDataset
 from tardis.dist_pytorch.utils.utils import BuildTrainDataSet, cal_node_input
@@ -87,6 +87,11 @@ from tardis.version import version
               type=click.Choice(['full', 'full_af', 'self_attn', 'triang', 'dualtriang', 'quad']),
               help='Structure of the graphformer',
               show_default=True)
+@click.option('-gt', '--gf_type',
+              default='instance',
+              type=click.Choice(['instance', 'semantic']),
+              help='Structure of the graphformer',
+              show_default=True)
 @click.option('-gde', '--gf_dist',
               default=True,
               type=bool,
@@ -152,6 +157,7 @@ def main(pointcloud_dir: str,
          dl_downsampling_rate,
          gf_loss: str,
          gf_structure: str,
+         gf_type: str,
          gf_dist: bool,
          loss_lr: float,
          lr_rate_schedule: bool,
@@ -260,7 +266,7 @@ def main(pointcloud_dir: str,
                                shuffle=False,
                                pin_memory=True)
 
-    coord, img, graph, _ = next(iter(dl_train_graph))
+    coord, img, graph, _, cls = next(iter(dl_train_graph))
     print(f'cord = shape: {coord[0].shape}; '
           f'type: {coord[0].dtype}')
     print(f'img = shape: {img[0].shape}; '
@@ -268,7 +274,9 @@ def main(pointcloud_dir: str,
     print(f'graph = shape: {graph[0].shape}; '
           f'class: {graph[0].unique()}; '
           f'type: {graph[0].dtype}')
-    print(mesh)
+    print(f'graph = shape: {graph[0].shape}; '
+          f'class: {cls[0].unique()}; '
+          f'type: {cls[0].dtype}')
 
     if patch_size is not None:
         if coord[0].shape[2] == 2:
@@ -278,17 +286,28 @@ def main(pointcloud_dir: str,
 
     """Setup training"""
     device = get_device(device)
-    model = DIST(n_out=gf_out,
-                 node_input=cal_node_input(patch_size),
-                 node_dim=gf_node_dim,
-                 edge_dim=gf_edge_dim,
-                 num_layers=gf_layers,
-                 num_heads=gf_heads,
-                 coord_embed_sigma=gf_sigma,
-                 dropout_rate=gf_dropout,
-                 structure=gf_structure,
-                 dist_embed=gf_dist,
-                 predict=False)
+    if gf_type == 'instance':
+        model = DIST(n_out=gf_out,
+                     node_input=cal_node_input(patch_size),
+                     node_dim=gf_node_dim,
+                     edge_dim=gf_edge_dim,
+                     num_layers=gf_layers,
+                     num_heads=gf_heads,
+                     coord_embed_sigma=gf_sigma,
+                     dropout_rate=gf_dropout,
+                     structure=gf_structure,
+                     dist_embed=gf_dist,
+                     predict=False)
+    elif gf_type == 'semantic':
+        model = C_DIST(n_out=gf_out,
+                       edge_dim=gf_edge_dim,
+                       num_layers=gf_layers,
+                       num_heads=gf_heads,
+                       coord_embed_sigma=gf_sigma,
+                       dropout_rate=gf_dropout,
+                       structure=gf_structure,
+                       dist_embed=gf_dist,
+                       predict=False)
 
     if gf_loss == "dice":
         loss_fn = DiceLoss()
@@ -332,6 +351,7 @@ def main(pointcloud_dir: str,
 
     """Train"""
     train = Trainer(model=model,
+                    type=gf_type,
                     node_input=with_img,
                     device=device,
                     criterion=loss_fn,

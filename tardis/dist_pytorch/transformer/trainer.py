@@ -30,6 +30,7 @@ class Trainer:
 
     def __init__(self,
                  model,
+                 type: str,
                  node_input: bool,
                  device: str,
                  criterion,
@@ -53,6 +54,8 @@ class Trainer:
         self.model = model.to(device)
 
         self.node_input = node_input
+        self.type = type
+
         self.device = device
         self.criterion = criterion
         self.optimizer = optimizer
@@ -156,35 +159,58 @@ class Trainer:
                             text_4='Training: (loss 1.000)',
                             text_5=printProgressBar(0, self.training_DataLoader.__len__()))
 
-        for idx, (x, y, z, _) in enumerate(self.training_DataLoader):
-            for c, i, g in zip(x, y, z):
-                c, g = c.to(self.device), g.to(self.device)
-                self.optimizer.zero_grad()
+        if self.type == 'instance':
+            for idx, (x, y, z, _) in enumerate(self.training_DataLoader):
+                for c, i, g in zip(x, y, z):
+                    c, g = c.to(self.device), g.to(self.device)
+                    self.optimizer.zero_grad()
 
-                if self.node_input:
-                    i = i.to(self.device)
-                    out = self.model(coords=c,
-                                     node_features=i,
-                                     padding_mask=None)
-                else:
-                    out = self.model(coords=c,
-                                     node_features=None,
-                                     padding_mask=None)
+                    if self.node_input:
+                        i = i.to(self.device)
+                        out = self.model(coords=c,
+                                         node_features=i,
+                                         padding_mask=None)
+                    else:
+                        out = self.model(coords=c,
+                                         node_features=None,
+                                         padding_mask=None)
 
-                loss = self.criterion(out[0, :], g)
+                    loss = self.criterion(out[0, :], g)
 
-                loss.backward()  # one backward pass
-                self.optimizer.step()  # update the parameters
+                    loss.backward()  # one backward pass
+                    self.optimizer.step()  # update the parameters
 
-                loss_value = loss.item()
-                self.training_loss.append(loss_value)
+                    loss_value = loss.item()
+                    self.training_loss.append(loss_value)
 
-                self.progress_train(title='DIST training module',
-                                    text_2=epoch_desc,
-                                    text_3=printProgressBar(progress_epoch, self.epochs),
-                                    text_4=f'Training: (loss {loss_value:.4f})',
-                                    text_5=printProgressBar(idx, self.training_DataLoader.__len__()))
+                    self.progress_train(title='DIST training module',
+                                        text_2=epoch_desc,
+                                        text_3=printProgressBar(progress_epoch, self.epochs),
+                                        text_4=f'Training: (loss {loss_value:.4f})',
+                                        text_5=printProgressBar(idx, self.training_DataLoader.__len__()))
+        elif self.type == 'semantic':
+            for idx, (x, y, z, _, cls_g) in enumerate(self.training_DataLoader):
+                for c, i, g, cls in zip(x, y, z, cls_g):
+                    c, g = c.to(self.device), g.to(self.device)
+                    self.optimizer.zero_grad()
 
+                    out, out_cls = self.model(coords=c,
+                                              padding_mask=None)
+
+                    loss = self.criterion(out[0, :], g) + self.criterion(out_cls, cls)
+
+                    loss.backward()  # one backward pass
+                    loss.backward()  # one backward pass
+                    self.optimizer.step()  # update the parameters
+
+                    loss_value = loss.item()
+                    self.training_loss.append(loss_value)
+
+                    self.progress_train(title='DIST training module',
+                                        text_2=epoch_desc,
+                                        text_3=printProgressBar(progress_epoch, self.epochs),
+                                        text_4=f'Training: (loss {loss_value:.4f})',
+                                        text_5=printProgressBar(idx, self.training_DataLoader.__len__()))
         """ Save current learning rate """
         self.learning_rate.append(self.optimizer.param_groups[0]['lr'])
 
@@ -202,40 +228,68 @@ class Trainer:
         F1_mean = []
 
         with torch.no_grad():
-            for idx, (x, y, z, _) in enumerate(self.validation_DataLoader):
-                for c, i, g in zip(x, y, z):
-                    c, target = c.to(self.device), g.to(self.device)
+            if self.type == 'instance':
+                for idx, (x, y, z, _) in enumerate(self.validation_DataLoader):
+                    for c, i, g in zip(x, y, z):
+                        c, target = c.to(self.device), g.to(self.device)
 
-                    if self.node_input:
-                        i = i.to(self.device)
-                        out = self.model(coords=c,
-                                         node_features=i,
-                                         padding_mask=None)
-                    else:
-                        out = self.model(coords=c,
-                                         node_features=None,
-                                         padding_mask=None)
+                        if self.node_input:
+                            i = i.to(self.device)
+                            out = self.model(coords=c,
+                                             node_features=i,
+                                             padding_mask=None)
+                        else:
+                            out = self.model(coords=c,
+                                             node_features=None,
+                                             padding_mask=None)
 
-                    out = out[0, :]
-                    loss = self.criterion(out,
-                                          target)
-                    out = torch.where(torch.sigmoid(out) > 0.5, 1, 0)
+                        out = out[0, :]
+                        loss = self.criterion(out,
+                                              target)
+                        out = torch.where(torch.sigmoid(out) > 0.5, 1, 0)
 
-                    acc, prec, recall, f1 = self.calculate_F1(logits=out,
-                                                              targets=target)
+                        acc, prec, recall, f1 = self.calculate_F1(logits=out,
+                                                                  targets=target)
 
-                    # Avg. precision score
-                    valid_losses.append(loss.item())
-                    accuracy_mean.append(acc)
-                    precision_mean.append(prec)
-                    recall_mean.append(recall)
-                    F1_mean.append(f1)
+                        # Avg. precision score
+                        valid_losses.append(loss.item())
+                        accuracy_mean.append(acc)
+                        precision_mean.append(prec)
+                        recall_mean.append(recall)
+                        F1_mean.append(f1)
 
-                self.progress_train(title='DIST training module',
-                                    text_2=epoch_desc,
-                                    text_3=printProgressBar(progress_epoch, self.epochs),
-                                    text_4=f'Validation: (loss {loss.item():.4f})',
-                                    text_5=printProgressBar(idx, self.validation_DataLoader.__len__()))
+                    self.progress_train(title='DIST training module',
+                                        text_2=epoch_desc,
+                                        text_3=printProgressBar(progress_epoch, self.epochs),
+                                        text_4=f'Validation: (loss {loss.item():.4f})',
+                                        text_5=printProgressBar(idx, self.validation_DataLoader.__len__()))
+            elif self.type == 'semantic':
+                for idx, (x, y, z, _, cls_g) in enumerate(self.validation_DataLoader):
+                    for c, i, g, cls in zip(x, y, z, cls_g):
+                        c, target = c.to(self.device), g.to(self.device)
+
+                        out, out_cls = self.model(coords=c,
+                                                  padding_mask=None)
+
+                        loss = self.criterion(out[0, :], target) + self.criterion(out_cls, cls)
+
+                        acc, \
+                            prec, recall, \
+                            f1 = self.calculate_F1(logits=torch.where(torch.sigmoid(out[0, :]) > 0.5, 1, 0),
+                                                   targets=target)
+
+                        # Avg. precision score
+                        valid_losses.append(loss.item())
+                        accuracy_mean.append(acc)
+                        precision_mean.append(prec)
+                        recall_mean.append(recall)
+                        F1_mean.append(f1)
+
+                    self.progress_train(title='DIST training module',
+                                        text_2=epoch_desc,
+                                        text_3=printProgressBar(progress_epoch, self.epochs),
+                                        text_4=f'Validation: (loss {loss.item():.4f})',
+                                        text_5=printProgressBar(idx, self.validation_DataLoader.__len__()))
 
         self.validation_loss.append(np.mean(valid_losses))
         self.accuracy.append(np.mean(accuracy_mean))

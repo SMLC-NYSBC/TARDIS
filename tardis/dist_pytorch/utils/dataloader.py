@@ -121,6 +121,11 @@ class GraphDataset(Dataset):
         if self.img_dir is None:
             coord[:, 1:] = coord[:, 1:] / dist  # Normalize point cloud
 
+            if self.mesh:
+                classes = coord[:, 0]
+            else:
+                classes = None
+
             if self.voxal_size[i, 0] == 0:
                 VD = VoxalizeDataSetV2(coord=coord,
                                        image=None,
@@ -128,6 +133,7 @@ class GraphDataset(Dataset):
                                        drop_rate=1,
                                        downsampling_threshold=self.downsampling,
                                        downsampling_rate=None,
+                                       label_cls=classes,
                                        graph=True)
             else:
                 VD = VoxalizeDataSetV2(coord=coord,
@@ -136,6 +142,7 @@ class GraphDataset(Dataset):
                                        drop_rate=1,
                                        downsampling_threshold=self.downsampling,
                                        downsampling_rate=None,
+                                       label_cls=classes,
                                        graph=True)
         else:
             if self.voxal_size[i, 0] == 0:
@@ -145,6 +152,7 @@ class GraphDataset(Dataset):
                                        drop_rate=1,
                                        downsampling_threshold=self.downsampling,
                                        downsampling_rate=None,
+                                       label_cls=None,
                                        graph=True)
             else:
                 VD = VoxalizeDataSetV2(coord=coord,
@@ -153,11 +161,17 @@ class GraphDataset(Dataset):
                                        drop_rate=1,
                                        downsampling_threshold=self.downsampling,
                                        downsampling_rate=None,
+                                       label_cls=None,
                                        graph=True)
 
-        coords_v, imgs_v, graph_v, output_idx = VD.voxalize_dataset(mesh=self.mesh,
-                                                                    out_idx=True,
-                                                                    prune=10)
+        if classes is not None:
+            coords_v, imgs_v, graph_v, output_idx, cls_idx = VD.voxalize_dataset(mesh=self.mesh,
+                                                                                 out_idx=True,
+                                                                                 prune=10)
+        else:
+            coords_v, imgs_v, graph_v, output_idx = VD.voxalize_dataset(mesh=self.mesh,
+                                                                        out_idx=True,
+                                                                        prune=10)
 
         # Store initial patch size for each data to speed up computation
         if self.voxal_size[i, 0] == 0:
@@ -167,8 +181,10 @@ class GraphDataset(Dataset):
             for id, c in enumerate(coords_v):
                 coords_v[id] = c / dist
 
-        # return [c / pc_median_dist(c, False) for c in coords_v], imgs_v, graph_v, output_idx
-        return coords_v, imgs_v, graph_v, output_idx
+        if classes is not None:
+            return coords_v, imgs_v, graph_v, output_idx, cls_idx
+        else:
+            return coords_v, imgs_v, graph_v, output_idx
 
 
 class PredictDataset(Dataset):

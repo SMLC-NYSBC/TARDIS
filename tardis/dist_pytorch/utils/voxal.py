@@ -48,8 +48,9 @@ class VoxalizeDataSetV2:
                  voxal_3d=False,
                  downsampling_threshold=500,
                  downsampling_rate: Optional[float] = None,
-                 init_voxal_size=10000,
+                 init_voxal_size=0,
                  drop_rate=1,
+                 label_cls=None,
                  graph=True,
                  tensor=True):
         # Global data setting
@@ -66,6 +67,7 @@ class VoxalizeDataSetV2:
         self.image = image
         self.torch_output = tensor
         self.graph_output = graph
+        self.label_cls = label_cls
 
         # Point cloud downsampling setting
         self.downsampling_threshold = downsampling_threshold
@@ -74,7 +76,7 @@ class VoxalizeDataSetV2:
         # Voxal setting
         self.voxal_3d = voxal_3d
         self.voxal_patch_size = init_voxal_size
-        self.expand = 0.025  # Expand boundary box by 2.5%
+        self.expand = 0.025  # Expand boundary box by 25%
         self.size_expand = init_voxal_size * self.expand
         self.voxal_size = 0.15  # Create 25% overlaps between voxals
         self.voxal_stride = init_voxal_size * self.voxal_size
@@ -259,7 +261,7 @@ class VoxalizeDataSetV2:
         if self.downsampling_rate is not None:
             self.coord = self.coord[self.voxal_downsampling(self.coord), :]
 
-        if self.coord.shape[0] <= self.downsampling_threshold:
+        if self.coord.shape[0] <= 500:
             voxal_coord_x = b_box[1][0] - ((abs(b_box[0][0]) + abs(b_box[1][0])) / 2)
             voxal_coord_y = b_box[1][1] - ((abs(b_box[0][1]) + abs(b_box[1][1])) / 2)
 
@@ -285,7 +287,7 @@ class VoxalizeDataSetV2:
         break_if = 0
 
         drop_rate = self.drop_rate
-        while not all(i <= self.downsampling_threshold for i in piv):
+        while not all(i <= 500 for i in piv):
             self.voxal_patch_size = self.voxal_patch_size - self.drop_rate
 
             if self.voxal_patch_size <= 0:
@@ -373,8 +375,11 @@ class VoxalizeDataSetV2:
 
             if out_idx:
                 output_idx.append(np.where(coord_ds)[0])
+            if self.label_cls is not None:
+                cls_voxal = [self.label_cls]
         else:
             all_voxal = []
+            cls_voxal = []
             for i in voxals_idx:
                 all_voxal.append(self.points_in_voxal(voxals_centers[i]))
 
@@ -431,6 +436,7 @@ class VoxalizeDataSetV2:
                         graph_voxal.append(self.output_format(build_graph()))
 
                     coord_voxal.append(self.output_format(df_voxal[coord_ds, :]))
+
                     if self.image is not None:
                         img_voxal.append(self.output_format(df_img[coord_ds, :]))
                     else:
@@ -439,7 +445,23 @@ class VoxalizeDataSetV2:
                     if out_idx:
                         output_idx.append(output_df[coord_ds])
 
-        if self.graph_output:
-            return coord_voxal, img_voxal, graph_voxal, output_idx
+                    if self.label_cls is not None:
+                        cls_df = self.label_cls[df_voxal_keep]
+                        cls_new = np.empty((cls_df.shape[0], 200))
+                        for id, i in enumerate(cls_df):
+                            df = np.empty((1, 200))
+                            df[0, int(i)] = 1
+                            cls_new[id, :] = df
+
+                        cls_voxal.append(cls_new)
+
+        if self.label_cls is not None:
+            if self.graph_output:
+                return coord_voxal, img_voxal, graph_voxal, output_idx, cls_voxal
+            else:
+                return coord_voxal, img_voxal, output_idx, cls_voxal
         else:
-            return coord_voxal, img_voxal, output_idx
+            if self.graph_output:
+                return coord_voxal, img_voxal, graph_voxal, output_idx
+            else:
+                return coord_voxal, img_voxal, output_idx

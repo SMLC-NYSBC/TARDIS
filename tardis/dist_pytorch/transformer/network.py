@@ -37,7 +37,7 @@ class DIST(nn.Module):
     def __init__(self,
                  n_out=1,
                  node_input=None,
-                 node_dim=256,
+                 node_dim=None,
                  edge_dim=128,
                  num_layers=6,
                  num_heads=8,
@@ -175,7 +175,7 @@ class C_DIST(nn.Module):
 
         if self.predict:
             self.logits_sigmoid = nn.Sigmoid()
-            self.logits_cls_softmax = nn.Softmax(dim=1)
+        self.logits_cls_softmax = nn.Softmax(dim=2)
 
     def embed_input(self,
                     coords: torch.Tensor,
@@ -202,14 +202,15 @@ class C_DIST(nn.Module):
 
         """ Predict the graph edges """
         logits = self.decoder(z + z.transpose(1, 2))  # symmetries z
-        logits = logits.permute(0, 3, 1, 2)  # Batch x Channels x Length x Length
+        logits = logits.permute(0, 3, 1, 2)
 
-        diag = np.arange(logits.shape[1])
+        diag = np.arange(logits.shape[2])
+
         # Batch x Length x Channels
         logits_cls = self.decoder_cls((z + z.transpose(1, 2))[:, diag, diag, :])
+        logits_cls = self.logits_cls_softmax(logits_cls)  # Batch x Length x Channel
 
         if self.predict:
-            logits_cls = self.logits_cls_softmax(logits_cls)
-            logits = self.logits_sigmoid(logits)
-
+            logits = self.logits_sigmoid(logits)  # Batch x Channels x Length x Length
+            logits = torch.argmax(logits_cls, 2)  # Batch x Length
         return logits, logits_cls

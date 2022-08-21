@@ -59,7 +59,7 @@ def preprocess_data(coord: str,
             coord_label = amira_import.get_segmented_points()
             pixel_size = amira_import.get_pixel_size()
     elif coord[-4:] == '.ply':
-        coord_label = load_ply(ply=coord, downsample=0.035)
+        coord_label = load_ply(ply=coord, downsample=0.05)
         pixel_size = None
 
     """Coordinates without labels"""
