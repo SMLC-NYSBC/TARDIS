@@ -124,7 +124,7 @@ class GraphDataset(Dataset):
         if self.img_dir is None:
             coord[:, 1:] = coord[:, 1:] / dist  # Normalize point cloud
 
-            if self.mesh:
+            if self.mesh and self.datatype:
                 classes = coord[:, 0]
             else:
                 classes = None
@@ -174,7 +174,7 @@ class GraphDataset(Dataset):
                                                                                  out_idx=True,
                                                                                  prune=10)
         else:
-            coords_v, imgs_v, graph_v, output_idx = VD.voxalize_dataset(mesh=self.mesh,
+            coords_v, imgs_v, graph_v, output_idx, _ = VD.voxalize_dataset(mesh=self.mesh,
                                                                         out_idx=True,
                                                                         prune=10)
 

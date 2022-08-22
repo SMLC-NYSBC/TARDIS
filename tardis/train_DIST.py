@@ -274,7 +274,11 @@ def main(pointcloud_dir: str,
                                shuffle=False,
                                pin_memory=True)
 
-    coord, img, graph, _, cls = next(iter(dl_train_graph))
+    if train_dataset:
+        coord, img, graph, _, cls = next(iter(dl_train_graph))
+    else:
+        coord, img, graph, _ , _ = next(iter(dl_train_graph))
+
     print(f'cord = shape: {coord[0].shape}; '
           f'type: {coord[0].dtype}')
     print(f'img = shape: {img[0].shape}; '
@@ -282,9 +286,6 @@ def main(pointcloud_dir: str,
     print(f'graph = shape: {graph[0].shape}; '
           f'class: {graph[0].unique()}; '
           f'type: {graph[0].dtype}')
-    print(f'graph = shape: {graph[0].shape}; '
-          f'class: {cls[0].unique()}; '
-          f'type: {cls[0].dtype}')
 
     if patch_size is not None:
         if coord[0].shape[2] == 2:

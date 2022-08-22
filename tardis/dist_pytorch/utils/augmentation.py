@@ -62,9 +62,9 @@ def preprocess_data(coord: str,
     elif coord[-4:] == '.ply':
         pixel_size = None
         if datatype:
-            coord_label = load_ply(ply=coord, downsample=0.05)
+            coord_label = load_ply(ply=coord, downsample=0.1, scannet_data=True)
         else:
-            coord_label = load_ply(ply=coord, downsample=0.02)
+            coord_label = load_ply(ply=coord, downsample=0.03, scannet_data=False)
 
     """Coordinates without labels"""
     coords = coord_label[:, 1:]

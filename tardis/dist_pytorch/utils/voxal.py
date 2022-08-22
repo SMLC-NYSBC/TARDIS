@@ -448,13 +448,16 @@ class VoxalizeDataSetV2:
                     if self.label_cls is not None:
                         cls_df = self.label_cls[df_voxal_keep]
                         cls_new = np.zeros((cls_df.shape[0], 200))
+                    else:
+                        cls_df = [0]
+                        cls_new = np.zeros((1, 200))
 
-                        for id, i in enumerate(cls_df):
-                            df = np.zeros((1, 200))
-                            df[0, int(i)] = 1
-                            cls_new[id, :] = df
+                    for id, i in enumerate(cls_df):
+                        df = np.zeros((1, 200))
+                        df[0, int(i)] = 1
+                        cls_new[id, :] = df
 
-                        cls_voxal.append(cls_new)
+                    cls_voxal.append(cls_new)
 
         if self.label_cls is not None:
             if self.graph_output:

@@ -425,7 +425,7 @@ def import_am(img: str):
 
 def load_ply(ply,
              downsample: Optional[None] = 0.035,
-             data: Optional[None] = 'scannet'):
+             scannet_data=True):
     """
     Loader for .ply files. .ply converted to point cloud and colors are used as labeling
 
@@ -648,7 +648,7 @@ def load_ply(ply,
     coord = np.asarray(pcd.points)
     label = np.asarray(pcd.colors)
 
-    if data == 'scannet':
+    if scannet_data:
         label_id = []
         for i in label:
             # Get RGB
