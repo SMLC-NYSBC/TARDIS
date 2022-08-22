@@ -277,7 +277,7 @@ def main(pointcloud_dir: str,
     if train_dataset:
         coord, img, graph, _, cls = next(iter(dl_train_graph))
     else:
-        coord, img, graph, _ , _ = next(iter(dl_train_graph))
+        coord, img, graph, _, _ = next(iter(dl_train_graph))
 
     print(f'cord = shape: {coord[0].shape}; '
           f'type: {coord[0].dtype}')

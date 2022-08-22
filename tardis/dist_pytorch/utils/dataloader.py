@@ -175,8 +175,8 @@ class GraphDataset(Dataset):
                                                                                  prune=10)
         else:
             coords_v, imgs_v, graph_v, output_idx, _ = VD.voxalize_dataset(mesh=self.mesh,
-                                                                        out_idx=True,
-                                                                        prune=10)
+                                                                           out_idx=True,
+                                                                           prune=10)
 
         # Store initial patch size for each data to speed up computation
         if self.voxal_size[i, 0] == 0:
