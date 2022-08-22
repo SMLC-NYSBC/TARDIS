@@ -160,7 +160,7 @@ class Trainer:
                             text_5=printProgressBar(0, self.training_DataLoader.__len__()))
 
         if self.type == 'instance':
-            for idx, (x, y, z, _) in enumerate(self.training_DataLoader):
+            for idx, (x, y, z, _, _) in enumerate(self.training_DataLoader):
                 for c, i, g in zip(x, y, z):
                     c, g = c.to(self.device), g.to(self.device)
                     self.optimizer.zero_grad()
@@ -229,7 +229,7 @@ class Trainer:
 
         with torch.no_grad():
             if self.type == 'instance':
-                for idx, (x, y, z, _) in enumerate(self.validation_DataLoader):
+                for idx, (x, y, z, _, _) in enumerate(self.validation_DataLoader):
                     for c, i, g in zip(x, y, z):
                         c, target = c.to(self.device), g.to(self.device)
 

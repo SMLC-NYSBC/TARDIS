@@ -20,8 +20,8 @@ def _DataSetFormat(coord: np.ndarray,
 
         # Correct 2D to 3D
         if coord.shape[1] == 3:
-            coord = np.vstack(
-                (coord[:, 0], coord[:, 1], coord[:, 2], np.zeros((coord.shape[0], )))).T
+            coord = np.vstack((coord[:, 0], coord[:, 1], coord[:, 2],
+                               np.zeros((coord.shape[0], )))).T
     else:
         if coord.shape[1] not in [2, 3]:
             check = False

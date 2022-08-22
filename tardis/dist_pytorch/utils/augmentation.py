@@ -10,6 +10,7 @@ from tardis.slcpy.utils.load_data import ImportDataFromAmira, load_ply
 def preprocess_data(coord: str,
                     image: Optional[str] = None,
                     size: Optional[int] = None,
+                    datatype=True,
                     include_label=True,
                     pixel_size=None,
                     normalization: Optional[str] = 'simple',
@@ -59,8 +60,11 @@ def preprocess_data(coord: str,
             coord_label = amira_import.get_segmented_points()
             pixel_size = amira_import.get_pixel_size()
     elif coord[-4:] == '.ply':
-        coord_label = load_ply(ply=coord, downsample=0.05)
         pixel_size = None
+        if datatype:
+            coord_label = load_ply(ply=coord, downsample=0.05)
+        else:
+            coord_label = load_ply(ply=coord, downsample=0.02)
 
     """Coordinates without labels"""
     coords = coord_label[:, 1:]
@@ -185,7 +189,7 @@ class BuildGraph:
                 if coord_df.shape[0] > 5:
                     nbrs = NearestNeighbors(n_neighbors=5, algorithm='ball_tree').fit(coord_df)
                     _, indices = nbrs.kneighbors(coord_df)
-                    indices = indices[:, 1:]  # 5 KNN for each node
+                    indices = indices[:, 1:]  # 4 KNN for each node
 
                     for j, id in zip(points_in_contour, indices):
                         # Self connection

@@ -78,7 +78,7 @@ class VoxalizeDataSetV2:
         self.voxal_patch_size = init_voxal_size
         self.expand = 0.025  # Expand boundary box by 25%
         self.size_expand = init_voxal_size * self.expand
-        self.voxal_size = 0.15  # Create 25% overlaps between voxals
+        self.voxal_size = 0.25  # Create 25% overlaps between voxals
         self.voxal_stride = init_voxal_size * self.voxal_size
         self.drop_rate = drop_rate
 

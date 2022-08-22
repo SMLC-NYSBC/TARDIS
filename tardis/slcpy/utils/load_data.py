@@ -424,7 +424,8 @@ def import_am(img: str):
 
 
 def load_ply(ply,
-             downsample: Optional[None] = 0.035):
+             downsample: Optional[None] = 0.035,
+             data: Optional[None] = 'scannet'):
     """
     Loader for .ply files. .ply converted to point cloud and colors are used as labeling
 
@@ -647,14 +648,21 @@ def load_ply(ply,
     coord = np.asarray(pcd.points)
     label = np.asarray(pcd.colors)
 
-    label_id = []
-    for i in label:
-        color_df = label_org[np.where(label_org == label_org[KDTree(label_org).query(i)[1]])[0][0]] * 255
+    if data == 'scannet':
+        label_id = []
+        for i in label:
+            # Get RGB
+            color_df = label_org[np.where(label_org == label_org[KDTree(label_org).query(i)[1]])[0][0]] * 255
 
-        color_id = [key for key in SCANNET_COLOR_MAP_200 if np.all(SCANNET_COLOR_MAP_200[key] == color_df)]
-        if len(color_id) > 0:
-            label_id.append(color_id[0])
-        else:
-            label_id.append(0)
+            color_id = [key for key in SCANNET_COLOR_MAP_200 if np.all(SCANNET_COLOR_MAP_200[key] == color_df)]
+            if len(color_id) > 0:
+                label_id.append(color_id[0])
+            else:
+                label_id.append(0)
+    else:
+        label_id = []
+        label_org = np.unique(np.asarray(pcd.colors), axis=0)
+        for i in label:
+            label_id.append(np.where(i == label_org)[0][0])
 
     return np.hstack((np.asarray(label_id)[:, None], coord))

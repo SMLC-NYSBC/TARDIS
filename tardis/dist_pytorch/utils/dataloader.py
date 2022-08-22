@@ -45,6 +45,7 @@ class GraphDataset(Dataset):
                  downsampling_rate: Optional[float] = None,
                  normalize="simple",
                  mesh=False,
+                 datatype=True,
                  memory_save=True):
         # Coord setting
         self.coord_dir = coord_dir
@@ -69,6 +70,7 @@ class GraphDataset(Dataset):
 
         # Graph setting
         self.mesh = mesh
+        self.datatype = datatype
 
     def __len__(self):
         return len(self.ids)
@@ -100,6 +102,7 @@ class GraphDataset(Dataset):
 
         # Pre process coord and image data also, if exist remove duplicates
         coord, img = preprocess_data(coord=coord_file,
+                                     datatype=self.datatype,
                                      image=img_file,
                                      include_label=True,
                                      size=self.size,

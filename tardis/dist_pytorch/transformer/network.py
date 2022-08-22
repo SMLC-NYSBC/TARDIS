@@ -212,5 +212,5 @@ class C_DIST(nn.Module):
 
         if self.predict:
             logits = self.logits_sigmoid(logits)  # Batch x Channels x Length x Length
-            logits = torch.argmax(logits_cls, 2)  # Batch x Length
+            logits_cls = torch.argmax(logits_cls, 2)  # Batch x Length
         return logits, logits_cls
