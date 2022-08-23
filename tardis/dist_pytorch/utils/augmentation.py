@@ -3,8 +3,8 @@ from typing import Optional
 import numpy as np
 import tifffile.tifffile as tiff
 from skimage import exposure
-from sklearn.neighbors import NearestNeighbors
 from tardis.slcpy.utils.load_data import ImportDataFromAmira, load_ply
+from sklearn.neighbors import KDTree
 
 
 def preprocess_data(coord: str,
@@ -187,23 +187,28 @@ class BuildGraph:
                 coord_df = self.coord[points_in_contour]
 
                 if coord_df.shape[0] > 5:
-                    nbrs = NearestNeighbors(n_neighbors=5, algorithm='ball_tree').fit(coord_df)
-                    _, indices = nbrs.kneighbors(coord_df)
-                    indices = indices[:, 1:]  # 4 KNN for each node
+                    # nbrs = NN(n_neighbors=5, algorithm='ball_tree').fit(coord_df)
+                    # _, indices = nbrs.kneighbors(coord_df)
+                    # indices = indices[:, 1:]  # 4 KNN for each node
 
-                    for j, id in zip(points_in_contour, indices):
+                    for j in points_in_contour:
+                        tree = KDTree(coord_df, leaf_size=coord_df.shape[0])
+                        _, match_coord = tree.query(self.coord[j].reshape(1, -1), k=5)
+                        match_coord = match_coord[0]  # 5 KNN
+                        knn = [x for id, x in enumerate(points_in_contour) if id in match_coord]
+
                         # Self connection
                         self.graph[j, j] = 1
 
-                        # Triangular connection
-                        self.graph[j, points_in_contour[id[0]]] = 1
-                        self.graph[points_in_contour[id[0]], j] = 1
+                        # Pentangular connection
+                        self.graph[j, knn] = 1
+                        self.graph[knn, j] = 1
 
-                        self.graph[j, points_in_contour[id[1]]] = 1
-                        self.graph[points_in_contour[id[1]], j] = 1
+                        self.graph[j, knn] = 1
+                        self.graph[knn, j] = 1
 
-                        self.graph[j, points_in_contour[id[2]]] = 1
-                        self.graph[points_in_contour[id[2]], j] = 1
+                        self.graph[j, knn] = 1
+                        self.graph[knn, j] = 1
                 else:
                     for j in points_in_contour:
                         self.graph[j, j] = 1
@@ -228,7 +233,7 @@ class BuildGraph:
                         self.graph[j, j - 1] = 1
                         self.graph[j - 1, j] = 1
 
-                # Check euclidian distance between fist and last point. if shorter then
+                # Check euclidean distance between fist and last point. if shorter then
                 #  10 nm then connect
                 ends_distance = np.linalg.norm(
                     self.coord[points_in_contour[0]][1:] - self.coord[points_in_contour[-1]][1:])

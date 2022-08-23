@@ -247,21 +247,21 @@ class VoxalizeDataSetV2:
 
     def optimize_voxal_size(self):
         """
-        Build voxals
+        Build Patches
 
-        Function search for the optimal voxals based on the number of points
+        Function search for the optimal patches based on the number of points
 
         Return:
-            voxals_coord: List of coordinates for the voxals centers
-            voxals_idx: List of voxal that contains points
+            patch_coord: List of coordinates for the patch centers
+            patch_idx: List of patch that contains points
         """
-        # Initial check for voxalization
+        """ Initial check for patches """
         b_box = self.boundary_box()
 
         if self.downsampling_rate is not None:
             self.coord = self.coord[self.voxal_downsampling(self.coord), :]
 
-        if self.coord.shape[0] <= 500:
+        if self.coord.shape[0] <= self.downsampling_threshold:
             voxal_coord_x = b_box[1][0] - ((abs(b_box[0][0]) + abs(b_box[1][0])) / 2)
             voxal_coord_y = b_box[1][1] - ((abs(b_box[0][1]) + abs(b_box[1][1])) / 2)
 
@@ -340,15 +340,12 @@ class VoxalizeDataSetV2:
             out_idx: If True, return point id of points in each voxal
             prune: Prune voxal with less then given number of nodes
         """
-        """ Find optimal patch centers """
-        voxals_centers, voxals_idx = self.optimize_voxal_size()
-
         coord_voxal = []
         img_voxal = []
         graph_voxal = []
         output_idx = []
 
-        if len(voxals_idx) == 1:  # No patching for PC below threshold
+        if self.coord.shape[0] <= self.downsampling_threshold:  # No patching for PC below threshold
             """ Transform 2D coord to 3D of shape [Z, Y, X] """
             if self.coord.shape[1] == 2:
                 coord_ds = np.vstack((self.coord[:, 0],
@@ -357,7 +354,7 @@ class VoxalizeDataSetV2:
             else:
                 coord_ds = self.coord
 
-            """DEPRECIATED; Optionally - downsampling for each patch """
+            """ DEPRECIATED; Optionally - downsampling for each patch """
             coord_ds = self.voxal_downsampling(coord_ds)
 
             """ Build point cloud for each patch """
@@ -372,6 +369,8 @@ class VoxalizeDataSetV2:
             """ Optionally - Build graph for each patch """
             if self.graph_output:
                 coord_label = self.segments_id[coord_ds, :]
+                coord_label = self.normalize_idx(coord_label)
+
                 build_graph = BuildGraph(coord=coord_label,
                                          mesh=mesh,
                                          pixel_size=None)
@@ -384,8 +383,11 @@ class VoxalizeDataSetV2:
             if self.label_cls is not None:
                 cls_voxal = [self.label_cls]
             else:
-                cls_voxal = [0]
+                cls_voxal = [self.output_format(np.zeros((1, 1)))]
         else:  # Build patches for PC with max num. of point per patch
+            """ Find optimal patch centers """
+            voxals_centers, voxals_idx = self.optimize_voxal_size()
+
             all_voxal = []
             cls_voxal = []
 
@@ -395,7 +397,7 @@ class VoxalizeDataSetV2:
 
             """ Combine smaller patches with threshold limit """
             new_voxal = []
-            while len(all_voxal) > 2:
+            while len(all_voxal) > 0:
                 df = all_voxal[0]
                 i = 1
 
@@ -413,10 +415,10 @@ class VoxalizeDataSetV2:
                     new_voxal.append(df)
                     all_voxal.pop(0)
 
-            voxals_idx = new_voxal
+            all_voxal = new_voxal
 
             """ Build patches """
-            for i in voxals_idx:
+            for i in all_voxal:
                 """ Find points and optional images for each patch"""
                 df_voxal_keep = i
 
