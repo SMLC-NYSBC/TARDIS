@@ -207,10 +207,11 @@ class C_DIST(nn.Module):
         diag = np.arange(logits.shape[2])
 
         # Batch x Length x Channels
-        logits_cls = self.decoder_cls((z + z.transpose(1, 2))[:, diag, diag, :])
+        logits_cls = self.decoder_cls(z)[:, diag, diag, :]
         logits_cls = self.logits_cls_softmax(logits_cls)  # Batch x Length x Channel
 
         if self.predict:
             logits = self.logits_sigmoid(logits)  # Batch x Channels x Length x Length
             logits_cls = torch.argmax(logits_cls, 2)  # Batch x Length
+
         return logits, logits_cls

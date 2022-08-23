@@ -332,9 +332,7 @@ class VoxalizeDataSetV2:
         return self.voxal_patch_size
 
     def voxalize_dataset(self,
-                         mesh=False,
-                         out_idx=True,
-                         prune=0):
+                         mesh=False):
         """
         Main function used to build voxalized dataset
 
@@ -342,7 +340,7 @@ class VoxalizeDataSetV2:
             out_idx: If True, return point id of points in each voxal
             prune: Prune voxal with less then given number of nodes
         """
-        # Build voxal dataset
+        """ Find optimal patch centers """
         voxals_centers, voxals_idx = self.optimize_voxal_size()
 
         coord_voxal = []
@@ -350,8 +348,8 @@ class VoxalizeDataSetV2:
         graph_voxal = []
         output_idx = []
 
-        if len(voxals_idx) == 1:
-            # Transform 2D coord to 3D of shape [Z, Y, X]
+        if len(voxals_idx) == 1:  # No patching for PC below threshold
+            """ Transform 2D coord to 3D of shape [Z, Y, X] """
             if self.coord.shape[1] == 2:
                 coord_ds = np.vstack((self.coord[:, 0],
                                       self.coord[:, 1],
@@ -359,31 +357,43 @@ class VoxalizeDataSetV2:
             else:
                 coord_ds = self.coord
 
+            """DEPRECIATED; Optionally - downsampling for each patch """
             coord_ds = self.voxal_downsampling(coord_ds)
 
-            if self.graph_output:
-                coord_label = self.segments_id[coord_ds, :]
-                build_graph = BuildGraph(coord=coord_label,
-                                         pixel_size=None)
-                graph_voxal.append(self.output_format(build_graph()))
-
+            """ Build point cloud for each patch """
             coord_voxal.append(self.output_format(self.coord[coord_ds, :]))
+
+            """ Build img patches for each patch """
             if self.image is not None:
                 img_voxal.append(self.output_format(self.image[coord_ds, :]))
             else:
                 img_voxal.append(self.output_format(np.zeros((1, 1))))
 
-            if out_idx:
-                output_idx.append(np.where(coord_ds)[0])
+            """ Optionally - Build graph for each patch """
+            if self.graph_output:
+                coord_label = self.segments_id[coord_ds, :]
+                build_graph = BuildGraph(coord=coord_label,
+                                         mesh=mesh,
+                                         pixel_size=None)
+                graph_voxal.append(self.output_format(build_graph()))
+
+            """ Build output index for each patch """
+            output_idx.append(np.where(coord_ds)[0])
+
+            """ Build class label index for each patch """
             if self.label_cls is not None:
                 cls_voxal = [self.label_cls]
-        else:
+            else:
+                cls_voxal = [0]
+        else:  # Build patches for PC with max num. of point per patch
             all_voxal = []
             cls_voxal = []
+
+            """ Find all patches """
             for i in voxals_idx:
                 all_voxal.append(self.points_in_voxal(voxals_centers[i]))
 
-            # Combine smaller patches
+            """ Combine smaller patches with threshold limit """
             new_voxal = []
             while len(all_voxal) > 2:
                 df = all_voxal[0]
@@ -405,7 +415,9 @@ class VoxalizeDataSetV2:
 
             voxals_idx = new_voxal
 
+            """ Build patches """
             for i in voxals_idx:
+                """ Find points and optional images for each patch"""
                 df_voxal_keep = i
 
                 if self.image is not None:
@@ -423,49 +435,47 @@ class VoxalizeDataSetV2:
                 else:
                     coord_ds = df_voxal
 
+                """DEPRECIATED; Optionally - downsampling for each patch """
                 coord_ds = self.voxal_downsampling(coord_ds)
 
-                if len(coord_ds) > prune:
-                    if self.graph_output:
-                        segment_voxal = self.segments_id[df_voxal_keep, :]
-                        segment_voxal = self.normalize_idx(segment_voxal[coord_ds, :])
+                """ Build point cloud for each patch """
+                coord_voxal.append(self.output_format(df_voxal[coord_ds, :]))
 
-                        build_graph = BuildGraph(coord=segment_voxal,
-                                                 mesh=mesh,
-                                                 pixel_size=None)
-                        graph_voxal.append(self.output_format(build_graph()))
+                """ Build img patches for each patch """
+                if self.image is not None:
+                    img_voxal.append(self.output_format(df_img[coord_ds, :]))
+                else:
+                    img_voxal.append(self.output_format(df_img))
 
-                    coord_voxal.append(self.output_format(df_voxal[coord_ds, :]))
+                """ Optionally - Build graph for each patch """
+                if self.graph_output:
+                    segment_voxal = self.segments_id[df_voxal_keep, :]
+                    segment_voxal = self.normalize_idx(segment_voxal[coord_ds, :])
 
-                    if self.image is not None:
-                        img_voxal.append(self.output_format(df_img[coord_ds, :]))
-                    else:
-                        img_voxal.append(self.output_format(df_img))
+                    build_graph = BuildGraph(coord=segment_voxal,
+                                             mesh=mesh,
+                                             pixel_size=None)
+                    graph_voxal.append(self.output_format(build_graph()))
 
-                    if out_idx:
-                        output_idx.append(output_df[coord_ds])
+                """ Build output index for each patch """
+                output_idx.append(output_df[coord_ds])
 
-                    if self.label_cls is not None:
-                        cls_df = self.label_cls[df_voxal_keep]
-                        cls_new = np.zeros((cls_df.shape[0], 200))
-                    else:
-                        cls_df = [0]
-                        cls_new = np.zeros((1, 200))
+                """ Build class label index for each patch """
+                if self.label_cls is not None:
+                    cls_df = self.label_cls[df_voxal_keep]
+                    cls_new = np.zeros((cls_df.shape[0], 200))
+                else:
+                    cls_df = [0]
+                    cls_new = np.zeros((1, 200))
 
-                    for id, i in enumerate(cls_df):
-                        df = np.zeros((1, 200))
-                        df[0, int(i)] = 1
-                        cls_new[id, :] = df
+                for id, i in enumerate(cls_df):
+                    df = np.zeros((1, 200))
+                    df[0, int(i)] = 1
+                    cls_new[id, :] = df
 
-                    cls_voxal.append(cls_new)
+                cls_voxal.append(cls_new)
 
-        if self.label_cls is not None:
-            if self.graph_output:
-                return coord_voxal, img_voxal, graph_voxal, output_idx, cls_voxal
-            else:
-                return coord_voxal, img_voxal, output_idx, cls_voxal
+        if self.graph_output:
+            return coord_voxal, img_voxal, graph_voxal, output_idx, cls_voxal
         else:
-            if self.graph_output:
-                return coord_voxal, img_voxal, graph_voxal, output_idx
-            else:
-                return coord_voxal, img_voxal, output_idx
+            return coord_voxal, img_voxal, output_idx, cls_voxal

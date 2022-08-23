@@ -275,7 +275,7 @@ def main(pointcloud_dir: str,
                                pin_memory=True)
 
     if train_dataset:
-        coord, img, graph, _, cls = next(iter(dl_train_graph))
+        coord, img, graph, _, _ = next(iter(dl_train_graph))
     else:
         coord, img, graph, _, _ = next(iter(dl_train_graph))
 
