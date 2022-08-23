@@ -352,12 +352,12 @@ def main(pointcloud_dir: str,
           f"LR = {optimizer.param_groups[0]['lr']}, and "
           f"LRS = {learning_rate_scheduler}")
 
-    print('The Network was build:')
-    print(f"Network: Graphformer, "
-          f"No. of Layers: {gf_layers} with {gf_heads} heads, "
-          f"Each layer is build of {gf_node_dim} nodes, {gf_edge_dim} edges embedding, "
-          f"Image patch size: {patch_size}")
-
+    print_setting = [f"Training is started on {device}",
+                     f"Local dir: {getcwd()}",
+                     f"Training for {gf_type} with No. of Layers: {gf_layers} with {gf_heads} heads",
+                     "Layer are build of {} nodes, {} edges, {} max point per patch".format(gf_node_dim,
+                                                                                            gf_edge_dim,
+                                                                                            dl_downsampling)]
     """Train"""
     train = Trainer(model=model,
                     type=gf_type,
@@ -369,7 +369,8 @@ def main(pointcloud_dir: str,
                     validation_DataLoader=dl_test_graph,
                     epochs=epochs,
                     checkpoint_name='GF',
-                    lr_scheduler=learning_rate_scheduler)
+                    lr_scheduler=learning_rate_scheduler,
+                    print_setting=print_setting)
 
     train.run_training()
 

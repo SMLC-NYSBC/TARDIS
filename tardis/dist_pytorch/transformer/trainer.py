@@ -39,6 +39,7 @@ class Trainer:
                  validation_DataLoader,
                  epochs: int,
                  checkpoint_name: str,
+                 print_setting: tuple,
                  lr_scheduler=None):
         self.f1 = []
         self.recall = []
@@ -64,6 +65,9 @@ class Trainer:
         self.lr_scheduler = lr_scheduler
         self.epochs = epochs
         self.checkpoint_name = checkpoint_name
+        self.print_setting = print_setting
+
+        self.gpu_info = ""
 
     @ staticmethod
     def calculate_F1(logits,
@@ -109,9 +113,26 @@ class Trainer:
             else:
                 epoch_desc = f'Epochs: stop counter {early_stopping.counter}; best F1 {round(np.max(self.f1), 3)}'
 
+            if self.device.type == 'cuda':
+                import nvidia_smi
+                
+                nvidia_smi.nvmlInit()
+                handle = nvidia_smi.nvmlDeviceGetHandleByIndex(self.device.index)
+                info = nvidia_smi.nvmlDeviceGetMemoryInfo(handle)
+                self.gpu_info = "Device {}: {}, Memory : {:.2f}% free".format(self.device.index,
+                                                                            nvidia_smi.nvmlDeviceGetName(handle),
+                                                                            100 * info.free / info.total)
+                nvidia_smi.nvmlShutdown()
+            else:self.gpu_info = " "
+
             self.progress_epoch(title='DIST training module',
-                                text_2=epoch_desc,
-                                text_3=printProgressBar(id, self.epochs))
+                                text_1=self.print_setting[0],
+                                text_2=self.print_setting[1],
+                                text_3=self.print_setting[2],
+                                text_4=self.print_setting[3],
+                                text_5=self.gpu_info,
+                                text_7=epoch_desc,
+                                text_8=printProgressBar(id, self.epochs))
 
             self.model.train()
             self.train(epoch_desc, id)
@@ -154,10 +175,15 @@ class Trainer:
               epoch_desc,
               progress_epoch):
         self.progress_train(title='DIST training module',
-                            text_2=epoch_desc,
-                            text_3=printProgressBar(progress_epoch, self.epochs),
-                            text_4='Training: (loss 1.000)',
-                            text_5=printProgressBar(0, self.training_DataLoader.__len__()))
+                            text_1=self.print_setting[0],
+                            text_2=self.print_setting[1],
+                            text_3=self.print_setting[2],
+                            text_4=self.print_setting[3],
+                            text_5=self.gpu_info,
+                            text_7=epoch_desc,
+                            text_8=printProgressBar(progress_epoch, self.epochs),
+                            text_9='Training: (loss 1.000)',
+                            text_10=printProgressBar(0, self.training_DataLoader.__len__()))
 
         if self.type == 'instance':
             for idx, (x, y, z, _, _) in enumerate(self.training_DataLoader):
@@ -184,10 +210,15 @@ class Trainer:
                     self.training_loss.append(loss_value)
 
                     self.progress_train(title='DIST training module',
-                                        text_2=epoch_desc,
-                                        text_3=printProgressBar(progress_epoch, self.epochs),
-                                        text_4=f'Training: (loss {loss_value:.4f})',
-                                        text_5=printProgressBar(idx, self.training_DataLoader.__len__()))
+                                        text_1=self.print_setting[0],
+                                        text_2=self.print_setting[1],
+                                        text_3=self.print_setting[2],
+                                        text_4=self.print_setting[3],
+                                        text_5=self.gpu_info,
+                                        text_7=epoch_desc,
+                                        text_8=printProgressBar(progress_epoch, self.epochs),
+                                        text_9=f'Training: (loss {loss_value:.4f})',
+                                        text_10=printProgressBar(idx, self.training_DataLoader.__len__()))
         elif self.type == 'semantic':
             for idx, (x, y, z, _, cls_g) in enumerate(self.training_DataLoader):
                 for c, i, g, cls in zip(x, y, z, cls_g):
@@ -207,10 +238,15 @@ class Trainer:
                     self.training_loss.append(loss_value)
 
                     self.progress_train(title='DIST training module',
-                                        text_2=epoch_desc,
-                                        text_3=printProgressBar(progress_epoch, self.epochs),
-                                        text_4=f'Training: (loss {loss_value:.4f})',
-                                        text_5=printProgressBar(idx, self.training_DataLoader.__len__()))
+                                        text_1=self.print_setting[0],
+                                        text_2=self.print_setting[1],
+                                        text_3=self.print_setting[2],
+                                        text_4=self.print_setting[3],
+                                        text_5=self.gpu_info,
+                                        text_7=epoch_desc,
+                                        text_8=printProgressBar(progress_epoch, self.epochs),
+                                        text_9=f'Training: (loss {loss_value:.4f})',
+                                        text_10=printProgressBar(idx, self.training_DataLoader.__len__()))
         """ Save current learning rate """
         self.learning_rate.append(self.optimizer.param_groups[0]['lr'])
 
@@ -259,10 +295,15 @@ class Trainer:
                         F1_mean.append(f1)
 
                     self.progress_train(title='DIST training module',
-                                        text_2=epoch_desc,
-                                        text_3=printProgressBar(progress_epoch, self.epochs),
-                                        text_4=f'Validation: (loss {loss.item():.4f})',
-                                        text_5=printProgressBar(idx, self.validation_DataLoader.__len__()))
+                                        text_1=self.print_setting[0],
+                                        text_2=self.print_setting[1],
+                                        text_3=self.print_setting[2],
+                                        text_4=self.print_setting[3],
+                                        text_5=self.gpu_info,
+                                        text_7=epoch_desc,
+                                        text_8=printProgressBar(progress_epoch, self.epochs),
+                                        text_9=f'Validation: (loss {loss.item():.4f})',
+                                        text_10=printProgressBar(idx, self.validation_DataLoader.__len__()))
             elif self.type == 'semantic':
                 for idx, (x, y, z, _, cls_g) in enumerate(self.validation_DataLoader):
                     for c, i, g, cls in zip(x, y, z, cls_g):
@@ -287,10 +328,15 @@ class Trainer:
                         F1_mean.append(f1)
 
                     self.progress_train(title='DIST training module',
-                                        text_2=epoch_desc,
-                                        text_3=printProgressBar(progress_epoch, self.epochs),
-                                        text_4=f'Validation: (loss {loss.item():.4f})',
-                                        text_5=printProgressBar(idx, self.validation_DataLoader.__len__()))
+                                        text_1=self.print_setting[0],
+                                        text_2=self.print_setting[1],
+                                        text_3=self.print_setting[2],
+                                        text_4=self.print_setting[3],
+                                        text_5=self.gpu_info,
+                                        text_7=epoch_desc,
+                                        text_8=printProgressBar(progress_epoch, self.epochs),
+                                        text_9=f'Validation: (loss {loss.item():.4f})',
+                                        text_10=printProgressBar(idx, self.validation_DataLoader.__len__()))
 
         self.validation_loss.append(np.mean(valid_losses))
         self.accuracy.append(np.mean(accuracy_mean))

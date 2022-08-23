@@ -172,7 +172,7 @@ class GraphDataset(Dataset):
         if classes is not None:
             coords_v, imgs_v, graph_v, output_idx, cls_idx = VD.voxalize_dataset(mesh=self.mesh)
         else:
-            coords_v, imgs_v, graph_v, output_idx, _ = VD.voxalize_dataset(mesh=self.mesh)
+            coords_v, imgs_v, graph_v, output_idx, cls_idx = VD.voxalize_dataset(mesh=self.mesh)
 
         # Store initial patch size for each data to speed up computation
         if self.voxal_size[i, 0] == 0:
@@ -185,7 +185,7 @@ class GraphDataset(Dataset):
         if classes is not None:
             return coords_v, imgs_v, graph_v, output_idx, cls_idx
         else:
-            return coords_v, imgs_v, graph_v, output_idx
+            return coords_v, imgs_v, graph_v, output_idx, cls_idx
 
 
 class PredictDataset(Dataset):
