@@ -363,13 +363,11 @@ class TriangularEdgeUpdate(nn.Module):
     def __init__(self,
                  input_dim,
                  channel_dim=128,
-                 axis=1,
-                 normalize=False):
+                 axis=1):
         super().__init__()
         self.input_dim = input_dim
         self.channel_dim = channel_dim
         self.axis = axis
-        self.normalize = normalize
         self.init_scaling = sqrt(2)
 
         self.norm_input = nn.LayerNorm(input_dim)
@@ -403,13 +401,6 @@ class TriangularEdgeUpdate(nn.Module):
 
         a = torch.sigmoid(self.gate_a(z)) * self.linear_a(z)  # B x L x L x O
         b = torch.sigmoid(self.gate_b(z)) * self.linear_b(z)  # B x L x L x O
-
-        if self.normalize:
-            z_shape = z.shape[1]
-
-            # Normalize for length of point cloud
-            a = a / sqrt(z_shape)
-            b = b / sqrt(z_shape)
 
         if mask is not None:
             mask = mask.unsqueeze(3).expand(mask.size(0),
