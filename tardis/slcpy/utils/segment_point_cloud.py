@@ -133,9 +133,8 @@ class GraphInstanceV2:
         [id][coord][interactions][interaction probability]
 
         Args:
-            graphs: graph voxal output from GraphFormer
-            coord: stitched coord output from GraphFormer or input given to
-                Graphformer
+            graphs: graph voxal output from DIST
+            coord: stitched coord output from DIST
         """
         all_prop = [[id, list(i), [], []] for id, i in enumerate(coord)]
 

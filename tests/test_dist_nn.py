@@ -10,7 +10,7 @@ class TestGraphFormer:
         return torch.rand(shape)
 
     def test_nn_wo_img(self):
-        for n_dim in [256, 128, 64, 32, 16]:
+        for n_dim in [256, 128, 64, 32, 16, None]:
             for e_dim in [256, 128, 64, 32, 16]:
                 for n_layer in [6, 3, 1]:
                     for n_head in [8, 4, 2, 1]:
@@ -31,7 +31,7 @@ class TestGraphFormer:
                               padding_mask=None)
 
     def test_nn_w_img(self):
-        for n_dim in [256, 128, 64, 32, 16]:
+        for n_dim in [256, 128, 64, 32, 16, None]:
             for e_dim in [256, 128, 64, 32, 16]:
                 for n_layer in [6, 3, 1]:
                     for n_head in [8, 4, 2, 1]:

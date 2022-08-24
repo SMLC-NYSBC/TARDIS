@@ -61,6 +61,9 @@ def pc_median_dist(pc: np.ndarray,
         # Calculate KNN dist
         knn = cdist(voxel, voxel)
     else:
+        if isinstance(pc, torch.Tensor):
+            pc = pc.cpu().detach().numpy()
+
         knn = cdist(pc, pc)
 
     if knn.shape[0] < 3:

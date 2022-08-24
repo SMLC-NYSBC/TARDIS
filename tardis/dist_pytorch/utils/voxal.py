@@ -126,6 +126,7 @@ class VoxalizeDataSetV2:
         # Find X positions for voxals
         x_pos = bb_min[0] + (self.voxal_patch_size / 2)
         voxal_positions_x.append(x_pos)
+
         while bb_max[0] > x_pos:
             x_pos = x_pos + self.voxal_patch_size
             voxal_positions_x.append(x_pos)
@@ -277,7 +278,7 @@ class VoxalizeDataSetV2:
 
         # Initial voxalization with self.voxal_patch_size
         if self.voxal_patch_size == 0:
-            self.voxal_patch_size = int(np.max(b_box))
+            self.voxal_patch_size = np.max(b_box)
         voxal_size = self.voxal_patch_size
 
         voxals_coord = self.voxal_centers(boundary_box=b_box)
@@ -287,7 +288,7 @@ class VoxalizeDataSetV2:
         break_if = 0
 
         drop_rate = self.drop_rate
-        while not all(i <= 500 for i in piv):
+        while not all(i <= self.downsampling_threshold for i in piv):
             self.voxal_patch_size = self.voxal_patch_size - self.drop_rate
 
             if self.voxal_patch_size <= 0:

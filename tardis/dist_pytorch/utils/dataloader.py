@@ -1,5 +1,6 @@
-from os import listdir
-from os.path import join, splitext
+from os import listdir, mkdir
+from os.path import isdir, join, splitext
+from shutil import rmtree
 from typing import Optional
 
 import numpy as np
@@ -50,6 +51,10 @@ class GraphDataset(Dataset):
         # Coord setting
         self.coord_dir = coord_dir
         self.coord_format = coord_format
+
+        if isdir(join(self.coord_dir, 'temp')):
+            rmtree(join(self.coord_dir, 'temp'))
+        mkdir(join(self.coord_dir, 'temp'))
 
         # Image setting
         self.img_dir = img_dir
@@ -137,16 +142,8 @@ class GraphDataset(Dataset):
                                        downsampling_threshold=self.downsampling,
                                        downsampling_rate=None,
                                        label_cls=classes,
-                                       graph=True)
-            else:
-                VD = VoxalizeDataSetV2(coord=coord,
-                                       image=None,
-                                       init_voxal_size=self.voxal_size[i, 0],
-                                       drop_rate=1,
-                                       downsampling_threshold=self.downsampling,
-                                       downsampling_rate=None,
-                                       label_cls=classes,
-                                       graph=True)
+                                       graph=True,
+                                       tensor=False)
         else:
             classes = None
 
@@ -158,21 +155,25 @@ class GraphDataset(Dataset):
                                        downsampling_threshold=self.downsampling,
                                        downsampling_rate=None,
                                        label_cls=None,
-                                       graph=True)
-            else:
-                VD = VoxalizeDataSetV2(coord=coord,
-                                       image=None,
-                                       init_voxal_size=self.voxal_size[i, 0],
-                                       drop_rate=1,
-                                       downsampling_threshold=self.downsampling,
-                                       downsampling_rate=None,
-                                       label_cls=None,
-                                       graph=True)
+                                       graph=True,
+                                       tensor=False)
 
-        if classes is not None:
+        if self.voxal_size[i, 0] == 0:
             coords_v, imgs_v, graph_v, output_idx, cls_idx = VD.voxalize_dataset(mesh=self.mesh)
+
+            # save data for faster access later
+            np.save(join(self.coord_dir, 'temp', f'coord_{i}.npy'), np.asarray(coords_v, dtype=object))
+            np.save(join(self.coord_dir, 'temp', f'img_{i}.npy'), np.asarray(imgs_v, dtype=object))
+            np.save(join(self.coord_dir, 'temp', f'graph_{i}.npy'), np.asarray(graph_v, dtype=object))
+            np.save(join(self.coord_dir, 'temp', f'out_{i}.npy'), np.asarray(output_idx, dtype=object))
+            np.save(join(self.coord_dir, 'temp', f'cls_{i}.npy'), np.asarray(cls_idx, dtype=object))
         else:
-            coords_v, imgs_v, graph_v, output_idx, cls_idx = VD.voxalize_dataset(mesh=self.mesh)
+            # Load pre-process data
+            coords_v = np.load(join(self.coord_dir, 'temp', f'coord_{i}.npy'), allow_pickle=True)
+            imgs_v = np.load(join(self.coord_dir, 'temp', f'img_{i}.npy'), allow_pickle=True)
+            graph_v = np.load(join(self.coord_dir, 'temp', f'graph_{i}.npy'), allow_pickle=True)
+            output_idx = np.load(join(self.coord_dir, 'temp', f'out_{i}.npy'), allow_pickle=True)
+            cls_idx = np.load(join(self.coord_dir, 'temp', f'cls_{i}.npy'), allow_pickle=True)
 
         # Store initial patch size for each data to speed up computation
         if self.voxal_size[i, 0] == 0:
@@ -182,10 +183,13 @@ class GraphDataset(Dataset):
             for id, c in enumerate(coords_v):
                 coords_v[id] = c / dist
 
-        if classes is not None:
-            return coords_v, imgs_v, graph_v, output_idx, cls_idx
-        else:
-            return coords_v, imgs_v, graph_v, output_idx, cls_idx
+        coords_v = [torch.Tensor(co.astype(np.float32)).type(torch.float32) for co in coords_v]
+        imgs_v = [torch.Tensor(im.astype(np.float32)).type(torch.float32) for im in imgs_v]
+        graph_v = [torch.Tensor(gr.astype(np.float32)).type(torch.float32) for gr in graph_v]
+        output_idx = [torch.Tensor(ou.astype(np.float32)).type(torch.float32) for ou in output_idx]
+        cls_idx = [torch.Tensor(cx.astype(np.float32)).type(torch.float32) for cx in cls_idx]
+
+        return coords_v, imgs_v, graph_v, output_idx, cls_idx
 
 
 class PredictDataset(Dataset):

@@ -83,7 +83,7 @@ from tardis.version import version
               help='If 0, dropout is turn-off. Else indicate dropout rate',
               show_default=True)
 @click.option('-gs', '--gf_sigma',
-              default=5,
+              default=2,
               type=float,
               help='Sigma value for distance embedding',
               show_default=True)
