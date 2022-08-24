@@ -1,3 +1,4 @@
+from turtle import forward
 from typing import Optional
 
 import torch
@@ -65,8 +66,7 @@ class DiceLoss(nn.Module):
 
         # Calculate dice loss
         intersection = (logits * targets).sum()
-        dice = (2. * intersection + smooth) / \
-            (logits.sum() + targets.sum() + smooth)
+        dice = (2. * intersection + smooth) / (logits.sum() + targets.sum() + smooth)
 
         return 1 - dice
 
@@ -79,6 +79,65 @@ class BCELoss(nn.Module):
     def forward(self,
                 logits: torch.Tensor,
                 targets: torch.Tensor):
-        BCE = self.loss(logits, targets)
 
-        return BCE
+        return self.loss(logits, targets)
+
+
+class SoftF1(nn.Module):
+    def __init__(self,
+                 grad: bool):
+        super(SoftF1, self).__init__()
+        self.grad = grad
+
+    def forward(self,
+                logits: torch.Tensor,
+                targets: torch.Tensor):
+        if self.grad:
+            logits = logits.flatten()
+            targets = targets.flatten()
+
+            tp = (logits * targets).sum(dim=0)
+            fp = (logits * (1 - targets)).sum(dim=0)  # soft
+            fn = ((1 - logits) * targets).sum(dim=0)  # soft
+            tn = ((1 - logits) * (1 - targets)).sum(dim=0)  # soft
+
+            soft_f1_class1 = 2 * tp / (2 * tp + fn + fp + 1e-16)
+            soft_f1_class0 = 2 * tn / (2 * tn + fn + fp + 1e-16)
+
+            cost_class1 = 1 - soft_f1_class1
+            cost_class0 = 1 - soft_f1_class0
+
+            return 0.5 * (cost_class1 + cost_class0)
+        else:
+            with torch.no_grad():
+                logits = logits.flatten()
+                targets = targets.flatten()
+
+                tp = (logits * targets).sum(dim=0)
+                fp = (logits * (1 - targets)).sum(dim=0)  # soft
+                fn = ((1 - logits) * targets).sum(dim=0)  # soft
+                tn = ((1 - logits) * (1 - targets)).sum(dim=0)  # soft
+
+                """Accuracy Score"""
+                accuracy = (tp + tn) / (tp + tn + fp + fn + 1e-8)
+
+                """Precision Score - tp / (tp + fp)"""
+                precision_score_1 = 1 - (tp / (tp + fp + 1e-8))
+                precision_score_0 = 1 - (tn / (tn + fp + 1e-8))
+                precision = 0.5 * (precision_score_1 + precision_score_0)
+
+                """Recall Score - tp / (tp + tn)"""
+                recall_score_1 = 1 - (tp / (tp + fn + 1e-8))
+                recall_score_2 = 1 - (tn / (tn + fn + 1e-8))
+                recall = 0.5 * (recall_score_1 + recall_score_2)
+
+                """F1 Score """
+                soft_f1_class1 = 2 * tp / (2 * tp + fn + fp + 1e-16)
+                soft_f1_class0 = 2 * tn / (2 * tn + fn + fp + 1e-16)
+
+                cost_class1 = 1 - soft_f1_class1
+                cost_class0 = 1 - soft_f1_class0
+                f1 = 0.5 * (cost_class1 + cost_class0)
+
+            return accuracy.cpu().detach().numpy(), precision.cpu().detach().numpy(), \
+                recall.cpu().detach().numpy(), f1.cpu().detach().numpy()

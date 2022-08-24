@@ -4,6 +4,7 @@ from shutil import rmtree
 
 import numpy as np
 import torch
+from tardis.dist_pytorch.transformer.losses import SoftF1
 from tardis.utils.logo import Tardis_Logo, printProgressBar
 from tardis.utils.utils import EarlyStopping
 
@@ -53,6 +54,7 @@ class Trainer:
         self.progress_train = Tardis_Logo()
 
         self.model = model.to(device)
+        self.soft_f1 = SoftF1(grad=False)
 
         self.node_input = node_input
         self.type = type
@@ -283,10 +285,9 @@ class Trainer:
                         out = out[0, :]
                         loss = self.criterion(out,
                                               target)
-                        out = torch.where(torch.sigmoid(out) > 0.5, 1, 0)
 
-                        acc, prec, recall, f1 = self.calculate_F1(logits=out,
-                                                                  targets=target)
+                        acc, prec, recall, f1 = self.soft_f1(logits=out[0, :],
+                                                             targets=target)
 
                         # Avg. precision score
                         valid_losses.append(loss.item())
@@ -316,10 +317,8 @@ class Trainer:
                         cls = cls.to(self.device)
                         loss = self.criterion(out[0, :], target) + self.criterion(out_cls, cls)
 
-                        acc, \
-                            prec, recall, \
-                            f1 = self.calculate_F1(logits=torch.where(torch.sigmoid(out[0, :]) > 0.5, 1, 0),
-                                                   targets=target)
+                        acc, prec, recall, f1 = self.soft_f1(logits=out[0, :],
+                                                             targets=target)
 
                         # Avg. precision score
                         valid_losses.append(loss.item())

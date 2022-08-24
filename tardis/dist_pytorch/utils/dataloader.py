@@ -1,4 +1,4 @@
-from os import listdir, mkdir
+from os import listdir, mkdir, getcwd
 from os.path import isdir, join, splitext
 from shutil import rmtree
 from typing import Optional
@@ -51,10 +51,10 @@ class GraphDataset(Dataset):
         # Coord setting
         self.coord_dir = coord_dir
         self.coord_format = coord_format
-
-        if isdir(join(self.coord_dir, 'temp')):
-            rmtree(join(self.coord_dir, 'temp'))
-        mkdir(join(self.coord_dir, 'temp'))
+        self.cwd = getcwd()
+        if isdir(join(self.cwd, 'temp')):
+            rmtree(join(self.cwd, 'temp'))
+        mkdir(join(self.cwd, 'temp'))
 
         # Image setting
         self.img_dir = img_dir
@@ -162,18 +162,18 @@ class GraphDataset(Dataset):
             coords_v, imgs_v, graph_v, output_idx, cls_idx = VD.voxalize_dataset(mesh=self.mesh)
 
             # save data for faster access later
-            np.save(join(self.coord_dir, 'temp', f'coord_{i}.npy'), np.asarray(coords_v, dtype=object))
-            np.save(join(self.coord_dir, 'temp', f'img_{i}.npy'), np.asarray(imgs_v, dtype=object))
-            np.save(join(self.coord_dir, 'temp', f'graph_{i}.npy'), np.asarray(graph_v, dtype=object))
-            np.save(join(self.coord_dir, 'temp', f'out_{i}.npy'), np.asarray(output_idx, dtype=object))
-            np.save(join(self.coord_dir, 'temp', f'cls_{i}.npy'), np.asarray(cls_idx, dtype=object))
+            np.save(join(self.cwd, 'temp', f'coord_{i}.npy'), np.asarray(coords_v, dtype=object))
+            np.save(join(self.cwd, 'temp', f'img_{i}.npy'), np.asarray(imgs_v, dtype=object))
+            np.save(join(self.cwd, 'temp', f'graph_{i}.npy'), np.asarray(graph_v, dtype=object))
+            np.save(join(self.cwd, 'temp', f'out_{i}.npy'), np.asarray(output_idx, dtype=object))
+            np.save(join(self.cwd, 'temp', f'cls_{i}.npy'), np.asarray(cls_idx, dtype=object))
         else:
             # Load pre-process data
-            coords_v = np.load(join(self.coord_dir, 'temp', f'coord_{i}.npy'), allow_pickle=True)
-            imgs_v = np.load(join(self.coord_dir, 'temp', f'img_{i}.npy'), allow_pickle=True)
-            graph_v = np.load(join(self.coord_dir, 'temp', f'graph_{i}.npy'), allow_pickle=True)
-            output_idx = np.load(join(self.coord_dir, 'temp', f'out_{i}.npy'), allow_pickle=True)
-            cls_idx = np.load(join(self.coord_dir, 'temp', f'cls_{i}.npy'), allow_pickle=True)
+            coords_v = np.load(join(self.cwd, 'temp', f'coord_{i}.npy'), allow_pickle=True)
+            imgs_v = np.load(join(self.cwd, 'temp', f'img_{i}.npy'), allow_pickle=True)
+            graph_v = np.load(join(self.cwd, 'temp', f'graph_{i}.npy'), allow_pickle=True)
+            output_idx = np.load(join(self.cwd, 'temp', f'out_{i}.npy'), allow_pickle=True)
+            cls_idx = np.load(join(self.cwd, 'temp', f'cls_{i}.npy'), allow_pickle=True)
 
         # Store initial patch size for each data to speed up computation
         if self.voxal_size[i, 0] == 0:
