@@ -65,7 +65,6 @@ class DIST(nn.Module):
                                        dropout=dropout_rate,
                                        num_layers=num_layers,
                                        num_heads=num_heads,
-                                       normalize=True,
                                        structure=structure)
         self.decoder = nn.Linear(in_features=edge_dim,
                                  out_features=n_out)
