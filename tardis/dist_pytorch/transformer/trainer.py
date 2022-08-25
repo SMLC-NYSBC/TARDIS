@@ -54,7 +54,7 @@ class Trainer:
         self.progress_train = Tardis_Logo()
 
         self.model = model.to(device)
-        self.soft_f1 = SoftF1(grad=False)
+        self.soft_f1 = SoftF1()
 
         self.node_input = node_input
         self.type = type
@@ -204,7 +204,7 @@ class Trainer:
                                          node_features=None,
                                          padding_mask=None)
 
-                    loss = self.criterion(out[0, :], g)
+                    loss = self.criterion(out[:, 0, :], g)
 
                     loss.backward()  # one backward pass
                     self.optimizer.step()  # update the parameters
@@ -282,11 +282,10 @@ class Trainer:
                                              node_features=None,
                                              padding_mask=None)
 
-                        out = out[0, :]
-                        loss = self.criterion(out,
+                        loss = self.criterion(out[0, :],
                                               target)
 
-                        acc, prec, recall, f1 = self.soft_f1(logits=out[0, :],
+                        acc, prec, recall, f1 = self.soft_f1(logits=out[:, 0, :],
                                                              targets=target)
 
                         # Avg. precision score
@@ -296,6 +295,7 @@ class Trainer:
                         recall_mean.append(recall)
                         F1_mean.append(f1)
 
+                    valid = f'Validation: (loss {loss.item():.4f} Prec: {prec:.2f} Rec: {recall:.2f} F1: {f1:.2f})'
                     self.progress_train(title='DIST training module',
                                         text_1=self.print_setting[0],
                                         text_2=self.print_setting[1],
@@ -304,7 +304,7 @@ class Trainer:
                                         text_5=self.gpu_info,
                                         text_7=epoch_desc,
                                         text_8=printProgressBar(progress_epoch, self.epochs),
-                                        text_9=f'Validation: (loss {loss.item():.4f})',
+                                        text_9=valid,
                                         text_10=printProgressBar(idx, self.validation_DataLoader.__len__()))
             elif self.type == 'semantic':
                 for idx, (x, y, z, _, cls_g) in enumerate(self.validation_DataLoader):
