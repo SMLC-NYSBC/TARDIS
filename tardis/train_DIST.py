@@ -151,7 +151,7 @@ def main(pointcloud_dir: str,
          patch_size,
          prefix,
          train_test_ratio: float,
-         train_dataset: str,
+         train_dataset: bool,
          gf_out: int,
          gf_node_dim: int,
          gf_edge_dim: int,
@@ -230,9 +230,8 @@ def main(pointcloud_dir: str,
                                       prefix=prefix)
         build_test.__builddataset__()
 
-    # else:
-    mesh = [True for f in ['.ply'] if listdir(train_coords_dir)[0].endswith(f)]
-    if len(mesh) > 0:
+    mesh = [True for f in listdir(train_coords_dir) if f.endswith('.ply')]
+    if sum(mesh) > 0:
         mesh = True
     else:
         mesh = False
@@ -251,6 +250,7 @@ def main(pointcloud_dir: str,
                                                      size=patch_size,
                                                      normalize="rescale",
                                                      mesh=mesh,
+                                                     train=True,
                                                      datatype=train_dataset,
                                                      downsampling_if=dl_downsampling,
                                                      downsampling_rate=dl_downsampling_rate,
@@ -266,6 +266,7 @@ def main(pointcloud_dir: str,
                                                     size=patch_size,
                                                     normalize="rescale",
                                                     mesh=mesh,
+                                                    train=False,
                                                     datatype=train_dataset,
                                                     downsampling_if=dl_downsampling,
                                                     downsampling_rate=dl_downsampling_rate,

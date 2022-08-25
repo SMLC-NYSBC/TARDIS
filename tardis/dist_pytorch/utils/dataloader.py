@@ -47,14 +47,22 @@ class GraphDataset(Dataset):
                  normalize="simple",
                  mesh=False,
                  datatype=True,
+                 train=True,
                  memory_save=True):
         # Coord setting
         self.coord_dir = coord_dir
         self.coord_format = coord_format
+
+        self.train = train
         self.cwd = getcwd()
-        if isdir(join(self.cwd, 'temp')):
-            rmtree(join(self.cwd, 'temp'))
-        mkdir(join(self.cwd, 'temp'))
+        if self.train:
+            if isdir(join(self.cwd, 'temp_train')):
+                rmtree(join(self.cwd, 'temp_train'))
+            mkdir(join(self.cwd, 'temp_train'))
+        else:
+            if isdir(join(self.cwd, 'temp_test')):
+                rmtree(join(self.cwd, 'temp_test'))
+            mkdir(join(self.cwd, 'temp_test'))
 
         # Image setting
         self.img_dir = img_dir
@@ -84,6 +92,10 @@ class GraphDataset(Dataset):
         """ Get list of all coordinates and image patches """
         idx = self.ids[i]
 
+        if self.train:
+            temp = 'temp_train'
+        else:
+            temp = 'temp_test'
         # Define what coordinate format are available
         coord_file = join(self.coord_dir, str(idx))
 
@@ -105,36 +117,37 @@ class GraphDataset(Dataset):
         else:
             img_file = None
 
-        # Pre process coord and image data also, if exist remove duplicates
-        coord, img = preprocess_data(coord=coord_file,
-                                     datatype=self.datatype,
-                                     image=img_file,
-                                     include_label=True,
-                                     size=self.size,
-                                     normalization=self.normalize,
-                                     memory_save=self.memory_save)
+        if self.voxal_size[i, 0] == 0:
+            # Pre process coord and image data also, if exist remove duplicates
+            coord, img = preprocess_data(coord=coord_file,
+                                        datatype=self.datatype,
+                                        image=img_file,
+                                        include_label=True,
+                                        size=self.size,
+                                        normalization=self.normalize,
+                                        memory_save=self.memory_save)
 
-        # Remove coord and img patch duplicates
-        # coord, uq_idx = np.unique(coord, axis=0, return_index=True)
+            # Remove coord and img patch duplicates
+            # coord, uq_idx = np.unique(coord, axis=0, return_index=True)
 
-        # if img_file is not None:
-        #     img = img[uq_idx, :]
+            # if img_file is not None:
+            #     img = img[uq_idx, :]
 
-        # Normalize point cloud
-        if coord_file.endswith('.ply'):
-            dist = pc_median_dist(pc=coord[:, 1:], avg_over=True, box_size=0.05)
-        else:
-            dist = pc_median_dist(pc=coord[:, 1:], avg_over=True)
+            # Normalize point cloud
+            if coord_file.endswith('.ply'):
+                dist = pc_median_dist(pc=coord[:, 1:], avg_over=True, box_size=0.05)
+            else:
+                dist = pc_median_dist(pc=coord[:, 1:], avg_over=True)
 
         if self.img_dir is None:
-            coord[:, 1:] = coord[:, 1:] / dist  # Normalize point cloud
-
-            if self.mesh and self.datatype:
-                classes = coord[:, 0]
-            else:
-                classes = None
-
             if self.voxal_size[i, 0] == 0:
+                coord[:, 1:] = coord[:, 1:] / dist  # Normalize point cloud
+
+                if self.mesh and self.datatype:
+                    classes = coord[:, 0]
+                else:
+                    classes = None
+
                 VD = VoxalizeDataSetV2(coord=coord,
                                        image=None,
                                        init_voxal_size=0,
@@ -154,7 +167,7 @@ class GraphDataset(Dataset):
                                        drop_rate=1,
                                        downsampling_threshold=self.downsampling,
                                        downsampling_rate=None,
-                                       label_cls=None,
+                                       label_cls=classes,
                                        graph=True,
                                        tensor=False)
 
@@ -162,18 +175,24 @@ class GraphDataset(Dataset):
             coords_v, imgs_v, graph_v, output_idx, cls_idx = VD.voxalize_dataset(mesh=self.mesh)
 
             # save data for faster access later
-            np.save(join(self.cwd, 'temp', f'coord_{i}.npy'), np.asarray(coords_v, dtype=object))
-            np.save(join(self.cwd, 'temp', f'img_{i}.npy'), np.asarray(imgs_v, dtype=object))
-            np.save(join(self.cwd, 'temp', f'graph_{i}.npy'), np.asarray(graph_v, dtype=object))
-            np.save(join(self.cwd, 'temp', f'out_{i}.npy'), np.asarray(output_idx, dtype=object))
-            np.save(join(self.cwd, 'temp', f'cls_{i}.npy'), np.asarray(cls_idx, dtype=object))
+            np.save(join(self.cwd, temp, f'coord_{i}.npy'), np.asarray(coords_v, dtype=object))
+            np.save(join(self.cwd, temp, f'img_{i}.npy'), np.asarray(imgs_v, dtype=object))
+            np.save(join(self.cwd, temp, f'graph_{i}.npy'), np.asarray(graph_v, dtype=object))
+            np.save(join(self.cwd, temp, f'out_{i}.npy'), np.asarray(output_idx, dtype=object))
+            np.save(join(self.cwd, temp, f'cls_{i}.npy'), np.asarray(cls_idx, dtype=object))
         else:
             # Load pre-process data
-            coords_v = np.load(join(self.cwd, 'temp', f'coord_{i}.npy'), allow_pickle=True)
-            imgs_v = np.load(join(self.cwd, 'temp', f'img_{i}.npy'), allow_pickle=True)
-            graph_v = np.load(join(self.cwd, 'temp', f'graph_{i}.npy'), allow_pickle=True)
-            output_idx = np.load(join(self.cwd, 'temp', f'out_{i}.npy'), allow_pickle=True)
-            cls_idx = np.load(join(self.cwd, 'temp', f'cls_{i}.npy'), allow_pickle=True)
+            coords_v = np.load(join(self.cwd, temp, f'coord_{i}.npy'), allow_pickle=True)
+            imgs_v = np.load(join(self.cwd, temp, f'img_{i}.npy'), allow_pickle=True)
+            graph_v = np.load(join(self.cwd, temp, f'graph_{i}.npy'), allow_pickle=True)
+            output_idx = np.load(join(self.cwd, temp, f'out_{i}.npy'), allow_pickle=True)
+            cls_idx = np.load(join(self.cwd, temp, f'cls_{i}.npy'), allow_pickle=True)
+
+        coords_v = [torch.Tensor(co.astype(np.float32)).type(torch.float32) for co in coords_v]
+        imgs_v = [torch.Tensor(im.astype(np.float32)).type(torch.float32) for im in imgs_v]
+        graph_v = [torch.Tensor(gr.astype(np.float32)).type(torch.float32) for gr in graph_v]
+        output_idx = [torch.Tensor(ou.astype(np.float32)).type(torch.float32) for ou in output_idx]
+        cls_idx = [torch.Tensor(cx.astype(np.float32)).type(torch.float32) for cx in cls_idx]
 
         # Store initial patch size for each data to speed up computation
         if self.voxal_size[i, 0] == 0:
@@ -182,12 +201,6 @@ class GraphDataset(Dataset):
         if self.img_dir is not None:
             for id, c in enumerate(coords_v):
                 coords_v[id] = c / dist
-
-        coords_v = [torch.Tensor(co.astype(np.float32)).type(torch.float32) for co in coords_v]
-        imgs_v = [torch.Tensor(im.astype(np.float32)).type(torch.float32) for im in imgs_v]
-        graph_v = [torch.Tensor(gr.astype(np.float32)).type(torch.float32) for gr in graph_v]
-        output_idx = [torch.Tensor(ou.astype(np.float32)).type(torch.float32) for ou in output_idx]
-        cls_idx = [torch.Tensor(cx.astype(np.float32)).type(torch.float32) for cx in cls_idx]
 
         return coords_v, imgs_v, graph_v, output_idx, cls_idx
 

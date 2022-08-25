@@ -75,7 +75,7 @@ class BCELoss(nn.Module):
     def __init__(self,
                  weight: Optional[float] = None):
         super(BCELoss, self).__init__()
-        self.loss = nn.BCEWithLogitsLoss(weight=weight)
+        self.loss = nn.BCEWithLogitsLoss(pos_weight=weight)
 
     def forward(self,
                 logits: torch.Tensor,

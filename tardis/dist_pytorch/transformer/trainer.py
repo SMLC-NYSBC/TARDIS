@@ -317,7 +317,7 @@ class Trainer:
                         cls = cls.to(self.device)
                         loss = self.criterion(out[0, :], target) + self.criterion(out_cls, cls)
 
-                        acc, prec, recall, f1 = self.soft_f1(logits=out[0, :],
+                        acc, prec, recall, f1 = self.soft_f1(logits=out[:, 0, :],
                                                              targets=target)
 
                         # Avg. precision score

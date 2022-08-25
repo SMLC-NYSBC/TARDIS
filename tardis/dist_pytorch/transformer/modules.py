@@ -1,7 +1,6 @@
 from math import sqrt
 from typing import Optional
 
-import numpy as np
 import torch
 import torch.nn as nn
 
@@ -32,22 +31,13 @@ class DistEmbedding(nn.Module):
         if x is None:
             return 0
 
+        x = torch.cdist(x, x)
+
         if self.dist:
-            dist = torch.cdist(x, x)
-            diag = np.arange(dist.shape[1])
-            dist[:, diag, diag] = 0
+            x = torch.exp(-x ** 2 / (self.sigma ** 2 * 2))
 
-            if isinstance(self.sigma, tuple):
-                kernel = torch.exp(-dist ** 2 / (self.sigma[0] ** 2 * 2))
-
-                for i in range(1, len(self.sigma)):
-                    kernel = kernel + torch.exp(-dist ** 2 / (self.sigma[i] ** 2 * 2))
-                kernel = kernel / len(self.sigma)
-            else:
-                kernel = torch.exp(-dist ** 2 / (self.sigma ** 2 * 2))
-
-            isnan = torch.isnan(kernel)
-            kernel = torch.where(isnan, torch.zeros_like(kernel), kernel)
+            isnan = torch.isnan(x)
+            x = torch.where(isnan, torch.zeros_like(x), x)
         else:
             size = x.shape[1]
             kernel = torch.zeros((1, size, size)).to(x.device)
@@ -55,9 +45,9 @@ class DistEmbedding(nn.Module):
             for i in range(size):
                 kernel[0, i, i] = 1
 
-        kernel = kernel.unsqueeze(3)
+        x = x.unsqueeze(3)
 
-        return self.linear(kernel)
+        return self.linear(x)
 
 
 @torch.jit.script

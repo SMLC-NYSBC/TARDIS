@@ -318,7 +318,7 @@ def main(prediction_dir: str,
                                downsampling_threshold=points_in_voxal,
                                graph=False)
 
-        coords_df, _, output_idx, _ = VD.voxalize_dataset(mesh=False)
+        coords_df, _, output_idx, _, _ = VD.voxalize_dataset(mesh=False)
         coords_df = [c / pc_median_dist(c) for c in coords_df]
 
         # Predict point cloud

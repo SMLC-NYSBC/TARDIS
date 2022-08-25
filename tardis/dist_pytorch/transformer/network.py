@@ -66,6 +66,7 @@ class DIST(nn.Module):
                                        num_layers=num_layers,
                                        num_heads=num_heads,
                                        structure=structure)
+
         self.decoder = nn.Linear(in_features=edge_dim,
                                  out_features=n_out)
 
@@ -95,6 +96,7 @@ class DIST(nn.Module):
 
         x, z = self.embed_input(coords=coords,
                                 node_features=node_features)
+
         if x is not None:
             """ Length x Batch x Embedded_Dim """
             x = x.transpose(0, 1)
