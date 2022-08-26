@@ -1,4 +1,3 @@
-from cmath import log
 from typing import Optional
 
 import torch
@@ -89,8 +88,8 @@ class SoftF1:
         super(SoftF1, self).__init__()
 
     def __call__(self,
-                logits: torch.Tensor,
-                targets: torch.Tensor):
+                 logits: torch.Tensor,
+                 targets: torch.Tensor):
         with torch.no_grad():
             logits = torch.sigmoid(logits)
             logits = logits.flatten().cpu().detach().numpy()

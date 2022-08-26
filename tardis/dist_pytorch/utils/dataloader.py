@@ -120,12 +120,12 @@ class GraphDataset(Dataset):
         if self.voxal_size[i, 0] == 0:
             # Pre process coord and image data also, if exist remove duplicates
             coord, img = preprocess_data(coord=coord_file,
-                                        datatype=self.datatype,
-                                        image=img_file,
-                                        include_label=True,
-                                        size=self.size,
-                                        normalization=self.normalize,
-                                        memory_save=self.memory_save)
+                                         datatype=self.datatype,
+                                         image=img_file,
+                                         include_label=True,
+                                         size=self.size,
+                                         normalization=self.normalize,
+                                         memory_save=self.memory_save)
 
             # Remove coord and img patch duplicates
             # coord, uq_idx = np.unique(coord, axis=0, return_index=True)
