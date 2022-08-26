@@ -4,7 +4,7 @@ from shutil import rmtree
 
 import numpy as np
 import torch
-from tardis.dist_pytorch.transformer.losses import SoftF1
+from tardis.utils.losses import SoftF1
 from tardis.utils.logo import Tardis_Logo, printProgressBar
 from tardis.utils.utils import EarlyStopping
 

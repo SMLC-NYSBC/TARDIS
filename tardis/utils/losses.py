@@ -56,7 +56,7 @@ class DiceLoss(nn.Module):
     def forward(self,
                 logits: torch.Tensor,
                 targets: torch.Tensor,
-                smooth=1):
+                smooth=1e-16):
         logits = torch.sigmoid(logits)
 
         # Flatten label and prediction tensors
@@ -65,9 +65,30 @@ class DiceLoss(nn.Module):
 
         # Calculate dice loss
         intersection = (logits * targets).sum()
-        dice = (2. * intersection + smooth) / (logits.sum() + targets.sum() + smooth)
+        dice = (2 * intersection + smooth) / (logits.square().sum() + targets.square().sum() + smooth)
 
         return 1 - dice
+
+
+class BCEDiceLoss(nn.Module):
+    def __init__(self,
+                 alpha=1.0):
+        super(BCEDiceLoss, self).__init__()
+        self.bce = BCELoss()
+        self.dice = DiceLoss(alpha=alpha)
+
+    def forward(self,
+                inputs: torch.Tensor,
+                targets: torch. Tensor):
+        bce_loss = self.bce(inputs=inputs,
+                            targets=targets)
+
+        dice_loss = self.dice(inputs=inputs,
+                              targets=targets)
+        if dice_loss is None:
+            return bce_loss + 1
+
+        return bce_loss + dice_loss
 
 
 class BCELoss(nn.Module):
@@ -81,6 +102,38 @@ class BCELoss(nn.Module):
                 targets: torch.Tensor):
 
         return self.loss(logits, targets)
+
+
+class AdaptiveDiceLoss(nn.Module):
+    """
+    AdaptiveDice =  2∑[(1-p_i)^a * p_i] * g_i
+                   --------------------------
+                   ∑[(1-p_i)^a * p_i]  + ∑g_i^2
+    Args:
+        alpha: Scaling factor
+        smooth: Smooth factor to remove division by 0
+    """
+
+    def __init__(self,
+                 alpha=0.1):
+        super(AdaptiveDiceLoss, self).__init__()
+        self.alpha = alpha
+
+    def forward(self,
+                inputs,
+                targets,
+                smooth=1e-16):
+        inputs = torch.sigmoid(inputs)
+
+        inputs = inputs.view(-1)
+        targets = targets.view(-1)
+
+        inputs = ((1 - inputs) ** self.alpha) * inputs
+
+        intersection = (inputs * targets).sum()
+        dice = (2. * intersection + smooth) / (inputs.square().sum() + targets.square().sum() + smooth)
+
+        return 1 - dice
 
 
 class SoftF1:

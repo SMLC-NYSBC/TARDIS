@@ -3,10 +3,9 @@ from os.path import isdir, join
 from typing import Optional
 
 import torch
-from tardis.spindletorch.unet.losses import (AdaptiveDiceLoss, BCEDiceLoss,
-                                             BCELoss, DiceLoss)
 from tardis.spindletorch.unet.trainer import Trainer
 from tardis.spindletorch.utils.build_network import build_network
+from tardis.utils.losses import AdaptiveDiceLoss, BCEDiceLoss, BCELoss, DiceLoss
 from torch import optim
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
