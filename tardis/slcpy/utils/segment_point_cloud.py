@@ -1,6 +1,9 @@
+from math import sqrt
 from typing import Optional
-import torch
+
 import numpy as np
+import torch
+from scipy.interpolate import splev, splprep
 from scipy.spatial.distance import cdist
 from sklearn.neighbors import KDTree
 from tardis.dist_pytorch.utils.visualize import (VisualizeFilaments,
@@ -12,12 +15,12 @@ class GraphInstanceV2:
     def __init__(self,
                  threshold=float,
                  connection=2,
-                 prune=3):
+                 smooth=False):
         self.threshold = threshold
         self.am_build = NumpyToAmira()
 
-        self.prune = prune
         self.connection = connection
+        self.smooth = smooth
 
     @staticmethod
     def _stitch_graph(graph_pred: list,
@@ -165,9 +168,9 @@ class GraphInstanceV2:
 
             if len(inter) > 1:
                 all_prop[p_id][2] = list(np.unique(inter))
-                all_prop[p_id][3] = [np.max([x for idx, x in enumerate(prop)
-                                             if idx in [id for id, j in enumerate(inter)
-                                                        if j == k]])
+                all_prop[p_id][3] = [np.median([x for idx, x in enumerate(prop)
+                                                if idx in [id for id, j in enumerate(inter)
+                                                           if j == k]])
                                      for k in np.unique(inter)]
 
         # Sort each interactions based on the probability
@@ -259,6 +262,52 @@ class GraphInstanceV2:
             coord = np.delete(coord, points, 0)
         return np.stack(new_c)
 
+    @staticmethod
+    def total_length(x):
+        length = 0
+        c_len = len(x) - 1
+
+        for id, _ in enumerate(x):
+            if id == c_len:
+                break
+            # sqrt((x2 - x1)2 + (y2 - y1)2 + (z2 - z1)2)
+            length += sqrt((x[id][0] - x[id + 1][0]) ** 2 + (x[id][1] - x[id + 1][1]) **
+                           2 + (x[id][2] - x[id + 1][2]) ** 2)
+
+        end_length = sqrt((x[0][0] - x[-1][0]) ** 2 + (x[0][1] - x[-1][1]) ** 2 + (x[0][2] - x[-1][2]) ** 2)
+
+        return length + 1e-16, end_length + 1e-16
+
+    def _smooth_segments(self,
+                         coord: np.ndarray):
+        smooth = []
+        tortuosity = []
+
+        for i in np.unique(coord[:, 0]):
+            x = coord[np.where(coord[:, 0] == int(i))[0], :]
+            if len(x) > 10:
+                x_len = int(len(x) * 1)
+                tck, u = splprep([x[:, 1], x[:, 2], x[:, 3]])
+                x_knots, y_knots, z_knots = splev(tck[0], tck)
+                u_fine = np.linspace(0, 1, x_len)
+                x_fine, y_fine, z_fine = splev(u_fine, tck)
+                filament = np.vstack((x_fine, y_fine, z_fine)).T
+                id = np.zeros((len(filament), 1))
+                id += i
+                df = np.hstack((id, filament))
+                smooth.append(df)
+            else:
+                smooth.append(x)
+        coord_segment_smooth = np.concatenate(smooth)
+
+        for i in np.unique(coord_segment_smooth[:, 0]):
+            filament = coord_segment_smooth[np.where(coord_segment_smooth[:, 0] == int(i))[0], :]
+            length, end_length = self.total_length(filament)
+            tortuosity.append(length / end_length)
+        error = [id for id, i in enumerate(tortuosity) if i > 1.1]
+
+        return np.stack([i for i in coord_segment_smooth if i[0] not in error])
+
     def voxal_to_segment(self,
                          graph: list,
                          coord: np.ndarray,
@@ -294,10 +343,14 @@ class GraphInstanceV2:
             visualize: If not None, visualize output with open3D
         """
         """Check data"""
-        if isinstance(graph, np.ndarray) or isinstance(graph, torch.Tensor):
+        if isinstance(graph, np.ndarray):
+            graph = [graph]
+        elif isinstance(graph, torch.Tensor):
             graph = [graph.cpu().detach().numpy()]
 
-        if isinstance(idx, np.ndarray) or isinstance(graph, torch.Tensor):
+        if isinstance(idx, np.ndarray):
+            idx = [idx]
+        elif isinstance(graph, torch.Tensor):
             idx = [idx.cpu().detach().numpy()]
 
         assert isinstance(coord, np.ndarray), \
@@ -342,13 +395,17 @@ class GraphInstanceV2:
             if sum([sum(i[2]) for i in adjacency_matrix]) == 0:
                 stop = True
 
+        segments = np.vstack(coord_segment)
+        if self.smooth:
+            segments = self._smooth_segments(segments)
+
         if visualize is not None:
             assert visualize in ['f', 'p'], \
                 'To visualize output use "f" for filament or "p" for point cloud!'
 
             if visualize == 'p':
-                VisualizePointCloud(np.vstack(coord_segment), True)
+                VisualizePointCloud(segments, True)
             elif visualize == 'f':
-                VisualizeFilaments(np.vstack(coord_segment))
+                VisualizeFilaments(segments)
 
-        return np.vstack(coord_segment)
+        return segments
