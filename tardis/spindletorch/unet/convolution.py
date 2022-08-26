@@ -20,7 +20,7 @@ class GeLU(nn.Module):
         if tanh is not None:
             self.tanh = sqrt(tanh)
         else:
-            self.tanh = sqrt(2)
+            self.tanh = 1.41421356237
 
     def forward(self,
                 x: torch.Tensor):
@@ -113,7 +113,7 @@ def convolution(in_ch: int,
         if "l" in letter:
             modules.append(("LeakyReLu", nn.LeakyReLU(inplace=True)))
         if 'e' in letter:
-            modules.append(('GeLU', GeLU(tanh=2)))
+            modules.append(('GeLU', GeLU()))
 
     return modules
 

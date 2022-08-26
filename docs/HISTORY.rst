@@ -2,20 +2,31 @@
 History
 =======
 
-0.1.0 beta (2022-08-08)
+0.1.0 beta (2022-08-28)
 --------------------------
 * DIST
+    * Added new classification model based on DIST
     * Simplified logic for patching big point cloud + reduction of number of patches
+    * Model structure now embedded in the model weight file
+    * Spline smoothing added to graph prediction
+    * Small bugfixes:
+        * Fixe inital_scale in model nn.Modules
+        * Fixed graph builder for ScanNet and PartNet
+    * Speed improved dataloader during training
 
 * SpindleTorch changes:
     * Quick retrained model on hand-curated dataset
+    * Added and trained new FNet
 
 * SLCPY module changes:
     * Fix interpolation handling for up-sampled datasets
     * Post-processing improvements and speeds-up
     * MRC2014 file format expand readable formats
+    * Processing image data with standardized pixel size of 25 A
 
 * TARDIS
+    * New beautiful log progress window
+    * Moved loss fun. to common directory
     * Clean-up
     * Flake8 and pyteset fixes
     * Global tunning for segmentation quality 
