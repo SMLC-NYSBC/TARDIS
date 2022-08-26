@@ -44,7 +44,6 @@ class DIST(nn.Module):
                  coord_embed_sigma: Optional[tuple] = 1.0,
                  dropout_rate=0,
                  structure='full',
-                 dist_embed=True,
                  predict=False):
         super().__init__()
 
@@ -57,8 +56,7 @@ class DIST(nn.Module):
                                         out_features=node_dim)
 
         self.coord_embed = DistEmbedding(n_out=edge_dim,
-                                         sigma=coord_embed_sigma,
-                                         dist=dist_embed)
+                                         sigma=coord_embed_sigma)
 
         self.layers = GraphFormerStack(node_dim=node_dim,
                                        pairs_dim=edge_dim,
@@ -107,7 +105,8 @@ class DIST(nn.Module):
                            src_key_padding_mask=padding_mask)
 
         """ Predict the graph edges """
-        logits = self.decoder(z + z.transpose(1, 2))  # symmetries z
+        z = z + z.transpose(1, 2)
+        logits = self.decoder(z)  # symmetries z
 
         if self.predict:
             return self.logits_sigmoid(logits.permute(0, 3, 1, 2))

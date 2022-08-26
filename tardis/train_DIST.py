@@ -96,12 +96,7 @@ from tardis.version import version
               default='instance',
               type=click.Choice(['instance', 'semantic']),
               help='Structure of the graphformer',
-              show_default=True)
-@click.option('-gde', '--gf_dist',
-              default=True,
-              type=bool,
-              help='If True use distance embedding as an input',
-              show_default=True)
+              show_default=True)    
 @click.option('-dds', '--dl_downsampling',
               default=500,
               type=int,
@@ -164,7 +159,6 @@ def main(pointcloud_dir: str,
          gf_loss: str,
          gf_structure: str,
          gf_type: str,
-         gf_dist: bool,
          loss_lr: float,
          lr_rate_schedule: bool,
          gf_checkpoint,
@@ -306,7 +300,6 @@ def main(pointcloud_dir: str,
                      coord_embed_sigma=gf_sigma,
                      dropout_rate=gf_dropout,
                      structure=gf_structure,
-                     dist_embed=gf_dist,
                      predict=False)
     elif gf_type == 'semantic':
         model = C_DIST(n_out=gf_out,
@@ -316,7 +309,6 @@ def main(pointcloud_dir: str,
                        coord_embed_sigma=gf_sigma,
                        dropout_rate=gf_dropout,
                        structure=gf_structure,
-                       dist_embed=gf_dist,
                        predict=False)
 
     if gf_loss == "dice":

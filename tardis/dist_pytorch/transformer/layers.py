@@ -90,6 +90,7 @@ class GraphFormerLayer(nn.Module):
         self.pairs_dim = pairs_dim
         self.node_dim = node_dim
         self.structure = structure
+        assert self.structure in ['full', 'full_af', 'self_attn', 'triang', 'quad', 'dualtriang']
 
         if node_dim is not None:
             self.input_attn = PairBiasSelfAttention(embed_dim=node_dim,
@@ -199,15 +200,19 @@ class GraphFormerLayer(nn.Module):
             h_nodes = h_nodes + self.row_update(z=h_nodes, mask=mask)
             h_nodes = h_nodes + self.col_update(z=h_nodes, mask=mask)
         elif self.structure == 'self_attn':
-            h_nodes = h_nodes + self.row_attention(x=h_nodes, padding_mask=mask) + \
+            h_nodes = h_nodes + \
+                self.row_attention(x=h_nodes, padding_mask=mask) + \
                 self.col_attention(x=h_nodes, padding_mask=mask)
         elif self.structure in ['triang', 'quad']:
-            h_nodes = h_nodes + self.row_update(z=h_nodes, mask=mask) + \
+            h_nodes = h_nodes + \
+                self.row_update(z=h_nodes, mask=mask) + \
                 self.col_update(z=h_nodes, mask=mask)
         elif self.structure == 'dualtriang':
-            h_nodes = h_nodes + self.row_update_1(z=h_nodes, mask=mask) + \
+            h_nodes = h_nodes + \
+                self.row_update_1(z=h_nodes, mask=mask) + \
                 self.col_update_1(z=h_nodes, mask=mask)
-            h_nodes = h_nodes + self.row_update_2(z=h_nodes, mask=mask) + \
+            h_nodes = h_nodes + \
+                self.row_update_2(z=h_nodes, mask=mask) + \
                 self.col_update_2(z=h_nodes, mask=mask)
 
         return h_nodes + self.pair_ffn(x=h_nodes)

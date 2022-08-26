@@ -191,7 +191,7 @@ class GraphDataset(Dataset):
         coords_v = [torch.Tensor(co.astype(np.float32)).type(torch.float32) for co in coords_v]
         imgs_v = [torch.Tensor(im.astype(np.float32)).type(torch.float32) for im in imgs_v]
         graph_v = [torch.Tensor(gr.astype(np.float32)).type(torch.float32) for gr in graph_v]
-        output_idx = [torch.Tensor(ou.astype(np.float32)).type(torch.float32) for ou in output_idx]
+        output_idx = [torch.Tensor(ou.astype(np.float32)).type(torch.int16) for ou in output_idx]
         cls_idx = [torch.Tensor(cx.astype(np.float32)).type(torch.float32) for cx in cls_idx]
 
         # Store initial patch size for each data to speed up computation

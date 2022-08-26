@@ -1,5 +1,5 @@
 from typing import Optional
-
+import torch
 import numpy as np
 from scipy.spatial.distance import cdist
 from sklearn.neighbors import KDTree
@@ -61,6 +61,10 @@ class GraphInstanceV2:
             coord: Coords in each voxal
             idx: Idx for each node in voxals
         """
+        # Conversion to Torch
+        if isinstance(coord[0], torch.Tensor):
+            coord = [c.cpu().detach().numpy() for c in coord]
+
         # Build empty coord array
         dim = coord[0].shape[1]
         coord_df = max([max(f) for f in idx]) + 1
@@ -290,11 +294,11 @@ class GraphInstanceV2:
             visualize: If not None, visualize output with open3D
         """
         """Check data"""
-        if not isinstance(graph, list) and isinstance(graph, np.ndarray):
-            graph = [graph]
+        if isinstance(graph, np.ndarray) or isinstance(graph, torch.Tensor):
+            graph = [graph.cpu().detach().numpy()]
 
-        if not isinstance(idx, list) and isinstance(idx, np.ndarray):
-            idx = [idx]
+        if isinstance(idx, np.ndarray) or isinstance(graph, torch.Tensor):
+            idx = [idx.cpu().detach().numpy()]
 
         assert isinstance(coord, np.ndarray), \
             'Coord must be an array of all nodes!'

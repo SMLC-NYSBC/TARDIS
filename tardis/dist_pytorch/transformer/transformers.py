@@ -1,4 +1,3 @@
-from math import sqrt
 from typing import Optional
 
 import torch
@@ -25,7 +24,7 @@ class PairBiasSelfAttention(nn.Module):
                  embed_dim,
                  pairs_dim,
                  num_heads,
-                 init_scaling=sqrt(2)):
+                 init_scaling=1 / 1.4142135623730951):
         super().__init__()
         self.embed_dim = self.kdim = self.vdim = embed_dim
         self.qkv_same_dim = self.kdim == embed_dim and self.vdim == embed_dim
@@ -211,8 +210,11 @@ class GeluFeedForward(nn.Module):
 
     def forward(self,
                 x: torch.Tensor):
+        x = self.norm(x)
+        x = self.linear1(x)
+        x = self.linear2(gelu(x))
 
-        return self.linear2(gelu(self.linear1(self.norm(x))))
+        return x
 
 
 class ComparisonLayer(nn.Module):
@@ -280,7 +282,7 @@ class QuadraticEdgeUpdate(nn.Module):
         self.input_dim = input_dim
         self.channel_dim = channel_dim
         self.axis = axis
-        self.init_scaling = sqrt(2)
+        self.init_scaling = 1.4142135623730951
 
         self.norm_input = nn.LayerNorm(input_dim)
 
@@ -368,7 +370,7 @@ class TriangularEdgeUpdate(nn.Module):
         self.input_dim = input_dim
         self.channel_dim = channel_dim
         self.axis = axis
-        self.init_scaling = sqrt(2)
+        self.init_scaling = 1.4142135623730951
 
         self.norm_input = nn.LayerNorm(input_dim)
 
@@ -416,7 +418,9 @@ class TriangularEdgeUpdate(nn.Module):
         elif self.axis == 0:
             k = torch.einsum('bkio,bkjo->bijo', a, b)
 
-        return torch.sigmoid(self.gate_o(z)) * self.linear_o(self.norm_o(k))
+        k = self.norm_o(k)
+        o = torch.sigmoid(self.gate_o(z)) * self.linear_o(k)
+        return o
 
 
 class MultiHeadAttention(nn.Module):
@@ -451,7 +455,7 @@ class MultiHeadAttention(nn.Module):
                  add_zero_attn=False,
                  self_attention=False,
                  encoder_decoder_attention=False,
-                 init_scaling=sqrt(2)):
+                 init_scaling=1 / 1.4142135623730951):
 
         super().__init__()
         self.embed_dim = embed_dim
