@@ -96,7 +96,7 @@ from tardis.version import version
               default='instance',
               type=click.Choice(['instance', 'semantic']),
               help='Structure of the graphformer',
-              show_default=True)    
+              show_default=True)
 @click.option('-dds', '--dl_downsampling',
               default=500,
               type=int,
@@ -172,6 +172,18 @@ def main(pointcloud_dir: str,
     """
     tardis_logo = Tardis_Logo()
     tardis_logo(title='DIST training module')
+
+    """Model structure dictionary"""
+    model_dict = {'gf_type': gf_type,
+                  'gf_out': gf_out,
+                  'patch_size': patch_size,
+                  'gf_node_dim': gf_node_dim,
+                  'gf_edge_dim': gf_edge_dim,
+                  'gf_layers': gf_layers,
+                  'gf_heads': gf_heads,
+                  'gf_sigma': gf_sigma,
+                  'gf_dropout': gf_dropout,
+                  'gf_structure': gf_structure}
 
     """Check directory for data compatibility"""
     train_imgs_dir = join(pointcloud_dir, 'train', 'imgs')
@@ -290,6 +302,14 @@ def main(pointcloud_dir: str,
 
     """Setup training"""
     device = get_device(device)
+
+    if gf_checkpoint is not None:
+        save_train = torch.load(join(gf_checkpoint), map_location=device)
+
+        if 'model_struct_dict' in save_train.keys():
+            model_dict = save_train['model_struct_dict']
+            locals().update(model_dict)
+
     if gf_type == 'instance':
         model = DIST(n_out=gf_out,
                      node_input=cal_node_input(patch_size),
@@ -320,9 +340,6 @@ def main(pointcloud_dir: str,
 
     """Checkpoint model and optimizer"""
     if gf_checkpoint is not None:
-        save_train = join(gf_checkpoint)
-
-        save_train = torch.load(join(save_train), map_location=device)
         model.to(device)
         model.load_state_dict(save_train['model_state_dict'])
     else:
@@ -353,7 +370,7 @@ def main(pointcloud_dir: str,
                                                                                             dl_downsampling)]
     """Train"""
     train = Trainer(model=model,
-                    type=gf_type,
+                    type=model_dict,
                     node_input=with_img,
                     device=device,
                     criterion=loss_fn,

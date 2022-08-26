@@ -31,7 +31,7 @@ class Trainer:
 
     def __init__(self,
                  model,
-                 type: str,
+                 type: dict,
                  node_input: bool,
                  device: str,
                  criterion,
@@ -163,11 +163,13 @@ class Trainer:
 
             """ If F1 is higher then save checkpoint """
             if (np.array(self.f1)[:len(self.f1) - 1] < self.f1[len(self.f1) - 1]).all():
-                torch.save({'model_state_dict': self.model.state_dict(),
+                torch.save({'model_struct_dict': self.type,
+                            'model_state_dict': self.model.state_dict(),
                             'optimizer_state_dict': self.optimizer.state_dict()},
                            'GF_checkpoint/checkpoint_{}.pth'.format(self.checkpoint_name))
 
-            torch.save({'model_state_dict': self.model.state_dict(),
+            torch.save({'model_struct_dict': self.type,
+                        'model_state_dict': self.model.state_dict(),
                         'optimizer_state_dict': self.optimizer.state_dict()},
                        join(getcwd(), 'GF_checkpoint', 'model_weights.pth'))
 
@@ -188,7 +190,7 @@ class Trainer:
                             text_9='Training: (loss 1.000)',
                             text_10=printProgressBar(0, self.training_DataLoader.__len__()))
 
-        if self.type == 'instance':
+        if self.type['gf_type'] == 'instance':
             for idx, (x, y, z, _, _) in enumerate(self.training_DataLoader):
                 for c, i, g in zip(x, y, z):
                     c, g = c.to(self.device), g.to(self.device)
@@ -222,7 +224,7 @@ class Trainer:
                                         text_8=printProgressBar(progress_epoch, self.epochs),
                                         text_9=f'Training: (loss {loss_value:.4f})',
                                         text_10=printProgressBar(idx, self.training_DataLoader.__len__()))
-        elif self.type == 'semantic':
+        elif self.type['gf_type'] == 'semantic':
             for idx, (x, y, z, _, cls_g) in enumerate(self.training_DataLoader):
                 for c, i, g, cls in zip(x, y, z, cls_g):
                     c, g = c.to(self.device), g.to(self.device)
@@ -267,7 +269,7 @@ class Trainer:
         F1_mean = []
 
         with torch.no_grad():
-            if self.type == 'instance':
+            if self.type['gf_type'] == 'instance':
                 for idx, (x, y, z, _, _) in enumerate(self.validation_DataLoader):
                     for c, i, g in zip(x, y, z):
                         c, target = c.to(self.device), g.to(self.device)
@@ -308,7 +310,7 @@ class Trainer:
                                         text_8=printProgressBar(progress_epoch, self.epochs),
                                         text_9=valid,
                                         text_10=printProgressBar(idx, self.validation_DataLoader.__len__()))
-            elif self.type == 'semantic':
+            elif self.type['gf_type'] == 'semantic':
                 for idx, (x, y, z, _, cls_g) in enumerate(self.validation_DataLoader):
                     for c, i, g, cls in zip(x, y, z, cls_g):
                         c, target = c.to(self.device), g.to(self.device)
