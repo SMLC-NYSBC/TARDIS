@@ -31,46 +31,6 @@ torch.autograd.profiler.emit_nvtx(enabled=False)
               type=str,
               help='Directory with images for prediction with GF model.',
               show_default=True)
-@click.option('-gst', '--gf_structure',
-              default='full',
-              type=click.Choice(['full', 'full_af', 'self_attn', 'triang', 'dualtriang', 'quad']),
-              help='Structure of the graphformer',
-              show_default=True)
-@click.option('-gni', '--gf_ninput',
-              default=None,
-              type=int,
-              help='Node input feature.',
-              show_default=True)
-@click.option('-gn', '--gf_ndim',
-              default=256,
-              type=int,
-              help='Number embedding channels for nodes.',
-              show_default=True)
-@click.option('-ge', '--gf_edim',
-              default=128,
-              type=int,
-              help='Number embedding channels for edges.',
-              show_default=True)
-@click.option('-gl', '--gf_layer',
-              default=6,
-              type=int,
-              help='Number of GF layers',
-              show_default=True)
-@click.option('-gh', '--gf_heads',
-              default=8,
-              type=int,
-              help='Number of GF heads in MHA',
-              show_default=True)
-@click.option('-gd', '--gf_dropout',
-              default=0,
-              type=float,
-              help='If 0, dropout is turn-off. Else indicate dropout rate',
-              show_default=True)
-@click.option('-gs', '--gf_sigma',
-              default=0.6,
-              type=float,
-              help='Sigma value for distance embedding',
-              show_default=True)
 @click.option('-wi', '--with_img',
               default=False,
               type=bool,
@@ -116,14 +76,6 @@ torch.autograd.profiler.emit_nvtx(enabled=False)
               show_default=True)
 @click.version_option(version=version)
 def main(gf_dir: str,
-         gf_structure: str,
-         gf_ninput: int,
-         gf_ndim: int,
-         gf_edim: int,
-         gf_layer: int,
-         gf_heads: int,
-         gf_dropout,
-         gf_sigma: float,
          with_img: bool,
          point_in_voxal: int,
          gf_threshold,
@@ -144,6 +96,10 @@ def main(gf_dir: str,
     available_format = ('.csv', '.CorrelationLines.am', '.npy', '.ply')
     GF_list = [f for f in listdir(gf_dir) if f.endswith(available_format)]
     assert len(GF_list) > 0, 'No file found in given directory!'
+
+    if isdir(join(gf_dir, 'scores')):
+        rmtree(join(gf_dir, 'scores'))
+    mkdir(join(gf_dir, 'scores'))
 
     if scannet:
         eval_list = ['scene0568_00', 'scene0568_01', 'scene0568_02', 'scene0304_00',
@@ -236,20 +192,20 @@ def main(gf_dir: str,
 
     # Build handlers
     GraphToSegment = GraphInstanceV2(threshold=gf_threshold,
-                                     connection=2,
-                                     prune=2)
+                                     connection=2)
+    save_train = torch.load(checkpoint, map_location='cpu')
+    locals().update(save_train['model_struct_dict'])
 
     model = DIST(n_out=1,
-                 node_input=gf_ninput,
-                 node_dim=gf_ndim,
-                 edge_dim=gf_edim,
-                 num_layers=gf_layer,
-                 num_heads=gf_heads,
-                 dropout_rate=gf_dropout,
-                 coord_embed_sigma=gf_sigma,
-                 structure=gf_structure,
+                 node_input=None,
+                 node_dim=None,
+                 edge_dim=128,
+                 num_layers=6,
+                 num_heads=8,
+                 dropout_rate=0,
+                 coord_embed_sigma=2,
+                 structure='triang',
                  predict=True)
-    save_train = torch.load(checkpoint, map_location='cpu')
     model.load_state_dict(save_train['model_state_dict'])
 
     """Process each image with CNN and GF"""
@@ -266,12 +222,14 @@ def main(gf_dir: str,
         # coord_dist <- array of all points with labels after normalization
         # coords <- voxal of coord
         # coord_vx <- voxals for prediction
-        if scannet:
-            coord = load_ply(join(gf_dir, i), downsample=0.035)
+        if i.endswith('.ply'):
+            if scannet:
+                coord, _ = load_ply(join(gf_dir, i), downsample=0.1, scannet_data=True)
             img = [[0] for _ in range(len(coord))]
         else:
             coord, img = preprocess_data(coord=join(gf_dir, i),
                                          image=None,
+                                         datatype=False,
                                          include_label=True,
                                          size=None)
 
@@ -281,35 +239,30 @@ def main(gf_dir: str,
 
         VD = VoxalizeDataSetV2(coord=coord_dist,
                                init_voxal_size=0,
-                               drop_rate=0.1,
-                               voxal_3d=False,
+                               drop_rate=1,
+                               label_cls=coord[:, 0],
                                downsampling_threshold=point_in_voxal,
                                downsampling_rate=None,
                                graph=True)
         if scannet:
-            coords, _, graph_target, output_idx = VD.voxalize_dataset(mesh=True,
-                                                                      out_idx=True,
-                                                                      prune=5)
+            coords, _, graph_target, output_idx, _ = VD.voxalize_dataset(mesh=True)
         else:
-            coords, _, graph_target, output_idx = VD.voxalize_dataset(prune=5)
-        coord_vx = [c / pc_median_dist(c) for c in coords]
+            coords, _, graph_target, output_idx, _ = VD.voxalize_dataset()
 
         # Generate GT .txt
         # save GT .txt
-        GraphToSegment = GraphInstanceV2(threshold=0.91,
-                                         connection=5,
-                                         prune=100)
+        GraphToSegment = GraphInstanceV2(threshold=gf_threshold,
+                                         connection=4)
 
         graphs = []
-        coords = []
         model.to(device)
         model.eval()
-        for idx, (c, img) in enumerate(zip(coord_vx, img)):
+        for idx, (c, img) in enumerate(zip(coords, img)):
             tardis_logo(title='Metric evaluation for DIST',
                         text_2=f'Predicting {i} Est. elapse time: {elapse}',
                         text_3=printProgressBar(id, len(GF_list)),
                         text_4='Current task: Voxals prediction...',
-                        text_5=printProgressBar(idx, len(coord_vx)))
+                        text_5=printProgressBar(idx, len(coords)))
             if with_img:
                 x, y = c.to(device), img.to(device)
                 graphs.append(model(x[None, :], y[None, :])[0, 0, :].cpu().detach().numpy())
@@ -325,9 +278,6 @@ def main(gf_dir: str,
                     text_3=printProgressBar(id, len(GF_list)),
                     text_4='Current task: Graph prediction...')
 
-        # graph_target = GraphToSegment._stitch_graph(graph_target, output_idx)
-        # graph_target = np.where(graph_target > 0, 1, 0)
-        # graph_logits = GraphToSegment._stitch_graph(graphs, output_idx)
         try:
             if scannet:
                 segments = GraphToSegment.voxal_to_segment(graph=graphs,
@@ -354,6 +304,17 @@ def main(gf_dir: str,
                 all_rec.append(rec)
                 all_ap50.append(ap50)
                 all_label.append(label)
+
+                classes_eval = []
+                for i in np.unique(np.concatenate(all_label)):
+                    id = list(np.where(np.array(np.concatenate(all_label)) == i)[0])
+                    prec = np.mean([c for idx, c in enumerate(np.concatenate(all_prec)) if idx in id])
+                    rec = np.mean([c for idx, c in enumerate(np.concatenate(all_rec)) if idx in id])
+                    ap = np.mean([c for idx, c in enumerate(np.concatenate(all_ap50)) if idx in id])
+                    classes_eval.append(f'{i}: AP50: {ap}, mPrec: {prec}, mRec: {rec}\n')
+
+                np.save(join(gf_dir, 'scores', 'classes_eval.npy'),
+                        classes_eval)
             else:
                 graph_logits = GraphToSegment._stitch_graph(graphs, output_idx)
                 acc, prec, rec, f1 = F1_metric(graph_target.flatten(),
@@ -390,11 +351,6 @@ def main(gf_dir: str,
         end = time.time()
 
     if export:
-        if isdir(join(gf_dir, 'scores')):
-            rmtree(join(gf_dir, 'scores'))
-
-        mkdir(join(gf_dir, 'scores'))
-
         np.savetxt(join(gf_dir, 'scores', 'mAccuracy.csv'),
                    macc,
                    delimiter=',')

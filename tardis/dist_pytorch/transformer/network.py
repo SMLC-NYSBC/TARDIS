@@ -150,7 +150,6 @@ class C_DIST(nn.Module):
                  coord_embed_sigma: Optional[tuple] = 1.0,
                  dropout_rate=0,
                  structure='full',
-                 dist_embed=True,
                  predict=False):
         super().__init__()
 
@@ -158,8 +157,7 @@ class C_DIST(nn.Module):
         self.predict = predict
 
         self.coord_embed = DistEmbedding(n_out=edge_dim,
-                                         sigma=coord_embed_sigma,
-                                         dist=dist_embed)
+                                         sigma=coord_embed_sigma)
 
         self.layers = GraphFormerStack(node_dim=None,
                                        pairs_dim=edge_dim,

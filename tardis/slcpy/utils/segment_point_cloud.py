@@ -80,6 +80,32 @@ class GraphInstanceV2:
 
         return coord_df
 
+    @staticmethod
+    def _stitch_cls(cls: list,
+                    idx: list):
+        """
+        STITCHER FOR NODES IN VOXAL
+
+        Args:
+            cls: Predicted class in each voxal
+            idx: Idx for each node in voxals
+        """
+        # Conversion to Torch
+        if isinstance(cls[0], torch.Tensor):
+            cls = [c.cpu().detach().numpy() for c in cls]
+
+        # Build empty coord array
+        cls_df = max([max(f) for f in idx]) + 1
+        cls_df = np.zeros((cls_df),
+                            dtype=np.float32)
+
+        for cls_voxal, idx_voxal in zip(cls, idx):
+            cls_voxal = [np.where(i == 1)[0][0] for i in cls_voxal]
+            for value, id in zip(cls_voxal, idx_voxal):
+                cls_df[id] = value
+
+        return cls_df
+
     def adjacency_list(self,
                        graph: np.ndarray):
         """
@@ -369,7 +395,7 @@ class GraphInstanceV2:
             idx = self._find_segment_matrix(adjacency_matrix)
 
             """Select segment longer then 3 points"""
-            if len(idx) >= self.prune:
+            if len(idx) >= 3:
                 # Sort points in segment
                 if sort:
                     segment = self._sort_segment(coord=coord[idx])

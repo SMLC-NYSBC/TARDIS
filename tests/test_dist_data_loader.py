@@ -64,7 +64,7 @@ class TestDataLoader:
                                 normalize="rescale",
                                 memory_save=False)
 
-        coords_v, imgs_v, graph_v, output_idx = train_DL.__getitem__(0)
+        coords_v, imgs_v, graph_v, output_idx, _ = train_DL.__getitem__(0)
 
         assert len(coords_v) == 1
         assert coords_v[0].shape == (10, 3)
@@ -83,7 +83,7 @@ class TestDataLoader:
                                 normalize="rescale",
                                 memory_save=False)
 
-        coords_v, imgs_v, graph_v, output_idx = train_DL.__getitem__(0)
+        coords_v, imgs_v, graph_v, output_idx, _ = train_DL.__getitem__(0)
 
         assert len(coords_v) == 1
         assert coords_v[0].shape == (10, 3)
@@ -91,7 +91,7 @@ class TestDataLoader:
         assert graph_v[0].shape == (10, 10)
         assert output_idx[0].shape == (10, )
 
-        coords_v, imgs_v, graph_v, output_idx = train_DL.__getitem__(1)
+        coords_v, imgs_v, graph_v, output_idx, _ = train_DL.__getitem__(1)
 
         assert len(coords_v) == 1
         assert coords_v[0].shape == (122, 2)

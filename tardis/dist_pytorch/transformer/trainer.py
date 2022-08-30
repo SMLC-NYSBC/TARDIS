@@ -4,6 +4,7 @@ from shutil import rmtree
 
 import numpy as np
 import torch
+import torch.nn as nn
 from tardis.utils.losses import SoftF1
 from tardis.utils.logo import Tardis_Logo, printProgressBar
 from tardis.utils.utils import EarlyStopping
@@ -61,6 +62,8 @@ class Trainer:
 
         self.device = device
         self.criterion = criterion
+        if self.type['gf_type'] == 'semantic':
+            self.criterion_cls = nn.CrossEntropyLoss()
         self.optimizer = optimizer
         self.training_DataLoader = training_DataLoader
         self.validation_DataLoader = validation_DataLoader
@@ -162,7 +165,8 @@ class Trainer:
                        delimiter=',')
 
             """ If F1 is higher then save checkpoint """
-            if (np.array(self.f1)[:len(self.f1) - 1] < self.f1[len(self.f1) - 1]).all():
+            if (np.array(self.validation_loss)[:len(self.validation_loss) - 1] <
+                    self.validation_loss[len(self.validation_loss) - 1]).all():
                 torch.save({'model_struct_dict': self.type,
                             'model_state_dict': self.model.state_dict(),
                             'optimizer_state_dict': self.optimizer.state_dict()},
@@ -234,7 +238,7 @@ class Trainer:
                                               padding_mask=None)
 
                     cls = cls.to(self.device)
-                    loss = self.criterion(out[0, :], g) + self.criterion(out_cls, cls)
+                    loss = self.criterion(out[0, :], g) + self.criterion_cls(out_cls, cls)
 
                     loss.backward()  # one backward pass
                     self.optimizer.step()  # update the parameters

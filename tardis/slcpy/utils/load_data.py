@@ -653,30 +653,37 @@ def load_ply(ply,
     # Work on kNN for coord not for color
     if scannet_data:
         label_id = []
+        cls_id = []
+        tree = KDTree(coord_org, leaf_size=coord_org.shape[0])
 
         for i in coord:
-            # Get RGB
-            tree = KDTree(coord_org, leaf_size=coord_org.shape[0])
             _, match_coord = tree.query(i.reshape(1, -1), k=1)
             match_coord = match_coord[0][0]
-            # match_coord = KDTree(coord_org).query(i, k=1, workers=-1)[1]
-
-            color_df = label_org[match_coord] * 255
-
-            color_id = [key for key in SCANNET_COLOR_MAP_200 if np.all(SCANNET_COLOR_MAP_200[key] == color_df)]
-            if len(color_id) > 0:
-                label_id.append(color_id[0])
-            else:
-                label_id.append(0)
-    else:
-        label_id = []
-
-        for i in coord:
-            tree = KDTree(coord_org, leaf_size=coord_org.shape[0])
-            _, match_coord = tree.query(i.reshape(1, -1), k=1)
-            match_coord = match_coord[0][0]
-            # match_coord = KDTree(coord_org).query(i, k=1, workers=-1)[1]
 
             label_id.append(np.where(np.all(label_org[match_coord] == label_uniq, 1))[0][0])
 
-    return np.hstack((np.asarray(label_id)[:, None], coord))
+        for i in coord:
+            # Get RGB
+            _, match_coord = tree.query(i.reshape(1, -1), k=1)
+            match_coord = match_coord[0][0]
+
+            color_df = label_org[match_coord] * 255
+            color_id = [key for key in SCANNET_COLOR_MAP_200 if np.all(SCANNET_COLOR_MAP_200[key] == color_df)]
+
+            if len(color_id) > 0:
+                cls_id.append(color_id[0])
+            else:
+                cls_id.append(0)
+
+        return np.hstack((np.asarray(label_id)[:, None], coord)), np.array(cls_id)
+    else:
+        label_id = []
+        tree = KDTree(coord_org, leaf_size=coord_org.shape[0])
+
+        for i in coord:
+            _, match_coord = tree.query(i.reshape(1, -1), k=1)
+            match_coord = match_coord[0][0]
+
+            label_id.append(np.where(np.all(label_org[match_coord] == label_uniq, 1))[0][0])
+
+        return np.hstack((np.asarray(label_id)[:, None], coord))

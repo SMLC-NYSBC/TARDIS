@@ -31,7 +31,7 @@ class TestGraphFormer:
                               padding_mask=None)
 
     def test_nn_w_img(self):
-        for n_dim in [256, 128, 64, 32, 16, None]:
+        for n_dim in [256, 128, 64, 32, 16]:
             for e_dim in [256, 128, 64, 32, 16]:
                 for n_layer in [6, 3, 1]:
                     for n_head in [8, 4, 2, 1]:

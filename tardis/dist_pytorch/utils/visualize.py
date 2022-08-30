@@ -51,7 +51,7 @@ def _rgb(coord: np.ndarray,
                               np.random.rand())) for _ in np.unique(coord[:, 0])]
 
         for id, _ in enumerate(rgb):
-            rgb[id, :] = rgb_list[int(coord[id, 0]) - 1]
+            rgb[id, :] = rgb_list[np.where(np.unique(coord[:, 0]) == int(coord[id, 0]))[0][0]]
     else:
         rgb_list = [[1, 0, 0]]
 

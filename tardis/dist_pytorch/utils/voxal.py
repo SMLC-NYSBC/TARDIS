@@ -78,7 +78,7 @@ class VoxalizeDataSetV2:
         self.voxal_patch_size = init_voxal_size
         self.expand = 0.025  # Expand boundary box by 25%
         self.size_expand = init_voxal_size * self.expand
-        self.voxal_size = 0.25  # Create 25% overlaps between voxals
+        self.voxal_size = 0.25  # Create 15% overlaps between voxals
         self.voxal_stride = init_voxal_size * self.voxal_size
         self.drop_rate = drop_rate
 
@@ -128,14 +128,14 @@ class VoxalizeDataSetV2:
         voxal_positions_x.append(x_pos)
 
         while bb_max[0] > x_pos:
-            x_pos = x_pos + self.voxal_patch_size
+            x_pos = x_pos + self.voxal_patch_size - self.voxal_stride
             voxal_positions_x.append(x_pos)
 
         # Find Y positions for voxal
         y_pos = bb_min[1] + (self.voxal_patch_size / 2)
         voxal_positions_y.append(y_pos)
         while bb_max[1] > y_pos:
-            y_pos = y_pos + self.voxal_patch_size
+            y_pos = y_pos + self.voxal_patch_size - self.voxal_stride
             voxal_positions_y.append(y_pos)
 
         # Bind X and Y voxal positions
@@ -154,7 +154,7 @@ class VoxalizeDataSetV2:
             z_pos = bb_min[2] + (self.voxal_patch_size / 2)
             voxal_positions_z.append(y_pos)
             while bb_max[2] > z_pos:
-                z_pos = z_pos + self.voxal_patch_size
+                z_pos = z_pos + self.voxal_patch_size - self.voxal_stride
                 voxal_positions_z.append(z_pos)
 
             for i in voxal_positions_x:
@@ -279,7 +279,8 @@ class VoxalizeDataSetV2:
         # Initial voxalization with self.voxal_patch_size
         if self.voxal_patch_size == 0:
             self.voxal_patch_size = np.max(b_box)
-        voxal_size = self.voxal_patch_size
+            voxal_size = self.voxal_patch_size
+            self.voxal_stride = voxal_size * self.voxal_size
 
         voxals_coord = self.voxal_centers(boundary_box=b_box)
         voxal_idx, piv = self.collect_voxal_idx(voxals=voxals_coord)
@@ -476,7 +477,7 @@ class VoxalizeDataSetV2:
                     df[0, int(i)] = 1
                     cls_new[id, :] = df
 
-                cls_voxal.append(cls_new)
+                cls_voxal.append(self.output_format(cls_new))
 
         if self.graph_output:
             return coord_voxal, img_voxal, graph_voxal, output_idx, cls_voxal

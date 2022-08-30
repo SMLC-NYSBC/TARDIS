@@ -51,8 +51,8 @@ class GraphFormerStack(nn.Module):
                 src_mask=None,
                 src_key_padding_mask=None):
         for layer in self.layers:
-            x, z = layer(h_pairs=x,
-                         h_nodes=z,
+            x, z = layer(h_pairs=z,
+                         h_nodes=x,
                          src_mask=src_mask,
                          src_key_padding_mask=src_key_padding_mask)
         return x, z
@@ -145,92 +145,92 @@ class GraphFormerLayer(nn.Module):
                                         ff_dim=pairs_dim * ff_factor)
 
     def update_nodes(self,
-                     h_nodes: torch.Tensor,
-                     h_pairs: Optional[torch.Tensor] = None,
+                     h_pairs: torch.Tensor,
+                     h_nodes: Optional[torch.Tensor] = None,
                      src_mask=None,
                      src_key_padding_mask=None):
         """
         Transformer on the input weighted by the pair representations
 
         Input:
-            h_nodes -> Batch x Length x Length x Channels
-            h_pairs -> Length x Batch x Channels
+            h_paris -> Batch x Length x Length x Channels
+            h_nodes -> Length x Batch x Channels
 
         Output:
-            h_pairs -> Length x Batch x Channels
+            h_nodes -> Length x Batch x Channels
         """
-        h_pairs = h_pairs + self.input_attn(query=h_pairs,
-                                            pairs=h_nodes,
+        h_nodes = h_nodes + self.input_attn(query=h_nodes,
+                                            pairs=h_pairs,
                                             attn_mask=src_mask,
                                             key_padding_mask=src_key_padding_mask)
-        h_pairs = h_pairs + self.input_ffn(x=h_pairs)
+        h_nodes = h_nodes + self.input_ffn(x=h_nodes)
 
-        return h_pairs
+        return h_nodes
 
     def update_edges(self,
-                     h_nodes: torch.Tensor,
-                     h_pairs: Optional[torch.Tensor] = None,
+                     h_pairs: torch.Tensor,
+                     h_nodes: Optional[torch.Tensor] = None,
                      src_key_padding_mask=None):
         """
         Update the edge representations based on nodes
 
         Input:
-            h_nodes -> Batch x Length x Length x Channels
-            h_pairs -> Length x Batch x Channels
+            h_pairs -> Batch x Length x Length x Channels
+            h_nodes -> Length x Batch x Channels
 
         Output:
-            h_nodes -> Batch x Length x Length x Channels
+            h_pairs -> Batch x Length x Length x Channels
         """
-        if self.node_dim is not None and h_pairs is not None:
-            h_nodes = h_nodes + self.pair_update(x=h_pairs)
+        if self.node_dim is not None and h_nodes is not None:
+            h_pairs = h_pairs + self.pair_update(x=h_nodes)
 
         mask = None
         if src_key_padding_mask is not None:
             mask = src_key_padding_mask.unsqueeze(2) | src_key_padding_mask.unsqueeze(1)
 
         if self.structure == 'full':
-            h_nodes = h_nodes + \
-                self.row_attention(x=h_nodes, padding_mask=mask) + \
-                self.col_attention(x=h_nodes, padding_mask=mask) + \
-                self.row_update(z=h_nodes, mask=mask) + \
-                self.col_update(z=h_nodes, mask=mask)
+            h_pairs = h_pairs + \
+                self.row_attention(x=h_pairs, padding_mask=mask) + \
+                self.col_attention(x=h_pairs, padding_mask=mask) + \
+                self.row_update(z=h_pairs, mask=mask) + \
+                self.col_update(z=h_pairs, mask=mask)
         elif self.structure == 'full_af':
-            h_nodes = h_nodes + self.row_attention(x=h_nodes, padding_mask=mask)
-            h_nodes = h_nodes + self.col_attention(x=h_nodes, padding_mask=mask)
-            h_nodes = h_nodes + self.row_update(z=h_nodes, mask=mask)
-            h_nodes = h_nodes + self.col_update(z=h_nodes, mask=mask)
+            h_pairs = h_pairs + self.row_attention(x=h_pairs, padding_mask=mask)
+            h_pairs = h_pairs + self.col_attention(x=h_pairs, padding_mask=mask)
+            h_pairs = h_pairs + self.row_update(z=h_pairs, mask=mask)
+            h_pairs = h_pairs + self.col_update(z=h_pairs, mask=mask)
         elif self.structure == 'self_attn':
-            h_nodes = h_nodes + \
-                self.row_attention(x=h_nodes, padding_mask=mask) + \
-                self.col_attention(x=h_nodes, padding_mask=mask)
+            h_pairs = h_pairs + \
+                self.row_attention(x=h_pairs, padding_mask=mask) + \
+                self.col_attention(x=h_pairs, padding_mask=mask)
         elif self.structure in ['triang', 'quad']:
-            h_nodes = h_nodes + \
-                self.row_update(z=h_nodes, mask=mask) + \
-                self.col_update(z=h_nodes, mask=mask)
+            h_pairs = h_pairs + \
+                self.row_update(z=h_pairs, mask=mask) + \
+                self.col_update(z=h_pairs, mask=mask)
         elif self.structure == 'dualtriang':
-            h_nodes = h_nodes + \
-                self.row_update_1(z=h_nodes, mask=mask) + \
-                self.col_update_1(z=h_nodes, mask=mask)
-            h_nodes = h_nodes + \
-                self.row_update_2(z=h_nodes, mask=mask) + \
-                self.col_update_2(z=h_nodes, mask=mask)
+            h_pairs = h_pairs + \
+                self.row_update_1(z=h_pairs, mask=mask) + \
+                self.col_update_1(z=h_pairs, mask=mask)
+            h_pairs = h_pairs + \
+                self.row_update_2(z=h_pairs, mask=mask) + \
+                self.col_update_2(z=h_pairs, mask=mask)
 
-        return h_nodes + self.pair_ffn(x=h_nodes)
+        return h_pairs + self.pair_ffn(x=h_pairs)
 
     def forward(self,
-                h_nodes: torch.Tensor,
-                h_pairs: Optional[torch.Tensor] = None,
+                h_pairs: torch.Tensor,
+                h_nodes: Optional[torch.Tensor] = None,
                 src_mask=None,
                 src_key_padding_mask=None):
-        if self.node_dim is not None and h_pairs is not None:
-            h_pairs = self.update_nodes(h_pairs=h_pairs,
+        if self.node_dim is not None and h_nodes is not None:
+            h_nodes = self.update_nodes(h_pairs=h_pairs,
                                         h_nodes=h_nodes,
                                         src_mask=src_mask,
                                         src_key_padding_mask=src_key_padding_mask)
         else:
-            h_pairs = None
+            h_nodes = None
 
-        h_nodes = self.update_edges(h_pairs=h_pairs,
+        h_pairs = self.update_edges(h_pairs=h_pairs,
                                     h_nodes=h_nodes,
                                     src_key_padding_mask=src_key_padding_mask)
-        return h_pairs, h_nodes
+        return h_nodes, h_pairs
