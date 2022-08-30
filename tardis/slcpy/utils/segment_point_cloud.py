@@ -97,7 +97,7 @@ class GraphInstanceV2:
         # Build empty coord array
         cls_df = max([max(f) for f in idx]) + 1
         cls_df = np.zeros((cls_df),
-                            dtype=np.float32)
+                          dtype=np.float32)
 
         for cls_voxal, idx_voxal in zip(cls, idx):
             cls_voxal = [np.where(i == 1)[0][0] for i in cls_voxal]
