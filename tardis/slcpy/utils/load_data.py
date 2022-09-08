@@ -413,7 +413,13 @@ def import_am(img: str):
                                    float(bb[9])))
         binary_start = str.find(am, "\n@1\n") + 4
 
-    pixel_size = round((physical_size[0] - transformation[0]) / (nx - 1), 3)
+    coordinate = str([word for word in am.split('\n')
+                      if word.startswith('        Coordinates')]).split(" ")[9][1:2]
+    if coordinate == 'm':  # Bring meter to angstrom
+        pixel_size = ((physical_size[0] - transformation[0]) / (nx - 1)) * 10000000000
+    else:
+        pixel_size = (physical_size[0] - transformation[0]) / (nx - 1)
+    pixel_size = round(pixel_size, 3)
 
     img = np.fromfile(img, dtype=np.uint8)
 

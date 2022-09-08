@@ -190,6 +190,13 @@ def main(prediction_dir: str,
         org_shape = image.shape
         scale_shape = np.multiply(org_shape, scale_factor).astype(np.int16)
 
+        tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
+                                text_1=f'Found {len(predict_list)} images to predict!',
+                                text_3=f'Image: {i}',
+                                text_4=f'Pixel size: {px} A; Image re-sample to 25 A',
+                                text_5='Point Cloud: In processing...',
+                                text_7=f'Current Task: Sub-dividing images for {patch_size} size')
+
         trim_with_stride(image=image,
                          scale=scale_factor,
                          trim_size_xy=patch_size,
