@@ -84,7 +84,7 @@ warnings.simplefilter("ignore", UserWarning)
               show_default=True)
 @click.option('-v', '--visualizer',
               default=None,
-              type=str,
+              type=click.Choice(['f', 'p']),
               help='If not None, output visualization of the prediction'
               'f: Output as filaments'
               'p: Output as segmented point cloud',
@@ -191,11 +191,11 @@ def main(prediction_dir: str,
         scale_shape = np.multiply(org_shape, scale_factor).astype(np.int16)
 
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
-                                text_1=f'Found {len(predict_list)} images to predict!',
-                                text_3=f'Image: {i}',
-                                text_4=f'Pixel size: {px} A; Image re-sample to 25 A',
-                                text_5='Point Cloud: In processing...',
-                                text_7=f'Current Task: Sub-dividing images for {patch_size} size')
+                        text_1=f'Found {len(predict_list)} images to predict!',
+                        text_3=f'Image: {i}',
+                        text_4=f'Pixel size: {px} A; Image re-sample to 25 A',
+                        text_5='Point Cloud: In processing...',
+                        text_7=f'Current Task: Sub-dividing images for {patch_size} size')
 
         trim_with_stride(image=image,
                          scale=scale_factor,
@@ -290,22 +290,22 @@ def main(prediction_dir: str,
 
         """DIST Prediction"""
         # Post-process predicted image patches
-        down_sample = 2.5
-        if point_cloud.shape[0] > 25000:
-            down_sample = 1.5
-        if point_cloud.shape[0] > 30000:
-            down_sample = 2.5
-        if point_cloud.shape[0] > 40000:
-            down_sample = 3
-        if point_cloud.shape[0] > 50000:
-            down_sample = 4
-        if point_cloud.shape[0] > 80000:
-            down_sample = 5
+        # down_sample = 2.5
+        # if point_cloud.shape[0] > 25000:
+        #     down_sample = 1.5
+        # if point_cloud.shape[0] > 30000:
+        #     down_sample = 2.5
+        # if point_cloud.shape[0] > 40000:
+        #     down_sample = 3
+        # if point_cloud.shape[0] > 50000:
+        #     down_sample = 4
+        # if point_cloud.shape[0] > 80000:
+        #     down_sample = 5
 
         # Find downsampling value by 5 to reduce noise
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(point_cloud)
-        point_cloud = np.asarray(pcd.voxel_down_sample(voxel_size=down_sample).points)
+        point_cloud = np.asarray(pcd.voxel_down_sample(voxel_size=5).points)
 
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
@@ -325,7 +325,7 @@ def main(prediction_dir: str,
                                downsampling_threshold=points_in_voxal,
                                graph=False)
 
-        coords_df, _, output_idx, _, _ = VD.voxalize_dataset(mesh=False)
+        coords_df, _, output_idx, _ = VD.voxalize_dataset(mesh=False)
         coords_df = [c / pc_median_dist(c) for c in coords_df]
 
         # Predict point cloud
@@ -338,7 +338,6 @@ def main(prediction_dir: str,
                                           dropout_rate=0,
                                           coord_embed_sigma=2,
                                           structure='triang',
-                                          dist_embed=True,
                                           predict=True),
                                checkpoint=checkpoints[2],
                                network='graphformer',
@@ -419,29 +418,35 @@ def main(prediction_dir: str,
 
         GraphToSegment = GraphInstanceV2(threshold=gt_threshold,
                                          connection=2,
-                                         prune=5)
+                                         smooth=True)
 
         segments = GraphToSegment.voxal_to_segment(graph=graphs,
                                                    coord=point_cloud,
                                                    idx=output_idx,
+                                                   prune=5,
+                                                   sort=True,
                                                    visualize=visualizer)
 
         """Threshold drop for hard datasets"""
         if 100 - ((segments.shape[0] * 100) / point_cloud.shape[0]) > 25:
-            GraphToSegment = GraphInstanceV2(threshold=0.25,
+            GraphToSegment = GraphInstanceV2(threshold=gt_threshold / 2,
                                              connection=2,
-                                             prune=5)
+                                             smooth=True)
             segments = GraphToSegment.voxal_to_segment(graph=graphs,
                                                        coord=point_cloud,
                                                        idx=output_idx,
+                                                       prune=5,
+                                                       sort=True,
                                                        visualize=visualizer)
         if 100 - ((segments.shape[0] * 100) / point_cloud.shape[0]) > 25:
-            GraphToSegment = GraphInstanceV2(threshold=0.1,
+            GraphToSegment = GraphInstanceV2(threshold=gt_threshold / 5,
                                              connection=2,
-                                             prune=5)
+                                             smooth=True)
             segments = GraphToSegment.voxal_to_segment(graph=graphs,
                                                        coord=point_cloud,
                                                        idx=output_idx,
+                                                       prune=5,
+                                                       sort=True,
                                                        visualize=visualizer)
         if debug:
             np.save(join(am_output,
