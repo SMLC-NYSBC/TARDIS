@@ -332,7 +332,15 @@ class GraphInstanceV2:
             tortuosity.append(length / end_length)
         error = [id for id, i in enumerate(tortuosity) if i > 1.1]
 
-        return np.stack([i for i in coord_segment_smooth if i[0] not in error])
+        segments = np.stack([i for i in coord_segment_smooth if i[0] not in error])
+
+        df = np.unique(segments[:, 0])
+        df_range = np.asarray(range(0, len(df)), dtype=df.dtype)
+
+        for id, i in enumerate(segments[:, 0]):
+            segments[id, 0] = df_range[np.where(df == i)[0][0]]
+
+        return segments
 
     def voxal_to_segment(self,
                          graph: list,
