@@ -100,7 +100,7 @@ class GraphInstanceV2:
                           dtype=np.float32)
 
         for cls_voxal, idx_voxal in zip(cls, idx):
-            cls_voxal = [np.where(i == 1)[0][0] for i in cls_voxal]
+            # cls_voxal = [np.where(i == 1)[0][0] for i in cls_voxal]
             for value, id in zip(cls_voxal, idx_voxal):
                 cls_df[id] = value
 
@@ -338,6 +338,7 @@ class GraphInstanceV2:
                          graph: list,
                          coord: np.ndarray,
                          idx: list,
+                         prune: int,
                          sort=True,
                          visualize: Optional[str] = None):
         """
@@ -395,7 +396,7 @@ class GraphInstanceV2:
             idx = self._find_segment_matrix(adjacency_matrix)
 
             """Select segment longer then 3 points"""
-            if len(idx) >= 3:
+            if len(idx) >= prune:
                 # Sort points in segment
                 if sort:
                     segment = self._sort_segment(coord=coord[idx])

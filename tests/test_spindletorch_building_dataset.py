@@ -1,5 +1,5 @@
 from os import listdir, mkdir
-from os.path import join
+from os.path import join, isdir
 from shutil import rmtree
 
 from tardis.slcpy.build_training_dataset import BuildTrainDataSet
@@ -19,6 +19,8 @@ class TestDataSetBuilder:
         assert builder.idx_mask == ['am3D.CorrelationLines.am']
 
     def test_train_builder(self):
+        if isdir(join('tests', 'test_data', 'data_loader', 'train')):
+            rmtree(join('tests', 'test_data', 'data_loader', 'train'))
         mkdir(join('tests', 'test_data', 'data_loader', 'train'))
         mkdir(join('tests', 'test_data', 'data_loader', 'train', 'imgs'))
         mkdir(join('tests', 'test_data', 'data_loader', 'train', 'masks'))
@@ -37,6 +39,10 @@ class TestDataSetBuilder:
         rmtree(join('tests', 'test_data', 'data_loader', 'train'))
 
     def test_test_builder(self):
+        if isdir(join('tests', 'test_data', 'data_loader', 'train')):
+            rmtree(join('tests', 'test_data', 'data_loader', 'train'))
+        if isdir(join('tests', 'test_data', 'data_loader', 'test')):
+            rmtree(join('tests', 'test_data', 'data_loader', 'test'))
         mkdir(join('tests', 'test_data', 'data_loader', 'train'))
         mkdir(join('tests', 'test_data', 'data_loader', 'train', 'imgs'))
         mkdir(join('tests', 'test_data', 'data_loader', 'train', 'masks'))

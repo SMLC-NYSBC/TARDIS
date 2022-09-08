@@ -251,8 +251,6 @@ def main(gf_dir: str,
 
         # Generate GT .txt
         # save GT .txt
-        GraphToSegment = GraphInstanceV2(threshold=gf_threshold,
-                                         connection=4)
 
         graphs = []
         model.to(device)
@@ -280,12 +278,17 @@ def main(gf_dir: str,
 
         try:
             if scannet:
+                GraphToSegment = GraphInstanceV2(threshold=gf_threshold,
+                                                 connection=40000000)
                 segments = GraphToSegment.voxal_to_segment(graph=graphs,
                                                            coord=coord_dist[:, 1:],
                                                            idx=output_idx,
+                                                           prune=10,
                                                            sort=False,
                                                            visualize=None)
             else:
+                GraphToSegment = GraphInstanceV2(threshold=gf_threshold,
+                                                 connection=40000000)
                 segments = GraphToSegment.voxal_to_segment(graph=graphs,
                                                            coord=coord_dist[:, 1:],
                                                            idx=output_idx,
@@ -297,6 +300,7 @@ def main(gf_dir: str,
                         text_2=f'Predicting {i} Est. elapse time: {elapse}',
                         text_3=printProgressBar(id, len(GF_list)),
                         text_4='Current task: Calculating metrics...')
+
             if scannet:
                 ap50, prec, rec, label = AP50_ScanNet(segments, coord_dist)
 

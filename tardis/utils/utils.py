@@ -5,7 +5,7 @@ from typing import Optional
 
 import numpy as np
 import torch
-from scipy.spatial.distance import cdist
+from sklearn.neighbors import KDTree
 
 
 def pc_median_dist(pc: np.ndarray,
@@ -59,20 +59,21 @@ def pc_median_dist(pc: np.ndarray,
         voxel = pc[voxel]
 
         # Calculate KNN dist
-        knn = cdist(voxel, voxel)
+        tree = KDTree(pc, leaf_size=pc.shape[0])
     else:
         if isinstance(pc, torch.Tensor):
             pc = pc.cpu().detach().numpy()
+        tree = KDTree(pc, leaf_size=pc.shape[0])
 
-        knn = cdist(pc, pc)
-
-    if knn.shape[0] < 3:
+    if pc.shape[0] < 3:
         return 1.0
 
-    df_1 = [sorted(d)[1] for d in knn if sorted(d)[1] != 0]  # Fist KNN
-    df_2 = [sorted(d)[2] for d in knn if sorted(d)[2] != 0]  # Second KNN
+    knn_df = []
+    for id, i in enumerate(pc):
+        knn, _ = tree.query(pc[id].reshape(1, -1), k=4)
+        knn_df.append(knn[0][1])
 
-    return np.mean(df_1 + df_2)
+    return np.mean(knn_df)
 
 
 class EarlyStopping():

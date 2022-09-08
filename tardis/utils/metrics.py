@@ -263,7 +263,7 @@ def AP50_ScanNet(logits: np.ndarray,
     prec, rec = [], []
     ap50 = []
     label = []
-    CLASS_LABELS = ('wall', 'chair', 'floor', 'table', 'door', 'couch', 'cabinet',
+    CLASS_LABELS_200 = ('wall', 'chair', 'floor', 'table', 'door', 'couch', 'cabinet',
                     'shelf', 'desk', 'office chair', 'bed', 'pillow', 'sink',
                     'picture', 'window', 'toilet', 'bookshelf', 'monitor',
                     'curtain', 'book', 'armchair', 'coffee table', 'box',
@@ -302,8 +302,12 @@ def AP50_ScanNet(logits: np.ndarray,
                     'keyboard piano', 'case of water bottles', 'coat rack', 'folded chair',
                     'fire alarm', 'power strip', 'calendar', 'poster', 'potted plant',
                     'mattress')
+    CLASS_LABELS_20 = ('wall', 'floor', 'cabinet', 'bed', 'chair', 'sofa', 'table',
+                       'door', 'window', 'bookshelf', 'picture', 'counter', 'desk',
+                       'curtain', 'refrigerator', 'shower curtain', 'toilet', 'sink',
+                       'bathtub', 'otherfurniture')
 
-    VALID_CLASS_IDS = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18,
+    VALID_CLASS_IDS_200 = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18,
                        19, 21, 22, 23, 24, 26, 27, 28, 29, 31, 32, 33, 34, 35, 36,
                        38, 39, 40, 41, 42, 44, 45, 46, 47, 48, 49, 50, 51, 52, 54,
                        55, 56, 57, 58, 59, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71,
@@ -318,6 +322,8 @@ def AP50_ScanNet(logits: np.ndarray,
                        748, 776, 1156, 1163, 1164, 1165, 1166, 1167, 1168, 1169,
                        1170, 1171, 1172, 1173, 1175, 1176, 1179, 1180, 1181, 1182,
                        1184, 1185, 1186, 1187, 1188, 1189, 1191)
+    VALID_CLASS_IDS_20 = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 24, 28, 
+                          33, 34, 36, 39)
 
     for j in np.unique(logits[:, 0]):
         """For each predicted instance find all point"""
@@ -334,14 +340,14 @@ def AP50_ScanNet(logits: np.ndarray,
 
             df.append(intersection / union)
 
-        """Get gt2pred label"""
+        """Get gt2pred coord"""
         id = np.where(df == np.max(df))[0][0]
         id = gt_uniqe_id[id]
         gt = coord[np.where(coord[:, 0] == id)[0]][:, 1:]
 
         """Get gt2pred label"""
-        if id in VALID_CLASS_IDS:
-            label.append(CLASS_LABELS[[idx for idx, k in enumerate(VALID_CLASS_IDS) if k == id][0]])
+        if id in VALID_CLASS_IDS_20:
+            label.append(CLASS_LABELS_20[[idx for idx, k in enumerate(VALID_CLASS_IDS_20) if k == id][0]])
         else:
             label.append('Not_Valid_Label')
 
@@ -371,7 +377,7 @@ def AP50_ScanNet(logits: np.ndarray,
         uniq_ap50.append(ap50s)
         precs = np.mean([a for id, a in enumerate(prec) if id in ids])
         uniq_prec.append(precs)
-        recs = np.sum([a for id, a in enumerate(rec) if id in ids])
+        recs = np.mean([a for id, a in enumerate(rec) if id in ids])
         uniq_rec.append(recs)
         uniq_label.append(i)
     return uniq_ap50, uniq_prec, uniq_rec, uniq_label

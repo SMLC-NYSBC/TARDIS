@@ -644,7 +644,47 @@ def load_ply(ply,
         1190: (72., 185., 134.),
         1191: (42., 94., 198.),
     }
-
+    SCANNET_COLOR_MAP_20 = {
+        0: (0., 0., 0.),
+        1: (174., 199., 232.),
+        2: (152., 223., 138.),
+        3: (31., 119., 180.),
+        4: (255., 187., 120.),
+        5: (188., 189., 34.),
+        6: (140., 86., 75.),
+        7: (255., 152., 150.),
+        8: (214., 39., 40.),
+        9: (197., 176., 213.),
+        10: (148., 103., 189.),
+        11: (196., 156., 148.),
+        12: (23., 190., 207.),
+        14: (247., 182., 210.),
+        15: (66., 188., 102.),
+        16: (219., 219., 141.),
+        17: (140., 57., 197.),
+        18: (202., 185., 52.),
+        19: (51., 176., 203.),
+        20: (200., 54., 131.),
+        21: (92., 193., 61.),
+        22: (78., 71., 183.),
+        23: (172., 114., 82.),
+        24: (255., 127., 14.),
+        25: (91., 163., 138.),
+        26: (153., 98., 156.),
+        27: (140., 153., 101.),
+        28: (158., 218., 229.),
+        29: (100., 125., 154.),
+        30: (178., 127., 135.),
+        32: (146., 111., 194.),
+        33: (44., 160., 44.),
+        34: (112., 128., 144.),
+        35: (96., 207., 209.),
+        36: (227., 119., 194.),
+        37: (213., 92., 176.),
+        38: (94., 106., 211.),
+        39: (82., 84., 163.),
+        40: (100., 85., 144.),
+    }
     if downsample is not None:
         pcd = pcd.voxel_down_sample(voxel_size=downsample)
 
@@ -656,11 +696,11 @@ def load_ply(ply,
         cls_id = []
         tree = KDTree(coord_org, leaf_size=coord_org.shape[0])
 
-        for i in coord:
-            _, match_coord = tree.query(i.reshape(1, -1), k=1)
-            match_coord = match_coord[0][0]
+        # for i in coord:
+        #     _, match_coord = tree.query(i.reshape(1, -1), k=1)
+        #     match_coord = match_coord[0][0]
 
-            label_id.append(np.where(np.all(label_org[match_coord] == label_uniq, 1))[0][0])
+        #     label_id.append(np.where(np.all(label_org[match_coord] == label_uniq, 1))[0][0])
 
         for i in coord:
             # Get RGB
@@ -668,14 +708,18 @@ def load_ply(ply,
             match_coord = match_coord[0][0]
 
             color_df = label_org[match_coord] * 255
-            color_id = [key for key in SCANNET_COLOR_MAP_200 if np.all(SCANNET_COLOR_MAP_200[key] == color_df)]
+            color_id = [key for key in SCANNET_COLOR_MAP_20 if np.all(SCANNET_COLOR_MAP_20[key] == color_df)]
 
             if len(color_id) > 0:
                 cls_id.append(color_id[0])
             else:
                 cls_id.append(0)
 
-        return np.hstack((np.asarray(label_id)[:, None], coord)), np.array(cls_id)
+        cls_id = np.asarray(cls_id)[:, None]
+        coord = coord[np.where(cls_id != 0)[0]]
+        cls_id = cls_id[np.where(cls_id != 0)[0]]
+
+        return np.hstack((cls_id, coord)), cls_id
     else:
         label_id = []
         tree = KDTree(coord_org, leaf_size=coord_org.shape[0])

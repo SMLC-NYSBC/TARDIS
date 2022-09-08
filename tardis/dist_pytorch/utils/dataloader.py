@@ -135,7 +135,7 @@ class GraphDataset(Dataset):
 
             # Normalize point cloud
             if coord_file.endswith('.ply'):
-                dist = pc_median_dist(pc=coord[:, 1:], avg_over=True, box_size=0.05)
+                dist = pc_median_dist(pc=coord[:, 1:], avg_over=False)
             else:
                 dist = pc_median_dist(pc=coord[:, 1:], avg_over=True)
 
