@@ -214,6 +214,22 @@ def main(prediction_dir: str,
                                        size=patch_size,
                                        out_channels=1)
 
+        predict_gf = Predictor(model=DIST(n_out=1,
+                                          node_input=None,
+                                          node_dim=256,
+                                          edge_dim=128,
+                                          num_layers=6,
+                                          num_heads=8,
+                                          dropout_rate=0,
+                                          coord_embed_sigma=2,
+                                          structure='triang',
+                                          predict=True),
+                               checkpoint=checkpoints[2],
+                               network='graphformer',
+                               subtype='without_img',
+                               model_type='microtubules',
+                               device=device)
+
         """CNN prediction"""
         for j in range(patches_DL.__len__()):
             if j // 10:
@@ -250,12 +266,15 @@ def main(prediction_dir: str,
                                      mask=True,
                                      scale=None,
                                      prefix='',
-                                     dtype=np.int8)[:scale_shape[0],
-                                                    :scale_shape[1],
-                                                    :scale_shape[2]])
+                                     dtype=np.int8)[:scale_shape[0] + 1,
+                                                    :scale_shape[1] + 1,
+                                                    :scale_shape[2] + 1])
         image, _ = scale_image(image=image,
                                mask=None,
                                scale=scale_factor)
+
+        assert image.shape == org_shape, 'Error while converting from 2.5 nm pixel size. ' \
+            f'Org. shape {org_shape} is not the same as converted shape {image.shape}'
 
         # Check if predicted image is not empty
         if debug:
@@ -278,7 +297,6 @@ def main(prediction_dir: str,
                                      euclidean_transform=True,
                                      label_size=3,
                                      down_sampling_voxal_size=None)
-        point_cloud = point_cloud * scale_factor
 
         # Transform for xyz and pixel size for coord
         image = None
@@ -289,19 +307,6 @@ def main(prediction_dir: str,
                     point_cloud)
 
         """DIST Prediction"""
-        # Post-process predicted image patches
-        # down_sample = 2.5
-        # if point_cloud.shape[0] > 25000:
-        #     down_sample = 1.5
-        # if point_cloud.shape[0] > 30000:
-        #     down_sample = 2.5
-        # if point_cloud.shape[0] > 40000:
-        #     down_sample = 3
-        # if point_cloud.shape[0] > 50000:
-        #     down_sample = 4
-        # if point_cloud.shape[0] > 80000:
-        #     down_sample = 5
-
         # Find downsampling value by 5 to reduce noise
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(point_cloud)
@@ -328,23 +333,7 @@ def main(prediction_dir: str,
         coords_df, _, output_idx, _ = VD.voxalize_dataset(mesh=False)
         coords_df = [c / pc_median_dist(c) for c in coords_df]
 
-        # Predict point cloud
-        predict_gf = Predictor(model=DIST(n_out=1,
-                                          node_input=None,
-                                          node_dim=256,
-                                          edge_dim=128,
-                                          num_layers=6,
-                                          num_heads=8,
-                                          dropout_rate=0,
-                                          coord_embed_sigma=2,
-                                          structure='triang',
-                                          predict=True),
-                               checkpoint=checkpoints[2],
-                               network='graphformer',
-                               subtype='without_img',
-                               model_type='microtubules',
-                               device=device)
-
+        # Save debugging check point
         if debug:
             if device == 'cpu':
                 np.save(join(am_output,
@@ -394,7 +383,7 @@ def main(prediction_dir: str,
                     allow_pickle=True)
 
         """Graphformer post-processing"""
-        if format == 'amira':
+        if format in ['amira', 'mrc']:
             tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                             text_1=f'Found {len(predict_list)} images to predict!',
                             text_3=f'Image: {i}',
