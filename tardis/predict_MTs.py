@@ -40,7 +40,7 @@ warnings.simplefilter("ignore", UserWarning)
               help='Size of image size used for prediction.',
               show_default=True)
 @click.option('-ct', '--cnn_threshold',
-              default=0.15,
+              default=0.05,
               type=float,
               help='Threshold use for model prediction.',
               show_default=True)
@@ -50,7 +50,7 @@ warnings.simplefilter("ignore", UserWarning)
               help='Threshold use for graph segmentation.',
               show_default=True)
 @click.option('-pv', '--points_in_voxal',
-              default=500,
+              default=1000,
               type=int,
               help='Number of point per voxal.',
               show_default=True)
@@ -136,21 +136,37 @@ def main(prediction_dir: str,
 
     device = get_device(device)
 
-    predict = Predictor(model=build_network(network_type='fnet',
-                                            classification=False,
-                                            in_channel=1,
-                                            out_channel=1,
-                                            img_size=patch_size,
-                                            dropout=None,
-                                            no_conv_layers=5,
-                                            conv_multiplayer=32,
-                                            layer_components='3gcl',
-                                            no_groups=8,
-                                            prediction=True),
-                        checkpoint=checkpoints[0],
-                        network='fnet',
-                        subtype=str(32),
-                        device=device)
+    predict_cnn = Predictor(model=build_network(network_type='fnet',
+                                                 classification=False,
+                                                 in_channel=1,
+                                                 out_channel=1,
+                                                 img_size=patch_size,
+                                                 dropout=None,
+                                                 no_conv_layers=5,
+                                                 conv_multiplayer=32,
+                                                 layer_components='3gcl',
+                                                 no_groups=8,
+                                                 prediction=True),
+                             checkpoint=checkpoints[0],
+                             network='fnet',
+                             subtype=str(32),
+                             device=device)
+
+    predict_gf = Predictor(model=DIST(n_out=1,
+                                      node_input=None,
+                                      node_dim=256,
+                                      edge_dim=128,
+                                      num_layers=6,
+                                      num_heads=8,
+                                      dropout_rate=0,
+                                      coord_embed_sigma=2,
+                                      structure='triang',
+                                      predict=True),
+                           checkpoint=checkpoints[2],
+                           network='graphformer',
+                           subtype='without_img',
+                           model_type='microtubules',
+                           device=device)
 
     """Process each image with CNN and GF"""
     tardis_progress = Tardis_Logo()
@@ -214,25 +230,9 @@ def main(prediction_dir: str,
                                        size=patch_size,
                                        out_channels=1)
 
-        predict_gf = Predictor(model=DIST(n_out=1,
-                                          node_input=None,
-                                          node_dim=256,
-                                          edge_dim=128,
-                                          num_layers=6,
-                                          num_heads=8,
-                                          dropout_rate=0,
-                                          coord_embed_sigma=2,
-                                          structure='triang',
-                                          predict=True),
-                               checkpoint=checkpoints[2],
-                               network='graphformer',
-                               subtype='without_img',
-                               model_type='microtubules',
-                               device=device)
-
         """CNN prediction"""
         for j in range(patches_DL.__len__()):
-            if j // 10:
+            if j // 50:
                 tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                                 text_1=f'Found {len(predict_list)} images to predict!',
                                 text_3=f'Image: {i}',
@@ -244,7 +244,7 @@ def main(prediction_dir: str,
             input, name = patches_DL.__getitem__(j)
 
             """Predict & Threshold"""
-            out = np.where(predict._predict(input[None, :]) >= cnn_threshold, 1, 0)
+            out = np.where(predict_cnn._predict(input[None, :]) >= cnn_threshold, 1, 0)
 
             """Save"""
             tif.imwrite(join(output, f'{name}.tif'),
@@ -333,27 +333,6 @@ def main(prediction_dir: str,
         coords_df, _, output_idx, _ = VD.voxalize_dataset(mesh=False)
         coords_df = [c / pc_median_dist(c) for c in coords_df]
 
-        # Save debugging check point
-        if debug:
-            if device == 'cpu':
-                np.save(join(am_output,
-                             f'{i[:-out_format]}_coord_voxal.npy'),
-                        np.array([c.detach().numpy() for c in coords_df]),
-                        allow_pickle=True)
-                np.save(join(am_output,
-                             f'{i[:-out_format]}_idx_voxal.npy'),
-                        output_idx,
-                        allow_pickle=True)
-            else:
-                np.save(join(am_output,
-                             f'{i[:-out_format]}_coord_voxal.npy'),
-                        np.array([c.cpu().detach().numpy() for c in coords_df]),
-                        allow_pickle=True)
-                np.save(join(am_output,
-                             f'{i[:-out_format]}_idx_voxal.npy'),
-                        output_idx,
-                        allow_pickle=True)
-
         # Predict point cloud
         graphs = []
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
@@ -365,7 +344,7 @@ def main(prediction_dir: str,
                         text_8=printProgressBar(0, len(coords_df)))
 
         for id, coord in enumerate(coords_df):
-            if id // 25:
+            if id // 50:
                 tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                                 text_1=f'Found {len(predict_list)} images to predict!',
                                 text_3=f'Image: {i}',
@@ -437,6 +416,28 @@ def main(prediction_dir: str,
                                                        prune=5,
                                                        sort=True,
                                                        visualize=visualizer)
+
+        # Save debugging check point
+        if debug:
+            if device == 'cpu':
+                np.save(join(am_output,
+                             f'{i[:-out_format]}_coord_voxal.npy'),
+                        point_cloud,
+                        allow_pickle=True)
+                np.save(join(am_output,
+                             f'{i[:-out_format]}_idx_voxal.npy'),
+                        output_idx,
+                        allow_pickle=True)
+            else:
+                np.save(join(am_output,
+                             f'{i[:-out_format]}_coord_voxal.npy'),
+                        point_cloud,
+                        allow_pickle=True)
+                np.save(join(am_output,
+                             f'{i[:-out_format]}_idx_voxal.npy'),
+                        output_idx,
+                        allow_pickle=True)
+
         if debug:
             np.save(join(am_output,
                          f'{i[:-out_format]}_segments.npy'),

@@ -194,18 +194,18 @@ def main(gf_dir: str,
     GraphToSegment = GraphInstanceV2(threshold=gf_threshold,
                                      connection=2)
     save_train = torch.load(checkpoint, map_location='cpu')
-    locals().update(save_train['model_struct_dict'])
+    globals().update(save_train['model_struct_dict'])
 
     model = DIST(n_out=1,
-                 node_input=None,
-                 node_dim=None,
-                 edge_dim=128,
-                 num_layers=6,
-                 num_heads=8,
-                 dropout_rate=0,
-                 coord_embed_sigma=2,
-                 structure='triang',
-                 predict=True)
+                     node_input=None,
+                     node_dim=gf_node_dim,
+                     edge_dim=gf_edge_dim,
+                     num_layers=gf_layers,
+                     num_heads=gf_heads,
+                     coord_embed_sigma=gf_sigma,
+                     dropout_rate=gf_dropout,
+                     structure=gf_structure,
+                     predict=True)
     model.load_state_dict(save_train['model_state_dict'])
 
     """Process each image with CNN and GF"""
@@ -279,7 +279,7 @@ def main(gf_dir: str,
         try:
             if scannet:
                 GraphToSegment = GraphInstanceV2(threshold=gf_threshold,
-                                                 connection=40000000)
+                                                 connection=3)
                 segments = GraphToSegment.voxal_to_segment(graph=graphs,
                                                            coord=coord_dist[:, 1:],
                                                            idx=output_idx,

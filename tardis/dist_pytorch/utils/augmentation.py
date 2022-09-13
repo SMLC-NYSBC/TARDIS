@@ -186,10 +186,8 @@ class BuildGraph:
             if self.mesh:
                 coord_df = self.coord[points_in_contour]
 
+                #TODO distance threshold not fixed knn
                 if coord_df.shape[0] > 4:
-                    # nbrs = NN(n_neighbors=5, algorithm='ball_tree').fit(coord_df)
-                    # _, indices = nbrs.kneighbors(coord_df)
-                    # indices = indices[:, 1:]  # 4 KNN for each node
                     tree = KDTree(coord_df, leaf_size=coord_df.shape[0])
 
                     for j in points_in_contour:
