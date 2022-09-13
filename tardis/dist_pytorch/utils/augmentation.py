@@ -186,7 +186,7 @@ class BuildGraph:
             if self.mesh:
                 coord_df = self.coord[points_in_contour]
 
-                #TODO distance threshold not fixed knn
+                # TODO distance threshold not fixed knn
                 if coord_df.shape[0] > 4:
                     tree = KDTree(coord_df, leaf_size=coord_df.shape[0])
 

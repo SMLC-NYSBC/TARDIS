@@ -197,15 +197,15 @@ def main(gf_dir: str,
     globals().update(save_train['model_struct_dict'])
 
     model = DIST(n_out=1,
-                     node_input=None,
-                     node_dim=gf_node_dim,
-                     edge_dim=gf_edge_dim,
-                     num_layers=gf_layers,
-                     num_heads=gf_heads,
-                     coord_embed_sigma=gf_sigma,
-                     dropout_rate=gf_dropout,
-                     structure=gf_structure,
-                     predict=True)
+                 node_input=None,
+                 node_dim=gf_node_dim,
+                 edge_dim=gf_edge_dim,
+                 num_layers=gf_layers,
+                 num_heads=gf_heads,
+                 coord_embed_sigma=gf_sigma,
+                 dropout_rate=gf_dropout,
+                 structure=gf_structure,
+                 predict=True)
     model.load_state_dict(save_train['model_state_dict'])
 
     """Process each image with CNN and GF"""
