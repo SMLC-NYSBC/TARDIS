@@ -121,11 +121,13 @@ def main(prediction_dir: str,
     predict_list = [f for f in listdir(prediction_dir) if f.endswith(available_format)]
     assert len(predict_list) > 0, 'No file found in given directory!'
     tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
-                    text_1=f'Found {len(predict_list)} images to predict!')
+                    text_1=f'Found {len(predict_list)} images to predict!',
+                    text_5='Point Cloud: In processing...',
+                    text_7='Current Task: Set-up environment...')
 
     # Build handler's
-    stitcher = StitchImages(tqdm=False)
-    post_processer = ImageToPointCloud(tqdm=False)
+    image_stitcher = StitchImages(tqdm=False)
+    post_processer = ImageToPointCloud()
     BuildAmira = NumpyToAmira()
 
     # Build CNN from checkpoints
@@ -261,14 +263,14 @@ def main(prediction_dir: str,
                         text_5='Point Cloud: In processing...',
                         text_7='Current Task: Stitching...')
 
-        image = check_uint8(stitcher(image_dir=output,
-                                     output=None,
-                                     mask=True,
-                                     scale=None,
-                                     prefix='',
-                                     dtype=np.int8)[:scale_shape[0] + 1,
-                                                    :scale_shape[1] + 1,
-                                                    :scale_shape[2] + 1])
+        image = check_uint8(image_stitcher(image_dir=output,
+                                           output=None,
+                                           mask=True,
+                                           scale=None,
+                                           prefix='',
+                                           dtype=np.int8)[:scale_shape[0] + 1,
+                                                          :scale_shape[1] + 1,
+                                                          :scale_shape[2] + 1])
         image, _ = scale_image(image=image,
                                mask=None,
                                scale=scale_factor)

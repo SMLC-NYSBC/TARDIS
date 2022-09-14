@@ -1,10 +1,10 @@
 import gc
 from typing import Optional
 
-import cv2
 import numpy as np
 import pandas as pd
 from skimage.morphology import skeletonize_3d
+from tardis.slcpy.utils.build_semantic_mask import fill_gaps_in_semantic
 
 
 class BuildPointCloud:
@@ -35,47 +35,28 @@ class BuildPointCloud:
             if isinstance(image, str):
                 from tardis.slcpy.utils.load_data import import_tiff
 
-                image = import_tiff(img=image,
-                                    dtype=np.int8)
+                image, _ = import_tiff(img=image,
+                                       dtype=np.int8)
         except RuntimeWarning:
-            raise Warning("Directory or input .tiff file is not correct...")
+            raise Warning("Directory/input .tiff file/array is not correct...")
 
         assert image.ndim in [2, 3], 'File must be 2D or 3D array!'
 
-        unique_val = pd.unique(image.flatten())
+        """Check for binary"""
+        unique_val = pd.unique(image.flatten())  # Use panda for speed
         assert len(unique_val) == 2, 'Not binary image'
 
-        if np.any(unique_val > 253):  # Fix uint8 formatting
+        """Check for int8 vs uint8"""
+        if np.any(unique_val > 254):  # Fix uint8 formatting
             image = image / 255
 
+        """Any other exertions"""
         assert unique_val[1] == 1, \
             'Array or file directory loaded properly but image is not semantic mask...'
 
         """Fill gaps in binary mask"""
-        if image.ndim == 3:
-            for id, _ in enumerate(image):
-                des = np.array(image[id, :], dtype=np.uint8)
-                contour, _ = cv2.findContours(des, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+        image = fill_gaps_in_semantic(image)
 
-                for cnt in contour:
-                    cv2.drawContours(des, [cnt], 0, 1, -1)
-
-                gray = cv2.bitwise_not(des)
-                kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-                res = cv2.morphologyEx(gray, cv2.MORPH_OPEN, kernel) / 255
-                res = np.where(res == 1, 0, 1)
-                image[id, :] = res
-        else:
-            des = np.array(image, dtype=np.uint8)
-            contour, _ = cv2.findContours(des, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
-
-            for cnt in contour:
-                cv2.drawContours(des, [cnt], 0, 1, -1)
-
-            gray = cv2.bitwise_not(des)
-            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-            res = cv2.morphologyEx(gray, cv2.MORPH_OPEN, kernel) / 255
-            res = np.where(res == 1, 0, 1)
         return image
 
     def build_point_cloud(self,

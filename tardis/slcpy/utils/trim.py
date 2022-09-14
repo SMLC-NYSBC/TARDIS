@@ -5,6 +5,7 @@ from typing import Optional
 import numpy as np
 import torch
 import torch.nn.functional as F
+from tardis.slcpy.utils.build_semantic_mask import fill_gaps_in_semantic
 from tifffile import tifffile as tif
 
 
@@ -275,6 +276,7 @@ def trim_with_stride(image: np.ndarray,
         image, mask, dim = scale_image(image=image,
                                        mask=mask,
                                        scale=scale)
+        mask = fill_gaps_in_semantic(mask)
     else:
         image, dim = scale_image(image=image,
                                  scale=scale)

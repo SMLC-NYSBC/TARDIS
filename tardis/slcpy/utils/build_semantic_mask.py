@@ -1,6 +1,38 @@
+import cv2
 import numpy as np
 from tardis.slcpy.utils.draw_mask_2D import draw_2D
 from tardis.slcpy.utils.interpolation import interpolation_3D
+
+
+def fill_gaps_in_semantic(image: np.ndarray):
+    if image.ndim == 3:
+        for id, _ in enumerate(image):
+            des = np.array(image[id, :], dtype=np.uint8)
+            contour, _ = cv2.findContours(des, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+
+            for cnt in contour:
+                cv2.drawContours(des, [cnt], 0, 1, -1)
+
+            gray = cv2.bitwise_not(des)
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+            res = cv2.morphologyEx(gray, cv2.MORPH_OPEN, kernel) / 255
+            res = np.where(res == 1, 0, 1)
+            image[id, :] = res
+
+            return image
+    else:
+        des = np.array(image, dtype=np.uint8)
+        contour, _ = cv2.findContours(des, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+
+        for cnt in contour:
+            cv2.drawContours(des, [cnt], 0, 1, -1)
+
+        gray = cv2.bitwise_not(des)
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+        res = cv2.morphologyEx(gray, cv2.MORPH_OPEN, kernel) / 255
+        res = np.where(res == 1, 0, 1)
+
+        return res
 
 
 def draw_semantic(mask_size: tuple,

@@ -392,7 +392,7 @@ def import_am(img: str):
     nx, ny, nz = int(size[0]), int(size[1]), int(size[2])
 
     # Fix for ET that were trimmed
-    # Trimmed ET boundarybox is has wrong size
+    # Trimmed ET boundarybox has wrong size
     bb = str([word for word in am.split('\n') if word.startswith('    BoundingBox')]).split(" ")
 
     if len(bb) == 0:
@@ -413,8 +413,11 @@ def import_am(img: str):
                                    float(bb[9])))
         binary_start = str.find(am, "\n@1\n") + 4
 
-    coordinate = str([word for word in am.split('\n')
-                      if word.startswith('        Coordinates')]).split(" ")[9][1:2]
+    try:
+        coordinate = str([word for word in am.split('\n') if word.startswith('        Coordinates')]).split(" ")[9][1:2]
+    except IndexError:
+        coordinate = None
+
     if coordinate == 'm':  # Bring meter to angstrom
         pixel_size = ((physical_size[0] - transformation[0]) / (nx - 1)) * 10000000000
     else:

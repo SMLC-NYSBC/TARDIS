@@ -5,9 +5,8 @@ from tardis.slcpy.utils.image_to_point_cloud import BuildPointCloud
 
 
 class ImageToPointCloud:
-    def __init__(self,
-                 tqdm: bool):
-        self.postprocess = BuildPointCloud(tqdm=tqdm)
+    def __init__(self):
+        self.postprocess = BuildPointCloud(tqdm=False)
 
     def __call__(self,
                  image: Optional[str] = np.ndarray,

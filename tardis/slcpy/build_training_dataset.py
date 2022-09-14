@@ -146,6 +146,7 @@ class BuildTrainDataSet:
                 scale_factor = 1
             else:
                 scale_factor = pixel_size / self.resize_pixel_size
+
             batch_iter.set_description(f'Building Training dataset: \n'
                                        f'{img_name}'
                                        f'px: {pixel_size}\n'

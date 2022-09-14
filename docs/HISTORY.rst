@@ -2,38 +2,28 @@
 History
 =======
 
-0.1.0 beta (2022-08-28)
+0.1.0 beta (2022-09-14)
 --------------------------
-* DIST
+* DIST module changes:
     * Added new classification model based on DIST
     * Simplified logic for patching big point cloud + reduction of number of patches
     * Model structure now embedded in the model weight file
     * Spline smoothing added to graph prediction
     * Small bugfixes:
-        * Fixe inital_scale in model nn.Modules
+        * Fixe initial_scale in model nn.Modules
         * Fixed graph builder for ScanNet and PartNet
     * Speed improved dataloader during training
+    * Added support for .ply file format and meshes
+    * Re-train model on different DIST structure for the paper and for searching 
+        of the best approach
+    * Bugfixes for segmentation of point cloud from graph probabilities
+        * Speed-up boost with simplifying the building and reading adjacency matrix
+        * Fix in masking adjacency matrix for points already connected
+        * Moved from greedy segmentation to 1-step-back segmentation
 
 * SpindleTorch changes:
     * Quick retrained model on hand-curated dataset
     * Added and trained new FNet
-
-* SLCPY module changes:
-    * Fix interpolation handling for up-sampled datasets
-    * Post-processing improvements and speeds-up
-    * MRC2014 file format expand readable formats
-    * Processing image data with standardized pixel size of 25 A
-
-* TARDIS
-    * New beautiful log progress window
-    * Moved loss fun. to common directory
-    * Clean-up
-    * Flake8 and pyteset fixes
-    * Global tunning for segmentation quality 
-
-0.1.0 pre-beta (2022-08-08)
---------------------------
-* SpindleTorch changes:
     * Standardized pixel size input. Now all data are reshaped to the pixel 
         size of 2.32
     * Change up-sampling from align_corners=True to align_corners=False
@@ -44,29 +34,27 @@ History
         * Train Big UNet
     * Speed-up prediction with new Big UNet model
 
-* DIST module changes:
-    * Added support for .ply file format and meshes
-    * Re-train model on different DIST structure for the paper and for searching 
-        of the best approach
-    * Bugfixes for segmentation of point cloud from graph probabilities
-        * Speed-up boost with simplifying the building and reading adjacency matrix
-        * Fix in masking adjacency matrix for points already connected
-        * Moved from greedy segmentation to 1-step-back segmentation
-
 * SLCPY module changes:
+    * Fix interpolation handling for up-sampled datasets
+    * Post-processing improvements and speeds-up
+    * MRC2014 file format expand readable formats
+    * Processing image data with standardized pixel size of 25 A
     * Bugfixes for floating point precision in Amira output
         * Change floating point from 3 to 15
-
     * Improvements from importing data from binary Amira file format
         * Change how pixel size is calculated. Amira has weird behavior whenever ET 
             is trimmed. Include this in pixel size calculation
-
     * Improvements in .rec, .mrc file loader
         * .rec and .mrc file are format with uint8 (value from -128 to 128) or 
             int8 (value from 0 to 255). Fix reading of these files
 
 * TARDIS
     * Cleaned log output for easier reading
+    * New beautiful log progress window
+    * Moved loss fun. to common directory
+    * Clean-up
+    * Flake8 and pyteset fixes
+    * Global tunning for segmentation quality 
 
 0.1.0a (2022-07-12)
 --------------------

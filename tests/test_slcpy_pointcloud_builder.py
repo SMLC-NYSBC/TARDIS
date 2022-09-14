@@ -9,7 +9,7 @@ from tardis.slcpy.utils.image_to_point_cloud import BuildPointCloud
 class TestPointCloudBuilder:
     point_cloud = tif.imread(join('tests', 'test_data', 'pointcloud.tif'))
     downsampling = 5
-    builder = ImageToPointCloud(tqdm=True)
+    builder = ImageToPointCloud()
 
     def test_builder(self):
         # Test loading 2D
