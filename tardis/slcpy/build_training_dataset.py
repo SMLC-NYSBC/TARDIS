@@ -136,9 +136,9 @@ class BuildTrainDataSet:
             elif img_name.endswith(('.mrc', '.rec')):
                 image, pixel_size = import_mrc(join(self.dataset_dir,
                                                     img_name))
-                
+
                 importer = ImportDataFromAmira(src_am=join(self.dataset_dir, mask_name))
-                coord = importer.get_segmented_points() # [ID x X x Y x Z]
+                coord = importer.get_segmented_points()  # [ID x X x Y x Z]
                 coord[:, 1:] = coord[:, 1:] // pixel_size
             elif img_name.endswith('.am'):
                 importer = ImportDataFromAmira(src_am=join(self.dataset_dir,
