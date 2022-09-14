@@ -178,7 +178,7 @@ def main(training_dataset: str,
     test_imgs_dir = join(training_dataset, 'test', 'imgs')
     test_masks_dir = join(training_dataset, 'test', 'masks')
     dataset_test = False
-    img_format = ('.tif', '.am', '.rmc', '.rec')
+    img_format = ('.tif', '.am', '.mrc', '.rec')
 
     # Check if dir has train/test folder and if folder have data
     dataset_test = check_dir(dir=training_dataset,

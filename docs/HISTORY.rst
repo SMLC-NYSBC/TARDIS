@@ -54,7 +54,7 @@ History
     * Moved loss fun. to common directory
     * Clean-up
     * Flake8 and pyteset fixes
-    * Global tunning for segmentation quality 
+    * Global tunning for segmentation quality
 
 0.1.0a (2022-07-12)
 --------------------

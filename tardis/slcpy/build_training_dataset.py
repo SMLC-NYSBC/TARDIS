@@ -100,6 +100,7 @@ class BuildTrainDataSet:
         """Load data, build mask if not image and voxalize"""
         coord = None
         img_counter = 0
+
         if self.tqdm:
             from tqdm import tqdm
 
@@ -114,6 +115,7 @@ class BuildTrainDataSet:
             """Load image data"""
             mask = None
             mask_name = self.idx_mask[i]
+
             if mask_name.endswith('.CorrelationLines.am'):
                 if isfile(join(self.dataset_dir, f'{mask_name[:-20]}.am')):
                     img_name = f'{mask_name[:-20]}.am'  # .am image file
@@ -134,6 +136,10 @@ class BuildTrainDataSet:
             elif img_name.endswith(('.mrc', '.rec')):
                 image, pixel_size = import_mrc(join(self.dataset_dir,
                                                     img_name))
+                
+                importer = ImportDataFromAmira(src_am=join(self.dataset_dir, mask_name))
+                coord = importer.get_segmented_points() # [ID x X x Y x Z]
+                coord[:, 1:] = coord[:, 1:] // pixel_size
             elif img_name.endswith('.am'):
                 importer = ImportDataFromAmira(src_am=join(self.dataset_dir,
                                                            mask_name),
@@ -148,7 +154,7 @@ class BuildTrainDataSet:
                 scale_factor = pixel_size / self.resize_pixel_size
 
             batch_iter.set_description(f'Building Training dataset: \n'
-                                       f'{img_name}'
+                                       f'{img_name} {mask_name} '
                                        f'px: {pixel_size}\n'
                                        f'scale {round(scale_factor, 2)}')
             """Draw mask"""

@@ -434,7 +434,7 @@ def trim_with_stride(image: np.ndarray,
                                                     x_start:x_stop]
 
                 if clean_empty and mask is not None:
-                    if not np.sum(trim_mask) > min_px_count:
+                    if np.sum(trim_mask) > min_px_count:
                         """Hard transform between int8 and uint8"""
                         if np.min(trim_img) < 0:
                             trim_img = trim_img + 128
