@@ -181,13 +181,12 @@ class BuildGraph:
 
     def __call__(self,
                  dist_th=None):
-        tree = KDTree(coord_df, leaf_size=coord_df.shape[0])
-
         for i in self.all_idx:
             points_in_contour = np.where(self.coord[:, 0] == i)[0].tolist()
 
             if self.mesh:
                 coord_df = self.coord[points_in_contour]
+                tree = KDTree(coord_df, leaf_size=coord_df.shape[0])
 
                 if coord_df.shape[0] > 6:
                     for j in points_in_contour:
