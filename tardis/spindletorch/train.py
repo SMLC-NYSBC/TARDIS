@@ -108,7 +108,7 @@ def train(train_dataloader: DataLoader,
         optimizer.load_state_dict(save_train['optimizer_state_dict'])
 
         save_train = None
-        del(save_train)
+        del save_train
 
     """Learning rate for the optimizer"""
     if learning_rate_scheduler:

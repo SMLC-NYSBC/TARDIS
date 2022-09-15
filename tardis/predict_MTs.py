@@ -225,7 +225,7 @@ def main(prediction_dir: str,
                          stride=10,
                          prefix='')
         image = None
-        del(image)
+        del image
 
         # Setup for predicting image patches
         patches_DL = PredictionDataSet(img_dir=join(prediction_dir, 'temp', 'Patches'),
@@ -302,7 +302,7 @@ def main(prediction_dir: str,
 
         # Transform for xyz and pixel size for coord
         image = None
-        del(image)
+        del image
 
         if debug:
             np.save(join(am_output, f'{i[:-out_format]}_raw_pc.npy'),

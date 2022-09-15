@@ -168,7 +168,7 @@ def main(prediction_dir: str,
                    prefix='')
 
         image = None
-        del(image)
+        del image
 
         """Predict image patches"""
         patches_DL = PredictionDataSet(img_dir=join(prediction_dir, 'temp', 'Patches'),
