@@ -179,21 +179,29 @@ class BuildGraph:
         self.graph = np.zeros((len(coord), len(coord)))
         self.all_idx = np.unique(coord[:, 0])
 
-    def __call__(self):
+    def __call__(self,
+                 dist_th=None):
+        tree = KDTree(coord_df, leaf_size=coord_df.shape[0])
+
         for i in self.all_idx:
             points_in_contour = np.where(self.coord[:, 0] == i)[0].tolist()
 
             if self.mesh:
                 coord_df = self.coord[points_in_contour]
 
-                # TODO distance threshold not fixed knn
-                if coord_df.shape[0] > 4:
-                    tree = KDTree(coord_df, leaf_size=coord_df.shape[0])
-
+                if coord_df.shape[0] > 6:
                     for j in points_in_contour:
-                        _, match_coord = tree.query(self.coord[j].reshape(1, -1), k=4)
-                        match_coord = match_coord[0]  # 3 KNN
+                        dist, match_coord = tree.query(self.coord[j].reshape(1, -1), k=6)
+                        match_coord = match_coord[0]  # 6 KNN
+                        dist = dist[0]  # Distance value
+
+                        # Select KNN based on NN
                         knn = [x for id, x in enumerate(points_in_contour) if id in match_coord]
+
+                        # Select KNN based on distance threshold
+                        if dist_th is not None:
+                            knn = [id for id, _ in enumerate(points_in_contour) if id in match_coord]
+                            knn = dist[knn]
 
                         # Self connection
                         self.graph[j, j] = 1
