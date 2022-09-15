@@ -2,7 +2,7 @@
 Transformer And Rapid Dimensionless Instance Segmentation [TARDIS]
 ================================
 .. image:: https://img.shields.io/badge/release-0.1.0_alpha-success
-        :target: https://img.shields.io/badge/release-0.1.0_alpha-success
+        :target: https://img.shields.io/badge/release-0.1.0_beta1-success
 
 .. image:: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python-package.yml/badge.svg
         :target: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python-package.yml
@@ -40,16 +40,18 @@ or install following requirements::
         click>=8.0.4
         edt>=2.1.2
         imagecodecs>=2021.8.26
-        numpy>=1.21.0
+        numpy>=1.22.3
         open3d>=0.9.0
         scikit-image>=0.19.2
         scikit-learn >=1.0.2
-        scipy>=1.7.3
-        tifffile>=2021.11.2
-        torch>=1.11.0
+        scipy>=1.8.0
+        tifffile>=2022.5.4
+        torch>=1.12.0
         tqdm>=4.63.0
+        requests>=2.27.1
         zarr>=2.8.1
-
+        pandas>=1.3.5
+        opencv-python>=4.5.5.64
 
 ============
 Installation
@@ -78,10 +80,10 @@ Usage
 data/train/ and data/test both of which should have ./imgs and ./masks folders
 
 Training modules:
-        Semantic Segmentation:
+        Semantic Segmentation with Unet/Unet3Plus/FNet:
 .. code-block:: console
 
-        tardis_cnn_train -dir str -ttr float -ps int -cnn str -co int -b -cl int -cm int -cs str -ck int -cp int -cmxk int -dp None/float -l str -la None/float -lr float -lrs bool -d str -e int -es int -cch None/str -tq bool
+        tardis_cnn_train -dir str -ttr float -ps int -px float -cnn str -co int -b int -cl int -cm int -cs str -ck int -cp int -cmpk int -dp None/float -l str -la None/float -lr float -lrs bool -d str -e int -es int -cch None/str
 
         int    [-dir]   Directory for training and test dataset.
                 [-default]      None
@@ -89,9 +91,11 @@ Training modules:
                 [-default]      10
         int    [-ps]    Image size used for perdition.
                 [-default]      64
+        float  [-px]    Pixel size to which all images are resize.
+                [-default]      23.2
         str    [-cnn]   Type of NN used for training.
                 [-default]      'Unet'
-                [-choice]       'unet', 'resunet', 'unet3plus'
+                [-choice]       'unet', 'resunet', 'unet3plus', 'big_unet', 'fnet'
         int    [-co]    Number of output channels for the NN.
                 [-default]      1
         int    [-b]     Batch size.
@@ -112,7 +116,7 @@ Training modules:
                 [-default]      3
         int    [-cp]    Padding size for convolution.
                 [-default]      1
-        int    [-cmxk]    Maxpooling kernel
+        int    [-cmpk]    Maxpooling kernel
                 [-default]      2
         float  [-dp]    If indicated, value of dropout for CNN.
                 [-default]      None
@@ -137,12 +141,16 @@ Training modules:
                 [-default]      10
         str    [-cch]    If indicated, dir to training checkpoint to reinitialized training.
                 [-default]      None
-        bool   [-tq]    If True, build with progress bar.
-                [-default]      True
 
+        Point cloud instance segmentation
 .. code-block:: console
 
-        tardis_cnn_predict -dir str -ps int -cnn str -co int -cl int -cm int -cs str -ck int -cp int -cmxk int -dp None/float -cch (None, None)/ (str, str) -d str -th float -tq bool
+
+Prediction modules:
+        Semantic Segmentation with Unet/Unet3Plus/FNet:
+.. code-block:: console
+
+        tardis_cnn_predict -dir str -ps int -cnn str -co int -cl int -cm int -cs str -ck int -cp int -cmpk int -dp None/float -cch (None, None)/ (str, str) -d str -th float -tq bool
 
         int    [-dir]   Directory for training and test dataset.
                 [-default]      None
@@ -171,7 +179,7 @@ Training modules:
                 [-default]      3
         int    [-cp]    Padding size for convolution.
                 [-default]      1
-        int    [-cmxk]    Maxpooling kernel
+        int    [-cmpk]    Maxpooling kernel
                 [-default]      2
         float  [-dp]    If indicated, value of dropout for CNN.
                 [-default]      None
@@ -188,3 +196,10 @@ Training modules:
                 [-default]      0.5
         bool  [-tq]    If True, build with progress bar.
                 [-default]      True
+
+        Point cloud instance segmentation
+.. code-block:: console
+
+
+        Microtubules segmentation
+.. code-block:: console

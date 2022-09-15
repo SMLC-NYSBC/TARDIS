@@ -69,7 +69,7 @@ from tardis.version import version
               type=int,
               help='Padding size for convolution.',
               show_default=True)
-@click.option('-cmxk', '--pool_kernel',
+@click.option('-cmpk', '--pool_kernel',
               default=2,
               type=int,
               help='Maxpooling kernel.',

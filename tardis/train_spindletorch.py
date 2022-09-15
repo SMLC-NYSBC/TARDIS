@@ -253,8 +253,6 @@ def main(training_dataset: str,
     """Get device"""
     device = get_device(device)
 
-    tardis_logo(title='CNN training module')
-
     """Run Training loop"""
     train(train_dataloader=train_DL,
           test_dataloader=test_DL,
