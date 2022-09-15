@@ -127,12 +127,9 @@ class GraphDataset(Dataset):
                                          normalization=self.normalize,
                                          memory_save=self.memory_save)
 
-            # Remove coord and img patch duplicates
-            # coord, uq_idx = np.unique(coord, axis=0, return_index=True)
-
-            # if img_file is not None:
-            #     img = img[uq_idx, :]
-
+            # TODO replace normalization with something more robust...
+            # TODO Introduce normalization by pixel size resolution for MTs
+            # TODO Introduce fix normalization for ScanNet and PartNet datasets
             # Normalize point cloud
             if coord_file.endswith('.ply'):
                 dist = pc_median_dist(pc=coord[:, 1:], avg_over=False)
