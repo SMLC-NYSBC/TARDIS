@@ -93,10 +93,10 @@ class BCEDiceLoss(nn.Module):
 
 class BCELoss(nn.Module):
     def __init__(self,
+                 reduction='mean',
                  weight: Optional[float] = None):
         super(BCELoss, self).__init__()
-        self.loss = nn.BCEWithLogitsLoss(pos_weight=weight)
-        # TODO reduction for sum not mean
+        self.loss = nn.BCEWithLogitsLoss(pos_weight=weight, reduction=reduction)
 
     def forward(self,
                 logits: torch.Tensor,

@@ -333,7 +333,7 @@ def main(pointcloud_dir: str,
     if gf_loss == "dice":
         loss_fn = DiceLoss()
     if gf_loss == "bce":
-        loss_fn = BCELoss()
+        loss_fn = BCELoss(reduction='sum')
     if gf_loss == 'sfl':
         loss_fn = SigmoidFocalLoss()
 
