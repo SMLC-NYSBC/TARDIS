@@ -1,4 +1,5 @@
 import numpy as np
+from skimage import exposure
 
 
 class CenterCrop:
@@ -91,6 +92,26 @@ class MinMaxNormalize:
     def __call__(self,
                  x: np.ndarray):
         return (x - self.min) / self.range
+
+
+class RescaleNormalize:
+    """
+    NORMALIZE IMAGE VALUE USING Skimage
+
+    Rescale intensity with 98% and 2% percentiles as default
+
+    Args:
+        x: image or target nD arrays
+    """
+    def __init__(self,
+                 range=(2, 98)):
+        self.range = range
+
+    def __call__(self,
+                 x: np.ndarray):
+        p2, p98 = np.percentile(x, self.range)
+
+        return exposure.rescale_intensity(x, in_range=(p2, p98))
 
 
 class RandomFlip:
@@ -233,6 +254,8 @@ def preprocess(image: np.ndarray,
             normalization = SimpleNormalize()
         elif normalization == "minmax":
             normalization = MinMaxNormalize(image.min(), image.max())
+        elif normalization == "exposure":
+            normalization = RescaleNormalize(range=(2, 98))
 
         image = normalization(image)
 
