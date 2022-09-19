@@ -46,6 +46,7 @@ class ImportDataFromAmira:
         self.spatial_graph = open(src_am,
                                   "r",
                                   encoding="iso-8859-1").read().split("\n")
+        self.spatial_graph = [x for x in self.spatial_graph if x != '']
 
     def get_segments(self):
         # Find line starting with EDGE { int NumEdgePoints }
