@@ -279,7 +279,7 @@ def main(gf_dir: str,
         try:
             if scannet:
                 GraphToSegment = GraphInstanceV2(threshold=gf_threshold,
-                                                 connection=3)
+                                                 connection=4)
                 segments = GraphToSegment.voxal_to_segment(graph=graphs,
                                                            coord=coord_dist[:, 1:],
                                                            idx=output_idx,
@@ -319,6 +319,10 @@ def main(gf_dir: str,
 
                 np.save(join(gf_dir, 'scores', 'classes_eval.npy'),
                         classes_eval)
+                np.save(join(gf_dir, 'scores', 'raw_ap50.npy'),
+                        all_ap50)
+                np.save(join(gf_dir, 'scores', 'raw_label.npy'),
+                        all_label)
             else:
                 graph_logits = GraphToSegment._stitch_graph(graphs, output_idx)
                 acc, prec, rec, f1 = F1_metric(graph_target.flatten(),

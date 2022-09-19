@@ -105,7 +105,7 @@ class PredictionDataSet(Dataset):
         img, _ = preprocess(image=img,
                             mask=img,
                             size=self.size,
-                            normalization="minmax",
+                            normalization=self.normalize,
                             transformation=False,
                             output_dim_mask=self.out_channels)
 

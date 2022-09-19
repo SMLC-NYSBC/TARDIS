@@ -63,7 +63,7 @@ class Trainer:
         self.device = device
         self.criterion = criterion
         if self.type['gf_type'] == 'semantic':
-            self.criterion_cls = nn.CrossEntropyLoss()
+            self.criterion_cls = nn.CrossEntropyLoss(reduction='mean')
         self.optimizer = optimizer
         self.training_DataLoader = training_DataLoader
         self.validation_DataLoader = validation_DataLoader

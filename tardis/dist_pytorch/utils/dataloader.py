@@ -1,5 +1,6 @@
-from os import listdir, mkdir, getcwd
-from os.path import isdir, join, splitext
+from dis import dis
+from os import getcwd, listdir, mkdir
+from os.path import isdir, join
 from shutil import rmtree
 from typing import Optional
 
@@ -127,33 +128,42 @@ class GraphDataset(Dataset):
                                          normalization=self.normalize,
                                          memory_save=self.memory_save)
 
-            # TODO replace normalization with something more robust...
-            # TODO Introduce normalization by pixel size resolution for MTs
-            # TODO Introduce fix normalization for ScanNet and PartNet datasets
-            # Normalize point cloud
-            if coord_file.endswith('.ply'):
-                dist = pc_median_dist(pc=coord[:, 1:], avg_over=False)
-            else:
-                dist = pc_median_dist(pc=coord[:, 1:], avg_over=True)
+        # Normalize point cloud
+        if coord_file.endswith('.ply'):
+            dist = None
+        else:
+            dist = pc_median_dist(coord[:, 1:])
 
         if self.img_dir is None:
             if self.voxal_size[i, 0] == 0:
-                coord[:, 1:] = coord[:, 1:] / dist  # Normalize point cloud
+                if dist is not None:
+                    coord[:, 1:] = coord[:, 1:] / dist  # Normalize point cloud to px unit
 
                 if self.mesh and self.datatype:
                     classes = coord[:, 0]
                 else:
                     classes = None
 
-                VD = VoxalizeDataSetV2(coord=coord,
-                                       image=None,
-                                       init_voxal_size=0,
-                                       drop_rate=1,
-                                       downsampling_threshold=self.downsampling,
-                                       downsampling_rate=None,
-                                       label_cls=classes,
-                                       graph=True,
-                                       tensor=False)
+                if coord_file.endswith('.ply'):
+                    VD = VoxalizeDataSetV2(coord=coord,
+                                           image=None,
+                                           init_voxal_size=0,
+                                           drop_rate=0.1,
+                                           downsampling_threshold=self.downsampling,
+                                           downsampling_rate=None,
+                                           label_cls=classes,
+                                           graph=True,
+                                           tensor=False)
+                else:
+                    VD = VoxalizeDataSetV2(coord=coord,
+                                           image=None,
+                                           init_voxal_size=0,
+                                           drop_rate=1,
+                                           downsampling_threshold=self.downsampling,
+                                           downsampling_rate=None,
+                                           label_cls=classes,
+                                           graph=True,
+                                           tensor=False)
         else:
             classes = None
 
@@ -169,7 +179,11 @@ class GraphDataset(Dataset):
                                        tensor=False)
 
         if self.voxal_size[i, 0] == 0:
-            coords_v, imgs_v, graph_v, output_idx, cls_idx = VD.voxalize_dataset(mesh=self.mesh)
+            if coord_file.endswith('.ply'):
+                coords_v, imgs_v, graph_v, output_idx, cls_idx = VD.voxalize_dataset(mesh=self.mesh)
+            else:
+                coords_v, imgs_v, graph_v, output_idx, cls_idx = VD.voxalize_dataset(mesh=self.mesh,
+                                                                                     dist_th=0.1)
 
             # save data for faster access later
             np.save(join(self.cwd, temp, f'coord_{i}.npy'), np.asarray(coords_v, dtype=object))
@@ -195,122 +209,11 @@ class GraphDataset(Dataset):
         if self.voxal_size[i, 0] == 0:
             self.voxal_size[i, 0] = VD.voxal_patch_size + 1
 
-        if self.img_dir is not None:
-            for id, c in enumerate(coords_v):
-                coords_v[id] = c / dist
+        # if self.img_dir is not None:
+        #     for id, c in enumerate(coords_v):
+        #         coords_v[id] = c / dist
 
         return coords_v, imgs_v, graph_v, output_idx, cls_idx
-
-
-class PredictDataset(Dataset):
-    def __init__(self,
-                 coord_dir: str,
-                 coord_format="csv",
-                 img_dir: Optional[str] = None,
-                 prefix: Optional[str] = None,
-                 size=(12, 12),
-                 voxal_size=500,
-                 downsampling=500000,
-                 drop_rate=1,
-                 downsampling_rate=2,
-                 normalize="simple",
-                 memory_save=True):
-        """
-        MODULE TO LOAD 2D/3D COORDINATES AND IMAGE PATCHES FOR PREDICTIONS
-
-        This module accepts point cloud in shape [X x Y]/[X x Y x Z]
-        and output dataset that are expected by graphformer (coord, graph
-        and image patches for each coordinate).
-
-        Build dataset without graph
-
-        Args:
-            coord_dir: source of the 3D .tif images masks.
-            coord_format: call for random transformation on img and mask data.
-            img_dir: source of the 3D .tif file.
-            prefix: Prefix name of coordinate file.
-            voxal_size: Initial voxal size
-            downsampling_if: Number of points in a cloud after which
-                downsampling is run
-            drop_rate: Drop rate for voxal size during optimization of
-                voxal size
-            downsampling_rate: Value used for downsampling with open3D
-            size: numeric value between 0 and 1 for scaling px.
-            normalize: type of normalization for img data ["simple", "minmax"]
-            memory_save: If True data are loaded with memory save mode on
-                (~10x faster computation).
-        """
-        # Coord setting
-        self.coord_dir = coord_dir
-        self.coord_format = coord_format
-
-        # Image setting
-        self.img_dir = img_dir
-        self.prefix = prefix
-        self.size = size
-        self.normalize = normalize
-        self.memory_save = memory_save
-
-        # Voxal setting
-        self.drop_rate = drop_rate
-        self.downsampling = downsampling
-        self.downsampling_rate = downsampling_rate
-        self.voxal_size = voxal_size
-
-        self.ids = [splitext(file)[0] for file in listdir(coord_dir)
-                    if not file.startswith('.')]
-
-    def __len__(self):
-        return len(self.ids)
-
-    def __getitem__(self, i):
-        """ Get list of all coordinates and image patches """
-        idx = self.ids[i]
-
-        if self.coord_format == ".csv":
-            coord_file = join(self.coord_dir, str(idx) + '.csv')
-        elif self.coord_format == ".npy":
-            coord_file = join(self.coord_dir, str(idx) + '.npy')
-        elif self.coord_format == ".am":
-            coord_file = join(self.coord_dir, str(idx) + '.am')
-
-        if self.prefix is not None:
-            img_idx = idx[:-len(self.prefix)]
-        else:
-            img_idx = idx
-
-        if self.img_dir is not None:
-            img_file = join(self.img_dir, str(img_idx) + '.*')
-        else:
-            img_file = None
-
-        coord, img = preprocess_data(coord=coord_file,
-                                     image=img_file,
-                                     include_label=True,
-                                     size=self.size,
-                                     normalization=self.normalize,
-                                     memory_save=self.memory_save)
-
-        if self.img_dir is None:
-            VD = VoxalizeDataSetV2(coord=coord,
-                                   image=None,
-                                   init_voxal_size=self.voxal_size,
-                                   drop_rate=self.drop_rate,
-                                   downsampling_threshold=self.downsampling,
-                                   downsampling_rate=None,
-                                   graph=False)
-        else:
-            VD = VoxalizeDataSetV2(coord=coord,
-                                   image=img,
-                                   init_voxal_size=self.voxal_size,
-                                   drop_rate=self.drop_rate,
-                                   downsampling_threshold=self.downsampling,
-                                   downsampling_rate=None,
-                                   graph=False)
-
-        coords_v, imgs_v, output_idx = VD.voxalize_dataset(out_idx=True)
-
-        return coords_v, imgs_v, output_idx
 
 
 def filter_collate_fn(batch, dataset):

@@ -153,8 +153,8 @@ def main(pointcloud_dir: str,
          gf_heads: int,
          gf_dropout: float,
          gf_sigma: int,
-         dl_downsampling,
-         dl_downsampling_rate,
+         dl_downsampling: int,
+         dl_downsampling_rate: float,
          gf_loss: str,
          gf_structure: str,
          gf_type: str,
@@ -333,7 +333,7 @@ def main(pointcloud_dir: str,
     if gf_loss == "dice":
         loss_fn = DiceLoss()
     if gf_loss == "bce":
-        loss_fn = BCELoss(reduction='sum')
+        loss_fn = BCELoss(reduction='mean')
     if gf_loss == 'sfl':
         loss_fn = SigmoidFocalLoss()
 

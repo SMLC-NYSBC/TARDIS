@@ -334,7 +334,8 @@ class VoxalizeDataSetV2:
         return self.voxal_patch_size
 
     def voxalize_dataset(self,
-                         mesh=False):
+                         mesh=False,
+                         dist_th: Optional[float] = None):
         """
         Main function used to build voxalized dataset
 
@@ -376,7 +377,10 @@ class VoxalizeDataSetV2:
                 build_graph = BuildGraph(coord=coord_label,
                                          mesh=mesh,
                                          pixel_size=None)
-                graph_voxal.append(self.output_format(build_graph()))
+                if mesh:
+                    graph_voxal.append(self.output_format(build_graph(dist_th)))
+                else:
+                    graph_voxal.append(self.output_format(build_graph()))
 
             """ Build output index for each patch """
             output_idx.append(np.where(coord_ds)[0])
@@ -459,7 +463,10 @@ class VoxalizeDataSetV2:
                     build_graph = BuildGraph(coord=segment_voxal,
                                              mesh=mesh,
                                              pixel_size=None)
-                    graph_voxal.append(self.output_format(build_graph()))
+                    if mesh:
+                        graph_voxal.append(self.output_format(build_graph(dist_th)))
+                    else:
+                        graph_voxal.append(self.output_format(build_graph()))
 
                 """ Build output index for each patch """
                 output_idx.append(output_df[coord_ds])

@@ -192,15 +192,15 @@ class BuildGraph:
                     for j in points_in_contour:
                         dist, match_coord = tree.query(self.coord[j].reshape(1, -1), k=6)
                         match_coord = match_coord[0]  # 6 KNN
-                        dist = dist[0]  # Distance value
+                        dist = dist[0]
 
-                        # Select KNN based on NN
-                        knn = [x for id, x in enumerate(points_in_contour) if id in match_coord]
-
-                        # Select KNN based on distance threshold
-                        if dist_th is not None:
-                            knn = [id for id, _ in enumerate(points_in_contour) if id in match_coord]
-                            knn = dist[knn]
+                        if dist_th is None:
+                            # Select point in contour
+                            knn = [x for id, x in enumerate(points_in_contour) if id in match_coord]
+                        else:
+                            # Select point in contour
+                            knn = [x for id, x in enumerate(points_in_contour) if id in match_coord]
+                            knn = [x for x, y in zip(knn, dist) if y <= dist_th]
 
                         # Self connection
                         self.graph[j, j] = 1
