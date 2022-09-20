@@ -307,7 +307,7 @@ def main(pointcloud_dir: str,
 
         if 'model_struct_dict' in save_train.keys():
             model_dict = save_train['model_struct_dict']
-            locals().update(model_dict)
+            globals().update(model_dict)
 
     if gf_type == 'instance':
         model = DIST(n_out=gf_out,

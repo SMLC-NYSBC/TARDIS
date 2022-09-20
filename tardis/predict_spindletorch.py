@@ -172,7 +172,6 @@ def main(prediction_dir: str,
 
         """Predict image patches"""
         patches_DL = PredictionDataSet(img_dir=join(prediction_dir, 'temp', 'Patches'),
-                                       size=patch_size,
                                        out_channels=cnn_out_channel)
 
         predict(image_DL=patches_DL,

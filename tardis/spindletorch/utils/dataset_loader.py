@@ -81,10 +81,8 @@ class PredictionDataSet(Dataset):
 
     def __init__(self,
                  img_dir: str,
-                 size: tuple,
                  out_channels=1):
         self.img_dir = img_dir
-        self.size = size
         self.out_channels = out_channels
 
         self.ids = [splitext(file)[0] for file in listdir(img_dir)
@@ -103,8 +101,8 @@ class PredictionDataSet(Dataset):
 
         """Pre-process image and mask"""
         img, _ = preprocess(image=img,
-                            mask=img,
-                            size=self.size,
+                            mask=np.zeros_like(img, dtype=np.int8),
+                            size=img.shape,
                             normalization=self.normalize,
                             transformation=False,
                             output_dim_mask=self.out_channels)

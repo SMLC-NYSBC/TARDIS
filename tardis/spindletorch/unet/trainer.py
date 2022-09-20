@@ -31,6 +31,7 @@ class Trainer:
 
     def __init__(self,
                  model,
+                 type: dict,
                  device: str,
                  criterion,
                  optimizer,
@@ -42,6 +43,7 @@ class Trainer:
                  checkpoint_name="Unet",
                  classification=False):
         self.model = model.to(device)
+        self.type = type
         self.device = device
         self.criterion = criterion
         self.optimizer = optimizer
@@ -120,13 +122,15 @@ class Trainer:
             """ Save current model weights"""
             """ If F1 is higher then save checkpoint """
             if (np.array(self.f1)[:len(self.f1) - 1] < self.f1[len(self.f1) - 1]).all():
-                torch.save({'model_state_dict': self.model.state_dict(),
+                torch.save({'model_struct_dict': self.type,
+                            'model_state_dict': self.model.state_dict(),
                             'optimizer_state_dict': self.optimizer.state_dict()},
                            join(getcwd(),
                                 'cnn_checkpoint',
-                                'checkpoint_{}.pth'.format(self.checkpoint_name)))
+                                f'checkpoint_{self.checkpoint_name}.pth'))
 
-            torch.save({'model_state_dict': self.model.state_dict(),
+            torch.save({'model_struct_dict': self.type,
+                        'model_state_dict': self.model.state_dict(),
                         'optimizer_state_dict': self.optimizer.state_dict()},
                        join(getcwd(), 'cnn_checkpoint', 'model_weights.pth'))
 

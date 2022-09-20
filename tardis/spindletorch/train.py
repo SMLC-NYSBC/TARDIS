@@ -5,7 +5,8 @@ from typing import Optional
 import torch
 from tardis.spindletorch.unet.trainer import Trainer
 from tardis.spindletorch.utils.build_network import build_network
-from tardis.utils.losses import AdaptiveDiceLoss, BCEDiceLoss, BCELoss, DiceLoss
+from tardis.utils.losses import (AdaptiveDiceLoss, BCEDiceLoss, BCELoss,
+                                 CELoss, DiceLoss)
 from torch import optim
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
@@ -19,6 +20,7 @@ torch.autograd.profiler.emit_nvtx(enabled=False)
 
 def train(train_dataloader: DataLoader,
           test_dataloader: DataLoader,
+          type: dict,
           img_size=64,
           cnn_type='unet',
           classification=False,
@@ -88,17 +90,25 @@ def train(train_dataloader: DataLoader,
     """Load checkpoint for retraining"""
     if cnn_checkpoint is not None:
         save_train = torch.load(cnn_checkpoint, map_location=device)
+
+        if 'model_struct_dict' in save_train.keys():
+            model_dict = save_train['model_struct_dict']
+            globals().update(model_dict)
+
         model.load_state_dict(save_train['model_state_dict'])
+
     model = model.to(device)
 
     """Define loss function for training"""
     if loss_function == "dice":
         loss_fn = DiceLoss()
-    if loss_function == "bce":
+    elif loss_function == "bce":
         loss_fn = BCELoss()
-    if loss_function == "adaptive_dice":
+    elif loss_function == 'ce':
+        loss_fn = CELoss()
+    elif loss_function == "adaptive_dice":
         loss_fn = AdaptiveDiceLoss(alpha=loss_alpha)
-    if loss_function == "hybrid":
+    elif loss_function == "hybrid":
         loss_fn = BCEDiceLoss(alpha=loss_alpha)
 
     """Define Optimizer for training"""
@@ -135,6 +145,7 @@ def train(train_dataloader: DataLoader,
             f'Dropout with {dropout} probability is used for each conv. layer')
 
     trainer = Trainer(model=model,
+                      type=type,
                       device=device,
                       criterion=loss_fn,
                       optimizer=optimizer,

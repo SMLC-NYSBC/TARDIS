@@ -105,6 +105,19 @@ class BCELoss(nn.Module):
         return self.loss(logits, targets)
 
 
+class CELoss(nn.Module):
+    def __init__(self,
+                 reduction='mean'):
+        super(CELoss, self).__init__()
+        self.loss = nn.CrossEntropyLoss(reduction=reduction)
+
+    def forward(self,
+                logits: torch.Tensor,
+                targets: torch.Tensor):
+
+        return self.loss(logits, targets)
+
+
 class AdaptiveDiceLoss(nn.Module):
     """
     AdaptiveDice =  2∑[(1-p_i)^a * p_i] * g_i

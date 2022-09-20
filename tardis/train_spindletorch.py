@@ -250,12 +250,26 @@ def main(training_dataset: str,
                          num_workers=8,
                          pin_memory=True)
 
+    if cnn_out_channel > 1:
+        cnn_loss = 'ce'
+
     """Get device"""
     device = get_device(device)
+
+    """Model structure dictionary"""
+    model_dict = {'patch_size': patch_size,
+                  'cnn_type': cnn_type,
+                  'dropout_rate': dropout_rate,
+                  'cnn_layers': cnn_layers,
+                  'cnn_multiplayer': cnn_multiplayer,
+                  'cnn_structure': cnn_structure,
+                  'conv_kernel': conv_kernel,
+                  'conv_padding': conv_padding}
 
     """Run Training loop"""
     train(train_dataloader=train_DL,
           test_dataloader=test_DL,
+          type=model_dict,
           img_size=patch_size,
           cnn_type=cnn_type,
           classification=False,
