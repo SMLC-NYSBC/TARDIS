@@ -128,10 +128,7 @@ class GraphDataset(Dataset):
                                          memory_save=self.memory_save)
 
         # Normalize point cloud
-        if coord_file.endswith('.ply'):
-            dist = None
-        else:
-            dist = pc_median_dist(coord[:, 1:])
+        dist = pc_median_dist(coord[:, 1:])
 
         if self.img_dir is None:
             if self.voxal_size[i, 0] == 0:
@@ -147,7 +144,7 @@ class GraphDataset(Dataset):
                     VD = VoxalizeDataSetV2(coord=coord,
                                            image=None,
                                            init_voxal_size=0,
-                                           drop_rate=0.1,
+                                           drop_rate=1,
                                            downsampling_threshold=self.downsampling,
                                            downsampling_rate=None,
                                            label_cls=classes,
@@ -182,7 +179,7 @@ class GraphDataset(Dataset):
                 coords_v, imgs_v, graph_v, output_idx, cls_idx = VD.voxalize_dataset(mesh=self.mesh)
             else:
                 coords_v, imgs_v, graph_v, output_idx, cls_idx = VD.voxalize_dataset(mesh=self.mesh,
-                                                                                     dist_th=0.1)
+                                                                                     dist_th=2)
 
             # save data for faster access later
             np.save(join(self.cwd, temp, f'coord_{i}.npy'), np.asarray(coords_v, dtype=object))
