@@ -706,12 +706,6 @@ def load_ply(ply,
         cls_id = []
         tree = KDTree(coord_org, leaf_size=coord_org.shape[0])
 
-        # for i in coord:
-        #     _, match_coord = tree.query(i.reshape(1, -1), k=1)
-        #     match_coord = match_coord[0][0]
-
-        #     label_id.append(np.where(np.all(label_org[match_coord] == label_uniq, 1))[0][0])
-
         for i in coord:
             # Get RGB
             _, match_coord = tree.query(i.reshape(1, -1), k=1)
@@ -729,7 +723,7 @@ def load_ply(ply,
         coord = coord[np.where(cls_id != 0)[0]]
         cls_id = cls_id[np.where(cls_id != 0)[0]]
 
-        return np.hstack((cls_id, coord)), cls_id
+        return np.hstack((cls_id, coord))
     else:
         label_id = []
         tree = KDTree(coord_org, leaf_size=coord_org.shape[0])

@@ -62,7 +62,7 @@ def preprocess_data(coord: str,
     elif coord[-4:] == '.ply':
         pixel_size = None
         if datatype:
-            coord_label, _ = load_ply(ply=coord, downsample=0.1, scannet_data=True)
+            coord_label = load_ply(ply=coord, downsample=0.1, scannet_data=True)
         else:
             coord_label = load_ply(ply=coord, downsample=0.03, scannet_data=False)
 
