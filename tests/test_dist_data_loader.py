@@ -1,4 +1,5 @@
 from os.path import join
+import shutil
 
 import numpy as np
 from tardis.dist_pytorch.utils.augmentation import preprocess_data
@@ -72,6 +73,8 @@ class TestDataLoader:
         assert graph_v[0].shape == (10, 10)
         assert output_idx[0].shape == (10, )
 
+        shutil.rmtree('./temp_train')
+
     def test_training_DL_no_img(self):
         train_DL = GraphDataset(coord_dir=join('tests', 'test_data', 'data_loader'),
                                 coord_format=(".CorrelationLines.am", '.csv'),
@@ -98,3 +101,5 @@ class TestDataLoader:
         assert imgs_v[0].shape == (1, 1)
         assert graph_v[0].shape == (122, 122)
         assert output_idx[0].shape == (122, )
+
+        shutil.rmtree('./temp_train')
