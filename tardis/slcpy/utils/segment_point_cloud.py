@@ -313,7 +313,7 @@ class GraphInstanceV2:
         for i in np.unique(coord[:, 0]):
             x = coord[np.where(coord[:, 0] == int(i))[0], :]
 
-            if len(x) > 10:
+            if len(x) > 3:
                 tck, _ = splprep([x[:, 1], x[:, 2], x[:, 3]])
 
                 u_fine = np.linspace(0, 1, int(len(x) * 0.5))
