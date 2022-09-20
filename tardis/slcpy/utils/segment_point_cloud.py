@@ -302,38 +302,42 @@ class GraphInstanceV2:
 
         end_length = sqrt((x[0][0] - x[-1][0]) ** 2 + (x[0][1] - x[-1][1]) ** 2 + (x[0][2] - x[-1][2]) ** 2)
 
-        return length + 1e-16, end_length + 1e-16
+        return (length + 1e-16) / (end_length + 1e-16)
 
     def _smooth_segments(self,
                          coord: np.ndarray):
-        smooth = []
+        smooth_spline = []
         tortuosity = []
 
+        # Smooth spline
         for i in np.unique(coord[:, 0]):
             x = coord[np.where(coord[:, 0] == int(i))[0], :]
+
             if len(x) > 10:
-                x_len = int(len(x) * 1)
-                tck, u = splprep([x[:, 1], x[:, 2], x[:, 3]])
-                x_knots, y_knots, z_knots = splev(tck[0], tck)
-                u_fine = np.linspace(0, 1, x_len)
+                tck, _ = splprep([x[:, 1], x[:, 2], x[:, 3]])
+
+                u_fine = np.linspace(0, 1, int(len(x) * 0.5))
                 x_fine, y_fine, z_fine = splev(u_fine, tck)
                 filament = np.vstack((x_fine, y_fine, z_fine)).T
+
                 id = np.zeros((len(filament), 1))
                 id += i
                 df = np.hstack((id, filament))
-                smooth.append(df)
+                smooth_spline.append(df)
             else:
-                smooth.append(x)
-        coord_segment_smooth = np.concatenate(smooth)
+                smooth_spline.append(x)
+
+        coord_segment_smooth = np.concatenate(smooth_spline)
 
         for i in np.unique(coord_segment_smooth[:, 0]):
             filament = coord_segment_smooth[np.where(coord_segment_smooth[:, 0] == int(i))[0], :]
-            length, end_length = self.total_length(filament)
-            tortuosity.append(length / end_length)
-        error = [id for id, i in enumerate(tortuosity) if i > 1.1]
+            tortuosity.append(self.total_length(filament))
 
+        # Remove errors with hight tortuosity
+        error = [id for id, i in enumerate(tortuosity) if i > 1.1]
         segments = np.stack([i for i in coord_segment_smooth if i[0] not in error])
 
+        # Fix breaks in spline numbering
         df = np.unique(segments[:, 0])
         df_range = np.asarray(range(0, len(df)), dtype=df.dtype)
 
