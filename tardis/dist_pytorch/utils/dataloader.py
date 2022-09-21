@@ -127,8 +127,8 @@ class GraphDataset(Dataset):
                                          normalization=self.normalize,
                                          memory_save=self.memory_save)
 
-        # Normalize point cloud
-        dist = pc_median_dist(coord[:, 1:])
+            # Normalize point cloud
+            dist = pc_median_dist(coord[:, 1:])
 
         if self.img_dir is None:
             if self.voxal_size[i, 0] == 0:

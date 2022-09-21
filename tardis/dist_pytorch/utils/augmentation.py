@@ -188,9 +188,9 @@ class BuildGraph:
                 coord_df = self.coord[points_in_contour]
                 tree = KDTree(coord_df, leaf_size=coord_df.shape[0])
 
-                if coord_df.shape[0] > 6:
+                if coord_df.shape[0] > 4:
                     for j in points_in_contour:
-                        dist, match_coord = tree.query(self.coord[j].reshape(1, -1), k=6)
+                        dist, match_coord = tree.query(self.coord[j].reshape(1, -1), k=4)
                         match_coord = match_coord[0]  # 6 KNN
                         dist = dist[0]
 
