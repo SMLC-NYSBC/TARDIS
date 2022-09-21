@@ -332,6 +332,7 @@ def AP50_ScanNet(logits: np.ndarray,
         """Find beset mach for instance"""
         df = []
         gt_uniqe_id = np.unique(coord[:, 0])
+
         for i in np.unique(coord[:, 0]):
             gt = coord[np.where(coord[:, 0] == i)[0]][:, 1:]
 
@@ -349,7 +350,7 @@ def AP50_ScanNet(logits: np.ndarray,
         if id in VALID_CLASS_IDS_20:
             label.append(CLASS_LABELS_20[[idx for idx, k in enumerate(VALID_CLASS_IDS_20) if k == id][0]])
         else:
-            label.append('Not_Valid_Label')
+            continue
 
         """Calculate metrics"""
         tp = np.sum([True for i in gt if i in pred])
@@ -373,11 +374,19 @@ def AP50_ScanNet(logits: np.ndarray,
     uniq_label = []
     for i in np.unique(label):
         ids = [id for id, j in enumerate(label) if j == i]
+
         ap50s = np.sum([a for id, a in enumerate(ap50) if id in ids])
         uniq_ap50.append(ap50s)
+
         precs = np.mean([a for id, a in enumerate(prec) if id in ids])
         uniq_prec.append(precs)
+
         recs = np.mean([a for id, a in enumerate(rec) if id in ids])
         uniq_rec.append(recs)
+
         uniq_label.append(i)
+
+    uniq_ap50.append(np.mean(uniq_ap50))
+    uniq_label.append('mIoU')
+
     return uniq_ap50, uniq_prec, uniq_rec, uniq_label
