@@ -7,8 +7,285 @@ import numpy as np
 import torch
 from tardis.dist_pytorch.utils.augmentation import preprocess_data
 from tardis.dist_pytorch.utils.voxal import VoxalizeDataSetV2
+from tardis.slcpy.utils.load_data import load_ply
 from tardis.utils.utils import pc_median_dist
 from torch.utils.data import Dataset
+
+
+class BasicDataset(Dataset):
+    def __init__(self,
+                 coord_dir: str,
+                 coord_format=(".csv"),
+                 downsampling_if=500,
+                 downsampling_rate: Optional[float] = None,
+                 train=True):
+        # Coord setting
+        self.coord_dir = coord_dir
+        self.coord_format = coord_format
+
+        self.train = train
+        self.cwd = getcwd()
+        if self.train:
+            if isdir(join(self.cwd, 'temp_train')):
+                rmtree(join(self.cwd, 'temp_train'))
+            mkdir(join(self.cwd, 'temp_train'))
+        else:
+            if isdir(join(self.cwd, 'temp_test')):
+                rmtree(join(self.cwd, 'temp_test'))
+            mkdir(join(self.cwd, 'temp_test'))
+
+        self.ids = [f for f in listdir(coord_dir) if f.endswith(self.coord_format)]
+
+        # Voxal setting
+        self.downsampling = downsampling_if
+        self.downsampling_rate = downsampling_rate
+        self.voxal_size = np.zeros((len(self.ids), 1))  # Save voxal size value for speed-up
+
+    def __len__(self):
+        return len(self.ids)
+
+
+class FilamentDataset(BasicDataset):
+    def __getitem__(self, i):
+        """ Get list of all coordinates and image patches """
+        idx = self.ids[i]
+
+        if self.train:
+            temp = 'temp_train'
+        else:
+            temp = 'temp_test'
+
+        # Define what coordinate format are available
+        coord_file = join(self.coord_dir, str(idx))
+
+        if self.voxal_size[i, 0] == 0:
+            # Pre process coord and image data also, if exist remove duplicates
+            coord, _ = preprocess_data(coord=coord_file,
+                                       image=None,
+                                       include_label=True,
+                                       size=None,
+                                       normalization=None,
+                                       memory_save=False)
+
+            # Normalize point cloud
+            dist = pc_median_dist(coord[:, 1:])
+
+        if self.voxal_size[i, 0] == 0:
+            if dist is not None:
+                coord[:, 1:] = coord[:, 1:] / dist  # Normalize point cloud to px unit
+
+            VD = VoxalizeDataSetV2(coord=coord,
+                                   image=None,
+                                   init_voxal_size=0,
+                                   drop_rate=1,
+                                   downsampling_threshold=self.downsampling,
+                                   downsampling_rate=None,
+                                   label_cls=None,
+                                   graph=True,
+                                   tensor=False)
+
+        if self.voxal_size[i, 0] == 0:
+            coords_v, _, graph_v, output_idx, _ = VD.voxalize_dataset()
+
+            # save data for faster access later
+            np.save(join(self.cwd, temp, f'coord_{i}.npy'), np.asarray(coords_v, dtype=object))
+            np.save(join(self.cwd, temp, f'graph_{i}.npy'), np.asarray(graph_v, dtype=object))
+            np.save(join(self.cwd, temp, f'out_{i}.npy'), np.asarray(output_idx, dtype=object))
+        else:
+            # Load pre-process data
+            coords_v = np.load(join(self.cwd, temp, f'coord_{i}.npy'), allow_pickle=True)
+            graph_v = np.load(join(self.cwd, temp, f'graph_{i}.npy'), allow_pickle=True)
+            output_idx = np.load(join(self.cwd, temp, f'out_{i}.npy'), allow_pickle=True)
+
+        coords_v = [torch.Tensor(co.astype(np.float32)).type(torch.float32) for co in coords_v]
+        graph_v = [torch.Tensor(gr.astype(np.float32)).type(torch.float32) for gr in graph_v]
+        output_idx = [torch.Tensor(ou.astype(np.float32)).type(torch.int16) for ou in output_idx]
+
+        # Store initial patch size for each data to speed up computation
+        if self.voxal_size[i, 0] == 0:
+            self.voxal_size[i, 0] = VD.voxal_patch_size + 1
+
+        return coords_v, graph_v, output_idx
+
+
+class PartnetDataset(BasicDataset):
+    def __getitem__(self, i):
+        """ Get list of all coordinates and image patches """
+        idx = self.ids[i]
+
+        if self.train:
+            temp = 'temp_train'
+        else:
+            temp = 'temp_test'
+
+        # Define what coordinate format are available
+        coord_file = join(self.coord_dir, str(idx))
+
+        if self.voxal_size[i, 0] == 0:
+            # Pre process coord and image data also, if exist remove duplicates
+            coord = load_ply(coord_file, downsample=0.03, scannet_data=False)
+
+            # Normalize point cloud
+            dist = pc_median_dist(coord[:, 1:])
+
+        if self.voxal_size[i, 0] == 0:
+            if dist is not None:
+                coord[:, 1:] = coord[:, 1:] / dist  # Normalize point cloud to px unit
+
+            VD = VoxalizeDataSetV2(coord=coord,
+                                   image=None,
+                                   init_voxal_size=0,
+                                   drop_rate=1,
+                                   downsampling_threshold=self.downsampling,
+                                   downsampling_rate=None,
+                                   label_cls=None,
+                                   graph=True,
+                                   tensor=False)
+
+        if self.voxal_size[i, 0] == 0:
+            coords_v, _, graph_v, output_idx, _ = VD.voxalize_dataset(mesh=True,
+                                                                      dist_th=2)
+
+            # save data for faster access later
+            np.save(join(self.cwd, temp, f'coord_{i}.npy'), np.asarray(coords_v, dtype=object))
+            np.save(join(self.cwd, temp, f'graph_{i}.npy'), np.asarray(graph_v, dtype=object))
+            np.save(join(self.cwd, temp, f'out_{i}.npy'), np.asarray(output_idx, dtype=object))
+        else:
+            # Load pre-process data
+            coords_v = np.load(join(self.cwd, temp, f'coord_{i}.npy'), allow_pickle=True)
+            graph_v = np.load(join(self.cwd, temp, f'graph_{i}.npy'), allow_pickle=True)
+            output_idx = np.load(join(self.cwd, temp, f'out_{i}.npy'), allow_pickle=True)
+
+        coords_v = [torch.Tensor(co.astype(np.float32)).type(torch.float32) for co in coords_v]
+        graph_v = [torch.Tensor(gr.astype(np.float32)).type(torch.float32) for gr in graph_v]
+        output_idx = [torch.Tensor(ou.astype(np.float32)).type(torch.int16) for ou in output_idx]
+
+        # Store initial patch size for each data to speed up computation
+        if self.voxal_size[i, 0] == 0:
+            self.voxal_size[i, 0] = VD.voxal_patch_size + 1
+
+        return coords_v, graph_v, output_idx
+
+
+class ScannetDataset(BasicDataset):
+    def __getitem__(self, i):
+        """ Get list of all coordinates and image patches """
+        idx = self.ids[i]
+
+        if self.train:
+            temp = 'temp_train'
+        else:
+            temp = 'temp_test'
+
+        # Define what coordinate format are available
+        coord_file = join(self.coord_dir, str(idx))
+
+        if self.voxal_size[i, 0] == 0:
+            # Pre process coord and image data also, if exist remove duplicates
+            coord = load_ply(coord_file, downsample=0.1, scannet_data=True)
+
+        classes = coord[:, 0]
+
+        if self.voxal_size[i, 0] == 0:
+            VD = VoxalizeDataSetV2(coord=coord,
+                                   image=None,
+                                   init_voxal_size=0,
+                                   drop_rate=0.1,
+                                   downsampling_threshold=self.downsampling,
+                                   downsampling_rate=None,
+                                   label_cls=classes,
+                                   graph=True,
+                                   tensor=False)
+
+        if self.voxal_size[i, 0] == 0:
+            coords_v, _, graph_v, output_idx, cls_idx = VD.voxalize_dataset(mesh=True,
+                                                                            dist_th=2)
+
+            # save data for faster access later
+            np.save(join(self.cwd, temp, f'coord_{i}.npy'), np.asarray(coords_v, dtype=object))
+            np.save(join(self.cwd, temp, f'graph_{i}.npy'), np.asarray(graph_v, dtype=object))
+            np.save(join(self.cwd, temp, f'out_{i}.npy'), np.asarray(output_idx, dtype=object))
+            np.save(join(self.cwd, temp, f'cls_{i}.npy'), np.asarray(cls_idx, dtype=object))
+        else:
+            # Load pre-process data
+            coords_v = np.load(join(self.cwd, temp, f'coord_{i}.npy'), allow_pickle=True)
+            graph_v = np.load(join(self.cwd, temp, f'graph_{i}.npy'), allow_pickle=True)
+            output_idx = np.load(join(self.cwd, temp, f'out_{i}.npy'), allow_pickle=True)
+            cls_idx = np.load(join(self.cwd, temp, f'cls_{i}.npy'), allow_pickle=True)
+
+        coords_v = [torch.Tensor(co.astype(np.float32)).type(torch.float32) for co in coords_v]
+        graph_v = [torch.Tensor(gr.astype(np.float32)).type(torch.float32) for gr in graph_v]
+        output_idx = [torch.Tensor(ou.astype(np.float32)).type(torch.int16) for ou in output_idx]
+        cls_idx = [torch.Tensor(cx.astype(np.float32)).type(torch.float32) for cx in cls_idx]
+
+        # Store initial patch size for each data to speed up computation
+        if self.voxal_size[i, 0] == 0:
+            self.voxal_size[i, 0] = VD.voxal_patch_size + 1
+
+        return coords_v, graph_v, output_idx, cls_idx
+
+
+class ScannetColorDataset(BasicDataset):
+    def __getitem__(self, i):
+        assert isdir(join(self.coord_dir, 'color'))  # Check if color folder exist
+
+        """ Get list of all coordinates and image patches """
+        idx = self.ids[i]
+
+        if self.train:
+            temp = 'temp_train'
+        else:
+            temp = 'temp_test'
+
+        # Define what coordinate format are available
+        coord_file = join(self.coord_dir, str(idx))
+
+        if self.voxal_size[i, 0] == 0:
+            # Pre process coord and image data also, if exist remove duplicates
+            coord, rgb = load_ply(coord_file,
+                                  downsample=0.1,
+                                  scannet_data=True,
+                                  color=join(self.coord_dir, 'color', str(idx)))
+
+        classes = coord[:, 0]
+
+        if self.voxal_size[i, 0] == 0:
+            VD = VoxalizeDataSetV2(coord=coord,
+                                   image=None,
+                                   init_voxal_size=0,
+                                   drop_rate=0.1,
+                                   downsampling_threshold=self.downsampling,
+                                   downsampling_rate=None,
+                                   label_cls=classes,
+                                   graph=True,
+                                   tensor=False)
+
+        if self.voxal_size[i, 0] == 0:
+            coords_v, _, graph_v, output_idx, cls_idx = VD.voxalize_dataset(mesh=True,
+                                                                            dist_th=2)
+
+            # save data for faster access later
+            np.save(join(self.cwd, temp, f'coord_{i}.npy'), np.asarray(coords_v, dtype=object))
+            np.save(join(self.cwd, temp, f'graph_{i}.npy'), np.asarray(graph_v, dtype=object))
+            np.save(join(self.cwd, temp, f'out_{i}.npy'), np.asarray(output_idx, dtype=object))
+            np.save(join(self.cwd, temp, f'cls_{i}.npy'), np.asarray(cls_idx, dtype=object))
+        else:
+            # Load pre-process data
+            coords_v = np.load(join(self.cwd, temp, f'coord_{i}.npy'), allow_pickle=True)
+            graph_v = np.load(join(self.cwd, temp, f'graph_{i}.npy'), allow_pickle=True)
+            output_idx = np.load(join(self.cwd, temp, f'out_{i}.npy'), allow_pickle=True)
+            cls_idx = np.load(join(self.cwd, temp, f'cls_{i}.npy'), allow_pickle=True)
+
+        coords_v = [torch.Tensor(co.astype(np.float32)).type(torch.float32) for co in coords_v]
+        graph_v = [torch.Tensor(gr.astype(np.float32)).type(torch.float32) for gr in graph_v]
+        output_idx = [torch.Tensor(ou.astype(np.float32)).type(torch.int16) for ou in output_idx]
+        cls_idx = [torch.Tensor(cx.astype(np.float32)).type(torch.float32) for cx in cls_idx]
+
+        # Store initial patch size for each data to speed up computation
+        if self.voxal_size[i, 0] == 0:
+            self.voxal_size[i, 0] = VD.voxal_patch_size + 1
+
+        return coords_v, graph_v, output_idx, cls_idx
 
 
 class GraphDataset(Dataset):
@@ -204,10 +481,6 @@ class GraphDataset(Dataset):
         # Store initial patch size for each data to speed up computation
         if self.voxal_size[i, 0] == 0:
             self.voxal_size[i, 0] = VD.voxal_patch_size + 1
-
-        # if self.img_dir is not None:
-        #     for id, c in enumerate(coords_v):
-        #         coords_v[id] = c / dist
 
         return coords_v, imgs_v, graph_v, output_idx, cls_idx
 

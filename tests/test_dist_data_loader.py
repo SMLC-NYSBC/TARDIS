@@ -3,7 +3,7 @@ import shutil
 
 import numpy as np
 from tardis.dist_pytorch.utils.augmentation import preprocess_data
-from tardis.dist_pytorch.utils.dataloader import GraphDataset
+from tardis.dist_pytorch.utils.dataloader import GraphDataset, FilamentDataset
 
 
 class TestDataLoader:
@@ -99,6 +99,28 @@ class TestDataLoader:
         assert len(coords_v) == 1
         assert coords_v[0].shape == (122, 2)
         assert imgs_v[0].shape == (1, 1)
+        assert graph_v[0].shape == (122, 122)
+        assert output_idx[0].shape == (122, )
+
+        shutil.rmtree('./temp_train')
+
+    def test_filament_dataloader(self):
+        train_DL = FilamentDataset(coord_dir=join('tests', 'test_data', 'data_loader'),
+                                   coord_format=(".CorrelationLines.am", '.csv'),
+                                   downsampling_if=500,
+                                   downsampling_rate=None)
+
+        coords_v, graph_v, output_idx = train_DL.__getitem__(0)
+
+        assert len(coords_v) == 1
+        assert coords_v[0].shape == (10, 3)
+        assert graph_v[0].shape == (10, 10)
+        assert output_idx[0].shape == (10, )
+
+        coords_v, graph_v, output_idx = train_DL.__getitem__(1)
+
+        assert len(coords_v) == 1
+        assert coords_v[0].shape == (122, 2)
         assert graph_v[0].shape == (122, 122)
         assert output_idx[0].shape == (122, )
 

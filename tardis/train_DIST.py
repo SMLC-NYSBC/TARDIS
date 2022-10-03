@@ -1,3 +1,4 @@
+import sys
 from os import getcwd, listdir, mkdir
 from os.path import isdir, join
 from shutil import rmtree
@@ -6,12 +7,11 @@ import click
 import torch
 from torch import optim
 from torch.optim.lr_scheduler import StepLR
-from torch.utils.data import DataLoader
 
 from tardis.dist_pytorch.transformer.network import C_DIST, DIST
 from tardis.dist_pytorch.transformer.trainer import Trainer
-from tardis.dist_pytorch.utils.dataloader import GraphDataset
-from tardis.dist_pytorch.utils.utils import BuildTrainDataSet, cal_node_input
+from tardis.dist_pytorch.utils.utils import (BuildTrainDataSet, build_dataset,
+                                             cal_node_input)
 from tardis.utils.device import get_device
 from tardis.utils.logo import Tardis_Logo
 from tardis.utils.losses import BCELoss, DiceLoss, SigmoidFocalLoss
@@ -26,10 +26,10 @@ from tardis.version import version
               help='Directory with train, test folder or folder with dataset '
               'to be used for training.',
               show_default=True)
-@click.option('-wi', '--with_img',
-              default=False,
-              type=bool,
-              help='Directory with train, test folder or folder with dataset ',
+@click.option('-dst', '--dataset_type',
+              default='filament',
+              type=click.Choice(['filament', 'scannet', 'scannet_color', 'partnet', 'general']),
+              help='Define training dataset type',
               show_default=True)
 @click.option('-ps', '--patch_size',
               default=None,
@@ -45,11 +45,6 @@ from tardis.version import version
               default=10,
               type=float,
               help='Percentage value of train dataset that will become test.',
-              show_default=True)
-@click.option('-td', '--train_dataset',
-              default=True,
-              type=bool,
-              help='If True and .ply detected use dataloader for Scannet not partnet dataset',
               show_default=True)
 @click.option('-go', '--gf_out',
               default=1,
@@ -141,11 +136,10 @@ from tardis.version import version
               show_default=True)
 @click.version_option(version=version)
 def main(pointcloud_dir: str,
-         with_img: bool,
+         dataset_type: str,
          patch_size,
          prefix,
          train_test_ratio: float,
-         train_dataset: bool,
          gf_out: int,
          gf_node_dim: int,
          gf_edge_dim: int,
@@ -172,6 +166,10 @@ def main(pointcloud_dir: str,
     tardis_logo = Tardis_Logo()
     tardis_logo(title='DIST training module')
 
+    if dataset_type == 'general':
+        tardis_logo(text_1=f'General DataSet loader is not supported in TARDIS {version}')
+        sys.exit()
+
     """Model structure dictionary"""
     model_dict = {'gf_type': gf_type,
                   'gf_out': gf_out,
@@ -190,19 +188,19 @@ def main(pointcloud_dir: str,
     test_imgs_dir = join(pointcloud_dir, 'test', 'imgs')
     test_coords_dir = join(pointcloud_dir, 'test', 'masks')
 
-    img_format = ('.tif', '.tiff', '.am', '.mrc', '.rec')
+    # img_format = ('.tif', '.tiff', '.am', '.mrc', '.rec')
     coord_format = ('.CorrelationLines.am', '.npy', '.csv', '.ply')
     dataset_test = False
 
-    # Check if dir has train/test folder and if folder have data
+    # Check if dir has train/test folder and if folder have compatible data
     dataset_test = check_dir(dir=pointcloud_dir,
                              train_img=train_imgs_dir,
                              train_mask=train_coords_dir,
-                             img_format=img_format,
+                             img_format=(),
                              test_img=test_imgs_dir,
                              test_mask=test_coords_dir,
                              mask_format=coord_format,
-                             with_img=with_img)
+                             with_img=False)
 
     """Set-up environment"""
     if not dataset_test:
@@ -226,8 +224,8 @@ def main(pointcloud_dir: str,
         """Move data to set-up dir"""
         _ = BuildTrainDataSet(dir=pointcloud_dir,
                               coord_format=coord_format,
-                              with_img=with_img,
-                              img_format=img_format)
+                              with_img=False,
+                              img_format=None)
 
         """Split train for train and test"""
         build_test = BuildTestDataSet(dataset_dir=pointcloud_dir,
@@ -241,49 +239,54 @@ def main(pointcloud_dir: str,
     else:
         mesh = False
 
-    if with_img:
-        coord_format.append([f for f in img_format if listdir(train_imgs_dir)[0].endswith(f)][0])
-    else:
-        train_imgs_dir = None
-        test_imgs_dir = None
+    train_imgs_dir = None
+    test_imgs_dir = None
 
     """Build dataset for training/validation"""
-    dl_train_graph = DataLoader(dataset=GraphDataset(coord_dir=train_coords_dir,
-                                                     coord_format=coord_format,
-                                                     img_dir=train_imgs_dir,
-                                                     prefix=prefix,
-                                                     size=patch_size,
-                                                     normalize="rescale",
-                                                     mesh=mesh,
-                                                     train=True,
-                                                     datatype=train_dataset,
-                                                     downsampling_if=dl_downsampling,
-                                                     downsampling_rate=dl_downsampling_rate,
-                                                     memory_save=False),
-                                batch_size=1,
-                                shuffle=True,
-                                pin_memory=True)
+    dl_train_graph, dl_test_graph = build_dataset(dataset_type=dataset_type,
+                                                  coord_dir=train_coords_dir,
+                                                  coord_format=coord_format,
+                                                  img_dir=train_imgs_dir,
+                                                  prefix=prefix,
+                                                  size=patch_size,
+                                                  normalize="rescale",
+                                                  downsampling_if=dl_downsampling,
+                                                  downsampling_rate=dl_downsampling_rate)
 
-    dl_test_graph = DataLoader(dataset=GraphDataset(coord_dir=test_coords_dir,
-                                                    coord_format=coord_format,
-                                                    img_dir=test_imgs_dir,
-                                                    prefix=prefix,
-                                                    size=patch_size,
-                                                    normalize="rescale",
-                                                    mesh=mesh,
-                                                    train=False,
-                                                    datatype=train_dataset,
-                                                    downsampling_if=dl_downsampling,
-                                                    downsampling_rate=dl_downsampling_rate,
-                                                    memory_save=False),
-                               batch_size=1,
-                               shuffle=False,
-                               pin_memory=True)
+    # dl_train_graph = DataLoader(dataset=GraphDataset(coord_dir=train_coords_dir,
+    #                                                  coord_format=coord_for
+    #                                                  mat,
+    #                                                  img_dir=train_imgs_dir,
+    #                                                  prefix=prefix,
+    #                                                  size=patch_size,
+    #                                                  normalize="rescale",
+    #                                                  mesh=mesh,
+    #                                                  train=True,
+    #                                                  datatype=train_dataset,
+    #                                                  downsampling_if=dl_downsampling,
+    #                                                  downsampling_rate=dl_downsampling_rate,
+    #                                                  memory_save=False),
+    #                             batch_size=1,
+    #                             shuffle=True,
+    #                             pin_memory=True)
 
-    if train_dataset:
-        coord, img, graph, _, _ = next(iter(dl_train_graph))
-    else:
-        coord, img, graph, _, _ = next(iter(dl_train_graph))
+    # dl_test_graph = DataLoader(dataset=GraphDataset(coord_dir=test_coords_dir,
+    #                                                 coord_format=coord_format,
+    #                                                 img_dir=test_imgs_dir,
+    #                                                 prefix=prefix,
+    #                                                 size=patch_size,
+    #                                                 normalize="rescale",
+    #                                                 mesh=mesh,
+    #                                                 train=False,
+    #                                                 datatype=train_dataset,
+    #                                                 downsampling_if=dl_downsampling,
+    #                                                 downsampling_rate=dl_downsampling_rate,
+    #                                                 memory_save=False),
+    #                            batch_size=1,
+    #                            shuffle=False,
+    #                            pin_memory=True)
+
+    coord, img, graph, _, _ = next(iter(dl_train_graph))
 
     print(f'cord = shape: {coord[0].shape}; '
           f'type: {coord[0].dtype}')
@@ -368,18 +371,21 @@ def main(pointcloud_dir: str,
                                                                                             gf_edge_dim,
                                                                                             dl_downsampling)]
     """Train"""
-    train = Trainer(model=model,
-                    type=model_dict,
-                    node_input=with_img,
-                    device=device,
-                    criterion=loss_fn,
-                    optimizer=optimizer,
-                    training_DataLoader=dl_train_graph,
-                    validation_DataLoader=dl_test_graph,
-                    epochs=epochs,
-                    checkpoint_name='GF',
-                    lr_scheduler=learning_rate_scheduler,
-                    print_setting=print_setting)
+    if dataset_type == 'scannet_color':
+        pass
+    else:
+        train = Trainer(model=model,
+                        type=model_dict,
+                        node_input=False,
+                        device=device,
+                        criterion=loss_fn,
+                        optimizer=optimizer,
+                        training_DataLoader=dl_train_graph,
+                        validation_DataLoader=dl_test_graph,
+                        epochs=epochs,
+                        checkpoint_name='GF',
+                        lr_scheduler=learning_rate_scheduler,
+                        print_setting=print_setting)
 
     train.run_training()
 

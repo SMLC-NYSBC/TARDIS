@@ -1,7 +1,6 @@
 import time
 from os import getcwd, listdir, mkdir
 from os.path import isdir, join
-from shutil import rmtree
 
 import click
 import numpy as np
