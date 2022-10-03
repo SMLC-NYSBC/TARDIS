@@ -89,6 +89,7 @@ def main(gf_dir: str,
     """
     """Initial setup"""
     device = get_device(device)
+    rand_id = np.random.randint(10000)
 
     tardis_logo = Tardis_Logo()
     tardis_logo(title='Metric evaluation for DIST')
@@ -97,9 +98,9 @@ def main(gf_dir: str,
     GF_list = [f for f in listdir(gf_dir) if f.endswith(available_format)]
     assert len(GF_list) > 0, 'No file found in given directory!'
 
-    if isdir(join(gf_dir, 'scores')):
-        rmtree(join(gf_dir, 'scores'))
-    mkdir(join(gf_dir, 'scores'))
+    if not isdir(join(gf_dir, 'scores')):
+        mkdir(join(gf_dir, 'scores'))
+    mkdir(join(gf_dir, 'scores', str(rand_id)))
 
     if scannet:
         eval_list = ['scene0568_00', 'scene0568_01', 'scene0568_02', 'scene0304_00',
@@ -224,7 +225,7 @@ def main(gf_dir: str,
         # coord_vx <- voxals for prediction
         if i.endswith('.ply'):
             if scannet:
-                coord, _ = load_ply(join(gf_dir, i), downsample=0.1, scannet_data=True)
+                coord = load_ply(join(gf_dir, i), downsample=0.1, scannet_data=True)
             img = [[0] for _ in range(len(coord))]
         else:
             coord, img = preprocess_data(coord=join(gf_dir, i),
@@ -317,11 +318,11 @@ def main(gf_dir: str,
                     ap = np.mean([c for idx, c in enumerate(np.concatenate(all_ap50)) if idx in id])
                     classes_eval.append(f'{i}: AP50: {ap}, mPrec: {prec}, mRec: {rec}\n')
 
-                np.save(join(gf_dir, 'scores', 'classes_eval.npy'),
+                np.save(join(gf_dir, 'scores', str(rand_id), 'classes_eval.npy'),
                         classes_eval)
-                np.save(join(gf_dir, 'scores', 'raw_ap50.npy'),
+                np.save(join(gf_dir, 'scores', str(rand_id), 'raw_ap50.npy'),
                         all_ap50)
-                np.save(join(gf_dir, 'scores', 'raw_label.npy'),
+                np.save(join(gf_dir, 'scores', str(rand_id), 'raw_label.npy'),
                         all_label)
             else:
                 graph_logits = GraphToSegment._stitch_graph(graphs, output_idx)

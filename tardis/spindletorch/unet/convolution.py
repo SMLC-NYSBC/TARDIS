@@ -109,9 +109,9 @@ def convolution(in_ch: int,
                     modules.append(("BatchNorm2", nn.BatchNorm2d(in_ch)))
 
         if "r" in letter:
-            modules.append(("ReLu", nn.ReLU(inplace=True)))
+            modules.append(("ReLu", nn.ReLU()))
         if "l" in letter:
-            modules.append(("LeakyReLu", nn.LeakyReLU(inplace=True)))
+            modules.append(("LeakyReLu", nn.LeakyReLU(negative_slope=0.1)))
         if 'e' in letter:
             modules.append(('GeLU', GeLU()))
 
@@ -140,7 +140,8 @@ class SingleConvolution(nn.Sequential):
                  components: str,
                  kernel: int or tuple,
                  padding: int or tuple,
-                 no_group=None):
+                 no_group=None,
+                 block_type=None):
         super(SingleConvolution, self).__init__()
         if '3' in components:
             conv3d = convolution(in_ch=in_ch,

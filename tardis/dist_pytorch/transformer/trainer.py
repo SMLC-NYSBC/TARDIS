@@ -165,7 +165,8 @@ class Trainer:
                        delimiter=',')
 
             """ If F1 is higher then save checkpoint """
-            if (np.array(self.f1)[:len(self.f1) - 1] > self.f1[len(self.f1) - 1]).all():
+            self.validation_loss[len(self.validation_loss) - 1]
+            if (self.f1[len(self.f1) - 1] > self.f1[len(self.f1) - 1]).all():
                 torch.save({'model_struct_dict': self.type,
                             'model_state_dict': self.model.state_dict(),
                             'optimizer_state_dict': self.optimizer.state_dict()},
