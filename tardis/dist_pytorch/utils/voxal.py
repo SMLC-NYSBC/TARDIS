@@ -459,11 +459,11 @@ class VoxalizeDataSetV2:
                 """ Build point cloud for each patch """
                 coord_voxal.append(self.output_format(df_voxal[coord_ds, :]))
 
-                """ Build img patches for each patch """
-                if self.image is not None:
-                    img_voxal.append(self.output_format(df_img[coord_ds, :]))
-                else:
-                    img_voxal.append(self.output_format(df_img))
+                # """ Build img patches for each patch """
+                # if self.image is not None:
+                #     img_voxal.append(self.output_format(df_img[coord_ds, :]))
+                # else:
+                #     img_voxal.append(self.output_format(df_img))
 
                 """ Optionally - Build graph for each patch """
                 if self.graph_output:
@@ -500,11 +500,11 @@ class VoxalizeDataSetV2:
                 if self.rgb is not None:
                     rgb_df = self.rgb[df_voxal_keep]
                 else:
-                    rgb_df = [0]
+                    rgb_df = np.zeros((1,1))
 
                 rgb_voxal.append(self.output_format(rgb_df))
 
         if self.graph_output:
-            return coord_voxal, img_voxal, graph_voxal, output_idx, cls_voxal, rgb_voxal
+            return coord_voxal, rgb_voxal, graph_voxal, output_idx, cls_voxal
         else:
-            return coord_voxal, img_voxal, output_idx, cls_voxal, rgb_voxal
+            return coord_voxal, rgb_voxal, output_idx, cls_voxal

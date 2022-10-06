@@ -97,7 +97,7 @@ class FilamentDataset(BasicDataset):
                                    tensor=False)
 
         if self.voxal_size[i, 0] == 0:
-            coords_idx, df_idx, graph_idx, output_idx, _, _ = VD.voxalize_dataset()
+            coords_idx, df_idx, graph_idx, output_idx, _ = VD.voxalize_dataset()
 
             # save data for faster access later
             np.save(join(self.cwd, temp, f'coord_{i}.npy'), np.asarray(coords_idx, dtype=object))
@@ -120,7 +120,7 @@ class FilamentDataset(BasicDataset):
         if self.voxal_size[i, 0] == 0:
             self.voxal_size[i, 0] = VD.voxal_patch_size + 1
 
-        # Output edge_f, node_f, graph, node_idx, node_class
+        # Output edge_f,   node_f, graph,     node_idx,   node_class
         return coords_idx, df_idx, graph_idx, output_idx, df_idx
 
 
@@ -161,7 +161,6 @@ class PartnetDataset(BasicDataset):
                 coord[:, 1:] = coord[:, 1:] / dist  # Normalize point cloud to px unit
 
             VD = VoxalizeDataSetV2(coord=coord,
-                                   image=None,
                                    init_voxal_size=0,
                                    drop_rate=1,
                                    downsampling_threshold=self.downsampling,
@@ -171,7 +170,7 @@ class PartnetDataset(BasicDataset):
                                    tensor=False)
 
         if self.voxal_size[i, 0] == 0:
-            coords_idx, df_idx, graph_idx, output_idx, _, _ = VD.voxalize_dataset(mesh=True,
+            coords_idx, df_idx, graph_idx, output_idx, _ = VD.voxalize_dataset(mesh=True,
                                                                                   dist_th=2)
 
             # save data for faster access later
@@ -195,7 +194,7 @@ class PartnetDataset(BasicDataset):
         if self.voxal_size[i, 0] == 0:
             self.voxal_size[i, 0] = VD.voxal_patch_size + 1
 
-        # Output edge_f, node_f, graph, node_idx, node_class
+        # Output edge_f,   node_f, graph,     node_idx,   node_class
         return coords_idx, df_idx, graph_idx, output_idx, df_idx
 
 
@@ -238,7 +237,7 @@ class ScannetDataset(BasicDataset):
                                    graph=True,
                                    tensor=False)
 
-            coords_idx, df_idx, graph_idx, output_idx, cls_idx, _ = VD.voxalize_dataset(mesh=True,
+            coords_idx, df_idx, graph_idx, output_idx, cls_idx = VD.voxalize_dataset(mesh=True,
                                                                                         dist_th=2)
 
             # save data for faster access later
@@ -265,7 +264,7 @@ class ScannetDataset(BasicDataset):
         if self.voxal_size[i, 0] == 0:
             self.voxal_size[i, 0] = VD.voxal_patch_size + 1
 
-        # Output edge_f, node_f, graph, node_idx, node_class
+        # Output edge_f,   node_f, graph,     node_idx,   node_class
         return coords_idx, df_idx, graph_idx, output_idx, cls_idx
 
 
@@ -316,34 +315,35 @@ class ScannetColorDataset(BasicDataset):
                                    graph=True,
                                    tensor=False)
 
-            coords_idx, _, graph_idx, output_idx, cls_idx, rgb_idx = VD.voxalize_dataset(mesh=True,
+            coords_idx, rgb_idx, graph_idx, output_idx, cls_idx = VD.voxalize_dataset(mesh=True,
                                                                                          dist_th=2)
 
             # save data for faster access later
             np.save(join(self.cwd, temp, f'coord_{i}.npy'), np.asarray(coords_idx, dtype=object))
+            np.save(join(self.cwd, temp, f'rgb_{i}.npy'), np.asarray(rgb_idx, dtype=object))
             np.save(join(self.cwd, temp, f'graph_{i}.npy'), np.asarray(graph_idx, dtype=object))
             np.save(join(self.cwd, temp, f'out_{i}.npy'), np.asarray(output_idx, dtype=object))
             np.save(join(self.cwd, temp, f'cls_{i}.npy'), np.asarray(cls_idx, dtype=object))
-            np.save(join(self.cwd, temp, f'rgb_{i}.npy'), np.asarray(rgb_idx, dtype=object))
         else:
             # Load pre-process data
             coords_idx = np.load(join(self.cwd, temp, f'coord_{i}.npy'), allow_pickle=True)
+            rgb_idx = np.load(join(self.cwd, temp, f'rgb_{i}.npy'), allow_pickle=True)
             graph_idx = np.load(join(self.cwd, temp, f'graph_{i}.npy'), allow_pickle=True)
             output_idx = np.load(join(self.cwd, temp, f'out_{i}.npy'), allow_pickle=True)
             cls_idx = np.load(join(self.cwd, temp, f'cls_{i}.npy'), allow_pickle=True)
-            rgb_idx = np.load(join(self.cwd, temp, f'rgb_{i}.npy'), allow_pickle=True)
+
 
         coords_idx = [torch.Tensor(co.astype(np.float32)).type(torch.float32) for co in coords_idx]
+        rgb_idx = [torch.Tensor(rx.astype(np.float32)).type(torch.float32) for rx in rgb_idx]
         graph_idx = [torch.Tensor(gr.astype(np.float32)).type(torch.float32) for gr in graph_idx]
         output_idx = [torch.Tensor(ou.astype(np.float32)).type(torch.int16) for ou in output_idx]
         cls_idx = [torch.Tensor(cx.astype(np.float32)).type(torch.float32) for cx in cls_idx]
-        rgb_idx = [torch.Tensor(rx.astype(np.float32)).type(torch.float32) for rx in rgb_idx]
 
         # Store initial patch size for each data to speed up computation
         if self.voxal_size[i, 0] == 0:
             self.voxal_size[i, 0] = VD.voxal_patch_size + 1
 
-        # Output edge_f, node_f, graph, node_idx, node_class
+        # Output edge_f,   node_f,  graph,     node_idx,   node_class
         return coords_idx, rgb_idx, graph_idx, output_idx, cls_idx
 
 
