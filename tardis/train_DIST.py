@@ -10,8 +10,8 @@ from torch.optim.lr_scheduler import StepLR
 
 from tardis.dist_pytorch.transformer.network import C_DIST, DIST
 from tardis.dist_pytorch.transformer.trainer import Trainer
-from tardis.dist_pytorch.utils.utils import (BuildTrainDataSet, build_dataset,
-                                             cal_node_input)
+from tardis.dist_pytorch.utils.dataloader import build_dataset
+from tardis.dist_pytorch.utils.utils import BuildTrainDataSet, cal_node_input
 from tardis.utils.device import get_device
 from tardis.utils.logo import Tardis_Logo
 from tardis.utils.losses import BCELoss, DiceLoss, SigmoidFocalLoss
@@ -244,63 +244,12 @@ def main(pointcloud_dir: str,
 
     """Build dataset for training/validation"""
     dl_train_graph, dl_test_graph = build_dataset(dataset_type=dataset_type,
-                                                  coord_dir=train_coords_dir,
-                                                  coord_format=coord_format,
-                                                  img_dir=train_imgs_dir,
-                                                  prefix=prefix,
-                                                  size=patch_size,
-                                                  normalize="rescale",
+                                                  dirs=[train_imgs_dir,
+                                                        train_coords_dir,
+                                                        test_imgs_dir,
+                                                        test_coords_dir],
                                                   downsampling_if=dl_downsampling,
                                                   downsampling_rate=dl_downsampling_rate)
-
-    # dl_train_graph = DataLoader(dataset=GraphDataset(coord_dir=train_coords_dir,
-    #                                                  coord_format=coord_for
-    #                                                  mat,
-    #                                                  img_dir=train_imgs_dir,
-    #                                                  prefix=prefix,
-    #                                                  size=patch_size,
-    #                                                  normalize="rescale",
-    #                                                  mesh=mesh,
-    #                                                  train=True,
-    #                                                  datatype=train_dataset,
-    #                                                  downsampling_if=dl_downsampling,
-    #                                                  downsampling_rate=dl_downsampling_rate,
-    #                                                  memory_save=False),
-    #                             batch_size=1,
-    #                             shuffle=True,
-    #                             pin_memory=True)
-
-    # dl_test_graph = DataLoader(dataset=GraphDataset(coord_dir=test_coords_dir,
-    #                                                 coord_format=coord_format,
-    #                                                 img_dir=test_imgs_dir,
-    #                                                 prefix=prefix,
-    #                                                 size=patch_size,
-    #                                                 normalize="rescale",
-    #                                                 mesh=mesh,
-    #                                                 train=False,
-    #                                                 datatype=train_dataset,
-    #                                                 downsampling_if=dl_downsampling,
-    #                                                 downsampling_rate=dl_downsampling_rate,
-    #                                                 memory_save=False),
-    #                            batch_size=1,
-    #                            shuffle=False,
-    #                            pin_memory=True)
-
-    coord, img, graph, _, _ = next(iter(dl_train_graph))
-
-    print(f'cord = shape: {coord[0].shape}; '
-          f'type: {coord[0].dtype}')
-    print(f'img = shape: {img[0].shape}; '
-          f'type: {img[0].dtype}')
-    print(f'graph = shape: {graph[0].shape}; '
-          f'class: {graph[0].unique()}; '
-          f'type: {graph[0].dtype}')
-
-    if patch_size is not None:
-        if coord[0].shape[2] == 2:
-            patch_size = (patch_size, patch_size)
-        elif coord[0].shape[2] == 3:
-            patch_size = (patch_size, patch_size, patch_size)
 
     """Setup training"""
     device = get_device(device)

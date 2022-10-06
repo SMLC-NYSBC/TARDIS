@@ -195,22 +195,22 @@ class Trainer:
                             text_10=printProgressBar(0, self.training_DataLoader.__len__()))
 
         if self.type['gf_type'] == 'instance':
-            for idx, (x, y, z, _, _) in enumerate(self.training_DataLoader):
-                for c, i, g in zip(x, y, z):
-                    c, g = c.to(self.device), g.to(self.device)
+            for idx, (e, n, g, _, _) in enumerate(self.training_DataLoader):
+                for edge, node, graph in zip(e, n, g):
+                    edge, graph = edge.to(self.device), graph.to(self.device)
                     self.optimizer.zero_grad()
 
                     if self.node_input:
-                        i = i.to(self.device)
-                        out = self.model(coords=c,
+                        node = node.to(self.device)
+                        out = self.model(coords=edge,
                                          node_features=i,
                                          padding_mask=None)
                     else:
-                        out = self.model(coords=c,
+                        out = self.model(coords=edge,
                                          node_features=None,
                                          padding_mask=None)
 
-                    loss = self.criterion(out[:, 0, :], g)
+                    loss = self.criterion(out[:, 0, :], graph)
 
                     loss.backward()  # one backward pass
                     self.optimizer.step()  # update the parameters
@@ -229,16 +229,23 @@ class Trainer:
                                         text_9=f'Training: (loss {loss_value:.4f})',
                                         text_10=printProgressBar(idx, self.training_DataLoader.__len__()))
         elif self.type['gf_type'] == 'semantic':
-            for idx, (x, y, z, _, cls_g) in enumerate(self.training_DataLoader):
-                for c, i, g, cls in zip(x, y, z, cls_g):
-                    c, g = c.to(self.device), g.to(self.device)
+            for idx, (e, n, g, i, c) in enumerate(self.training_DataLoader):
+                for edge, node, classes, graph in zip(e, n, c, g):
+                    edge, graph = edge.to(self.device), graph.to(self.device)
                     self.optimizer.zero_grad()
 
-                    out, out_cls = self.model(coords=c,
-                                              padding_mask=None)
+                    if self.node_input:
+                        node = node.to(self.device)
+                        out, out_cls = self.model(coords=edge,
+                                                  node_features=node,
+                                                  padding_mask=None)
+                    else:
+                        out, out_cls = self.model(coords=edge,
+                                                  node_features=None,
+                                                  padding_mask=None)
 
                     cls = cls.to(self.device)
-                    loss = self.criterion(out[0, :], g) + self.criterion_cls(out_cls, cls)
+                    loss = self.criterion(out[0, :], graph) + self.criterion_cls(out_cls, cls)
 
                     loss.backward()  # one backward pass
                     self.optimizer.step()  # update the parameters

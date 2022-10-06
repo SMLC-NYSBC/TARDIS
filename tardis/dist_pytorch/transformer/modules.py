@@ -4,7 +4,22 @@ import torch
 import torch.nn as nn
 
 
-class DistEmbedding(nn.Module):
+class NodeEmbedding(nn.Module):
+    def __init__(self,
+                 n_out: int):
+        super().__init__()
+        self.linear = nn.Linear(1, n_out, bias=False)
+        self.n_out = n_out
+
+    def forward(self,
+                input_node: torch.Tensor):
+        if input is None:
+            return 0
+
+        return self.linear(input_node.unsqueeze(2))
+
+
+class EdgeEmbedding(nn.Module):
     """
     COORDINATE EMBEDDING INTO GRAPH
 
@@ -24,11 +39,11 @@ class DistEmbedding(nn.Module):
         self.sigma = sigma
 
     def forward(self,
-                x: torch.Tensor):
-        if x is None:
+                input_coord: torch.Tensor):
+        if input_coord is None:
             return 0
 
-        dist = torch.cdist(x, x)
+        dist = torch.cdist(input_coord, input_coord)
         dist = torch.exp(-dist ** 2 / (self.sigma ** 2 * 2))
         isnan = torch.isnan(dist)
         dist = torch.where(isnan, torch.zeros_like(dist), dist)

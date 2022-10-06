@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from tardis.dist_pytorch.transformer.layers import GraphFormerStack
-from tardis.dist_pytorch.transformer.modules import DistEmbedding
+from tardis.dist_pytorch.transformer.modules import NodeEmbedding, EdgeEmbedding
 
 
 class DIST(nn.Module):
@@ -36,7 +36,7 @@ class DIST(nn.Module):
 
     def __init__(self,
                  n_out=1,
-                 node_input=None,
+                 node_input=False,
                  node_dim=None,
                  edge_dim=128,
                  num_layers=6,
@@ -51,11 +51,10 @@ class DIST(nn.Module):
         self.edge_dim = edge_dim
         self.predict = predict
 
-        if node_input is not None:
-            self.node_embed = nn.Linear(in_features=node_input,
-                                        out_features=node_dim)
+        if node_input:
+            self.node_embed = NodeEmbedding(n_out=node_dim)
 
-        self.coord_embed = DistEmbedding(n_out=edge_dim,
+        self.coord_embed = EdgeEmbedding(n_out=edge_dim,
                                          sigma=coord_embed_sigma)
 
         self.layers = GraphFormerStack(node_dim=node_dim,
@@ -76,12 +75,12 @@ class DIST(nn.Module):
                     node_features: Optional[torch.Tensor] = None):
         if hasattr(self, 'node_embed') and node_features is not None:
             """ Batch x Length x Embedded_Dim """
-            x = self.node_embed(input=node_features)
+            x = self.node_embed(input_node=node_features)
         else:
             x = None
 
         """ Batch x Length x Length x Channels """
-        z = self.coord_embed(x=coords)
+        z = self.coord_embed(input_coord=coords)
         return x, z
 
     def forward(self,
@@ -97,7 +96,7 @@ class DIST(nn.Module):
 
         if x is not None:
             """ Length x Batch x Embedded_Dim """
-            x = x.transpose(0, 1)
+            # x = x.transpose(2, 1)
 
         """ Encode throughout the transformer layers """
         _, z = self.layers(x=x,
@@ -156,7 +155,7 @@ class C_DIST(nn.Module):
         self.edge_dim = edge_dim
         self.predict = predict
 
-        self.coord_embed = DistEmbedding(n_out=edge_dim,
+        self.coord_embed = EdgeEmbedding(n_out=edge_dim,
                                          sigma=coord_embed_sigma)
 
         self.layers = GraphFormerStack(node_dim=None,
