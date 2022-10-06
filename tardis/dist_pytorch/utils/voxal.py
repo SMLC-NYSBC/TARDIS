@@ -51,6 +51,7 @@ class VoxalizeDataSetV2:
                  init_voxal_size=0,
                  drop_rate=1,
                  label_cls=None,
+                 rgb=None,
                  graph=True,
                  tensor=True):
         # Global data setting
@@ -68,6 +69,7 @@ class VoxalizeDataSetV2:
         self.torch_output = tensor
         self.graph_output = graph
         self.label_cls = label_cls
+        self.rgb = rgb
 
         # Point cloud downsampling setting
         self.downsampling_threshold = downsampling_threshold
@@ -347,6 +349,7 @@ class VoxalizeDataSetV2:
         img_voxal = []
         graph_voxal = []
         output_idx = []
+        rgb_idx = []
 
         if self.coord.shape[0] <= self.downsampling_threshold:  # No patching for PC below threshold
             """ Transform 2D coord to 3D of shape [Z, Y, X] """
@@ -390,12 +393,19 @@ class VoxalizeDataSetV2:
                 cls_voxal = [self.label_cls]
             else:
                 cls_voxal = [self.output_format(np.zeros((1, 1)))]
+
+            """ Build rgb node label index for each patch """
+            if self.rgb is not None:
+                rgb_voxal = [self.rgb]
+            else:
+                rgb_voxal = [self.output_format(np.zeros((1, 1)))]
         else:  # Build patches for PC with max num. of point per patch
             """ Find optimal patch centers """
             voxals_centers, voxals_idx = self.optimize_voxal_size()
 
             all_voxal = []
             cls_voxal = []
+            rgb_voxal = []
 
             """ Find all patches """
             for i in voxals_idx:
@@ -443,7 +453,7 @@ class VoxalizeDataSetV2:
                 else:
                     coord_ds = df_voxal
 
-                """DEPRECIATED; Optionally - downsampling for each patch """
+                """DEPRECIATED; Optionally - downsampling for each patch"""
                 coord_ds = self.voxal_downsampling(coord_ds)
 
                 """ Build point cloud for each patch """
@@ -486,7 +496,15 @@ class VoxalizeDataSetV2:
 
                 cls_voxal.append(self.output_format(cls_new))
 
+                """ Build rbg node label index for each patch """
+                if self.rgb is not None:
+                    rgb_df = self.rgb[df_voxal_keep]
+                else:
+                    rgb_df = [0]
+
+                rgb_voxal.append(self.output_format(rgb_df))
+
         if self.graph_output:
-            return coord_voxal, img_voxal, graph_voxal, output_idx, cls_voxal
+            return coord_voxal, img_voxal, graph_voxal, output_idx, cls_voxal, rgb_voxal
         else:
-            return coord_voxal, img_voxal, output_idx, cls_voxal
+            return coord_voxal, img_voxal, output_idx, cls_voxal, rgb_voxal

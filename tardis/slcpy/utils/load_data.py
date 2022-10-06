@@ -7,6 +7,7 @@ import numpy as np
 import open3d as o3d
 import tifffile.tifffile as tif
 from sklearn.neighbors import KDTree
+from math import sqrt
 
 
 class ImportDataFromAmira:
@@ -502,7 +503,10 @@ def load_ply(ply,
         rgb = o3d.io.read_point_cloud(color)
         rgb = rgb.voxel_down_sample(voxel_size=downsample)
         rgb = np.asarray(rgb.colors)
-        assert coord.shape == rgb.shape
+        if coord.shape == rgb.shape:
+            rgb = np.apply_along_axis(lambda x: sqrt(x[0]**2 + x[1]**2 + x[2]**2),
+                                      1,
+                                      rgb)
 
     # Work on kNN for coord not for color
     if scannet_data:
