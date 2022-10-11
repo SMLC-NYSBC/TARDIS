@@ -171,7 +171,7 @@ class PartnetDataset(BasicDataset):
 
         if self.voxal_size[i, 0] == 0:
             coords_idx, df_idx, graph_idx, output_idx, _ = VD.voxalize_dataset(mesh=True,
-                                                                                  dist_th=2)
+                                                                               dist_th=2)
 
             # save data for faster access later
             np.save(join(self.cwd, temp, f'coord_{i}.npy'), np.asarray(coords_idx, dtype=object))
@@ -230,7 +230,7 @@ class ScannetDataset(BasicDataset):
             VD = VoxalizeDataSetV2(coord=coord,
                                    image=None,
                                    init_voxal_size=0,
-                                   drop_rate=0.1,
+                                   drop_rate=0.01,
                                    downsampling_threshold=self.downsampling,
                                    downsampling_rate=None,
                                    label_cls=coord[:, 0],
@@ -238,7 +238,7 @@ class ScannetDataset(BasicDataset):
                                    tensor=False)
 
             coords_idx, df_idx, graph_idx, output_idx, cls_idx = VD.voxalize_dataset(mesh=True,
-                                                                                        dist_th=2)
+                                                                                     dist_th=0.2)
 
             # save data for faster access later
             np.save(join(self.cwd, temp, f'coord_{i}.npy'), np.asarray(coords_idx, dtype=object))
@@ -307,7 +307,7 @@ class ScannetColorDataset(BasicDataset):
             VD = VoxalizeDataSetV2(coord=coord,
                                    image=None,
                                    init_voxal_size=0,
-                                   drop_rate=0.1,
+                                   drop_rate=0.01,
                                    downsampling_threshold=self.downsampling,
                                    downsampling_rate=None,
                                    label_cls=classes,
@@ -316,7 +316,7 @@ class ScannetColorDataset(BasicDataset):
                                    tensor=False)
 
             coords_idx, rgb_idx, graph_idx, output_idx, cls_idx = VD.voxalize_dataset(mesh=True,
-                                                                                         dist_th=2)
+                                                                                      dist_th=0.2)
 
             # save data for faster access later
             np.save(join(self.cwd, temp, f'coord_{i}.npy'), np.asarray(coords_idx, dtype=object))
@@ -331,7 +331,6 @@ class ScannetColorDataset(BasicDataset):
             graph_idx = np.load(join(self.cwd, temp, f'graph_{i}.npy'), allow_pickle=True)
             output_idx = np.load(join(self.cwd, temp, f'out_{i}.npy'), allow_pickle=True)
             cls_idx = np.load(join(self.cwd, temp, f'cls_{i}.npy'), allow_pickle=True)
-
 
         coords_idx = [torch.Tensor(co.astype(np.float32)).type(torch.float32) for co in coords_idx]
         rgb_idx = [torch.Tensor(rx.astype(np.float32)).type(torch.float32) for rx in rgb_idx]
@@ -545,7 +544,7 @@ class GraphDataset(Dataset):
         return coords_v, imgs_v, graph_v, output_idx, cls_idx
 
 
-def build_dataset(dataset_type: str,
+def build_dataset(dataset_type: list,
                   dirs: str,
                   downsampling_if: int,
                   downsampling_rate: float):
@@ -556,7 +555,7 @@ def build_dataset(dataset_type: str,
                                    downsampling_if=downsampling_if,
                                    downsampling_rate=downsampling_rate,
                                    train=True)
-        dl_test = FilamentDataset(coord_dir=dirs[1],
+        dl_test = FilamentDataset(coord_dir=dirs[3],
                                   coord_format=('.CorrelationLines.am', '.csv'),
                                   downsampling_if=downsampling_if,
                                   downsampling_rate=downsampling_rate,
@@ -567,7 +566,7 @@ def build_dataset(dataset_type: str,
                                   downsampling_if=downsampling_if,
                                   downsampling_rate=downsampling_rate,
                                   train=True)
-        dl_test = PartnetDataset(coord_dir=dirs[1],
+        dl_test = PartnetDataset(coord_dir=dirs[3],
                                  coord_format=('.ply'),
                                  downsampling_if=downsampling_if,
                                  downsampling_rate=downsampling_rate,
@@ -578,7 +577,7 @@ def build_dataset(dataset_type: str,
                                   downsampling_if=downsampling_if,
                                   downsampling_rate=downsampling_rate,
                                   train=True)
-        dl_test = ScannetDataset(coord_dir=dirs[1],
+        dl_test = ScannetDataset(coord_dir=dirs[3],
                                  coord_format=('.ply'),
                                  downsampling_if=downsampling_if,
                                  downsampling_rate=downsampling_rate,
@@ -589,7 +588,7 @@ def build_dataset(dataset_type: str,
                                        downsampling_if=downsampling_if,
                                        downsampling_rate=downsampling_rate,
                                        train=True)
-        dl_test = ScannetColorDataset(coord_dir=dirs[1],
+        dl_test = ScannetColorDataset(coord_dir=dirs[3],
                                       coord_format=('.ply'),
                                       downsampling_if=downsampling_if,
                                       downsampling_rate=downsampling_rate,

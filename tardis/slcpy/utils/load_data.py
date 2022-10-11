@@ -532,6 +532,7 @@ def load_ply(ply,
 
         if color is not None:
             rgb = rgb[np.where(cls_id != 0)[0]]
+            rgb = (rgb - np.min(rgb)) / (255 - 0) # 0,1 Norm
             cls_id = cls_id[np.where(cls_id != 0)[0]]
 
             return np.hstack((cls_id, coord)), rgb
