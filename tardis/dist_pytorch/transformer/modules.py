@@ -5,18 +5,29 @@ import torch.nn as nn
 
 
 class NodeEmbedding(nn.Module):
+    """
+    NODE FEATURE EMBEDDING
+
+    Input: Batch x Length x Dim
+    if Batch x Length -> Batch x Length x Dim(1)
+    """
     def __init__(self,
+                 n_in: int,
                  n_out: int):
         super().__init__()
-        self.linear = nn.Linear(1, n_out, bias=False)
+        self.linear = nn.Linear(n_in, n_out, bias=False)
+        self.n_in = n_in
         self.n_out = n_out
 
     def forward(self,
                 input_node: torch.Tensor):
         if input is None:
-            return 0
+            return None
 
-        return self.linear(input_node.unsqueeze(2))
+        if self.n_in == 1:
+            return self.linear(input_node.unsqueeze(2))
+        else:
+            return self.linear(input_node)
 
 
 class EdgeEmbedding(nn.Module):

@@ -159,8 +159,14 @@ def main(pointcloud_dir: str,
         sys.exit()
 
     """Model structure dictionary"""
+    if dataset_type == 'scannet_color':
+        node_input = 3
+    else:
+        node_input = 0
+
     model_dict = {'gf_type': gf_type,
                   'gf_out': gf_out,
+                  'node_input': node_input,
                   'gf_node_dim': gf_node_dim,
                   'gf_edge_dim': gf_edge_dim,
                   'gf_layers': gf_layers,
@@ -247,11 +253,6 @@ def main(pointcloud_dir: str,
         if 'model_struct_dict' in save_train.keys():
             model_dict = save_train['model_struct_dict']
             globals().update(model_dict)
-
-    if dataset_type == 'scannet_color':
-        node_input = True
-    else:
-        node_input = False
 
     if gf_type == 'instance':
         model = DIST(n_out=gf_out,

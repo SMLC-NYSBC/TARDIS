@@ -36,7 +36,7 @@ class DIST(nn.Module):
 
     def __init__(self,
                  n_out=1,
-                 node_input=False,
+                 node_input=0,
                  node_dim=None,
                  edge_dim=128,
                  num_layers=6,
@@ -47,12 +47,14 @@ class DIST(nn.Module):
                  predict=False):
         super().__init__()
 
+        self.node_input = node_input
         self.node_dim = node_dim
         self.edge_dim = edge_dim
         self.predict = predict
 
-        if node_input:
-            self.node_embed = NodeEmbedding(n_out=node_dim)
+        if node_input > 0:
+            self.node_embed = NodeEmbedding(n_in=node_input,
+                                            n_out=node_dim)
 
         self.coord_embed = EdgeEmbedding(n_out=edge_dim,
                                          sigma=coord_embed_sigma)
@@ -73,7 +75,7 @@ class DIST(nn.Module):
     def embed_input(self,
                     coords: torch.Tensor,
                     node_features: Optional[torch.Tensor] = None):
-        if hasattr(self, 'node_embed') and node_features is not None:
+        if node_features is not None:
             """ Batch x Length x Embedded_Dim """
             x = self.node_embed(input_node=node_features)
         else:
@@ -88,15 +90,12 @@ class DIST(nn.Module):
                 node_features: Optional[torch.Tensor] = None,
                 padding_mask: Optional[torch.Tensor] = None):
         """ Check if image patches exist """
-        if node_features is not None and len(node_features.shape) != 3:
-            node_features = None
-
         x, z = self.embed_input(coords=coords,
                                 node_features=node_features)
 
         if x is not None:
             """ Length x Batch x Embedded_Dim """
-            # x = x.transpose(2, 1)
+            x = x.transpose(0, 1)
 
         """ Encode throughout the transformer layers """
         _, z = self.layers(x=x,
@@ -142,6 +141,8 @@ class C_DIST(nn.Module):
 
     def __init__(self,
                  n_out=1,
+                 node_input=0,
+                 node_dim=64,
                  edge_dim=128,
                  num_layers=6,
                  num_heads=8,
@@ -154,6 +155,10 @@ class C_DIST(nn.Module):
 
         self.edge_dim = edge_dim
         self.predict = predict
+
+        if node_input > 0:
+            self.node_embed = NodeEmbedding(n_in=node_input,
+                                            n_out=node_dim)
 
         self.coord_embed = EdgeEmbedding(n_out=edge_dim,
                                          sigma=coord_embed_sigma)
@@ -177,7 +182,7 @@ class C_DIST(nn.Module):
     def embed_input(self,
                     coords: torch.Tensor,
                     node_features: Optional[torch.Tensor] = None):
-        if hasattr(self, 'node_embed') and node_features is not None:
+        if node_features is not None:
             """ Batch x Length x Embedded_Dim """
             x = self.node_embed(input=node_features)
         else:
@@ -190,11 +195,16 @@ class C_DIST(nn.Module):
     def forward(self,
                 coords: torch.Tensor,
                 padding_mask: Optional[torch.Tensor] = None):
-        _, z = self.embed_input(coords=coords,
+        x, z = self.embed_input(coords=coords,
                                 node_features=None)
 
+        if x is not None:
+            """ Length x Batch x Embedded_Dim """
+            x = x.transpose(0, 1)
+
         """ Encode throughout the transformer layers """
-        _, z = self.layers(z=z,
+        _, z = self.layers(x=x,
+                           z=z,
                            src_key_padding_mask=padding_mask)
 
         """ Predict the graph edges """

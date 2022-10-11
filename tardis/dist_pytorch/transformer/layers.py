@@ -55,6 +55,7 @@ class GraphFormerStack(nn.Module):
                          h_nodes=x,
                          src_mask=src_mask,
                          src_key_padding_mask=src_key_padding_mask)
+
         return x, z
 
 

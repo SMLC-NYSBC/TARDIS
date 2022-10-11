@@ -118,7 +118,7 @@ class FilamentDataset(BasicDataset):
 
         # Store initial patch size for each data to speed up computation
         if self.voxal_size[i, 0] == 0:
-            self.voxal_size[i, 0] = VD.voxal_patch_size + 1
+            self.voxal_size[i, 0] = 1
 
         # Output edge_f,   node_f, graph,     node_idx,   node_class
         return coords_idx, df_idx, graph_idx, output_idx, df_idx
@@ -192,7 +192,7 @@ class PartnetDataset(BasicDataset):
 
         # Store initial patch size for each data to speed up computation
         if self.voxal_size[i, 0] == 0:
-            self.voxal_size[i, 0] = VD.voxal_patch_size + 1
+            self.voxal_size[i, 0] = 1
 
         # Output edge_f,   node_f, graph,     node_idx,   node_class
         return coords_idx, df_idx, graph_idx, output_idx, df_idx
@@ -262,7 +262,7 @@ class ScannetDataset(BasicDataset):
 
         # Store initial patch size for each data to speed up computation
         if self.voxal_size[i, 0] == 0:
-            self.voxal_size[i, 0] = VD.voxal_patch_size + 1
+            self.voxal_size[i, 0] = 1
 
         # Output edge_f,   node_f, graph,     node_idx,   node_class
         return coords_idx, df_idx, graph_idx, output_idx, cls_idx
@@ -340,7 +340,7 @@ class ScannetColorDataset(BasicDataset):
 
         # Store initial patch size for each data to speed up computation
         if self.voxal_size[i, 0] == 0:
-            self.voxal_size[i, 0] = VD.voxal_patch_size + 1
+            self.voxal_size[i, 0] = 1
 
         # Output edge_f,   node_f,  graph,     node_idx,   node_class
         return coords_idx, rgb_idx, graph_idx, output_idx, cls_idx

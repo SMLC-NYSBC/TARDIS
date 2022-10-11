@@ -503,10 +503,10 @@ def load_ply(ply,
         rgb = o3d.io.read_point_cloud(color)
         rgb = rgb.voxel_down_sample(voxel_size=downsample)
         rgb = np.asarray(rgb.colors)
-        if coord.shape == rgb.shape:
-            rgb = np.apply_along_axis(lambda x: sqrt(x[0]**2 + x[1]**2 + x[2]**2),
-                                      1,
-                                      rgb)
+        assert coord.shape == rgb.shape  # RGB 3D vector
+            # rgb = np.apply_along_axis(lambda x: sqrt(x[0]**2 + x[1]**2 + x[2]**2),
+            #                           1,
+            #                           rgb)
 
     # Work on kNN for coord not for color
     if scannet_data:
@@ -531,8 +531,8 @@ def load_ply(ply,
         coord = coord[np.where(cls_id != 0)[0]]
 
         if color is not None:
-            rgb = rgb[np.where(cls_id != 0)[0]]
-            rgb = (rgb - np.min(rgb)) / (255 - 0)  # 0,1 Norm
+            rgb = rgb[np.where(cls_id != 0)[0]]  # Remove 0 labels
+            # rgb = (rgb - 0) / (sqrt(3) - 0)  # 0,1 Norm
             cls_id = cls_id[np.where(cls_id != 0)[0]]
 
             return np.hstack((cls_id, coord)), rgb
