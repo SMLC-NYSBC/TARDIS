@@ -500,7 +500,7 @@ class VoxalizeDataSetV2:
                 if self.rgb is not None:
                     rgb_df = self.rgb[df_voxal_keep]
                 else:
-                    rgb_df = np.zeros((1,1))
+                    rgb_df = np.zeros((1, 1))
 
                 rgb_voxal.append(self.output_format(rgb_df))
 
