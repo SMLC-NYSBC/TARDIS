@@ -31,16 +31,6 @@ from tardis.version import version
               type=click.Choice(['filament', 'scannet', 'scannet_color', 'partnet', 'general']),
               help='Define training dataset type',
               show_default=True)
-@click.option('-ps', '--patch_size',
-              default=None,
-              type=int,
-              help='If not None, patch size of images for GF',
-              show_default=True)
-@click.option('-pf', '--prefix',
-              default=None,
-              type=str,
-              help='If not None, prefix name for coord data',
-              show_default=True)
 @click.option('-ttr', '--train_test_ratio',
               default=10,
               type=float,
@@ -137,8 +127,6 @@ from tardis.version import version
 @click.version_option(version=version)
 def main(pointcloud_dir: str,
          dataset_type: str,
-         patch_size,
-         prefix,
          train_test_ratio: float,
          gf_out: int,
          gf_node_dim: int,
@@ -173,7 +161,6 @@ def main(pointcloud_dir: str,
     """Model structure dictionary"""
     model_dict = {'gf_type': gf_type,
                   'gf_out': gf_out,
-                  'patch_size': patch_size,
                   'gf_node_dim': gf_node_dim,
                   'gf_edge_dim': gf_edge_dim,
                   'gf_layers': gf_layers,
@@ -230,7 +217,7 @@ def main(pointcloud_dir: str,
         """Split train for train and test"""
         build_test = BuildTestDataSet(dataset_dir=pointcloud_dir,
                                       train_test_ration=train_test_ratio,
-                                      prefix=prefix)
+                                      prefix='')
         build_test.__builddataset__()
 
     mesh = [True for f in listdir(train_coords_dir) if f.endswith('.ply')]
@@ -261,9 +248,14 @@ def main(pointcloud_dir: str,
             model_dict = save_train['model_struct_dict']
             globals().update(model_dict)
 
+    if dataset_type == 'scannet_color':
+        node_input = True
+    else:
+        node_input = False
+
     if gf_type == 'instance':
         model = DIST(n_out=gf_out,
-                     node_input=cal_node_input(patch_size),
+                     node_input=node_input,
                      node_dim=gf_node_dim,
                      edge_dim=gf_edge_dim,
                      num_layers=gf_layers,
@@ -320,21 +312,18 @@ def main(pointcloud_dir: str,
                                                                                             gf_edge_dim,
                                                                                             dl_downsampling)]
     """Train"""
-    if dataset_type == 'scannet_color':
-        pass
-    else:
-        train = Trainer(model=model,
-                        type=model_dict,
-                        node_input=False,
-                        device=device,
-                        criterion=loss_fn,
-                        optimizer=optimizer,
-                        training_DataLoader=dl_train_graph,
-                        validation_DataLoader=dl_test_graph,
-                        epochs=epochs,
-                        checkpoint_name='GF',
-                        lr_scheduler=learning_rate_scheduler,
-                        print_setting=print_setting)
+    train = Trainer(model=model,
+                    type=model_dict,
+                    node_input=False,
+                    device=device,
+                    criterion=loss_fn,
+                    optimizer=optimizer,
+                    training_DataLoader=dl_train_graph,
+                    validation_DataLoader=dl_test_graph,
+                    epochs=epochs,
+                    checkpoint_name='GF',
+                    lr_scheduler=learning_rate_scheduler,
+                    print_setting=print_setting)
 
     train.run_training()
 
