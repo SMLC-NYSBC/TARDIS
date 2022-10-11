@@ -55,7 +55,6 @@ class GraphFormerStack(nn.Module):
                          h_nodes=x,
                          src_mask=src_mask,
                          src_key_padding_mask=src_key_padding_mask)
-
         return x, z
 
 
@@ -182,7 +181,7 @@ class GraphFormerLayer(nn.Module):
         Output:
             h_pairs -> Batch x Length x Length x Channels
         """
-        if self.node_dim is not None and h_nodes is not None:
+        if h_nodes is not None:
             h_pairs = h_pairs + self.pair_update(x=h_nodes)
 
         mask = None

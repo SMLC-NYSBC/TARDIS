@@ -202,12 +202,10 @@ class Trainer:
                     if self.node_input:
                         node = node.to(self.device)
                         out = self.model(coords=edge,
-                                         node_features=i,
-                                         padding_mask=None)
+                                         node_features=i)
                     else:
                         out = self.model(coords=edge,
-                                         node_features=None,
-                                         padding_mask=None)
+                                         node_features=None)
 
                     loss = self.criterion(out[:, 0, :], graph)
 
@@ -236,12 +234,10 @@ class Trainer:
                     if self.node_input:
                         node = node.to(self.device)
                         out, out_cls = self.model(coords=edge,
-                                                  node_features=node,
-                                                  padding_mask=None)
+                                                  node_features=node)
                     else:
                         out, out_cls = self.model(coords=edge,
-                                                  node_features=None,
-                                                  padding_mask=None)
+                                                  node_features=None)
 
                     cls = cls.to(self.device)
                     loss = self.criterion(out[0, :], graph) + self.criterion_cls(out_cls, cls)
@@ -287,12 +283,10 @@ class Trainer:
                         if self.node_input:
                             i = i.to(self.device)
                             out = self.model(coords=c,
-                                             node_features=i,
-                                             padding_mask=None)
+                                             node_features=i)
                         else:
                             out = self.model(coords=c,
-                                             node_features=None,
-                                             padding_mask=None)
+                                             node_features=None)
 
                         loss = self.criterion(out[0, :],
                                               target)
@@ -325,8 +319,7 @@ class Trainer:
                     for c, i, g, cls in zip(x, y, z, cls_g):
                         c, target = c.to(self.device), g.to(self.device)
 
-                        out, out_cls = self.model(coords=c,
-                                                  padding_mask=None)
+                        out, out_cls = self.model(coords=c)
 
                         cls = cls.to(self.device)
                         loss = self.criterion(out[0, :], target) + self.criterion(out_cls, cls)

@@ -87,8 +87,7 @@ class DIST(nn.Module):
 
     def forward(self,
                 coords: torch.Tensor,
-                node_features: Optional[torch.Tensor] = None,
-                padding_mask: Optional[torch.Tensor] = None):
+                node_features: Optional[torch.Tensor] = None):
         """ Check if image patches exist """
         x, z = self.embed_input(coords=coords,
                                 node_features=node_features)
@@ -99,8 +98,7 @@ class DIST(nn.Module):
 
         """ Encode throughout the transformer layers """
         _, z = self.layers(x=x,
-                           z=z,
-                           src_key_padding_mask=padding_mask)
+                           z=z)
 
         """ Predict the graph edges """
         z = z + z.transpose(1, 2)

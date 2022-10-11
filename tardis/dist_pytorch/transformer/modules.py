@@ -17,11 +17,10 @@ class NodeEmbedding(nn.Module):
         super().__init__()
         self.linear = nn.Linear(n_in, n_out, bias=False)
         self.n_in = n_in
-        self.n_out = n_out
 
     def forward(self,
                 input_node: torch.Tensor):
-        if input is None:
+        if input_node is None:
             return None
 
         if self.n_in == 1:
@@ -58,9 +57,8 @@ class EdgeEmbedding(nn.Module):
         dist = torch.exp(-dist ** 2 / (self.sigma ** 2 * 2))
         isnan = torch.isnan(dist)
         dist = torch.where(isnan, torch.zeros_like(dist), dist)
-        dist = dist.unsqueeze(3)
 
-        return self.linear(dist)
+        return self.linear(dist.unsqueeze(3))
 
 
 @torch.jit.script
