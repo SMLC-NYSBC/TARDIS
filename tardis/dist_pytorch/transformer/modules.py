@@ -8,9 +8,14 @@ class NodeEmbedding(nn.Module):
     """
     NODE FEATURE EMBEDDING
 
-    Input: Batch x Length x Dim
-    if Batch x Length -> Batch x Length x Dim(1)
+    Input: Batch x Length x Dim or Batch x Length
+    Output: Batch x Length x Dim
+
+    Args:
+    n_in: Number of input features
+    n_out: Number of output features
     """
+
     def __init__(self,
                  n_in: int,
                  n_out: int):
@@ -34,10 +39,13 @@ class EdgeEmbedding(nn.Module):
     COORDINATE EMBEDDING INTO GRAPH
 
     Set of coordinates is used to build distance matrix which is then
-    normalized using negative parabolic function.
+    normalized using negative parabolic function
 
+    Input: Batch x Length x Dim
+    Output: Batch x Length x Length x Dim
     Args:
-        n_out: Number of features to output.
+        n_out: Number of features to output
+        sigma: Sigma value for exponential function used to normalized distances
     """
 
     def __init__(self,
@@ -67,6 +75,6 @@ def gelu(x: torch.Tensor):
     CUSTOM GAUSSIAN ERROR LINEAR UNITS ACTIVATION FUNCTION
 
     Args:
-        x: torch input for activation.
+        x: torch input for activation
     """
     return x * 0.5 * (1.0 + torch.erf(x / 1.41421356237))

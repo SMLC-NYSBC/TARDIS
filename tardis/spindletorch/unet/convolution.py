@@ -18,9 +18,9 @@ class GeLU(nn.Module):
         super(GeLU, self).__init__()
 
         if tanh is not None:
-            self.tanh = sqrt(tanh)
+            self.tanh = 1 / sqrt(tanh)
         else:
-            self.tanh = 1.41421356237
+            self.tanh = 1 / 1.41421356237
 
     def forward(self,
                 x: torch.Tensor):

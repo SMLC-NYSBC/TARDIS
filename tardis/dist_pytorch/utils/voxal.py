@@ -6,52 +6,20 @@ from scipy.spatial import distance
 from tardis.dist_pytorch.utils.augmentation import BuildGraph
 
 
-class VoxalizeDataSetV2:
+class PatchDataSet:
     """
-    CLASS TO REDUCE DATASET TO OVERLAPPING VOXAL
-
-    Build voxal grid from the given point cloud and output
-    coordinates/graph/image in each voxal as a list of numpy arrays
-
-    Coordinates in each voxal can be downsample if they reach pre-defined
-    threshold. In that case, voxal downsampling from open3d library is used to
-    downsample point cloud as close as possible to defined threshold and output
-    points from the original dataset that are closes to the downsample points
-    in order to preserve coordinates.
-
-    Args:
-        coord: Coordinates dataset in a shape [Dim, X, Y, (Z)].
-            where Dim are segment ids
-        image: Image dataset in a shape of [Channels x Length].
-        downsampling_threshold: Max number of point in voxal
-        downsampling_rate: Downsampling voxal size for open3d voxal_downsampling
-        init_voxal_size: Initial voxal size used for voxalization of the point
-            cloud. This voxal size will be 'optimize' until each voxal contains
-            number of points below downsampling_threshold
-        drop_rate: Voxal size optimization drop rate factor.
-        graph: If True, graph is output, as coord in shape [Dim, X, Y, (Z)]
-            else [X, Y, (Z)]
-        tensor: If True return all output as Tensors
-    Usage:
-        VD = VoxalizeDataSetV2(...
-                               graph=True)
-        coord, img, graph = VD.voxalize_dataset()
-
-        VD = VoxalizeDataSetV2(...
-                               graph=False)
-        coord, img = VD.voxalize_dataset()
+    TODO
     """
 
     def __init__(self,
                  coord: np.ndarray,
                  image: Optional[np.ndarray] = None,
-                 voxal_3d=False,
-                 downsampling_threshold=500,
-                 downsampling_rate: Optional[float] = None,
-                 init_voxal_size=0,
-                 drop_rate=1,
                  label_cls=None,
                  rgb=None,
+                 patch_3d=False,
+                 downsampling_threshold=500,
+                 init_voxal_size=0,
+                 drop_rate=1,
                  graph=True,
                  tensor=True):
         # Global data setting
@@ -73,12 +41,11 @@ class VoxalizeDataSetV2:
 
         # Point cloud downsampling setting
         self.downsampling_threshold = downsampling_threshold
-        self.downsampling_rate = downsampling_rate
 
         # Voxal setting
-        self.voxal_3d = voxal_3d
+        self.patch_3d = patch_3d
         self.voxal_patch_size = init_voxal_size
-        self.expand = 0.025  # Expand boundary box by 25%
+        self.expand = 0.025  # Expand boundary box by 2.5%
         self.size_expand = init_voxal_size * self.expand
         self.voxal_size = 0.15  # Create 15% overlaps between voxals
         self.voxal_stride = init_voxal_size * self.voxal_size
@@ -86,7 +53,7 @@ class VoxalizeDataSetV2:
 
     def boundary_box(self):
         """
-        DEFINE BOUNDARY BOX FOR 2D OR 3D COORD
+        TODO
         """
         box_dim = self.coord.shape[1]
 
@@ -108,10 +75,7 @@ class VoxalizeDataSetV2:
     def voxal_centers(self,
                       boundary_box: np.ndarray):
         """
-        SEARCH FOR CENTER OF EACH 2D/3D VOXAL
-
-        Args:
-            boundary_box: Coordinate boundary box
+        TODO
         """
         voxal = []
         voxal_positions_x = []
@@ -144,7 +108,7 @@ class VoxalizeDataSetV2:
         voxal_positions_x = voxal_positions_x[::2]
         voxal_positions_y = voxal_positions_y[::2]
 
-        if not self.voxal_3d:
+        if not self.patch_3d:
             for i in voxal_positions_x:
                 voxal.append(np.vstack(([i] * len(voxal_positions_y),
                                         voxal_positions_y,
@@ -170,10 +134,7 @@ class VoxalizeDataSetV2:
     def points_in_voxal(self,
                         voxal_center: np.ndarray):
         """
-        BOOLEAN INDEXING FOR FILTERING POINT CLOUD IN VOXAL
-
-        Args:
-            voxal_center: Numpy array [3, 1] with voxal center coordinate
+        TODO
         """
         voxal_size = self.voxal_patch_size + self.voxal_stride
 
@@ -184,50 +145,10 @@ class VoxalizeDataSetV2:
 
         return coord_idx
 
-    def voxal_downsampling(self,
-                           coord: np.ndarray):
-        """
-        VOXAL DOWNSAMPLE MODULE
-        The module downsample point cloud based on voxal method then finds
-        nearest point in the input cloud which are outputted as down-sampled PC.
-
-        Args:
-            coord: Coordinates of points found in voxal
-        """
-        if self.downsampling_rate is not None:
-            from open3d import geometry, utility
-
-            # Downsampling
-            pcd = geometry.PointCloud()
-            pcd.points = utility.Vector3dVector(coord)
-            pcd = np.asarray(pcd.voxel_down_sample(self.downsampling_rate).points)
-
-            idx_ds = []
-            dist_matrix = distance.cdist(pcd, coord, 'euclidean')
-
-            # Find point closest to original position
-            for i in dist_matrix:
-                idx = np.where(i == np.min(i))[0]
-                idx_ds.append(idx[0])
-
-            # Build list of point idx to keep
-            full_idx = list(range(0, coord.shape[0], 1))
-            idx_bool = [True if id in idx_ds else False for id in full_idx]
-        else:
-
-            # Build list of point idx to keep
-            full_idx = list(range(0, coord.shape[0], 1))
-            idx_bool = [True for p in full_idx]
-
-        return idx_bool
-
     def collect_voxal_idx(self,
                           voxals):
         """
-        SELECT NOT EMPTY VOXAL WITH UNIQUE SET OF POINTS
-
-        Args:
-            voxals: XYZ coord array of voxal centers
+        TODO
         """
         not_empty_voxal = []
         points_no = []
@@ -250,19 +171,10 @@ class VoxalizeDataSetV2:
 
     def optimize_voxal_size(self):
         """
-        Build Patches
-
-        Function search for the optimal patches based on the number of points
-
-        Return:
-            patch_coord: List of coordinates for the patch centers
-            patch_idx: List of patch that contains points
+        TODO
         """
         """ Initial check for patches """
         b_box = self.boundary_box()
-
-        if self.downsampling_rate is not None:
-            self.coord = self.coord[self.voxal_downsampling(self.coord), :]
 
         if self.coord.shape[0] <= self.downsampling_threshold:
             voxal_coord_x = b_box[1][0] - ((abs(b_box[0][0]) + abs(b_box[1][0])) / 2)
@@ -313,7 +225,10 @@ class VoxalizeDataSetV2:
         return voxals_coord, voxal_idx
 
     @staticmethod
-    def normalize_idx(coord_with_idx: np. ndarray):
+    def normalize_idx(coord_with_idx: np.ndarray):
+        """
+        TODO
+        """
         unique_idx = list(np.unique(coord_with_idx[:, 0]))
         norm_idx = list(range(len(np.unique(coord_with_idx[:, 0]))))
 
@@ -327,23 +242,19 @@ class VoxalizeDataSetV2:
 
     def output_format(self,
                       data: np.ndarray):
+        """
+        TODO
+        """
         if self.torch_output:
             data = torch.from_numpy(data).type(torch.float32)
 
         return data
 
-    def voxal_patch_size(self):
-        return self.voxal_patch_size
-
     def voxalize_dataset(self,
                          mesh=False,
                          dist_th: Optional[float] = None):
         """
-        Main function used to build voxalized dataset
-
-        Args:
-            out_idx: If True, return point id of points in each voxal
-            prune: Prune voxal with less then given number of nodes
+        TODO
         """
         coord_voxal = []
         img_voxal = []
@@ -361,7 +272,7 @@ class VoxalizeDataSetV2:
                 coord_ds = self.coord
 
             """ DEPRECIATED; Optionally - downsampling for each patch """
-            coord_ds = self.voxal_downsampling(coord_ds)
+            coord_ds = [True for _ in list(range(0, coord_ds.shape[0], 1))]
 
             """ Build point cloud for each patch """
             coord_voxal.append(self.output_format(self.coord[coord_ds, :]))
@@ -378,8 +289,7 @@ class VoxalizeDataSetV2:
                 coord_label = self.normalize_idx(coord_label)
 
                 build_graph = BuildGraph(coord=coord_label,
-                                         mesh=mesh,
-                                         pixel_size=None)
+                                         mesh=mesh)
                 if mesh:
                     graph_voxal.append(self.output_format(build_graph(dist_th)))
                 else:
@@ -453,17 +363,10 @@ class VoxalizeDataSetV2:
                 else:
                     coord_ds = df_voxal
 
-                """DEPRECIATED; Optionally - downsampling for each patch"""
-                coord_ds = self.voxal_downsampling(coord_ds)
+                coord_ds = [True for _ in list(range(0, coord_ds.shape[0], 1))]
 
                 """ Build point cloud for each patch """
                 coord_voxal.append(self.output_format(df_voxal[coord_ds, :]))
-
-                # """ Build img patches for each patch """
-                # if self.image is not None:
-                #     img_voxal.append(self.output_format(df_img[coord_ds, :]))
-                # else:
-                #     img_voxal.append(self.output_format(df_img))
 
                 """ Optionally - Build graph for each patch """
                 if self.graph_output:
@@ -471,8 +374,7 @@ class VoxalizeDataSetV2:
                     segment_voxal = self.normalize_idx(segment_voxal[coord_ds, :])
 
                     build_graph = BuildGraph(coord=segment_voxal,
-                                             mesh=mesh,
-                                             pixel_size=None)
+                                             mesh=mesh)
                     if mesh:
                         graph_voxal.append(self.output_format(build_graph(dist_th)))
                     else:

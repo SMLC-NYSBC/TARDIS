@@ -2,69 +2,36 @@ from typing import Optional
 
 import numpy as np
 import tifffile.tifffile as tiff
+from tardis.slcpy.utils.load_data import ImportDataFromAmira
 from skimage import exposure
-from tardis.slcpy.utils.load_data import ImportDataFromAmira, load_ply
 from sklearn.neighbors import KDTree
 
 
 def preprocess_data(coord: str,
                     image: Optional[str] = None,
                     size: Optional[int] = None,
-                    datatype=True,
                     include_label=True,
-                    pixel_size=None,
-                    normalization: Optional[str] = 'simple',
-                    memory_save: Optional[bool] = False):
+                    normalization: Optional[str] = 'simple'):
     """
-    PRE-PROCESSING MODULE FOR COORDINATES AND IMAGES
-
-    The module is taking as an input a coordinate file as well as corresponding
-    image file, and compose trainable input.
-
-    Args:
-        coord: Directory for coordinate file [ID x Coord x Dim].
-        coord_downsample:
-        image: Directory for image file.
-        size: Size of the image patches.
-        normalization: ['simple', 'minmax', 'rescale'] Type of normalization for
-            image data.
-        memory_save: If True image patches are build slower but with memory
-            preservation.
-
-    Return:
-        coord: [Length x Dimension]
-        img:   [Channels x Length]
-        graph: [Length x Length]
+    TODO
     """
-    if memory_save:
-        import zarr
 
     """ Collect Coordinates [Length x Dimension] """
     if coord[-4:] == ".csv":
         coord_label = np.genfromtxt(coord, delimiter=',')
         if str(coord_label[0, 0]) == 'nan':
             coord_label = coord_label[1:, :]
-        pixel_size = None
     elif coord[-4:] == ".npy":
         coord_label = np.load(coord)
-        pixel_size = None
     elif coord[-3:] == ".am":
         if image is None:
             amira_import = ImportDataFromAmira(src_am=coord,
                                                src_img=None)
             coord_label = amira_import.get_segmented_points()
-            pixel_size = amira_import.get_pixel_size()
         else:
             amira_import = ImportDataFromAmira(src_am=coord,
                                                src_img=image)
             coord_label = amira_import.get_segmented_points()
-            pixel_size = amira_import.get_pixel_size()
-    elif coord[-4:] == '.ply':
-        pixel_size = None
-        if datatype:
-            coord_label = load_ply(ply=coord, downsample=0.1, scannet_data=True)
-        else:
-            coord_label = load_ply(ply=coord, downsample=0.03, scannet_data=False)
 
     """Coordinates without labels"""
     coords = coord_label[:, 1:]
@@ -85,20 +52,15 @@ def preprocess_data(coord: str,
         elif normalization == 'minmax':
             normalization = MinMaxNormalize(0, 255)
         elif normalization == 'rescale':
-            normalization = ResaleNormalize()
+            normalization = RescaleNormalize()
 
     if image is not None and coord[-3:] != ".am":
         # Crop images size around coordinates
-        if memory_save:
-            img_df = tiff.imread(image, aszarr=True)
-            img_stack = zarr.open(img_df, mode='r')
-        else:
-            img_stack = tiff.imread(image)
+        img_stack = tiff.imread(image)
 
         crop_tiff = Crop2D3D(image=img_stack,
                              size=size,
-                             normalization=normalization,
-                             memory_save=memory_save)  # Z x Y x X
+                             normalization=normalization)  # Z x Y x X
 
         # Load images in an array
         if len(size) == 2:
@@ -114,17 +76,15 @@ def preprocess_data(coord: str,
             for i in range(img.shape[0]):
                 point = coords[i]  # X x Y x Z
                 img[i, :] = np.array(crop_tiff(center_point=point)).flatten()
-        if memory_save:
-            img_df.close()
+
     elif image is not None and image.endswith('.am'):
         """Collect Image Patches for .am binary files"""
-        img_stack, pixel_size = amira_import.get_image()
+        img_stack, _ = amira_import.get_image()
 
         # Crop image around coordinates
         crop_tiff = Crop2D3D(image=img_stack,
                              size=size,
-                             normalization=normalization,
-                             memory_save=False)  # Z x Y x X
+                             normalization=normalization)  # Z x Y x X
 
         # Load images patches into an array
         if len(size) == 2:
@@ -143,18 +103,12 @@ def preprocess_data(coord: str,
     else:
         img = np.zeros(size)
 
+    """If not Include label build graph"""
     if include_label:
         return coord_label, img
     else:
-        """ Collect Graph [Length x Length] """
-        if coord[-4:] == '.ply':
-            build = BuildGraph(coord=coord_label,
-                               pixel_size=pixel_size,
-                               mesh=True)
-        else:
-            build = BuildGraph(coord=coord_label,
-                               pixel_size=pixel_size,
-                               mesh=False)
+        build = BuildGraph(coord=coord_label,
+                           mesh=False)
         graph = build()
 
         return coords, img, graph
@@ -162,19 +116,13 @@ def preprocess_data(coord: str,
 
 class BuildGraph:
     """
-    MODULE FOR BUILDING GRAPH REPRESENTATION OF A POINT CLOUD
-
-    Args:
-        coord: Coordinate with label from which graph is build
-        pixel_size: Pixel size of image used for calculating distance
+    TODO
     """
 
     def __init__(self,
                  coord: np.ndarray,
-                 pixel_size: Optional[int] = None,
                  mesh=False):
         self.coord = coord
-        self.pixel_size = pixel_size
         self.mesh = mesh
         self.graph = np.zeros((len(coord), len(coord)))
         self.all_idx = np.unique(coord[:, 0])
@@ -238,12 +186,12 @@ class BuildGraph:
                         self.graph[j, j - 1] = 1
                         self.graph[j - 1, j] = 1
 
-                # Check euclidean distance between fist and last point. if shorter then
-                #  10 nm then connect
-                ends_distance = np.linalg.norm(
-                    self.coord[points_in_contour[0]][1:] - self.coord[points_in_contour[-1]][1:])
+                # Check euclidean distance between fist and last point
+                ends_distance = np.linalg.norm(self.coord[points_in_contour[0]][1:] -
+                                               self.coord[points_in_contour[-1]][1:])
 
-                if ends_distance < 1.1:  # Assuming around 2 nm pixel size
+                # If < 2 nm pixel size, connect
+                if ends_distance < 2:
                     self.graph[points_in_contour[0], points_in_contour[-1]] = 1
                     self.graph[points_in_contour[-1], points_in_contour[0]] = 1
 
@@ -252,10 +200,7 @@ class BuildGraph:
 
 class SimpleNormalize:
     """
-    NORMALIZE IMAGE VALUE USING ASSUMED VALUES
-
-    Inputs:
-        x: image or target nD arrays
+    TODO
     """
 
     def __call__(self,
@@ -271,14 +216,9 @@ class SimpleNormalize:
         return norm
 
 
-class ResaleNormalize:
+class RescaleNormalize:
     """
-    NORMALIZE IMAGE VALUE USING Skimage
-
-    Rescale intensity with 98% and 2% percentiles as default
-
-    Args:
-        x: image or target nD arrays
+    TODO
     """
 
     def __call__(self,
@@ -291,12 +231,7 @@ class ResaleNormalize:
 
 class MinMaxNormalize:
     """
-    NORMALIZE IMAGE VALUE USING MIN/MAX APPROACH
-
-    Args:
-        min: Minimal value for initialize normalization e.g. 0
-        max: Maximal value for initialize normalization e.g. 255
-        x: image or target nD arrays
+    TODO
     """
 
     def __init__(self,
@@ -313,32 +248,16 @@ class MinMaxNormalize:
 
 class Crop2D3D:
     """
-    CROPPING MODULE FOR 2D AND 3D IMAGES
-
-    This module is highly conservative for memory used, which is especially
-    useful while loading several big tiff files. The module using zarr object
-    with pre-loaded image object from tifffile library.
-
-    Args:
-        image: Image object with pre-loaded image file
-        size: Size of cropping frame for 2D or 3D images
-        normalization: Normalization object, to normalize image value
-            between 0,1
-        memory_save: If True image object is used except of image loaded
-            into memory
-        center_point: 2D or 3D coordinates around which image should be cropped
-            expect coordinate in shape [X x Y x Z]
+    TODO
     """
 
     def __init__(self,
                  image,
                  size: tuple,
-                 normalization,
-                 memory_save: bool):
+                 normalization):
         self.image = image
         self.size = size
         self.normalization = normalization
-        self.memory_save = memory_save
 
         if len(size) == 2:
             self.width, self.height = image.shape
@@ -381,10 +300,7 @@ class Crop2D3D:
             y0, y1 = self.get_xyz_position(center_point=center_point[1],
                                            size=self.size[1],
                                            max_size=self.width)
-            if self.memory_save:
-                crop_img = self.image[z0:z1][y0:y1, x0:x1]
-            else:
-                crop_img = self.image[z0:z1, y0:y1, x0:x1]
+            crop_img = self.image[z0:z1, y0:y1, x0:x1]
 
             if crop_img.shape != (self.size[-1], self.size[0], self.size[1]):
                 crop_df = np.array(crop_img)
@@ -398,10 +314,7 @@ class Crop2D3D:
             y0, y1 = self.get_xyz_position(center_point=center_point[1],
                                            size=self.size[1],
                                            max_size=self.width)
-            if self.memory_save:
-                crop_img = self.image[y0:y1, x0:x1]
-            else:
-                crop_img = self.image[y0:y1, x0:x1]
+            crop_img = self.image[y0:y1, x0:x1]
 
             if crop_img.shape != (self.size[0], self.size[1]):
                 crop_df = np.array(crop_img)

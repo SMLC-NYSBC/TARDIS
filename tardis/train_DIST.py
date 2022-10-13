@@ -241,8 +241,7 @@ def main(pointcloud_dir: str,
                                                         train_coords_dir,
                                                         test_imgs_dir,
                                                         test_coords_dir],
-                                                  downsampling_if=dl_downsampling,
-                                                  downsampling_rate=dl_downsampling_rate)
+                                                  max_points_per_patch=dl_downsampling)
 
     """Setup training"""
     device = get_device(device)

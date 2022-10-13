@@ -10,14 +10,14 @@ class GraphFormerStack(nn.Module):
     """
     WRAPPER FOR GRAPHFORMER LAYER
 
-    This wrapper define number of layer for the graphformer.
+    This wrapper define number of layer for the graphformer
 
     Args:
-        node_dim: Number of input dimensions for node features.
-        pairs_dim: Number of input dimension for pairs features.
-        num_layers: Number of GraphFormer layers. Min. 1.
-        ff_factor: Feed forward factor.
-        num_heads: Number of heads in multi head attention.
+        node_dim: Number of input dimensions for node features
+        pairs_dim: Number of input dimension for pairs features
+        num_layers: Number of GraphFormer layers. Min. 1
+        ff_factor: Feed forward factor
+        num_heads: Number of heads in multi head attention
     """
 
     def __init__(self,

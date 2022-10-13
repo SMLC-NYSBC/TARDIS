@@ -21,9 +21,7 @@ class TestDataLoader:
                                                 'train', 'imgs', 'am3D.am'),
                                      include_label=True,
                                      size=64,
-                                     pixel_size=None,
-                                     normalization='rescale',
-                                     memory_save=False)
+                                     normalization='rescale')
         assert coord.ndim == 2
         assert coord.shape == (10, 4), \
             f'Coord of wrong shape {coord.shape}'
@@ -35,9 +33,7 @@ class TestDataLoader:
                                      image=None,
                                      include_label=True,
                                      size=64,
-                                     pixel_size=None,
-                                     normalization='rescale',
-                                     memory_save=False)
+                                     normalization='rescale')
         assert coord.ndim == 2
         assert coord.shape == (10, 4), \
             f'Coord of wrong shape {coord.shape}'
@@ -50,9 +46,7 @@ class TestDataLoader:
                                             image=None,
                                             include_label=False,
                                             size=64,
-                                            pixel_size=None,
-                                            normalization='rescale',
-                                            memory_save=False)
+                                            normalization='rescale')
         assert coord.ndim == 2, 'Incorrect no. of dimension'
         assert coord.shape == (10, 3), \
             f'Coord of wrong shape {coord.shape}'
@@ -115,8 +109,7 @@ class TestDataLoader:
         train_DL = FilamentDataset(coord_dir=join(self.dir, 'filament_mt',
                                                   'train', 'masks'),
                                    coord_format=(".CorrelationLines.am"),
-                                   downsampling_if=500,
-                                   downsampling_rate=None)
+                                   patch_if=500)
 
         # Build first time
         coords_v, _, graph_v, output_idx, _ = train_DL.__getitem__(0)
@@ -140,8 +133,7 @@ class TestDataLoader:
         train_DL = FilamentDataset(coord_dir=join(self.dir, 'filament_mem',
                                                   'train', 'masks'),
                                    coord_format=(".csv"),
-                                   downsampling_if=500,
-                                   downsampling_rate=None)
+                                   patch_if=500)
 
         # Build first time
         coords_v, _, graph_v, output_idx, _ = train_DL.__getitem__(0)
@@ -165,8 +157,7 @@ class TestDataLoader:
         train_DL = ScannetDataset(coord_dir=join(self.dir, 'scannet',
                                                  'train', 'masks'),
                                   coord_format=(".ply"),
-                                  downsampling_if=500,
-                                  downsampling_rate=None)
+                                  patch_if=500)
 
         # Build first time
         coords_v, _, graph_v, output_idx, clx_idx = train_DL.__getitem__(0)
@@ -192,8 +183,7 @@ class TestDataLoader:
         train_DL = ScannetColorDataset(coord_dir=join(self.dir, 'scannet',
                                                       'train', 'masks'),
                                        coord_format=(".ply"),
-                                       downsampling_if=500,
-                                       downsampling_rate=None)
+                                       patch_if=500)
 
         # Build first time
         coords_v, rgb_idx, graph_v, output_idx, clx_idx = train_DL.__getitem__(0)
@@ -221,23 +211,22 @@ class TestDataLoader:
         train_DL = PartnetDataset(coord_dir=join(self.dir, 'partnet',
                                                  'train', 'masks'),
                                   coord_format=(".ply"),
-                                  downsampling_if=500,
-                                  downsampling_rate=None)
+                                  patch_if=500)
 
         # Build first time
         coords_v, _, graph_v, output_idx, _ = train_DL.__getitem__(0)
 
-        assert len(coords_v) == 21
-        assert coords_v[0].shape == (404, 3)
-        assert graph_v[0].shape == (404, 404)
-        assert output_idx[0].shape == (404, )
+        assert len(coords_v) == 16
+        assert coords_v[0].shape == (338, 3)
+        assert graph_v[0].shape == (338, 338)
+        assert output_idx[0].shape == (338, )
 
         # Load from memory
         coords_v, _, graph_v, output_idx, _ = train_DL.__getitem__(0)
 
-        assert len(coords_v) == 21
-        assert coords_v[0].shape == (404, 3)
-        assert graph_v[0].shape == (404, 404)
-        assert output_idx[0].shape == (404, )
+        assert len(coords_v) == 16
+        assert coords_v[0].shape == (338, 3)
+        assert graph_v[0].shape == (338, 338)
+        assert output_idx[0].shape == (338, )
 
         shutil.rmtree('./temp_train')

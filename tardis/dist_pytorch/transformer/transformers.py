@@ -14,8 +14,8 @@ class PairBiasSelfAttention(nn.Module):
     Self attention block that attend coordinate and image patches.
 
     Args:
-        embed_dim: Number of embedded dimensions for
-        pairs_dim: Number of pairs dimension
+        embed_dim: Number of embedded dimensions for node dimensions
+        pairs_dim: Number of pairs dimensions
         num_heads: Number of heads for multi-head attention
         init_scaling: Initial scaling factor used for reset parameters
     """
@@ -38,9 +38,9 @@ class PairBiasSelfAttention(nn.Module):
         self.init_scaling = init_scaling
 
         self.norm_input = nn.LayerNorm(embed_dim)
-        self.v_proj = nn.Linear(self.vdim, embed_dim, bias=False)
         self.q_proj = nn.Linear(embed_dim, embed_dim, bias=False)
         self.k_proj = nn.Linear(self.kdim, embed_dim, bias=False)
+        self.v_proj = nn.Linear(self.vdim, embed_dim, bias=False)
         self.out_proj = nn.Linear(embed_dim, embed_dim)
 
         self.pairs_dim = pairs_dim
@@ -50,14 +50,15 @@ class PairBiasSelfAttention(nn.Module):
         self.reset_parameters()
 
     def reset_parameters(self):
+        nn.init.xavier_uniform_(self.q_proj.weight, gain=self.init_scaling)
         nn.init.xavier_uniform_(self.k_proj.weight, gain=self.init_scaling)
         nn.init.xavier_uniform_(self.v_proj.weight, gain=self.init_scaling)
-        nn.init.xavier_uniform_(self.q_proj.weight, gain=self.init_scaling)
 
-        nn.init.constant_(self.out_proj.weight, 0.0)
-
+        nn.init.xavier_uniform_(self.out_proj.weight, gain=self.init_scaling)
+        # nn.init.constant_(self.out_proj.weight, 0.0)
         if self.out_proj.bias is not None:
             nn.init.constant_(self.out_proj.bias, 0.0)
+
         nn.init.xavier_uniform_(self.pairs_proj.weight, gain=self.init_scaling)
 
     def forward(self,
@@ -69,23 +70,19 @@ class PairBiasSelfAttention(nn.Module):
                 need_head_weights: bool = False):
         """
         Input:
-            query: Length x Batch x Channel
-            pairs: Batch x Length x Length x Channel
+            query(Nodes): Length x Batch x Channel
+            pairs(Edges): Batch x Length x Length x Channel
 
         Args:
-            query: Tensor with embedded coordinates.
-            pairs: Tensor with image patches.
-            key_padding_mask (ByteTensor, optional): mask to exclude
-                keys that are pads, of shape `(batch, src_len)`, where
-                padding elements are indicated by 1s.
-            need_weights (bool, optional): return the attention weights,
-                averaged over heads (default: False).
-            attn_mask (ByteTensor, optional): typically used to
-                implement causal attention, where the mask prevents the
-                attention from looking forward in time (default: None).
-            need_head_weights (bool, optional): return the attention
-                weights for each head. Implies *need_weights*. Default:
-                return the average attention weights over all heads.
+            query: Tensor with embedded Nodes features
+            pairs: Tensor with embedded Edges features
+            attn_mask: typically used to implement causal attention, where 
+                the mask prevents the attention from looking forward in time
+            key_padding_mask: mask to exclude keys that are pads, of shape 
+                `(batch, src_len)`, where padding elements are indicated by 1s
+            need_weights: return the attention weights, averaged over heads
+            need_head_weights: return the attention weights for each head. 
+                Return the average attention weights over all heads
         """
         if need_head_weights:
             need_weights = True
@@ -148,10 +145,11 @@ class PairBiasSelfAttention(nn.Module):
                                              self.num_heads,
                                              tgt_len,
                                              src_len)
-            attn_weights = attn_weights.masked_fill(
-                key_padding_mask.unsqueeze(1).unsqueeze(2).to(torch.bool),
-                float("-inf")
-            )
+
+            key_padding_mask = key_padding_mask.unsqueeze(1).unsqueeze(2).to(torch.bool)
+            attn_weights = attn_weights.masked_fill(key_padding_mask,
+                                                    float("-inf"))
+
             attn_weights = attn_weights.view(bsz * self.num_heads,
                                              tgt_len,
                                              src_len)
@@ -179,7 +177,6 @@ class PairBiasSelfAttention(nn.Module):
                 attn_weights = attn_weights.mean(dim=1)
 
             return attn, attn_weights
-
         return attn
 
 
@@ -187,13 +184,12 @@ class GeluFeedForward(nn.Module):
     """
     FEED-FORWARD TRANSFORMER MODULE USING GELU
 
-    Input:
-        Batch x ... x Channels (input dim)
+    Input: Batch x ... x Dim
+    Output: Batch x ... x Dim
 
     Args:
-        input_dim: Number of input dimension for linear transformation.
-        ff_dim: Number of feed forward dimension in linear
-            transformation.
+        input_dim: Number of input dimension for linear transformation
+        ff_dim: Number of feed forward dimension in linear transformation
 
     """
 
@@ -205,7 +201,8 @@ class GeluFeedForward(nn.Module):
         self.linear1 = nn.Linear(input_dim, ff_dim)
         self.linear2 = nn.Linear(ff_dim, input_dim)
 
-        nn.init.constant_(self.linear2.weight, 0.0)
+        nn.init.xavier_uniform_(self.linear2.weight, gain=1 / 1.4142135623730951)
+        # nn.init.constant_(self.linear2.weight, 0.0)
         nn.init.constant_(self.linear2.bias, 0.0)
 
     def forward(self,
@@ -242,9 +239,14 @@ class ComparisonLayer(nn.Module):
         self.linear3 = nn.Linear(channel_dim, output_dim)
         self.linear4 = nn.Linear(channel_dim, output_dim, bias=False)
 
-        nn.init.constant_(self.linear3.weight, 0.0)
+        init_scalier = 1 / 1.4142135623730951
+
+        nn.init.xavier_uniform_(self.linear3.weight, gain=init_scalier)
+        # nn.init.constant_(self.linear3.weight, 0.0)
         nn.init.constant_(self.linear3.bias, 0.0)
-        nn.init.constant_(self.linear4.weight, 0.0)
+
+        nn.init.xavier_uniform_(self.linear4.weight, gain=init_scalier)
+        # nn.init.constant_(self.linear4.weight, 0.0)
 
     def forward(self,
                 x: torch.Tensor):
@@ -255,10 +257,8 @@ class ComparisonLayer(nn.Module):
         b = self.linear2(x)
 
         """Batch x Length x Length x Out_Channels"""
-        z = self.linear3(a.unsqueeze(2) * b.unsqueeze(1)) + \
+        return self.linear3(a.unsqueeze(2) * b.unsqueeze(1)) + \
             self.linear4(a.unsqueeze(2) - b.unsqueeze(1))
-
-        return z
 
 
 class QuadraticEdgeUpdate(nn.Module):
@@ -282,7 +282,7 @@ class QuadraticEdgeUpdate(nn.Module):
         self.input_dim = input_dim
         self.channel_dim = channel_dim
         self.axis = axis
-        self.init_scaling = 1.4142135623730951
+        self.init_scaling = 1 / 1.4142135623730951
 
         self.norm_input = nn.LayerNorm(input_dim)
 
@@ -317,7 +317,7 @@ class QuadraticEdgeUpdate(nn.Module):
         nn.init.xavier_uniform_(self.linear_d.weight, gain=self.init_scaling)
         nn.init.constant_(self.linear_d.bias, 0.0)
 
-        nn.init.constant_(self.linear_o.weight, 0.0)
+        nn.init.xavier_uniform_(self.linear_o.weight, gain=self.init_scaling)
         nn.init.constant_(self.linear_o.bias, 0.0)
 
     def forward(self,
@@ -370,7 +370,7 @@ class TriangularEdgeUpdate(nn.Module):
         self.input_dim = input_dim
         self.channel_dim = channel_dim
         self.axis = axis
-        self.init_scaling = 1.4142135623730951
+        self.init_scaling = 1 / 1.4142135623730951
 
         self.norm_input = nn.LayerNorm(input_dim)
 
@@ -393,7 +393,8 @@ class TriangularEdgeUpdate(nn.Module):
         nn.init.xavier_uniform_(self.linear_b.weight, gain=self.init_scaling)
         nn.init.constant_(self.linear_b.bias, 0.0)
 
-        nn.init.constant_(self.linear_o.weight, 0.0)
+        nn.init.xavier_uniform_(self.linear_o.weight, gain=self.init_scaling)
+        # nn.init.constant_(self.linear_o.weight, 0.0)
         nn.init.constant_(self.linear_o.bias, 0.0)
 
     def forward(self,
@@ -418,9 +419,7 @@ class TriangularEdgeUpdate(nn.Module):
         elif self.axis == 0:
             k = torch.einsum('bkio,bkjo->bijo', a, b)
 
-        k = self.norm_o(k)
-        o = torch.sigmoid(self.gate_o(z)) * self.linear_o(k)
-        return o
+        return torch.sigmoid(self.gate_o(z)) * self.linear_o(self.norm_o(k))
 
 
 class MultiHeadAttention(nn.Module):
@@ -526,8 +525,8 @@ class MultiHeadAttention(nn.Module):
                 before_softmax: bool = False,
                 need_head_weights: bool = False):
         """
-        Input:
-        Batch x Length x Length x Channel
+        Input: Batch x Length x Length x Dim
+
         Args:
             query: Query input.
             key: Key input.
@@ -706,79 +705,79 @@ class MultiHeadAttention(nn.Module):
 
         return attn
 
-    @staticmethod
-    def _append_prev_key_padding_mask(key_padding_mask: Optional[torch.Tensor],
-                                      prev_key_padding_mask: Optional[torch.Tensor],
-                                      batch_size: int,
-                                      src_len: int,
-                                      static_kv: bool) -> Optional[torch.Tensor]:
-        """saved key padding masks have shape (bsz, seq_len)"""
-        if prev_key_padding_mask is not None and static_kv:
-            new_key_padding_mask = prev_key_padding_mask
-        elif prev_key_padding_mask is not None and key_padding_mask is not None:
-            new_key_padding_mask = torch.cat(
-                [prev_key_padding_mask.float(), key_padding_mask.float()], dim=1
-            )
-            """
-            During incremental decoding, as the padding token enters and
-            leaves the frame, there will be a time when prev or current
-            is None
-            """
-        elif prev_key_padding_mask is not None:
-            filler = torch.zeros(
-                (batch_size, src_len - prev_key_padding_mask.size(1)),
-                device=prev_key_padding_mask.device,
-            )
-            new_key_padding_mask = torch.cat(
-                [prev_key_padding_mask.float(), filler.float()], dim=1
-            )
-        elif key_padding_mask is not None:
-            filler = torch.zeros(
-                (batch_size, src_len - key_padding_mask.size(1)),
-                device=key_padding_mask.device,
-            )
-            new_key_padding_mask = torch.cat(
-                [filler.float(), key_padding_mask.float()], dim=1
-            )
-        else:
-            new_key_padding_mask = prev_key_padding_mask
-        return new_key_padding_mask
+    # @staticmethod
+    # def _append_prev_key_padding_mask(key_padding_mask: Optional[torch.Tensor],
+    #                                   prev_key_padding_mask: Optional[torch.Tensor],
+    #                                   batch_size: int,
+    #                                   src_len: int,
+    #                                   static_kv: bool) -> Optional[torch.Tensor]:
+    #     """saved key padding masks have shape (bsz, seq_len)"""
+    #     if prev_key_padding_mask is not None and static_kv:
+    #         new_key_padding_mask = prev_key_padding_mask
+    #     elif prev_key_padding_mask is not None and key_padding_mask is not None:
+    #         new_key_padding_mask = torch.cat(
+    #             [prev_key_padding_mask.float(), key_padding_mask.float()], dim=1
+    #         )
+    #         """
+    #         During incremental decoding, as the padding token enters and
+    #         leaves the frame, there will be a time when prev or current
+    #         is None
+    #         """
+    #     elif prev_key_padding_mask is not None:
+    #         filler = torch.zeros(
+    #             (batch_size, src_len - prev_key_padding_mask.size(1)),
+    #             device=prev_key_padding_mask.device,
+    #         )
+    #         new_key_padding_mask = torch.cat(
+    #             [prev_key_padding_mask.float(), filler.float()], dim=1
+    #         )
+    #     elif key_padding_mask is not None:
+    #         filler = torch.zeros(
+    #             (batch_size, src_len - key_padding_mask.size(1)),
+    #             device=key_padding_mask.device,
+    #         )
+    #         new_key_padding_mask = torch.cat(
+    #             [filler.float(), key_padding_mask.float()], dim=1
+    #         )
+    #     else:
+    #         new_key_padding_mask = prev_key_padding_mask
+    #     return new_key_padding_mask
 
-    def apply_sparse_mask(self,
-                          attn_weights,
-                          tgt_len,
-                          src_len,
-                          bsz):
-        return attn_weights
+    # def apply_sparse_mask(self,
+    #                       attn_weights,
+    #                       tgt_len,
+    #                       src_len,
+    #                       bsz):
+    #     return attn_weights
 
-    def upgrade_state_dict_named(self, state_dict, name):
-        prefix = name + "." if name != "" else ""
-        items_to_add = {}
-        keys_to_remove = []
-        for k in state_dict.keys():
-            if k.endswith(prefix + "in_proj_weight"):
-                """in_proj_weight used to be q + k + v with same dimensions"""
-                dim = int(state_dict[k].shape[0] / 3)
-                items_to_add[prefix + "q_proj.weight"] = state_dict[k][:dim]
-                items_to_add[prefix + "k_proj.weight"] = state_dict[k][dim: 2 * dim]
-                items_to_add[prefix + "v_proj.weight"] = state_dict[k][2 * dim:]
+    # def upgrade_state_dict_named(self, state_dict, name):
+    #     prefix = name + "." if name != "" else ""
+    #     items_to_add = {}
+    #     keys_to_remove = []
+    #     for k in state_dict.keys():
+    #         if k.endswith(prefix + "in_proj_weight"):
+    #             """in_proj_weight used to be q + k + v with same dimensions"""
+    #             dim = int(state_dict[k].shape[0] / 3)
+    #             items_to_add[prefix + "q_proj.weight"] = state_dict[k][:dim]
+    #             items_to_add[prefix + "k_proj.weight"] = state_dict[k][dim: 2 * dim]
+    #             items_to_add[prefix + "v_proj.weight"] = state_dict[k][2 * dim:]
 
-                keys_to_remove.append(k)
+    #             keys_to_remove.append(k)
 
-                k_bias = prefix + "in_proj_bias"
-                if k_bias in state_dict.keys():
-                    dim = int(state_dict[k].shape[0] / 3)
-                    items_to_add[prefix + "q_proj.bias"] = state_dict[k_bias][:dim]
-                    items_to_add[prefix + "k_proj.bias"] = state_dict[k_bias][dim: 2 * dim]
-                    items_to_add[prefix + "v_proj.bias"] = state_dict[k_bias][2 * dim:]
+    #             k_bias = prefix + "in_proj_bias"
+    #             if k_bias in state_dict.keys():
+    #                 dim = int(state_dict[k].shape[0] / 3)
+    #                 items_to_add[prefix + "q_proj.bias"] = state_dict[k_bias][:dim]
+    #                 items_to_add[prefix + "k_proj.bias"] = state_dict[k_bias][dim: 2 * dim]
+    #                 items_to_add[prefix + "v_proj.bias"] = state_dict[k_bias][2 * dim:]
 
-                    keys_to_remove.append(prefix + "in_proj_bias")
+    #                 keys_to_remove.append(prefix + "in_proj_bias")
 
-        for k in keys_to_remove:
-            del state_dict[k]
+    #     for k in keys_to_remove:
+    #         del state_dict[k]
 
-        for key, value in items_to_add.items():
-            state_dict[key] = value
+    #     for key, value in items_to_add.items():
+    #         state_dict[key] = value
 
 
 class SelfAttention2D(MultiHeadAttention):
@@ -795,6 +794,7 @@ class SelfAttention2D(MultiHeadAttention):
         dropout: Dropout probability
         max_size: Maximum size of batch
     """
+
     def __init__(self,
                  embed_dim: int,
                  num_heads: int,

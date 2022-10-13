@@ -7,21 +7,11 @@ import numpy as np
 import open3d as o3d
 import tifffile.tifffile as tif
 from sklearn.neighbors import KDTree
-from math import sqrt
 
 
 class ImportDataFromAmira:
     """
-    HANDLER for loading 3D .AM DATA
-
-    Loading of Amira 3D spatial graph and/or image data (.tif/.mrc).
-    In case of including image data, coordinates from spatial graph are
-    corrected for Amira transformation.
-    Ensuring matching of the coordinates with image data
-
-    Args:
-        src_am: Source of the spatial graph in ASCII format
-        src_img: Source of the 3D .tif file
+    TODO
     """
 
     def __init__(self,
@@ -119,23 +109,6 @@ class ImportDataFromAmira:
 
         return df
 
-    def __read_am_transformation(self):
-        """
-        This method read the header of ET (.am) file and determines global
-        transformation for all coordinates
-        !DEPRECIATED!
-        """
-        with open(self.src_img, "r", encoding="iso-8859-1") as et:
-            lines_in_et = et.read(50000).split("\n")
-
-        transformation_list = str([word for word in lines_in_et
-                                   if word.startswith('    BoundingBox')]).split(" ")
-
-        trans_x, trans_y, trans_z = (float(transformation_list[5]),
-                                     float(transformation_list[7]),
-                                     float(transformation_list[9]))
-        return trans_x, trans_y, trans_z
-
     def get_points(self):
         """
         Output for point cloud as array of a shape [X, Y, Z]
@@ -178,60 +151,47 @@ class ImportDataFromAmira:
         return self.pixel_size
 
 
-def import_tiff(img: str,
+def import_tiff(tiff: str,
                 dtype=np.uint8):
     """
-    Default import for tif files
-
-    Args:
-        img: x
-        dtype: Type of output data
-    Return:
-        image: Image array of [Z, Y, X] shape
-        pixel_size: 1
+    TODO
     """
-    if not isfile(img):
+    if not isfile(tiff):
         raise Warning("Indicated .tif file does not exist...")
 
-    return np.array(tif.imread(img), dtype=dtype), 1
+    return np.array(tif.imread(tiff), dtype=dtype), 1
 
 
-def import_mrc(img: str):
+def import_mrc(mrc: str):
     """
-    DEFAULT IMPORT FOR .mrc/.rec files
-
-    Read out for MRC2014 files with
-
-    Args:
-        img: Source of image file
-
-    Returns:
-        image: Image array of [Z, Y, X] shape
-        pixel_size: float value of the pixel size
+    TODO
     """
-    if not isfile(img):
+    if not isfile(mrc):
         raise Warning("Indicated .mrc file does not exist...")
 
-    header = mrc_header(img)
+    header = mrc_header(mrc)
 
     pixel_size = round(header.xlen / header.nx, 3)
-    dtype = get_mode(header.mode, header.amin)
+    dtype = mrc_mode(header.mode, header.amin)
     nz, ny, nx = header.nz, header.ny, header.nx
 
     if nz == 1:
-        image = np.fromfile(img, dtype=dtype)[1024:].reshape((ny, nx))
+        image = np.fromfile(mrc, dtype=dtype)[1024:].reshape((ny, nx))
     else:
         try:
-            image = np.fromfile(img, dtype=dtype)[1024:].reshape((nz, ny, nx))
+            image = np.fromfile(mrc, dtype=dtype)[1024:].reshape((nz, ny, nx))
         except:
             try:
-                image = np.fromfile(img, dtype=dtype)[512:].reshape((nz, ny, nx))
+                image = np.fromfile(mrc, dtype=dtype)[512:].reshape((nz, ny, nx))
             except:
-                image = np.fromfile(img, dtype=dtype)[256:].reshape((nz, ny, nx))
+                image = np.fromfile(mrc, dtype=dtype)[256:].reshape((nz, ny, nx))
     return image, pixel_size
 
 
-def mrc_header(img: str):
+def mrc_header(mrc: str):
+    """
+    TODO
+    """
     # int nx
     # int ny
     # int nz
@@ -333,19 +293,15 @@ def mrc_header(img: str):
     header_struct = struct.Struct(fstr)
     MRCHeader = namedtuple('MRCHeader', names)
 
-    with open(img, 'rb') as f:
+    with open(mrc, 'rb') as f:
         header = f.read(1024)
 
     return MRCHeader._make(header_struct.unpack(header))
 
 
-def get_mode(mode, amin):
+def mrc_mode(mode, amin):
     """
-    File formats for MRC2014
-
-    Args:
-        mode: MRC2014 mode
-        amin: Optional min value to detect uint8
+    TODO
     """
     if mode == 0:
         if amin >= 0:
@@ -374,19 +330,16 @@ def get_mode(mode, amin):
     return dtype
 
 
-def import_am(img: str):
+def import_am(am_file: str):
     """
-    Default import for .am binary files
-
-    Args:
-        img: Source of image file
+    TODO
     """
-    if not isfile(img):
-        raise Warning(f"Indicated .am {img} file does not exist...")
+    if not isfile(am_file):
+        raise Warning(f"Indicated .am {am_file} file does not exist...")
 
-    am = open(img, 'r', encoding="iso-8859-1").read(8000)
+    am = open(am_file, 'r', encoding="iso-8859-1").read(8000)
     assert '# AmiraMesh BINARY' in am, \
-        f'{img} file is not Amira binary image file!'
+        f'{am_file} file is not Amira binary image file!'
 
     size = [word for word in am.split('\n') if word.startswith(
             'define Lattice ')][0][15:].split(" ")
@@ -403,7 +356,7 @@ def import_am(img: str):
                                   float(bb[10][:-3])))
         binary_start = str.find(am, "\n@1\n") + 4
     else:
-        am = open(img, 'r', encoding="iso-8859-1").read(20000)
+        am = open(am_file, 'r', encoding="iso-8859-1").read(20000)
         bb = str([word for word in am.split('\n') if word.startswith('    BoundingBox')]).split(" ")
 
         physical_size = np.array((float(bb[6]),
@@ -426,7 +379,7 @@ def import_am(img: str):
         pixel_size = (physical_size[0] - transformation[0]) / (nx - 1)
     pixel_size = round(pixel_size, 3)
 
-    img = np.fromfile(img, dtype=np.uint8)
+    img = np.fromfile(am_file, dtype=np.uint8)
 
     if nz == 1:
         return img[binary_start:-1].reshape((ny, nx)), pixel_size, physical_size, transformation
@@ -434,22 +387,14 @@ def import_am(img: str):
         return img[binary_start:-1].reshape((nz, ny, nx)), pixel_size, physical_size, transformation
 
 
-def load_ply(ply,
-             downsample: Optional[None] = 0.035,
-             scannet_data=True,
-             color: Optional[str] = None):
+def load_ply_scannet(ply: str,
+                     downsample: Optional[None] = 0.1,
+                     color: Optional[str] = None):
     """
-    Loader for .ply files. .ply converted to point cloud and colors are used as labeling
-
-    Args:
-        ply: Directory for .ply file
-        downsampling: Float value for .ply downsampling
-    Return:
-        np.ndarray of shape [Length x Dimension] dim are [L x X x Y x Z]
+    TODO
     """
+    # Load .ply scannet file
     pcd = o3d.io.read_point_cloud(ply)
-    label_uniq = np.unique(np.asarray(pcd.colors), axis=0)
-
     coord_org = np.asarray(pcd.points)
     label_org = np.asarray(pcd.colors)
 
@@ -494,33 +439,30 @@ def load_ply(ply,
         39: (82., 84., 163.),
         40: (100., 85., 144.),
     }
+
+    # Downsample point cloud with labels
     if downsample is not None:
         pcd = pcd.voxel_down_sample(voxel_size=downsample)
-
     coord = np.asarray(pcd.points)
 
+    # Retrive Node RGB features
     if color is not None:
         rgb = o3d.io.read_point_cloud(color)
         rgb = rgb.voxel_down_sample(voxel_size=downsample)
         rgb = np.asarray(rgb.colors)
-        assert coord.shape == rgb.shape  # RGB 3D vector
-            # rgb = np.apply_along_axis(lambda x: sqrt(x[0]**2 + x[1]**2 + x[2]**2),
-            #                           1,
-            #                           rgb)
+        assert coord.shape == rgb.shape  # RGB must be the same as coord
 
-    # Work on kNN for coord not for color
-    if scannet_data:
-        label_id = []
+    # Retrive ScanNet v2 labels after downsampling
+    if downsample is not None:
         cls_id = []
         tree = KDTree(coord_org, leaf_size=coord_org.shape[0])
-
         for i in coord:
-            # Get RGB
             _, match_coord = tree.query(i.reshape(1, -1), k=1)
             match_coord = match_coord[0][0]
 
             color_df = label_org[match_coord] * 255
-            color_id = [key for key in SCANNET_COLOR_MAP_20 if np.all(SCANNET_COLOR_MAP_20[key] == color_df)]
+            color_id = [key for key in SCANNET_COLOR_MAP_20 if
+                        np.all(SCANNET_COLOR_MAP_20[key] == color_df)]
 
             if len(color_id) > 0:
                 cls_id.append(color_id[0])
@@ -528,24 +470,42 @@ def load_ply(ply,
                 cls_id.append(0)
 
         cls_id = np.asarray(cls_id)[:, None]
-        coord = coord[np.where(cls_id != 0)[0]]
-
-        if color is not None:
-            rgb = rgb[np.where(cls_id != 0)[0]]  # Remove 0 labels
-            # rgb = (rgb - 0) / (sqrt(3) - 0)  # 0,1 Norm
-            cls_id = cls_id[np.where(cls_id != 0)[0]]
-
-            return np.hstack((cls_id, coord)), rgb
-        else:
-            return np.hstack((cls_id[np.where(cls_id != 0)[0]], coord))
     else:
-        label_id = []
-        tree = KDTree(coord_org, leaf_size=coord_org.shape[0])
+        cls_id = label_org
 
-        for i in coord:
-            _, match_coord = tree.query(i.reshape(1, -1), k=1)
-            match_coord = match_coord[0][0]
+    # Remove 0 labels
+    coord = coord[np.where(cls_id != 0)[0]]
 
-            label_id.append(np.where(np.all(label_org[match_coord] == label_uniq, 1))[0][0])
+    if color is not None:
+        rgb = rgb[np.where(cls_id != 0)[0]]  # Remove 0 labels
+        cls_id = cls_id[np.where(cls_id != 0)[0]]
 
-        return np.hstack((np.asarray(label_id)[:, None], coord))
+        return np.hstack((cls_id, coord)), rgb
+    else:
+        return np.hstack((cls_id[np.where(cls_id != 0)[0]], coord))
+
+
+def load_ply_partnet(ply,
+                     downsample: Optional[None] = 0.035):
+    """
+    TODO
+    """
+    pcd = o3d.io.read_point_cloud(ply)
+    label_uniq = np.unique(np.asarray(pcd.colors), axis=0)
+
+    coord_org = np.asarray(pcd.points)
+    label_org = np.asarray(pcd.colors)
+
+    if downsample is not None:
+        pcd = pcd.voxel_down_sample(voxel_size=downsample)
+    coord = np.asarray(pcd.points)
+
+    label_id = []
+    tree = KDTree(coord_org, leaf_size=coord_org.shape[0])
+    for i in coord:
+        _, match_coord = tree.query(i.reshape(1, -1), k=1)
+        match_coord = match_coord[0][0]
+
+        label_id.append(np.where(np.all(label_org[match_coord] == label_uniq, 1))[0][0])
+
+    return np.hstack((np.asarray(label_id)[:, None], coord))
