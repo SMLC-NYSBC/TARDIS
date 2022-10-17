@@ -9,7 +9,7 @@ import open3d as o3d
 import tifffile.tifffile as tif
 
 from tardis.dist_pytorch.transformer.network import DIST
-from tardis.dist_pytorch.utils.voxal import PatchDataSet
+from tardis.dist_pytorch.utils.patches import PatchDataSet
 from tardis.slcpy.image_postprocess import ImageToPointCloud
 from tardis.slcpy.utils.export_data import NumpyToAmira
 from tardis.slcpy.utils.load_data import import_am, import_mrc, import_tiff

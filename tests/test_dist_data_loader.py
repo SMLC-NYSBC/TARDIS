@@ -216,17 +216,17 @@ class TestDataLoader:
         # Build first time
         coords_v, _, graph_v, output_idx, _ = train_DL.__getitem__(0)
 
-        assert len(coords_v) == 16
-        assert coords_v[0].shape == (338, 3)
-        assert graph_v[0].shape == (338, 338)
-        assert output_idx[0].shape == (338, )
+        assert len(coords_v) == 15
+        assert coords_v[0].shape == (351, 3)
+        assert graph_v[0].shape == (351, 351)
+        assert output_idx[0].shape == (351, )
 
         # Load from memory
         coords_v, _, graph_v, output_idx, _ = train_DL.__getitem__(0)
 
-        assert len(coords_v) == 16
-        assert coords_v[0].shape == (338, 3)
-        assert graph_v[0].shape == (338, 338)
-        assert output_idx[0].shape == (338, )
+        assert len(coords_v) == 15
+        assert coords_v[0].shape == (351, 3)
+        assert graph_v[0].shape == (351, 351)
+        assert output_idx[0].shape == (351, )
 
         shutil.rmtree('./temp_train')

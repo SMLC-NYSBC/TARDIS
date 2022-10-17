@@ -5,19 +5,28 @@ from shutil import rmtree
 import numpy as np
 import torch
 from tardis.dist_pytorch.utils.augmentation import preprocess_data
+from tardis.dist_pytorch.utils.patches import PatchDataSet
 from tardis.slcpy.utils.load_data import load_ply_partnet, load_ply_scannet
-from tardis.dist_pytorch.utils.voxal import PatchDataSet
 from tardis.utils.utils import pc_median_dist
 from torch.utils.data import DataLoader, Dataset
 
+
 class BasicDataset(Dataset):
     """
-    BASIC CLAS FOR STANDARD DATASET CONSTRUCTION
+    BASIC CLASS FOR STANDARD DATASET CONSTRUCTION
 
     Args:
-        coord_dir:
-        coord_format:
-        patch_if
+        coord_dir: str
+                Dataset directory
+        coord_format: tuple of str
+            default: ('.csv)
+                Tuple of allowed coord formats
+        patch_if: int
+            default: 500
+                Max number of point per patch
+        train: boolean
+            default: True
+                If True, compute as for training dataset, else test
     """
 
     def __init__(self,
@@ -53,23 +62,61 @@ class BasicDataset(Dataset):
         return len(self.ids)
 
     def save_temp(self, i, **kwargs):
+        """
+        General class function to save temp. data
+
+        Args:
+            i: temp index value
+            **kwargs: Dictionary of all file to save, where key is used as temp name, and value is an array to be save
+        """
         for key, values in kwargs.items():
             np.save(join(self.cwd, self.temp, f'{key}_{i}.npy'),
                     np.asarray(values, dtype=object))
 
     def load_temp(self, i, **kwargs):
+        """
+        General class function to load temp. data
+
+        Args:
+            i: temp index value
+            **kwargs: Dictionary of all file to load, where key is used as temp name, and value is an array to be loaded
+
+        Return
+        ------
+        list: List of **kwargs arrays as tensor array
+        """
         return [np.load(join(self.cwd, self.temp, f'{key}_{i}.npy'), allow_pickle=True)
                 for key, _ in kwargs.items()]
 
     @staticmethod
     def list_to_tensor(**kwargs):
+        """
+        Static class function to transform list of numpy arrays to list of tensor array
+
+        Return
+        ------
+        list: List of **kwargs arrays as tensor array
+        """
         return [[torch.Tensor(df.astype(np.float32)).type(torch.float32) for df in value]
                 for _, value in kwargs.items()]
 
 
 class FilamentDataset(BasicDataset):
     """
-    TODO
+    FILAMENT TYPE DATASET CONSTRUCTION
+
+    Return 
+    ------
+    coords_idx: list of arrays
+        Numpy or Tensor list of coordinates (N, (2, 3))
+    df_idx: list of arrays
+        Normalize zero-out output for standardize dummy
+    graph_idx: list of arrays
+        Numpy or Tensor list of 2D GT graphs
+    output_idx: list of arrays
+        Numpy or Tensor list (N, 1) of output index value 
+    df_idx: list of arrays
+        Normalize zero-out output for standardize dummy
     """
 
     def __init__(self,
@@ -91,7 +138,6 @@ class FilamentDataset(BasicDataset):
         if self.patch_size[i, 0] == 0:
             # Pre process coord and image data also, if exist remove duplicates
             coord, _ = preprocess_data(coord=coord_file,
-                                       image=None,
                                        include_label=True,
                                        size=None,
                                        normalization=None)
@@ -103,21 +149,23 @@ class FilamentDataset(BasicDataset):
                 coord[:, 1:] = coord[:, 1:] / dist  # Normalize point cloud to px unit
 
             VD = PatchDataSet(coord=coord,
-                              image=None,
-                              init_voxal_size=0,
+                              init_patch_size=0,
                               drop_rate=1,
-                              downsampling_threshold=self.max_point_in_patch,
+                              max_number_of_points=self.max_point_in_patch,
                               label_cls=None,
                               graph=True,
                               tensor=False)
+            coords_idx, df_idx, graph_idx, output_idx, _ = VD.patched_dataset()
 
-            coords_idx, df_idx, graph_idx, output_idx, _ = VD.voxalize_dataset()
             # save data for faster access later
             self.save_temp(i=i,
                            coords=coords_idx,
                            graph=graph_idx,
                            out=output_idx,
                            df=df_idx)
+
+            # Store initial patch size for each data to speed up computation
+            self.patch_size[i, 0] = 1
         else:
             # Load pre-process data
             coords_idx, graph_idx, output_idx, df_idx = self.load_temp(i,
@@ -131,17 +179,26 @@ class FilamentDataset(BasicDataset):
                                                                         output=output_idx,
                                                                         df=df_idx)
 
-        # Store initial patch size for each data to speed up computation
-        if self.patch_size[i, 0] == 0:
-            self.patch_size[i, 0] = 1
-
         # Output edge_f,   node_f, graph,     node_idx,   node_class
         return coords_idx, df_idx, graph_idx, output_idx, df_idx
 
 
 class PartnetDataset(BasicDataset):
     """
-    TODO
+    PARTNET TYPE DATASET CONSTRUCTION
+
+    Return 
+    ------
+    coords_idx: list of arrays
+        Numpy or Tensor list of coordinates (N, (2, 3))
+    df_idx: list of arrays
+        Normalize zero-out output for standardize dummy
+    graph_idx: list of arrays
+        Numpy or Tensor list of 2D GT graphs
+    output_idx: list of arrays
+        Numpy or Tensor list (N, 1) of output index value 
+    df_idx: list of arrays
+        Normalize zero-out output for standardize dummy
     """
 
     def __init__(self,
@@ -164,27 +221,25 @@ class PartnetDataset(BasicDataset):
             # Pre process coord and image data also, if exist remove duplicates
             coord = load_ply_partnet(coord_file, downsample=0.035)
 
-            # Normalize point cloud
-            dist = pc_median_dist(coord[:, 1:])
-
-            if dist is not None:
-                coord[:, 1:] = coord[:, 1:] / dist  # Normalize point cloud to px unit
-
             VD = PatchDataSet(coord=coord,
-                              init_voxal_size=0,
-                              drop_rate=1,
-                              downsampling_threshold=self.max_point_in_patch,
+                              init_patch_size=0,
+                              drop_rate=0.01,
+                              max_number_of_points=self.max_point_in_patch,
                               label_cls=None,
                               graph=True,
                               tensor=False)
 
-            coords_idx, df_idx, graph_idx, output_idx, _ = VD.voxalize_dataset()
+            coords_idx, df_idx, graph_idx, output_idx, _ = VD.patched_dataset(mesh=True,
+                                                                               dist_th=0.07)
             # save data for faster access later
             self.save_temp(i=i,
                            coords=coords_idx,
                            graph=graph_idx,
                            out=output_idx,
                            df=df_idx)
+
+            # Store initial patch size for each data to speed up computation
+            self.patch_size[i, 0] = 1
         else:
             # Load pre-process data
             coords_idx, graph_idx, output_idx, df_idx = self.load_temp(i=i,
@@ -198,17 +253,26 @@ class PartnetDataset(BasicDataset):
                                                                         output=output_idx,
                                                                         df=df_idx)
 
-        # Store initial patch size for each data to speed up computation
-        if self.patch_size[i, 0] == 0:
-            self.patch_size[i, 0] = 1
-
         # Output edge_f,   node_f, graph,     node_idx,   node_class
         return coords_idx, df_idx, graph_idx, output_idx, df_idx
 
 
 class ScannetDataset(BasicDataset):
     """
-    TODO
+    SCANNET V2 TYPE DATASET CONSTRUCTION
+
+    Return 
+    ------
+    coords_idx: list of arrays
+        Numpy or Tensor list of coordinates (N, (2, 3))
+    df_idx: list of arrays
+        Normalize zero-out output for standardize dummy
+    graph_idx: list of arrays
+        Numpy or Tensor list of 2D GT graphs
+    output_idx: list of arrays
+        Numpy or Tensor list (N, 1) of output index value 
+    df_idx: list of arrays
+        Normalize zero-out output for standardize dummy
     """
 
     def __init__(self,
@@ -232,15 +296,14 @@ class ScannetDataset(BasicDataset):
             coord = load_ply_scannet(coord_file, downsample=0.1)
 
             VD = PatchDataSet(coord=coord,
-                              image=None,
-                              init_voxal_size=0,
+                              init_patch_size=0,
                               drop_rate=0.01,
-                              downsampling_threshold=self.max_point_in_patch,
+                              max_number_of_points=self.max_point_in_patch,
                               label_cls=coord[:, 0],
                               graph=True,
                               tensor=False)
 
-            coords_idx, df_idx, graph_idx, output_idx, cls_idx = VD.voxalize_dataset(mesh=True,
+            coords_idx, df_idx, graph_idx, output_idx, cls_idx = VD.patched_dataset(mesh=True,
                                                                                      dist_th=0.2)
             # save data for faster access later
             self.save_temp(i=i,
@@ -249,6 +312,9 @@ class ScannetDataset(BasicDataset):
                            out=output_idx,
                            df=df_idx,
                            cls=cls_idx)
+
+            # Store initial patch size for each data to speed up computation
+            self.patch_size[i, 0] = 1
         else:
             # Load pre-process data
             coords_idx, graph_idx, output_idx, df_idx, cls_idx = self.load_temp(i,
@@ -264,17 +330,26 @@ class ScannetDataset(BasicDataset):
                                                                                  df=df_idx,
                                                                                  cls=cls_idx)
 
-        # Store initial patch size for each data to speed up computation
-        if self.patch_size[i, 0] == 0:
-            self.patch_size[i, 0] = 1
-
         # Output edge_f,   node_f, graph,     node_idx,   node_class
         return coords_idx, df_idx, graph_idx, output_idx, cls_idx
 
 
 class ScannetColorDataset(BasicDataset):
     """
-    TODO
+    SCANNET V2 + COLORS TYPE DATASET CONSTRUCTION
+
+    Return 
+    ------
+    coords_idx: list of arrays
+        Numpy or Tensor list of coordinates (N, (2, 3))
+    rgb_idx: list of arrays
+        Numpy or Tensor list of RGB values (N, 3)
+    graph_idx: list of arrays
+        Numpy or Tensor list of 2D GT graphs
+    output_idx: list of arrays
+        Numpy or Tensor list (N, 1) of output index value 
+    df_idx: list of arrays
+        Normalize zero-out output for standardize
     """
 
     def __init__(self,
@@ -304,16 +379,15 @@ class ScannetColorDataset(BasicDataset):
 
             classes = coord[:, 0]
             VD = PatchDataSet(coord=coord,
-                              image=None,
-                              init_voxal_size=0,
+                              init_patch_size=0,
                               drop_rate=0.01,
-                              downsampling_threshold=self.max_point_in_patch,
+                              max_number_of_points=self.max_point_in_patch,
                               label_cls=classes,
                               rgb=rgb,
                               graph=True,
                               tensor=False)
 
-            coords_idx, rgb_idx, graph_idx, output_idx, cls_idx = VD.voxalize_dataset(mesh=True,
+            coords_idx, rgb_idx, graph_idx, output_idx, cls_idx = VD.patched_dataset(mesh=True,
                                                                                       dist_th=0.2)
 
             # save data for faster access later
@@ -323,6 +397,9 @@ class ScannetColorDataset(BasicDataset):
                            out=output_idx,
                            rgb=rgb_idx,
                            cls=cls_idx)
+
+            # Store initial patch size for each data to speed up computation
+            self.patch_size[i, 0] = 1
         else:
             # Load pre-process data
             coords_idx, graph_idx, output_idx, rgb_idx, cls_idx = self.load_temp(i,
@@ -338,10 +415,6 @@ class ScannetColorDataset(BasicDataset):
                                                                                   rgb=rgb_idx,
                                                                                   cls=cls_idx)
 
-        # Store initial patch size for each data to speed up computation
-        if self.patch_size[i, 0] == 0:
-            self.patch_size[i, 0] = 1
-
         # Output edge_f,   node_f,  graph,     node_idx,   node_class
         return coords_idx, rgb_idx, graph_idx, output_idx, cls_idx
 
@@ -350,42 +423,60 @@ def build_dataset(dataset_type: list,
                   dirs: str,
                   max_points_per_patch: int):
     """
-    TODO
+    WRAPPER FOR DATALOADER
+
+    Function that wrap all dataloader and output only one asked for depending
+    of a dataset
+
+    Args:
+        dataset_type: list
+            Ask to recognize and process dataset
+        dirs: list
+            Ask for list with directory given as [train, test]
+        patch_if: int
+            Max number of points per patch
+
+    Return
+    ------
+    dl_train: torch.DataLoader
+        Output DataLoader with specified dataset for training
+    dl_test: torch.DataLoader
+        Output DataLoader with specified dataset for evaluation
     """
 
     if dataset_type == 'filament':
-        dl_train = FilamentDataset(coord_dir=dirs[1],
+        dl_train = FilamentDataset(coord_dir=dirs[0],
                                    coord_format=('.CorrelationLines.am', '.csv'),
                                    patch_if=max_points_per_patch,
                                    train=True)
-        dl_test = FilamentDataset(coord_dir=dirs[3],
+        dl_test = FilamentDataset(coord_dir=dirs[1],
                                   coord_format=('.CorrelationLines.am', '.csv'),
                                   patch_if=max_points_per_patch,
                                   train=False)
     elif dataset_type == 'partnet':
-        dl_train = PartnetDataset(coord_dir=dirs[1],
+        dl_train = PartnetDataset(coord_dir=dirs[0],
                                   coord_format=('.ply'),
                                   patch_if=max_points_per_patch,
                                   train=True)
-        dl_test = PartnetDataset(coord_dir=dirs[3],
+        dl_test = PartnetDataset(coord_dir=dirs[1],
                                  coord_format=('.ply'),
                                  patch_if=max_points_per_patch,
                                  train=False)
     elif dataset_type == 'scannet':
-        dl_train = ScannetDataset(coord_dir=dirs[1],
+        dl_train = ScannetDataset(coord_dir=dirs[0],
                                   coord_format=('.ply'),
                                   patch_if=max_points_per_patch,
                                   train=True)
-        dl_test = ScannetDataset(coord_dir=dirs[3],
+        dl_test = ScannetDataset(coord_dir=dirs[1],
                                  coord_format=('.ply'),
                                  patch_if=max_points_per_patch,
                                  train=False)
     elif dataset_type == 'scannet_color':
-        dl_train = ScannetColorDataset(coord_dir=dirs[1],
+        dl_train = ScannetColorDataset(coord_dir=dirs[0],
                                        coord_format=('.ply'),
                                        patch_if=max_points_per_patch,
                                        train=True)
-        dl_test = ScannetColorDataset(coord_dir=dirs[3],
+        dl_test = ScannetColorDataset(coord_dir=dirs[1],
                                       coord_format=('.ply'),
                                       patch_if=max_points_per_patch,
                                       train=False)

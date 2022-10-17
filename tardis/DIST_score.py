@@ -8,7 +8,7 @@ import torch
 
 from tardis.dist_pytorch.transformer.network import DIST
 from tardis.dist_pytorch.utils.augmentation import preprocess_data
-from tardis.dist_pytorch.utils.voxal import VoxalizeDataSetV2
+from tardis.dist_pytorch.utils.patches import VoxalizeDataSetV2
 from tardis.slcpy.utils.load_data import load_ply
 from tardis.slcpy.utils.segment_point_cloud import GraphInstanceV2
 from tardis.utils.device import get_device

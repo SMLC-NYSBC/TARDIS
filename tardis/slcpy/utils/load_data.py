@@ -11,15 +11,30 @@ from sklearn.neighbors import KDTree
 
 class ImportDataFromAmira:
     """
-    TODO
+    LOADER FOR AMIRA SPATIAL GRAPH FILES
     """
 
     def __init__(self,
                  src_am: str,
                  src_img: Optional[str] = None):
+        """
+        This class read any .am file and if spatial graph is recognized it is converted
+        into an numpy array as (N, 4) with class ids and coordinates for XYZ.
+        Also due to Amira designed, file properties are encoded only in image file
+        therefore in order to properly ready spatial graph, class optionally require 
+        amira binary or ascii image file which contain transformation property and
+        pixel size. If image file is not included, spatial graph is return without 
+        corrections
+
+        :param src_am: Amira spatial graph directory
+        :type src_am: str
+        :param src_img: Amira binary or ascii image file directory, defaults to None
+        :type src_img: Optional[str], optional
+        """
         self.src_img = src_img
         self.src_am = src_am
 
+        # Read image and its property if existing
         if self.src_img is not None:
             if not self.src_img[-3:] == '.am':
                 raise Warning("Not a .am file...")
@@ -34,12 +49,20 @@ class ImportDataFromAmira:
                 raise Warning("Directory or input .am image file is not correct...")
         else:
             self.pixel_size = 1
+
+        # Read spatial graph
         self.spatial_graph = open(src_am,
                                   "r",
                                   encoding="iso-8859-1").read().split("\n")
         self.spatial_graph = [x for x in self.spatial_graph if x != '']
 
-    def get_segments(self):
+    def __get_segments(self) -> np.ndarray:
+        """
+        __get_segments Helper class function to read segment data from amira file
+
+        :return: Array (N, 1) indicating number of point per segment
+        :rtype: np.ndarray
+        """
         # Find line starting with EDGE { int NumEdgePoints }
         segments = str([word for word in self.spatial_graph if
                         word.startswith('EDGE { int NumEdgePoints }')])
@@ -53,12 +76,12 @@ class ImportDataFromAmira:
             segment_start = int(self.spatial_graph.index("@" + str(segment_start[0]))) + 1
         except ValueError:
             segment_start = int(self.spatial_graph.index("@" + str(segment_start[0]) + " ")) + 1
+
         # Find line define EDGE ... <- number indicate number of segments
         segments = str(
             [word for word in self.spatial_graph if word.startswith('define EDGE')])
 
-        segment_finish = "".join(
-            (ch if ch in "0123456789" else " ") for ch in segments)
+        segment_finish = "".join((ch if ch in "0123456789" else " ") for ch in segments)
         segment_finish = [int(i) for i in segment_finish.split()]
         segment_no = int(segment_finish[0])
         segment_finish = segment_start + int(segment_finish[0])
@@ -68,12 +91,18 @@ class ImportDataFromAmira:
         segments = [i.split(' ')[0] for i in segments]
 
         # return an array of number of points belonged to each segment
-        df = np.zeros((segment_no, 1), dtype="int")
-        df[0:segment_no, 0] = [int(i) for i in segments]
+        segment_list = np.zeros((segment_no, 1), dtype="int")
+        segment_list[0:segment_no, 0] = [int(i) for i in segments]
 
-        return df
+        return segment_list
 
-    def __find_points(self):
+    def __find_points(self) -> np.ndarray:
+        """
+        __find_points Helper class function to search for points in Amira file
+
+        :return: Set of all points
+        :rtype: np.ndarray
+        """
         # Find line starting with POINT { float[3] EdgePointCoordinates }
         points = str([word for word in self.spatial_graph
                       if word.startswith('POINT { float[3] EdgePointCoordinates }')])
@@ -102,16 +131,19 @@ class ImportDataFromAmira:
         points = self.spatial_graph[points_start:points_finish]
 
         # return an array of all points coordinates in pixel
-        df = np.zeros((points_no, 3), dtype="float")
+        point_list = np.zeros((points_no, 3), dtype="float")
         for j in range(3):
             coord = [i.split(' ')[j] for i in points]
-            df[0:points_no, j] = [float(i) for i in coord]
+            point_list[0:points_no, j] = [float(i) for i in coord]
 
-        return df
+        return point_list
 
-    def get_points(self):
+    def get_points(self) -> np.ndarray:
         """
-        Output for point cloud as array of a shape [X, Y, Z]
+        get_points General class function to retrive point cloud
+
+        :return: Point cloud as [X, Y, Z] after transformation and pixel size correction
+        :rtype: np.ndarray
         """
         if self.src_img is None:
             self.transformation = [0, 0, 0]
@@ -123,12 +155,15 @@ class ImportDataFromAmira:
 
         return points_coord / self.pixel_size
 
-    def get_segmented_points(self):
+    def get_segmented_points(self) -> np.ndarray:
         """
-        Output for segmented point cloud as array of a shape [ID, X, Y, Z]
+        get_segmented_points General class function to retrive segmented point cloud
+
+        :return: Point cloud as [ID, X, Y, Z]
+        :rtype: np.ndarray
         """
         points = self.get_points()
-        segments = self.get_segments()
+        segments = self.__get_segments()
 
         segmentation = np.zeros((points.shape[0], ))
         id = 0
@@ -145,6 +180,12 @@ class ImportDataFromAmira:
                          points[:, 2])).T
 
     def get_image(self):
+        """
+        get_image General class function to return image file 
+
+        :return: Image and if available pixel size data
+        :rtype: np.ndarray, float
+        """
         return self.image, self.pixel_size
 
     def get_pixel_size(self):
@@ -154,17 +195,35 @@ class ImportDataFromAmira:
 def import_tiff(tiff: str,
                 dtype=np.uint8):
     """
-    TODO
+    import_tiff Function to load any tiff file
+
+    :param tiff: Tiff file directory
+    :type tiff: str
+    :param dtype: Define output format for tiff file, defaults to np.uint8
+    :type dtype: alias
+
+    :raises Warning: Check if directory point to tiff file
+
+    :return: Image data and unified pixel size
+    :rtype: np.ndarray, float
     """
     if not isfile(tiff):
         raise Warning("Indicated .tif file does not exist...")
 
-    return np.array(tif.imread(tiff), dtype=dtype), 1
+    return np.array(tif.imread(tiff), dtype=dtype), 1.0
 
 
 def import_mrc(mrc: str):
     """
-    TODO
+    import_mrc Function to load MRC 2014 file format
+
+    :param mrc: MRC file directory
+    :type mrc: str
+
+    :raises Warning: Check if directory point to mrc file
+
+    :return: Image data and pixel size
+    :rtype: np.ndarray, float
     """
     if not isfile(mrc):
         raise Warning("Indicated .mrc file does not exist...")
@@ -190,7 +249,13 @@ def import_mrc(mrc: str):
 
 def mrc_header(mrc: str):
     """
-    TODO
+    mrc_header Helper function to read MRC header
+
+    :param mrc:  MRC file directory
+    :type mrc: str
+
+    :return: MRC header
+    :rtype: class
     """
     # int nx
     # int ny
@@ -301,7 +366,18 @@ def mrc_header(mrc: str):
 
 def mrc_mode(mode, amin):
     """
-    TODO
+    mrc_mode Helper function to decode mrc mode type
+
+    :param mode: MRC mode from mrc header
+    :type mode: int
+    :param amin: int
+    :type amin: MRC minimum pixel value
+
+    :raises Exception: Check for 4bit MRC files
+    :raises Exception: Not known type of mode
+
+    :return: mode as np.dtype
+    :rtype: alias
     """
     if mode == 0:
         if amin >= 0:
@@ -332,7 +408,15 @@ def mrc_mode(mode, amin):
 
 def import_am(am_file: str):
     """
-    TODO
+    import_am Function to load Amira binary image data
+
+    :param am_file: Amira binary image .am file
+    :type am_file: str
+
+    :raises Warning: Check if .am file exist
+
+    :return: Image file as well image parameters
+    :rtype: np.ndarray, float, float, list
     """
     if not isfile(am_file):
         raise Warning(f"Indicated .am {am_file} file does not exist...")
@@ -391,7 +475,17 @@ def load_ply_scannet(ply: str,
                      downsample: Optional[None] = 0.1,
                      color: Optional[str] = None):
     """
-    TODO
+    load_ply_scannet Function to read .ply files 
+
+    :param ply: File directory
+    :type ply: str
+    :param downsample: Downsampling point cloud by fix voxal size, defaults to 0.1
+    :type downsample: Optional[None], optional
+    :param color: Optional color feature, defaults to None
+    :type color: Optional[str], optional
+
+    :return: Label point cloud coordinates and optionally rgb value for each point
+    :rtype: np.ndarray, np.ndarray
     """
     # Load .ply scannet file
     pcd = o3d.io.read_point_cloud(ply)
@@ -486,9 +580,17 @@ def load_ply_scannet(ply: str,
 
 
 def load_ply_partnet(ply,
-                     downsample: Optional[None] = 0.035):
+                     downsample: Optional[None] = 0.035) -> np.ndarray:
     """
-    TODO
+    load_ply_partnet Function to read .ply files 
+
+    :param ply: File directory
+    :type ply: str
+    :param downsample: Downsampling point cloud by fix voxal size, defaults to 0.035
+    :type downsample: Optional[None], optional
+
+    :return: Labeled point cloud coordinates
+    :rtype: np.ndarray
     """
     pcd = o3d.io.read_point_cloud(ply)
     label_uniq = np.unique(np.asarray(pcd.colors), axis=0)
