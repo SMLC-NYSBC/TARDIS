@@ -75,6 +75,12 @@ class Trainer:
         self.gpu_info = ""
 
     @ staticmethod
+    def update_desc(stop_count: int,
+                    f1: float):
+        desc = f'Epochs: stop counter {stop_count}; best F1 {f1}'
+        return desc
+
+    @ staticmethod
     def calculate_F1(logits,
                      targets):
         """ Calculate confusion matrix """
@@ -103,7 +109,7 @@ class Trainer:
                             text_2='Epoch:',
                             text_3=printProgressBar(0, self.epochs))
 
-        early_stopping = EarlyStopping(patience=50, min_delta=0)
+        self.early_stopping = EarlyStopping(patience=50, min_delta=0)
 
         if isdir('GF_checkpoint'):
             rmtree('GF_checkpoint')
@@ -114,9 +120,12 @@ class Trainer:
         for id in range(self.epochs):
             """For each Epoch load be t model from previous run"""
             if id == 0:
-                epoch_desc = 'Epochs: stop counter 0; best F1: NaN'
+                self.epoch_desc = 'Epochs: stop counter 0; best F1: NaN'
             else:
-                epoch_desc = f'Epochs: stop counter {early_stopping.counter}; best F1 {round(np.max(self.f1), 3)}'
+                self.epoch_desc = self.update_desc(self.early_stopping.counter,
+                                                   round(np.max(self.f1), 3))
+
+            self.id = id
 
             if self.device.type == 'cuda':
                 import nvidia_smi
@@ -137,16 +146,16 @@ class Trainer:
                                 text_3=self.print_setting[2],
                                 text_4=self.print_setting[3],
                                 text_5=self.gpu_info,
-                                text_7=epoch_desc,
-                                text_8=printProgressBar(id, self.epochs))
+                                text_7=self.epoch_desc,
+                                text_8=printProgressBar(self.id, self.epochs))
 
             self.model.train()
-            self.train(epoch_desc, id)
+            self.train()
 
             self.model.eval()
-            self.validate(epoch_desc, id)
+            self.validate()
 
-            early_stopping(val_loss=self.validation_loss[len(self.validation_loss) - 1])
+            self.early_stopping(val_loss=self.validation_loss[len(self.validation_loss) - 1])
 
             np.savetxt('GF_checkpoint/training_losses.csv',
                        self.training_loss,
@@ -176,25 +185,28 @@ class Trainer:
                         'optimizer_state_dict': self.optimizer.state_dict()},
                        join(getcwd(), 'GF_checkpoint', 'model_weights.pth'))
 
-            if early_stopping.early_stop:
+            if self.early_stopping.early_stop:
                 break
 
-    def train(self,
-              epoch_desc,
-              progress_epoch):
+    def train(self):
         self.progress_train(title='DIST training module',
                             text_1=self.print_setting[0],
                             text_2=self.print_setting[1],
                             text_3=self.print_setting[2],
                             text_4=self.print_setting[3],
                             text_5=self.gpu_info,
-                            text_7=epoch_desc,
-                            text_8=printProgressBar(progress_epoch, self.epochs),
+                            text_7=self.epoch_desc,
+                            text_8=printProgressBar(self.id, self.epochs),
                             text_9='Training: (loss 1.000)',
                             text_10=printProgressBar(0, self.training_DataLoader.__len__()))
 
         if self.type['gf_type'] == 'instance':
             for idx, (e, n, g, _, _) in enumerate(self.training_DataLoader):
+                if idx % 50 == 0:
+                    self.validate()
+                    self.epoch_desc = self.update_desc(self.early_stopping.counter,
+                                                       round(np.max(self.f1), 3))
+
                 for edge, node, graph in zip(e, n, g):
                     edge, graph = edge.to(self.device), graph.to(self.device)
                     self.optimizer.zero_grad()
@@ -202,7 +214,7 @@ class Trainer:
                     if self.node_input:
                         node = node.to(self.device)
                         out = self.model(coords=edge,
-                                         node_features=i)
+                                         node_features=node)
                     else:
                         out = self.model(coords=edge,
                                          node_features=None)
@@ -221,13 +233,18 @@ class Trainer:
                                         text_3=self.print_setting[2],
                                         text_4=self.print_setting[3],
                                         text_5=self.gpu_info,
-                                        text_7=epoch_desc,
-                                        text_8=printProgressBar(progress_epoch, self.epochs),
+                                        text_7=self.epoch_desc,
+                                        text_8=printProgressBar(self.id, self.epochs),
                                         text_9=f'Training: (loss {loss_value:.4f})',
                                         text_10=printProgressBar(idx, self.training_DataLoader.__len__()))
         elif self.type['gf_type'] == 'semantic':
-            for idx, (e, n, g, i, c) in enumerate(self.training_DataLoader):
-                for edge, node, classes, graph in zip(e, n, c, g):
+            for idx, (e, n, g, _, c) in enumerate(self.training_DataLoader):
+                if idx % 50 == 0:
+                    self.validate()
+                    self.epoch_desc = self.update_desc(self.early_stopping.counter,
+                                                       round(np.max(self.f1), 3))
+
+                for edge, node, cls, graph in zip(e, n, c, g):
                     edge, graph = edge.to(self.device), graph.to(self.device)
                     self.optimizer.zero_grad()
 
@@ -254,8 +271,8 @@ class Trainer:
                                         text_3=self.print_setting[2],
                                         text_4=self.print_setting[3],
                                         text_5=self.gpu_info,
-                                        text_7=epoch_desc,
-                                        text_8=printProgressBar(progress_epoch, self.epochs),
+                                        text_7=self.epoch_desc,
+                                        text_8=printProgressBar(self.id, self.epochs),
                                         text_9=f'Training: (loss {loss_value:.4f})',
                                         text_10=printProgressBar(idx, self.training_DataLoader.__len__()))
         """ Save current learning rate """
@@ -265,9 +282,7 @@ class Trainer:
         if self.lr_scheduler is not None:
             self.lr_scheduler.step()
 
-    def validate(self,
-                 epoch_desc,
-                 progress_epoch):
+    def validate(self):
         valid_losses = []
         accuracy_mean = []
         precision_mean = []
@@ -276,25 +291,25 @@ class Trainer:
 
         with torch.no_grad():
             if self.type['gf_type'] == 'instance':
-                for idx, (x, y, z, _, _) in enumerate(self.validation_DataLoader):
-                    for c, i, g in zip(x, y, z):
-                        c, target = c.to(self.device), g.to(self.device)
+                for idx, (e, n, g, _, _) in enumerate(self.validation_DataLoader):
+                    for edge, node, graph in zip(e, n, g):
+                        edge, graph = edge.to(self.device), graph.to(self.device)
 
                         if self.node_input:
-                            i = i.to(self.device)
-                            out = self.model(coords=c,
-                                             node_features=i)
+                            node = node.to(self.device)
+                            out = self.model(coords=edge,
+                                             node_features=node)
                         else:
-                            out = self.model(coords=c,
+                            out = self.model(coords=edge,
                                              node_features=None)
 
                         loss = self.criterion(out[0, :],
-                                              target)
+                                              graph)
 
                         out = torch.sigmoid(out[:, 0, :])
                         out = torch.where(out > 0.5, 1, 0)
                         acc, prec, recall, f1 = self.calculate_F1(logits=out,
-                                                                  targets=target)
+                                                                  targets=graph)
 
                         # Avg. precision score
                         valid_losses.append(loss.item())
@@ -310,24 +325,31 @@ class Trainer:
                                         text_3=self.print_setting[2],
                                         text_4=self.print_setting[3],
                                         text_5=self.gpu_info,
-                                        text_7=epoch_desc,
-                                        text_8=printProgressBar(progress_epoch, self.epochs),
+                                        text_7=self.epoch_desc,
+                                        text_8=printProgressBar(self.id, self.epochs),
                                         text_9=valid,
                                         text_10=printProgressBar(idx, self.validation_DataLoader.__len__()))
-            elif self.type['gf_type'] == 'semantic':
-                for idx, (x, y, z, _, cls_g) in enumerate(self.validation_DataLoader):
-                    for c, i, g, cls in zip(x, y, z, cls_g):
-                        c, target = c.to(self.device), g.to(self.device)
 
-                        out, out_cls = self.model(coords=c)
+            elif self.type['gf_type'] == 'semantic':
+                for idx, (e, n, g, _, c) in enumerate(self.validation_DataLoader):
+                    for edge, node, cls, graph in zip(e, n, c, g):
+                        edge, graph = edge.to(self.device), graph.to(self.device)
+
+                        if self.node_input:
+                            node = node.to(self.device)
+                            out, out_cls = self.model(coords=edge,
+                                                      node_features=node)
+                        else:
+                            out, out_cls = self.model(coords=edge,
+                                                      node_features=None)
 
                         cls = cls.to(self.device)
-                        loss = self.criterion(out[0, :], target) + self.criterion(out_cls, cls)
+                        loss = self.criterion(out[0, :], graph) + self.criterion(out_cls, cls)
 
                         out = torch.sigmoid(out[:, 0, :])
                         out = torch.where(out > 0.5, 1, 0)
                         acc, prec, recall, f1 = self.calculate_F1(logits=out,
-                                                                  targets=target)
+                                                                  targets=graph)
 
                         # Avg. precision score
                         valid_losses.append(loss.item())
@@ -342,8 +364,8 @@ class Trainer:
                                         text_3=self.print_setting[2],
                                         text_4=self.print_setting[3],
                                         text_5=self.gpu_info,
-                                        text_7=epoch_desc,
-                                        text_8=printProgressBar(progress_epoch, self.epochs),
+                                        text_7=self.epoch_desc,
+                                        text_8=printProgressBar(self.id, self.epochs),
                                         text_9=f'Validation: (loss {loss.item():.4f})',
                                         text_10=printProgressBar(idx, self.validation_DataLoader.__len__()))
 

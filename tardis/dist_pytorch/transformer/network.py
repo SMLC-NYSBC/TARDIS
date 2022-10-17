@@ -52,7 +52,7 @@ class DIST(nn.Module):
         self.edge_dim = edge_dim
         self.predict = predict
 
-        if node_input > 0:
+        if node_input is not None and node_input > 0:  # Back compatibility
             self.node_embed = NodeEmbedding(n_in=node_input,
                                             n_out=node_dim)
 
@@ -154,7 +154,7 @@ class C_DIST(nn.Module):
         self.edge_dim = edge_dim
         self.predict = predict
 
-        if node_input > 0:
+        if node_input is not None and node_input > 0:  # Back compatibility
             self.node_embed = NodeEmbedding(n_in=node_input,
                                             n_out=node_dim)
 

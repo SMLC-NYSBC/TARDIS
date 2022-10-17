@@ -495,24 +495,25 @@ class MultiHeadAttention(nn.Module):
         self.onnx_trace = False
         self.tpu = False
 
-    def prepare_for_onnx_export_(self):
-        self.onnx_trace = True
+    # def prepare_for_onnx_export_(self):
+    #     self.onnx_trace = True
 
-    def prepare_for_tpu_(self):
-        self.tpu = True
+    # def prepare_for_tpu_(self):
+    #     self.tpu = True
 
     def reset_parameters(self):
         nn.init.xavier_uniform_(self.k_proj.weight, gain=self.init_scaling)
         nn.init.xavier_uniform_(self.v_proj.weight, gain=self.init_scaling)
         nn.init.xavier_uniform_(self.q_proj.weight, gain=self.init_scaling)
-
         nn.init.xavier_uniform_(self.out_proj.weight, gain=self.init_scaling)
+        # nn.init.constant_(self.out_proj.weight, 0.0)
+
         if self.out_proj.bias is not None:
             nn.init.constant_(self.out_proj.bias, 0.0)
         if self.bias_k is not None:
-            nn.init.xavier_normal_(self.bias_k, gain=self.init_scaling)
+            nn.init.constant_(self.bias_k.bias, 0.0)
         if self.bias_v is not None:
-            nn.init.xavier_normal_(self.bias_v, gain=self.init_scaling)
+            nn.init.constant_(self.bias_v.bias, 0.0)
 
     def forward(self,
                 query: torch.Tensor,
@@ -633,10 +634,10 @@ class MultiHeadAttention(nn.Module):
                 )
 
         attn_weights = torch.bmm(q, k.transpose(1, 2))
-        attn_weights = self.apply_sparse_mask(attn_weights,
-                                              tgt_len,
-                                              src_len,
-                                              bsz)
+        # attn_weights = self.apply_sparse_mask(attn_weights,
+        #                                       tgt_len,
+        #                                       src_len,
+        #                                       bsz)
 
         assert list(attn_weights.size()) == [bsz * self.num_heads,
                                              tgt_len,

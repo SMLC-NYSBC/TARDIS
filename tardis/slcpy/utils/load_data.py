@@ -443,35 +443,35 @@ def load_ply_scannet(ply: str,
     # Downsample point cloud with labels
     if downsample is not None:
         pcd = pcd.voxel_down_sample(voxel_size=downsample)
-    coord = np.asarray(pcd.points)
+        coord = np.asarray(pcd.points)
+    else:
+        coord = coord_org
 
     # Retrive Node RGB features
     if color is not None:
         rgb = o3d.io.read_point_cloud(color)
-        rgb = rgb.voxel_down_sample(voxel_size=downsample)
+        if downsample is not None:
+            rgb = rgb.voxel_down_sample(voxel_size=downsample)
         rgb = np.asarray(rgb.colors)
         assert coord.shape == rgb.shape  # RGB must be the same as coord
 
     # Retrive ScanNet v2 labels after downsampling
-    if downsample is not None:
-        cls_id = []
-        tree = KDTree(coord_org, leaf_size=coord_org.shape[0])
-        for i in coord:
-            _, match_coord = tree.query(i.reshape(1, -1), k=1)
-            match_coord = match_coord[0][0]
+    cls_id = []
+    tree = KDTree(coord_org, leaf_size=coord_org.shape[0])
+    for i in coord:
+        _, match_coord = tree.query(i.reshape(1, -1), k=1)
+        match_coord = match_coord[0][0]
 
-            color_df = label_org[match_coord] * 255
-            color_id = [key for key in SCANNET_COLOR_MAP_20 if
-                        np.all(SCANNET_COLOR_MAP_20[key] == color_df)]
+        color_df = label_org[match_coord] * 255
+        color_id = [key for key in SCANNET_COLOR_MAP_20 if
+                    np.all(SCANNET_COLOR_MAP_20[key] == color_df)]
 
-            if len(color_id) > 0:
-                cls_id.append(color_id[0])
-            else:
-                cls_id.append(0)
+        if len(color_id) > 0:
+            cls_id.append(color_id[0])
+        else:
+            cls_id.append(0)
 
-        cls_id = np.asarray(cls_id)[:, None]
-    else:
-        cls_id = label_org
+    cls_id = np.asarray(cls_id)[:, None]
 
     # Remove 0 labels
     coord = coord[np.where(cls_id != 0)[0]]

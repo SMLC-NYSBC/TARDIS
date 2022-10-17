@@ -1,3 +1,4 @@
+from typing import Optional
 import numpy as np
 from skimage import exposure
 
@@ -23,9 +24,11 @@ class CenterCrop:
 
     def __call__(self,
                  x: np.ndarray,
-                 y: np.ndarray):
+                 y: Optional[np.ndarray] = None):
         """Evaluate data structure"""
-        assert x.ndim in [2, 3] and y.ndim in [2, 3]
+        assert x.ndim in [2, 3]
+        if y is not None:
+            y.ndim in [2, 3]
 
         if x.ndim == 3:
             d, h, w = x.shape
@@ -43,13 +46,18 @@ class CenterCrop:
         left_w = int(w // 2 - self.size[2] // 2)
 
         """Crop"""
-        if x.ndim == 3 and y.ndim == 3:
-            return x[up_d:down_d, top_h:bottom_h, left_w:right_w], \
-                y[up_d:down_d, top_h:bottom_h, left_w:right_w]
-        elif x.ndim == 2 and y.ndim == 2:
-            return x[top_h:bottom_h, left_w:right_w], \
-                y[top_h:bottom_h, left_w:right_w]
-
+        if y is not None:
+            if x.ndim == 3 and y.ndim == 3:
+                return x[up_d:down_d, top_h:bottom_h, left_w:right_w], \
+                    y[up_d:down_d, top_h:bottom_h, left_w:right_w]
+            elif x.ndim == 2 and y.ndim == 2:
+                return x[top_h:bottom_h, left_w:right_w], \
+                    y[top_h:bottom_h, left_w:right_w]
+        else:
+            if x.ndim == 3:
+                return x[up_d:down_d, top_h:bottom_h, left_w:right_w]
+            elif x.ndim == 2:
+                return x[top_h:bottom_h, left_w:right_w]
 
 class SimpleNormalize:
     """
@@ -103,6 +111,7 @@ class RescaleNormalize:
     Args:
         x: image or target nD arrays
     """
+
     def __init__(self,
                  range=(2, 98)):
         self.range = range
@@ -203,10 +212,10 @@ class ComposeRandomTransformation:
 
 
 def preprocess(image: np.ndarray,
-               mask: np.ndarray,
                normalization: str,
                transformation: bool,
                size: int,
+               mask: Optional[np.ndarray] = None,
                output_dim_mask=1):
     """
         Module to transform dataset and prepare them for learning
@@ -222,24 +231,30 @@ def preprocess(image: np.ndarray,
     """
     """Evaluate data structure"""
     assert image.ndim in [2, 3]
-    if image.ndim == 3:
-        z, h, w = image.shape
-        dim = 3
-    else:
-        h, w = image.shape
-        dim = 2
+
+    if isinstance(size, tuple):
+        if sum(size) / len(size) == size[0]:  # Check if image has uniform size
+            size = size[0]
+        else:
+            raise Exception
 
     """Resize image"""
-    if dim == 3:
-        if (z, h, w) != (size, size, size):
+    if image.ndim == 3:
+        if image.shape != (size, size, size):
             # resize image
             crop = CenterCrop((size, size, size))
-            image, mask = crop(image, mask)
-        elif dim == 2:
-            if (h, w) != (size, size):
-                # resize image
-                crop = CenterCrop((size, size))
+            if mask is not None:
                 image, mask = crop(image, mask)
+            else:
+                image = crop(image)
+    elif image.ndim == 2:
+        if image.shape != (size, size):
+            # resize image
+            crop = CenterCrop((size, size))
+            if mask is not None:
+                image, mask = crop(image, mask)
+            else:
+                image = crop(image)
 
     """Transform image randomly"""
     if transformation:
@@ -261,9 +276,12 @@ def preprocess(image: np.ndarray,
 
     """Expand dimension order for HW / DHW to CHW / CDHW"""
     image = np.expand_dims(image, axis=0)
-    mask = np.expand_dims(mask, axis=0)
 
-    if output_dim_mask != mask.shape[0]:
-        mask = np.tile(mask, [output_dim_mask, 1, 1, 1])
+    if mask is not None:
+        mask = np.expand_dims(mask, axis=0)
 
-    return image, mask
+        if output_dim_mask != mask.shape[0]:
+            mask = np.tile(mask, [output_dim_mask, 1, 1, 1])
+        return image, mask
+    else:
+        return image

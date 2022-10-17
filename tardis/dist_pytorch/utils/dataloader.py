@@ -99,7 +99,6 @@ class FilamentDataset(BasicDataset):
             # Normalize point cloud
             dist = pc_median_dist(coord[:, 1:])
 
-        if self.patch_size[i, 0] == 0:
             if dist is not None:
                 coord[:, 1:] = coord[:, 1:] / dist  # Normalize point cloud to px unit
 
@@ -128,7 +127,7 @@ class FilamentDataset(BasicDataset):
                                                                        df=True)
 
         coords_idx, graph_idx, output_idx, df_idx = self.list_to_tensor(coord=coords_idx,
-                                                                        grap=graph_idx,
+                                                                        graph=graph_idx,
                                                                         output=output_idx,
                                                                         df=df_idx)
 
@@ -168,7 +167,6 @@ class PartnetDataset(BasicDataset):
             # Normalize point cloud
             dist = pc_median_dist(coord[:, 1:])
 
-        if self.patch_size[i, 0] == 0:
             if dist is not None:
                 coord[:, 1:] = coord[:, 1:] / dist  # Normalize point cloud to px unit
 
@@ -196,7 +194,7 @@ class PartnetDataset(BasicDataset):
                                                                        df=True)
 
         coords_idx, graph_idx, output_idx, df_idx = self.list_to_tensor(coord=coords_idx,
-                                                                        grap=graph_idx,
+                                                                        graph=graph_idx,
                                                                         output=output_idx,
                                                                         df=df_idx)
 
@@ -261,7 +259,7 @@ class ScannetDataset(BasicDataset):
                                                                                 cls=True)
 
         coords_idx, graph_idx, output_idx, df_idx, cls_idx = self.list_to_tensor(coord=coords_idx,
-                                                                                 grap=graph_idx,
+                                                                                 graph=graph_idx,
                                                                                  output=output_idx,
                                                                                  df=df_idx,
                                                                                  cls=cls_idx)
@@ -335,7 +333,7 @@ class ScannetColorDataset(BasicDataset):
                                                                                  cls=True)
 
         coords_idx, graph_idx, output_idx, rgb_idx, cls_idx = self.list_to_tensor(coord=coords_idx,
-                                                                                  grap=graph_idx,
+                                                                                  graph=graph_idx,
                                                                                   output=output_idx,
                                                                                   rgb=rgb_idx,
                                                                                   cls=cls_idx)

@@ -9,7 +9,7 @@ import open3d as o3d
 import tifffile.tifffile as tif
 
 from tardis.dist_pytorch.transformer.network import DIST
-from tardis.dist_pytorch.utils.voxal import VoxalizeDataSetV2
+from tardis.dist_pytorch.utils.voxal import PatchDataSet
 from tardis.slcpy.image_postprocess import ImageToPointCloud
 from tardis.slcpy.utils.export_data import NumpyToAmira
 from tardis.slcpy.utils.load_data import import_am, import_mrc, import_tiff
@@ -40,7 +40,7 @@ warnings.simplefilter("ignore", UserWarning)
               help='Size of image size used for prediction.',
               show_default=True)
 @click.option('-ct', '--cnn_threshold',
-              default=0.05,
+              default=0.1,
               type=float,
               help='Threshold use for model prediction.',
               show_default=True)
@@ -188,7 +188,7 @@ def main(prediction_dir: str,
 
         # Cut image for smaller image
         if i.endswith(('.tif', '.tiff')):
-            image, px = import_tiff(img=join(prediction_dir, i),
+            image, px = import_tiff(tiff=join(prediction_dir, i),
                                     dtype=np.uint8)
             if i.endswith('.tif'):
                 out_format = 4
@@ -196,11 +196,11 @@ def main(prediction_dir: str,
                 out_format = 5
             format = 'tif'
         elif i.endswith(('.mrc', '.rec')):
-            image, px = import_mrc(img=join(prediction_dir, i))
+            image, px = import_mrc(mrc=join(prediction_dir, i))
             out_format = 4
             format = 'mrc'
         elif i.endswith('.am'):
-            image, px, _, transformation = import_am(img=join(prediction_dir, i))
+            image, px, _, transformation = import_am(am_file=join(prediction_dir, i))
             out_format = 3
             format = 'amira'
 
@@ -223,7 +223,7 @@ def main(prediction_dir: str,
                          image_counter=0,
                          clean_empty=False,
                          stride=10,
-                         prefix='')
+                         prefix='') # wtf
         image = None
         del image
 
@@ -323,12 +323,12 @@ def main(prediction_dir: str,
         dist = pc_median_dist(point_cloud, avg_over=True)
 
         # Build voxalized dataset with
-        VD = VoxalizeDataSetV2(coord=point_cloud / dist,
-                               downsampling_rate=None,
-                               init_voxal_size=0,
-                               drop_rate=1,
-                               downsampling_threshold=points_in_voxal,
-                               graph=False)
+        VD = PatchDataSet(coord=point_cloud / dist,
+                          downsampling_rate=None,
+                          init_voxal_size=0,
+                          drop_rate=1,
+                          downsampling_threshold=points_in_voxal,
+                          graph=False)
 
         coords_df, _, output_idx, _ = VD.voxalize_dataset(mesh=False)
         coords_df = [c / pc_median_dist(c) for c in coords_df]

@@ -222,7 +222,7 @@ class GraphFormerLayer(nn.Module):
                 h_nodes: Optional[torch.Tensor] = None,
                 src_mask=None,
                 src_key_padding_mask=None):
-        if self.node_dim is not None and h_nodes is not None:
+        if h_nodes is not None:
             h_nodes = self.update_nodes(h_pairs=h_pairs,
                                         h_nodes=h_nodes,
                                         src_mask=src_mask,

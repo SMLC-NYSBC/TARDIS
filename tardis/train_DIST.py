@@ -86,11 +86,6 @@ from tardis.version import version
               type=int,
               help='Number of point threshold for voxal optimization',
               show_default=True)
-@click.option('-ddsr', '--dl_downsampling_rate',
-              default=5,
-              type=float,
-              help='Downsampling value for each point cloud',
-              show_default=True)
 @click.option('-glo', '--gf_loss',
               default='bce',
               type=click.Choice(['bce', 'dice', 'sfl']),
@@ -136,7 +131,6 @@ def main(pointcloud_dir: str,
          gf_dropout: float,
          gf_sigma: int,
          dl_downsampling: int,
-         dl_downsampling_rate: float,
          gf_loss: str,
          gf_structure: str,
          gf_type: str,
@@ -312,9 +306,13 @@ def main(pointcloud_dir: str,
                                                                                             gf_edge_dim,
                                                                                             dl_downsampling)]
     """Train"""
+    if node_input == 3:
+        node_input = True
+    else:
+        node_input = False
     train = Trainer(model=model,
                     type=model_dict,
-                    node_input=False,
+                    node_input=node_input,
                     device=device,
                     criterion=loss_fn,
                     optimizer=optimizer,

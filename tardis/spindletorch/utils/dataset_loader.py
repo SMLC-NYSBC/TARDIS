@@ -100,12 +100,12 @@ class PredictionDataSet(Dataset):
         img = np.array(img, dtype='uint8')
 
         """Pre-process image and mask"""
-        img, _ = preprocess(image=img,
-                            mask=np.zeros_like(img, dtype=np.int8),
-                            size=img.shape,
-                            normalization=self.normalize,
-                            transformation=False,
-                            output_dim_mask=self.out_channels)
+        img = preprocess(image=img,
+                         mask=None,
+                         size=img.shape,
+                         normalization='simple',
+                         transformation=False,
+                         output_dim_mask=self.out_channels)
 
         return torch.from_numpy(img).type(torch.float32), idx
 
