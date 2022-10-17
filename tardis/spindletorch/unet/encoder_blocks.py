@@ -1,7 +1,7 @@
 from typing import Optional
 
 import torch.nn as nn
-from tardis.spindletorch.unet.init_weights import init_weights
+# from tardis.spindletorch.unet.init_weights import init_weights
 from tardis.spindletorch.utils.utils import number_of_features_per_level
 
 
@@ -55,9 +55,7 @@ class EncoderBlock(nn.Module):
                                        components=conv_component,
                                        no_group=no_groups)
 
-        # initialise the blocks
-        for m in self.children():
-            init_weights(m, init_type='kaiming')
+ 
 
     def forward(self, x):
         if self.max_pool is not None:

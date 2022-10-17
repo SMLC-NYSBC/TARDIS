@@ -69,6 +69,12 @@ class Trainer:
         self.f1 = []
         self.threshold = []
 
+    @ staticmethod
+    def update_desc(stop_count: int,
+                    f1: float):
+        desc = f'Epochs: stop counter {stop_count}; best F1 {f1}'
+        return desc
+
     def run_trainer(self):
         self.progress_epoch(title='CNN training module',
                             text_2='Epoch:',
@@ -80,26 +86,28 @@ class Trainer:
         else:
             mkdir('cnn_checkpoint')
 
-        early_stopping = EarlyStopping(patience=self.early_stop_rate, min_delta=0)
+        self.early_stopping = EarlyStopping(patience=self.early_stop_rate, min_delta=0)
         for id in range(self.epochs):
             """Training block"""
+            self.id = id
+
+            """For each Epoch load be t model from previous run"""
             if id == 0:
-                epoch_desc = 'Epochs: stop counter 0; best F1: NaN'
+                self.epoch_desc = 'Epochs: stop counter 0; best F1: NaN'
             else:
-                epoch_desc = f'Epochs: stop counter {early_stopping.counter}; best F1 {round(np.max(self.f1), 3)}'
+                self.epoch_desc = self.update_desc(self.early_stopping.counter,
+                                                   round(np.max(self.f1), 3))
 
             self.progress_epoch(title='CNN training module',
-                                text_2=epoch_desc,
-                                text_3=printProgressBar(id, self.epochs))
+                                text_2=self.epoch_desc,
+                                text_3=printProgressBar(self.id, self.epochs))
 
-            self._train(epoch_desc,
-                        id)
+            self._train()
 
             """Validation block"""
             if self.validation_DataLoader is not None:
-                self._validate(epoch_desc,
-                               id)
-                early_stopping(f1_score=self.f1[len(self.f1) - 1])
+                self._validate()
+                self.early_stopping(f1_score=self.f1[len(self.f1) - 1])
 
             """Learning rate scheduler block"""
             if self.lr_scheduler is not None:
@@ -121,7 +129,7 @@ class Trainer:
 
             """ Save current model weights"""
             """ If F1 is higher then save checkpoint """
-            if (np.array(self.f1)[:len(self.f1) - 1] < self.f1[len(self.f1) - 1]).all():
+            if all(self.f1[-1:][0] >= i for i in self.f1[:-1]):
                 torch.save({'model_struct_dict': self.type,
                             'model_state_dict': self.model.state_dict(),
                             'optimizer_state_dict': self.optimizer.state_dict()},
@@ -134,20 +142,23 @@ class Trainer:
                         'optimizer_state_dict': self.optimizer.state_dict()},
                        join(getcwd(), 'cnn_checkpoint', 'model_weights.pth'))
 
-            if early_stopping.early_stop:
+            if self.early_stopping.early_stop:
                 break
 
-    def _train(self,
-               epoch_desc,
-               progress_epoch):
+    def _train(self):
 
         self.progress_train(title='CNN training module',
-                            text_2=epoch_desc,
-                            text_3=printProgressBar(progress_epoch, self.epochs),
+                            text_2=self.epoch_desc,
+                            text_3=printProgressBar(self.id, self.epochs),
                             text_4='Training: (loss 1.000)',
                             text_5=printProgressBar(0, self.training_DataLoader.__len__()))
 
         for idx, (x, y) in enumerate(self.training_DataLoader):
+            if idx % 500 == 0:
+                self._validate()
+                self.epoch_desc = self.update_desc(self.early_stopping.counter,
+                                                   round(np.max(self.f1), 3))
+
             self.model.train()
             input, target = x.to(self.device), y.to(self.device)
             self.optimizer.zero_grad(set_to_none=True)
@@ -166,16 +177,14 @@ class Trainer:
             self.training_loss.append(loss_value)
 
             self.progress_train(title='CNN training module',
-                                text_2=epoch_desc,
-                                text_3=printProgressBar(progress_epoch, self.epochs),
+                                text_2=self.epoch_desc,
+                                text_3=printProgressBar(self.id, self.epochs),
                                 text_4=f'Training: (loss {loss_value:.4f})',
                                 text_5=printProgressBar(idx, self.training_DataLoader.__len__()))
 
         self.learning_rate.append(self.optimizer.param_groups[0]['lr'])
 
-    def _validate(self,
-                  epoch_desc,
-                  progress_epoch):
+    def _validate(self):
         self.model.eval()  # evaluation mode
         valid_losses = []  # accumulate the losses
         accuracy_mean = []  # accumulate the accuracy
@@ -208,8 +217,8 @@ class Trainer:
                                                        best_f1=True)
 
                 self.progress_train(title='CNN training module',
-                                    text_2=epoch_desc,
-                                    text_3=printProgressBar(progress_epoch, self.epochs),
+                                    text_2=self.epoch_desc,
+                                    text_3=printProgressBar(self.id, self.epochs),
                                     text_4=f'Validation: (loss {loss_value:.4f})',
                                     text_5=printProgressBar(0, self.validation_DataLoader.__len__()))
 

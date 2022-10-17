@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 from tardis.spindletorch.unet.convolution import (DoubleConvolution,
                                                   RecurrentDoubleConvolution)
-from tardis.spindletorch.unet.init_weights import init_weights
+# from tardis.spindletorch.unet.init_weights import init_weights
 from tardis.spindletorch.utils.utils import number_of_features_per_level
 
 
@@ -51,14 +51,14 @@ class DecoderBlockCNN(nn.Module):
         if dropout is not None:
             self.dropout_layer = nn.Dropout(dropout)
 
-        # initialise the blocks
-        for m in self.children():
-            if m.__class__.__name__.find('Conv3d') != -1:
-                init_weights(m, init_type='kaiming')
-            if m.__class__.__name__.find('Conv2d') != -1:
-                init_weights(m, init_type='kaiming')
-            if m.__class__.__name__.find('GroupNorm') != -1:
-                init_weights(m, init_type='kaiming')
+        # # initialise the blocks
+        # for m in self.children():
+        #     if m.__class__.__name__.find('Conv3d') != -1:
+        #         init_weights(m, init_type='kaiming')
+        #     if m.__class__.__name__.find('Conv2d') != -1:
+        #         init_weights(m, init_type='kaiming')
+        #     if m.__class__.__name__.find('GroupNorm') != -1:
+        #         init_weights(m, init_type='kaiming')
 
     def forward(self,
                 encoder_features: torch.Tensor,
@@ -125,14 +125,14 @@ class DecoderBlockRCNN(nn.Module):
         if dropout is not None:
             self.dropout_layer = nn.Dropout(dropout)
 
-        # initialise the blocks
-        for m in self.children():
-            if m.__class__.__name__.find('Conv3d') != -1:
-                init_weights(m, init_type='kaiming')
-            if m.__class__.__name__.find('Conv2d') != -1:
-                init_weights(m, init_type='kaiming')
-            if m.__class__.__name__.find('GroupNorm') != -1:
-                init_weights(m, init_type='kaiming')
+        # # initialise the blocks
+        # for m in self.children():
+        #     if m.__class__.__name__.find('Conv3d') != -1:
+        #         init_weights(m, init_type='kaiming')
+        #     if m.__class__.__name__.find('Conv2d') != -1:
+        #         init_weights(m, init_type='kaiming')
+        #     if m.__class__.__name__.find('GroupNorm') != -1:
+        #         init_weights(m, init_type='kaiming')
 
     def forward(self,
                 encoder_features: torch.Tensor,
@@ -254,16 +254,16 @@ class DecoderBlockUnet3Plus(nn.Module):
         if dropout is not None:
             self.dropout_layer = nn.Dropout(dropout)
 
-        # initialise the blocks
-        for m in self.children():
-            if m.__class__.__name__.find('Conv3d') != -1:
-                continue
-            if m.__class__.__name__.find('Conv2d') != -1:
-                continue
-            if m.__class__.__name__.find('GroupNorm') != -1:
-                continue
+        # # initialise the blocks
+        # for m in self.children():
+        #     if m.__class__.__name__.find('Conv3d') != -1:
+        #         continue
+        #     if m.__class__.__name__.find('Conv2d') != -1:
+        #         continue
+        #     if m.__class__.__name__.find('GroupNorm') != -1:
+        #         continue
 
-            init_weights(m, init_type='kaiming')
+        #     init_weights(m, init_type='kaiming')
 
     def forward(self,
                 x: torch.Tensor,

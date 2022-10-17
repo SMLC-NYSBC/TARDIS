@@ -270,7 +270,7 @@ def preprocess(image: np.ndarray,
         elif normalization == "minmax":
             normalization = MinMaxNormalize(image.min(), image.max())
         elif normalization == "exposure":
-            normalization = RescaleNormalize(range=(2, 98))
+            normalization = RescaleNormalize(range=(0.1, 99.1))
 
         image = normalization(image)
 
