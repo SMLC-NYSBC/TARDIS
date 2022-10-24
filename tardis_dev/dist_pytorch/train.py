@@ -26,8 +26,6 @@ class DistTrainer(BasicTrainer):
             if idx % (len(self.training_DataLoader) // 4) == 0:
                 self._validate()
 
-                # Check if average evaluation loss dropped
-                self.early_stopping(val_loss=self.validation_loss[-1:][0])
                 self.epoch_desc = self._update_desc(self.early_stopping.counter,
                                                     [round(np.max(self.f1), 3),
                                                      self.f1[-1:]])
@@ -91,7 +89,7 @@ class DistTrainer(BasicTrainer):
                     loss = self.criterion(out[0, :],
                                           graph)
                     out = torch.sigmoid(out[:, 0, :])
-                    out = torch.where(out > 0.5, 1, 0)
+                    # out = torch.where(out > 0.5, 1, 0)
 
                 acc, prec, recall, f1, th = calculate_F1(logits=out,
                                                          targets=graph,
@@ -117,6 +115,9 @@ class DistTrainer(BasicTrainer):
         self.recall.append(np.mean(recall_mean))
         self.threshold.append(np.mean(threshold_mean))
         self.f1.append(np.mean(F1_mean))
+
+        # Check if average evaluation loss dropped
+        self.early_stopping(f1_score=self.f1[-1:][0])
 
 
 class C_DistTrainer(BasicTrainer):

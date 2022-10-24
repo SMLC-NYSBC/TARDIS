@@ -1,4 +1,5 @@
 import shutil
+import os
 import torch.nn as nn
 from tardis_dev.dist_pytorch.train import C_DistTrainer, DistTrainer
 from tardis_dev.dist_pytorch.trainer import train_dist
@@ -92,7 +93,15 @@ def test_dist_trainer():
                device=get_device('cpu'),
                epochs=2)
 
-
+    assert os.listdir('./temp_test') == ['coords_0.npy', 'out_0.npy', 'df_0.npy',
+                                         'graph_0.npy']
     shutil.rmtree('./temp_test')
+
+    assert os.listdir('./temp_train') == ['coords_0.npy', 'out_0.npy', 'df_0.npy',
+                                          'graph_0.npy']
     shutil.rmtree('./temp_train')
+
+    assert os.listdir('./DIST_checkpoint') == ['training_losses.csv', 'model_weights.pth',
+                                               'validation_losses.csv', 'eval_metric.csv',
+                                               'DIST_checkpoint.pth']
     shutil.rmtree('./DIST_checkpoint')

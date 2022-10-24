@@ -179,9 +179,6 @@ class BasicTrainer:
                 self.model.eval()
                 self._validate()
 
-                # Check if average evaluation loss dropped
-                self.early_stopping(val_loss=self.validation_loss[-1:][0])
-
             """Learning rate scheduler block"""
             if self.lr_scheduler is not None:
                 self.lr_scheduler.step()
