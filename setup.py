@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
-from tardis.version import version
+from tardis_dev.version import version
 
-with open('README.rst') as readme_file:
+with open('./doc/source/README.rst') as readme_file:
     readme = readme_file.read()
 
 with open('requirements.txt') as r:
@@ -38,7 +38,7 @@ setup(
     include_package_data=True,
     keywords=['spindletorch', 'semantic segmentation', 'point cloud segmentation',
               'MT segmentation', 'UNet', 'Unet3Plus'],
-    name='tardis-pytorch',
+    name='tardis-dev',
     packages=find_packages(include=['tardis', 'tardis.*'],
                            exclude=['tests']),
     url='https://github.com/SMLC-NYSBC/tardis-pytorch',
