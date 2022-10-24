@@ -89,7 +89,6 @@ class DistTrainer(BasicTrainer):
                     loss = self.criterion(out[0, :],
                                           graph)
                     out = torch.sigmoid(out[:, 0, :])
-                    # out = torch.where(out > 0.5, 1, 0)
 
                 acc, prec, recall, f1, th = calculate_F1(logits=out,
                                                          targets=graph,
