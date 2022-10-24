@@ -17,13 +17,17 @@ class DistTrainer(BasicTrainer):
 
     def _train(self):
         # Update progress bar
-        self._update_progress_bar(loss_value=1.000,
+        self._update_progress_bar(loss_desc='Training: (loss 1.000)',
                                   idx=0)
 
         # Run training for DIST model
         for idx, (e, n, g, _, _) in enumerate(self.training_DataLoader):
+            """Mid-training eval"""
             if idx % (len(self.training_DataLoader) // 4) == 0:
                 self._validate()
+
+                # Check if average evaluation loss dropped
+                self.early_stopping(val_loss=self.validation_loss[-1:][0])
                 self.epoch_desc = self._update_desc(self.early_stopping.counter,
                                                     [round(np.max(self.f1), 3),
                                                      self.f1[-1:]])
@@ -37,6 +41,7 @@ class DistTrainer(BasicTrainer):
                                     f'{self.checkpoint_name}_checkpoint',
                                     f'{self.checkpoint_name}_checkpoint.pth'))
 
+            """Training"""
             for edge, node, graph in zip(e, n, g):
                 edge, graph = edge.to(self.device), graph.to(self.device)
                 self.optimizer.zero_grad()
@@ -59,7 +64,7 @@ class DistTrainer(BasicTrainer):
                 self.training_loss.append(loss_value)
 
                 # Update progress bar
-                self._update_progress_bar(loss_value=f'Training: (loss {loss_value:.4f})',
+                self._update_progress_bar(loss_desc=f'Training: (loss {loss_value:.4f})',
                                           idx=idx)
 
     def _validate(self):
@@ -102,7 +107,7 @@ class DistTrainer(BasicTrainer):
                 valid = f'Validation: (loss {loss.item():.4f} Prec: {prec:.2f} Rec: {recall:.2f} F1: {f1:.2f})'
 
                 # Update progress bar
-                self._update_progress_bar(loss_value=valid,
+                self._update_progress_bar(loss_desc=valid,
                                           idx=idx)
 
         # Reduce eval. metric with mean
@@ -110,6 +115,7 @@ class DistTrainer(BasicTrainer):
         self.accuracy.append(np.mean(accuracy_mean))
         self.precision.append(np.mean(precision_mean))
         self.recall.append(np.mean(recall_mean))
+        self.threshold.append(np.mean(threshold_mean))
         self.f1.append(np.mean(F1_mean))
 
 
@@ -123,7 +129,7 @@ class C_DistTrainer(BasicTrainer):
 
     def _train(self):
         # Update progress bar
-        self._update_progress_bar(loss_value=1.000,
+        self._update_progress_bar(loss_desc='Training: (loss 1.000)',
                                   idx=0)
 
         for idx, (e, n, g, _, c) in enumerate(self.training_DataLoader):
@@ -166,7 +172,7 @@ class C_DistTrainer(BasicTrainer):
                 self.training_loss.append(loss_value)
 
                 # Update progress bar
-                self._update_progress_bar(loss_value=f'Training: (loss {loss_value:.4f})',
+                self._update_progress_bar(loss_desc=f'Training: (loss {loss_value:.4f})',
                                           idx=idx)
 
     def _validate(self):

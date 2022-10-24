@@ -157,9 +157,9 @@ class BasicTrainer:
             if self.id == 0:
                 self.epoch_desc = 'Epochs: stop counter 0; best F1: NaN'
             else:
-                self.epoch_desc = self.update_desc(self.early_stopping.counter,
-                                                   [round(np.max(self.f1), 3),
-                                                    0.0])
+                self.epoch_desc = self._update_desc(self.early_stopping.counter,
+                                                    [round(np.max(self.f1), 3),
+                                                     0.0])
 
             self.progress_epoch(title=f'{self.checkpoint_name} training module',
                                 text_1=self.print_setting[0],
@@ -180,7 +180,7 @@ class BasicTrainer:
                 self._validate()
 
                 # Check if average evaluation loss dropped
-                self.early_stopping(f1_score=self.validation_loss[-1:])
+                self.early_stopping(val_loss=self.validation_loss[-1:][0])
 
             """Learning rate scheduler block"""
             if self.lr_scheduler is not None:
@@ -198,7 +198,7 @@ class BasicTrainer:
                            delimiter=';')
             if len(self.validation_loss) > 0:
                 np.savetxt(join(getcwd(),
-                                f'{self.checkpoint_name}checkpoint',
+                                f'{self.checkpoint_name}_checkpoint',
                                 'validation_losses.csv'),
                            self.validation_loss,
                            delimiter=',')

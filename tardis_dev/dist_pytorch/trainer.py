@@ -26,7 +26,7 @@ def train_dist(train_dataloader,
                device='gpu',
                epochs=1000):
     """BUild DIST"""
-    if model_structure['model'] == 'dist':
+    if model_structure['dist_type'] == 'instance':
         model = DIST(n_out=model_structure['n_out'],
                      node_input=model_structure['node_input'],
                      node_dim=model_structure['node_dim'],
@@ -37,7 +37,7 @@ def train_dist(train_dataloader,
                      dropout_rate=model_structure['dropout_rate'],
                      structure=model_structure['structure'],
                      predict=False)
-    elif model_structure['model'] == 'c_dist':
+    elif model_structure['dist_type'] == 'semantic':
         model = C_DIST(n_out=model_structure['n_out'],
                        node_input=model_structure['node_input'],
                        node_dim=model_structure['node_dim'],
@@ -52,7 +52,7 @@ def train_dist(train_dataloader,
 
     print_setting = [f"Training is started on {device}",
                      f"Local dir: {getcwd()}",
-                     f"Training for {model_structure['model']} with "
+                     f"Training for {model_structure['dist_type']} with "
                      f"No. of Layers: {model_structure['num_layers']} with "
                      f"{model_structure['num_heads']} heads",
                      f"Layer are build of {model_structure['node_dim']} nodes, "
@@ -96,7 +96,7 @@ def train_dist(train_dataloader,
         learning_rate_scheduler = None
 
     """Build trainer"""
-    if model_structure['model'] == 'dist':
+    if model_structure['dist_type'] == 'instance':
         train = DistTrainer(model=model,
                             structure=model_structure,
                             device=device,
@@ -109,7 +109,7 @@ def train_dist(train_dataloader,
                             epochs=epochs,
                             early_stop_rate=early_stop_rate,
                             checkpoint_name="DIST")
-    elif model_structure['model'] == 'c_dist':
+    elif model_structure['dist_type'] == 'semantic':
         train = C_DistTrainer(model=model,
                               structure=model_structure,
                               device=device,
