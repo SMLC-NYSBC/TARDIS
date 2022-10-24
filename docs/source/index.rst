@@ -12,7 +12,7 @@ DIST
 ====
 .. toctree::
 
-   DIST -> DIST <dist_pytorch/dist_pytorch>
+   DIST <dist_pytorch/dist_pytorch>
    DIST -> DIST modules <dist_pytorch/modules>
    DIST -> Data augmentation <dist_pytorch/augmentation>
    DIST -> DataLoader <dist_pytorch/data_loader>
@@ -20,6 +20,8 @@ DIST
    DIST -> Visualizer <dist_pytorch/visualize>
    DIST -> Utils <dist_pytorch/utils>
 
+   .. SpindleTorch <spindletorch/spindletorch>
+   .. SpindleTorch -> SpindleTorch modules <SpindleTorch/modules>
 Global
 ======
 .. toctree::

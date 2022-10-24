@@ -9,6 +9,10 @@ from torch import nn
 
 
 class DistTrainer(BasicTrainer):
+    """
+    DIST MODEL TRAINER
+    """
+
     def __init__(self,
                  **kwargs):
         super(DistTrainer, self).__init__(**kwargs)
@@ -16,6 +20,9 @@ class DistTrainer(BasicTrainer):
         self.node_input = self.structure['node_input']
 
     def _train(self):
+        """
+        Run model training.
+        """
         # Update progress bar
         self._update_progress_bar(loss_desc='Training: (loss 1.000)',
                                   idx=0)
@@ -31,7 +38,7 @@ class DistTrainer(BasicTrainer):
                                                      self.f1[-1:]])
 
                 # Update checkpoint weights if validation loss dropped
-                if all(self.validation_loss[-1:][0] >= i for i in self.validation_loss[:-1]):
+                if all(self.f1[-1:][0] >= i for i in self.f1[:-1]):
                     torch.save({'model_struct_dict': self.structure,
                                 'model_state_dict': self.model.state_dict(),
                                 'optimizer_state_dict': self.optimizer.state_dict()},
@@ -66,6 +73,9 @@ class DistTrainer(BasicTrainer):
                                           idx=idx)
 
     def _validate(self):
+        """
+        Test model against validation dataset.
+        """
         valid_losses = []
         accuracy_mean = []
         precision_mean = []
@@ -120,6 +130,10 @@ class DistTrainer(BasicTrainer):
 
 
 class C_DistTrainer(BasicTrainer):
+    """
+    C_DIST MODEL TRAINER
+    """
+
     def __init__(self,
                  **kwargs):
         super(C_DistTrainer, self).__init__(**kwargs)
@@ -128,19 +142,24 @@ class C_DistTrainer(BasicTrainer):
             self.criterion_cls = nn.CrossEntropyLoss(reduction='mean')
 
     def _train(self):
+        """
+        Run model training.
+        """
         # Update progress bar
         self._update_progress_bar(loss_desc='Training: (loss 1.000)',
                                   idx=0)
 
         for idx, (e, n, g, _, c) in enumerate(self.training_DataLoader):
+            """Mid-training eval"""
             if idx % (len(self.training_DataLoader) // 4) == 0:
                 self._validate()
+
                 self.epoch_desc = self._update_desc(self.early_stopping.counter,
                                                     [round(np.max(self.f1), 3),
-                                                     self.f1[-1:]])
+                                                     self.f1[-1:][0]])
 
                 # Update checkpoint weights if validation loss dropped
-                if all(self.validation_loss[-1:][0] >= i for i in self.validation_loss[:-1]):
+                if all(self.f1[-1:][0] >= i for i in self.f1[:-1]):
                     torch.save({'model_struct_dict': self.structure,
                                 'model_state_dict': self.model.state_dict(),
                                 'optimizer_state_dict': self.optimizer.state_dict()},
@@ -176,6 +195,9 @@ class C_DistTrainer(BasicTrainer):
                                           idx=idx)
 
     def _validate(self):
+        """
+        Test model against validation dataset.
+        """
         valid_losses = []
         accuracy_mean = []
         precision_mean = []
@@ -201,11 +223,11 @@ class C_DistTrainer(BasicTrainer):
                     loss = self.criterion(out[0, :], graph) + \
                         self.criterion(out_cls, cls)
 
-                    out = torch.sigmoid(out[:, 0, :])
-                    out = torch.where(out > 0.5, 1, 0)
+                    out = torch.sigmoid(out[:, 0, :])\
 
-                acc, prec, recall, f1, th = self.calculate_F1(logits=out,
-                                                              targets=graph)
+                acc, prec, recall, f1, th = calculate_F1(logits=out,
+                                                         targets=graph,
+                                                         best_f1=True)
 
                 # Avg. precision score
                 valid_losses.append(loss.item())
@@ -217,11 +239,15 @@ class C_DistTrainer(BasicTrainer):
                 valid = f'Validation: (loss {loss.item():.4f} Prec: {prec:.2f} Rec: {recall:.2f} F1: {f1:.2f})'
 
                 # Update progress bar
-                self._update_progress_bar(loss_value=valid,
+                self._update_progress_bar(loss_desc=valid,
                                           idx=idx)
         # Reduce eval. metric with mean
         self.validation_loss.append(np.mean(valid_losses))
         self.accuracy.append(np.mean(accuracy_mean))
         self.precision.append(np.mean(precision_mean))
         self.recall.append(np.mean(recall_mean))
+        self.threshold.append(np.mean(threshold_mean))
         self.f1.append(np.mean(F1_mean))
+
+        # Check if average evaluation loss dropped
+        self.early_stopping(f1_score=self.f1[-1:][0])

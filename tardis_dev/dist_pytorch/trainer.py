@@ -25,7 +25,9 @@ def train_dist(train_dataloader,
                early_stop_rate=10,
                device='gpu',
                epochs=1000):
-    """BUild DIST"""
+    """
+
+    """
     if model_structure['dist_type'] == 'instance':
         model = DIST(n_out=model_structure['n_out'],
                      node_input=model_structure['node_input'],

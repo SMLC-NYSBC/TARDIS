@@ -10,21 +10,22 @@ from tardis.utils.utils import EarlyStopping
 
 class BasicTrainer:
     """
-    __init__ _summary_
+    BASIC MODEL TRAINER FOR DIST AND CNN
 
     Args:
-        model (_type_): _description_
-        structure (dict): _description_
-        device (str): _description_
-        criterion (_type_): _description_
-        optimizer (_type_): _description_
-        training_DataLoader (_type_): _description_
-        print_setting (tuple): _description_
-        validation_DataLoader (_type_, optional): _description_. Defaults to None.
-        lr_scheduler (_type_, optional): _description_. Defaults to None.
-        epochs (int, optional): _description_. Defaults to 100.
-        early_stop_rate (int, optional): _description_. Defaults to 10.
-        checkpoint_name (str, optional): _description_. Defaults to "DIST".
+        model (nn.Module): ML model build with nn.Module or nn.sequential.
+        structure (dict): Model structure as dictionary.
+        device (torch.device): Device for training.
+        criterion (nn.loss): Loss function type.
+        optimizer (torch.optim): Optimizer type.
+        training_DataLoader (torch.DataLoader): DataLoader with training dataset.
+        validation_DataLoader (torch.DataLoader, optional): DataLoader with test dataset..
+        print_setting (tuple): Model property to display in TARDIS progress bar.
+        lr_scheduler (torch.StepLR, optional): Optional Learning rate schedular.
+        epochs (int): Max number of epoches.
+        early_stop_rate (int): Number of epoches without improvement after which
+            Trainer stop training.
+        checkpoint_name (str): Name of the checkpoint.
     """
 
     def __init__(self,
@@ -52,6 +53,8 @@ class BasicTrainer:
         self.checkpoint_name = checkpoint_name
 
         self.structure = structure
+        if 'node_input' in structure:
+            self.node_input = structure['node_input']
 
         self.training_DataLoader = training_DataLoader
         self.validation_DataLoader = validation_DataLoader
@@ -85,7 +88,7 @@ class BasicTrainer:
 
         Args:
             stop_count (int): Early stop count.
-            f1 (float): Best f1 score.
+            f1 (list): Best f1 score.
 
         Returns:
             str: Updated progress bar status.
@@ -212,7 +215,7 @@ class BasicTrainer:
 
             """ Save current model weights"""
             # If mean evaluation loss is higher then save checkpoint
-            if all(self.validation_loss[-1:][0] >= i for i in self.validation_loss[:-1]):
+            if all(self.f1[-1:][0] >= i for i in self.f1[:-1]):
                 torch.save({'model_struct_dict': self.structure,
                             'model_state_dict': self.model.state_dict(),
                             'optimizer_state_dict': self.optimizer.state_dict()},

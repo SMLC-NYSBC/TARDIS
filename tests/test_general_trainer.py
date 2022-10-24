@@ -1,3 +1,5 @@
+import shutil
+
 import torch
 import torch.nn as nn
 from tardis_dev.dist_pytorch.train import C_DistTrainer, DistTrainer
@@ -60,6 +62,7 @@ def test_trainer_init():
                        epochs=100,
                        early_stop_rate=10,
                        checkpoint_name='test')
+    shutil.rmtree('./test_checkpoint')
 
 
 def test_trainer_utils():
