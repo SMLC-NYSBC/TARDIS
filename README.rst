@@ -1,8 +1,8 @@
 TARDIS
 ======
 
-.. image:: https://img.shields.io/badge/release-0.1.0_beta1-success
-        :target: https://img.shields.io/badge/release-0.1.0_beta1-success
+.. image:: https://img.shields.io/badge/release-0.1.0_beta2-success
+        :target: https://img.shields.io/badge/release-0.1.0_beta2-success
 
 .. image:: https://readthedocs.org/projects/tardis-pytorch/badge/?version=latest
         :target: https://tardis-pytorch.readthedocs.io/en/latest/?badge=latest
