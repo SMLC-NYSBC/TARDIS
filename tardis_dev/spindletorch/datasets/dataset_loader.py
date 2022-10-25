@@ -100,7 +100,7 @@ class PredictionDataSet(Dataset):
         img = tifffile.imread(img_file)
         img = np.array(img, dtype='uint8')
 
-        """Pre-process image and mask"""
+        """Pre-process image and mask - no transformation and mask"""
         img = preprocess(image=img,
                          mask=None,
                          size=img.shape,

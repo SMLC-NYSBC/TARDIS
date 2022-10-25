@@ -14,14 +14,14 @@ class EncoderBlock(nn.Module):
     Args:        
         in_ch (int): Number of input channels.
         out_ch (int): Number of output channels.
-        conv_module: Single, Double or RCNN convolution block.
+        conv_module (conv_module): Single, Double or RCNN convolution block.
         conv_kernel (int): Convolution kernel size.
         max_pool (int): If True nn.MaxPool is applied.
         pool_kernel (int): Kernel size for max pooling.
         dropout (float, optional): Optionals, dropout rate.
-        padding: Padding size for the convolution.
-        components: Components that are used for conv. block.
-        num_group: Num. of groups for the nn.GroupNorm.
+        padding (int): Padding size for the convolution.
+        components (str): Components that are used for conv. block.
+        num_group (int): Num. of groups for the nn.GroupNorm.
             None -> if nn.GroupNorm is not used.
     """
 
@@ -106,14 +106,14 @@ def build_encoder(in_ch: int,
     Args:
         in_ch (int): Number of input channels.
         conv_layers (int): Number of convolution layers.
-        conv_layer_scaler: Number of channel by which each CNN block is scaled up.
-        conv_module: Single, Double or RCNN convolution block.
+        conv_layer_scaler (int): Number of channel by which each CNN block is scaled up.
+        conv_module (conv_module): Single, Double or RCNN convolution block.
         conv_kernel (int): Convolution kernel size.
         pool_kernel (int): Kernel size for max pooling.
         dropout (float, optional): Optionals, dropout rate.
-        padding: Padding size for the convolution.
-        components: Components that are used for conv. block.
-        num_group: Num. of groups for the nn.GroupNorm.
+        padding (int): Padding size for the convolution.
+        components (str): Components that are used for conv. block.
+        num_group (int): Num. of groups for the nn.GroupNorm.
             None -> if nn.GroupNorm is not used.
 
     Returns: 

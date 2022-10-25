@@ -10,8 +10,7 @@ class GeLU(nn.Module):
     CUSTOM GAUSSIAN ERROR LINEAR UNITS ACTIVATION FUNCTION
 
     Args:
-        tanh: hyperbolic tangent value for GeLU
-        x: torch input for activation.
+        tanh (float): hyperbolic tangent value for GeLU
     """
 
     def __init__(self,
@@ -25,6 +24,15 @@ class GeLU(nn.Module):
 
     def forward(self,
                 x: torch.Tensor) -> torch.Tensor:
+        """
+        Forward GeLu transformation.
+
+        Args:
+            x (torch.Tensor): Image tensor to transform.
+
+        Returns:
+            torch.Tensor: Transformed image tensor.
+        """
         return x * 0.5 * (1.0 + torch.erf(x / self.tanh))
 
 

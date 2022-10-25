@@ -20,9 +20,9 @@ class DecoderBlockCNN(nn.Module):
         out_ch (int): Number of output channels.
         size (int): Size for the resampling.
         dropout (float, optional): Optional, dropout rate.
-        components: String list of components from which convolution block
+        components (Str): String list of components from which convolution block
             is composed
-        num_group: No. of groups for nn.GroupNorm()
+        num_group (int): No. of groups for nn.GroupNorm()
     """
 
     def __init__(self,
@@ -104,9 +104,9 @@ class DecoderBlockRCNN(nn.Module):
         out_ch (int): Number of output channels.
         size (int): Size for the resampling.
         dropout (float, optional): Optional, dropout rate.
-        components: String list of components from which convolution block
+        components (str): String list of components from which convolution block
             is composed
-        num_group: No. of groups for nn.GroupNorm()
+        num_group (int): No. of groups for nn.GroupNorm()
     """
 
     def __init__(self,
@@ -198,13 +198,13 @@ class DecoderBlockUnet3Plus(nn.Module):
         out_ch (int): Number of output channels.
         size (int): Size for the resampling.
         dropout (float, optional): Optional, dropout rate.
-        components: String list of components from which convolution block
+        components (str): String list of components from which convolution block
             is composed.
         num_group (int): Number ofr groups inc CNN block.
         num_layers (int): Number of CNN layers.
         decoder_feature_ch (list): List of decoder outputs.
         encoder_feature_ch (list): List of encode outputs.
-        num_group: No. of groups for nn.GroupNorm()
+        num_group (int): No. of groups for nn.GroupNorm()
     """
 
     def __init__(self,
@@ -375,8 +375,8 @@ def build_decoder(conv_layers: int,
                   conv_layer_scaler: int,
                   components: str,
                   num_group: int,
+                  sizes: list,
                   dropout: Optional[float] = None,
-                  sizes=None,
                   deconv_module='CNN'):
     """
     Decoder wrapper for entire CNN model.
@@ -388,16 +388,14 @@ def build_decoder(conv_layers: int,
     Args:
         conv_layers: Number of deconvolution layers.
         conv_layer_scaler: Number of channel by which each CNN block is scaled up.
-        conv_kernel (int): Convolution kernel size.
-        padding: Padding size for the convolution.
-        components: Components that are used for deconvolution block.
-        num_group: Num. of groups for the nn.GroupNorm.
+        components (str): Components that are used for deconvolution block.
+        sizes (list): List of tensor sizes for upscaling.
+        num_group (int): Num. of groups for the nn.GroupNorm.
             None -> if nn.GroupNorm is not used.
-        up_sampling: If True the up-sampling is applied.
         deconv_module: Module of the deconvolution for decoder.
 
     Returns:
-        nn.ModuleList: List of decoders blocks
+        nn.ModuleList: List of decoders blocks.
     """
     decoders = []
     feature_map = number_of_features_per_level(channel_scaler=conv_layer_scaler,
