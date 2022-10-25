@@ -6,7 +6,7 @@ from typing import Optional
 import numpy as np
 
 
-def build_train_dataset(dir: str,
+def move_train_dataset(dir: str,
                         coord_format: tuple,
                         with_img: bool,
                         img_format: Optional[tuple] = None) -> list:

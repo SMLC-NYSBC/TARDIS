@@ -8,7 +8,7 @@ import torch
 
 from tardis_dev.dist_pytorch.trainer import train_dist
 from tardis_dev.dist_pytorch.datasets.dataloader import build_dataset
-from tardis_dev.utils.dataset import build_test_dataset, build_train_dataset
+from tardis_dev.utils.dataset import build_test_dataset, move_train_dataset
 from tardis_dev.utils.device import get_device
 from tardis_dev.utils.logo import Tardis_Logo
 from tardis_dev.utils.utils import check_dir
@@ -185,10 +185,10 @@ def main(dir: str,
         mkdir(TEST_COORD_DIR)
 
         # Build train and test dataset
-        build_train_dataset(dir=dir,
-                            coord_format=COORD_FORMAT,
-                            with_img=False,
-                            img_format=None)
+        move_train_dataset(dir=dir,
+                           coord_format=COORD_FORMAT,
+                           with_img=False,
+                           img_format=None)
 
         build_test_dataset(dataset_dir=dir,
                            train_test_ration=train_test_ratio,
