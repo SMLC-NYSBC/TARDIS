@@ -1,0 +1,107 @@
+import numpy as np
+
+
+def number_of_features_per_level(channel_scaler: int,
+                                 num_levels: int) -> int:
+    """
+    Compute list of output channels for CNN.
+
+    Features = channel_scaler * 2^k
+        where: 
+        - k is layer number
+
+    Args:
+        channel_scaler (int): Number of initial input channels for CNN.
+        num_levels (int): Number of channels from max_number_of_conv_layer().
+
+    Returns:
+        list: List of output channels.
+    """
+    return [channel_scaler * 2 ** k for k in range(num_levels)]
+
+
+def max_number_of_conv_layer(img=None,
+                             input_volume=64,
+                             max_out=8,
+                             kernel_size=3,
+                             padding=1,
+                             stride=1,
+                             pool_size=2,
+                             pool_stride=2,
+                             first_max_pool=False) -> int:
+    """
+    Calculate maximum possible number of layers given image size.
+
+    Based on the torch input automatically select number of convolution blocks,
+    based on a standard settings.
+
+        I = [(W - K + 2*P) / S] + 1
+        Out_size = [(I - F) / S] + 1
+        - W is the input volume
+        - K is the Kernel size
+        - P is the padding
+        - S is the stride
+        - F is the max pooling kernel size
+
+    Args:
+        img: Tensor Image data if from which size of data is calculated
+        input_volume: Size of the multiplayer for the convolution
+        max_out: Maximal output dimension after maxpooling
+        kernel_size: Kernel size for the convolution
+        padding: Padding size for the convolution blocks
+        stride: Stride for the convolution blocks
+        pool_size: Max Pooling kernel size
+        pool_stride: Max Pooling stride size
+        first_max_pool: If first CNN block has max pooling
+
+    Returns:
+        int: Maximum number of CNN layers.
+    """
+    if img is not None:
+        # In case of anisotropic image select smallest size
+        # to calculate max conv layers
+        if len(img.shape) == 5:
+            size = np.array(list(img.shape[2:]))
+        elif len(img.shape) == 4:
+            size = np.array(list(img.shape[1:]))
+        else:
+            size = np.array(list(img.shape))
+
+        size = size[size.argmin()]
+        input_volume = size
+
+    max_layers = 0
+
+    while input_volume >= max_out:
+        img_window = ((input_volume - kernel_size + 2 * padding) / stride) + 1
+        input_volume = ((img_window - pool_size) / pool_stride) + 1
+        max_layers += 1
+
+    if first_max_pool:
+        max_layers -= 1
+
+    return max_layers
+
+
+def normalize_image(image: np.ndarray) -> np.ndarray:
+    """
+    Simple image data normalizer between 0,1.
+
+    Args:
+        image: Image data set
+
+    Returns:
+        np.ndarray: Normalized image between 0 and 1 values.
+    """
+    image_min = np.min(image)
+    image_max = np.max(image)
+
+    if image_min == 0 and image_max == 1:
+        return image
+
+    if image_min == 0:
+        image = np.where(image > image_min, 1, 0)
+    elif image_max == 0:
+        image = np.where(image < image_max, 1, 0)
+
+    return image

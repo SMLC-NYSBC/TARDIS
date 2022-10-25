@@ -7,7 +7,7 @@ import click
 import torch
 
 from tardis_dev.dist_pytorch.trainer import train_dist
-from tardis_dev.dist_pytorch.utils.dataloader import build_dataset
+from tardis_dev.dist_pytorch.datasets.dataloader import build_dataset
 from tardis_dev.utils.dataset import build_test_dataset, build_train_dataset
 from tardis_dev.utils.device import get_device
 from tardis_dev.utils.logo import Tardis_Logo
