@@ -20,8 +20,7 @@ DIST
    DIST -> Visualizer <dist_pytorch/visualize>
    DIST -> Utils <dist_pytorch/utils>
 
-   .. SpindleTorch <spindletorch/spindletorch>
-   .. SpindleTorch -> SpindleTorch modules <SpindleTorch/modules>
+
 Global
 ======
 .. toctree::
