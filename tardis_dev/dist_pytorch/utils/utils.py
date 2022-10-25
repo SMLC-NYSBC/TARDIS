@@ -1,3 +1,6 @@
+from os import listdir
+from os.path import join
+from shutil import move
 from typing import Optional
 
 import numpy as np
@@ -107,3 +110,45 @@ def point_in_bb(points: np.ndarray,
         bb_filter = np.logical_and(bound_x, bound_y)
 
     return bb_filter
+
+
+def check_model_dict(model_dict: dict) -> dict:
+    """
+    Check and rebuild model structure dictionary to ensure back-compatibility.
+
+    Args:
+        model_dict (dict): Model structure dictionary.
+
+    Returns:
+        dict: Standardize model structure dictionary.
+    """
+    new_dict = {}
+
+    for key, value in model_dict.items():
+        if key.endswith('type'):
+            new_dict['dist_type'] = value
+        if key.endswith('out'):
+            new_dict['n_out'] = value
+        if key.endswith('node_input'):
+            new_dict['node_input'] = value
+        if key.endswith('node_dim'):
+            new_dict['node_dim'] = value
+        if key.endswith('edge_dim'):
+            new_dict['edge_dim'] = value
+        if key.endswith('layers'):
+            new_dict['num_layers'] = value
+        if key.endswith('heads'):
+            new_dict['num_heads'] = value
+        if key.endswith('cls'):
+            new_dict['num_cls'] = value
+        if key.endswith('sigma'):
+            new_dict['coord_embed_sigma'] = value
+        if key.endswith('dropout') or key.startswith('dropout'):
+            new_dict['dropout_rate'] = value
+        if key.endswith('structure'):
+            new_dict['structure'] = value
+
+    if 'num_cls' not in new_dict:
+        new_dict['num_cls'] = None
+
+    return new_dict

@@ -1,5 +1,5 @@
 import glob
-from os import mkdir, rename
+from os import mkdir, rename, listdir
 from os.path import isdir, join
 from shutil import rmtree
 
@@ -60,3 +60,67 @@ def clean_up(dir: str):
         dir (str): Main directory where temp dir is located.
     """
     rmtree(join(dir, 'temp'))
+
+
+def check_dir(dir: str,
+              train_img: str,
+              train_mask: str,
+              img_format: tuple,
+              test_img: str,
+              test_mask: str,
+              mask_format: tuple,
+              with_img: bool):
+    """
+    Check list used to evaluate if directory containing dataset for CNN.
+
+    Args:
+        dir (str): Main directory with all files.
+        train_img (str): Directory name with images for training.
+        train_mask (str): Directory name with mask images for training.
+        img_format (tuple): Allowed image format.
+        test_img (str): Directory name with images for validation.
+        test_mask (str): Directory name with mask images for validation.
+        mask_format (tuple): Allowed mask image format.
+        with_img (bool): GraphFormer bool value for training with/without images.
+    """
+    dataset_test = False
+    if isdir(join(dir, 'train')) and isdir(join(dir, 'test')):
+        dataset_test = True
+
+        if with_img:
+            # Check if train img and coord exist and have same files
+            if isdir(train_img) and isdir(train_mask):
+                if len([f for f in listdir(train_img)
+                        if f.endswith(img_format)]) == len([f for f in listdir(train_mask)
+                                                            if f.endswith(mask_format)]):
+                    if len([f for f in listdir(train_img) if f.endswith(img_format)]) == 0:
+                        dataset_test = False
+                else:
+                    dataset_test = False
+
+            # Check if test img and mask exist and have same files
+            if isdir(test_img) and isdir(test_mask):
+                if len([f for f in listdir(test_img)
+                        if f.endswith(img_format)]) == len([f for f in listdir(test_mask)
+                                                            if f.endswith(mask_format)]):
+                    if len([f for f in listdir(test_img) if f.endswith(img_format)]) == 0:
+                        dataset_test = False
+                else:
+                    dataset_test = False
+        else:
+            if isdir(train_img) and isdir(train_mask):
+                if len([f for f in listdir(train_mask) if f.endswith(mask_format)]) > 0:
+                    pass
+                else:
+                    dataset_test = False
+            else:
+                dataset_test = False
+
+            if isdir(test_img) and isdir(test_mask):
+                if len([f for f in listdir(test_mask) if f.endswith(mask_format)]) > 0:
+                    pass
+                else:
+                    dataset_test = False
+            else:
+                dataset_test = False
+    return dataset_test

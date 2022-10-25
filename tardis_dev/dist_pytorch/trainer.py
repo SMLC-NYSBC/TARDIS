@@ -1,12 +1,16 @@
+import sys
+from os import getcwd
 from typing import Optional
 
 import torch
 from tardis_dev.dist_pytorch.dist import C_DIST, DIST
+from tardis_dev.dist_pytorch.train import C_DistTrainer, DistTrainer
+from tardis_dev.dist_pytorch.utils.utils import check_model_dict
+from tardis_dev.utils.device import get_device
+from tardis_dev.utils.logo import Tardis_Logo
 from tardis_dev.utils.losses import BCELoss, CELoss, DiceLoss
 from torch import optim
 from torch.optim.lr_scheduler import StepLR
-from tardis_dev.dist_pytorch.train import DistTrainer, C_DistTrainer
-from os import getcwd
 
 # Setting for stable release to turn off all debug APIs
 torch.backends.cudnn.benchmark = True
@@ -26,8 +30,27 @@ def train_dist(train_dataloader,
                device='gpu',
                epochs=1000):
     """
+    Wrapper for DIST or C_DIST models.
 
+    Args:
+        train_dataloader (torch.DataLoader): 
+        test_dataloader (torch.DataLoader): 
+        model_structure (dict):
+        dist_checkpoint (None, optional):
+        loss_function (str):
+        learning_rate (float)
+        learning_rate_scheduler (bool):
+        early_stop_rate (int):
+        device (torch.device):
+        epochs (int):
     """
+    """Check input variable"""
+    model_structure = check_model_dict(model_structure)
+
+    if not isinstance(device, torch.device) and isinstance(device, str):
+        device = get_device(device)
+
+    """Build DIST model"""
     if model_structure['dist_type'] == 'instance':
         model = DIST(n_out=model_structure['n_out'],
                      node_input=model_structure['node_input'],
@@ -51,7 +74,12 @@ def train_dist(train_dataloader,
                        dropout_rate=model_structure['dropout_rate'],
                        structure=model_structure['structure'],
                        predict=False)
+    else:
+        tardis_logo = Tardis_Logo()
+        tardis_logo(text_1=f'ValueError: Model type: {type} is not supported!')
+        sys.exit()
 
+    """Build TARDIS progress bar output"""
     print_setting = [f"Training is started on {device}",
                      f"Local dir: {getcwd()}",
                      f"Training for {model_structure['dist_type']} with "
@@ -61,7 +89,7 @@ def train_dist(train_dataloader,
                      f"{model_structure['edge_dim']} edges, "
                      f"{model_structure['coord_embed_sigma']} sigma"]
 
-    """Load checkpoint for retraining"""
+    """Optionally: Load checkpoint for retraining"""
     if dist_checkpoint is not None:
         save_train = torch.load(dist_checkpoint, map_location=device)
 
@@ -81,17 +109,18 @@ def train_dist(train_dataloader,
     elif loss_function == 'ce':
         loss_fn = CELoss()
 
-    """Define Optimizer for training"""
+    """Build training optimizer"""
     optimizer = optim.Adam(params=model.parameters(),
                            lr=learning_rate)
 
+    """Optionally: Checkpoint model"""
     if dist_checkpoint is not None:
         optimizer.load_state_dict(save_train['optimizer_state_dict'])
 
         save_train = None
         del save_train
 
-    """Learning rate for the optimizer"""
+    """Optionally: Build learning rate scheduler"""
     if learning_rate_scheduler:
         learning_rate_scheduler = StepLR(optimizer, step_size=2, gamma=0.5)
     else:
