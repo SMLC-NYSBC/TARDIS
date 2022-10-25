@@ -12,6 +12,9 @@ setup(
     author_email='rkiewisz@nysbc.com',
     python_requires='>=3.7',
     install_requires=required,
+    dependency_links=[
+        'https://download.pytorch.org/whl/cu116'
+        ],
     classifiers=['Development Status :: Alpha Release',
                  'Intended Audience :: Developers/Research',
                  'Environment :: Console/WebApp',
