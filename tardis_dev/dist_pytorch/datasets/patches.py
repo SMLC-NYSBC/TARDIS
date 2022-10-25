@@ -2,7 +2,7 @@ from typing import Optional
 
 import numpy as np
 import torch
-from tardis_dev.dist_pytorch.utils.augmentation import BuildGraph
+from tardis_dev.dist_pytorch.datasets.augmentation import BuildGraph
 
 
 class PatchDataSet:

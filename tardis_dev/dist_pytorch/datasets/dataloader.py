@@ -4,8 +4,8 @@ from shutil import rmtree
 
 import numpy as np
 import torch
-from tardis_dev.dist_pytorch.utils.augmentation import preprocess_data
-from tardis_dev.dist_pytorch.utils.patches import PatchDataSet
+from tardis_dev.dist_pytorch.datasets.augmentation import preprocess_data
+from tardis_dev.dist_pytorch.datasets.patches import PatchDataSet
 from tardis_dev.dist_pytorch.utils.utils import pc_median_dist
 from tardis_dev.utils.load_data import load_ply_partnet, load_ply_scannet
 from torch.utils.data import DataLoader, Dataset
