@@ -1,8 +1,8 @@
 TARDIS
 ======
 
-.. image:: https://img.shields.io/badge/release-0.1.0_beta2-success
-        :target: https://img.shields.io/badge/release-0.1.0_beta2-success
+.. image:: https://img.shields.io/badge/release-0.1.0_beta1-success
+        :target: https://img.shields.io/badge/release-0.1.0_beta1-success
 
 .. image:: https://readthedocs.org/projects/tardis-pytorch/badge/?version=latest
         :target: https://tardis-pytorch.readthedocs.io/en/latest/?badge=latest
@@ -12,8 +12,8 @@ Python based software for generali instance segmentation of object from electron
 cryo-EM micrographs. Software package is builded on general workflow where predicted semantic segmentation 
 is used for instance segmentation of 2D/3D and 4D/5D fluorescent images in the future.
 
-.. image:: ../../resources/workflow.jpg
-        :target: ../../resources/workflow.jpg
+.. image:: resources/workflow.jpg
+        :target: resources/workflow.jpg
         :alt: TARDIS workflow
 
 
@@ -33,7 +33,7 @@ Requirements
 	conda install --file requirements.txt
 
 or install following requirements:
-	.. include:: ../../requirements.txt
+	.. include:: requirements.txt
 		:literal:
 
 
@@ -57,9 +57,4 @@ You can either clone the public repository:
 
 Usage
 -----
-**!IMPORTANT!** 
-
-Training expect to be in a directory which contains 2 folders: 
-data/train/ and data/test both of which should have ./imgs and ./masks folders
-
 Coming Soon!
