@@ -33,16 +33,17 @@ def train_dist(train_dataloader,
     Wrapper for DIST or C_DIST models.
 
     Args:
-        train_dataloader (torch.DataLoader): 
-        test_dataloader (torch.DataLoader): 
-        model_structure (dict):
-        dist_checkpoint (None, optional):
-        loss_function (str):
-        learning_rate (float)
-        learning_rate_scheduler (bool):
-        early_stop_rate (int):
-        device (torch.device):
-        epochs (int):
+        train_dataloader (torch.DataLoader): DataLoader with train dataset.
+        test_dataloader (torch.DataLoader): DataLoader with test dataset.
+        model_structure (dict): Dictionary with model setting.
+        dist_checkpoint (None, optional): Optional, DIST model checkpoint.
+        loss_function (str): Type of loss function.
+        learning_rate (float): Learning rate.
+        learning_rate_scheduler (bool): If True, StepLR is used with training.
+        early_stop_rate (int): Define max. number of epoches without improvements
+        after which training is stopped.
+        device (torch.device): Device on which model is trained.
+        epochs (int): Max number of epoches.
     """
     """Check input variable"""
     model_structure = check_model_dict(model_structure)

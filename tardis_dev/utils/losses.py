@@ -24,7 +24,7 @@ class SigmoidFocalLoss(nn.Module):
 
     def forward(self,
                 logits: torch.Tensor,
-                targets: torch.Tensor):
+                targets: torch.Tensor) -> torch.Tensor:
         """
         Forward loos function
 
@@ -68,7 +68,7 @@ class DiceLoss(nn.Module):
     def forward(self,
                 logits: torch.Tensor,
                 targets: torch.Tensor,
-                smooth=1e-16):
+                smooth=1e-16) -> torch.Tensor:
         """
         Forward loos function
 
@@ -108,7 +108,7 @@ class BCEDiceLoss(nn.Module):
 
     def forward(self,
                 inputs: torch.Tensor,
-                targets: torch. Tensor):
+                targets: torch. Tensor) -> torch.Tensor:
         """
         Forward loos function
 
@@ -146,7 +146,7 @@ class BCELoss(nn.Module):
 
     def forward(self,
                 logits: torch.Tensor,
-                targets: torch.Tensor):
+                targets: torch.Tensor) -> torch.Tensor:
         """
         Forward loos function
 
@@ -177,7 +177,7 @@ class CELoss(nn.Module):
 
     def forward(self,
                 logits: torch.Tensor,
-                targets: torch.Tensor):
+                targets: torch.Tensor) -> torch.Tensor:
         """
         Forward loos function
 
@@ -213,7 +213,7 @@ class AdaptiveDiceLoss(nn.Module):
     def forward(self,
                 inputs,
                 targets,
-                smooth=1e-16):
+                smooth=1e-16) -> torch.Tensor:
         """
         Forward loos function
 
