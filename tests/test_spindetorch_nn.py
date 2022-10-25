@@ -5,8 +5,8 @@ from tardis_dev.spindletorch.utils.build_network import build_network
 
 
 class TestNetwork3D:
-    image_sizes = [16, 32, 64]
-    conv_scaler = [8, 16, 32]
+    image_sizes = [16, 32]
+    conv_scaler = [4, 8, 16]
 
     def unet_3d(self,
                 image_size: int,

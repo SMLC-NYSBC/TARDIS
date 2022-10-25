@@ -33,20 +33,20 @@ class TestGraphFormer:
     #     model.load_state_dict(weight['model_state_dict'])
 
     def test_dist_wo_rgb(self):
-        for n_dim in [64, 32, 16, None]:
-            for e_dim in [64, 32, 16]:
-                for n_layer in [6, 3, 1]:
-                    for n_head in [8, 4, 2, 1]:
+        for n_dim in [32, 16, None]:
+            for e_dim in [32, 16]:
+                for n_layer in [3, 1]:
+                    for n_head in [4, 4, 1]:
                         model = DIST(n_out=1,
-                                     node_input=0,
-                                     node_dim=n_dim,
-                                     edge_dim=e_dim,
-                                     num_layers=n_layer,
-                                     num_heads=n_head,
-                                     num_cls=None,
-                                     dropout_rate=0,
-                                     coord_embed_sigma=16,
-                                     predict=False)
+                                    node_input=0,
+                                    node_dim=n_dim,
+                                    edge_dim=e_dim,
+                                    num_layers=n_layer,
+                                    num_heads=n_head,
+                                    num_cls=None,
+                                    dropout_rate=0,
+                                    coord_embed_sigma=16,
+                                    predict=False)
                         x = model(coords=self.rand_tensor((1, 5, 3)),
                                   node_features=None)
                         assert x.shape == torch.Size((1, 1, 5, 5))
@@ -56,10 +56,10 @@ class TestGraphFormer:
                         assert x.shape == torch.Size((1, 1, 5, 5))
 
     def test_dist_w_rgb(self):
-        for n_dim in [64, 32, 16]:
-            for e_dim in [64, 32, 16]:
-                for n_layer in [6, 3, 1]:
-                    for n_head in [8, 4, 2, 1]:
+        for n_dim in [32, 16]:
+            for e_dim in [32, 16]:
+                for n_layer in [3, 1]:
+                    for n_head in [4, 4, 1]:
                         model = DIST(n_out=1,
                                      node_input=3,
                                      node_dim=n_dim,
@@ -87,10 +87,10 @@ class TestGraphFormer:
                         assert x.shape == torch.Size((1, 1, 5, 5))
 
     def test_cdist_wo_rgb(self):
-        for n_dim in [64, 32, 16, None]:
-            for e_dim in [64, 32, 16]:
-                for n_layer in [6, 3, 1]:
-                    for n_head in [8, 4, 2, 1]:
+        for n_dim in [32, 16, None]:
+            for e_dim in [32, 16]:
+                for n_layer in [3, 1]:
+                    for n_head in [4, 4, 1]:
                         model = C_DIST(n_out=1,
                                        node_input=0,
                                        node_dim=n_dim,
@@ -112,10 +112,10 @@ class TestGraphFormer:
                         assert cls.shape == torch.Size((1, 5, 200))
 
     def test_cdist_w_rgb(self):
-        for n_dim in [64, 32, 16]:
-            for e_dim in [64, 32, 16]:
-                for n_layer in [6, 3, 1]:
-                    for n_head in [8, 4, 2, 1]:
+        for n_dim in [32, 16]:
+            for e_dim in [32, 16]:
+                for n_layer in [3,  1]:
+                    for n_head in [4, 2, 1]:
                         model = C_DIST(n_out=1,
                                        node_input=3,
                                        node_dim=n_dim,
