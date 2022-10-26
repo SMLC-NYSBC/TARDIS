@@ -2,7 +2,8 @@ import shutil
 
 import torch
 import torch.nn as nn
-from tardis_dev.dist_pytorch.train import C_DistTrainer, DistTrainer
+from tardis_dev.dist_pytorch.trainer import C_DistTrainer, DistTrainer
+from tardis_dev.spindletorch.trainer import CNNTrainer
 from tardis_dev.utils.device import get_device
 from tardis_dev.utils.trainer import BasicTrainer
 from torch.utils.data import DataLoader
@@ -22,8 +23,23 @@ def test_trainer_init():
                       early_stop_rate=10,
                       checkpoint_name='test')
 
+    dl = CNNTrainer(model=nn.Conv1d(1, 2, 3),
+                    device='cpu',
+                    criterion=None,
+                    optimizer=None,
+                    print_setting=[],
+                    training_DataLoader=None,
+                    validation_DataLoader=None,
+                    lr_scheduler=None,
+                    epochs=100,
+                    early_stop_rate=10,
+                    checkpoint_name='test',
+                    structure={'cnn_type': 'unet'},
+                    classification=False)
+
     dl = DistTrainer(model=nn.Conv1d(1, 2, 3),
-                     structure={'node_input': 0},
+                     structure={'dist_type': 'instance',
+                                'node_input': 0},
                      device='cpu',
                      criterion=None,
                      optimizer=None,

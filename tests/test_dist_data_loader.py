@@ -4,9 +4,9 @@ from os.path import join
 import numpy as np
 from tardis_dev.dist_pytorch.datasets.augmentation import preprocess_data
 from tardis_dev.dist_pytorch.datasets.dataloader import (FilamentDataset,
-                                                      PartnetDataset,
-                                                      ScannetColorDataset,
-                                                      ScannetDataset)
+                                                         PartnetDataset,
+                                                         ScannetColorDataset,
+                                                         ScannetDataset)
 
 
 class TestDataLoader:

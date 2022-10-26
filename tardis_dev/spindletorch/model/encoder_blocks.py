@@ -11,7 +11,7 @@ class EncoderBlock(nn.Module):
 
     Single encoder module composed of nn.MaxPool and convolution module.
 
-    Args:        
+    Args:
         in_ch (int): Number of input channels.
         out_ch (int): Number of output channels.
         conv_module (conv_module): Single, Double or RCNN convolution block.
@@ -116,7 +116,7 @@ def build_encoder(in_ch: int,
         num_group (int): Num. of groups for the nn.GroupNorm.
             None -> if nn.GroupNorm is not used.
 
-    Returns: 
+    Returns:
         nn.ModuleList: Encoder block.
     """
     encoders = []

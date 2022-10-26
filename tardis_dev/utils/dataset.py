@@ -7,9 +7,9 @@ import numpy as np
 
 
 def move_train_dataset(dir: str,
-                        coord_format: tuple,
-                        with_img: bool,
-                        img_format: Optional[tuple] = None) -> list:
+                       coord_format: tuple,
+                       with_img: bool,
+                       img_format: Optional[tuple] = None) -> list:
     """
     Standard builder for train datasets.
 

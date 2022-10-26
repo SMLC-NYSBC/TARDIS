@@ -18,24 +18,25 @@ def build_network(network_type: str,
     """
     Wrapper for building CNN model
 
-    Wrapper take CNN parameter and predefined network type (e.g. unet, etc.), 
+    Wrapper take CNN parameter and predefined network type (e.g. unet, etc.),
     and build CNN model.
 
     Args:
-        network_type (str): Name of network [unet, resunet, unet3plus, big_unet, fnet]
-        classification (bool): If True Unet3Plus classified network output before loss
-        in_channel (int): Number of input channels
-        out_channel (int): Number of output channels
-        img_size (int): Image size used for training inference
-        dropout (float, optional): If float dropout is used
-        num_conv_layers (int): Number of convolution layers
-        conv_scaler (int): Convolution multiplayer used in each layer
+        network_type (str): Name of network [unet, resunet, unet3plus, big_unet, fnet].
+        classification (bool): If True Unet3Plus classified network output before loss.
+        in_channel (int): Number of input channels.
+        out_channel (int): Number of output channels.
+        img_size (int): Image size used for training inference.
+        dropout (float, optional): If float dropout is used.
+        num_conv_layers (int): Number of convolution layers.
+        conv_scaler (int): Convolution multiplayer used in each layer.
         layer_components (str): (2 or 3),b,g,c,l,r type of operation and order for
-            each convolution
-        num_group (int): Number of group used for groupnorm
-        prediction (bool): If True, network output softmax of the prediction
+            each convolution.
+        num_group (int): Number of group used for groupnorm.
+        prediction (bool): If True, network output softmax of the prediction.
     """
-
+    assert network_type in ['unet', 'resunet', 'unet3plus', 'fnet'], \
+        f'Wrong CNN network name {network_type}'
     if network_type == 'unet':
         return UNet(in_channels=in_channel,
                     out_channels=out_channel,

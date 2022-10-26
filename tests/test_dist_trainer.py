@@ -2,10 +2,10 @@ import os
 import shutil
 
 import torch.nn as nn
-from tardis_dev.dist_pytorch.train import C_DistTrainer, DistTrainer
-from tardis_dev.dist_pytorch.trainer import train_dist
+from tardis_dev.dist_pytorch.trainer import C_DistTrainer, DistTrainer
+from tardis_dev.dist_pytorch.train import train_dist
 from tardis_dev.dist_pytorch.datasets.dataloader import (FilamentDataset,
-                                                      ScannetColorDataset)
+                                                         ScannetColorDataset)
 from tardis_dev.utils.device import get_device
 from torch.utils.data import DataLoader
 
@@ -88,7 +88,7 @@ def test_dist_trainer():
     train_dist(train_dataloader=train_dl,
                test_dataloader=test_dl,
                model_structure=structure,
-               dist_checkpoint=None,
+               checkpoint=None,
                loss_function='bce',
                learning_rate=0.001,
                learning_rate_scheduler=False,
@@ -104,10 +104,10 @@ def test_dist_trainer():
                                           'graph_0.npy']
     shutil.rmtree('./temp_train')
 
-    assert os.listdir('./DIST_checkpoint') == ['training_losses.csv', 'model_weights.pth',
-                                               'validation_losses.csv', 'eval_metric.csv',
-                                               'DIST_checkpoint.pth']
-    shutil.rmtree('./DIST_checkpoint')
+    assert os.listdir('./instance_checkpoint') == ['training_losses.csv', 'model_weights.pth',
+                                                   'validation_losses.csv', 'eval_metric.csv',
+                                                   'instance_checkpoint.pth']
+    shutil.rmtree('./instance_checkpoint')
 
 
 def test_c_dist_trainer():
@@ -146,7 +146,7 @@ def test_c_dist_trainer():
     train_dist(train_dataloader=train_dl,
                test_dataloader=test_dl,
                model_structure=structure,
-               dist_checkpoint=None,
+               checkpoint=None,
                loss_function='bce',
                learning_rate=0.001,
                learning_rate_scheduler=False,
@@ -160,7 +160,7 @@ def test_c_dist_trainer():
     assert os.listdir('./temp_train') == ['coords_0.npy', 'rgb_0.npy', 'out_0.npy', 'cls_0.npy', 'graph_0.npy']
     shutil.rmtree('./temp_train')
 
-    assert os.listdir('./DIST_checkpoint') == ['training_losses.csv', 'model_weights.pth',
-                                               'validation_losses.csv', 'eval_metric.csv',
-                                               'DIST_checkpoint.pth']
-    shutil.rmtree('./DIST_checkpoint')
+    assert os.listdir('./semantic_checkpoint') == ['training_losses.csv', 'model_weights.pth',
+                                                   'validation_losses.csv', 'eval_metric.csv',
+                                                   'semantic_checkpoint.pth']
+    shutil.rmtree('./semantic_checkpoint')

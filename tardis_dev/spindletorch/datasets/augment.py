@@ -1,5 +1,3 @@
-from argparse import ArgumentError
-import re
 from typing import Optional
 import numpy as np
 from skimage import exposure
@@ -103,8 +101,8 @@ class MinMaxNormalize:
     IMAGE NORMALIZATION BETWEEN MIN AND MAX VALUE
 
     Args:
-        min (int): Minimal value for initialize normalization e.g. 0
-        max (int): Maximal value for initialize normalization e.g. 255
+        min (int): Minimal value for initialize normalization e.g. 0.
+        max (int): Maximal value for initialize normalization e.g. 255.
     """
 
     def __init__(self,
@@ -154,7 +152,7 @@ class RescaleNormalize:
         self.norm = SimpleNormalize()
 
     def __call__(self,
-                 x: np.ndarray):
+                 x: np.ndarray) -> np.ndarray:
         """
         Call for normalization.
 
@@ -222,7 +220,7 @@ class RandomRotation:
 
     def __call__(self,
                  x: np.ndarray,
-                 y: np.ndarray):
+                 y: np.ndarray) -> np.ndarray:
         """
         Call for random rotation.
 
@@ -257,7 +255,7 @@ class ComposeRandomTransformation:
 
     Args:
         transformations: list of transforms objects from which single
-            or multiple transformations will be selected
+            or multiple transformations will be selected.
     """
 
     def __init__(self,
@@ -267,7 +265,7 @@ class ComposeRandomTransformation:
 
     def __call__(self,
                  x: np.ndarray,
-                 y: np.ndarray):
+                 y: np.ndarray) -> np.ndarray:
         """
         Call for random transformation.
 
@@ -293,7 +291,7 @@ def preprocess(image: np.ndarray,
                transformation: bool,
                size: int,
                mask: Optional[np.ndarray] = None,
-               output_dim_mask=1):
+               output_dim_mask=1) -> np.ndarray:
     """
     Module to augment dataset.
 
@@ -305,6 +303,10 @@ def preprocess(image: np.ndarray,
             same random effect.
         size (int): Image size output for center crop.
         output_dim_mask (int): Number of output channel dimensions for label mask.
+
+    Returns:
+        np.ndarray: Image and optionally label mask after transformation and
+            normalization
     """
     # Check if image is 2D or 3D
     assert image.ndim in [2, 3]

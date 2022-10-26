@@ -6,8 +6,8 @@ from tardis_dev.spindletorch.datasets.augment import (MinMaxNormalize,
                                                       RescaleNormalize,
                                                       SimpleNormalize,
                                                       preprocess)
-from tardis_dev.spindletorch.datasets.dataset_loader import (CNNDataset,
-                                                             PredictionDataset)
+from tardis_dev.spindletorch.datasets.dataloader import (CNNDataset,
+                                                         PredictionDataset)
 
 
 def test_dataloader():

@@ -65,9 +65,9 @@ class CNNDataset(Dataset):
         # Load image and corresponding label mask
         img, mask = tifffile.imread(img_file), tifffile.imread(mask_file)
         img, mask = np.array(img, dtype='uint8'), np.array(mask, dtype='uint8')
-        assert img.min() >=0 and img.max() <= 255
+        assert img.min() >= 0 and img.max() <= 255
         assert np.sum(img) != 0
-        assert mask.min() >=0 and mask.max() <= 255
+        assert mask.min() >= 0 and mask.max() <= 255
         assert np.sum(mask) != 0
 
         # Process image and mask
@@ -122,7 +122,7 @@ class PredictionDataset(Dataset):
         # Load image
         img = tifffile.imread(img_file)
         img = np.array(img, dtype='uint8')
-        assert img.min() >=0 and img.max() <= 255
+        assert img.min() >= 0 and img.max() <= 255
         assert np.sum(img) != 0
 
         # Process image and mask

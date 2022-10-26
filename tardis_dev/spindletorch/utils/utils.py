@@ -7,7 +7,7 @@ def number_of_features_per_level(channel_scaler: int,
     Compute list of output channels for CNN.
 
     Features = channel_scaler * 2^k
-        where: 
+        where:
         - k is layer number
 
     Args:
@@ -44,15 +44,15 @@ def max_number_of_conv_layer(img=None,
         - F is the max pooling kernel size
 
     Args:
-        img: Tensor Image data if from which size of data is calculated
-        input_volume: Size of the multiplayer for the convolution
-        max_out: Maximal output dimension after maxpooling
-        kernel_size: Kernel size for the convolution
-        padding: Padding size for the convolution blocks
-        stride: Stride for the convolution blocks
-        pool_size: Max Pooling kernel size
-        pool_stride: Max Pooling stride size
-        first_max_pool: If first CNN block has max pooling
+        img (np.ndarray, optional): Tensor Image data if from which size of data is calculated.
+        input_volume (int): Size of the multiplayer for the convolution.
+        max_out (int): Maximal output dimension after maxpooling.
+        kernel_size (int): Kernel size for the convolution.
+        padding (int): Padding size for the convolution blocks.
+        stride: (int) Stride for the convolution blocks.
+        pool_size (int) Max Pooling kernel size.
+        pool_stride (int): Max Pooling stride size.
+        first_max_pool (bool): If first CNN block has max pooling.
 
     Returns:
         int: Maximum number of CNN layers.
@@ -88,7 +88,7 @@ def normalize_image(image: np.ndarray) -> np.ndarray:
     Simple image data normalizer between 0,1.
 
     Args:
-        image: Image data set
+        image: Image data set.
 
     Returns:
         np.ndarray: Normalized image between 0 and 1 values.
@@ -105,3 +105,46 @@ def normalize_image(image: np.ndarray) -> np.ndarray:
         image = np.where(image < image_max, 1, 0)
 
     return image
+
+
+def check_model_dict(model_dict: dict) -> dict:
+    """
+    Check and rebuild model structure dictionary to ensure back-compatibility.
+
+    Args:
+        model_dict (dict): Model structure dictionary.
+
+    Returns:
+        dict: Standardize model structure dictionary.
+    """
+    new_dict = {}
+
+    for key, value in model_dict.items():
+        if key.endswith('type'):
+            new_dict['cnn_type'] = value
+        if key.endswith('cation'):
+            new_dict['classification'] = value
+        if key.endswith('_in') or key.startswith('in_'):
+            new_dict['in_channel'] = value
+        if key.endswith('_out') or key.startswith('out_'):
+            new_dict['out_channel'] = value
+        if key.endswith('size'):
+            new_dict['img_size'] = value
+        if key.endswith('dropout'):
+            new_dict['dropout'] = value
+        if key.endswith('layers'):
+            new_dict['num_conv_layers'] = value
+        if key.endswith('scaler') or key.endswith('multiplayer'):
+            new_dict['conv_scaler'] = value
+        if key.endswith('v_kernel'):
+            new_dict['conv_kernel'] = value
+        if key.endswith('padding'):
+            new_dict['conv_padding'] = value
+        if key.endswith('l_kernel'):
+            new_dict['maxpool_kernel'] = value
+        if key.endswith('components'):
+            new_dict['layer_components'] = value
+        if key.endswith('group'):
+            new_dict['num_group'] = value
+
+    return new_dict

@@ -26,6 +26,7 @@ class BasicTrainer:
         early_stop_rate (int): Number of epoches without improvement after which
             Trainer stop training.
         checkpoint_name (str): Name of the checkpoint.
+        cnn (bool): If True expect CNN model parameters.
     """
 
     def __init__(self,
@@ -40,7 +41,8 @@ class BasicTrainer:
                  lr_scheduler=None,
                  epochs=100,
                  early_stop_rate=10,
-                 checkpoint_name="DIST"):
+                 checkpoint_name="DIST",
+                 classification=False):
         super(BasicTrainer, self).__init__()
 
         self.model = model.to(device)
@@ -51,10 +53,13 @@ class BasicTrainer:
         self.epochs = epochs
         self.early_stop_rate = early_stop_rate
         self.checkpoint_name = checkpoint_name
-
         self.structure = structure
-        if 'node_input' in structure:
-            self.node_input = structure['node_input']
+
+        if 'cnn_type' in self.structure:
+            self.classification = classification
+        elif 'dist_type' in self.structure:
+            if 'node_input' in structure:
+                self.node_input = structure['node_input']
 
         self.training_DataLoader = training_DataLoader
         self.validation_DataLoader = validation_DataLoader
@@ -118,6 +123,24 @@ class BasicTrainer:
                             text_9=loss_desc,
                             text_10=printProgressBar(idx,
                                                      len(self.training_DataLoader)))
+
+    def _mid_training_eval(self,
+                           idx):
+        if idx % (len(self.training_DataLoader) // 4) == 0:
+            self._validate()
+
+            self.epoch_desc = self._update_desc(self.early_stopping.counter,
+                                                [round(np.max(self.f1), 3),
+                                                 self.f1[-1:]])
+
+            # Update checkpoint weights if validation loss dropped
+            if all(self.f1[-1:][0] >= i for i in self.f1[:-1]):
+                torch.save({'model_struct_dict': self.structure,
+                            'model_state_dict': self.model.state_dict(),
+                            'optimizer_state_dict': self.optimizer.state_dict()},
+                           join(getcwd(),
+                                f'{self.checkpoint_name}_checkpoint',
+                                f'{self.checkpoint_name}_checkpoint.pth'))
 
     def run_trainer(self):
         """

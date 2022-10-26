@@ -143,7 +143,10 @@ class Tardis_Logo:
         if is_interactive():
             WIDTH = 75
         else:
-            WIDTH = get_terminal_size()[0] - 5
+            try:
+                WIDTH = get_terminal_size()[0] - 5
+            except OSError:
+                WIDTH = 50
 
         self.CLEAR()
         if logo:

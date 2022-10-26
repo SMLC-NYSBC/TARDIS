@@ -1,253 +1,159 @@
+import sys
 from os import getcwd
-from os.path import join
+from typing import Optional
 
-import numpy as np
 import torch
-from tardis.utils.metrics import calculate_F1
-from tardis_dev.utils.trainer import BasicTrainer
-from torch import nn
+from tardis_dev.dist_pytorch.dist import C_DIST, DIST
+from tardis_dev.dist_pytorch.trainer import C_DistTrainer, DistTrainer
+from tardis_dev.dist_pytorch.utils.utils import check_model_dict
+from tardis_dev.utils.device import get_device
+from tardis_dev.utils.logo import Tardis_Logo
+from tardis_dev.utils.losses import BCELoss, CELoss, DiceLoss
+from torch import optim
+from torch.optim.lr_scheduler import StepLR
+
+# Setting for stable release to turn off all debug APIs
+torch.backends.cudnn.benchmark = True
+torch.autograd.set_detect_anomaly(mode=False)
+torch.autograd.profiler.profile(enabled=False)
+torch.autograd.profiler.emit_nvtx(enabled=False)
 
 
-class DistTrainer(BasicTrainer):
+def train_dist(train_dataloader,
+               test_dataloader,
+               model_structure: dict,
+               checkpoint: Optional[str] = None,
+               loss_function='bce',
+               learning_rate=0.001,
+               learning_rate_scheduler=False,
+               early_stop_rate=10,
+               device='gpu',
+               epochs=1000):
     """
-    DIST MODEL TRAINER
+    Wrapper for DIST or C_DIST models.
+
+    Args:
+        train_dataloader (torch.DataLoader): DataLoader with train dataset.
+        test_dataloader (torch.DataLoader): DataLoader with test dataset.
+        model_structure (dict): Dictionary with model setting.
+        checkpoint (None, optional): Optional, DIST model checkpoint.
+        loss_function (str): Type of loss function.
+        learning_rate (float): Learning rate.
+        learning_rate_scheduler (bool): If True, StepLR is used with training.
+        early_stop_rate (int): Define max. number of epoches without improvements
+        after which training is stopped.
+        device (torch.device): Device on which model is trained.
+        epochs (int): Max number of epoches.
     """
+    """Check input variable"""
+    model_structure = check_model_dict(model_structure)
 
-    def __init__(self,
-                 **kwargs):
-        super(DistTrainer, self).__init__(**kwargs)
+    if not isinstance(device, torch.device) and isinstance(device, str):
+        device = get_device(device)
 
-        self.node_input = self.structure['node_input']
+    """Build DIST model"""
+    if model_structure['dist_type'] == 'instance':
+        model = DIST(n_out=model_structure['n_out'],
+                     node_input=model_structure['node_input'],
+                     node_dim=model_structure['node_dim'],
+                     edge_dim=model_structure['edge_dim'],
+                     num_layers=model_structure['num_layers'],
+                     num_heads=model_structure['num_heads'],
+                     coord_embed_sigma=model_structure['coord_embed_sigma'],
+                     dropout_rate=model_structure['dropout_rate'],
+                     structure=model_structure['structure'],
+                     predict=False)
+    elif model_structure['dist_type'] == 'semantic':
+        model = C_DIST(n_out=model_structure['n_out'],
+                       node_input=model_structure['node_input'],
+                       node_dim=model_structure['node_dim'],
+                       edge_dim=model_structure['edge_dim'],
+                       num_layers=model_structure['num_layers'],
+                       num_heads=model_structure['num_heads'],
+                       num_cls=model_structure['num_cls'],
+                       coord_embed_sigma=model_structure['coord_embed_sigma'],
+                       dropout_rate=model_structure['dropout_rate'],
+                       structure=model_structure['structure'],
+                       predict=False)
+    else:
+        tardis_logo = Tardis_Logo()
+        tardis_logo(text_1=f'ValueError: Model type: {type} is not supported!')
+        sys.exit()
 
-    def _train(self):
-        """
-        Run model training.
-        """
-        # Update progress bar
-        self._update_progress_bar(loss_desc='Training: (loss 1.000)',
-                                  idx=0)
+    """Build TARDIS progress bar output"""
+    print_setting = [f"Training is started on {device}",
+                     f"Local dir: {getcwd()}",
+                     f"Training for {model_structure['dist_type']} with "
+                     f"No. of Layers: {model_structure['num_layers']} with "
+                     f"{model_structure['num_heads']} heads",
+                     f"Layers are build of {model_structure['node_dim']} nodes, "
+                     f"{model_structure['edge_dim']} edges, "
+                     f"{model_structure['coord_embed_sigma']} sigma"]
 
-        # Run training for DIST model
-        for idx, (e, n, g, _, _) in enumerate(self.training_DataLoader):
-            """Mid-training eval"""
-            if idx % (len(self.training_DataLoader) // 4) == 0:
-                self._validate()
+    """Optionally: Load checkpoint for retraining"""
+    if checkpoint is not None:
+        save_train = torch.load(checkpoint, map_location=device)
 
-                self.epoch_desc = self._update_desc(self.early_stopping.counter,
-                                                    [round(np.max(self.f1), 3),
-                                                     self.f1[-1:]])
+        if 'model_struct_dict' in save_train.keys():
+            model_dict = save_train['model_struct_dict']
+            globals().update(model_dict)
 
-                # Update checkpoint weights if validation loss dropped
-                if all(self.f1[-1:][0] >= i for i in self.f1[:-1]):
-                    torch.save({'model_struct_dict': self.structure,
-                                'model_state_dict': self.model.state_dict(),
-                                'optimizer_state_dict': self.optimizer.state_dict()},
-                               join(getcwd(),
-                                    f'{self.checkpoint_name}_checkpoint',
-                                    f'{self.checkpoint_name}_checkpoint.pth'))
+        model.load_state_dict(save_train['model_state_dict'])
 
-            """Training"""
-            for edge, node, graph in zip(e, n, g):
-                edge, graph = edge.to(self.device), graph.to(self.device)
-                self.optimizer.zero_grad()
+    model = model.to(device)
 
-                if self.node_input:
-                    node = node.to(self.device)
-                    out = self.model(coords=edge,
-                                     node_features=node)
-                else:
-                    out = self.model(coords=edge,
-                                     node_features=None)
+    """Define loss function for training"""
+    if loss_function == "dice":
+        loss_fn = DiceLoss()
+    elif loss_function == "bce":
+        loss_fn = BCELoss()
+    elif loss_function == 'ce':
+        loss_fn = CELoss()
 
-                # Back-propagate
-                loss = self.criterion(out[:, 0, :], graph)  # Calc. loss
-                loss.backward()  # One backward pass
-                self.optimizer.step()  # Update the parameters
+    """Build training optimizer"""
+    optimizer = optim.Adam(params=model.parameters(),
+                           lr=learning_rate)
 
-                # Store training loss metric
-                loss_value = loss.item()
-                self.training_loss.append(loss_value)
+    """Optionally: Checkpoint model"""
+    if checkpoint is not None:
+        optimizer.load_state_dict(save_train['optimizer_state_dict'])
 
-                # Update progress bar
-                self._update_progress_bar(loss_desc=f'Training: (loss {loss_value:.4f})',
-                                          idx=idx)
+        save_train = None
+        del save_train
 
-    def _validate(self):
-        """
-        Test model against validation dataset.
-        """
-        valid_losses = []
-        accuracy_mean = []
-        precision_mean = []
-        recall_mean = []
-        F1_mean = []
-        threshold_mean = []
+    """Optionally: Build learning rate scheduler"""
+    if learning_rate_scheduler:
+        learning_rate_scheduler = StepLR(optimizer, step_size=2, gamma=0.5)
+    else:
+        learning_rate_scheduler = None
 
-        for idx, (e, n, g, _, _) in enumerate(self.validation_DataLoader):
-            for edge, node, graph in zip(e, n, g):
-                edge, graph = edge.to(self.device), graph.to(self.device)
+    """Build trainer"""
+    if model_structure['dist_type'] == 'instance':
+        train = DistTrainer(model=model,
+                            structure=model_structure,
+                            device=device,
+                            criterion=loss_fn,
+                            optimizer=optimizer,
+                            print_setting=print_setting,
+                            training_DataLoader=train_dataloader,
+                            validation_DataLoader=test_dataloader,
+                            lr_scheduler=learning_rate_scheduler,
+                            epochs=epochs,
+                            early_stop_rate=early_stop_rate,
+                            checkpoint_name=model_structure['dist_type'])
+    elif model_structure['dist_type'] == 'semantic':
+        train = C_DistTrainer(model=model,
+                              structure=model_structure,
+                              device=device,
+                              criterion=loss_fn,
+                              optimizer=optimizer,
+                              print_setting=print_setting,
+                              training_DataLoader=train_dataloader,
+                              validation_DataLoader=test_dataloader,
+                              lr_scheduler=learning_rate_scheduler,
+                              epochs=epochs,
+                              early_stop_rate=early_stop_rate,
+                              checkpoint_name=model_structure['dist_type'])
 
-                with torch.no_grad():
-                    if self.node_input:
-                        node = node.to(self.device)
-                        out = self.model(coords=edge,
-                                         node_features=node)
-                    else:
-                        out = self.model(coords=edge,
-                                         node_features=None)
-
-                    loss = self.criterion(out[0, :],
-                                          graph)
-                    out = torch.sigmoid(out[:, 0, :])
-
-                acc, prec, recall, f1, th = calculate_F1(logits=out,
-                                                         targets=graph,
-                                                         best_f1=True)
-
-                # Avg. precision score
-                valid_losses.append(loss.item())
-                accuracy_mean.append(acc)
-                precision_mean.append(prec)
-                recall_mean.append(recall)
-                F1_mean.append(f1)
-                threshold_mean.append(th)
-                valid = f'Validation: (loss {loss.item():.4f} Prec: {prec:.2f} Rec: {recall:.2f} F1: {f1:.2f})'
-
-                # Update progress bar
-                self._update_progress_bar(loss_desc=valid,
-                                          idx=idx)
-
-        # Reduce eval. metric with mean
-        self.validation_loss.append(np.mean(valid_losses))
-        self.accuracy.append(np.mean(accuracy_mean))
-        self.precision.append(np.mean(precision_mean))
-        self.recall.append(np.mean(recall_mean))
-        self.threshold.append(np.mean(threshold_mean))
-        self.f1.append(np.mean(F1_mean))
-
-        # Check if average evaluation loss dropped
-        self.early_stopping(f1_score=self.f1[-1:][0])
-
-
-class C_DistTrainer(BasicTrainer):
-    """
-    C_DIST MODEL TRAINER
-    """
-
-    def __init__(self,
-                 **kwargs):
-        super(C_DistTrainer, self).__init__(**kwargs)
-
-        if self.structure['dist_type'] == 'semantic':
-            self.criterion_cls = nn.CrossEntropyLoss(reduction='mean')
-
-    def _train(self):
-        """
-        Run model training.
-        """
-        # Update progress bar
-        self._update_progress_bar(loss_desc='Training: (loss 1.000)',
-                                  idx=0)
-
-        for idx, (e, n, g, _, c) in enumerate(self.training_DataLoader):
-            """Mid-training eval"""
-            if idx % (len(self.training_DataLoader) // 4) == 0:
-                self._validate()
-
-                self.epoch_desc = self._update_desc(self.early_stopping.counter,
-                                                    [round(np.max(self.f1), 3),
-                                                     self.f1[-1:][0]])
-
-                # Update checkpoint weights if validation loss dropped
-                if all(self.f1[-1:][0] >= i for i in self.f1[:-1]):
-                    torch.save({'model_struct_dict': self.structure,
-                                'model_state_dict': self.model.state_dict(),
-                                'optimizer_state_dict': self.optimizer.state_dict()},
-                               join(getcwd(),
-                                    f'{self.checkpoint_name}_checkpoint',
-                                    f'{self.checkpoint_name}_checkpoint.pth'))
-
-            for edge, node, cls, graph in zip(e, n, c, g):
-                edge, graph = edge.to(self.device), graph.to(self.device)
-                cls = cls.to(self.device)
-                self.optimizer.zero_grad()
-
-                if self.node_input:
-                    node = node.to(self.device)
-                    out, out_cls = self.model(coords=edge,
-                                              node_features=node)
-                else:
-                    out, out_cls = self.model(coords=edge,
-                                              node_features=None)
-
-                # Back-propagate
-                loss = self.criterion(out[0, :], graph) + \
-                    self.criterion_cls(out_cls, cls)
-                loss.backward()  # One backward pass
-                self.optimizer.step()  # Update the parameters
-
-                # Store evaluation loss metric
-                loss_value = loss.item()
-                self.training_loss.append(loss_value)
-
-                # Update progress bar
-                self._update_progress_bar(loss_desc=f'Training: (loss {loss_value:.4f})',
-                                          idx=idx)
-
-    def _validate(self):
-        """
-        Test model against validation dataset.
-        """
-        valid_losses = []
-        accuracy_mean = []
-        precision_mean = []
-        recall_mean = []
-        F1_mean = []
-        threshold_mean = []
-
-        for idx, (e, n, g, _, c) in enumerate(self.validation_DataLoader):
-            for edge, node, cls, graph in zip(e, n, c, g):
-                edge, graph, cls = edge.to(self.device), \
-                    graph.to(self.device), \
-                    cls.to(self.device)
-
-                with torch.no_grad():
-                    if self.node_input:
-                        node = node.to(self.device)
-                        out, out_cls = self.model(coords=edge,
-                                                  node_features=node)
-                    else:
-                        out, out_cls = self.model(coords=edge,
-                                                  node_features=None)
-
-                    loss = self.criterion(out[0, :], graph) + \
-                        self.criterion(out_cls, cls)
-
-                    out = torch.sigmoid(out[:, 0, :])\
-
-                acc, prec, recall, f1, th = calculate_F1(logits=out,
-                                                         targets=graph,
-                                                         best_f1=True)
-
-                # Avg. precision score
-                valid_losses.append(loss.item())
-                accuracy_mean.append(acc)
-                precision_mean.append(prec)
-                recall_mean.append(recall)
-                F1_mean.append(f1)
-                threshold_mean.append(th)
-                valid = f'Validation: (loss {loss.item():.4f} Prec: {prec:.2f} Rec: {recall:.2f} F1: {f1:.2f})'
-
-                # Update progress bar
-                self._update_progress_bar(loss_desc=valid,
-                                          idx=idx)
-        # Reduce eval. metric with mean
-        self.validation_loss.append(np.mean(valid_losses))
-        self.accuracy.append(np.mean(accuracy_mean))
-        self.precision.append(np.mean(precision_mean))
-        self.recall.append(np.mean(recall_mean))
-        self.threshold.append(np.mean(threshold_mean))
-        self.f1.append(np.mean(F1_mean))
-
-        # Check if average evaluation loss dropped
-        self.early_stopping(f1_score=self.f1[-1:][0])
+    """Train"""
+    train.run_trainer()
