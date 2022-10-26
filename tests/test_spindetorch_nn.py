@@ -1,7 +1,7 @@
 from typing import Optional
 
 import torch
-from tardis_dev.spindletorch.utils.build_network import build_network
+from tardis_dev.spindletorch.spindletorch import build_network
 
 
 class TestNetwork3D:

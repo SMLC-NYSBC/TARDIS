@@ -20,7 +20,7 @@ class DecoderBlockCNN(nn.Module):
         out_ch (int): Number of output channels.
         size (int): Size for the resampling.
         dropout (float, optional): Optional, dropout rate.
-        components (Str): String list of components from which convolution block
+        components (str): String list of components from which convolution block
             is composed
         num_group (int): No. of groups for nn.GroupNorm()
     """
@@ -386,8 +386,8 @@ def build_decoder(conv_layers: int,
     torch.cat()
 
     Args:
-        conv_layers: Number of deconvolution layers.
-        conv_layer_scaler: Number of channel by which each CNN block is scaled up.
+        conv_layers (int): Number of deconvolution layers.
+        conv_layer_scaler (int): Number of channel by which each CNN block is scaled up.
         components (str): Components that are used for deconvolution block.
         sizes (list): List of tensor sizes for upscaling.
         num_group (int): Num. of groups for the nn.GroupNorm.
