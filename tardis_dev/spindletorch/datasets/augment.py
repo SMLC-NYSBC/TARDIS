@@ -1,3 +1,5 @@
+from argparse import ArgumentError
+import re
 from typing import Optional
 import numpy as np
 from skimage import exposure
@@ -5,13 +7,12 @@ from skimage import exposure
 
 class CenterCrop:
     """
-    Rescale the image and mask to a given size for 3D [DxHxW],
-    or 2D images [HxW]
+    CENTER CROP ARRAY
+
+    Rescale the image and mask to a given size for 3D [DxHxW], or 2D images [HxW].
 
     Args:
-        size: output size of image in DHW/HW
-        x: image 2D or 3D arrays
-        y: target/mask 2D or 3D arrays
+        size (int): Output size of image in DHW/HW.
     """
 
     def __init__(self,
@@ -24,8 +25,17 @@ class CenterCrop:
 
     def __call__(self,
                  x: np.ndarray,
-                 y: Optional[np.ndarray] = None):
-        """Evaluate data structure"""
+                 y: Optional[np.ndarray] = None) -> np.ndarray:
+        """
+        Call for centre crop.
+
+        Args:
+            x (np.ndarray): Image 2D or 3D arrays.
+            y (np.ndarray, optional): Optional label mask 2D or 3D arrays.
+
+        Returns:
+            np.ndarray: Cropped array.
+        """
         assert x.ndim in [2, 3]
         if y is not None:
             y.ndim in [2, 3]
@@ -59,20 +69,28 @@ class CenterCrop:
             elif x.ndim == 2:
                 return x[top_h:bottom_h, left_w:right_w]
 
+
 class SimpleNormalize:
     """
-    Normalize image vale by simple division
-
-    Args:
-        x: image or target
+    SIMPLE ARRAY NORMALIZATION FOR NP.UINT8
     """
 
     def __call__(self,
-                 x: np.ndarray):
-        if x.dtype == np.int8:
-            if x.min() > 0:
-                x = x + 128
-            x = x.astype(np.uint8)
+                 x: np.ndarray) -> np.ndarray:
+        """
+        Call for normalization.
+
+        Args:
+            x (np.ndarray): Image or label mask.
+
+        Returns:
+            np.ndarray: Normalized array.
+        """
+        assert x.dtype == np.uint8, f'Wrong datatype {x.dtype}!'
+
+        # Don't normalized if image is already between 0 and 1
+        if x.min() >= 0 and x.max() <= 1:
+            return x
 
         assert x.min() >= 0 and x.max() <= 255, \
             f'Dtype: {x.dtype}, Min: {x.min()}, Max: {x.max()}. Values not in range'
@@ -82,17 +100,16 @@ class SimpleNormalize:
 
 class MinMaxNormalize:
     """
-    Normalize image vale between 0 and 1
+    IMAGE NORMALIZATION BETWEEN MIN AND MAX VALUE
 
     Args:
-        min: Minimal value for initialize normalization e.g. 0
-        max: Maximal value for initialize normalization e.g. 255
-        x: image or target
+        min (int): Minimal value for initialize normalization e.g. 0
+        max (int): Maximal value for initialize normalization e.g. 255
     """
 
     def __init__(self,
                  min: int,
-                 max: int):
+                 max: int) -> np.ndarray:
         assert max >= min
         self.min = int(min)
         self.max = int(max)
@@ -104,38 +121,64 @@ class MinMaxNormalize:
         self.range = self.max - self.min
 
     def __call__(self,
-                 x: np.ndarray):
-        return (x - self.min) / self.range
+                 x: np.ndarray) -> np.ndarray:
+        """
+        Call for normalization.
+
+        Args:
+            x (np.ndarray): Image or label mask.
+
+        Returns:
+            np.ndarray: Normalized array.
+        """
+        x = (x - self.min) / self.range
+        x = np.where(x > 1, 1, x)
+        x = np.where(x < 0, 0, x)
+
+        return x
 
 
 class RescaleNormalize:
     """
     NORMALIZE IMAGE VALUE USING Skimage
 
-    Rescale intensity with 98% and 2% percentiles as default
+    Rescale intensity with top% and bottom% percentiles as default
 
     Args:
-        x: image or target nD arrays
+        range: Histogram percentiles range crop.
     """
 
     def __init__(self,
                  range=(2, 98)):
         self.range = range
+        self.norm = SimpleNormalize()
 
     def __call__(self,
                  x: np.ndarray):
+        """
+        Call for normalization.
+
+        Args:
+            x (np.ndarray): Image or label mask.
+
+        Returns:
+            np.ndarray: Normalized array.
+        """
         p2, p98 = np.percentile(x, self.range)
 
-        return exposure.rescale_intensity(x, in_range=(p2, p98))
+        x = exposure.rescale_intensity(x, in_range=(p2, p98))
+
+        if x.min() >= 0 and x.max() <= 255:
+            x = self.norm(x)
+
+        return x
 
 
 class RandomFlip:
     """
-    Perform 180 degree flip randomly in z,x or y axis for 3D or 4D
+    180 RANDOM FLIP ARRAY
 
-    Args:
-        x: image 2D or 3D arrays
-        y: target/mask 2D or 3D arrays
+    Perform 180 degree flip randomly in z,x or y axis for 3D or 4D
     """
 
     def __init__(self):
@@ -145,7 +188,17 @@ class RandomFlip:
 
     def __call__(self,
                  x: np.ndarray,
-                 y: np.ndarray):
+                 y: np.ndarray) -> np.ndarray:
+        """
+        Call for random flip.
+
+        Args:
+            x: 2D/3D image array.
+            y: 2D/3D label mask array.
+
+        Returns:
+            np.ndarray: Flipped array.
+        """
         if x.ndim == 2 or y.ndim == 2:
             if self.random_state == 2:
                 self.random_state = np.random.randint(0, 1)
@@ -155,11 +208,9 @@ class RandomFlip:
 
 class RandomRotation:
     """
-    Perform 90, 180 or 270 degree rotation for 2D or 3D in left or right
+    MULTIPLE 90 RANDOM ROTATION
 
-    Args:
-        x: image 2D or 3D arrays
-        y: target/mask 2D or 3D arrays
+    Perform 90, 180 or 270 degree rotation for 2D or 3D in left or right
     """
 
     def __init__(self):
@@ -172,7 +223,17 @@ class RandomRotation:
     def __call__(self,
                  x: np.ndarray,
                  y: np.ndarray):
-        """Evaluate data structure"""
+        """
+        Call for random rotation.
+
+        Args:
+            x: 2D/3D image array.
+            y: 2D/3D label mask array.
+
+        Returns:
+            np.ndarray: Rotated array.
+        """
+        # Evaluate data structure
         if self.random_direction == 0:
             if x.ndim == 2:
                 axis = (0, 1)
@@ -190,13 +251,13 @@ class RandomRotation:
 
 class ComposeRandomTransformation:
     """
+    RANDOM TRANSFORMATION WRAPPER
+
     Double wrapper for image and mask to perform random transformation
 
     Args:
         transformations: list of transforms objects from which single
             or multiple transformations will be selected
-        x: image 2D or 3D arrays
-        y: target/mask 2D or 3D arrays
     """
 
     def __init__(self,
@@ -207,7 +268,17 @@ class ComposeRandomTransformation:
     def __call__(self,
                  x: np.ndarray,
                  y: np.ndarray):
-        """Run randomize transformation"""
+        """
+        Call for random transformation.
+
+        Args:
+            x: 2D/3D image array.
+            y: 2D/3D label mask array.
+
+        Returns:
+            np.ndarray: Transformed array.
+        """
+        # Run randomize transformation
         if self.random_repetition > 0:
             for _ in range(self.random_repetition):
                 random_transf = np.random.randint(0, len(self.transforms))
@@ -224,18 +295,18 @@ def preprocess(image: np.ndarray,
                mask: Optional[np.ndarray] = None,
                output_dim_mask=1):
     """
-        Module to transform dataset and prepare them for learning
+    Module to augment dataset.
 
     Args:
-        image: 2D/3D array with image data
-        mask: 2D/3D array with semantic labels
-        normalization: normalize object to bring img to 0 and 1 values
-        transformation: perform transformation on img and mask with
-            same random effect
-        size: image size output for center crop
-        output_dim_mask: output channel dimensions for label mask
+        image (np.ndarray): 2D/3D array with image data.
+        mask (np.ndarray, optional): 2D/3D array with semantic labels.
+        normalization (str): Normalization type to bring img to 0 and 1 values.
+        transformation (bool): If True perform transformation on img and mask with
+            same random effect.
+        size (int): Image size output for center crop.
+        output_dim_mask (int): Number of output channel dimensions for label mask.
     """
-    """Evaluate data structure"""
+    # Check if image is 2D or 3D
     assert image.ndim in [2, 3]
 
     if isinstance(size, tuple):
@@ -244,7 +315,7 @@ def preprocess(image: np.ndarray,
         else:
             raise Exception
 
-    """Resize image"""
+    """Resize image if image != size"""
     if image.ndim == 3:
         if image.shape != (size, size, size):
             # resize image
@@ -264,20 +335,22 @@ def preprocess(image: np.ndarray,
 
     """Transform image randomly"""
     if transformation:
-        transformations = [RandomFlip(), RandomRotation()]
-        random_transform = ComposeRandomTransformation(transformations)
+        random_transform = ComposeRandomTransformation([RandomFlip(),
+                                                        RandomRotation()])
 
         image, mask = random_transform(image, mask)
 
     """Normalize image for value between 1 and 0"""
     if image.max() > 1:
-        if normalization is not None:
+        if normalization in ['simple', 'minmax'] and image.dtype == np.uint8:
             if normalization == "simple":
                 normalization = SimpleNormalize()
             elif normalization == "minmax":
                 normalization = MinMaxNormalize(image.min(), image.max())
-
             image = normalization(image)
+        else:
+            raise ValueError(f'Normalization type {normalization} '
+                             f'or image in wrong type {image.dtype }')
 
     """Expand dimension order for HW / DHW to CHW / CDHW"""
     image = np.expand_dims(image, axis=0)
