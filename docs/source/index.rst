@@ -8,8 +8,8 @@ Main
    Intro <README>
    History <HISTORY>
 
-DIST
-====
+SpindleTorch
+============
 .. toctree::
 
    SpindleTorch <spindletorch/spindletorch>
@@ -17,6 +17,10 @@ DIST
    SpindleTorch -> Encoder Blocks <spindletorch/encoder>
    SpindleTorch -> Decoder Blocks <spindletorch/decoder>
    SpindleTorch -> Weights initialization <spindletorch/w_init>
+
+DIST
+====
+.. toctree::
 
    DIST <dist_pytorch/dist_pytorch>
    DIST -> DIST modules <dist_pytorch/modules>
@@ -30,6 +34,8 @@ Global
 ======
 .. toctree::
 
+   Globla -> Trainer<utils/trainer>
+   Gloabl -> Import data <utils/import_data>
    Global -> Utils <utils/utils>
 
 Indices and tables
