@@ -473,8 +473,8 @@ def load_ply_scannet(ply: str,
         color (str, optional): Optional color feature defaults to None.
 
     Returns:
-    np.ndarray: Label point cloud coordinates and optionally RGB value for
-        each point.
+        np.ndarray: Label point cloud coordinates and optionally RGB value for
+            each point.
     """
     # Load .ply scannet file
     pcd = o3d.io.read_point_cloud(ply)

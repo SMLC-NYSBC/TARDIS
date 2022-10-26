@@ -12,6 +12,7 @@ TARDIS logo
 Environment setting
 -------------------
 .. automodule:: tardis_dev.utils.setup_envir
+.. automodule:: tardis_dev.utils.dataset
 
 Loss functions
 --------------
