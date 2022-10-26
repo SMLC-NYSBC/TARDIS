@@ -12,6 +12,12 @@ DIST
 ====
 .. toctree::
 
+   SpindleTorch <spindletorch/spindletorch>
+   SpindleTorch -> Convolution Blocks <spindletorch/convolution>
+   SpindleTorch -> Encoder Blocks <spindletorch/encoder>
+   SpindleTorch -> Decoder Blocks <spindletorch/decoder>
+   SpindleTorch -> Weights initialization <spindletorch/w_init>
+
    DIST <dist_pytorch/dist_pytorch>
    DIST -> DIST modules <dist_pytorch/modules>
    DIST -> Data augmentation <dist_pytorch/augmentation>
@@ -19,7 +25,6 @@ DIST
    DIST -> Patch point cloud <dist_pytorch/patches>
    DIST -> Visualizer <dist_pytorch/visualize>
    DIST -> Utils <dist_pytorch/utils>
-
 
 Global
 ======
