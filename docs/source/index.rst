@@ -34,8 +34,8 @@ Global
 ======
 .. toctree::
 
-   Globla -> Trainer<utils/trainer>
-   Gloabl -> Import data <utils/import_data>
+   Global -> Trainer<utils/trainer>
+   Global -> Import data <utils/import_data>
    Global -> Utils <utils/utils>
 
 Indices and tables
