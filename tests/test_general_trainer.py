@@ -62,7 +62,6 @@ def test_trainer_init():
                        epochs=100,
                        early_stop_rate=10,
                        checkpoint_name='test')
-    shutil.rmtree('./test_checkpoint')
 
 
 def test_trainer_utils():
@@ -89,4 +88,5 @@ def test_trainer_utils():
     try:
         dl.run_trainer()
     except AttributeError:
+        shutil.rmtree('./test_checkpoint')
         pass

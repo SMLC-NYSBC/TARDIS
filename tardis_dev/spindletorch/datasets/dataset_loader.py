@@ -10,18 +10,18 @@ from tifffile import tifffile
 from torch.utils.data import Dataset
 
 
-class VolumeDataset(Dataset):
+class CNNDataset(Dataset):
     """
     DATASET BUILDER FOR IMAGES AND SEMANTIC LABEL MASKS FOR TRAINING
 
     Args:
-        img_dir: source of the 2D/3D .tif file
-        mask_dir: source of the 2D/3D .tif  images masks
-        size: Output patch size for image and mask
-        mask_suffix: numeric value of pixel size
-        normalize: type of normalization for img data ["simple", "minmax"]
-        transform: call for random transformation on img and mask data
-        out_channels: Number of output channels
+        img_dir (str): Source of the 2D/3D .tif file.
+        mask_dir (str): Source of the 2D/3D .tif  images masks.
+        size (int): Output patch size for image and mask.
+        mask_suffix (str): Suffix name for mask images.
+        normalize (str): Type of normalization for img data ["simple", "minmax"].
+        transform (bool): Call for random transformation on img and mask.
+        out_channels (int): Number of output channels.
     """
 
     def __init__(self,
@@ -47,16 +47,30 @@ class VolumeDataset(Dataset):
         return len(self.ids)
 
     def __getitem__(self,
-                    i):
-        """Find next image and corresponding label mask image"""
+                    i: int) -> torch.Tensor:
+        """
+        Select and process dataset for CNN.
+
+        Args:
+            i (int): Image ID number.
+
+        Returns:
+            torch.Tensor: Tensor of processed image and mask.
+        """
+        # Find next image and corresponding label mask image
         idx = self.ids[i]
         mask_file = os.path.join(self.mask_dir, str(idx) + '_mask' + '.tif')
         img_file = os.path.join(self.img_dir, str(idx) + '.tif')
 
+        # Load image and corresponding label mask
         img, mask = tifffile.imread(img_file), tifffile.imread(mask_file)
         img, mask = np.array(img, dtype='uint8'), np.array(mask, dtype='uint8')
+        assert img.min() >=0 and img.max() <= 255
+        assert np.sum(img) != 0
+        assert mask.min() >=0 and mask.max() <= 255
+        assert np.sum(mask) != 0
 
-        """Pre-process image and mask"""
+        # Process image and mask
         img, mask = preprocess(image=img,
                                mask=mask,
                                size=self.size,
@@ -68,16 +82,15 @@ class VolumeDataset(Dataset):
             torch.from_numpy(mask.copy()).type(torch.float32)
 
 
-class PredictionDataSet(Dataset):
+class PredictionDataset(Dataset):
     """
     DATASET BUILDER FOR IMAGES AND SEMANTIC LABEL MASKS FOR PREDICTION
 
-    Module has turn off all transformations
+    Module has turn off all transformations.
 
     Args:
-        img_dir: source of the 2D/3D .tif file
-        size: Output patch size for image and mask
-        out_channels: Number of output channels
+        img_dir (str): Source of the 2D/3D .tif file.
+        out_channels (int): Number of output channels.
     """
 
     def __init__(self,
@@ -92,15 +105,27 @@ class PredictionDataSet(Dataset):
     def __len__(self):
         return len(self.ids)
 
-    def __getitem__(self, i):
-        """Find next image and corresponding label mask image"""
+    def __getitem__(self,
+                    i: int):
+        """
+        Select and process dataset for CNN.
+
+        Args:
+            i (int): Image ID number.
+
+        Returns:
+            torch.Tensor, str: Tensor of processed image and image file name.
+        """
         idx = self.ids[i]
         img_file = join(self.img_dir, str(idx) + '.*')
 
+        # Load image
         img = tifffile.imread(img_file)
         img = np.array(img, dtype='uint8')
+        assert img.min() >=0 and img.max() <= 255
+        assert np.sum(img) != 0
 
-        """Pre-process image and mask - no transformation and mask"""
+        # Process image and mask
         img = preprocess(image=img,
                          mask=None,
                          size=img.shape,
