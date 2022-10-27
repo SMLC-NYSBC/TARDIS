@@ -1,4 +1,3 @@
-from audioop import minmax
 import os
 from os import listdir
 from os.path import join, splitext
