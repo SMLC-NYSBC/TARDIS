@@ -113,13 +113,22 @@ class MinMaxNormalize:
         Returns:
             np.ndarray: Normalized array.
         """
-        min = x.min()
-        max = x.max()
-        x = (x - min) / (max - min)
-        x = np.where(x > 1, 1, x)
-        x = np.where(x < 0, 0, x)
+        MIN = x.min()
+        MAX = x.max()
+        assert MIN >= 0
 
-        return x.astype(np.float32)
+        if MAX <= 1:
+            x = (x - 0) / 255
+            return x.astype(np.float32)
+        elif MAX <= 255:
+            x = (x - 0) / 255
+            return x.astype(np.float32)
+        elif MAX <= 65535:
+            x = (x - 0) / 255
+            return x.astype(np.float32)
+        elif MAX <= 4294967295:
+            x = (x - 0) / 4294967295
+            return x.astype(np.float32)
 
 
 class RescaleNormalize:
@@ -148,6 +157,11 @@ class RescaleNormalize:
             np.ndarray: Normalized array.
         """
         p2, p98 = np.percentile(x, self.range)
+        if x.dtype == np.uint8:
+            if p98 >= 250:
+                p98 = 256
+            if p2 <= 5:
+                p2 = 0
 
         x = exposure.rescale_intensity(x, in_range=(p2, p98))
 
