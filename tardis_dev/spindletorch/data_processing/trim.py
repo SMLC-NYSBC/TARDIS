@@ -133,7 +133,7 @@ def trim_with_stride(image: np.ndarray,
         stride: Trimming step size
         mask: Label mask
     """
-    img_dtype = image.dtype
+    img_dtype = np.float32
 
     if mask is not None:
         mask_dtype = np.uint8
@@ -148,6 +148,8 @@ def trim_with_stride(image: np.ndarray,
     else:
         image, dim = scale_image(image=image,
                                  scale=scale)
+
+    assert img_dtype == image.dtype
 
     if image.ndim == 4 and dim == 3:  # 3D RGB
         nz, ny, nx, nc = image.shape
@@ -314,12 +316,12 @@ def trim_with_stride(image: np.ndarray,
                 else:
                     if mask is None:
                         tif.imwrite(join(output, img_name),
-                                    np.array(trim_img, dtype=img_dtype),
+                                    trim_img,
                                     shape=trim_img.shape)
 
                     else:
                         tif.imwrite(join(output, 'imgs', dtype=img_name),
-                                    np.array(trim_img, img_dtype),
+                                    trim_img,
                                     shape=trim_img.shape)
                         tif.imwrite(join(output, 'masks', f'{img_name[:-4]}_mask.tif'),
                                     np.array(trim_mask, dtype=mask_dtype),
