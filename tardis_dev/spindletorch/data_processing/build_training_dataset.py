@@ -7,7 +7,8 @@ from tardis_dev.spindletorch.data_processing.trim import trim_with_stride
 from tardis_dev.spindletorch.datasets.augment import (MinMaxNormalize,
                                                       RescaleNormalize)
 from tardis_dev.utils.load_data import ImportDataFromAmira, load_image
-from tqdm import tqdm
+
+from tardis_dev.utils.logo import Tardis_Logo, printProgressBar
 
 
 def build_train_dataset(dataset_dir: str,
@@ -47,7 +48,10 @@ def build_train_dataset(dataset_dir: str,
         trim_xy: Voxal size of output image in x and y dimension.
         trim_z: Voxal size of output image in z dimension.
     """
-    normalize = RescaleNormalize(range=(1, 99))  # Normalize histogram
+    tardis_progress = Tardis_Logo()
+    tardis_progress(title='Data pre-processing for CNN training')
+
+    normalize = RescaleNormalize(range=(0.1, 99.9))  # Normalize histogram
     minmax = MinMaxNormalize()
 
     IMG_FORMATS = ('.tif', '.am', '.mrc', '.rec')
@@ -99,8 +103,7 @@ def build_train_dataset(dataset_dir: str,
     coord = None
     img_counter = 0
 
-    batch_iter = tqdm(range(len(idx_img)))
-    for i in batch_iter:
+    for id, i in enumerate(range(len(idx_img))):
         """Load image data"""
         mask = None
         mask_name = idx_mask[i]
@@ -138,10 +141,15 @@ def build_train_dataset(dataset_dir: str,
         else:
             scale_factor = pixel_size / resize_pixel_size
 
-        batch_iter.set_description(f'Building Training dataset: \n'
-                                   f'{img_name} {mask_name} '
-                                   f'px: {pixel_size}\n'
-                                   f'scale {round(scale_factor, 2)}')
+        tardis_progress(title='Data pre-processing for CNN training',
+                        text_1='Building Training dataset:',
+                        text_2=f'Files: {img_name} {mask_name}',
+                        text_3=f'px: {pixel_size}',
+                        text_4=f'Scale: {round(scale_factor, 2)}',
+                        text_6=f'Image dtype: {image.dtype} min: {image.min()} max: {image.max()}',
+                        text_7=printProgressBar(id,
+                                                len(idx_img)))
+
         """Draw mask"""
         if coord is not None:
             assert coord.shape[1] == 4, \
@@ -154,8 +162,19 @@ def build_train_dataset(dataset_dir: str,
                                      multi_layer=multi_layer)
 
         """Check image structure and normalize histogram"""
-        image = normalize(image)  # Rescale image intensity
+        if image.min() > 5 and image.max() < 250:
+            image = normalize(image)  # Rescale image intensity
         image = minmax(image)
+        assert image.dtype == np.float32
+
+        tardis_progress(title='Data pre-processing for CNN training',
+                        text_1='Building Training dataset:',
+                        text_2=f'Files: {img_name} {mask_name}',
+                        text_3=f'px: {pixel_size}',
+                        text_4=f'Scale: {round(scale_factor, 2)}',
+                        text_6=f'Image dtype: {image.dtype} min: {image.min()} max: {image.max()}',
+                        text_7=printProgressBar(id,
+                                                len(idx_img)))
 
         """Voxalize Image and Mask"""
         trim_with_stride(image=image,
