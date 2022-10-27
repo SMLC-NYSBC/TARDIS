@@ -60,23 +60,19 @@ def test_normalization():
 
 
 class TestDataSetBuilder2D3D:
-    mask3D = np.zeros((64, 64, 64))
-    mask3D[:32, 32, :32] = 1  # draw a line
-    mask2D = np.zeros((64, 64))
-    mask2D[32, :32] = 1  # draw a line
-
     def test_data_augmentation3D(self):
         img = np.random.rand(64, 64, 64)
         img = img.astype(np.float32)
 
         img_proc, mask = preprocess(image=img,
-                                    mask=self.mask3D,
+                                    mask=img,
                                     transformation=True,
                                     size=64,
                                     output_dim_mask=1)
         assert img_proc.shape == (1, 64, 64, 64)
         assert mask.shape == (1, 64, 64, 64)
         assert img_proc.dtype == np.float32
+        assert np.all(img_proc == mask)
         assert img_proc.min() >= 0 and img_proc.max() <= 1
         assert mask.min() >= 0 and mask.max() <= 1
 
@@ -85,12 +81,13 @@ class TestDataSetBuilder2D3D:
         img = img.astype(np.float32)
 
         img_proc, mask = preprocess(image=img,
-                                    mask=self.mask2D,
+                                    mask=img,
                                     transformation=True,
                                     size=64,
                                     output_dim_mask=1)
         assert img_proc.shape == (1, 64, 64)
         assert mask.shape == (1, 64, 64)
         assert img_proc.dtype == np.float32
+        assert np.all(img_proc == mask)
         assert img_proc.min() >= 0 and img_proc.max() <= 1
         assert mask.min() >= 0 and mask.max() <= 1
