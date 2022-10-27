@@ -258,6 +258,10 @@ def import_mrc(mrc: str):
     else:
         image = np.fromfile(mrc, dtype=dtype)[-bit_len:].reshape((nz, ny, nx))
 
+    if image.min() < 0 and image.dtype == np.int8:
+        image = image + 127
+        image = image.astype(np.uint8)
+
     return image, pixel_size
 
 
@@ -391,9 +395,9 @@ def mrc_mode(mode: int,
     """
     if mode == 0:
         if amin >= 0:
-            dtype = np.uint8  # Unassigned 8-bit integer (-128 to 127)
+            dtype = np.uint8  # Unassigned 8-bit integer (0 - 254)
         elif amin < 0:
-            dtype = np.int8  # Signed 8-bit integer (0 - 254)
+            dtype = np.int8  # Signed 8-bit integer (-128 to 127)
     elif mode == 1:
         dtype = np.int16  # Signed 16-bit integer
     elif mode == 2:
