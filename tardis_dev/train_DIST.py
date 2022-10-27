@@ -11,7 +11,7 @@ from tardis_dev.dist_pytorch.datasets.dataloader import build_dataset
 from tardis_dev.utils.dataset import build_test_dataset, move_train_dataset
 from tardis_dev.utils.device import get_device
 from tardis_dev.utils.logo import Tardis_Logo
-from tardis_dev.utils.utils import check_dir
+from tardis_dev.utils.setup_envir import check_dir
 from tardis_dev.version import version
 
 

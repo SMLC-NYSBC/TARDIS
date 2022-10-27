@@ -92,31 +92,15 @@ class SimpleNormalize:
 
         assert x.min() >= 0 and x.max() <= 255, \
             f'Dtype: {x.dtype}, Min: {x.min()}, Max: {x.max()}. Values not in range'
+        x = x / 255
 
-        return x / 255
+        return x.astype(np.float32)
 
 
 class MinMaxNormalize:
     """
     IMAGE NORMALIZATION BETWEEN MIN AND MAX VALUE
-
-    Args:
-        min (int): Minimal value for initialize normalization e.g. 0.
-        max (int): Maximal value for initialize normalization e.g. 255.
     """
-
-    def __init__(self,
-                 min: int,
-                 max: int) -> np.ndarray:
-        assert max >= min
-        self.min = int(min)
-        self.max = int(max)
-
-        if max == min:
-            self.min = 0
-            self.max = 255
-
-        self.range = self.max - self.min
 
     def __call__(self,
                  x: np.ndarray) -> np.ndarray:
@@ -129,11 +113,13 @@ class MinMaxNormalize:
         Returns:
             np.ndarray: Normalized array.
         """
-        x = (x - self.min) / self.range
+        min = x.min()
+        max = x.max()
+        x = (x - min) / (max - min)
         x = np.where(x > 1, 1, x)
         x = np.where(x < 0, 0, x)
 
-        return x
+        return x.astype(np.float32)
 
 
 class RescaleNormalize:
@@ -149,7 +135,6 @@ class RescaleNormalize:
     def __init__(self,
                  range=(2, 98)):
         self.range = range
-        self.norm = SimpleNormalize()
 
     def __call__(self,
                  x: np.ndarray) -> np.ndarray:
@@ -166,9 +151,6 @@ class RescaleNormalize:
 
         x = exposure.rescale_intensity(x, in_range=(p2, p98))
 
-        if x.min() >= 0 and x.max() <= 255:
-            x = self.norm(x)
-
         return x
 
 
@@ -177,12 +159,10 @@ class RandomFlip:
     180 RANDOM FLIP ARRAY
 
     Perform 180 degree flip randomly in z,x or y axis for 3D or 4D
-    """
 
-    def __init__(self):
-        self.random_state = np.random.randint(0, 2)
-        # 0 is z axis, 1 is x axis, 2 is y axis for 3D
-        # 0 is x axis, 1 is y axis for 2D
+        - 0 is z axis, 1 is x axis, 2 is y axis for 3D
+        - 0 is x axis, 1 is y axis for 2D
+    """
 
     def __call__(self,
                  x: np.ndarray,
@@ -197,11 +177,18 @@ class RandomFlip:
         Returns:
             np.ndarray: Flipped array.
         """
+        random_state = np.random.randint(0, 9)
         if x.ndim == 2 or y.ndim == 2:
-            if self.random_state == 2:
-                self.random_state = np.random.randint(0, 1)
+            random_state = np.random.randint(0, 6)
 
-        return np.flip(x, self.random_state), np.flip(y, self.random_state)
+        if random_state <= 3:
+            random_state = 0
+        elif random_state <= 6 and random_state > 3:
+            random_state = 1
+        elif random_state <= 9 and random_state > 6:
+            random_state = 2
+
+        return np.flip(x, random_state), np.flip(y, random_state)
 
 
 class RandomRotation:
@@ -209,14 +196,13 @@ class RandomRotation:
     MULTIPLE 90 RANDOM ROTATION
 
     Perform 90, 180 or 270 degree rotation for 2D or 3D in left or right
+
+        - 0 is 90, 1 is 180, 2 is 270
+        - 0 is left, 1 is right
     """
 
     def __init__(self):
         """Randomize rotation"""
-        self.random_rotation = np.random.randint(0, 3)
-        # 0 is 90, 1 is 180, 2 is 270
-        self.random_direction = np.random.randint(0, 1)
-        # 0 is left, 1 is right
 
     def __call__(self,
                  x: np.ndarray,
@@ -231,20 +217,34 @@ class RandomRotation:
         Returns:
             np.ndarray: Rotated array.
         """
+        random_rotation = np.random.randint(0, 9)
+        if random_rotation <= 3:
+            random_rotation = 0
+        elif random_rotation <= 6 and random_rotation > 3:
+            random_rotation = 1
+        elif random_rotation <= 9 and random_rotation > 6:
+            random_rotation = 2
+
+        random_direction = np.random.randint(0, 10)
+        if random_direction <= 3:
+            random_direction = 0
+        else:
+            random_direction = 1
+
         # Evaluate data structure
-        if self.random_direction == 0:
+        if random_direction == 0:
             if x.ndim == 2:
                 axis = (0, 1)
             elif x.ndim == 3:
                 axis = (1, 2)
-        elif self.random_direction == 1:
+        elif random_direction == 1:
             if x.ndim == 2:
                 axis = (1, 0)
             elif x.ndim == 3:
                 axis = (2, 1)
 
-        return np.rot90(x, self.random_rotation, axis), \
-            np.rot90(y, self.random_rotation, axis)
+        return np.rot90(x, random_rotation, axis), \
+            np.rot90(y, random_rotation, axis)
 
 
 class ComposeRandomTransformation:
@@ -261,7 +261,7 @@ class ComposeRandomTransformation:
     def __init__(self,
                  transformations: list):
         self.transforms = transformations
-        self.random_repetition = np.random.randint(0, len(transformations))
+        self.random_repetition = np.random.randint(1, 4)
 
     def __call__(self,
                  x: np.ndarray,
@@ -277,17 +277,15 @@ class ComposeRandomTransformation:
             np.ndarray: Transformed array.
         """
         # Run randomize transformation
-        if self.random_repetition > 0:
-            for _ in range(self.random_repetition):
-                random_transf = np.random.randint(0, len(self.transforms))
-                transform = self.transforms[random_transf]
-                x, y = transform(x, y)
+        for _ in range(self.random_repetition):
+            random_transf = np.random.randint(0, len(self.transforms))
+            transform = self.transforms[random_transf]
+            x, y = transform(x, y)
 
         return x, y
 
 
 def preprocess(image: np.ndarray,
-               normalization: str,
                transformation: bool,
                size: int,
                mask: Optional[np.ndarray] = None,
@@ -298,15 +296,13 @@ def preprocess(image: np.ndarray,
     Args:
         image (np.ndarray): 2D/3D array with image data.
         mask (np.ndarray, optional): 2D/3D array with semantic labels.
-        normalization (str): Normalization type to bring img to 0 and 1 values.
         transformation (bool): If True perform transformation on img and mask with
             same random effect.
         size (int): Image size output for center crop.
         output_dim_mask (int): Number of output channel dimensions for label mask.
 
     Returns:
-        np.ndarray: Image and optionally label mask after transformation and
-            normalization
+        np.ndarray: Image and optionally label mask after transformation.
     """
     # Check if image is 2D or 3D
     assert image.ndim in [2, 3]
@@ -341,18 +337,6 @@ def preprocess(image: np.ndarray,
                                                         RandomRotation()])
 
         image, mask = random_transform(image, mask)
-
-    """Normalize image for value between 1 and 0"""
-    if image.max() > 1:
-        if normalization in ['simple', 'minmax'] and image.dtype == np.uint8:
-            if normalization == "simple":
-                normalization = SimpleNormalize()
-            elif normalization == "minmax":
-                normalization = MinMaxNormalize(image.min(), image.max())
-            image = normalization(image)
-        else:
-            raise ValueError(f'Normalization type {normalization} '
-                             f'or image in wrong type {image.dtype }')
 
     """Expand dimension order for HW / DHW to CHW / CDHW"""
     image = np.expand_dims(image, axis=0)

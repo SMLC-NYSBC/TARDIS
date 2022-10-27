@@ -44,7 +44,6 @@ def test_unet_trainer():
                           mask_dir='./tests/test_data/data_loader/cnn/train/masks',
                           size=structure['img_size'],
                           mask_suffix='_mask',
-                          normalize='simple',
                           transform=True,
                           out_channels=structure['out_channel'])
     train_dl = train_dl + train_dl + train_dl + train_dl
@@ -57,7 +56,6 @@ def test_unet_trainer():
                          mask_dir='./tests/test_data/data_loader/cnn/test/masks',
                          size=structure['img_size'],
                          mask_suffix='_mask',
-                         normalize='simple',
                          transform=True,
                          out_channels=structure['out_channel'])
     test_dl = DataLoader(dataset=test_dl,
@@ -103,12 +101,11 @@ def test_fnet_trainer():
                           mask_dir='./tests/test_data/data_loader/cnn/train/masks',
                           size=structure['img_size'],
                           mask_suffix='_mask',
-                          normalize='simple',
                           transform=True,
                           out_channels=structure['out_channel'])
     train_dl = train_dl + train_dl + train_dl + train_dl
     train_dl = DataLoader(dataset=train_dl,
-                          batch_size=2,
+                          batch_size=1,
                           shuffle=True,
                           pin_memory=True)
 
@@ -116,7 +113,6 @@ def test_fnet_trainer():
                          mask_dir='./tests/test_data/data_loader/cnn/test/masks',
                          size=structure['img_size'],
                          mask_suffix='_mask',
-                         normalize='simple',
                          transform=True,
                          out_channels=structure['out_channel'])
     test_dl = DataLoader(dataset=test_dl,
@@ -162,12 +158,11 @@ def test_unet3plus_trainer():
                           mask_dir='./tests/test_data/data_loader/cnn/train/masks',
                           size=structure['img_size'],
                           mask_suffix='_mask',
-                          normalize='simple',
                           transform=True,
                           out_channels=structure['out_channel'])
     train_dl = train_dl + train_dl + train_dl + train_dl
     train_dl = DataLoader(dataset=train_dl,
-                          batch_size=2,
+                          batch_size=1,
                           shuffle=True,
                           pin_memory=True)
 
@@ -175,7 +170,6 @@ def test_unet3plus_trainer():
                          mask_dir='./tests/test_data/data_loader/cnn/test/masks',
                          size=structure['img_size'],
                          mask_suffix='_mask',
-                         normalize='simple',
                          transform=True,
                          out_channels=structure['out_channel'])
     test_dl = DataLoader(dataset=test_dl,

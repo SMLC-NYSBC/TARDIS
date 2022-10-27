@@ -7,6 +7,32 @@ import numpy as np
 import open3d as o3d
 import tifffile.tifffile as tif
 from sklearn.neighbors import KDTree
+from tardis_dev.spindletorch.datasets.augment import RescaleNormalize
+
+
+def load_image(image: str,
+               normalize=False):
+    """
+    Quick wrapper for loading image data based on detected file format.
+
+    Args:
+        image (str): Image file directory.
+
+    Returns:
+        np.ndarray, float: Image array and associated pixel size.
+    """
+    if image.endswith(('.tif', '.tiff')):
+        image, px = import_tiff(image)
+    elif image.endswith(('.mrc', '.rec')):
+        image, px = import_mrc(image)
+    elif image.endswith('.am'):
+        image, px, _, _ = import_am(image)
+
+    if normalize:
+        norm = RescaleNormalize(range=(1, 99))
+        image = norm(image)
+
+    return image, px
 
 
 class ImportDataFromAmira:
@@ -191,14 +217,12 @@ class ImportDataFromAmira:
         return self.pixel_size
 
 
-def import_tiff(tiff: str,
-                dtype=np.uint8):
+def import_tiff(tiff: str):
     """
     Function to load any tiff file.
 
     Args:
         tiff (str): Tiff file directory.
-        np.dtype: Define output format for tiff file, defaults to np.uint8.
 
     Returns:
         np.ndarray, float: Image data and unified pixel size.
@@ -206,7 +230,7 @@ def import_tiff(tiff: str,
     if not isfile(tiff):
         raise Warning("Indicated .tif file does not exist...")
 
-    return np.array(tif.imread(tiff), dtype=dtype), 1.0
+    return np.array(tif.imread(tiff)), 1.0
 
 
 def import_mrc(mrc: str):
@@ -233,11 +257,6 @@ def import_mrc(mrc: str):
         image = np.fromfile(mrc, dtype=dtype)[-bit_len:].reshape((ny, nx))
     else:
         image = np.fromfile(mrc, dtype=dtype)[-bit_len:].reshape((nz, ny, nx))
-
-    # int8  -128 - 128 to uint8 0-256 correction
-    if dtype == np.int8 and image.min() < 0:
-        image = image + 128
-        image = image.astype(np.uint8)
 
     return image, pixel_size
 
@@ -391,8 +410,10 @@ def mrc_mode(mode: int,
         dtype = '3B'  # RGB values
     elif mode == 101:
         raise Exception('4 bit .mrc file are not supported. Ask Dev if you need it!')
+    elif mode == 1024:
+        raise Exception('Are your trying to load tiff file as mrc?')
     else:
-        raise Exception('Unknown dtype mode:' + str(mode))
+        raise Exception('Unknown dtype mode:' + str(mode) + str(amin))
 
     return dtype
 
@@ -411,8 +432,9 @@ def import_am(am_file: str):
         raise Warning(f"Indicated .am {am_file} file does not exist...")
 
     am = open(am_file, 'r', encoding="iso-8859-1").read(8000)
-    assert '# AmiraMesh BINARY' in am, \
-        f'{am_file} file is not Amira binary image file!'
+
+    if 'AmiraMesh 3D ASCII' in am:
+        raise ValueError('.am file is coordinate file not image!')
 
     size = [word for word in am.split('\n') if word.startswith(
             'define Lattice ')][0][15:].split(" ")
@@ -439,7 +461,6 @@ def import_am(am_file: str):
         transformation = np.array((float(bb[5]),
                                    float(bb[7]),
                                    float(bb[9])))
-        binary_start = str.find(am, "\n@1\n") + 4
 
     try:
         coordinate = str([word for word in am.split('\n') if word.startswith('        Coordinates')]).split(" ")[9][1:2]
@@ -452,12 +473,34 @@ def import_am(am_file: str):
         pixel_size = (physical_size[0] - transformation[0]) / (nx - 1)
     pixel_size = round(pixel_size, 3)
 
-    img = np.fromfile(am_file, dtype=np.uint8)
+    if 'Lattice { byte Data }' in am:
+        binary_start = str.find(am, "\n@1\n") + 4
+        img = np.fromfile(am_file, dtype=np.uint8)
 
-    if nz == 1:
-        return img[binary_start:-1].reshape((ny, nx)), pixel_size, physical_size, transformation
-    else:
-        return img[binary_start:-1].reshape((nz, ny, nx)), pixel_size, physical_size, transformation
+        if nz == 1:
+            img = img[binary_start:-1].reshape((ny, nx))
+        else:
+            img = img[binary_start:-1].reshape((nz, ny, nx))
+    # elif 'Lattice { byte Labels } @1(HxByteRLE' in am:
+    #     img = np.fromfile(am_file, dtype=np.uint8)
+
+    #     if nz == 1:
+    #         binary_start = nx * ny
+    #         img = img[-binary_start:-1].reshape((ny, nx))
+    #     else:
+    #         binary_start = nx * ny * nz
+    #         img = img[-binary_start:].reshape((nz, ny, nx))
+    # elif 'Lattice { byte Labels } @1 ' in am:
+    #     img = open(am_file, 'r', encoding="iso-8859-1").readlines()
+
+    #     if nz == 1:
+    #         binary_start = nx * ny
+    #         img = np.asarray(img[-binary_start:]).astype(np.uint8).reshape((ny, nx))
+    #     else:
+    #         binary_start = nx * ny * nz
+    #         img = np.asarray(img[-binary_start:]).astype(np.uint8).reshape((nz, ny, nx))
+
+    return img, pixel_size, physical_size, transformation
 
 
 def load_ply_scannet(ply: str,

@@ -43,32 +43,26 @@ def test_check_device():
 def test_tif():
     tif, px = import_tiff(tiff='./tests/test_data/data_type/tif2D.tif')
     assert tif.shape == (64, 32)
-    assert tif.dtype == np.uint8
 
     tif, px = import_tiff(tiff='./tests/test_data/data_type/tif3D.tif')
     assert tif.shape == (78, 64, 32)
-    assert tif.dtype == np.uint8
 
 
 def test_rec_mrc():
     mrc, px = import_mrc(mrc='./tests/test_data/data_type/mrc2D.mrc')
     assert mrc.shape == (64, 32)
-    assert mrc.dtype == np.uint8
     assert px == 23.2
 
     rec, px = import_mrc(mrc='./tests/test_data/data_type/rec2D.rec')
     assert rec.shape == (64, 32)
-    assert rec.dtype == np.uint8
     assert px == 23.2
 
     mrc, px = import_mrc(mrc='./tests/test_data/data_type/mrc3D.mrc')
     assert mrc.shape == (78, 64, 32)
-    assert mrc.dtype == np.uint8
     assert px == 23.2
 
     rec, px = import_mrc(mrc='./tests/test_data/data_type/rec3D.rec')
     assert rec.shape == (78, 64, 32)
-    assert rec.dtype == np.uint8
     assert px == 23.2
 
 
