@@ -39,8 +39,7 @@ def draw_semantic(mask_size: tuple,
                   coordinate: np.ndarray,
                   pixel_size: float,
                   circle_size=250,
-                  multi_layer=False,
-                  tqdm=True):
+                  multi_layer=False):
     """
     MODULE TO BUILD SEMANTIC MASK FROM CORRESPONDING COORDINATES
 
@@ -69,18 +68,8 @@ def draw_semantic(mask_size: tuple,
     # Number of segments in coordinates
     segments = np.unique(coordinate[:, 0])
 
-    if tqdm:
-        from tqdm import tqdm
-
-        batch_iter = tqdm(range(len(segments)),
-                          'Building semantic mask',
-                          leave=True,
-                          ascii=True)
-    else:
-        batch_iter = range(len(segments))
-
     """Build semantic mask by drawing circle in 2D for each coordinate point"""
-    for i in batch_iter:
+    for i in range(len(segments)):
         points = coordinate[np.where(coordinate[:, 0] == i)[0]][:, 1:]
 
         label = interpolation_3D(points)
