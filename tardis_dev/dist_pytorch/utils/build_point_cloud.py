@@ -4,7 +4,6 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 from skimage.morphology import skeletonize_3d
-from tardis.slcpy.utils.build_semantic_mask import fill_gaps_in_semantic
 
 
 class ImageToPointCloud:
@@ -69,9 +68,6 @@ class BuildPointCloud:
         """Any other exertions"""
         assert unique_val[1] == 1, \
             'Array or file directory loaded properly but image is not semantic mask...'
-
-        """Fill gaps in binary mask"""
-        image = fill_gaps_in_semantic(image)
 
         return image
 

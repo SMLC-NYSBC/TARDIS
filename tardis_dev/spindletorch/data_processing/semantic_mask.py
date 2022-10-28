@@ -14,12 +14,12 @@ def fill_gaps_in_semantic(image: np.ndarray):
                 cv2.drawContours(des, [cnt], 0, 1, -1)
 
             gray = cv2.bitwise_not(des)
-            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-            res = cv2.morphologyEx(gray, cv2.MORPH_OPEN, kernel) / 255
-            res = np.where(res == 1, 0, 1)
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (4, 4))
+            res = cv2.morphologyEx(gray, cv2.MORPH_OPEN, kernel)
+            res = np.where(res == 255, 0, 1)
             image[id, :] = res
 
-            return image
+        return image
     else:
         des = np.array(image, dtype=np.uint8)
         contour, _ = cv2.findContours(des, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
@@ -28,9 +28,9 @@ def fill_gaps_in_semantic(image: np.ndarray):
             cv2.drawContours(des, [cnt], 0, 1, -1)
 
         gray = cv2.bitwise_not(des)
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-        res = cv2.morphologyEx(gray, cv2.MORPH_OPEN, kernel) / 255
-        res = np.where(res == 1, 0, 1)
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (4, 4))
+        res = cv2.morphologyEx(gray, cv2.MORPH_OPEN, kernel)
+        res = np.where(res == 255, 0, 1)
 
         return res
 

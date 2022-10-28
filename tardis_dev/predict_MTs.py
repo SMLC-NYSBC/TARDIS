@@ -1,3 +1,4 @@
+import time
 import warnings
 from os import getcwd, listdir
 from os.path import join
@@ -12,6 +13,7 @@ from tardis_dev.dist_pytorch.datasets.patches import PatchDataSet
 from tardis_dev.dist_pytorch.utils.build_point_cloud import ImageToPointCloud
 from tardis_dev.dist_pytorch.utils.segment_point_cloud import GraphInstanceV2
 from tardis_dev.dist_pytorch.utils.utils import pc_median_dist
+from tardis_dev.spindletorch.data_processing.semantic_mask import fill_gaps_in_semantic
 from tardis_dev.spindletorch.data_processing.stitch import StitchImages
 from tardis_dev.spindletorch.data_processing.trim import (scale_image,
                                                           trim_with_stride)
@@ -19,7 +21,7 @@ from tardis_dev.spindletorch.datasets.dataloader import PredictionDataset
 from tardis_dev.spindletorch.predictor import Predictor
 from tardis_dev.utils.device import get_device
 from tardis_dev.utils.export_data import NumpyToAmira
-from tardis_dev.utils.load_data import load_image, import_am
+from tardis_dev.utils.load_data import import_am, load_image
 from tardis_dev.utils.logo import Tardis_Logo, printProgressBar
 from tardis_dev.utils.setup_envir import build_temp_dir, clean_up
 from tardis_dev.utils.utils import check_uint8
@@ -153,7 +155,7 @@ def main(dir: str,
                              network='dist',
                              subtype='without_img',
                              model_type='microtubules',
-                             img_size=patch_size,
+                             img_size=None,
                              device=device)
 
     """Process each image with CNN and GF"""
@@ -186,6 +188,7 @@ def main(dir: str,
             image, px, _, transformation = import_am(am_file=join(dir, i))
         else:
             image, px = load_image(join(dir, i))
+            transformation = [0, 0, 0]
 
         if tif_px is not None:
             px = tif_px
@@ -219,16 +222,9 @@ def main(dir: str,
                                        out_channels=1)
 
         """CNN prediction"""
-        tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
-                        text_1=f'Found {len(predict_list)} images to predict!',
-                        text_3=f'Image: {i}',
-                        text_4=f'Pixel size: {px} A; Image re-sample to 25 A',
-                        text_5='Point Cloud: In processing...',
-                        text_7='Current Task: CNN prediction...',
-                        text_8=printProgressBar(0, len(patches_DL)))
-
+        iter_time = 100
         for j in range(len(patches_DL)):
-            if j // 100:
+            if j % iter_time == 0:
                 tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                                 text_1=f'Found {len(predict_list)} images to predict!',
                                 text_3=f'Image: {i}',
@@ -238,7 +234,16 @@ def main(dir: str,
                                 text_8=printProgressBar(j, len(patches_DL)))
 
             # Pick image['s]
-            input, name = patches_DL.__getitem__(j)
+            if j == 0:
+                start = time.time()
+                input, name = patches_DL.__getitem__(j)
+
+                end = time.time()
+                iter_time = round(10 / (end - start))  # Scale progress bar refresh to 10s
+                if iter_time == 0:
+                    iter_time = 1
+            else:
+                input, name = patches_DL.__getitem__(j)
 
             # Predict & Threshold
             out = np.where(predict_cnn._predict(input[None, :]) >= cnn_threshold, 1, 0)
@@ -269,6 +274,9 @@ def main(dir: str,
         image, _ = scale_image(image=image,
                                mask=None,
                                scale=scale_factor)
+
+        """Fill gaps in binary mask"""
+        image = fill_gaps_in_semantic(image)
 
         assert image.shape == org_shape, 'Error while converting from 2.5 nm pixel size. ' \
             f'Org. shape {org_shape} is not the same as converted shape {image.shape}'
@@ -323,7 +331,7 @@ def main(dir: str,
         # Build patches dataset with
         VD = PatchDataSet(coord=point_cloud / dist,
                           label_cls=None,
-                          rbg=None,
+                          rgb=None,
                           patch_3d=False,
                           max_number_of_points=points_in_patch,
                           init_patch_size=0,
@@ -331,8 +339,8 @@ def main(dir: str,
                           graph=False,
                           tensor=True)
 
-        coords_df, _, output_idx, _ = VD.voxalize_dataset(mesh=False,
-                                                          dist_th=None)
+        coords_df, _, output_idx, _ = VD.patched_dataset(mesh=False,
+                                                         dist_th=None)
         coords_df = [c / pc_median_dist(c) for c in coords_df]
 
         # Predict point cloud
@@ -364,7 +372,7 @@ def main(dir: str,
                     allow_pickle=True)
 
         """Graphformer post-processing"""
-        if format in ['amira', 'mrc']:
+        if i.endswith(('.am', '.rec', '.mrc')):
             tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                             text_1=f'Found {len(predict_list)} images to predict!',
                             text_3=f'Image: {i}',
@@ -396,28 +404,6 @@ def main(dir: str,
                                                    prune=5,
                                                    sort=True,
                                                    visualize=visualizer)
-
-        """Threshold drop for hard datasets"""
-        if 100 - ((segments.shape[0] * 100) / point_cloud.shape[0]) > 25:
-            GraphToSegment = GraphInstanceV2(threshold=dist_threshold / 2,
-                                             connection=2,
-                                             smooth=True)
-            segments = GraphToSegment.patch_to_segment(graph=graphs,
-                                                       coord=point_cloud,
-                                                       idx=output_idx,
-                                                       prune=5,
-                                                       sort=True,
-                                                       visualize=visualizer)
-        if 100 - ((segments.shape[0] * 100) / point_cloud.shape[0]) > 25:
-            GraphToSegment = GraphInstanceV2(threshold=dist_threshold / 5,
-                                             connection=2,
-                                             smooth=True)
-            segments = GraphToSegment.voxal_to_segment(graph=graphs,
-                                                       coord=point_cloud,
-                                                       idx=output_idx,
-                                                       prune=5,
-                                                       sort=True,
-                                                       visualize=visualizer)
 
         # Save debugging check point
         if debug:

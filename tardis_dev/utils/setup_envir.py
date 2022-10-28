@@ -59,6 +59,12 @@ def clean_up(dir: str):
     Args:
         dir (str): Main directory where temp dir is located.
     """
+    if isdir(join(dir, 'temp', 'Patches')):
+        rmtree(join(dir, 'temp', 'Patches'))
+
+    if isdir(join(dir, 'temp', 'Predictions')):
+        rmtree(join(dir, 'temp', 'Predictions'))
+
     rmtree(join(dir, 'temp'))
 
 

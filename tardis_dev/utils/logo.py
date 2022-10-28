@@ -4,7 +4,7 @@ from os import get_terminal_size, system
 
 from IPython.core.interactiveshell import InteractiveShell
 from tardis_dev.version import version
-
+from IPython.display import clear_output
 
 def printProgressBar(value: int,
                      max: int):
@@ -56,7 +56,7 @@ class Tardis_Logo:
 
     ....)
     """
-
+    
     def __init__(self):
         clear = None
 
@@ -66,7 +66,7 @@ class Tardis_Logo:
             self.CLEAR = lambda: system('cls')
 
         if clear is None and is_interactive():
-            self.CLEAR = self._clear_output
+            self.CLEAR = clear_output(wait=True)
 
         self.FN = "TARDIS-pytorch Copyright Information:"
         self.C = "Copyright (c) 2021 Robert Kiewisz, Tristan Bepler"

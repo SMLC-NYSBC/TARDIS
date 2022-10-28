@@ -6,9 +6,8 @@ import torch
 from scipy.interpolate import splev, splprep
 from scipy.spatial.distance import cdist
 from sklearn.neighbors import KDTree
-from tardis.dist_pytorch.utils.visualize import (VisualizeFilaments,
-                                                 VisualizePointCloud)
-from tardis.slcpy.utils.export_data import NumpyToAmira
+from tardis_dev.dist_pytorch.utils.visualize import (VisualizeFilaments,
+                                                     VisualizePointCloud)
 
 
 class GraphInstanceV2:
@@ -17,7 +16,6 @@ class GraphInstanceV2:
                  connection=2,
                  smooth=False):
         self.threshold = threshold
-        self.am_build = NumpyToAmira()
 
         self.connection = connection
         self.smooth = smooth
@@ -313,10 +311,10 @@ class GraphInstanceV2:
         for i in np.unique(coord[:, 0]):
             x = coord[np.where(coord[:, 0] == int(i))[0], :]
 
-            if len(x) > 3:
+            if len(x) > 4:
                 tck, _ = splprep([x[:, 1], x[:, 2], x[:, 3]])
 
-                u_fine = np.linspace(0, 1, int(len(x) * 0.5))
+                u_fine = np.linspace(0, 1, int(len(x) * 0.5))  # Output half number of len(x)
                 x_fine, y_fine, z_fine = splev(u_fine, tck)
                 filament = np.vstack((x_fine, y_fine, z_fine)).T
 

@@ -86,12 +86,10 @@ class Predictor:
             if self.network == 'dist':
                 if y is None:
                     out = self.model(coords=x.to(self.device),
-                                     node_features=None,
-                                     padding_mask=None)
+                                     node_features=None)
                 else:
                     out = self.model(coords=x.to(self.device),
-                                     node_features=y.to(self.device),
-                                     padding_mask=None)
+                                     node_features=y.to(self.device))
             else:
                 out = self.model(x.to(self.device))
 
