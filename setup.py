@@ -16,7 +16,7 @@ setup(
         'https://download.pytorch.org/whl/cu116'
     ],
     classifiers=['Development Status :: Alpha Release',
-                 'Intended Audience :: Developers/Research',
+                 'Intended Audience : ../: Developers/Research',
                  'Environment :: Console/WebApp',
                  'Environment :: GPU :: NVIDIA CUDA :: >=11.3',
                  'License :: OSI Approved :: MIT License',
@@ -29,7 +29,7 @@ setup(
         'console_scripts': [
             'tardis_dev_cnn_train = tardis_dev.train_spindletorch:main',
             'tardis_dev_dist_train = tardis_dev.train_DIST:main',
-            'tardis_dev_mt = tardis_dev.predict_MTs:main',
+            'm = tardis_dev.predict_MTs:main',
         ],
     },
     license="MIT License",

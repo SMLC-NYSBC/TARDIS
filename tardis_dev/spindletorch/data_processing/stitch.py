@@ -4,7 +4,6 @@ from typing import Optional
 
 import numpy as np
 import tifffile.tifffile as tif
-from tardis.slcpy.utils.trim import scale_image
 
 
 class StitchImages:
@@ -27,7 +26,6 @@ class StitchImages:
     """
 
     def __init__(self):
-        self.tqdm = tqdm
         self.idx = 0  # Variable storing number of stitched images
         self.nx, self.ny, self.nz = 0, 0, 0  # Variable used to store xyz image dimension
         self.x, self.y, self.z = 0, 0, 0  # Variable to store number of patches in xyz

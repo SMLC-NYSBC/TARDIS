@@ -149,7 +149,7 @@ def trim_with_stride(image: np.ndarray,
         image, dim = scale_image(image=image,
                                  scale=scale)
 
-    assert img_dtype == image.dtype
+    assert img_dtype == image.dtype, f'{img_dtype} != {image.dtype}'
 
     if image.ndim == 4 and dim == 3:  # 3D RGB
         nz, ny, nx, nc = image.shape
@@ -160,6 +160,7 @@ def trim_with_stride(image: np.ndarray,
         min_px_count = trim_size_xy * trim_size_xy
     elif image.ndim == 3 and dim == 1:  # 3D gray
         nz, ny, nx = image.shape
+
         nc = None  # Gray
         min_px_count = trim_size_xy * trim_size_xy * trim_size_z
     elif image.ndim == 2:  # 2D gray

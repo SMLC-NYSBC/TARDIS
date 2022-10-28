@@ -98,6 +98,7 @@ def calculate_F1(logits: Optional[np.ndarray] = torch.Tensor,
 
         return accuracy_score, precision_score, recall_score, F1_score
 
+
 def normalize_image(image: np.ndarray):
     """
     Simple image data normalizer between 0,1

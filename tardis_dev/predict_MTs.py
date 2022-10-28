@@ -59,11 +59,6 @@ warnings.simplefilter("ignore", UserWarning)
               type=int,
               help='Number of point per voxal.',
               show_default=True)
-@click.option('-ch', '--checkpoints',
-              default=False,
-              type=bool,
-              help='If True, include offline checkpoints',
-              show_default=True)
 @click.option('-cch', '--cnn_checkpoint',
               default=None,
               type=str,
@@ -101,7 +96,6 @@ def main(dir: str,
          cnn_threshold: float,
          dist_threshold: float,
          points_in_patch: int,
-         checkpoints: bool,
          device: str,
          debug: bool,
          visualizer: Optional[str] = None,
@@ -131,16 +125,19 @@ def main(dir: str,
                     text_5='Point Cloud: In processing...',
                     text_7='Current Task: Set-up environment...')
 
+    # Hard fix for dealing with tif file lack of pixel sizes...
+    tif_px = None
+    if np.any([True for x in predict_list if x.endswith(('.tif', '.tiff'))]):
+        tif_px = click.prompt('Detected .tif files, please provide pixel size:',
+                              type=float)
+
     # Build handler's
     image_stitcher = StitchImages()
     post_processer = ImageToPointCloud()
     BuildAmira = NumpyToAmira()
 
     # Build CNN from checkpoints
-    if checkpoints:
-        checkpoints = (cnn_checkpoint, dist_checkpoint)
-    else:
-        checkpoints = (None, None)
+    checkpoints = (cnn_checkpoint, dist_checkpoint)
 
     device = get_device(device)
     cnn_network = cnn_network.split('_')
@@ -152,7 +149,7 @@ def main(dir: str,
                             img_size=patch_size,
                             device=device)
 
-    predict_dist = Predictor(checkpoint=checkpoints[2],
+    predict_dist = Predictor(checkpoint=checkpoints[1],
                              network='dist',
                              subtype='without_img',
                              model_type='microtubules',
@@ -190,6 +187,9 @@ def main(dir: str,
         else:
             image, px = load_image(join(dir, i))
 
+        if tif_px is not None:
+            px = tif_px
+
         scale_factor = px / 25
         org_shape = image.shape
         scale_shape = np.multiply(org_shape, scale_factor).astype(np.int16)
@@ -201,7 +201,8 @@ def main(dir: str,
                         text_5='Point Cloud: In processing...',
                         text_7=f'Current Task: Sub-dividing images for {patch_size} size')
 
-        trim_with_stride(image=image,
+        trim_with_stride(image=image.astype(np.float32),
+                         mask=None,
                          scale=scale_factor,
                          trim_size_xy=patch_size,
                          trim_size_z=patch_size,
@@ -218,7 +219,15 @@ def main(dir: str,
                                        out_channels=1)
 
         """CNN prediction"""
-        for j in range(patches_DL.__len__()):
+        tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
+                        text_1=f'Found {len(predict_list)} images to predict!',
+                        text_3=f'Image: {i}',
+                        text_4=f'Pixel size: {px} A; Image re-sample to 25 A',
+                        text_5='Point Cloud: In processing...',
+                        text_7='Current Task: CNN prediction...',
+                        text_8=printProgressBar(0, len(patches_DL)))
+
+        for j in range(len(patches_DL)):
             if j // 100:
                 tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                                 text_1=f'Found {len(predict_list)} images to predict!',
@@ -226,7 +235,7 @@ def main(dir: str,
                                 text_4=f'Pixel size: {px} A; Image re-sample to 25 A',
                                 text_5='Point Cloud: In processing...',
                                 text_7='Current Task: CNN prediction...',
-                                text_8=printProgressBar(j, patches_DL.__len__()))
+                                text_8=printProgressBar(j, len(patches_DL)))
 
             # Pick image['s]
             input, name = patches_DL.__getitem__(j)
@@ -235,7 +244,7 @@ def main(dir: str,
             out = np.where(predict_cnn._predict(input[None, :]) >= cnn_threshold, 1, 0)
 
             # Save
-            assert out.min() == 0 and out.max() == 1
+            assert out.min() == 0 and out.max() in [0, 1]
             tif.imwrite(join(output, f'{name}.tif'),
                         np.array(out, dtype=np.uint8))
 

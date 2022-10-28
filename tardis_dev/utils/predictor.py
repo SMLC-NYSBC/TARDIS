@@ -51,12 +51,12 @@ class BasicPredictor:
         """
         if self.id % 50 == 0:
             self.progress_predict(title=f'{self.nn_name} Predicting module',
-                                text_1=self.print_setting[0],
-                                text_2=self.print_setting[1],
-                                text_3=self.print_setting[2],
-                                text_4=self.print_setting[3],
-                                text_8=printProgressBar(self.id,
-                                                        self.predicting_idx))
+                                  text_1=self.print_setting[0],
+                                  text_2=self.print_setting[1],
+                                  text_3=self.print_setting[2],
+                                  text_4=self.print_setting[3],
+                                  text_8=printProgressBar(self.id,
+                                                          self.predicting_idx))
 
     def run_predictor(self):
         """
