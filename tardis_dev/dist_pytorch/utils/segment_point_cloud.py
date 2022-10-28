@@ -29,28 +29,28 @@ class GraphInstanceV2:
         STITCHER FOR GRAPH REPRESENTATION
 
         Args:
-            graph_pred: Voxals of graph predictions
-            idx: Idx for each node in voxals
+            graph_pred: Patches of graph predictions
+            idx: Idx for each node in patches
         """
         # Build empty graph
         graph = max([max(f) for f in idx]) + 1
         graph = np.zeros((graph, graph),
                          dtype=np.float32)
 
-        for idx_voxal, graph_voxal in zip(idx, graph_pred):
-            for k, _ in enumerate(idx_voxal):
-                row = graph_voxal[k, :]
-                row_v = [row[id] if graph[i, idx_voxal[k]] == 0
-                         else np.mean((graph[i, idx_voxal[k]], row[id]))
-                         for id, i in enumerate(idx_voxal)]
+        for idx_patch, graph_patch in zip(idx, graph_pred):
+            for k, _ in enumerate(idx_patch):
+                row = graph_patch[k, :]
+                row_v = [row[id] if graph[i, idx_patch[k]] == 0
+                         else np.mean((graph[i, idx_patch[k]], row[id]))
+                         for id, i in enumerate(idx_patch)]
 
-                column = graph_voxal[:, k]
-                column_v = [row[id] if graph[i, idx_voxal[k]] == 0
-                            else np.mean((graph[i, idx_voxal[k]], column[id]))
-                            for id, i in enumerate(idx_voxal)]
+                column = graph_patch[:, k]
+                column_v = [row[id] if graph[i, idx_patch[k]] == 0
+                            else np.mean((graph[i, idx_patch[k]], column[id]))
+                            for id, i in enumerate(idx_patch)]
 
-                graph[list(idx_voxal), idx_voxal[k]] = row_v
-                graph[idx_voxal[k], list(idx_voxal)] = column_v
+                graph[list(idx_patch), idx_patch[k]] = row_v
+                graph[idx_patch[k], list(idx_patch)] = column_v
 
         return graph
 
@@ -58,11 +58,11 @@ class GraphInstanceV2:
     def _stitch_coord(coord: list,
                       idx: list):
         """
-        STITCHER FOR NODES IN VOXAL
+        Stitcher for coord in patches
 
         Args:
-            coord: Coords in each voxal
-            idx: Idx for each node in voxals
+            coord: Coords in each patch
+            idx: Idx for each node in patches
         """
         # Conversion to Torch
         if isinstance(coord[0], torch.Tensor):
@@ -74,8 +74,8 @@ class GraphInstanceV2:
         coord_df = np.zeros((coord_df, dim),
                             dtype=np.float32)
 
-        for coord_voxal, idx_voxal in zip(coord, idx):
-            for value, id in zip(coord_voxal, idx_voxal):
+        for coord_patch, idx_patch in zip(coord, idx):
+            for value, id in zip(coord_patch, idx_patch):
                 coord_df[id, :] = value
 
         return coord_df
@@ -84,11 +84,11 @@ class GraphInstanceV2:
     def _stitch_cls(cls: list,
                     idx: list):
         """
-        STITCHER FOR NODES IN VOXAL
+        Stitcher for nodes in patches
 
         Args:
-            cls: Predicted class in each voxal
-            idx: Idx for each node in voxals
+            cls: Predicted class in each patch
+            idx: Idx for each node in patches
         """
         # Conversion to Torch
         if isinstance(cls[0], torch.Tensor):
@@ -99,9 +99,9 @@ class GraphInstanceV2:
         cls_df = np.zeros((cls_df),
                           dtype=np.float32)
 
-        for cls_voxal, idx_voxal in zip(cls, idx):
-            # cls_voxal = [np.where(i == 1)[0][0] for i in cls_voxal]
-            for value, id in zip(cls_voxal, idx_voxal):
+        for cls_patch, idx_patch in zip(cls, idx):
+            # cls_patch = [np.where(i == 1)[0][0] for i in cls_patch]
+            for value, id in zip(cls_patch, idx_patch):
                 cls_df[id] = value
 
         return cls_df
@@ -166,7 +166,7 @@ class GraphInstanceV2:
         [id][coord][interactions][interaction probability]
 
         Args:
-            graphs: graph voxal output from DIST
+            graphs: graph patch output from DIST
             coord: stitched coord output from DIST
         """
         all_prop = [[id, list(i), [], []] for id, i in enumerate(coord)]
@@ -346,7 +346,7 @@ class GraphInstanceV2:
 
         return segments
 
-    def voxal_to_segment(self,
+    def patch_to_segment(self,
                          graph: list,
                          coord: np.ndarray,
                          idx: list,
@@ -354,9 +354,9 @@ class GraphInstanceV2:
                          sort=True,
                          visualize: Optional[str] = None):
         """
-        SEGMENTER FOR VOXALS
+        Point cloud instance segmenter from graph representation
 
-        From each point cloud (voxal) segmenter first build adjacency matrix.
+        From each point cloud (patch) segmenter first build adjacency matrix.
         Matrix is then used to iteratively search for new segments.
         For each initial node algorithm search for 2 edges with highest prop.
         with given threshold. For each found edges, algorithm check if found
@@ -375,7 +375,7 @@ class GraphInstanceV2:
         ...
 
         Args:
-            graph: Graph voxal output from Dist
+            graph: Graph patch output from Dist
             coord: Coordinates for each unsorted point idx
             idx: idx of point included in the segment
             sort: If True sort output

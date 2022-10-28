@@ -267,7 +267,7 @@ def main(dir: str,
     """Run Training loop"""
     train_cnn(train_dataloader=train_DL,
               test_dataloader=test_DL,
-              type=model_dict,
+              model_structure=model_dict,
               checkpoint=cnn_checkpoint,
               loss_function=cnn_loss,
               learning_rate=loss_lr_rate,

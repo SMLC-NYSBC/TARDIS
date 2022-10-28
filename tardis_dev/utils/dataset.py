@@ -45,7 +45,7 @@ def move_train_dataset(dir: str,
 
 
 def build_test_dataset(dataset_dir: str,
-                       train_test_ration: int,
+                       train_test_ration: float,
                        prefix: str):
     """
     Standard builder for test datasets.
@@ -72,7 +72,7 @@ def build_test_dataset(dataset_dir: str,
     mask_list = listdir(join(dataset_dir, 'train', 'masks'))
     mask_list.sort()
 
-    train_test_ratio = (len(mask_list) * train_test_ration) // 100
+    train_test_ratio = (len(mask_list) * train_test_ration) // 1
     train_test_ratio = int(train_test_ratio)
 
     if train_test_ratio == 0:

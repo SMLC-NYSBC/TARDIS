@@ -26,8 +26,7 @@ class StitchImages:
         dtype: Numpy dtype for output
     """
 
-    def __init__(self,
-                 tqdm=True):
+    def __init__(self):
         self.tqdm = tqdm
         self.idx = 0  # Variable storing number of stitched images
         self.nx, self.ny, self.nz = 0, 0, 0  # Variable used to store xyz image dimension
@@ -62,25 +61,15 @@ class StitchImages:
                  image_dir: str,
                  mask: bool,
                  prefix='',
-                 scale: Optional[float] = 1.0,
                  output: Optional[str] = None,
-                 dtype=np.int8):
+                 dtype=np.uint8):
         """Extract information about images in dir_path"""
         file_list = [f for f in listdir(image_dir) if isfile(join(image_dir, f))]
         file_list = [f for f in file_list if f.endswith('.tif')]
 
         self.idx = max(list(map(int, [str.split(f[:-4], "_")[0] for f in file_list]))) + 1
 
-        if self.tqdm:
-            from tqdm import tqdm
-
-            batch_iter_idx = tqdm(range(self.idx),
-                                  'Stitching image number',
-                                  leave=True)
-        else:
-            batch_iter_idx = range(self.idx)
-
-        for idx in batch_iter_idx:
+        for idx in range(self.idx):
             self._find_xyz(file_list, idx)
             self._calculate_dim(tif.imread(join(image_dir,
                                                 f'{idx}_0_0_0_{self.stride}{prefix}.tif')))
@@ -143,11 +132,6 @@ class StitchImages:
 
             if mask:
                 stitched_image = np.where(stitched_image > 0, 1, 0)
-
-            if scale is not None:
-                stitched_image, _ = scale_image(image=stitched_image,
-                                                mask=None,
-                                                scale=scale)
 
             if output is None:
                 return np.array(stitched_image, dtype=dtype)

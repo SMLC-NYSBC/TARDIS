@@ -120,8 +120,7 @@ class PredictionDataset(Dataset):
 
         # Load image
         img, _ = load_image(img_file)
-        if img.dtype != np.float32:
-            img = self.minmax(img.astype(np.float32))
+        img = self.minmax(img.astype(np.float32))
 
         # Process image and mask
         img = preprocess(image=img,

@@ -446,10 +446,24 @@ class FNet(nn.Module):
 
         """ Final Layer """
         if '3' in layer_components:
+            self.unet_conv_layer = nn.Conv3d(in_channels=conv_layer_scaler,
+                                             out_channels=conv_layer_scaler,
+                                             kernel_size=1)
+            self.unet3plus_conv_layer = nn.Conv3d(in_channels=conv_layer_scaler,
+                                                  out_channels=conv_layer_scaler,
+                                                  kernel_size=1)
+
             self.final_conv_layer = nn.Conv3d(in_channels=conv_layer_scaler,
                                               out_channels=out_channels,
                                               kernel_size=1)
         elif '2' in layer_components:
+            self.unet_conv_layer = nn.Conv2d(in_channels=conv_layer_scaler,
+                                             out_channels=conv_layer_scaler,
+                                             kernel_size=1)
+            self.unet3plus_conv_layer = nn.Conv2d(in_channels=conv_layer_scaler,
+                                                  out_channels=conv_layer_scaler,
+                                                  kernel_size=1)
+
             self.final_conv_layer = nn.Conv2d(in_channels=conv_layer_scaler,
                                               out_channels=out_channels,
                                               kernel_size=1)
@@ -490,6 +504,8 @@ class FNet(nn.Module):
             encoder_features = encoder_features[1:]
 
         """ Final Layer/Prediction """
+        x_unet = self.unet_conv_layer(x_unet)
+        x_3plus = self.unet3plus_conv_layer(x_3plus)
         x = self.final_conv_layer(x_unet + x_3plus)
 
         if self.prediction:

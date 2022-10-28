@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from tardis.utils.metrics import calculate_F1
+from tardis_dev.utils.metrics import calculate_F1
 from tardis_dev.utils.trainer import BasicTrainer
 from torch import nn
 

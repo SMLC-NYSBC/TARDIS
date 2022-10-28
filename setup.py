@@ -28,7 +28,8 @@ setup(
     entry_points={
         'console_scripts': [
             'tardis_dev_cnn_train = tardis_dev.train_spindletorch:main',
-            'tardis_dev_dist_train = tardis_dev.train_DIST:main'
+            'tardis_dev_dist_train = tardis_dev.train_DIST:main',
+            'tardis_dev_mt = tardis_dev.predict_MTs:main',
         ],
     },
     license="MIT License",

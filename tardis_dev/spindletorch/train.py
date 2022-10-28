@@ -74,7 +74,7 @@ def train_cnn(train_dataloader,
         sys.exit()
 
     """Build TARDIS progress bar output"""
-    print_setting = [f"Training is started on {device}",
+    print_setting = [f"Training is started for {model_structure['cnn_type']}:",
                      f"Local dir: {getcwd()}",
                      f"Training for {model_structure['cnn_type']} with "
                      f"No. of Layers: {model_structure['num_conv_layers']} with "

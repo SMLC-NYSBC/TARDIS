@@ -22,7 +22,7 @@ def get_weights_aws(network: str,
         model (str): Additional dataset name used for the DIST.
         save_weights (bool): If the True model is saved in the temp repository.
     """
-    if network in ['unet', 'unet3plus', 'big_unet', 'fnet']:
+    if network in ['unet', 'unet3plus', 'fnet']:
         assert subtype in ['32', '64'], \
             'For DIST, pre train model must be selected!'
 

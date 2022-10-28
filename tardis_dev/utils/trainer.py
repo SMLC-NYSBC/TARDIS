@@ -19,7 +19,7 @@ class BasicTrainer:
         criterion (nn.loss): Loss function type.
         optimizer (torch.optim): Optimizer type.
         training_DataLoader (torch.DataLoader): DataLoader with training dataset.
-        validation_DataLoader (torch.DataLoader, optional): DataLoader with test dataset..
+        validation_DataLoader (torch.DataLoader, optional): DataLoader with test dataset.
         print_setting (tuple): Model property to display in TARDIS progress bar.
         lr_scheduler (torch.StepLR, optional): Optional Learning rate schedular.
         epochs (int): Max number of epoches.
@@ -57,7 +57,10 @@ class BasicTrainer:
 
         if 'cnn_type' in self.structure:
             self.classification = classification
+            self.nn_name = self.structure['cnn_type']
         elif 'dist_type' in self.structure:
+            self.nn_name = self.structure['dist_type']
+
             if 'node_input' in structure:
                 self.node_input = structure['node_input']
 
@@ -98,20 +101,20 @@ class BasicTrainer:
         Returns:
             str: Updated progress bar status.
         """
-        desc = f'Epochs: stop counter {stop_count}; best F1 {f1[0]}; last f1: {f1[1]}'
+        desc = f'Epochs: stop counter {stop_count}; best F1 {f1[0]:.2f}; last f1: {f1[1]:.2f}'
         return desc
 
     def _update_progress_bar(self,
                              loss_desc: str,
                              idx: int):
         """
-        _update_progress_bar _summary_
+        Update entire Tardis progress bar.
 
         Args:
-            loss_desc (str): _description_
-            idx (int): _description_
+            loss_desc (str): Description for loss function current state.
+            idx (int): Number of the current epoch step.
         """
-        self.progress_train(title='DIST training module',
+        self.progress_train(title=f'{self.checkpoint_name} training module',
                             text_1=self.print_setting[0],
                             text_2=self.print_setting[1],
                             text_3=self.print_setting[2],
@@ -131,7 +134,7 @@ class BasicTrainer:
 
             self.epoch_desc = self._update_desc(self.early_stopping.counter,
                                                 [round(np.max(self.f1), 3),
-                                                 self.f1[-1:]])
+                                                 self.f1[-1:][0]])
 
             # Update checkpoint weights if validation loss dropped
             if all(self.f1[-1:][0] >= i for i in self.f1[:-1]):
