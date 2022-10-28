@@ -149,12 +149,14 @@ def main(dir: str,
     predict_cnn = Predictor(checkpoint=checkpoints[0],
                             network=cnn_network[0],
                             subtype=int(cnn_network[1]),
+                            img_size=patch_size,
                             device=device)
 
     predict_dist = Predictor(checkpoint=checkpoints[2],
                              network='dist',
                              subtype='without_img',
                              model_type='microtubules',
+                             img_size=patch_size,
                              device=device)
 
     """Process each image with CNN and GF"""

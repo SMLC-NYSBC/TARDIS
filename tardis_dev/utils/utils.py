@@ -1,3 +1,4 @@
+import hashlib
 from typing import Optional
 
 import numpy as np
@@ -78,3 +79,20 @@ def check_uint8(image: np.ndarray):
     elif np.all(image == 0):
         # Image is empty
         return image
+
+
+class MD5Count:
+    def __init__(self, source):
+        self._sig = hashlib.md5()
+        self._source = source
+
+    def read(self):
+        try:
+            line = self._source.next()
+            self._sig.update(line)
+            return line
+        except StopIteration:
+            return b''
+
+    def hexdigest(self):
+        return self._sig.hexdigest()
