@@ -36,6 +36,7 @@ class Predictor:
                                                  model_type),
                                  map_location=device)
         else:
+            print(f'Loaded weight file for {network}_{subtype}...')
             weights = torch.load(checkpoint,
                                  map_location=device)
 

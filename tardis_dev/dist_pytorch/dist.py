@@ -54,9 +54,10 @@ class BasicDIST(nn.Module):
         self.structure = structure
         self.predict = predict
 
-        if self.node_input > 0 and self.node_dim is not None:
-            self.node_embed = NodeEmbedding(n_in=self.node_input,
-                                            n_out=self.node_dim)
+        if self.node_dim is not None:
+            if self.node_input > 0:
+                self.node_embed = NodeEmbedding(n_in=self.node_input,
+                                                n_out=self.node_dim)
 
         self.coord_embed = EdgeEmbedding(n_out=self.edge_dim,
                                          sigma=self.sigma)

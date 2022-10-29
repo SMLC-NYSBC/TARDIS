@@ -106,7 +106,7 @@ def aws_check_with_temp(model_name: str) -> bool:
             aws_md5 = md5.hexdigest()
         elif len(m) == 3:
             md5 = MD5Count(requests.get(
-                f'https://tardis-weigths.s3.amazonaws.com/{m[0]}/{m[1]}/{m[2]}/model_weights.pth',
+                f'https://tardis-weigths.s3.amazonaws.com/{m[0]}/{m[2]}/{m[1]}/model_weights.pth',
                            stream=True
                            ))
             aws_md5 = md5.hexdigest()

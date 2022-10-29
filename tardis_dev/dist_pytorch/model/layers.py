@@ -126,14 +126,15 @@ class DistLayer(nn.Module):
 
         # Node optional features update
         if node_dim is not None:
-            self.input_attn = PairBiasSelfAttention(embed_dim=node_dim,
-                                                    pairs_dim=pairs_dim,
-                                                    num_heads=num_heads)
-            self.input_ffn = GeluFeedForward(input_dim=node_dim,
-                                             ff_dim=node_dim * ff_factor)
-            self.pair_update = ComparisonLayer(input_dim=node_dim,
-                                               output_dim=pairs_dim,
-                                               channel_dim=pairs_dim)
+            if node_dim > 0:
+                self.input_attn = PairBiasSelfAttention(embed_dim=node_dim,
+                                                        pairs_dim=pairs_dim,
+                                                        num_heads=num_heads)
+                self.input_ffn = GeluFeedForward(input_dim=node_dim,
+                                                ff_dim=node_dim * ff_factor)
+                self.pair_update = ComparisonLayer(input_dim=node_dim,
+                                                output_dim=pairs_dim,
+                                                channel_dim=pairs_dim)
 
         # Edge optional MHA update
         if self.structure in ['full', 'full_af', 'self_attn']:

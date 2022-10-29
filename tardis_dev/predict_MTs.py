@@ -354,7 +354,7 @@ def main(dir: str,
                         text_8=printProgressBar(0, len(coords_df)))
 
         for id, coord in enumerate(coords_df):
-            if id // 50:
+            if id % 50 == 0:
                 tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                                 text_1=f'Found {len(predict_list)} images to predict!',
                                 text_3=f'Image: {i}',
