@@ -259,7 +259,7 @@ def import_mrc(mrc: str):
         image = np.fromfile(mrc, dtype=dtype)[-bit_len:].reshape((nz, ny, nx))
 
     if image.min() < 0 and image.dtype == np.int8:
-        image = image + 127
+        image = image + 128
         image = image.astype(np.uint8)
 
     return image, pixel_size
@@ -397,7 +397,7 @@ def mrc_mode(mode: int,
         if amin >= 0:
             dtype = np.uint8  # Unassigned 8-bit integer (0 - 254)
         elif amin < 0:
-            dtype = np.int8  # Signed 8-bit integer (-128 to 127)
+            dtype = np.int8  # Signed 8-bit integer (-128 to 128)
     elif mode == 1:
         dtype = np.int16  # Signed 16-bit integer
     elif mode == 2:
@@ -480,6 +480,16 @@ def import_am(am_file: str):
     if 'Lattice { byte Data }' in am:
         binary_start = str.find(am, "\n@1\n") + 4
         img = np.fromfile(am_file, dtype=np.uint8)
+
+        if nz == 1:
+            img = img[binary_start:-1].reshape((ny, nx))
+        else:
+            img = img[binary_start:-1].reshape((nz, ny, nx))
+
+    if 'Lattice { sbyte Data }' in am:
+        binary_start = str.find(am, "\n@1\n") + 4
+        img = np.fromfile(am_file, dtype=np.int8)
+        img = img + 128
 
         if nz == 1:
             img = img[binary_start:-1].reshape((ny, nx))
