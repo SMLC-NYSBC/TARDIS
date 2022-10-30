@@ -51,7 +51,7 @@ def build_train_dataset(dataset_dir: str,
     tardis_progress = Tardis_Logo()
     tardis_progress(title='Data pre-processing for CNN training')
 
-    normalize = RescaleNormalize(range=(0.1, 99.9))  # Normalize histogram
+    normalize = RescaleNormalize(range=(1, 99))  # Normalize histogram
     minmax = MinMaxNormalize()
 
     IMG_FORMATS = ('.tif', '.am', '.mrc', '.rec')
@@ -162,9 +162,10 @@ def build_train_dataset(dataset_dir: str,
                                      multi_layer=multi_layer)
 
         """Check image structure and normalize histogram"""
-        if image.min() > 5 and image.max() < 250:
-            image = normalize(image)  # Rescale image intensity
-        image = minmax(image)
+        if image.min() > 5 or image.max() < 250:  # Rescale image intensity
+            image = normalize(image)
+        if not image.min() >= 0 or not image.max() <= 1:  # Normalized between 0 and 1
+            image = minmax(image)
         assert image.dtype == np.float32
 
         tardis_progress(title='Data pre-processing for CNN training',

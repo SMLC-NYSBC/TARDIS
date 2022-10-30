@@ -29,7 +29,7 @@ setup(
         'console_scripts': [
             'tardis_dev_cnn_train = tardis_dev.train_spindletorch:main',
             'tardis_dev_dist_train = tardis_dev.train_DIST:main',
-            'm = tardis_dev.predict_MTs:main',
+            'tardis_dev_mt = tardis_dev.predict_mt:main',
         ],
     },
     license="MIT License",

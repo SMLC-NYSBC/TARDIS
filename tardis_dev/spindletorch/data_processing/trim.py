@@ -42,35 +42,31 @@ def scale_image(image: np.ndarray,
     if image.ndim == 4:  # 3D with RGB
         dim = 3
 
-        image = torch.from_numpy(np.transpose(image, (3, 0, 1, 2))).to('cpu').type(torch.float)
-        image = np.transpose(F.interpolate(image[None, :],
-                                           size=scale,
-                                           mode='trilinear',
-                                           align_corners=False).cpu().detach().numpy()[0, :],
-                             (1, 2, 3, 0)).astype(type_i)
+        image = torch.from_numpy(image).to('cpu').type(torch.float)
+        image = F.interpolate(image[None, :],
+                              size=scale,
+                              mode='trilinear',
+                              align_corners=False).cpu().detach().numpy()[0, :].astype(type_i)
         if mask is not None:
-            mask = torch.from_numpy(np.transpose(mask, (3, 0, 1, 2))).to('cpu').type(torch.float)
-            mask = np.transpose(F.interpolate(mask[None, :],
-                                              size=scale,
-                                              mode='trilinear',
-                                              align_corners=False).cpu().detach().numpy()[0, :],
-                                (1, 2, 3, 0)).astype(type_m)
+            mask = torch.from_numpy(mask).to('cpu').type(torch.float)
+            mask = F.interpolate(mask[None, :],
+                                 size=scale,
+                                 mode='trilinear',
+                                 align_corners=False).cpu().detach().numpy()[0, :].astype(type_m)
     elif image.ndim == 3 and image.shape[2] == 3:  # 2D with RGB
         dim = 3
 
-        image = torch.from_numpy(np.transpose(image, (2, 0, 1))).to('cpu').type(torch.float)
-        image = np.transpose(F.interpolate(image[None, :],
-                                           size=scale,
-                                           mode='bicubic',
-                                           align_corners=False).cpu().detach().numpy()[0, :],
-                             (1, 2, 0)).astype(type_i)
+        image = torch.from_numpy(image, (2, 0, 1)).to('cpu').type(torch.float)
+        image = F.interpolate(image[None, :],
+                              size=scale,
+                              mode='bicubic',
+                              align_corners=False).cpu().detach().numpy()[0, :].astype(type_i)
         if mask is not None:
-            mask = torch.from_numpy(np.transpose(mask, (2, 0, 1))).to('cpu').type(torch.float)
-            mask = np.transpose(F.interpolate(mask[None, :],
-                                              size=scale,
-                                              mode='bicubic',
-                                              align_corners=False).cpu().detach().numpy()[0, :],
-                                (1, 2, 0)).astype(type_m)
+            mask = torch.from_numpy(mask).to('cpu').type(torch.float)
+            mask = F.interpolate(mask[None, :],
+                                 size=scale,
+                                 mode='bicubic',
+                                 align_corners=False).cpu().detach().numpy()[0, :].astype(type_m)
     elif image.ndim == 3 and image.shape[2] != 3:  # 3D with Gray
         dim = 1
 

@@ -192,3 +192,46 @@ class C_DIST(BasicDIST):
         if self.predict:
             self.logits_sigmoid = nn.Sigmoid()
         self.logits_cls_softmax = nn.Softmax(dim=2)
+
+
+def build_dist_network(network_type: str,
+                       structure: dict,
+                       prediction: bool):
+    """
+    Wrapper for building DIST model
+
+    Wrapper take DIST parameter and predefined network type (e.g. DIST, C_DIST),
+    and build DIST model.
+
+    Args:
+        network_type (str):
+        structure (dict):
+        prediction (bool):
+    """
+    assert network_type in ['instance', 'semantic'], \
+        f'Wrong CNN network name {network_type}'
+    if network_type == 'instance':
+        return DIST(n_out=structure['n_out'],
+                    node_input=structure['node_input'],
+                    node_dim=structure['node_dim'],
+                    edge_dim=structure['edge_dim'],
+                    num_layers=structure['num_layers'],
+                    num_heads=structure['num_heads'],
+                    coord_embed_sigma=structure['coord_embed_sigma'],
+                    dropout_rate=structure['dropout_rate'],
+                    structure=structure['structure'],
+                    predict=prediction)
+    elif network_type == 'semantic':
+        return C_DIST(n_out=structure['n_out'],
+                      node_input=structure['node_input'],
+                      node_dim=structure['node_dim'],
+                      edge_dim=structure['edge_dim'],
+                      num_layers=structure['num_layers'],
+                      num_heads=structure['num_heads'],
+                      num_cls=structure['num_cls'],
+                      coord_embed_sigma=structure['coord_embed_sigma'],
+                      dropout_rate=structure['dropout_rate'],
+                      structure=structure['structure'],
+                      predict=prediction)
+    else:
+        return None

@@ -2,7 +2,8 @@ from typing import Optional
 
 import torch
 from tardis_dev.dist_pytorch.dist import DIST
-from tardis_dev.spindletorch.spindletorch import build_network
+from tardis_dev.spindletorch.spindletorch import build_cnn_network
+from tardis_dev.dist_pytorch.dist import build_dist_network
 from tardis_dev.utils.aws import get_weights_aws
 
 
@@ -27,6 +28,7 @@ class Predictor:
                  model_type: Optional[str] = None):
         self.device = device
         self.img_size = img_size
+        assert checkpoint is not None or network is not None
 
         if checkpoint is None:
             print(f'Searching for weight file for {network}_{subtype}...')
@@ -36,7 +38,7 @@ class Predictor:
                                                  model_type),
                                  map_location=device)
         else:
-            print(f'Loaded weight file for {network}_{subtype}...')
+            print(f'Loading weight file for...')
             weights = torch.load(checkpoint,
                                  map_location=device)
 
@@ -49,32 +51,14 @@ class Predictor:
     def _build_model_from_checkpoint(self,
                                      structure: dict):
         if 'dist_type' in structure:
-            model = DIST(n_out=structure['n_out'],
-                         node_input=structure['node_input'],
-                         node_dim=structure['node_dim'],
-                         edge_dim=structure['edge_dim'],
-                         num_layers=structure['num_layers'],
-                         num_heads=structure['num_heads'],
-                         coord_embed_sigma=structure['coord_embed_sigma'],
-                         dropout_rate=structure['dropout_rate'],
-                         structure=structure['structure'],
-                         predict=True)
-
+            model = build_dist_network(network_type=structure['dist_type'],
+                                       structure=structure,
+                                       prediction=True)
         if 'cnn_type' in structure:
-            model = build_network(network_type=structure['cnn_type'],
-                                  classification=structure['classification'],
-                                  in_channel=structure['in_channel'],
-                                  out_channel=structure['out_channel'],
-                                  img_size=self.img_size,
-                                  dropout=structure['dropout'],
-                                  num_conv_layers=structure['num_conv_layers'],
-                                  conv_scaler=structure['conv_scaler'],
-                                  conv_kernel=structure['conv_kernel'],
-                                  conv_padding=structure['conv_padding'],
-                                  maxpool_kernel=structure['maxpool_kernel'],
-                                  layer_components=structure['layer_components'],
-                                  num_group=structure['num_group'],
-                                  prediction=True)
+            model = build_cnn_network(network_type=structure['cnn_type'],
+                                      structure=structure,
+                                      img_size=self.img_size,
+                                      prediction=True)
 
         return model.to(self.device)
 

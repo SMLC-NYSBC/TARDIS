@@ -15,8 +15,8 @@ from tardis_dev.dist_pytorch.utils.segment_point_cloud import GraphInstanceV2
 from tardis_dev.dist_pytorch.utils.utils import pc_median_dist
 from tardis_dev.spindletorch.data_processing.semantic_mask import fill_gaps_in_semantic
 from tardis_dev.spindletorch.data_processing.stitch import StitchImages
-from tardis_dev.spindletorch.data_processing.trim import (scale_image,
-                                                          trim_with_stride)
+from tardis_dev.spindletorch.data_processing.trim import scale_image, trim_with_stride
+from tardis_dev.spindletorch.datasets.augment import MinMaxNormalize, RescaleNormalize
 from tardis_dev.spindletorch.datasets.dataloader import PredictionDataset
 from tardis_dev.spindletorch.predictor import Predictor
 from tardis_dev.utils.device import get_device
@@ -46,10 +46,20 @@ warnings.simplefilter("ignore", UserWarning)
               type=str,
               help='CNN network name.',
               show_default=True)
+@click.option('-cch', '--cnn_checkpoint',
+              default=None,
+              type=str,
+              help='If not None, str checkpoints for Big_Unet',
+              show_default=True)
 @click.option('-ct', '--cnn_threshold',
               default=0.1,
               type=float,
               help='Threshold use for model prediction.',
+              show_default=True)
+@click.option('-dch', '--dist_checkpoint',
+              default=None,
+              type=str,
+              help='If not None, str checkpoints for DIST',
               show_default=True)
 @click.option('-dt', '--dist_threshold',
               default=0.5,
@@ -60,16 +70,6 @@ warnings.simplefilter("ignore", UserWarning)
               default=1000,
               type=int,
               help='Number of point per voxal.',
-              show_default=True)
-@click.option('-cch', '--cnn_checkpoint',
-              default=None,
-              type=str,
-              help='If not None, str checkpoints for Big_Unet',
-              show_default=True)
-@click.option('-dch', '--dist_checkpoint',
-              default=None,
-              type=str,
-              help='If not None, str checkpoints for DIST',
               show_default=True)
 @click.option('-d', '--device',
               default='0',
@@ -136,6 +136,9 @@ def main(dir: str,
                               type=float)
 
     # Build handler's
+    normalize = RescaleNormalize(range=(1, 99))  # Normalize histogram
+    minmax = MinMaxNormalize()
+
     image_stitcher = StitchImages()
     post_processer = ImageToPointCloud()
     build_amira_file = NumpyToAmira()
@@ -147,6 +150,9 @@ def main(dir: str,
                             drop_rate=1,
                             graph=False,
                             tensor=True)
+    GraphToSegment = GraphInstanceV2(threshold=dist_threshold,
+                                     connection=2,
+                                     smooth=True)
 
     # Build CNN from checkpoints
     checkpoints = (cnn_checkpoint, dist_checkpoint)
@@ -158,7 +164,7 @@ def main(dir: str,
     # Build CNN network with loaded pre-trained weights
     predict_cnn = Predictor(checkpoint=checkpoints[0],
                             network=cnn_network[0],
-                            subtype=int(cnn_network[1]),
+                            subtype=cnn_network[1],
                             img_size=patch_size,
                             device=device)
 
@@ -206,6 +212,13 @@ def main(dir: str,
         if tif_px is not None:
             px = tif_px
 
+        # Check image structure and normalize histogram
+        if image.min() > 5 or image.max() < 250:  # Rescale image intensity
+            image = normalize(image)
+        if not image.min() >= 0 or not image.max() <= 1:  # Normalized between 0 and 1
+            image = minmax(image)
+        assert image.dtype == np.float32
+
         # Calculate parameters for normalizing image pixel size
         scale_factor = px / 25
         org_shape = image.shape
@@ -239,33 +252,35 @@ def main(dir: str,
 
         """CNN prediction"""
         iter_time = 1
-        for id_cnn, j in enumerate(range(len(patches_DL))):
-            if id_cnn % iter_time == 0:
+        for j in range(len(patches_DL)):
+            if j % iter_time == 0:
                 # Tardis progress bard update
                 tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                                 text_1=f'Found {len(predict_list)} images to predict!',
                                 text_3=f'Image: {i}',
                                 text_4=f'Pixel size: {px} A; Image re-sample to 25 A',
                                 text_5='Point Cloud: In processing...',
-                                text_7='Current Task: CNN prediction...',
+                                text_7=f'Current Task: CNN prediction...',
                                 text_8=printProgressBar(j, len(patches_DL)))
 
             # Pick image['s]
-            if id_cnn == 0:
+            input, name = patches_DL.__getitem__(j)
+
+            if j == 0:
                 start = time.time()
-                input, name = patches_DL.__getitem__(j)
+
+                # Predict & Threshold
+                out = np.where(predict_cnn._predict(input[None, :]) >= cnn_threshold, 1, 0)
 
                 end = time.time()
                 iter_time = 10 // (end - start)  # Scale progress bar refresh to 10s
                 if iter_time <= 1:
                     iter_time = 1
             else:
-                input, name = patches_DL.__getitem__(j)
+                # Predict & Threshold
+                out = np.where(predict_cnn._predict(input[None, :]) >= cnn_threshold, 1, 0)
 
-            # Predict & Threshold
-            out = np.where(predict_cnn._predict(input[None, :]) >= cnn_threshold, 1, 0)
-
-            # Save thresholded image
+            # Save threshold image
             assert out.min() == 0 and out.max() in [0, 1]
             tif.imwrite(join(output, f'{name}.tif'),
                         np.array(out, dtype=np.uint8))
@@ -311,7 +326,7 @@ def main(dir: str,
             tif.imwrite(join(am_output, f'{i[:-out_format]}_CNN.tif'),
                         image)
 
-        if image.min() == 0 and image.max() == 1:
+        if not image.min() == 0 and not image.max() == 1:
             continue
 
         # Tardis progress bard update
@@ -327,6 +342,15 @@ def main(dir: str,
                                      euclidean_transform=True,
                                      label_size=3,
                                      down_sampling_voxal_size=None)
+
+        if point_cloud.shape[0] < 100:
+            point_cloud = post_processer(image=image,
+                                         euclidean_transform=True,
+                                         label_size=0.1,
+                                         down_sampling_voxal_size=None)
+
+        if point_cloud.shape[0] < 100:
+            continue
 
         # Transform for xyz and pixel size for coord
         image = None
@@ -420,10 +444,6 @@ def main(dir: str,
                             text_4=f'Original pixel size: {px} A; Image re-sample to 25 A',
                             text_5=f'Point Cloud: {point_cloud.shape[0]} Nodes; NaN Segments',
                             text_7='Current Task: MT Segmentation...')
-
-        GraphToSegment = GraphInstanceV2(threshold=dist_threshold,
-                                         connection=2,
-                                         smooth=True)
 
         segments = GraphToSegment.patch_to_segment(graph=graphs,
                                                    coord=point_cloud,
