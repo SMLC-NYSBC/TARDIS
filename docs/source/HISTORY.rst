@@ -1,7 +1,7 @@
 History
 =======
 
-0.1.0-beta2 (2022-09-14)
+0.1.0-prebeta2 (2022-09-14)
 ------------------------
 * **Code restructure:**
     * Clean-up
@@ -13,14 +13,29 @@ History
     * Separate dev. requirements
     * Cleaned S3 aws loading and removed old models from S3 bucket
 
+* **SLCPY module changes:**
+    * Removed and marge with SpindleTorch and DIST
+
 * **SpindleTorch module changes:**
-    * Retrained FNet_32 and UNet_32
+    * Retrained FNet_16, FNet_32 and UNet_16, UNet_32
 
 * **DIST module changes:**
     * Introduced DIST for semantic segmentation
     * Retrained model on ScanNet v2 datasets
     * Added node feature embedding with images or RGB values
     * Retrained DIST model on ScanNet v2 + RGB
+
+* **General changes:**
+    * Load image data, marge and fixed for int8 and uint8
+    * Amira binary import fixes. Amira defined import type. Previously assumption was
+        that Amira load all binary as uint8. Amira load files as uint8 or int8 and
+        have deferent structure when loading mask data which can by binary or ascii.
+    * Overall stability improvements
+    * Tardis logo was integrated with all TARDIS modules
+    * Build tests for the whole tardis-pytorch
+    * Introduced tardis_dev and divide stable and developmental branches
+    * Fixed image normalization and enure correct normalized output for training
+        and prediction
 
 0.1.0-beta1 (2022-09-14)
 ------------------------
