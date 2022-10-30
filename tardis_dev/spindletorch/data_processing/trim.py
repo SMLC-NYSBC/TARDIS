@@ -10,7 +10,7 @@ from tifffile import tifffile as tif
 
 
 def scale_image(image: np.ndarray,
-                scale: float,
+                scale: tuple,
                 mask: Optional[np.ndarray] = None):
     """
     Scale image module using torch GPU interpolation
@@ -20,7 +20,7 @@ def scale_image(image: np.ndarray,
         mask: Optional binary mask image data
         scale: scale value for image
     """
-    if scale == 1:
+    if np.all(scale == image.shape):
         if image.ndim == 4:  # 3D with RGB
             dim = 3
         elif image.ndim == 3 and image.shape[2] == 3:  # 2D with RGB
@@ -44,14 +44,14 @@ def scale_image(image: np.ndarray,
 
         image = torch.from_numpy(np.transpose(image, (3, 0, 1, 2))).to('cpu').type(torch.float)
         image = np.transpose(F.interpolate(image[None, :],
-                                           scale_factor=scale,
+                                           size=scale,
                                            mode='trilinear',
                                            align_corners=False).cpu().detach().numpy()[0, :],
                              (1, 2, 3, 0)).astype(type_i)
         if mask is not None:
             mask = torch.from_numpy(np.transpose(mask, (3, 0, 1, 2))).to('cpu').type(torch.float)
             mask = np.transpose(F.interpolate(mask[None, :],
-                                              scale_factor=scale,
+                                              size=scale,
                                               mode='trilinear',
                                               align_corners=False).cpu().detach().numpy()[0, :],
                                 (1, 2, 3, 0)).astype(type_m)
@@ -60,14 +60,14 @@ def scale_image(image: np.ndarray,
 
         image = torch.from_numpy(np.transpose(image, (2, 0, 1))).to('cpu').type(torch.float)
         image = np.transpose(F.interpolate(image[None, :],
-                                           scale_factor=scale,
+                                           size=scale,
                                            mode='bicubic',
                                            align_corners=False).cpu().detach().numpy()[0, :],
                              (1, 2, 0)).astype(type_i)
         if mask is not None:
             mask = torch.from_numpy(np.transpose(mask, (2, 0, 1))).to('cpu').type(torch.float)
             mask = np.transpose(F.interpolate(mask[None, :],
-                                              scale_factor=scale,
+                                              size=scale,
                                               mode='bicubic',
                                               align_corners=False).cpu().detach().numpy()[0, :],
                                 (1, 2, 0)).astype(type_m)
@@ -76,13 +76,13 @@ def scale_image(image: np.ndarray,
 
         image = torch.from_numpy(image).to('cpu').type(torch.float)
         image = F.interpolate(image[None, None, :],
-                              scale_factor=scale,
+                              size=scale,
                               mode='trilinear',
                               align_corners=False).cpu().detach().numpy()[0, 0, :].astype(type_i)
         if mask is not None:
             mask = torch.from_numpy(mask).to('cpu').type(torch.float)
             mask = F.interpolate(mask[None, None, :],
-                                 scale_factor=scale,
+                                 size=scale,
                                  mode='trilinear',
                                  align_corners=False).cpu().detach().numpy()[0, 0, :].astype(type_m)
     else:  # 2D with Gray
@@ -90,13 +90,13 @@ def scale_image(image: np.ndarray,
 
         image = torch.from_numpy(image).to('cpu').type(torch.float)
         image = F.interpolate(image[None, None, :],
-                              scale_factor=scale,
+                              size=scale,
                               mode='bicubic',
                               align_corners=False).cpu().detach().numpy()[0, 0, :].astype(type_i)
         if mask is not None:
             mask = torch.from_numpy(mask).to('cpu').type(torch.float)
             mask = F.interpolate(mask[None, None, :],
-                                 scale_factor=scale,
+                                 size=scale,
                                  mode='bicubic',
                                  align_corners=False).cpu().detach().numpy()[0, 0, :].astype(type_m)
 
@@ -114,7 +114,7 @@ def trim_with_stride(image: np.ndarray,
                      prefix='',
                      clean_empty=True,
                      stride=25,
-                     scale: Optional[float] = 1.0,
+                     scale: Optional[tuple] = 1.0,
                      mask: Optional[np.ndarray] = None):
     """
     FUNCTION TO TRIMMED IMAGE AND MASKS TO SPECIFIED SIZE

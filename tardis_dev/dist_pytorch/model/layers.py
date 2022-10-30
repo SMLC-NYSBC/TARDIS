@@ -131,10 +131,10 @@ class DistLayer(nn.Module):
                                                         pairs_dim=pairs_dim,
                                                         num_heads=num_heads)
                 self.input_ffn = GeluFeedForward(input_dim=node_dim,
-                                                ff_dim=node_dim * ff_factor)
+                                                 ff_dim=node_dim * ff_factor)
                 self.pair_update = ComparisonLayer(input_dim=node_dim,
-                                                output_dim=pairs_dim,
-                                                channel_dim=pairs_dim)
+                                                   output_dim=pairs_dim,
+                                                   channel_dim=pairs_dim)
 
         # Edge optional MHA update
         if self.structure in ['full', 'full_af', 'self_attn']:

@@ -24,7 +24,6 @@ class PatchDataSet:
     Output is given as a list of arrays as torch.tensor or np.ndarray.
 
     Args:
-        coord (np.ndarray): 2D or 3D array of the point cloud.
         label_cls (np.ndarray): Optional class id array for each point in the
             point cloud.
         rgb (np.ndarray): Optional RGB feature array for each point in the point
@@ -40,7 +39,6 @@ class PatchDataSet:
     """
 
     def __init__(self,
-                 coord: np.ndarray,
                  label_cls=None,
                  rgb=None,
                  patch_3d=False,
@@ -50,17 +48,6 @@ class PatchDataSet:
                  graph=True,
                  tensor=True):
         # Global data setting
-        if graph:
-            assert coord.shape[1] in [3, 4], 'If graph True, coord must by of shape' \
-                '[Dim x X x Y x (Z)]'
-            self.segments_id = coord
-            self.coord = coord[:, 1:]
-        else:
-            assert coord.shape[1] in [2, 3], 'If graph True, coord must by of shape' \
-                '[X x Y x (Z)]'
-            self.segments_id = None
-            self.coord = coord
-
         self.label_cls = label_cls
         self.rgb = rgb
 
@@ -329,12 +316,14 @@ class PatchDataSet:
         return patches_coord, patch_idx
 
     def patched_dataset(self,
+                        coord: np.ndarray,
                         mesh=False,
                         dist_th: Optional[float] = None) -> list:
         """
         Main function for processing dataset and return patches.
 
         Args:
+            coord (np.ndarray): 2D or 3D array of the point cloud.
             mesh (boolean): If True, build a graph for meshes, not filaments.
             dist_th (float):  Distance threshold for graph from meshes.
 
@@ -354,7 +343,19 @@ class PatchDataSet:
         coord_patch = []
         graph_patch = []
         output_idx = []
-        graph_builder = BuildGraph(mesh=mesh)
+
+        if self.GRAPH_OUTPUT:
+            assert coord.shape[1] in [3, 4], 'If graph True, coord must by of shape' \
+                '[Dim x X x Y x (Z)]'
+            self.segments_id = coord
+            self.coord = coord[:, 1:]
+        else:
+            assert coord.shape[1] in [2, 3], 'If graph True, coord must by of shape' \
+                '[X x Y x (Z)]'
+            self.segments_id = None
+            self.coord = coord
+
+            graph_builder = BuildGraph(mesh=mesh)
 
         if mesh:
             assert dist_th is not None, 'If mesh, dist_th cannot be None!'

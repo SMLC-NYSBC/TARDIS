@@ -122,6 +122,8 @@ def main(dir: str,
 
     predict_list = [f for f in listdir(dir) if f.endswith(available_format)]
     assert len(predict_list) > 0, 'No file found in given directory!'
+
+    # Tardis progress bard update
     tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}',
                     text_1=f'Found {len(predict_list)} images to predict!',
                     text_5='Point Cloud: In processing...',
@@ -136,7 +138,15 @@ def main(dir: str,
     # Build handler's
     image_stitcher = StitchImages()
     post_processer = ImageToPointCloud()
-    BuildAmira = NumpyToAmira()
+    build_amira_file = NumpyToAmira()
+    patch_pc = PatchDataSet(label_cls=None,
+                            rgb=None,
+                            patch_3d=False,
+                            max_number_of_points=points_in_patch,
+                            init_patch_size=0,
+                            drop_rate=1,
+                            graph=False,
+                            tensor=True)
 
     # Build CNN from checkpoints
     checkpoints = (cnn_checkpoint, dist_checkpoint)
@@ -145,12 +155,14 @@ def main(dir: str,
     cnn_network = cnn_network.split('_')
     assert len(cnn_network) == 2, 'CNN type should be formatted as `unet_32`'
 
+    # Build CNN network with loaded pre-trained weights
     predict_cnn = Predictor(checkpoint=checkpoints[0],
                             network=cnn_network[0],
                             subtype=int(cnn_network[1]),
                             img_size=patch_size,
                             device=device)
 
+    # Build DIST network with loaded pre-trained weights
     predict_dist = Predictor(checkpoint=checkpoints[1],
                              network='dist',
                              subtype='without_img',
@@ -158,7 +170,7 @@ def main(dir: str,
                              img_size=None,
                              device=device)
 
-    """Process each image with CNN and GF"""
+    """Process each image with CNN and DIST"""
     tardis_progress = Tardis_Logo()
     for id, i in enumerate(sorted(predict_list)):
         """Pre-Processing"""
@@ -173,6 +185,7 @@ def main(dir: str,
         elif i.endswith('.am'):
             out_format = 3
 
+        # Tardis progress bard update
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image: {i}',
@@ -193,10 +206,12 @@ def main(dir: str,
         if tif_px is not None:
             px = tif_px
 
+        # Calculate parameters for normalizing image pixel size
         scale_factor = px / 25
         org_shape = image.shape
-        scale_shape = np.multiply(org_shape, scale_factor).astype(np.int16)
+        scale_shape = tuple(np.multiply(org_shape, scale_factor).astype(np.int16))
 
+        # Tardis progress bard update
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image: {i}',
@@ -204,9 +219,10 @@ def main(dir: str,
                         text_5='Point Cloud: In processing...',
                         text_7=f'Current Task: Sub-dividing images for {patch_size} size')
 
+        # Cut image for fix patch size and normalizing image pixel size
         trim_with_stride(image=image.astype(np.float32),
                          mask=None,
-                         scale=scale_factor,
+                         scale=scale_shape,
                          trim_size_xy=patch_size,
                          trim_size_z=patch_size,
                          output=join(dir, 'temp', 'Patches'),
@@ -217,14 +233,15 @@ def main(dir: str,
         image = None
         del image
 
-        # Setup for predicting image patches
+        # Setup CNN dataloader
         patches_DL = PredictionDataset(img_dir=join(dir, 'temp', 'Patches'),
                                        out_channels=1)
 
         """CNN prediction"""
-        iter_time = 100
-        for j in range(len(patches_DL)):
-            if j % iter_time == 0:
+        iter_time = 1
+        for id_cnn, j in enumerate(range(len(patches_DL))):
+            if id_cnn % iter_time == 0:
+                # Tardis progress bard update
                 tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                                 text_1=f'Found {len(predict_list)} images to predict!',
                                 text_3=f'Image: {i}',
@@ -234,13 +251,13 @@ def main(dir: str,
                                 text_8=printProgressBar(j, len(patches_DL)))
 
             # Pick image['s]
-            if j == 0:
+            if id_cnn == 0:
                 start = time.time()
                 input, name = patches_DL.__getitem__(j)
 
                 end = time.time()
-                iter_time = round(10 / (end - start))  # Scale progress bar refresh to 10s
-                if iter_time == 0:
+                iter_time = 10 // (end - start)  # Scale progress bar refresh to 10s
+                if iter_time <= 1:
                     iter_time = 1
             else:
                 input, name = patches_DL.__getitem__(j)
@@ -248,15 +265,15 @@ def main(dir: str,
             # Predict & Threshold
             out = np.where(predict_cnn._predict(input[None, :]) >= cnn_threshold, 1, 0)
 
-            # Save
+            # Save thresholded image
             assert out.min() == 0 and out.max() in [0, 1]
             tif.imwrite(join(output, f'{name}.tif'),
                         np.array(out, dtype=np.uint8))
 
         """Post-Processing"""
-        # Stitch predicted image patches
-        scale_factor = 25 / px
+        scale_factor = org_shape
 
+        # Tardis progress bard update
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image: {i}',
@@ -264,34 +281,40 @@ def main(dir: str,
                         text_5='Point Cloud: In processing...',
                         text_7='Current Task: Stitching...')
 
+        # Stitch predicted image patches
         image = check_uint8(image_stitcher(image_dir=output,
                                            output=None,
                                            mask=True,
                                            prefix='',
-                                           dtype=np.int8)[:scale_shape[0] + 1,
-                                                          :scale_shape[1] + 1,
-                                                          :scale_shape[2] + 1])
+                                           dtype=np.int8)[:scale_shape[0],
+                                                          :scale_shape[1],
+                                                          :scale_shape[2]])
+        assert image.shape == scale_shape, f'Image shape {image.shape} != scale shape {scale_shape}'
+
+        # Restored original image pixel size
         image, _ = scale_image(image=image,
                                mask=None,
                                scale=scale_factor)
 
-        """Fill gaps in binary mask"""
+        # Fill gaps in binary mask after up/downsizing image to 2.5 nm pixel size
         image = fill_gaps_in_semantic(image)
 
-        assert image.shape == org_shape, 'Error while converting from 2.5 nm pixel size. ' \
+        # Check if predicted image
+        assert image.shape == org_shape, f'Error while converting to {px} A pixel size. ' \
             f'Org. shape {org_shape} is not the same as converted shape {image.shape}'
-        assert image.min() == 0 and image.max() == 1
-
-        # Check if predicted image is not empty
-        if debug:
-            tif.imwrite(join(am_output, f'{i[:-out_format]}_CNN.tif'),
-                        image)
 
         # If prediction fail aka no prediction was produces continue with next image
         if image is None:
             continue
 
-        # Post-process predicted image patches
+        if debug:  # Debugging checkpoint
+            tif.imwrite(join(am_output, f'{i[:-out_format]}_CNN.tif'),
+                        image)
+
+        if image.min() == 0 and image.max() == 1:
+            continue
+
+        # Tardis progress bard update
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image: {i}',
@@ -299,6 +322,7 @@ def main(dir: str,
                         text_5='Point Cloud: In processing...',
                         text_7='Current Task: Image Postprocessing...')
 
+        # Post-process predicted image patches
         point_cloud = post_processer(image=image,
                                      euclidean_transform=True,
                                      label_size=3,
@@ -308,16 +332,17 @@ def main(dir: str,
         image = None
         del image
 
-        if debug:
+        if debug:  # Debugging checkpoint
             np.save(join(am_output, f'{i[:-out_format]}_raw_pc.npy'),
                     point_cloud)
 
         """DIST Prediction"""
-        # Find downsampling value by 5 to reduce noise
+        # Find downsampling value by voxal size 5 to reduce noise
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(point_cloud)
         point_cloud = np.asarray(pcd.voxel_down_sample(voxel_size=5).points)
 
+        # Tardis progress bard update
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image: {i}',
@@ -325,23 +350,13 @@ def main(dir: str,
                         text_5=f'Point Cloud: {point_cloud.shape[0]} Nodes; NaN Segments',
                         text_7='Current Task: Preparing for MT segmentation...')
 
-        # Normalize point cloud KNN distance
+        # Normalize point cloud KNN distance !Soon depreciated!
         dist = pc_median_dist(point_cloud, avg_over=True)
 
-        # Build patches dataset with
-        VD = PatchDataSet(coord=point_cloud / dist,
-                          label_cls=None,
-                          rgb=None,
-                          patch_3d=False,
-                          max_number_of_points=points_in_patch,
-                          init_patch_size=0,
-                          drop_rate=1,
-                          graph=False,
-                          tensor=True)
-
-        coords_df, _, output_idx, _ = VD.patched_dataset(mesh=False,
-                                                         dist_th=None)
-        coords_df = [c / pc_median_dist(c) for c in coords_df]
+        # Build patches dataset
+        coords_df, _, output_idx, _ = patch_pc.patched_dataset(coord=point_cloud / dist,
+                                                               mesh=False,
+                                                               dist_th=None)
 
         # Predict point cloud
         graphs = []
@@ -353,8 +368,10 @@ def main(dir: str,
                         text_7='Current Task: DIST prediction...',
                         text_8=printProgressBar(0, len(coords_df)))
 
-        for id, coord in enumerate(coords_df):
-            if id % 50 == 0:
+        """DIST prediction"""
+        iter_time = 1
+        for id_dist, coord in enumerate(coords_df):
+            if id_dist % 1 == 0:
                 tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                                 text_1=f'Found {len(predict_list)} images to predict!',
                                 text_3=f'Image: {i}',
@@ -363,9 +380,19 @@ def main(dir: str,
                                 text_7='Current Task: DIST prediction...',
                                 text_8=printProgressBar(id, len(coords_df)))
 
-            graph = predict_dist._predict(x=coord[None, :])
-            graphs.append(graph)
+            if id_dist == 0:
+                start = time.time()
 
+                graph = predict_dist._predict(x=coord[None, :])
+
+                end = time.time()
+                iter_time = 10 // (end - start)  # Scale progress bar refresh to 10s
+                if iter_time <= 1:
+                    iter_time = 1
+            else:
+                graph = predict_dist._predict(x=coord[None, :])
+
+            graphs.append(graph)
         if debug:
             np.save(join(am_output, f'{i[:-out_format]}_graph_voxal.npy'),
                     graphs,
@@ -439,8 +466,8 @@ def main(dir: str,
                         text_7='Current Task: Segmentation finished!')
 
         """Save as .am"""
-        BuildAmira.export_amira(coord=segments,
-                                file_dir=join(am_output, f'{i[:-out_format]}_SpatialGraph.am'))
+        build_amira_file.export_amira(coord=segments,
+                                      file_dir=join(am_output, f'{i[:-out_format]}_SpatialGraph.am'))
 
         """Clean-up temp dir"""
         clean_up(dir=dir)

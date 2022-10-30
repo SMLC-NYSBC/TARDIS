@@ -6,6 +6,7 @@ from IPython.core.interactiveshell import InteractiveShell
 from tardis_dev.version import version
 from IPython.display import clear_output
 
+
 def printProgressBar(value: int,
                      max: int):
     """
@@ -56,7 +57,7 @@ class Tardis_Logo:
 
     ....)
     """
-    
+
     def __init__(self):
         clear = None
 
