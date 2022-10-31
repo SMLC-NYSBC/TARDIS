@@ -12,7 +12,6 @@ from tardis_dev.utils.losses import BCELoss, CELoss, DiceLoss
 from torch import optim
 from torch.optim.lr_scheduler import StepLR
 
-
 # Setting for stable release to turn off all debug APIs
 torch.backends.cudnn.benchmark = True
 torch.autograd.set_detect_anomaly(mode=False)

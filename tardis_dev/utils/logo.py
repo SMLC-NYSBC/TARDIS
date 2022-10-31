@@ -3,8 +3,8 @@ import sys
 from os import get_terminal_size, system
 
 from IPython.core.interactiveshell import InteractiveShell
-from tardis_dev.version import version
 from IPython.display import clear_output
+from tardis_dev.version import version
 
 
 def printProgressBar(value: int,

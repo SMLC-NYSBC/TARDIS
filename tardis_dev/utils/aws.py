@@ -2,8 +2,9 @@ import io
 from os import mkdir
 from os.path import expanduser, isdir, isfile, join
 from typing import Optional
-from tardis_dev.utils.utils import MD5Count
+
 import requests
+from tardis_dev.utils.utils import MD5Count
 
 
 def get_weights_aws(network: str,

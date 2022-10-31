@@ -13,10 +13,10 @@ from tardis_dev.spindletorch.data_processing.stitch import StitchImages
 from tardis_dev.spindletorch.data_processing.trim import scale_image, trim_with_stride
 from tardis_dev.spindletorch.datasets.augment import MinMaxNormalize, RescaleNormalize
 from tardis_dev.spindletorch.datasets.dataloader import PredictionDataset
-from tardis_dev.spindletorch.predictor import Predictor
 from tardis_dev.utils.device import get_device
 from tardis_dev.utils.load_data import import_am, load_image
 from tardis_dev.utils.logo import Tardis_Logo, printProgressBar
+from tardis_dev.utils.predictor import Predictor
 from tardis_dev.utils.setup_envir import build_temp_dir, clean_up
 from tardis_dev.utils.utils import check_uint8
 from tardis_dev.version import version

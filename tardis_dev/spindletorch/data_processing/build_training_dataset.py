@@ -4,10 +4,8 @@ from os.path import isfile, join
 import numpy as np
 from tardis_dev.spindletorch.data_processing.semantic_mask import draw_semantic
 from tardis_dev.spindletorch.data_processing.trim import trim_with_stride
-from tardis_dev.spindletorch.datasets.augment import (MinMaxNormalize,
-                                                      RescaleNormalize)
+from tardis_dev.spindletorch.datasets.augment import MinMaxNormalize, RescaleNormalize
 from tardis_dev.utils.load_data import ImportDataFromAmira, load_image
-
 from tardis_dev.utils.logo import Tardis_Logo, printProgressBar
 
 

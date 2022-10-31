@@ -7,12 +7,12 @@ import click
 from torch.utils.data import DataLoader
 
 from tardis_dev.spindletorch.data_processing.build_training_dataset import build_train_dataset
-from tardis_dev.spindletorch.train import train_cnn
 from tardis_dev.spindletorch.datasets.dataloader import CNNDataset
+from tardis_dev.spindletorch.train import train_cnn
+from tardis_dev.utils.dataset import build_test_dataset
 from tardis_dev.utils.device import get_device
 from tardis_dev.utils.logo import Tardis_Logo
 from tardis_dev.utils.setup_envir import check_dir
-from tardis_dev.utils.dataset import build_test_dataset
 from tardis_dev.version import version
 
 

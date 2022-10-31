@@ -1,5 +1,5 @@
 import glob
-from os import mkdir, rename, listdir
+from os import listdir, mkdir, rename
 from os.path import isdir, join
 from shutil import rmtree
 

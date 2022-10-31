@@ -1,6 +1,7 @@
 from typing import Optional
-import torch
+
 import numpy as np
+import torch
 
 
 def calculate_F1(logits: Optional[np.ndarray] = torch.Tensor,

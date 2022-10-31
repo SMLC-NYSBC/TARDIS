@@ -1,8 +1,8 @@
 History
 =======
 
-0.1.0-prebeta2 (2022-09-14)
-------------------------
+0.1.0-pre_beta2 (2022-09-14)
+----------------------------
 * **Code restructure:**
     * Clean-up
     * Restructure code organization

@@ -10,18 +10,20 @@ with open('requirements.txt') as r:
 setup(
     author=["Robert Kiewisz", "Tristan Bepler"],
     author_email='rkiewisz@nysbc.com',
-    python_requires='>=3.7',
+    python_requires='==3.7',
     install_requires=required,
     dependency_links=[
         'https://download.pytorch.org/whl/cu116'
     ],
-    classifiers=['Development Status :: Alpha Release',
-                 'Intended Audience : ../: Developers/Research',
-                 'Environment :: Console/WebApp',
+    classifiers=['Development Status :: 4 - Beta',
+                 'Intended Audience :: Developers/Research',
+                 'Environment :: Console',
                  'Environment :: GPU :: NVIDIA CUDA :: >=11.3',
                  'License :: OSI Approved :: MIT License',
                  'Natural Language :: English',
-                 'Programming Language :: Python :: 3.7'],
+                 'Programming Language :: Python :: 3.7',
+                 'Programming Language :: Python :: 3.8',
+                 'Programming Language :: Python :: 3.9'],
     description="PyTorch segmentation of 2D/3D images such as electron tomography "
                 "(ET), Cryo-EM or fluorescent microscopy data into 3D segmented "
                 "point cloud.",

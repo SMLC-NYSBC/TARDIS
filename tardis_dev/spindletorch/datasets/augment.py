@@ -1,4 +1,5 @@
 from typing import Optional
+
 import numpy as np
 from skimage import exposure
 

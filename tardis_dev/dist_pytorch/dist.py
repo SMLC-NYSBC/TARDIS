@@ -3,8 +3,7 @@ from typing import Optional
 import numpy as np
 import torch
 import torch.nn as nn
-from tardis.dist_pytorch.transformer.modules import (EdgeEmbedding,
-                                                     NodeEmbedding)
+from tardis.dist_pytorch.transformer.modules import EdgeEmbedding, NodeEmbedding
 from tardis_dev.dist_pytorch.model.layers import DistStack
 
 
