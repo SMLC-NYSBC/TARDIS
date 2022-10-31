@@ -60,7 +60,9 @@ class PatchDataSet:
         self.PATCH_3D = patch_3d
         self.init_patch_size = init_patch_size
         self.INIT_PATCH_SIZE = init_patch_size
+        self.expand = 0.025
         self.EXPAND = 0.025  # Expand boundary box by 2.5%
+        self.stride = 0.15
         self.STRIDE = 0.15  # Create 15% overlaps between patches
 
         if init_patch_size == 0:
@@ -76,14 +78,14 @@ class PatchDataSet:
     def _init_parameters(self):
         # Patch setting
         self.INIT_PATCH_SIZE = self.init_patch_size
-        self.EXPAND = 0.025  # Expand boundary box by 2.5%
-        self.STRIDE = 0.15  # Create 15% overlaps between patches
         if self.init_patch_size == 0:
+            self.EXPAND = self.expand
+            self.STRIDE = self.stride
             self.SIZE_EXPAND = self.EXPAND
             self.PATCH_STRIDE = self.STRIDE
         else:
-            self.SIZE_EXPAND = self.init_patch_size * self.EXPAND
-            self.PATCH_STRIDE = self.init_patch_size * self.STRIDE
+            self.SIZE_EXPAND = self.init_patch_size * self.expand
+            self.PATCH_STRIDE = self.init_patch_size * self.stride
 
     def _boundary_box(self) -> np.ndarray:
         """

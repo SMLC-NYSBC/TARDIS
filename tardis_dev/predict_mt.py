@@ -18,7 +18,7 @@ from tardis_dev.spindletorch.data_processing.stitch import StitchImages
 from tardis_dev.spindletorch.data_processing.trim import scale_image, trim_with_stride
 from tardis_dev.spindletorch.datasets.augment import MinMaxNormalize, RescaleNormalize
 from tardis_dev.spindletorch.datasets.dataloader import PredictionDataset
-from tardis_dev.spindletorch.predictor import Predictor
+from tardis_dev.utils.predictor import Predictor
 from tardis_dev.utils.device import get_device
 from tardis_dev.utils.export_data import NumpyToAmira
 from tardis_dev.utils.load_data import import_am, load_image
