@@ -2,11 +2,11 @@ from os.path import join
 
 import numpy as np
 import torch
-from tardis_dev.spindletorch.datasets.augment import (MinMaxNormalize,
+from tardis.spindletorch.datasets.augment import (MinMaxNormalize,
                                                       RescaleNormalize,
                                                       SimpleNormalize,
                                                       preprocess)
-from tardis_dev.spindletorch.datasets.dataloader import (CNNDataset,
+from tardis.spindletorch.datasets.dataloader import (CNNDataset,
                                                          PredictionDataset)
 
 

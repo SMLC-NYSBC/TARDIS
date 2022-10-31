@@ -1,5 +1,5 @@
 import torch
-from tardis_dev.dist_pytorch.model.embedding import EdgeEmbedding, NodeEmbedding
+from tardis.dist_pytorch.model.embedding import EdgeEmbedding, NodeEmbedding
 
 
 def test_node_embedding():

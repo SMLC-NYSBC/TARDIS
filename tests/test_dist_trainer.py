@@ -2,11 +2,11 @@ import os
 import shutil
 
 import torch.nn as nn
-from tardis_dev.dist_pytorch.trainer import C_DistTrainer, DistTrainer
-from tardis_dev.dist_pytorch.train import train_dist
-from tardis_dev.dist_pytorch.datasets.dataloader import (FilamentDataset,
+from tardis.dist_pytorch.trainer import C_DistTrainer, DistTrainer
+from tardis.dist_pytorch.train import train_dist
+from tardis.dist_pytorch.datasets.dataloader import (FilamentDataset,
                                                          ScannetColorDataset)
-from tardis_dev.utils.device import get_device
+from tardis.utils.device import get_device
 from torch.utils.data import DataLoader
 
 

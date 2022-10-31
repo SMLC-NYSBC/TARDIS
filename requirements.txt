@@ -1,5 +1,4 @@
 click>=8.0.4
-torch>=1.12.1
 numpy>=1.20.0
 open3d>=0.9.0
 tifffile>=2021.11.2
@@ -10,3 +9,4 @@ ipython>=8.4.0
 opencv-python>=4.5.5.64
 pandas>=1.4.3
 scipy>=1.8.0
+imagecodecs>=2021.8.26

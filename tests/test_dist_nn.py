@@ -1,7 +1,5 @@
 import torch
-from tardis_dev.dist_pytorch.dist import C_DIST, DIST
-
-# from tardis_dev.utils.aws import get_weights_aws
+from tardis.dist_pytorch.dist import C_DIST, DIST
 
 
 class TestGraphFormer:
@@ -9,28 +7,6 @@ class TestGraphFormer:
     def rand_tensor(self,
                     shape: tuple):
         return torch.rand(shape)
-
-    # def test_dist_with_aws(self):
-    #     # Test for model compatibility with aws weights
-    #     weight = torch.load(get_weights_aws(network='dist',
-    #                                         subtype='without_img',
-    #                                         model='microtubules'),
-    #                         map_location='cpu')
-    #     model_dict = weight['model_struct_dict']
-    #     globals().update(model_dict)
-
-    #     model = DIST(n_out=gf_out,
-    #                  node_input=node_input,
-    #                  node_dim=gf_node_dim,
-    #                  edge_dim=gf_edge_dim,
-    #                  num_layers=gf_layers,
-    #                  num_heads=gf_heads,
-    #                  coord_embed_sigma=gf_sigma,
-    #                  dropout_rate=gf_dropout,
-    #                  structure=gf_structure,
-    #                  predict=False)
-
-    #     model.load_state_dict(weight['model_state_dict'])
 
     def test_dist_wo_rgb(self):
         for n_dim in [32, 16, None]:

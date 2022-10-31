@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-from tardis_dev.version import version
+from tardis.version import version
 
 with open('README.rst') as readme_file:
     readme = readme_file.read()
@@ -10,7 +10,7 @@ with open('requirements.txt') as r:
 setup(
     author=["Robert Kiewisz", "Tristan Bepler"],
     author_email='rkiewisz@nysbc.com',
-    python_requires='==3.7',
+    python_requires='>=3.7.*',
     install_requires=required,
     dependency_links=[
         'https://download.pytorch.org/whl/cu116'
@@ -29,9 +29,9 @@ setup(
                 "point cloud.",
     entry_points={
         'console_scripts': [
-            'tardis_dev_cnn_train = tardis_dev.train_spindletorch:main',
-            'tardis_dev_dist_train = tardis_dev.train_DIST:main',
-            'tardis_dev_mt = tardis_dev.predict_mt:main',
+            'tardis_cnn_train = tardis.train_spindletorch:main',
+            'tardis_dist_train = tardis.train_DIST:main',
+            'tardis_mt = tardis.predict_mt:main',
         ],
     },
     license="MIT License",
@@ -39,8 +39,8 @@ setup(
     long_description=readme,
     include_package_data=True,
     keywords=['spindletorch', 'semantic segmentation', 'point cloud segmentation',
-              'MT segmentation', 'UNet', 'Unet3Plus'],
-    name='tardis-dev',
+              'MT segmentation', 'UNet', 'Unet3Plus', 'FNet'],
+    name='tardis_pytorch',
     packages=find_packages(include=['tardis', 'tardis.*'],
                            exclude=['tests']),
     url='https://github.com/SMLC-NYSBC/tardis-pytorch',

@@ -1,0 +1,440 @@
+from typing import Optional
+
+import numpy as np
+import tifffile.tifffile as tiff
+from skimage import exposure
+from sklearn.neighbors import KDTree
+from tardis.utils.load_data import ImportDataFromAmira
+
+
+def preprocess_data(coord: str,
+                    image: Optional[str] = None,
+                    size: Optional[int] = None,
+                    include_label=True,
+                    normalization='simple') -> np.ndarray:
+    """
+    Data augmentation function.
+
+    Given any supported coordinate file, the function process it with optional image
+    data. If image data are used, the image output is a list of flattened image patches
+    of a specified size.
+    Additionally, the graph output can be created.
+
+    Args:
+        coord (str): Directory for the file containing coordinate data.
+        image (str, optional): Directory to the supported image file.
+        size (int, optional): Image patch size.
+        include_label (bool): If True output coordinate array with label ids.
+        normalization (str): Type of image normalization.
+
+    Returns:
+        np.ndarray: Returns coordinates and optionally image patch list.
+    """
+
+    """ Collect Coordinates [Length x Dimension] """
+    if coord[-4:] == ".csv":
+        coord_label = np.genfromtxt(coord, delimiter=',')
+        if str(coord_label[0, 0]) == 'nan':
+            coord_label = coord_label[1:, :]
+    elif coord[-4:] == ".npy":
+        coord_label = np.load(coord)
+    elif coord[-3:] == ".am":
+        if image is None:
+            amira_import = ImportDataFromAmira(src_am=coord,
+                                               src_img=None)
+            coord_label = amira_import.get_segmented_points()
+        else:
+            amira_import = ImportDataFromAmira(src_am=coord,
+                                               src_img=image)
+            coord_label = amira_import.get_segmented_points()
+
+    """ Coordinates without labels """
+    coords = coord_label[:, 1:]
+
+    if size is None:
+        size = 1
+
+    if coords.shape[1] == 2:
+        size = (size, size)
+    elif coords.shape[1] == 3:
+        size = (size, size, size)
+
+    """ Collect Image Patches [Channels x Length] """
+    # Normalize image between 0,1
+    if image is not None:
+        assert normalization in ['simple', 'minmax']
+        if normalization == "simple":
+            normalization = SimpleNormalize()
+        elif normalization == 'minmax':
+            normalization = MinMaxNormalize(0, 255)
+
+    if image is not None and coord[-3:] != ".am":
+        # Crop images size around coordinates
+        img_stack = tiff.imread(image)
+
+        crop_tiff = Crop2D3D(image=img_stack,
+                             size=size,
+                             normalization=normalization)  # Z x Y x X
+
+        # Load images in an array
+        if len(size) == 2:
+            img = np.zeros((len(coords), size[0] * size[1]))
+
+            for i in range(img.shape[0]):
+                point = coords[i]  # X x Y
+                img[i, :] = np.array(crop_tiff(center_point=point)).flatten()
+
+        elif len(size) == 3:
+            img = np.zeros((len(coords), size[0] * size[1] * size[2]))
+
+            for i in range(img.shape[0]):
+                point = coords[i]  # X x Y x Z
+                img[i, :] = np.array(crop_tiff(center_point=point)).flatten()
+
+    elif image is not None and image.endswith('.am'):
+        """ Collect Image Patches for .am binary files """
+        img_stack, _ = amira_import.get_image()
+
+        # Crop image around coordinates
+        crop_tiff = Crop2D3D(image=img_stack,
+                             size=size,
+                             normalization=normalization)  # Z x Y x X
+
+        # Load images patches into an array
+        if len(size) == 2:
+            img = np.zeros((len(coords), size[0] * size[1]))
+
+            for i in range(img.shape[0]):
+                point = coords[i]  # X x Y
+                img[i, :] = np.array(crop_tiff(center_point=point)).flatten()
+
+        elif len(size) == 3:
+            img = np.zeros((len(coords), size[0] * size[1] * size[2]))
+
+            for i in range(img.shape[0]):
+                point = coords[i]  # X x Y x Z
+                img[i, :] = np.array(crop_tiff(center_point=point)).flatten()
+    else:
+        img = np.zeros(size)
+
+    """ If not Include label build graph """
+    if include_label:
+        return coord_label, img
+    else:
+        graph_builder = BuildGraph(mesh=False)
+        graph = graph_builder(coord=coord_label)
+
+        return coords, img, graph
+
+
+class BuildGraph:
+    """
+    GRAPH REPRESENTATION FROM 2D/3D COORDINATES
+
+    The main class is to build a graph representation of any given point cloud based on
+    the labeling information and optionally point distances.
+
+    The BuildGraph class outputs a 2D array of a graph representation built for the
+    filament-like structure which allows for only a maximum of 2 connections per node.
+    Or for an object structure where the cap interaction per node limit was fixed as 4.
+    The graph representation for a mesh-like object is computed by identifying
+    all points in the class and searching for 4 KNN for each node inside the class.
+
+    Args:
+        mesh (bool, optional): If True graph representation is computed for
+            object-like structures.
+    """
+
+    def __init__(self,
+                 mesh=False):
+        self.mesh = mesh
+
+    def __call__(self,
+                 coord: np.ndarray,
+                 dist_th=None) -> np.ndarray:
+        """
+        Graph representation builder.
+
+        Args:
+            coord (np.ndarray): A coordinate array of the shape (Nx[2,3]).
+            dist_th (float, optional): Distance threshold for identifiers correct
+                connection. Especially useful for better resolving edges on the
+                corners of the objects.
+
+        Returns:
+            np.ndarray: Graph representation 2D array.
+        """
+        coord = coord
+        graph = np.zeros((len(coord), len(coord)))
+        all_idx = np.unique(coord[:, 0])
+
+        for i in all_idx:
+            points_in_contour = np.where(coord[:, 0] == i)[0].tolist()
+
+            if self.mesh:
+                coord_df = coord[points_in_contour]
+                tree = KDTree(coord_df, leaf_size=coord_df.shape[0])
+
+                if coord_df.shape[0] > 4:
+                    for j in points_in_contour:
+                        dist, match_coord = tree.query(coord[j].reshape(1, -1),
+                                                       k=4)
+                        match_coord = match_coord[0]  # 6 KNN
+                        dist = dist[0]
+
+                        if dist_th is None:
+                            # Select point in contour
+                            knn = [x for id, x in enumerate(points_in_contour) if id in match_coord]
+                        else:
+                            # Select point in contour
+                            knn = [x for id, x in enumerate(points_in_contour) if id in match_coord]
+                            knn = [x for x, y in zip(knn, dist) if y <= dist_th]
+
+                        # Self connection
+                        graph[j, j] = 1
+
+                        # Pentangular connection
+                        graph[j, knn] = 1
+                        graph[knn, j] = 1
+
+                        graph[j, knn] = 1
+                        graph[knn, j] = 1
+
+                        graph[j, knn] = 1
+                        graph[knn, j] = 1
+                else:
+                    for j in points_in_contour:
+                        graph[j, j] = 1
+
+                        graph[j, points_in_contour] = 1
+                        graph[points_in_contour, j] = 1
+            else:
+                for j in points_in_contour:
+                    graph[j, j] = 1
+
+                    # First point in contour
+                    if j == points_in_contour[0]:  # First point
+                        if (j + 1) <= (len(coord) - 1):
+                            graph[j, j + 1] = 1
+                            graph[j + 1, j] = 1
+                    # Last point
+                    elif j == points_in_contour[len(points_in_contour) - 1]:
+                        graph[j, j - 1] = 1
+                        graph[j - 1, j] = 1
+                    else:  # Point in the middle
+                        graph[j, j + 1] = 1
+                        graph[j + 1, j] = 1
+                        graph[j, j - 1] = 1
+                        graph[j - 1, j] = 1
+
+                # Check euclidean distance between fist and last point
+                ends_distance = np.linalg.norm(coord[points_in_contour[0]][1:] -
+                                               coord[points_in_contour[-1]][1:])
+
+                # If < 2 nm pixel size, connect
+                if ends_distance < 2:
+                    graph[points_in_contour[0], points_in_contour[-1]] = 1
+                    graph[points_in_contour[-1], points_in_contour[0]] = 1
+
+        return graph
+
+
+class SimpleNormalize:
+    """
+    SIMPLE IMAGE NORMALIZATION
+
+    Take int8 image file with 0 - 255 value. All image value are spread
+    between 0 - 1.
+    """
+
+    def __call__(self,
+                 x: np.ndarray) -> np.ndarray:
+        """
+        Call for image normalization.
+
+        Args:
+            x (np.ndarray):
+                Image array.
+
+        Returns:
+            np.ndarray:
+                Normalized image.
+        """
+        if x.min() >= 0 and x.max() <= 255:
+            norm = x / 255
+        elif x.min() >= 0 and x.max() <= 65535:
+            norm = x / 65535
+        elif x.min() < 0:
+            x = x + abs(x.min())  # Move px values from negative numbers
+            norm = x / x.max()  # Convert 32 to 16 bit and normalize
+
+        return norm
+
+
+class RescaleNormalize:
+    """
+    IMAGE CLIPPING NORMALIZATION
+
+    The image histogram is clipped and spread between 0 and 255, given the
+    prudential range.
+    """
+
+    def __call__(self,
+                 x: np.ndarray,
+                 range=(2, 98)) -> np.ndarray:
+        """
+        Call for image normalization.
+
+        Args:
+            x (np.ndarray):
+                Image array.
+            range (tuple, optional):
+                Range for image histogram clipping.
+                    Defaults to (2, 98).
+
+        Returns:
+            np.ndarray: Normalized image
+        """
+        p2, p98 = np.percentile(x, range)
+
+        return exposure.rescale_intensity(x, in_range=(p2, p98))
+
+
+class MinMaxNormalize:
+    """
+    MINMAX NORMALIZATION
+
+    Image histogram is normalized between given fixed value between 0 and 255.
+
+    Args:
+        min (int): Minimum clip value.
+        max (int): Maximum clip value.
+    """
+
+    def __init__(self,
+                 min: int,
+                 max: int):
+        assert max > min
+        self.min = min
+        self.range = max - min
+
+    def __call__(self,
+                 x: np.ndarray) -> np.ndarray:
+        """
+        Call for image normalization.
+
+        Args:
+            x (np.ndarray):
+                Image array
+
+        Returns:
+            np.ndarray:
+                Normalized image
+        """
+        return (x - self.min) / self.range
+
+
+class Crop2D3D:
+    """
+    2D/3D IMAGE CROPPING
+
+    Center crop gave image to the specified size.
+
+    Args:
+        image (np.ndarray): Image array.
+        size (tuple): Uniform cropping size.
+        normalization (class): Normalization type.
+    """
+
+    def __init__(self,
+                 image: np.ndarray,
+                 size: tuple,
+                 normalization):
+        self.image = image
+        self.size = size
+        self.normalization = normalization
+
+        if len(size) == 2:
+            self.width, self.height = image.shape
+            self.depth = None
+        else:
+            self.depth, self.width, self.height = image.shape
+
+    @staticmethod
+    def get_xyz_position(center_point: int,
+                         size: int,
+                         max_size: int) -> int:
+        """
+        Given the center point calculate the range to crop.
+
+        Args:
+            center_point (tuple): XYZ coordinate for center point.
+            size (int): Crop size.
+            max_size (int): Axis maximum size is used to calculate the offset.
+
+        Returns:
+            int: Min and max int values refer to the position on the axis.
+        """
+        x0 = center_point - (size / 2)
+        x1 = center_point + (size / 2)
+
+        """ Check if frame feet into image, if not shift it """
+        if x0 < 0:
+            move_by = abs(x0)
+            x0 = x0 + move_by
+            x1 = x1 + move_by
+
+        if x1 > max_size:
+            move_by = x1 - max_size
+            x0 = x0 - move_by
+            x1 = x1 - move_by
+
+        return int(x0), int(x1)
+
+    def __call__(self,
+                 center_point: tuple) -> np.ndarray:
+        """
+        Call for image cropping.
+
+        Args:
+            center_point (tuple): XYZ coordinates to crop image.
+
+        Returns:
+            np.ndarray: Cropped image patch.
+        """
+        assert len(center_point) in [2, 3], \
+            'Given position for cropping is not 2D or 3D!'
+
+        if len(center_point) == 3:
+            z0, z1 = self.get_xyz_position(center_point=center_point[-1],
+                                           size=self.size[-1],
+                                           max_size=self.depth)
+            x0, x1 = self.get_xyz_position(center_point=center_point[0],
+                                           size=self.size[0],
+                                           max_size=self.height)
+            y0, y1 = self.get_xyz_position(center_point=center_point[1],
+                                           size=self.size[1],
+                                           max_size=self.width)
+            crop_img = self.image[z0:z1, y0:y1, x0:x1]
+
+            if crop_img.shape != (self.size[-1], self.size[0], self.size[1]):
+                crop_df = np.array(crop_img)
+                shape = crop_img.shape
+                crop_img = np.zeros((self.size[2], self.size[0], self.size[1]))
+                crop_img[0:shape[0], 0:shape[1], 0:shape[2]] = crop_df
+        elif len(center_point) == 2:
+            x0, x1 = self.get_xyz_position(center_point=center_point[0],
+                                           size=self.size[0],
+                                           max_size=self.height)
+            y0, y1 = self.get_xyz_position(center_point=center_point[1],
+                                           size=self.size[1],
+                                           max_size=self.width)
+            crop_img = self.image[y0:y1, x0:x1]
+
+            if crop_img.shape != (self.size[0], self.size[1]):
+                crop_df = np.array(crop_img)
+                shape = crop_img.shape
+                crop_img = np.zeros((self.size[0], self.size[1]))
+                crop_img[0:shape[0], 0:shape[1]] = crop_df
+
+        return self.normalization(crop_img)

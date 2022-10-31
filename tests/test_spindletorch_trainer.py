@@ -2,10 +2,10 @@ import os
 import shutil
 
 import torch.nn as nn
-from tardis_dev.spindletorch.trainer import CNNTrainer
-from tardis_dev.spindletorch.train import train_cnn
-from tardis_dev.spindletorch.datasets.dataloader import CNNDataset
-from tardis_dev.utils.device import get_device
+from tardis.spindletorch.trainer import CNNTrainer
+from tardis.spindletorch.train import train_cnn
+from tardis.spindletorch.datasets.dataloader import CNNDataset
+from tardis.utils.device import get_device
 from torch.utils.data import DataLoader
 
 

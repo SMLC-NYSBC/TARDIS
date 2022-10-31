@@ -1,5 +1,5 @@
 import torch
-from tardis_dev.dist_pytorch.model.modules import (ComparisonLayer,
+from tardis.dist_pytorch.model.modules import (ComparisonLayer,
                                                    GeluFeedForward,
                                                    PairBiasSelfAttention,
                                                    QuadraticEdgeUpdate,

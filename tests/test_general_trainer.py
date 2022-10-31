@@ -2,10 +2,10 @@ import shutil
 
 import torch
 import torch.nn as nn
-from tardis_dev.dist_pytorch.trainer import C_DistTrainer, DistTrainer
-from tardis_dev.spindletorch.trainer import CNNTrainer
-from tardis_dev.utils.device import get_device
-from tardis_dev.utils.trainer import BasicTrainer
+from tardis.dist_pytorch.trainer import C_DistTrainer, DistTrainer
+from tardis.spindletorch.trainer import CNNTrainer
+from tardis.utils.device import get_device
+from tardis.utils.trainer import BasicTrainer
 from torch.utils.data import DataLoader
 
 

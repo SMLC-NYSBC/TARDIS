@@ -3,9 +3,9 @@ from os.path import isdir, join
 from shutil import copy, rmtree
 
 import numpy as np
-from tardis_dev.spindletorch.data_processing.build_training_dataset import \
+from tardis.spindletorch.data_processing.build_training_dataset import \
     build_train_dataset
-from tardis_dev.utils.load_data import load_image
+from tardis.utils.load_data import load_image
 
 
 def test_build_datasets():

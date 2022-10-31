@@ -1,9 +1,9 @@
 import numpy as np
 import torch
-from tardis_dev.utils.device import get_device
-from tardis_dev.utils.load_data import (ImportDataFromAmira, import_am,
+from tardis.utils.device import get_device
+from tardis.utils.load_data import (ImportDataFromAmira, import_am,
                                         import_mrc, import_tiff)
-from tardis_dev.utils.utils import EarlyStopping
+from tardis.utils.utils import EarlyStopping
 
 
 def test_early_stop():
