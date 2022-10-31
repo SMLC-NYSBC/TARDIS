@@ -13,7 +13,7 @@ setup(
     python_requires='>=3.7.*',
     install_requires=required,
     dependency_links=[
-        'https://download.pytorch.org/whl/cu116'
+        'https://download.pytorch.org/whl/cu117'
     ],
     classifiers=['Development Status :: 4 - Beta',
                  'Intended Audience :: Developers/Research',
