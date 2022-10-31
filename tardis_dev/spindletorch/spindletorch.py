@@ -1,4 +1,3 @@
-from torch import dropout
 from tardis_dev.spindletorch.utils.build_cnn import ResUNet, UNet, UNet3Plus, FNet
 
 
@@ -20,7 +19,7 @@ def build_cnn_network(network_type: str,
     """
     assert network_type in ['unet', 'resunet', 'unet3plus', 'fnet'], \
         f'Wrong CNN network name {network_type}'
-                                      
+
     if network_type == 'unet':
         return UNet(in_channels=structure['in_channel'],
                     out_channels=structure['out_channel'],

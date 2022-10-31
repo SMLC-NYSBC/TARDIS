@@ -140,6 +140,7 @@ def build_train_dataset(dataset_dir: str,
             scale_factor = 1
         else:
             scale_factor = pixel_size / resize_pixel_size
+        scale_shape = tuple(np.multiply(image.shape, scale_factor).astype(np.int16))
 
         tardis_progress(title='Data pre-processing for CNN training',
                         text_1='Building Training dataset:',
@@ -180,12 +181,12 @@ def build_train_dataset(dataset_dir: str,
         """Voxalize Image and Mask"""
         trim_with_stride(image=image,
                          mask=mask,
+                         scale=scale_shape,
                          trim_size_xy=trim_xy,
                          trim_size_z=trim_z,
-                         scale=scale_factor,
                          output=join(dataset_dir, 'train'),
                          image_counter=img_counter,
                          clean_empty=True,
-                         prefix='',
-                         stride=25)
+                         stride=25,
+                         prefix='')
         img_counter += 1

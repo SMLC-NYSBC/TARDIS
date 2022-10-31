@@ -208,7 +208,7 @@ def main(dir: str,
                                 text_3=f'Image: {i}',
                                 text_4=f'Pixel size: {px} A; Image re-sample to 25 A',
                                 text_5='Point Cloud: In processing...',
-                                text_7=f'Current Task: CNN prediction...',
+                                text_7='Current Task: CNN prediction...',
                                 text_8=printProgressBar(j, len(patches_DL)))
 
             # Pick image['s]

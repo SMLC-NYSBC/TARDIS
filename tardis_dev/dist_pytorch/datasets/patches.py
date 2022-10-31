@@ -58,16 +58,32 @@ class PatchDataSet:
         self.TORCH_OUTPUT = tensor
         self.GRAPH_OUTPUT = graph
         self.PATCH_3D = patch_3d
+        self.init_patch_size = init_patch_size
         self.INIT_PATCH_SIZE = init_patch_size
         self.EXPAND = 0.025  # Expand boundary box by 2.5%
         self.STRIDE = 0.15  # Create 15% overlaps between patches
+
         if init_patch_size == 0:
             self.SIZE_EXPAND = self.EXPAND
             self.PATCH_STRIDE = self.STRIDE
         else:
             self.SIZE_EXPAND = init_patch_size * self.EXPAND
             self.PATCH_STRIDE = init_patch_size * self.STRIDE
+
+        self.drop_rate = drop_rate
         self.DROP_RATE = drop_rate
+
+    def _init_parameters(self):
+        # Patch setting
+        self.INIT_PATCH_SIZE = self.init_patch_size
+        self.EXPAND = 0.025  # Expand boundary box by 2.5%
+        self.STRIDE = 0.15  # Create 15% overlaps between patches
+        if self.init_patch_size == 0:
+            self.SIZE_EXPAND = self.EXPAND
+            self.PATCH_STRIDE = self.STRIDE
+        else:
+            self.SIZE_EXPAND = self.init_patch_size * self.EXPAND
+            self.PATCH_STRIDE = self.init_patch_size * self.STRIDE
 
     def _boundary_box(self) -> np.ndarray:
         """
@@ -344,18 +360,20 @@ class PatchDataSet:
         graph_patch = []
         output_idx = []
 
+        self._init_parameters()
+
         if self.GRAPH_OUTPUT:
             assert coord.shape[1] in [3, 4], 'If graph True, coord must by of shape' \
                 '[Dim x X x Y x (Z)]'
             self.segments_id = coord
             self.coord = coord[:, 1:]
+
+            graph_builder = BuildGraph(mesh=mesh)
         else:
             assert coord.shape[1] in [2, 3], 'If graph True, coord must by of shape' \
                 '[X x Y x (Z)]'
             self.segments_id = None
             self.coord = coord
-
-            graph_builder = BuildGraph(mesh=mesh)
 
         if mesh:
             assert dist_th is not None, 'If mesh, dist_th cannot be None!'

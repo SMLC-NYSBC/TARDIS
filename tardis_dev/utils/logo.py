@@ -19,7 +19,10 @@ def printProgressBar(value: int,
     if is_interactive():
         n_bar = 75
     else:
-        n_bar = get_terminal_size()[0] - 50
+        try:
+            n_bar = get_terminal_size()[0] - 50
+        except OSError:
+            n_bar = 50
 
     j = value / max
     bar = '█' * int(n_bar * j)

@@ -1,7 +1,6 @@
 from typing import Optional
 
 import torch
-from tardis_dev.dist_pytorch.dist import DIST
 from tardis_dev.spindletorch.spindletorch import build_cnn_network
 from tardis_dev.dist_pytorch.dist import build_dist_network
 from tardis_dev.utils.aws import get_weights_aws
@@ -38,7 +37,7 @@ class Predictor:
                                                  model_type),
                                  map_location=device)
         else:
-            print(f'Loading weight file for...')
+            print('Loading weight file for...')
             weights = torch.load(checkpoint,
                                  map_location=device)
 

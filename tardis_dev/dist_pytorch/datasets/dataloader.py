@@ -144,14 +144,15 @@ class FilamentDataset(BasicDataset):
             if dist is not None:
                 coord[:, 1:] = coord[:, 1:] / dist  # Normalize point cloud to px unit
 
-            VD = PatchDataSet(coord=coord,
-                              init_patch_size=0,
+            VD = PatchDataSet(init_patch_size=0,
                               drop_rate=1,
                               max_number_of_points=self.max_point_in_patch,
                               label_cls=None,
                               graph=True,
                               tensor=False)
-            coords_idx, df_idx, graph_idx, output_idx, _ = VD.patched_dataset()
+            coords_idx, df_idx, graph_idx, output_idx, _ = VD.patched_dataset(coord=coord,
+                                                                              mesh=False,
+                                                                              dist_th=None)
 
             # save data for faster access later
             self.save_temp(i=i,
@@ -216,15 +217,15 @@ class PartnetDataset(BasicDataset):
             # Pre process coord and image data also, if exist remove duplicates
             coord = load_ply_partnet(coord_file, downsample=0.035)
 
-            VD = PatchDataSet(coord=coord,
-                              init_patch_size=0,
+            VD = PatchDataSet(init_patch_size=0,
                               drop_rate=0.01,
                               max_number_of_points=self.max_point_in_patch,
                               label_cls=None,
                               graph=True,
                               tensor=False)
 
-            coords_idx, df_idx, graph_idx, output_idx, _ = VD.patched_dataset(mesh=True,
+            coords_idx, df_idx, graph_idx, output_idx, _ = VD.patched_dataset(coord=coord,
+                                                                              mesh=True,
                                                                               dist_th=0.07)
             # save data for faster access later
             self.save_temp(i=i,
@@ -289,15 +290,15 @@ class ScannetDataset(BasicDataset):
             # Pre process coord and image data also, if exist remove duplicates
             coord = load_ply_scannet(coord_file, downsample=0.1)
 
-            VD = PatchDataSet(coord=coord,
-                              init_patch_size=0,
+            VD = PatchDataSet(init_patch_size=0,
                               drop_rate=0.01,
                               max_number_of_points=self.max_point_in_patch,
                               label_cls=coord[:, 0],
                               graph=True,
                               tensor=False)
 
-            coords_idx, df_idx, graph_idx, output_idx, cls_idx = VD.patched_dataset(mesh=True,
+            coords_idx, df_idx, graph_idx, output_idx, cls_idx = VD.patched_dataset(coord=coord,
+                                                                                    mesh=True,
                                                                                     dist_th=0.2)
             # save data for faster access later
             self.save_temp(i=i,
@@ -371,8 +372,7 @@ class ScannetColorDataset(BasicDataset):
                                           color=join(self.color_dir, f'{idx[:-11]}.ply'))
 
             classes = coord[:, 0]
-            VD = PatchDataSet(coord=coord,
-                              init_patch_size=0,
+            VD = PatchDataSet(init_patch_size=0,
                               drop_rate=0.01,
                               max_number_of_points=self.max_point_in_patch,
                               label_cls=classes,
@@ -380,7 +380,8 @@ class ScannetColorDataset(BasicDataset):
                               graph=True,
                               tensor=False)
 
-            coords_idx, rgb_idx, graph_idx, output_idx, cls_idx = VD.patched_dataset(mesh=True,
+            coords_idx, rgb_idx, graph_idx, output_idx, cls_idx = VD.patched_dataset(coord=coord,
+                                                                                     mesh=True,
                                                                                      dist_th=0.2)
 
             # save data for faster access later

@@ -1,7 +1,20 @@
 from typing import Optional
 
 import torch
-from tardis_dev.spindletorch.spindletorch import build_network
+from tardis_dev.spindletorch.spindletorch import build_cnn_network
+
+structure = {'in_channel': 1,
+             'out_channel': 1,
+             'img_size': 64,
+             'dropout': None,
+             'conv_kernel': 3,
+             'conv_padding': 1,
+             'maxpool_kernel': 2,
+             'num_group': 8,
+             'num_conv_layers': 5,
+             'conv_scaler': 32,
+             'classification': False,
+             'layer_components': '3gcl'}
 
 
 class TestNetwork3D:
@@ -13,142 +26,112 @@ class TestNetwork3D:
                 layer_num: int,
                 conv_scaler: int,
                 dropout: Optional[float] = None):
-        return build_network(network_type='unet',
-                             classification=False,
-                             in_channel=1,
-                             out_channel=1,
-                             img_size=image_size,
-                             dropout=dropout,
-                             num_conv_layers=layer_num,
-                             conv_kernel=3,
-                             conv_padding=1,
-                             maxpool_kernel=2,
-                             conv_scaler=conv_scaler,
-                             layer_components='3gcl',
-                             num_group=8,
-                             prediction=False)
+        structure.update({'layer_components': '3gcl'})
+        structure.update({'num_conv_layers': layer_num})
+        structure.update({'conv_scaler': conv_scaler})
+        structure.update({'dropout': dropout})
+        return build_cnn_network(network_type='unet',
+                                 structure=structure,
+                                 img_size=image_size,
+                                 prediction=False)
 
     def unet_2d(self,
                 image_size: int,
                 layer_num: int,
                 conv_scaler: int,
                 dropout: Optional[float] = None):
-        return build_network(network_type='unet',
-                             classification=False,
-                             in_channel=1,
-                             out_channel=1,
-                             img_size=image_size,
-                             dropout=dropout,
-                             conv_kernel=3,
-                             conv_padding=1,
-                             maxpool_kernel=2,
-                             num_conv_layers=layer_num,
-                             conv_scaler=conv_scaler,
-                             layer_components='2gcl',
-                             num_group=8,
-                             prediction=False)
+        structure.update({'layer_components': '2gcl'})
+        structure.update({'num_conv_layers': layer_num})
+        structure.update({'conv_scaler': conv_scaler})
+        structure.update({'dropout': dropout})
+        return build_cnn_network(network_type='unet',
+                                 structure=structure,
+                                 img_size=image_size,
+                                 prediction=False)
 
     def resunet_3d(self,
                    image_size: int,
                    layer_num: int,
                    conv_scaler: int,
                    dropout: Optional[float] = None):
-        return build_network(network_type='resunet',
-                             classification=False,
-                             in_channel=1,
-                             out_channel=1,
-                             img_size=image_size,
-                             dropout=dropout,
-                             num_conv_layers=layer_num,
-                             conv_scaler=conv_scaler,
-                             layer_components='3gcl',
-                             num_group=8,
-                             prediction=False)
+        structure.update({'layer_components': '3gcl'})
+        structure.update({'num_conv_layers': layer_num})
+        structure.update({'conv_scaler': conv_scaler})
+        structure.update({'dropout': dropout})
+        return build_cnn_network(network_type='resunet',
+                                 structure=structure,
+                                 img_size=image_size,
+                                 prediction=False)
 
     def resunet_2d(self,
                    image_size: int,
                    layer_num: int,
                    conv_scaler: int,
                    dropout: Optional[float] = None):
-        return build_network(network_type='resunet',
-                             classification=False,
-                             in_channel=1,
-                             out_channel=1,
-                             img_size=image_size,
-                             dropout=dropout,
-                             num_conv_layers=layer_num,
-                             conv_scaler=conv_scaler,
-                             layer_components='2gcl',
-                             num_group=8,
-                             prediction=False)
+        structure.update({'layer_components': '2gcl'})
+        structure.update({'num_conv_layers': layer_num})
+        structure.update({'conv_scaler': conv_scaler})
+        structure.update({'dropout': dropout})
+        return build_cnn_network(network_type='resunet',
+                                 structure=structure,
+                                 img_size=image_size,
+                                 prediction=False)
 
     def unet3plus_3d(self,
                      image_size: int,
                      layer_num: int,
                      conv_scaler: int,
                      dropout: Optional[float] = None):
-        return build_network(network_type='unet3plus',
-                             classification=False,
-                             in_channel=1,
-                             out_channel=1,
-                             img_size=image_size,
-                             dropout=dropout,
-                             num_conv_layers=layer_num,
-                             conv_scaler=conv_scaler,
-                             layer_components='3gcl',
-                             num_group=8,
-                             prediction=False)
+        structure.update({'layer_components': '3gcl'})
+        structure.update({'num_conv_layers': layer_num})
+        structure.update({'conv_scaler': conv_scaler})
+        structure.update({'dropout': dropout})
+        return build_cnn_network(network_type='unet3plus',
+                                 structure=structure,
+                                 img_size=image_size,
+                                 prediction=False)
 
     def unet3plus_2d(self,
                      image_size: int,
                      layer_num: int,
                      conv_scaler: int,
                      dropout: Optional[float] = None):
-        return build_network(network_type='unet3plus',
-                             classification=False,
-                             in_channel=1,
-                             out_channel=1,
-                             img_size=image_size,
-                             dropout=dropout,
-                             num_conv_layers=layer_num,
-                             conv_scaler=conv_scaler,
-                             layer_components='2gcl',
-                             num_group=8,
-                             prediction=False)
+        structure.update({'layer_components': '2gcl'})
+        structure.update({'num_conv_layers': layer_num})
+        structure.update({'conv_scaler': conv_scaler})
+        structure.update({'dropout': dropout})
+        return build_cnn_network(network_type='unet3plus',
+                                 structure=structure,
+                                 img_size=image_size,
+                                 prediction=False)
 
     def fnet_2d(self,
                 image_size: int,
                 layer_num: int,
                 conv_scaler: int,
                 dropout: Optional[float] = None):
-        return build_network(network_type='fnet',
-                             classification=False,
-                             in_channel=1,
-                             out_channel=1,
-                             img_size=image_size,
-                             dropout=dropout,
-                             num_conv_layers=layer_num,
-                             conv_scaler=conv_scaler,
-                             layer_components='2gcl',
-                             num_group=8,
-                             prediction=False)
+        structure.update({'layer_components': '2gcl'})
+        structure.update({'num_conv_layers': layer_num})
+        structure.update({'conv_scaler': conv_scaler})
+        structure.update({'dropout': dropout})
+        return build_cnn_network(network_type='fnet',
+                                 structure=structure,
+                                 img_size=image_size,
+                                 prediction=False)
 
     def fnet_3d(self,
                 image_size: int,
                 layer_num: int,
                 conv_scaler: int,
                 dropout: Optional[float] = None):
-        return build_network(network_type='fnet',
-                             classification=False,
-                             in_channel=1,
-                             out_channel=1,
-                             img_size=image_size,
-                             dropout=dropout,
-                             num_conv_layers=layer_num,
-                             conv_scaler=conv_scaler,
-                             layer_components='3gcl',
-                             num_group=8,
-                             prediction=False)
+        structure.update({'layer_components': '3gcl'})
+        structure.update({'num_conv_layers': layer_num})
+        structure.update({'conv_scaler': conv_scaler})
+        structure.update({'dropout': dropout})
+        return build_cnn_network(network_type='fnet',
+                                 structure=structure,
+                                 img_size=image_size,
+                                 prediction=False)
 
     def test_unet3d(self):
         for i in self.image_sizes:

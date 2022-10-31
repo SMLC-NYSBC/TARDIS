@@ -3,7 +3,7 @@ from os import getcwd
 from typing import Optional
 
 import torch
-from tardis_dev.spindletorch.spindletorch import build_network
+from tardis_dev.spindletorch.spindletorch import build_cnn_network
 from tardis_dev.spindletorch.trainer import CNNTrainer
 from tardis_dev.spindletorch.utils.utils import check_model_dict
 from tardis_dev.utils.device import get_device
@@ -54,20 +54,10 @@ def train_cnn(train_dataloader,
 
     """Build DIST model"""
     try:
-        model = build_network(network_type=model_structure['cnn_type'],
-                              classification=model_structure['classification'],
-                              in_channel=model_structure['in_channel'],
-                              out_channel=model_structure['out_channel'],
-                              img_size=model_structure['img_size'],
-                              dropout=model_structure['dropout'],
-                              num_conv_layers=model_structure['num_conv_layers'],
-                              conv_scaler=model_structure['conv_scaler'],
-                              conv_kernel=model_structure['conv_kernel'],
-                              conv_padding=model_structure['conv_padding'],
-                              maxpool_kernel=model_structure['maxpool_kernel'],
-                              layer_components=model_structure['layer_components'],
-                              num_group=model_structure['num_group'],
-                              prediction=False)
+        model = build_cnn_network(network_type=model_structure['cnn_type'],
+                                  structure=model_structure,
+                                  img_size=model_structure['img_size'],
+                                  prediction=False)
     except:
         tardis_logo = Tardis_Logo()
         tardis_logo(text_1=f'CNNModelError: Model type: {type} was not build correctly!')

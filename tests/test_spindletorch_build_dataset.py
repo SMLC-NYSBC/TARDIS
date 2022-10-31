@@ -1,12 +1,17 @@
-from tardis_dev.spindletorch.data_processing.build_training_dataset import build_train_dataset
-from os import mkdir, listdir
-from os.path import join
-from shutil import rmtree, copy
-from tardis_dev.utils.load_data import load_image
+from os import listdir, mkdir
+from os.path import isdir, join
+from shutil import copy, rmtree
+
 import numpy as np
+from tardis_dev.spindletorch.data_processing.build_training_dataset import \
+    build_train_dataset
+from tardis_dev.utils.load_data import load_image
 
 
 def test_build_datasets():
+    if isdir('./tests/test_data/temp'):
+        rmtree('./tests/test_data/temp')
+
     mkdir('./tests/test_data/temp')
     mkdir('./tests/test_data/temp/train')
     mkdir('./tests/test_data/temp/train/imgs')
@@ -24,8 +29,8 @@ def test_build_datasets():
                         trim_xy=64,
                         trim_z=64)
 
-    assert len(listdir('./tests/test_data/temp/train/imgs')) == 60
-    assert len(listdir('./tests/test_data/temp/train/masks')) == 60
+    assert len(listdir('./tests/test_data/temp/train/imgs')) == 38
+    assert len(listdir('./tests/test_data/temp/train/masks')) == 38
     dir_img = listdir('./tests/test_data/temp/train/imgs')
     img, _ = load_image(join('./tests/test_data/temp/train/imgs', dir_img[5]))
     assert img.shape == (64, 64, 64)
