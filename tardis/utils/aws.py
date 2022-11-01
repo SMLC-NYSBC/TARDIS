@@ -99,18 +99,21 @@ def aws_check_with_temp(model_name: str) -> bool:
     if save_md5 is None:
         return False
     else:
-        if len(m) == 2:
-            md5 = MD5Count(requests.get(
-                f'https://tardis-weigths.s3.amazonaws.com/{m[0]}_{m[1]}/model_weights.pth',
-                stream=True
-            ))
-            aws_md5 = md5.hexdigest()
-        elif len(m) == 3:
-            md5 = MD5Count(requests.get(
-                f'https://tardis-weigths.s3.amazonaws.com/{m[0]}/{m[2]}/{m[1]}/model_weights.pth',
-                           stream=True
-                           ))
-            aws_md5 = md5.hexdigest()
+        try:
+            if len(m) == 2:
+                md5 = MD5Count(requests.get(
+                    f'https://tardis-weigths.s3.amazonaws.com/{m[0]}_{m[1]}/model_weights.pth',
+                    stream=True
+                ))
+                aws_md5 = md5.hexdigest()
+            elif len(m) == 3:
+                md5 = MD5Count(requests.get(
+                    f'https://tardis-weigths.s3.amazonaws.com/{m[0]}/{m[2]}/{m[1]}/model_weights.pth',
+                            stream=True
+                            ))
+                aws_md5 = md5.hexdigest()
+        except:
+            return True
 
     if save_md5 == aws_md5:
         return True

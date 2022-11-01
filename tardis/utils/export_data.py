@@ -33,23 +33,23 @@ class NumpyToAmira:
         point = int(coord.shape[0])
 
         with open(file_dir, 'w') as f:
-            f.write('# ASCII Spatial Graph \r\n')
+            f.write('# ASCII Spatial Graph \n')
             f.write(
-                '# TARDIS - Transformer And Rapid Dimensionless Instance Segmentation (R) \r\n')
+                '# TARDIS - Transformer And Rapid Dimensionless Instance Segmentation (R) \n')
             f.write(f'# tardis-pytorch v{version} \r\n')
-            f.write(f'# MIT License * 2021-{datetime.now().year} * Robert Kiewisz & Tristan Bepler \r\n')
-            f.write('\r\n')
-            f.write(f'define VERTEX {vertex} \r\n')
-            f.write(f'define EDGE {edge} \r\n')
-            f.write(f'define POINT {point} \r\n')
-            f.write('\r\n')
-            f.write('Parameters { ContentType "HxSpatialGraph" } \r\n')
-            f.write('\r\n')
-            f.write('VERTEX { float[3] VertexCoordinates } @1 \r\n'
-                    'EDGE { int[2] EdgeConnectivity } @2 \r\n'
-                    'EDGE { int NumEdgePoints } @3 \r\n'
-                    'POINT { float[3] EdgePointCoordinates } @4 \r\n'
-                    '\r\n')
+            f.write(f'# MIT License * 2021-{datetime.now().year} * Robert Kiewisz & Tristan Bepler \n')
+            f.write('\n')
+            f.write(f'define VERTEX {vertex} \n')
+            f.write(f'define EDGE {edge} \n')
+            f.write(f'define POINT {point} \n')
+            f.write('\n')
+            f.write('Parameters { ContentType "HxSpatialGraph" } \n')
+            f.write('\n')
+            f.write('VERTEX { float[3] VertexCoordinates } @1 \n'
+                    'EDGE { int[2] EdgeConnectivity } @2 \n'
+                    'EDGE { int NumEdgePoints } @3 \n'
+                    'POINT { float[3] EdgePointCoordinates } @4 \n'
+                    '\n')
 
     def _write_to_amira(self,
                         data: list,
@@ -57,10 +57,10 @@ class NumpyToAmira:
         assert file_dir.endswith('.am'), f'{file_dir} must be and .am file!'
 
         with open(file_dir, 'a+') as f:
-            f.write('\r\n')
+            f.write('\n')
 
             for i in data:
-                f.write(f'{i} \r\n')
+                f.write(f'{i} \n')
 
     def export_amira(self,
                      coord: np.ndarray,
