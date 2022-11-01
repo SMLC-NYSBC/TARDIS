@@ -12,7 +12,7 @@ import tifffile.tifffile as tif
 
 from tardis.dist_pytorch.datasets.patches import PatchDataSet
 from tardis.dist_pytorch.utils.build_point_cloud import ImageToPointCloud
-from tardis.dist_pytorch.utils.segment_point_cloud import FilterSpatialGraph,  GraphInstanceV2
+from tardis.dist_pytorch.utils.segment_point_cloud import FilterSpatialGraph, GraphInstanceV2
 from tardis.dist_pytorch.utils.utils import pc_median_dist
 from tardis.spindletorch.data_processing.semantic_mask import fill_gaps_in_semantic
 from tardis.spindletorch.data_processing.stitch import StitchImages
@@ -73,7 +73,7 @@ warnings.simplefilter("ignore", UserWarning)
               help='Number of point per voxal.',
               show_default=True)
 @click.option('-f', '--filter_mt',
-              default=False,
+              default=True,
               type=bool,
               help='If True, Tardis output org. and filtered spatial graph. '
               'NOT SUPPORTED FOR .TIF FILE FORMAT '
@@ -133,13 +133,14 @@ def main(dir: str,
 
     predict_list = [f for f in listdir(dir) if f.endswith(available_format)]
 
-    # Tardis progress bard update
+    # Tardis progress bar update
     if len(predict_list) == 0:
         tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_5='Point Cloud: Nan',
                         text_7='Current Task: NaN',
-                        text_8=f'Given directory {dir} is empty!')
+                        text_8=f'Tardis Error: Wrong directory:',
+                        text_9=f'Given {dir} is does not contain any recognizable file formats!')
         sys.exit()
     else:
         tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}',
@@ -179,7 +180,14 @@ def main(dir: str,
 
     device = get_device(device)
     cnn_network = cnn_network.split('_')
-    assert len(cnn_network) == 2, 'CNN type should be formatted as `unet_32`'
+    if not len(cnn_network) == 2:
+        tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}',
+                        text_1=f'Found {len(predict_list)} images to predict!',
+                        text_5='Point Cloud: Nan',
+                        text_7='Current Task: NaN',
+                        text_8='Tardis Error: Given CNN type is wrong!:',
+                        text_9=f'Given {cnn_network} but should be e.g. `unet_32`')
+        sys.exit()
 
     # Build CNN network with loaded pre-trained weights
     predict_cnn = Predictor(checkpoint=checkpoints[0],
@@ -211,7 +219,7 @@ def main(dir: str,
         elif i.endswith('.am'):
             out_format = 3
 
-        # Tardis progress bard update
+        # Tardis progress bar update
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
@@ -237,14 +245,23 @@ def main(dir: str,
             image = normalize(image)
         if not image.min() >= 0 or not image.max() <= 1:  # Normalized between 0 and 1
             image = minmax(image)
-        assert image.dtype == np.float32
+
+        if not image.dtype == np.float32:
+            tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}',
+                            text_1=f'Found {len(predict_list)} images to predict!',
+                            text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
+                            text_5='Point Cloud: Nan A',
+                            text_7='Current Task: NaN',
+                            text_8=f'Tardis Error: Error while loading image {i}:',
+                            text_9=f'Image loaded correctly, but output format {image.dtype} is not float32!')
+            sys.exit()
 
         # Calculate parameters for normalizing image pixel size
         scale_factor = px / 25
         org_shape = image.shape
         scale_shape = tuple(np.multiply(org_shape, scale_factor).astype(np.int16))
 
-        # Tardis progress bard update
+        # Tardis progress bar update
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
@@ -274,7 +291,7 @@ def main(dir: str,
         iter_time = 1
         for j in range(len(patches_DL)):
             if j % iter_time == 0:
-                # Tardis progress bard update
+                # Tardis progress bar update
                 tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                                 text_1=f'Found {len(predict_list)} images to predict!',
                                 text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
@@ -301,14 +318,25 @@ def main(dir: str,
                 out = np.where(predict_cnn._predict(input[None, :]) >= cnn_threshold, 1, 0)
 
             # Save threshold image
-            assert out.min() == 0 and out.max() in [0, 1]
+            if not out.min() == 0 and out.max() in [0, 1]:
+                tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}',
+                                text_1=f'Found {len(predict_list)} images to predict!',
+                                text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
+                                text_4=f'Pixel size: {px} A; Image re-sample to 25 A',
+                                text_5=f'Point Cloud: {px} A',
+                                text_7='Last Task: CNN prediction finished...',
+                                text_8='Tardis Error: Error while while processing CNN prediction:',
+                                text_9=f'Predicted semantic mask has wrong values:',
+                                text_10=f'Unique: {np.unique(out)}; dtype: {out.dtype}')
+                sys.exit()
+
             tif.imwrite(join(output, f'{name}.tif'),
                         np.array(out, dtype=np.uint8))
 
         """Post-Processing"""
         scale_factor = org_shape
 
-        # Tardis progress bard update
+        # Tardis progress bar update
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
@@ -324,7 +352,6 @@ def main(dir: str,
                                            dtype=np.int8)[:scale_shape[0],
                                                           :scale_shape[1],
                                                           :scale_shape[2]])
-        assert image.shape == scale_shape, f'Image shape {image.shape} != scale shape {scale_shape}'
 
         # Restored original image pixel size
         image, _ = scale_image(image=image,
@@ -335,8 +362,16 @@ def main(dir: str,
         image = fill_gaps_in_semantic(image)
 
         # Check if predicted image
-        assert image.shape == org_shape, f'Error while converting to {px} A pixel size. ' \
-            f'Org. shape {org_shape} is not the same as converted shape {image.shape}'
+        if not image.shape == org_shape:
+                tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}',
+                                text_1=f'Found {len(predict_list)} images to predict!',
+                                text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
+                                text_4=f'Original pixel size: {px} A; Image re-sample to 25 A',
+                                text_5='Point Cloud: NaN.',
+                                text_7='Last Task: Stitching/Scaling/Make correction...',
+                                text_8=f'Tardis Error: Error while converting to {px} A pixel size.',
+                                text_9=f'Org. shape {org_shape} is not the same as converted shape {image.shape}')
+                sys.exit()
 
         # If prediction fail aka no prediction was produces continue with next image
         if image is None:
@@ -349,7 +384,7 @@ def main(dir: str,
         if not image.min() == 0 and not image.max() == 1:
             continue
 
-        # Tardis progress bard update
+        # Tardis progress bar update
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
@@ -386,7 +421,7 @@ def main(dir: str,
         pcd.points = o3d.utility.Vector3dVector(point_cloud)
         point_cloud = np.asarray(pcd.voxel_down_sample(voxel_size=5).points)
 
-        # Tardis progress bard update
+        # Tardis progress bar update
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
@@ -513,7 +548,7 @@ def main(dir: str,
                                       file_dir=join(am_output,
                                                     f'{i[:-out_format]}_SpatialGraph.am'))
 
-        if filter_mt:
+        if filter_mt and i.endswith(('.am', '.rec', '.mrc')):
             if len(segments_filter) > 0:
                 build_amira_file.export_amira(coord=segments_filter,
                                               file_dir=join(am_output,

@@ -427,7 +427,7 @@ class FilterSpatialGraph:
 
             segments = np.hstack(new_seg)[0, :]
 
-        return segments
+        return reorder_segments_id(segments)
 
 
 def reorder_segments_id(coord: np.ndarray,

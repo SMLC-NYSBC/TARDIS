@@ -1,9 +1,15 @@
+import io
+from logging import shutdown
+from cv2 import exp
 import numpy as np
 import torch
 from tardis.utils.device import get_device
-from tardis.utils.load_data import (ImportDataFromAmira, import_am,
-                                        import_mrc, import_tiff)
+from tardis.utils.load_data import (ImportDataFromAmira, import_am, import_mrc,
+                                    import_tiff)
 from tardis.utils.utils import EarlyStopping
+from tardis.utils.aws import get_weights_aws
+from tardis.utils.export_data import NumpyToAmira
+import os
 
 
 def test_early_stop():
@@ -96,3 +102,36 @@ def test_am_sg():
 
     px = am.get_pixel_size()
     assert px == 92.8
+
+
+def test_aws():
+    aws = get_weights_aws(network='dist',
+                          subtype='without_img',
+                          model='microtubules')
+    assert isinstance(aws, str) or isinstance(aws, io.BytesIO)
+
+    aws = get_weights_aws(network='dist',
+                          subtype='without_img',
+                          model='microtubules')
+    assert isinstance(aws, str)
+
+
+def test_device():
+    assert get_device('cpu') == torch.device('cpu')
+
+    assert get_device(0) == torch.device('cpu') or get_device(0) == torch.device('cuda:0')
+
+    assert get_device('mps') == torch.device('cpu') or get_device('mps') == torch.device('mps')
+
+
+def test_am_export():
+    df = np.zeros((25, 4))
+    df_line = np.linspace(0, 5, 25)
+    df_line = np.round(df_line)
+    df[:, 0] = df_line
+
+    exporter = NumpyToAmira()
+    exporter.export_amira(df, './test.am')
+
+    assert os.path.isfile('./test.am')
+    os.remove('./test.am')
