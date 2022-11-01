@@ -1,3 +1,4 @@
+import sys
 import time
 import warnings
 from os import getcwd, listdir
@@ -11,7 +12,7 @@ import tifffile.tifffile as tif
 
 from tardis.dist_pytorch.datasets.patches import PatchDataSet
 from tardis.dist_pytorch.utils.build_point_cloud import ImageToPointCloud
-from tardis.dist_pytorch.utils.segment_point_cloud import FilterSpatialGraph, GraphInstanceV2
+from tardis.dist_pytorch.utils.segment_point_cloud import FilterSpatialGraph,  GraphInstanceV2
 from tardis.dist_pytorch.utils.utils import pc_median_dist
 from tardis.spindletorch.data_processing.semantic_mask import fill_gaps_in_semantic
 from tardis.spindletorch.data_processing.stitch import StitchImages
@@ -131,13 +132,20 @@ def main(dir: str,
     am_output = join(dir, 'Predictions')
 
     predict_list = [f for f in listdir(dir) if f.endswith(available_format)]
-    assert len(predict_list) > 0, 'No file found in given directory!'
 
     # Tardis progress bard update
-    tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}',
-                    text_1=f'Found {len(predict_list)} images to predict!',
-                    text_5='Point Cloud: In processing...',
-                    text_7='Current Task: Set-up environment...')
+    if len(predict_list) == 0:
+        tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}',
+                        text_1=f'Found {len(predict_list)} images to predict!',
+                        text_5='Point Cloud: Nan',
+                        text_7='Current Task: NaN',
+                        text_8=f'Given directory {dir} is empty!')
+        sys.exit()
+    else:
+        tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}',
+                        text_1=f'Found {len(predict_list)} images to predict!',
+                        text_5='Point Cloud: In processing...',
+                        text_7='Current Task: Set-up environment...')
 
     # Hard fix for dealing with tif file lack of pixel sizes...
     tif_px = None
