@@ -1,3 +1,4 @@
+import itertools
 from math import sqrt
 from typing import Optional
 
@@ -6,8 +7,7 @@ import torch
 from scipy.interpolate import splev, splprep
 from scipy.spatial.distance import cdist
 from sklearn.neighbors import KDTree
-from tardis.dist_pytorch.utils.visualize import (VisualizeFilaments,
-                                                     VisualizePointCloud)
+from tardis.dist_pytorch.utils.visualize import VisualizeFilaments, VisualizePointCloud
 
 
 class GraphInstanceV2:
@@ -259,53 +259,10 @@ class GraphInstanceV2:
         idx_df = [i for i in idx_df if adj_matrix[i][2] != []]  # Check 3
         return idx_df
 
-    @staticmethod
-    def _sort_segment(coord: np.ndarray):
-        """
-        Sorting of the point cloud based on number of connections followed by
-        searching of the closest point with cdist.
-
-        Args:
-            coord: Coordinates for each unsorted point idx
-            idx: idx of point included in the segment
-        """
-        new_c = []
-        for i in range(len(coord) - 1):
-            if i == 0:
-                id = np.where([sum(i) for i in cdist(coord, coord)] == max(
-                    [sum(i) for i in cdist(coord, coord)]))[0]
-
-                new_c.append(coord[id[0]])
-                coord = np.delete(coord, id[0], 0)
-
-            kd = KDTree(coord)
-            points = kd.query(np.expand_dims(
-                new_c[len(new_c) - 1], 0), 1)[1][0][0]
-
-            new_c.append(coord[points])
-            coord = np.delete(coord, points, 0)
-        return np.stack(new_c)
-
-    @staticmethod
-    def total_length(x):
-        length = 0
-        c_len = len(x) - 1
-
-        for id, _ in enumerate(x):
-            if id == c_len:
-                break
-            # sqrt((x2 - x1)2 + (y2 - y1)2 + (z2 - z1)2)
-            length += sqrt((x[id][0] - x[id + 1][0]) ** 2 + (x[id][1] - x[id + 1][1]) **
-                           2 + (x[id][2] - x[id + 1][2]) ** 2)
-
-        end_length = sqrt((x[0][0] - x[-1][0]) ** 2 + (x[0][1] - x[-1][1]) ** 2 + (x[0][2] - x[-1][2]) ** 2)
-
-        return (length + 1e-16) / (end_length + 1e-16)
-
     def _smooth_segments(self,
                          coord: np.ndarray):
         smooth_spline = []
-        tortuosity = []
+        tortuosity_spline = []
 
         # Smooth spline
         for i in np.unique(coord[:, 0]):
@@ -329,20 +286,13 @@ class GraphInstanceV2:
 
         for i in np.unique(coord_segment_smooth[:, 0]):
             filament = coord_segment_smooth[np.where(coord_segment_smooth[:, 0] == int(i))[0], :]
-            tortuosity.append(self.total_length(filament))
+            tortuosity_spline.append(tortuosity(filament))
 
         # Remove errors with hight tortuosity
-        error = [id for id, i in enumerate(tortuosity) if i > 1.1]
+        error = [id for id, i in enumerate(tortuosity_spline) if i > 1.1]
         segments = np.stack([i for i in coord_segment_smooth if i[0] not in error])
 
-        # Fix breaks in spline numbering
-        df = np.unique(segments[:, 0])
-        df_range = np.asarray(range(0, len(df)), dtype=df.dtype)
-
-        for id, i in enumerate(segments[:, 0]):
-            segments[id, 0] = df_range[np.where(df == i)[0][0]]
-
-        return segments
+        return reorder_segments_id(segments)
 
     def patch_to_segment(self,
                          graph: list,
@@ -409,7 +359,7 @@ class GraphInstanceV2:
             if len(idx) >= prune:
                 # Sort points in segment
                 if sort:
-                    segment = self._sort_segment(coord=coord[idx])
+                    segment = sort_segment(coord=coord[idx])
                 else:
                     segment = coord[idx]
 
@@ -446,3 +396,170 @@ class GraphInstanceV2:
                 VisualizeFilaments(segments)
 
         return segments
+
+
+class FilterSpatialGraph:
+    def __init__(self,
+                 filter_unconnected_segments=True,
+                 filter_short_spline=True):
+        self.filter_connections = filter_unconnected_segments
+        self.filter_short_segment = filter_short_spline
+
+    def __call__(self,
+                 segments: np.ndarray):
+        if self.filter_connections:
+            # Gradually connect segments with ends close to each other
+            segments = filter_connect_near_segment(segments, 50)
+            segments = filter_connect_near_segment(segments, 100)
+            segments = filter_connect_near_segment(segments, 150)
+            segments = filter_connect_near_segment(segments, 175)
+
+        if self.filter_short_segment:
+            length = []
+            for i in np.unique(segments[:, 0]):
+                length.append(total_length(segments[np.where(segments[:, 0] == int(i))[0], 1:]))
+
+            length = [id for id, i in enumerate(length) if i > 1000]
+
+            new_seg = []
+            for i in length:
+                new_seg.append(segments[np.where(segments[:, 0] == i), :])
+
+            segments = np.hstack(new_seg)[0, :]
+
+        return segments
+
+
+def reorder_segments_id(coord: np.ndarray,
+                        order_range: Optional[list] = None):
+    df = np.unique(coord[:, 0])
+
+    if order_range is None:
+        df_range = np.asarray(range(0, len(df)), dtype=df.dtype)
+    else:
+        df_range = np.asarray(range(order_range[0], order_range[1]), dtype=df.dtype)
+
+    for id, i in enumerate(coord[:, 0]):
+        coord[id, 0] = df_range[np.where(df == i)[0][0]]
+
+    return coord
+
+
+def sort_segment(coord: np.ndarray):
+    """
+    Sorting of the point cloud based on number of connections followed by
+    searching of the closest point with cdist.
+
+    Args:
+        coord: Coordinates for each unsorted point idx
+        idx: idx of point included in the segment
+    """
+    new_c = []
+    for i in range(len(coord) - 1):
+        if i == 0:
+            id = np.where([sum(i) for i in cdist(coord, coord)] == max(
+                [sum(i) for i in cdist(coord, coord)]))[0]
+
+            new_c.append(coord[id[0]])
+            coord = np.delete(coord, id[0], 0)
+
+        kd = KDTree(coord)
+        points = kd.query(np.expand_dims(new_c[len(new_c) - 1], 0), 1)[1][0][0]
+
+        new_c.append(coord[points])
+        coord = np.delete(coord, points, 0)
+    return np.stack(new_c)
+
+
+def total_length(coord: np.ndarray):
+    length = 0
+    c_len = len(coord) - 1
+
+    for id, _ in enumerate(coord):
+        if id == c_len:
+            break
+        # sqrt((x2 - x1)2 + (y2 - y1)2 + (z2 - z1)2)
+        length += sqrt((coord[id][0] - coord[id + 1][0]) ** 2 +
+                       (coord[id][1] - coord[id + 1][1]) ** 2 +
+                       (coord[id][2] - coord[id + 1][2]) ** 2)
+
+    return length
+
+
+def tortuosity(coord: np.ndarray):
+    length = total_length(coord)
+    end_length = sqrt((coord[0][0] - coord[-1][0]) ** 2 +
+                      (coord[0][1] - coord[-1][1]) ** 2 +
+                      (coord[0][2] - coord[-1][2]) ** 2)
+
+    return (length + 1e-16) / (end_length + 1e-16)
+
+
+def filter_connect_near_segment(segments: np.ndarray,
+                                dist_th=200):
+    seg_list = [segments[np.where(segments[:, 0] == i), :][0] for i in np.unique(segments[:, 0])]
+    filtered_seg = []
+
+    # Find all segments ends
+    ends = [s[0] for s in seg_list] + [s[-1] for s in seg_list]
+    ends_coord = [s[0, 1:] for s in seg_list] + [s[-1, 1:] for s in seg_list]
+
+    kd = cdist(ends_coord, ends_coord)
+
+    # Find segments pair with ends in dist_th distance
+    df = []
+    for i in kd:
+        df.append(np.where(i < dist_th)[0])
+    idx_connect = [[int(ends[i[0]][0]), int(ends[i[1]][0])] for i in df if len(i) > 1]
+
+    idx_connect.sort()
+    idx_connect = list(k for k, _ in itertools.groupby(idx_connect))
+
+    s = set()
+    a1 = []
+    for t in idx_connect:
+        if tuple(t) not in s:
+            a1.append(t)
+            s.add(tuple(t)[::-1])
+    idx_connect = list(s)
+
+    # Select segments without any pair
+    new_seg = []
+    for i in [int(id) for id in np.unique(segments[:, 0]) if id not in np.unique(np.concatenate(idx_connect))]:
+        new_seg.append(segments[np.where(segments[:, 0] == i), :])
+    new_seg = np.hstack(new_seg)[0, :]
+
+    # Fix breaks in spline numbering
+    new_seg = reorder_segments_id(new_seg)
+
+    connect_seg = []
+    for i in [int(id) for id in np.unique(segments[:, 0]) if id in np.unique(np.concatenate(idx_connect))]:
+        connect_seg.append(segments[np.where(segments[:, 0] == i), :])
+    connect_seg = np.hstack(connect_seg)[0, :]
+
+    assert len(new_seg) + len(connect_seg) == len(segments)
+
+    # Connect selected segments pairs
+    df_connect_seg = []
+    idx = 1000000
+    for i in idx_connect:
+        for j in i:
+            df = np.where(connect_seg[:, 0] == j)[0]
+            connect_seg[df, 0] = idx
+        idx += 1
+    assert len(new_seg) + len(connect_seg) == len(segments), f'{len(new_seg)}, {len(connect_seg)}, {len(segments)}'
+
+    # Fix breaks in spline numbering
+    connect_seg = reorder_segments_id(connect_seg,
+                                      order_range=[int(np.max(new_seg[:, 0])) + 1,
+                                                   int(np.max(new_seg[:, 0])) + 1 +
+                                                   len(np.unique(connect_seg[:, 0]))])
+
+    connect_seg_sort = []
+    for i in np.unique(connect_seg[:, 0]):
+        connect_seg_sort.append(sort_segment(connect_seg[np.where(connect_seg[:, 0] == int(i)), :][0]))
+    connect_seg = np.vstack(connect_seg_sort)
+
+    new_seg = np.concatenate((new_seg, connect_seg))
+
+    return new_seg

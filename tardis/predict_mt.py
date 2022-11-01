@@ -11,7 +11,7 @@ import tifffile.tifffile as tif
 
 from tardis.dist_pytorch.datasets.patches import PatchDataSet
 from tardis.dist_pytorch.utils.build_point_cloud import ImageToPointCloud
-from tardis.dist_pytorch.utils.segment_point_cloud import GraphInstanceV2
+from tardis.dist_pytorch.utils.segment_point_cloud import FilterSpatialGraph, GraphInstanceV2
 from tardis.dist_pytorch.utils.utils import pc_median_dist
 from tardis.spindletorch.data_processing.semantic_mask import fill_gaps_in_semantic
 from tardis.spindletorch.data_processing.stitch import StitchImages
@@ -71,6 +71,15 @@ warnings.simplefilter("ignore", UserWarning)
               type=int,
               help='Number of point per voxal.',
               show_default=True)
+@click.option('-f', '--filter_mt',
+              default=False,
+              type=bool,
+              help='If True, Tardis output org. and filtered spatial graph. '
+              'NOT SUPPORTED FOR .TIF FILE FORMAT '
+              'There are two filtering mechanisms: '
+              '- Remove short segments (aka. Segments shorter then 100 nm. '
+              '- Connect segments that are closer then 17.5 nm',
+              show_default=True)
 @click.option('-d', '--device',
               default='0',
               type=str,
@@ -98,6 +107,7 @@ def main(dir: str,
          cnn_threshold: float,
          dist_threshold: float,
          points_in_patch: int,
+         filter_mt: bool,
          device: str,
          debug: bool,
          visualizer: Optional[str] = None,
@@ -153,6 +163,8 @@ def main(dir: str,
     GraphToSegment = GraphInstanceV2(threshold=dist_threshold,
                                      connection=2,
                                      smooth=True)
+    filter_segments = FilterSpatialGraph(filter_unconnected_segments=True,
+                                         filter_short_spline=True)
 
     # Build CNN from checkpoints
     checkpoints = (cnn_checkpoint, dist_checkpoint)
@@ -452,6 +464,9 @@ def main(dir: str,
                                                    sort=True,
                                                    visualize=visualizer)
 
+        if filter_mt:
+            segments_filter = filter_segments(segments)
+
         # Save debugging check point
         if debug:
             if device == 'cpu':
@@ -487,7 +502,14 @@ def main(dir: str,
 
         """Save as .am"""
         build_amira_file.export_amira(coord=segments,
-                                      file_dir=join(am_output, f'{i[:-out_format]}_SpatialGraph.am'))
+                                      file_dir=join(am_output,
+                                                    f'{i[:-out_format]}_SpatialGraph.am'))
+
+        if filter_mt:
+            if len(segments_filter) > 0:
+                build_amira_file.export_amira(coord=segments_filter,
+                                              file_dir=join(am_output,
+                                                            f'{i[:-out_format]}_SpatialGraph_filter_.am'))
 
         """Clean-up temp dir"""
         clean_up(dir=dir)

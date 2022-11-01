@@ -28,13 +28,13 @@ History
 * **General changes:**
     * Load image data, marge and fixed for int8 and uint8
     * Amira binary import fixes. Amira defined import type. Previously assumption was
-        that Amira load all binary as uint8. Amira load files as uint8 or int8 and
-        have deferent structure when loading mask data which can by binary or ascii.
+        that Amira load all binary as uint8. Amira loads files as uint8 or int8 and
+        have different structures when loading mask data which can be binary or ascii.
     * Overall stability improvements
     * Tardis logo was integrated with all TARDIS modules
     * Build tests for the whole tardis-pytorch
-    * Introduced tardis_dev and divide stable and developmental branches
-    * Fixed image normalization and enure correct normalized output for training
+    * Introduced tardis_dev and divided stable and developmental branches
+    * Fixed image normalization and ensure correct normalized output for training
         and prediction
 
 0.1.0-beta1 (2022-09-14)
