@@ -34,17 +34,9 @@ def interpolation(points: np.ndarray):
         x = points[i:i + 2, 0]
         x_len = abs(x[0] - x[1])
 
-        x_new = interpolation_1D(start=x[0],
-                                 stop=x[1],
-                                 max_len=max_len)
-
         """1D interpolation for Y dimension"""
         y = points[i:i + 2, 1]
         y_len = abs(y[0] - y[1])
-
-        y_new = interpolation_1D(start=y[0],
-                                 stop=y[1],
-                                 max_len=max_len)
 
         """1D interpolation for optional Z dimension"""
         if points.shape[1] == 3:
@@ -52,15 +44,21 @@ def interpolation(points: np.ndarray):
             z_len = abs(z[0] - z[1])
 
             max_len = int(max([x_len, y_len, z_len]) + 1)
-
-            z_new = interpolation_1D(start=z[0],
-                                     stop=z[1],
-                                     max_len=max_len)
         else:
             z = None
             max_len = int(max([x_len, y_len]) + 1)
 
         df = np.zeros((max_len, 3))
+
+        x_new = interpolation_1D(start=x[0],
+                                 stop=x[1],
+                                 max_len=max_len)
+        y_new = interpolation_1D(start=y[0],
+                                 stop=y[1],
+                                 max_len=max_len)
+        z_new = interpolation_1D(start=z[0],
+                                 stop=z[1],
+                                 max_len=max_len)
 
         df[0:max_len, 0] = list(map(int, x_new))
         df[0:max_len, 1] = list(map(int, y_new))

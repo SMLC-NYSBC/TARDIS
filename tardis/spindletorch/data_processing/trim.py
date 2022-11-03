@@ -5,8 +5,10 @@ from typing import Optional
 import numpy as np
 import torch
 import torch.nn.functional as F
-from tardis.spindletorch.data_processing.semantic_mask import fill_gaps_in_semantic
 from tifffile import tifffile as tif
+
+from tardis.spindletorch.data_processing.semantic_mask import fill_gaps_in_semantic
+from tardis.utils.errors import TardisError
 
 
 def scale_image(image: np.ndarray,
@@ -134,7 +136,10 @@ def trim_with_stride(image: np.ndarray,
     if mask is not None:
         mask_dtype = np.uint8
         assert image.shape == mask.shape, \
-            f'Image {image.shape} has different shape from mask {mask.shape}'
+            TardisError('TRAINING_DATASET_COMPATIBILITY',
+                        'tardis/spindletorch/data_processing',
+                        f'Image {image.shape} has different shape from mask {mask.shape}')
+
         image, mask, dim = scale_image(image=image,
                                        mask=mask,
                                        scale=scale)
@@ -168,12 +173,18 @@ def trim_with_stride(image: np.ndarray,
 
     if trim_size_xy is not None or trim_size_z is not None:
         assert nx >= trim_size_xy, \
-            "trim_size_xy should be equal or greater then X dimension!"
+            TardisError('TRAINING_DATASET_COMPATIBILITY',
+                        'tardis/spindletorch/data_processing',
+                        "trim_size_xy should be equal or greater then X dimension!")
         assert ny >= trim_size_xy, \
-            "trim_size_xy should be equal or greater then Y dimension!"
+            TardisError('TRAINING_DATASET_COMPATIBILITY',
+                        'tardis/spindletorch/data_processing',
+                        "trim_size_xy should be equal or greater then Y dimension!")
     else:
         assert stride is not None, \
-            "Trim sizes or stride has to be indicated!"
+            TardisError('TRAINING_DATASET_COMPATIBILITY',
+                        'tardis/spindletorch/data_processing',
+                        "Trim sizes or stride has to be indicated!")
         trim_size_xy = 64
         trim_size_z = 64
 

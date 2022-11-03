@@ -106,12 +106,12 @@ def test_am_sg():
 
 def test_aws():
     aws = get_weights_aws(network='dist',
-                          subtype='without_img',
+                          subtype='triang',
                           model='microtubules')
     assert isinstance(aws, str) or isinstance(aws, io.BytesIO)
 
     aws = get_weights_aws(network='dist',
-                          subtype='without_img',
+                          subtype='triang',
                           model='microtubules')
     assert isinstance(aws, str)
 

@@ -2,9 +2,11 @@ from os import listdir
 from os.path import isfile, join
 
 import numpy as np
+
 from tardis.spindletorch.data_processing.semantic_mask import draw_semantic
 from tardis.spindletorch.data_processing.trim import trim_with_stride
 from tardis.spindletorch.datasets.augment import MinMaxNormalize, RescaleNormalize
+from tardis.utils.errors import TardisError
 from tardis.utils.load_data import ImportDataFromAmira, load_image
 from tardis.utils.logo import Tardis_Logo, printProgressBar
 
@@ -43,17 +45,18 @@ def build_train_dataset(dataset_dir: str,
         multi_layer (bool): If True mask is build in RGB channel instead of
             gray (0-1).
         resize_pixel_size (float): Pixel size for image resizing.
-        trim_xy: Voxal size of output image in x and y dimension.
-        trim_z: Voxal size of output image in z dimension.
+        trim_xy (int): Voxal size of output image in x and y dimension.
+        trim_z (int): Voxal size of output image in z dimension.
     """
+    """Setup"""
     tardis_progress = Tardis_Logo()
     tardis_progress(title='Data pre-processing for CNN training')
 
     normalize = RescaleNormalize(range=(1, 99))  # Normalize histogram
     minmax = MinMaxNormalize()
 
-    IMG_FORMATS = ('.tif', '.am', '.mrc', '.rec')
-    MASK_FORMATS = ('_mask.tif', "_mask.mrc", '_mask.rec')
+    IMG_FORMATS = ('.am', '.mrc', '.rec')
+    MASK_FORMATS = ('_mask.am', '_mask.mrc', '_mask.rec')
 
     """Check what file are in the folder to build dataset"""
     img_list = [f for f in listdir(dataset_dir) if f.endswith(IMG_FORMATS)]
@@ -66,23 +69,30 @@ def build_train_dataset(dataset_dir: str,
     check_am = False
     if len(is_csv) > 0:  # Expect .csv as coordinate
         assert len(is_csv) * 2 == (len(img_list) / 2), \
-            'Not all image file in directory has corresponding .csv file...'
+            TardisError('TRAINING_DATASET_COMPATIBILITY',
+                        'tardis/spindletorch/data_processing',
+                        'Not all image file has corresponding .csv file...')
         check_csv = True
     else:
         if len(is_mask_image) > 0:  # Expect image semantic mask as input
             assert len(is_mask_image) == (len(img_list) / 2), \
-                'Not all image file in directory has corresponding _mask.* file...'
+                TardisError('TRAINING_DATASET_COMPATIBILITY',
+                            'tardis/spindletorch/data_processing',
+                            'Not all image file has corresponding _mask.* file...')
             check_mask_image = True
-        else:
-            # Expect .am as coordinate
+        else:  # Expect .am as coordinate
             assert len([f for f in img_list
                         if f.endswith('.CorrelationLines.am')]) == (len(img_list) / 2), \
-                'Not all image file in directory has corresponding .CorrelationLines.am file...'
+                TardisError('TRAINING_DATASET_COMPATIBILITY',
+                            'tardis/spindletorch/data_processing',
+                            'Not all image file has corresponding  .CorrelationLines.am file...')
             check_am = True
 
     assert np.any([check_csv, check_mask_image, check_am]), \
-        'Could not find any compatible dataset. Refer to documentation for, ' \
-        'how to structure your dataset properly!'
+        TardisError('TRAINING_DATASET_COMPATIBILITY',
+                    'tardis/spindletorch/data_processing',
+                    'Could not find any compatible dataset. Refer to documentation for, '
+                    'how to structure your dataset properly!')
 
     """Build label mask file list"""
     if check_csv:
@@ -95,14 +105,16 @@ def build_train_dataset(dataset_dir: str,
     idx_mask = list(np.array(img_list)[mask_list])
     idx_img = list(np.array(img_list)[np.logical_not(mask_list)])
     assert len(idx_mask) == len(idx_img), \
-        'Number of images and mask is not the same!'
+        TardisError('TRAINING_DATASET_COMPATIBILITY',
+                    'tardis/spindletorch/data_processing',
+                    'Number of images and mask is not the same!')
 
     """Load data, build mask is not image and trim"""
     coord = None
     img_counter = 0
 
     for id, i in enumerate(range(len(idx_img))):
-        """Load image data"""
+        """Load image data and store image and mask name"""
         mask = None
         mask_name = idx_mask[i]
 
@@ -121,28 +133,42 @@ def build_train_dataset(dataset_dir: str,
             img_name = f'{mask_name[:-9]}.mrc'
 
         """Load image file"""
-        if img_name.endswith(('.mrc', '.rec', '.tif')):
-            image, pixel_size = load_image(join(dataset_dir, img_name))
-
-            try:
-                importer = ImportDataFromAmira(src_am=join(dataset_dir, mask_name))
+        if img_name.endswith(IMG_FORMATS):
+            if not check_am:
+                image, pixel_size = load_image(join(dataset_dir, img_name))
+            elif img_name.endswith('.am') and check_am:
+                importer = ImportDataFromAmira(src_am=join(dataset_dir,
+                                                        mask_name),
+                                            src_img=join(dataset_dir,
+                                                            img_name))
+                image, pixel_size = importer.get_image()
                 coord = importer.get_segmented_points()  # [ID x X x Y x Z]
-                coord[:, 1:] = coord[:, 1:] // pixel_size
-            except IndexError:
-                coord = None
-        elif img_name.endswith('.am'):
-            importer = ImportDataFromAmira(src_am=join(dataset_dir,
-                                                       mask_name),
-                                           src_img=join(dataset_dir,
-                                                        img_name))
-            image, pixel_size = importer.get_image()
-            coord = importer.get_segmented_points()  # [ID x X x Y x Z]
 
-        """Calculate normalization factor"""
-        if pixel_size == 0:
-            scale_factor = 1
-        else:
-            scale_factor = pixel_size / resize_pixel_size
+        """Load mask file"""
+        # Try to load .CorrelationLines.am files
+        mask_px = None
+        if coord is None:
+            importer = ImportDataFromAmira(src_am=join(dataset_dir, mask_name))
+            coord = importer.get_segmented_points()  # [ID x X x Y x Z]
+            mask_px = importer.get_pixel_size()
+            coord[:, 1:] = coord[:, 1:] // mask_px
+        elif check_mask_image:
+            mask, mask_px = load_image(join(dataset_dir, mask_name))
+        elif check_csv:
+            coord = np.genfromtxt(join(dataset_dir, mask_name), delimiter=',')
+            if str(coord[0, 0]) == 'nan':
+                coord = coord[1:, :]
+
+        """Calculate normalization factor for image and mask"""
+        if mask_px is None:
+            mask_px = pixel_size
+        assert mask_px == pixel_size, \
+            TardisError('TRAINING_DATASET_COMPATIBILITY',
+                        'tardis/spindletorch/data_processing',
+                        f'Mask pixel size {mask_px} and image pixel size '
+                        f'{pixel_size} and not the same!')
+
+        scale_factor = pixel_size / resize_pixel_size
         scale_shape = tuple(np.multiply(image.shape, scale_factor).astype(np.int16))
 
         tardis_progress(title='Data pre-processing for CNN training',
@@ -157,29 +183,38 @@ def build_train_dataset(dataset_dir: str,
         """Draw mask"""
         if coord is not None:
             assert coord.shape[1] == 4, \
-                f'Coord file do not have shape [ID x X x Y x Z]. Given {coord.shape[1]}'
+                TardisError('TRAINING_DATASET_COMPATIBILITY',
+                            'tardis/spindletorch/data_processing',
+                            f'Coord file do not have shape [ID x X x Y x Z]. '
+                            f'Given {coord.shape[1]}')
             if not is_mask_image:
                 mask = draw_semantic(mask_size=image.shape,
                                      coordinate=coord,
                                      pixel_size=pixel_size,
                                      circle_size=circle_size,
                                      multi_layer=multi_layer)
-        else: 
-            mask, _ = load_image(join(dataset_dir, mask_name))
-            assert mask.min() >= 0, f'Mask min: {mask.min()}; max: {mask.max()}'
-            mask = np.where(mask > 0, 1, 0).astype(np.uint8)  # Convert to binary 
-            mask = np.flip(mask, 1)
+        else:
+            assert mask.min() >= 0, \
+                TardisError('TRAINING_DATASET_COMPATIBILITY',
+                            'tardis/spindletorch/data_processing',
+                            f'Mask min: {mask.min()}; max: {mask.max()}')
+            mask = np.where(mask > 0, 1, 0).astype(np.uint8)  # Convert to binary
+            if mask_name.endswith(('_mask.mrc', '_mask.rec')):
+                mask = np.flip(mask, 1)
 
-        """Check image structure and normalize histogram"""
+        """Normalize histogram"""
         # Rescale image intensity
         image = normalize(image)
 
-        if not image.min() >= 0 or not image.max() <= 1:  # Normalized between 0 and 1
+        if not image.min() >= 0 or not image.max() <= 1:  # Image between in 0 and 255
             image = minmax(image)
-        elif image.min() >= -1 and image.max() <= 1:
+        elif image.min() >= -1 and image.max() <= 1:  # int8 normalize
             image = minmax(image)
 
-        assert image.dtype == np.float32
+        assert image.dtype == np.float32, \
+            TardisError('TRAINING_DATASET_COMPATIBILITY',
+                            'tardis/spindletorch/data_processing',
+                            f'Image data of type {image.dtype} not float32')
 
         tardis_progress(title='Data pre-processing for CNN training',
                         text_1='Building Training dataset:',
