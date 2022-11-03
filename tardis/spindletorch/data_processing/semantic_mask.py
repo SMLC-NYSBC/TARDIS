@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from tardis.spindletorch.data_processing.draw_mask_2D import draw_2D
-from tardis.spindletorch.data_processing.interpolation import interpolation_3D
+from tardis.spindletorch.data_processing.interpolation import interpolation
 
 
 def fill_gaps_in_semantic(image: np.ndarray):
@@ -45,13 +45,13 @@ def draw_semantic(mask_size: tuple,
 
     Args:
         mask_size: Size of array that will hold created mask
-        coordinate: Segmented coordinates of a shape [Label x X x Y x Z]
+        coordinate: Segmented coordinates of a shape [Label x X x Y x (Z)]
         pixel_size: Pixel size in Angstrom
         circle_size: Size of a circle the label mask in Angstrom
         multi_layer: single, or unique value for each lines
         tqdm: If True build with progress bar
     """
-    assert coordinate.ndim == 2 and coordinate.shape[1] == 4, \
+    assert coordinate.ndim == 2 and coordinate.shape[1] in [3, 4], \
         'Included coordinate array is not of a correct shape.'
 
     label_mask = np.zeros(mask_size)
@@ -72,7 +72,7 @@ def draw_semantic(mask_size: tuple,
     for i in range(len(segments)):
         points = coordinate[np.where(coordinate[:, 0] == i)[0]][:, 1:]
 
-        label = interpolation_3D(points)
+        label = interpolation(points)
 
         if multi_layer:
             segment_color = list(np.random.choice(range(255), size=3))
