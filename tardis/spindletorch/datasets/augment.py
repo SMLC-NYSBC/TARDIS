@@ -116,20 +116,20 @@ class MinMaxNormalize:
         """
         MIN = x.min()
         MAX = x.max()
-        assert MIN >= 0
 
-        if MAX <= 1:
-            x = (x - 0) / 255
-            return x.astype(np.float32)
-        elif MAX <= 255:
-            x = (x - 0) / 255
-            return x.astype(np.float32)
-        elif MAX <= 65535:
-            x = (x - 0) / 255
-            return x.astype(np.float32)
-        elif MAX <= 4294967295:
-            x = (x - 0) / 4294967295
-            return x.astype(np.float32)
+        if MIN >= 0:
+            if MAX <= 1:
+                x = (x - 0) / 255
+            elif MAX <= 255:
+                x = (x - 0) / 255
+            elif MAX <= 65535:
+                x = (x - 0) / 255
+            elif MAX <= 4294967295:
+                x = (x - 0) / 4294967295
+        elif MIN < 0 and MIN >= -1 and MAX <= 1:
+            x = (x + 1) / 2
+
+        return x.astype(np.float32)
 
 
 class RescaleNormalize:

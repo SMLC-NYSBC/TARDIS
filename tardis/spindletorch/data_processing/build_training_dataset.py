@@ -53,7 +53,7 @@ def build_train_dataset(dataset_dir: str,
     minmax = MinMaxNormalize()
 
     IMG_FORMATS = ('.tif', '.am', '.mrc', '.rec')
-    MASK_FORMATS = ('_mask.tif', "_mask.mrc", '_mask.rec', '_mask.am')
+    MASK_FORMATS = ('_mask.tif', "_mask.mrc", '_mask.rec')
 
     """Check what file are in the folder to build dataset"""
     img_list = [f for f in listdir(dataset_dir) if f.endswith(IMG_FORMATS)]
@@ -117,14 +117,19 @@ def build_train_dataset(dataset_dir: str,
                 img_name = f'{mask_name[:-20]}.tif'  # .tif image file
             else:
                 raise NameError(f'No image file found for {mask_name}')
+        else:
+            img_name = f'{mask_name[:-9]}.mrc'
 
         """Load image file"""
         if img_name.endswith(('.mrc', '.rec', '.tif')):
             image, pixel_size = load_image(join(dataset_dir, img_name))
 
-            importer = ImportDataFromAmira(src_am=join(dataset_dir, mask_name))
-            coord = importer.get_segmented_points()  # [ID x X x Y x Z]
-            coord[:, 1:] = coord[:, 1:] // pixel_size
+            try:
+                importer = ImportDataFromAmira(src_am=join(dataset_dir, mask_name))
+                coord = importer.get_segmented_points()  # [ID x X x Y x Z]
+                coord[:, 1:] = coord[:, 1:] // pixel_size
+            except IndexError:
+                coord = None
         elif img_name.endswith('.am'):
             importer = ImportDataFromAmira(src_am=join(dataset_dir,
                                                        mask_name),
@@ -159,12 +164,21 @@ def build_train_dataset(dataset_dir: str,
                                      pixel_size=pixel_size,
                                      circle_size=circle_size,
                                      multi_layer=multi_layer)
+        else: 
+            mask, _ = load_image(join(dataset_dir, mask_name))
+            assert mask.min() >= 0, f'Mask min: {mask.min()}; max: {mask.max()}'
+            mask = np.where(mask > 0, 1, 0).astype(np.uint8)  # Convert to binary 
+            mask = np.flip(mask, 1)
 
         """Check image structure and normalize histogram"""
-        if image.min() > 5 or image.max() < 250:  # Rescale image intensity
-            image = normalize(image)
+        # Rescale image intensity
+        image = normalize(image)
+
         if not image.min() >= 0 or not image.max() <= 1:  # Normalized between 0 and 1
             image = minmax(image)
+        elif image.min() >= -1 and image.max() <= 1:
+            image = minmax(image)
+
         assert image.dtype == np.float32
 
         tardis_progress(title='Data pre-processing for CNN training',

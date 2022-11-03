@@ -3,7 +3,7 @@ from typing import Optional
 
 import numpy as np
 import pandas as pd
-from skimage.morphology import skeletonize_3d
+from skimage.morphology import skeletonize_3d, skeletonize
 
 
 class ImageToPointCloud:
@@ -14,12 +14,14 @@ class ImageToPointCloud:
                  image: Optional[str] = np.ndarray,
                  euclidean_transform=True,
                  label_size=2.5,
-                 down_sampling_voxal_size=None):
+                 down_sampling_voxal_size=None,
+                 as_2d=False):
 
         return self.postprocess.build_point_cloud(image=image,
                                                   EDT=euclidean_transform,
                                                   label_size=label_size,
-                                                  down_sampling=down_sampling_voxal_size)
+                                                  down_sampling=down_sampling_voxal_size,
+                                                  as_2d=as_2d)
 
 
 class BuildPointCloud:
@@ -48,7 +50,7 @@ class BuildPointCloud:
                    image):
         try:
             if isinstance(image, str):
-                from tardis.slcpy.utils.load_data import import_tiff
+                from tardis.utils.load_data import import_tiff
 
                 image, _ = import_tiff(img=image,
                                        dtype=np.int8)
@@ -75,10 +77,8 @@ class BuildPointCloud:
                           image: Optional[str] = np.ndarray,
                           EDT=False,
                           label_size=2.5,
-                          down_sampling: Optional[float] = None):
-        if self.tqdm:
-            from tqdm import tqdm
-
+                          down_sampling: Optional[float] = None,
+                          as_2d=False):
         image = self.check_data(image)
 
         if EDT:
@@ -92,45 +92,46 @@ class BuildPointCloud:
             else:
                 image_edt = np.zeros(image.shape, dtype=np.int8)
 
-                if self.tqdm:
-                    edt_iter = tqdm(range(image_edt.shape[0]),
-                                    'Calculating EDT map:',
-                                    leave=True)
-                else:
-                    edt_iter = range(image_edt.shape[0])
-
-                for i in edt_iter:
+                for i in range(image_edt.shape[0]):
                     image_edt[i, :] = np.where(edt.edt(image[i, :]) > label_size, 1, 0)
 
             """Skeletonization"""
-            if image_edt.flatten().shape[0] > 1000000000:
+            if image_edt.flatten().shape[0] > 1000000000 or as_2d:
                 image_point = np.zeros(image_edt.shape, dtype=np.int8)
                 start = 0
 
-                for i in range(10, image_edt.shape[0], 10):
-                    if (image_edt.shape[0] - i) // 10 == 0:
-                        i = image_edt.shape[0]
+                if as_2d:
+                    for i in range(image_edt.shape[0]):
+                        image_point[i, :] = skeletonize(image_edt[i, :])
+                else:
+                    for i in range(10, image_edt.shape[0], 10):
+                        if (image_edt.shape[0] - i) // 10 == 0:
+                            i = image_edt.shape[0]
+                        image_point[start:i, :] += skeletonize_3d(image_edt[start:i, :])
+                        start = i
 
-                    image_point[start:i, :] += skeletonize_3d(image_edt[start:i, :])
-                    start = i
                 image_point = np.where(image_point > 0)
             else:
                 image_point = np.where(skeletonize_3d(image_edt) > 0)
         else:
             """Skeletonization"""
-            if image.flatten().shape[0] > 1000000000:
+            if image.flatten().shape[0] > 1000000000 or as_2d:
                 image_point = np.zeros(image.shape, dtype=np.int8)
                 start = 0
 
-                for i in range(10, image.shape[0], 10):
-                    if (image.shape[0] - i) // 10 == 0:
-                        i = image.shape[0]
+                if as_2d:
+                    for i in range(image.shape[0]):
+                        image_point[i, :] = skeletonize(image[i, :])
+                else:
+                    for i in range(10, image.shape[0], 10):
+                        if (image.shape[0] - i) // 10 == 0:
+                            i = image.shape[0]
 
-                    image_point[start:i, :] += skeletonize_3d(image[start:i, :])
-                    start = i
+                        image_point[start:i, :] += skeletonize_3d(image[start:i, :])
+                        start = i
                 image_point = np.where(image_point > 0)
             else:
-                image_point = np.where(skeletonize_3d(image) > 0)
+                image_point = np.where(skeletonize_3d(image_edt) > 0)
 
         """CleanUp to avoid memory loss"""
         image = None

@@ -401,7 +401,7 @@ class GraphInstanceV2:
 class FilterSpatialGraph:
     def __init__(self,
                  filter_unconnected_segments=True,
-                 filter_short_spline=True):
+                 filter_short_spline=1000):
         self.filter_connections = filter_unconnected_segments
         self.filter_short_segment = filter_short_spline
 
@@ -414,12 +414,12 @@ class FilterSpatialGraph:
             segments = filter_connect_near_segment(segments, 150)
             segments = filter_connect_near_segment(segments, 175)
 
-        if self.filter_short_segment:
+        if self.filter_short_segment > 0:
             length = []
             for i in np.unique(segments[:, 0]):
                 length.append(total_length(segments[np.where(segments[:, 0] == int(i))[0], 1:]))
 
-            length = [id for id, i in enumerate(length) if i > 1000]
+            length = [id for id, i in enumerate(length) if i > self.filter_short_segment]
 
             new_seg = []
             for i in length:

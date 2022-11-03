@@ -76,7 +76,7 @@ def scale_image(image: np.ndarray,
                               mode='trilinear',
                               align_corners=False).cpu().detach().numpy()[0, 0, :].astype(type_i)
         if mask is not None:
-            mask = torch.from_numpy(mask).to('cpu').type(torch.float)
+            mask = torch.from_numpy(mask.copy()).to('cpu').type(torch.float)
             mask = F.interpolate(mask[None, None, :],
                                  size=scale,
                                  mode='trilinear',

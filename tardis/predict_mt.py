@@ -73,12 +73,12 @@ warnings.simplefilter("ignore", UserWarning)
               help='Number of point per voxal.',
               show_default=True)
 @click.option('-f', '--filter_mt',
-              default=True,
-              type=bool,
-              help='If True, Tardis output org. and filtered spatial graph. '
+              default=1000,
+              type=int,
+              help='Remove MT that are shorter then given A value '
               'NOT SUPPORTED FOR .TIF FILE FORMAT '
               'There are two filtering mechanisms: '
-              '- Remove short segments (aka. Segments shorter then 100 nm. '
+              '- Remove short segments (aka. Segments shorter then XX A. '
               '- Connect segments that are closer then 17.5 nm',
               show_default=True)
 @click.option('-d', '--device',
@@ -108,7 +108,7 @@ def main(dir: str,
          cnn_threshold: float,
          dist_threshold: float,
          points_in_patch: int,
-         filter_mt: bool,
+         filter_mt: float,
          device: str,
          debug: bool,
          visualizer: Optional[str] = None,
@@ -173,7 +173,7 @@ def main(dir: str,
                                      connection=2,
                                      smooth=True)
     filter_segments = FilterSpatialGraph(filter_unconnected_segments=True,
-                                         filter_short_spline=True)
+                                         filter_short_spline=1000)
 
     # Build CNN from checkpoints
     checkpoints = (cnn_checkpoint, dist_checkpoint)
@@ -401,7 +401,7 @@ def main(dir: str,
         if point_cloud.shape[0] < 100:
             point_cloud = post_processer(image=image,
                                          euclidean_transform=True,
-                                         label_size=0.1,
+                                         label_size=0.5,
                                          down_sampling_voxal_size=None)
 
         if point_cloud.shape[0] < 100:
@@ -477,7 +477,7 @@ def main(dir: str,
                     graphs,
                     allow_pickle=True)
 
-        """Graphformer post-processing"""
+        """DIST post-processing"""
         if i.endswith(('.am', '.rec', '.mrc')):
             tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                             text_1=f'Found {len(predict_list)} images to predict!',

@@ -252,7 +252,7 @@ def import_mrc(mrc: str):
     dtype = mrc_mode(header.mode, header.amin)
     nz, ny, nx = header.nz, header.ny, header.nx
 
-    bit_len = nz * ny * nx  # Calculate file size and without header
+    bit_len = nz * ny * nx  # Calculate file size
     if nz == 1:
         image = np.fromfile(mrc, dtype=dtype)[-bit_len:].reshape((ny, nx))
     else:

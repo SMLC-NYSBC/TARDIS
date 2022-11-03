@@ -62,15 +62,15 @@ class Tardis_Logo:
     """
 
     def __init__(self):
-        clear = None
+        self.CLEAR  = None
 
         if platform.system() in ['Darwin', 'Linux']:
             self.CLEAR = lambda: system('clear')
         else:
             self.CLEAR = lambda: system('cls')
 
-        if clear is None and is_interactive():
-            self.CLEAR = clear_output(wait=True)
+        if is_interactive():
+            self.CLEAR = lambda: clear_output(wait=True)
 
         self.FN = "TARDIS-pytorch Copyright Information:"
         self.C = "Copyright (c) 2021 Robert Kiewisz, Tristan Bepler"
