@@ -10,7 +10,7 @@ with open('requirements.txt') as r:
 setup(
     author=["Robert Kiewisz", "Tristan Bepler"],
     author_email='rkiewisz@nysbc.com',
-    python_requires='>=3.8.*, !=3.11.*',
+    python_requires='>=3.7.*, !=3.11.*',
     install_requires=required,
     dependency_links=[
         'https://download.pytorch.org/whl/cu117'
@@ -32,6 +32,7 @@ setup(
             'tardis_cnn_train = tardis.train_spindletorch:main',
             'tardis_dist_train = tardis.train_DIST:main',
             'tardis_mt = tardis.predict_mt:main',
+            'tardis_mem = tardis.predict_mem:main',
         ],
     },
     license="MIT License",
