@@ -1,6 +1,29 @@
 History
 =======
 
+0.1.0-beta2 (2022-09-14)
+----------------------------
+* **Code restructure:**
+    * Finished documentation with Sphinx
+    * Build testes for the whole tardis-pytorch
+    * Push to RC branch
+
+* **SpindleTorch module changes:**
+    * Cryo-membrane model support 
+    * Build prediction module for Cryo-membrane
+    * Removed scaling module (after extensive testes it shows not benefits)
+    * Fixes in building train data set and small restructure (more in documentation)
+    * Added more support for 2D images while building test/train dataset
+    * Added support for pure probability prediction output in float32
+
+* **DIST module changes:**
+    * Last clean-up and prepare for release with ICLR2023
+
+* **General changes:**
+    * Added support for mrc and csv file outputs
+    * Support for python 3.11 (awaiting pytorch and open3d)
+    * requirements.txt changes and include pytroch with support for different os
+
 0.1.0-pre_beta2 (2022-09-14)
 ----------------------------
 * **Code restructure:**

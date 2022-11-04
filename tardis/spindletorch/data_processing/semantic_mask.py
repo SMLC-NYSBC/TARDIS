@@ -7,7 +7,7 @@ from tardis.spindletorch.data_processing.interpolation import interpolation
 def fill_gaps_in_semantic(image: np.ndarray):
     if image.ndim == 3:
         for id, _ in enumerate(image):
-            des = np.array(image[id, :], dtype=np.uint8)
+            des = np.array(image[id, :], dtype=image.dtype)
             contour, _ = cv2.findContours(des, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
 
             for cnt in contour:
@@ -21,7 +21,7 @@ def fill_gaps_in_semantic(image: np.ndarray):
 
         return image
     else:
-        des = np.array(image, dtype=np.uint8)
+        des = np.array(image, dtype=image.dtype)
         contour, _ = cv2.findContours(des, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
 
         for cnt in contour:

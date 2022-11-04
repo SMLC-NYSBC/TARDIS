@@ -7,25 +7,18 @@ from typing import Optional
 
 import click
 import numpy as np
-import open3d as o3d
 import tifffile.tifffile as tif
 
-from tardis.dist_pytorch.datasets.patches import PatchDataSet
-from tardis.dist_pytorch.utils.build_point_cloud import ImageToPointCloud
-from tardis.dist_pytorch.utils.segment_point_cloud import FilterSpatialGraph, GraphInstanceV2
-from tardis.dist_pytorch.utils.utils import pc_median_dist
 from tardis.spindletorch.data_processing.semantic_mask import fill_gaps_in_semantic
 from tardis.spindletorch.data_processing.stitch import StitchImages
 from tardis.spindletorch.data_processing.trim import scale_image, trim_with_stride
 from tardis.spindletorch.datasets.augment import MinMaxNormalize, RescaleNormalize
 from tardis.spindletorch.datasets.dataloader import PredictionDataset
 from tardis.utils.device import get_device
-from tardis.utils.export_data import NumpyToAmira
 from tardis.utils.load_data import import_am, load_image
 from tardis.utils.logo import Tardis_Logo, printProgressBar
 from tardis.utils.predictor import Predictor
 from tardis.utils.setup_envir import build_temp_dir, clean_up
-from tardis.utils.utils import check_uint8
 from tardis.version import version
 
 warnings.simplefilter("ignore", UserWarning)
@@ -113,9 +106,6 @@ def main(dir: str,
 
     image_stitcher = StitchImages()
 
-    # Build CNN from checkpoints
-    checkpoints = cnn_checkpoint
-
     device = get_device(device)
     cnn_network = cnn_network.split('_')
     if not len(cnn_network) == 2:
@@ -128,7 +118,7 @@ def main(dir: str,
         sys.exit()
 
     # Build CNN network with loaded pre-trained weights
-    predict_cnn = Predictor(checkpoint=checkpoints,
+    predict_cnn = Predictor(checkpoint=cnn_checkpoint,
                             network=cnn_network[0],
                             subtype=cnn_network[1],
                             model_type='cryo_mem',
@@ -163,7 +153,7 @@ def main(dir: str,
 
         # Cut image for smaller image
         if i.endswith('.am'):
-            image, px, _, transformation = import_am(am_file=join(dir, i))
+            image, px, _, _ = import_am(am_file=join(dir, i))
         else:
             image, px = load_image(join(dir, i))
             transformation = [0, 0, 0]
@@ -239,7 +229,9 @@ def main(dir: str,
                 start = time.time()
 
                 # Predict & Threshold
-                out = np.where(predict_cnn._predict(input[None, :]) >= cnn_threshold, 1, 0)
+                input = predict_cnn._predict(input[None, :])
+                if cnn_threshold != 0:
+                    input = np.where(input >= cnn_threshold, 1, 0).astype(np.uint8)
 
                 end = time.time()
                 iter_time = 10 // (end - start)  # Scale progress bar refresh to 10s
@@ -247,23 +239,12 @@ def main(dir: str,
                     iter_time = 1
             else:
                 # Predict & Threshold
-                out = np.where(predict_cnn._predict(input[None, :]) >= cnn_threshold, 1, 0)
-
-            # Save threshold image
-            if not out.min() == 0 and out.max() in [0, 1]:
-                tardis_progress(title=f'Fully-automatic Membrane segmentation module',
-                                text_1=f'Found {len(predict_list)} images to predict!',
-                                text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
-                                text_4=f'Pixel size: {px} A; Image re-sample to 16.56 A',
-                                text_5=f'Point Cloud: {px} A',
-                                text_7='Last Task: CNN prediction finished...',
-                                text_8='Tardis Error: Error while while processing CNN prediction:',
-                                text_9=f'Predicted semantic mask has wrong values:',
-                                text_10=f'Unique: {np.unique(out)}; dtype: {out.dtype}')
-                sys.exit()
+                input = predict_cnn._predict(input[None, :])
+                if cnn_threshold != 0:
+                    input = np.where(input >= cnn_threshold, 1, 0).astype(np.uint8)
 
             tif.imwrite(join(output, f'{name}.tif'),
-                        np.array(out, dtype=np.uint8))
+                        np.array(input, dtype=input.dtype))
 
         """Post-Processing"""
         scale_factor = org_shape
@@ -277,21 +258,22 @@ def main(dir: str,
                         text_7='Current Task: Stitching...')
 
         # Stitch predicted image patches
-        image = check_uint8(image_stitcher(image_dir=output,
-                                           output=None,
-                                           mask=True,
-                                           prefix='',
-                                           dtype=np.int8)[:scale_shape[0],
-                                                          :scale_shape[1],
-                                                          :scale_shape[2]])
+        image = image_stitcher(image_dir=output,
+                               output=None,
+                               mask=True,
+                               prefix='',
+                               dtype=input.dtype)[:scale_shape[0],
+                                                  :scale_shape[1],
+                                                  :scale_shape[2]]
 
         # Restored original image pixel size
         image, _ = scale_image(image=image,
                                mask=None,
-                               scale=scale_factor)
+                               scale=org_shape)
 
         # Fill gaps in binary mask after up/downsizing image to 2.5 nm pixel size
-        image = fill_gaps_in_semantic(image)
+        if cnn_threshold != 0:
+            image = fill_gaps_in_semantic(image)
 
         # Check if predicted image
         if not image.shape == org_shape:
@@ -305,9 +287,11 @@ def main(dir: str,
                             text_9=f'Org. shape {org_shape} is not the same as converted shape {image.shape}')
             sys.exit()
 
-        image = np.flip(image, 1)
-        tif.imwrite(join(am_output, f'{i[:-out_format]}_CNN.tif'),
-                    image)
+        if cnn_threshold == 0:
+            if join(dir, i).endswith('.mrc'):
+                image = np.flip(image, 1)
+            tif.imwrite(join(am_output, f'{i[:-out_format]}_CNN.tif'),
+                        image)
 
         """Clean-up temp dir"""
         clean_up(dir=dir)

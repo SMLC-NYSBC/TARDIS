@@ -38,7 +38,7 @@ warnings.simplefilter("ignore", UserWarning)
               help='Directory with images for prediction with CNN model.',
               show_default=True)
 @click.option('-ps', '--patch_size',
-              default=128,
+              default=96,
               type=int,
               help='Size of image size used for prediction.',
               show_default=True)
@@ -89,6 +89,11 @@ warnings.simplefilter("ignore", UserWarning)
               'cpu: Usa CPU '
               '0-9 - specified GPU device id to use',
               show_default=True)
+@click.option('-o', '--output',
+              default='amira',
+              type=click.Choice(['amira', 'csv']),
+              help='Define output format type.',
+              show_default=True)
 @click.option('-db', '--debug',
               default=False,
               type=bool,
@@ -111,6 +116,7 @@ def main(dir: str,
          filter_mt: float,
          device: str,
          debug: bool,
+         output='amira',
          visualizer: Optional[str] = None,
          cnn_checkpoint: Optional[str] = None,
          dist_checkpoint: Optional[str] = None):
@@ -173,7 +179,7 @@ def main(dir: str,
                                      connection=2,
                                      smooth=True)
     filter_segments = FilterSpatialGraph(filter_unconnected_segments=True,
-                                         filter_short_spline=1000)
+                                         filter_short_spline=filter_mt)
 
     # Build CNN from checkpoints
     checkpoints = (cnn_checkpoint, dist_checkpoint)
@@ -193,13 +199,14 @@ def main(dir: str,
     predict_cnn = Predictor(checkpoint=checkpoints[0],
                             network=cnn_network[0],
                             subtype=cnn_network[1],
+                            model_type='microtubules',
                             img_size=patch_size,
                             device=device)
 
     # Build DIST network with loaded pre-trained weights
     predict_dist = Predictor(checkpoint=checkpoints[1],
                              network='dist',
-                             subtype='without_img',
+                             subtype='triang',
                              model_type='microtubules',
                              img_size=None,
                              device=device)
@@ -307,7 +314,10 @@ def main(dir: str,
                 start = time.time()
 
                 # Predict & Threshold
-                out = np.where(predict_cnn._predict(input[None, :]) >= cnn_threshold, 1, 0)
+                input = predict_cnn._predict(input[None, :])
+
+                if cnn_threshold != 0:
+                    input = np.where(input >= cnn_threshold, 1, 0).astype(np.uint8)
 
                 end = time.time()
                 iter_time = 10 // (end - start)  # Scale progress bar refresh to 10s
@@ -315,23 +325,13 @@ def main(dir: str,
                     iter_time = 1
             else:
                 # Predict & Threshold
-                out = np.where(predict_cnn._predict(input[None, :]) >= cnn_threshold, 1, 0)
+                input = predict_cnn._predict(input[None, :])
 
-            # Save threshold image
-            if not out.min() == 0 and out.max() in [0, 1]:
-                tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}',
-                                text_1=f'Found {len(predict_list)} images to predict!',
-                                text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
-                                text_4=f'Pixel size: {px} A; Image re-sample to 25 A',
-                                text_5=f'Point Cloud: {px} A',
-                                text_7='Last Task: CNN prediction finished...',
-                                text_8='Tardis Error: Error while while processing CNN prediction:',
-                                text_9=f'Predicted semantic mask has wrong values:',
-                                text_10=f'Unique: {np.unique(out)}; dtype: {out.dtype}')
-                sys.exit()
+                if cnn_threshold != 0:
+                    input = np.where(input >= cnn_threshold, 1, 0).astype(np.uint8)
 
             tif.imwrite(join(output, f'{name}.tif'),
-                        np.array(out, dtype=np.uint8))
+                        np.array(input, dtype=input.dtype))
 
         """Post-Processing"""
         scale_factor = org_shape
@@ -345,33 +345,41 @@ def main(dir: str,
                         text_7='Current Task: Stitching...')
 
         # Stitch predicted image patches
-        image = check_uint8(image_stitcher(image_dir=output,
-                                           output=None,
-                                           mask=True,
-                                           prefix='',
-                                           dtype=np.int8)[:scale_shape[0],
-                                                          :scale_shape[1],
-                                                          :scale_shape[2]])
+        image = image_stitcher(image_dir=output,
+                               output=None,
+                               mask=True,
+                               prefix='',
+                               dtype=input.dtype)[:scale_shape[0],
+                                                  :scale_shape[1],
+                                                  :scale_shape[2]]
 
         # Restored original image pixel size
         image, _ = scale_image(image=image,
                                mask=None,
-                               scale=scale_factor)
+                               scale=org_shape)
 
-        # Fill gaps in binary mask after up/downsizing image to 2.5 nm pixel size
-        image = fill_gaps_in_semantic(image)
+        if cnn_threshold == 0:
+            """Clean-up temp dir"""
+            tif.imwrite(join(am_output, f'{i[:-out_format]}_CNN.tif'),
+                        image)
+            clean_up(dir=dir)
+            continue
+
+        else:
+            # Fill gaps in binary mask after up/downsizing image to 2.5 nm pixel size
+            image = fill_gaps_in_semantic(image)
 
         # Check if predicted image
         if not image.shape == org_shape:
-                tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}',
-                                text_1=f'Found {len(predict_list)} images to predict!',
-                                text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
-                                text_4=f'Original pixel size: {px} A; Image re-sample to 25 A',
-                                text_5='Point Cloud: NaN.',
-                                text_7='Last Task: Stitching/Scaling/Make correction...',
-                                text_8=f'Tardis Error: Error while converting to {px} A pixel size.',
-                                text_9=f'Org. shape {org_shape} is not the same as converted shape {image.shape}')
-                sys.exit()
+            tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}',
+                            text_1=f'Found {len(predict_list)} images to predict!',
+                            text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
+                            text_4=f'Original pixel size: {px} A; Image re-sample to 25 A',
+                            text_5='Point Cloud: NaN.',
+                            text_7='Last Task: Stitching/Scaling/Make correction...',
+                            text_8=f'Tardis Error: Error while converting to {px} A pixel size.',
+                            text_9=f'Org. shape {org_shape} is not the same as converted shape {image.shape}')
+            sys.exit()
 
         # If prediction fail aka no prediction was produces continue with next image
         if image is None:
@@ -544,15 +552,15 @@ def main(dir: str,
                         text_7='Current Task: Segmentation finished!')
 
         """Save as .am"""
-        build_amira_file.export_amira(coord=segments,
-                                      file_dir=join(am_output,
-                                                    f'{i[:-out_format]}_SpatialGraph.am'))
-
-        if filter_mt and i.endswith(('.am', '.rec', '.mrc')):
-            if len(segments_filter) > 0:
-                build_amira_file.export_amira(coord=segments_filter,
-                                              file_dir=join(am_output,
-                                                            f'{i[:-out_format]}_SpatialGraph_filter_.am'))
+        if output == 'amira':
+            build_amira_file.export_amira(coord=segments,
+                                          file_dir=join(am_output,
+                                                        f'{i[:-out_format]}_SpatialGraph.am'))
+        elif output == 'csv':
+            np.savetxt(join(am_output,
+                            f'{i[:-out_format]}'
+                            '_SpatialGraph.csv'),
+                       segments_filter, delimiter=",")
 
         """Clean-up temp dir"""
         clean_up(dir=dir)

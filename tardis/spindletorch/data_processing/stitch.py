@@ -128,7 +128,7 @@ class StitchImages:
                                            y_start:y_stop,
                                            x_start:x_stop] = img
 
-            if mask:
+            if mask and stitched_image.dtype in [(np.int8, np.uint8)]:
                 stitched_image = np.where(stitched_image > 0, 1, 0)
 
             if output is None:
