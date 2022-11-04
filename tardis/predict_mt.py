@@ -16,7 +16,7 @@ from tardis.dist_pytorch.utils.segment_point_cloud import FilterSpatialGraph, Gr
 from tardis.dist_pytorch.utils.utils import pc_median_dist
 from tardis.spindletorch.data_processing.semantic_mask import fill_gaps_in_semantic
 from tardis.spindletorch.data_processing.stitch import StitchImages
-from tardis.spindletorch.data_processing.trim import scale_image, trim_with_stride
+from tardis.spindletorch.data_processing.trim import trim_with_stride
 from tardis.spindletorch.datasets.augment import MinMaxNormalize, RescaleNormalize
 from tardis.spindletorch.datasets.dataloader import PredictionDataset
 from tardis.utils.device import get_device
@@ -25,7 +25,6 @@ from tardis.utils.load_data import import_am, load_image
 from tardis.utils.logo import Tardis_Logo, printProgressBar
 from tardis.utils.predictor import Predictor
 from tardis.utils.setup_envir import build_temp_dir, clean_up
-from tardis.utils.utils import check_uint8
 from tardis.version import version
 
 warnings.simplefilter("ignore", UserWarning)
@@ -264,9 +263,9 @@ def main(dir: str,
             sys.exit()
 
         # Calculate parameters for normalizing image pixel size
-        scale_factor = px / 25
+        # scale_factor = px / 25
         org_shape = image.shape
-        scale_shape = tuple(np.multiply(org_shape, scale_factor).astype(np.int16))
+        # scale_shape = tuple(np.multiply(org_shape, scale_factor).astype(np.int16))
 
         # Tardis progress bar update
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
@@ -279,7 +278,7 @@ def main(dir: str,
         # Cut image for fix patch size and normalizing image pixel size
         trim_with_stride(image=image.astype(np.float32),
                          mask=None,
-                         scale=scale_shape,
+                         scale=org_shape,
                          trim_size_xy=patch_size,
                          trim_size_z=patch_size,
                          output=join(dir, 'temp', 'Patches'),
@@ -334,7 +333,7 @@ def main(dir: str,
                         np.array(input, dtype=input.dtype))
 
         """Post-Processing"""
-        scale_factor = org_shape
+        # scale_factor = org_shape
 
         # Tardis progress bar update
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
@@ -349,14 +348,14 @@ def main(dir: str,
                                output=None,
                                mask=True,
                                prefix='',
-                               dtype=input.dtype)[:scale_shape[0],
-                                                  :scale_shape[1],
-                                                  :scale_shape[2]]
+                               dtype=input.dtype)[:org_shape[0],
+                                                  :org_shape[1],
+                                                  :org_shape[2]]
 
         # Restored original image pixel size
-        image, _ = scale_image(image=image,
-                               mask=None,
-                               scale=org_shape)
+        # image, _ = scale_image(image=image,
+        #                        mask=None,
+        #                        scale=org_shape)
 
         if cnn_threshold == 0:
             """Clean-up temp dir"""

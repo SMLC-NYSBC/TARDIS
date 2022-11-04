@@ -261,6 +261,9 @@ def import_mrc(mrc: str):
     if image.min() < 0 and image.dtype == np.int8:
         image = image + 128
         image = image.astype(np.uint8)
+        
+    if header.alpha == 90:
+        image = np.flip(image, 1)
 
     return image, pixel_size
 
