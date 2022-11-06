@@ -89,8 +89,8 @@ warnings.simplefilter("ignore", UserWarning)
               '0-9 - specified GPU device id to use',
               show_default=True)
 @click.option('-o', '--output',
-              default='amira',
-              type=click.Choice(['amira', 'csv', 'mrc']),
+              default=None,
+              type=click.Choice(['csv', 'mrc']),
               help='Define output format type.',
               show_default=True)
 @click.option('-db', '--debug',
@@ -246,6 +246,11 @@ def main(dir: str,
         if tif_px is not None:
             px = tif_px
 
+        if px == 0:
+            px = click.prompt(f'Image file has pixel size {px}, thats obviously wrong... '
+                            'What is the correct value:',
+                                type=float)
+
         # Check image structure and normalize histogram
         if image.min() > 5 or image.max() < 250:  # Rescale image intensity
             image = normalize(image)
@@ -387,9 +392,9 @@ def main(dir: str,
         if debug:  # Debugging checkpoint
             tif.imwrite(join(am_output, f'{i[:-out_format]}_CNN.tif'),
                         image)
-            if output == 'mrc':
-                to_mrc(data=image,
-                       file_dir=join(am_output, f'{i[:-out_format]}_CNN.mrc'))
+        if output == 'mrc':
+            to_mrc(data=image,
+                   file_dir=join(am_output, f'{i[:-out_format]}_CNN.mrc'))
 
         if not image.min() == 0 and not image.max() == 1:
             continue
@@ -554,14 +559,20 @@ def main(dir: str,
                         text_7='Current Task: Segmentation finished!')
 
         """Save as .am"""
-        if output == 'amira':
-            build_amira_file.export_amira(coord=segments,
-                                          file_dir=join(am_output,
-                                                        f'{i[:-out_format]}_SpatialGraph.am'))
-        elif output == 'csv':
+        build_amira_file.export_amira(coord=segments,
+                                      file_dir=join(am_output,
+                                                    f'{i[:-out_format]}_SpatialGraph.am'))
+        build_amira_file.export_amira(coord=segments_filter,
+                                      file_dir=join(am_output,
+                                                    f'{i[:-out_format]}_SpatialGraph_filter.am'))
+        if output == 'csv':
             np.savetxt(join(am_output,
                             f'{i[:-out_format]}'
                             '_SpatialGraph.csv'),
+                       segments, delimiter=",")
+            np.savetxt(join(am_output,
+                            f'{i[:-out_format]}'
+                            '_SpatialGraph_filter.csv'),
                        segments_filter, delimiter=",")
 
         """Clean-up temp dir"""
