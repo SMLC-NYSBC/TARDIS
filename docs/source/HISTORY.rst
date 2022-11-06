@@ -59,6 +59,9 @@ History
     * Introduced tardis_dev and divided stable and developmental branches
     * Fixed image normalization and ensure correct normalized output for training
         and prediction
+    * Added MRC export
+    * Minor bugfixes from prebeta2 and new additions to beta2
+
 
 0.1.0-beta1 (2022-09-14)
 ------------------------

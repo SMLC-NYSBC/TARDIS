@@ -20,7 +20,7 @@ from tardis.spindletorch.data_processing.trim import trim_with_stride
 from tardis.spindletorch.datasets.augment import MinMaxNormalize, RescaleNormalize
 from tardis.spindletorch.datasets.dataloader import PredictionDataset
 from tardis.utils.device import get_device
-from tardis.utils.export_data import NumpyToAmira
+from tardis.utils.export_data import NumpyToAmira, to_mrc
 from tardis.utils.load_data import import_am, load_image
 from tardis.utils.logo import Tardis_Logo, printProgressBar
 from tardis.utils.predictor import Predictor
@@ -90,7 +90,7 @@ warnings.simplefilter("ignore", UserWarning)
               show_default=True)
 @click.option('-o', '--output',
               default='amira',
-              type=click.Choice(['amira', 'csv']),
+              type=click.Choice(['amira', 'csv', 'mrc']),
               help='Define output format type.',
               show_default=True)
 @click.option('-db', '--debug',
@@ -387,6 +387,9 @@ def main(dir: str,
         if debug:  # Debugging checkpoint
             tif.imwrite(join(am_output, f'{i[:-out_format]}_CNN.tif'),
                         image)
+            if output == 'mrc':
+                to_mrc(data=image,
+                       file_dir=join(am_output, f'{i[:-out_format]}_CNN.mrc'))
 
         if not image.min() == 0 and not image.max() == 1:
             continue
