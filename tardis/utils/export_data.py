@@ -4,6 +4,7 @@ import numpy as np
 from tardis.version import version
 import mrcfile
 
+
 class NumpyToAmira:
     """
     Builder of Amira file from numpy array
@@ -115,6 +116,10 @@ class NumpyToAmira:
 
 
 def to_mrc(data: np.ndarray,
-                 file_dir: str):
-    with mrcfile.new(file_dir) as mrc:
-        mrc.set_data(data)
+           file_dir: str):
+    try:
+        with mrcfile.new(file_dir) as mrc:
+            mrc.set_data(data)
+    except ValueError:
+        with mrcfile.new(file_dir, overwrite=True) as mrc:
+            mrc.set_data(data)
