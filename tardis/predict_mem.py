@@ -15,12 +15,13 @@ from tardis.spindletorch.data_processing.trim import scale_image, trim_with_stri
 from tardis.spindletorch.datasets.augment import MinMaxNormalize, RescaleNormalize
 from tardis.spindletorch.datasets.dataloader import PredictionDataset
 from tardis.utils.device import get_device
+from tardis.utils.export_data import to_mrc
 from tardis.utils.load_data import import_am, load_image
 from tardis.utils.logo import Tardis_Logo, printProgressBar
 from tardis.utils.predictor import Predictor
 from tardis.utils.setup_envir import build_temp_dir, clean_up
 from tardis.version import version
-
+from tardis.utils.export_data import to_mrc
 warnings.simplefilter("ignore", UserWarning)
 
 
@@ -292,6 +293,8 @@ def main(dir: str,
                 image = np.flip(image, 1)
             tif.imwrite(join(am_output, f'{i[:-out_format]}_CNN.tif'),
                         image)
+            to_mrc(data=image,
+                   file_dir=join(am_output, f'{i[:-out_format]}_CNN.mrc'))
 
         """Clean-up temp dir"""
         clean_up(dir=dir)
