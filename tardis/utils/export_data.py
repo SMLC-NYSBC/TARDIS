@@ -2,7 +2,7 @@ from datetime import datetime
 
 import numpy as np
 from tardis.version import version
-
+import mrcfile
 
 class NumpyToAmira:
     """
@@ -112,3 +112,9 @@ class NumpyToAmira:
                              file_dir=file_dir)
         self._write_to_amira(data=point_coord,
                              file_dir=file_dir)
+
+
+def to_mrc(data: np.ndarray,
+                 file_dir: str):
+    with mrcfile.new(file_dir) as mrc:
+        mrc.set_data(data)

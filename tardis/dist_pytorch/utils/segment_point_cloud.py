@@ -515,6 +515,9 @@ def filter_connect_near_segment(segments: np.ndarray,
     idx_connect.sort()
     idx_connect = list(k for k, _ in itertools.groupby(idx_connect))
 
+    if len(idx_connect) == 0:
+        return segments
+
     s = set()
     a1 = []
     for t in idx_connect:
