@@ -515,6 +515,9 @@ def filter_connect_near_segment(segments: np.ndarray,
     idx_connect.sort()
     idx_connect = list(k for k, _ in itertools.groupby(idx_connect))
 
+    if len(idx_connect) == 0:
+        return segments
+
     s = set()
     a1 = []
     for t in idx_connect:
@@ -525,11 +528,7 @@ def filter_connect_near_segment(segments: np.ndarray,
 
     # Select segments without any pair
     new_seg = []
-    end_list = [int(id) for id in np.unique(segments[:, 0]) if id not in np.unique(np.concatenate(idx_connect))]
-    if len(end_list) < 2:
-        return segments
-
-    for i in end_list:
+    for i in [int(id) for id in np.unique(segments[:, 0]) if id not in np.unique(np.concatenate(idx_connect))]:
         new_seg.append(segments[np.where(segments[:, 0] == i), :])
     new_seg = np.hstack(new_seg)[0, :]
 
