@@ -11,7 +11,7 @@ import tifffile.tifffile as tif
 
 from tardis.spindletorch.data_processing.semantic_mask import fill_gaps_in_semantic
 from tardis.spindletorch.data_processing.stitch import StitchImages
-from tardis.spindletorch.data_processing.trim import scale_image, trim_with_stride
+from tardis.spindletorch.data_processing.trim import trim_with_stride
 from tardis.spindletorch.datasets.augment import MinMaxNormalize, RescaleNormalize
 from tardis.spindletorch.datasets.dataloader import PredictionDataset
 from tardis.utils.device import get_device
@@ -47,7 +47,7 @@ warnings.simplefilter("ignore", UserWarning)
               help='If not None, str checkpoints for CNN',
               show_default=True)
 @click.option('-ct', '--cnn_threshold',
-              default=0.2,
+              default=0.1,
               type=float,
               help='Threshold use for model prediction.',
               show_default=True)
@@ -74,7 +74,7 @@ def main(dir: str,
     tardis_progress(title=f'Fully-automatic Membrane segmentation module')
 
     # Searching for available images for prediction
-    available_format = ('.tif', '.mrc', '.rec', '.am')
+    available_format = ('.tif', '.mrc', '.rec', '.am', '.map')
     output = join(dir, 'temp', 'Predictions')
     am_output = join(dir, 'Predictions')
 
@@ -134,7 +134,7 @@ def main(dir: str,
             continue
 
         out_format = 0
-        if i.endswith(('.tif', '.mrc', '.rec')):
+        if i.endswith(('.tif', '.mrc', '.rec', '.map')):
             out_format = 4
         elif i.endswith('.tiff'):
             out_format = 5
@@ -157,7 +157,6 @@ def main(dir: str,
             image, px, _, _ = import_am(am_file=join(dir, i))
         else:
             image, px = load_image(join(dir, i))
-            transformation = [0, 0, 0]
 
         if tif_px is not None:
             px = tif_px
@@ -180,22 +179,22 @@ def main(dir: str,
             sys.exit()
 
         # Calculate parameters for normalizing image pixel size
-        scale_factor = px / 16.56
+        # scale_factor = px / 16.56
         org_shape = image.shape
-        scale_shape = tuple(np.multiply(org_shape, scale_factor).astype(np.int16))
+        # scale_shape = tuple(np.multiply(org_shape, scale_factor).astype(np.int16))
 
         # Tardis progress bar update
         tardis_progress(title=f'Fully-automatic Membrane segmentation module ',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
-                        text_4=f'Pixel size: {px} A; Image re-sample to 16.56 A',
+                        text_4=f'Pixel size: {px} A',
                         text_5='Point Cloud: In processing...',
                         text_7=f'Current Task: Sub-dividing images for {patch_size} size')
 
         # Cut image for fix patch size and normalizing image pixel size
         trim_with_stride(image=image.astype(np.float32),
                          mask=None,
-                         scale=scale_shape,
+                         scale=org_shape,
                          trim_size_xy=patch_size,
                          trim_size_z=patch_size,
                          output=join(dir, 'temp', 'Patches'),
@@ -218,7 +217,7 @@ def main(dir: str,
                 tardis_progress(title=f'Fully-automatic Membrane segmentation module ',
                                 text_1=f'Found {len(predict_list)} images to predict!',
                                 text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
-                                text_4=f'Pixel size: {px} A; Image re-sample to 16.56 A',
+                                text_4=f'Pixel size: {px} A',
                                 text_5='Point Cloud: In processing...',
                                 text_7='Current Task: CNN prediction...',
                                 text_8=printProgressBar(j, len(patches_DL)))
@@ -248,13 +247,11 @@ def main(dir: str,
                         np.array(input, dtype=input.dtype))
 
         """Post-Processing"""
-        scale_factor = org_shape
-
         # Tardis progress bar update
         tardis_progress(title=f'Fully-automatic Membrane segmentation module ',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
-                        text_4=f'Original pixel size: {px} A; Image re-sample to 16.56 A',
+                        text_4=f'Original pixel size: {px} A',
                         text_5='Point Cloud: In processing...',
                         text_7='Current Task: Stitching...')
 
@@ -263,14 +260,14 @@ def main(dir: str,
                                output=None,
                                mask=True,
                                prefix='',
-                               dtype=input.dtype)[:scale_shape[0],
-                                                  :scale_shape[1],
-                                                  :scale_shape[2]]
+                               dtype=input.dtype)[:org_shape[0],
+                                                  :org_shape[1],
+                                                  :org_shape[2]]
 
         # Restored original image pixel size
-        image, _ = scale_image(image=image,
-                               mask=None,
-                               scale=org_shape)
+        # image, _ = scale_image(image=image,
+        #                        mask=None,
+        #                        scale=org_shape)
 
         # Fill gaps in binary mask after up/downsizing image to 2.5 nm pixel size
         if cnn_threshold != 0:
@@ -281,20 +278,19 @@ def main(dir: str,
             tardis_progress(title=f'Fully-automatic Membrane segmentation module',
                             text_1=f'Found {len(predict_list)} images to predict!',
                             text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
-                            text_4=f'Original pixel size: {px} A; Image re-sample to 16.56 A',
+                            text_4=f'Original pixel size: {px} A',
                             text_5='Point Cloud: NaN.',
                             text_7='Last Task: Stitching/Scaling/Make correction...',
                             text_8=f'Tardis Error: Error while converting to {px} A pixel size.',
                             text_9=f'Org. shape {org_shape} is not the same as converted shape {image.shape}')
             sys.exit()
 
-        if cnn_threshold == 0:
-            if join(dir, i).endswith('.mrc'):
-                image = np.flip(image, 1)
-            tif.imwrite(join(am_output, f'{i[:-out_format]}_CNN.tif'),
-                        image)
+        if join(dir, i).endswith('.mrc'):
             to_mrc(data=image,
                    file_dir=join(am_output, f'{i[:-out_format]}_CNN.mrc'))
+
+        tif.imwrite(join(am_output, f'{i[:-out_format]}_CNN.tif'),
+                    image)
 
         """Clean-up temp dir"""
         clean_up(dir=dir)

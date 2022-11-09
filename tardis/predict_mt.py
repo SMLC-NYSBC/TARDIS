@@ -16,7 +16,7 @@ from tardis.dist_pytorch.utils.segment_point_cloud import FilterSpatialGraph, Gr
 from tardis.dist_pytorch.utils.utils import pc_median_dist
 from tardis.spindletorch.data_processing.semantic_mask import fill_gaps_in_semantic
 from tardis.spindletorch.data_processing.stitch import StitchImages
-from tardis.spindletorch.data_processing.trim import trim_with_stride
+from tardis.spindletorch.data_processing.trim import scale_image, trim_with_stride
 from tardis.spindletorch.datasets.augment import MinMaxNormalize, RescaleNormalize
 from tardis.spindletorch.datasets.dataloader import PredictionDataset
 from tardis.utils.device import get_device
@@ -72,7 +72,7 @@ warnings.simplefilter("ignore", UserWarning)
               help='Number of point per voxal.',
               show_default=True)
 @click.option('-f', '--filter_mt',
-              default=1000,
+              default=0,
               type=int,
               help='Remove MT that are shorter then given A value '
               'NOT SUPPORTED FOR .TIF FILE FORMAT '
@@ -248,8 +248,13 @@ def main(dir: str,
 
         if px == 0:
             px = click.prompt(f'Image file has pixel size {px}, thats obviously wrong... '
-                            'What is the correct value:',
-                                type=float)
+                              'What is the correct value:',
+                              type=float)
+        if px == 1:
+            px = click.prompt(f'Image file has pixel size {px}, thats maybe wrong... '
+                              'What is the correct value:',
+                              default=px,
+                              type=float)
 
         # Check image structure and normalize histogram
         if image.min() > 5 or image.max() < 250:  # Rescale image intensity
@@ -268,9 +273,9 @@ def main(dir: str,
             sys.exit()
 
         # Calculate parameters for normalizing image pixel size
-        # scale_factor = px / 25
+        scale_factor = px / 25
         org_shape = image.shape
-        # scale_shape = tuple(np.multiply(org_shape, scale_factor).astype(np.int16))
+        scale_shape = tuple(np.multiply(org_shape, scale_factor).astype(np.int16))
 
         # Tardis progress bar update
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
@@ -283,7 +288,7 @@ def main(dir: str,
         # Cut image for fix patch size and normalizing image pixel size
         trim_with_stride(image=image.astype(np.float32),
                          mask=None,
-                         scale=org_shape,
+                         scale=scale_shape,
                          trim_size_xy=patch_size,
                          trim_size_z=patch_size,
                          output=join(dir, 'temp', 'Patches'),
@@ -320,9 +325,6 @@ def main(dir: str,
                 # Predict & Threshold
                 input = predict_cnn._predict(input[None, :])
 
-                if cnn_threshold != 0:
-                    input = np.where(input >= cnn_threshold, 1, 0).astype(np.uint8)
-
                 end = time.time()
                 iter_time = 10 // (end - start)  # Scale progress bar refresh to 10s
                 if iter_time <= 1:
@@ -331,14 +333,11 @@ def main(dir: str,
                 # Predict & Threshold
                 input = predict_cnn._predict(input[None, :])
 
-                if cnn_threshold != 0:
-                    input = np.where(input >= cnn_threshold, 1, 0).astype(np.uint8)
-
             tif.imwrite(join(output, f'{name}.tif'),
                         np.array(input, dtype=input.dtype))
 
         """Post-Processing"""
-        # scale_factor = org_shape
+        scale_factor = org_shape
 
         # Tardis progress bar update
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
@@ -358,9 +357,9 @@ def main(dir: str,
                                                   :org_shape[2]]
 
         # Restored original image pixel size
-        # image, _ = scale_image(image=image,
-        #                        mask=None,
-        #                        scale=org_shape)
+        image, _ = scale_image(image=image,
+                               mask=None,
+                               scale=org_shape)
 
         if cnn_threshold == 0:
             """Clean-up temp dir"""
@@ -370,6 +369,9 @@ def main(dir: str,
             continue
 
         else:
+            # Threshold image
+            image = np.where(image >= cnn_threshold, 1, 0).astype(np.uint8)
+
             # Fill gaps in binary mask after up/downsizing image to 2.5 nm pixel size
             image = fill_gaps_in_semantic(image)
 
@@ -453,7 +455,6 @@ def main(dir: str,
                                                                dist_th=None)
 
         # Predict point cloud
-        graphs = []
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
@@ -464,6 +465,7 @@ def main(dir: str,
 
         """DIST prediction"""
         iter_time = 1
+        graphs = []
         for id_dist, coord in enumerate(coords_df):
             if id_dist % iter_time == 0:
                 tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
@@ -522,8 +524,7 @@ def main(dir: str,
                                                    sort=True,
                                                    visualize=visualizer)
 
-        if filter_mt:
-            segments_filter = filter_segments(segments)
+        segments_filter = filter_segments(segments)
 
         # Save debugging check point
         if debug:

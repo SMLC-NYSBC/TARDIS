@@ -399,6 +399,9 @@ class GraphInstanceV2:
 
 
 class FilterSpatialGraph:
+    """
+     ToDo no filtering difference while changing filter short spline
+    """
     def __init__(self,
                  filter_unconnected_segments=True,
                  filter_short_spline=1000):

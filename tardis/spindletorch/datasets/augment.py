@@ -350,8 +350,10 @@ def preprocess(image: np.ndarray,
     if transformation:
         random_transform = ComposeRandomTransformation([RandomFlip(),
                                                         RandomRotation()])
-
-        image, mask = random_transform(image, mask)
+        if mask is None:
+            image, _ = random_transform(image, image)
+        else:
+            image, mask = random_transform(image, mask)
 
     """Expand dimension order for HW / DHW to CHW / CDHW"""
     image = np.expand_dims(image, axis=0)

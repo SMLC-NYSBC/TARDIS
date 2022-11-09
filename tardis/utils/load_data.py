@@ -23,7 +23,7 @@ def load_image(image: str,
     """
     if image.endswith(('.tif', '.tiff')):
         image, px = import_tiff(image)
-    elif image.endswith(('.mrc', '.rec')):
+    elif image.endswith(('.mrc', '.rec', '.map')):
         image, px = import_mrc(image)
     elif image.endswith('.am'):
         image, px, _, _ = import_am(image)
@@ -261,6 +261,10 @@ def import_mrc(mrc: str):
     if image.min() < 0 and image.dtype == np.int8:
         image = image + 128
         image = image.astype(np.uint8)
+
+    if image.min() < 0 and image.dtype == np.int16:
+        image = image + 32768
+        image = image.astype(np.uint16)
 
     if nz > ny or nz > nx:
         if nz > ny:

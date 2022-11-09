@@ -12,8 +12,8 @@ imagecodecs>=2021.8.26
 edt>=2.3.0
 mrcfile>= 1.4.3
 open3d==0.9.0; sys_platform == "linux" and python_version < "3.8"
-open3d==0.16.0; sys_platform == "linux" and python_version >= "3.8"
-open3d>=0.16.0; sys_platform != "linux"
+open3d>=0.9.0; sys_platform == "linux" and python_version >= "3.8"
+open3d>=0.9.0; sys_platform != "linux"
 torch>=1.13.0; sys_platform == "Windows"
 torch>=1.13.0; sys_platform == "linux"
 torch>=1.13.0; sys_platform == "darwin"
