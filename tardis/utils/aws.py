@@ -72,6 +72,17 @@ def get_weights_aws(network: str,
 
 
 def aws_check_with_temp(model_name: list) -> bool:
+    """
+    Module to check aws up-to data status.
+
+    Quick check if local file if exist is up-to data with aws server.
+
+    Args:
+        model_name (list): Name of the NN model.
+
+    Returns:
+        bool: If True, local file is up to data.
+    """
     """Check if temp dir exist"""
     if not isdir(join(expanduser('~'), '.tardis_pytorch')):
         return False  # No weight, first Tardis run, download from aws
