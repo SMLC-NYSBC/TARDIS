@@ -102,8 +102,8 @@ class ImportDataFromAmira:
             segment_start = int(self.spatial_graph.index("@" + str(segment_start[0]) + " ")) + 1
 
         # Find line define EDGE ... <- number indicate number of segments
-        segments = str(
-            [word for word in self.spatial_graph if word.startswith('define EDGE')])
+        segments = str([word for word in self.spatial_graph if
+                        word.startswith('define EDGE')])
 
         segment_finish = "".join((ch if ch in "0123456789" else " ") for ch in segments)
         segment_finish = [int(i) for i in segment_finish.split()]
@@ -204,6 +204,53 @@ class ImportDataFromAmira:
                          points[:, 1],
                          points[:, 2])).T
 
+    def get_labels(self) -> dict:
+        """
+        General class function to read all labels from amira file.
+
+        Returns:
+            dict: _description_
+        """
+        # Find line starting with EDGE { int NumEdgePoints } associated with all labels
+        labels = [word for word in self.spatial_graph if
+                  word.startswith('EDGE { int ') and
+                  not word.startswith('EDGE { int NumEdgePoints } @7')]
+
+        # Find line define EDGE ... <- number indicate number of segments
+        segment_no = str([word for word in self.spatial_graph if
+                          word.startswith('define EDGE')])
+
+        labels_dict = {}
+        for i in labels:
+            # Find line starting with EDGE { int label }
+            label_start = "".join((ch if ch in "0123456789" else " ") for ch in i)
+            label_start = [int(i) for i in label_start.split()][-1:]
+
+            # Find in the line directory that starts with @..
+            try:
+                label_start = int(self.spatial_graph.index("@" + str(label_start[0]))) + 1
+            except ValueError:
+                label_start = int(self.spatial_graph.index("@" + str(label_start[0]) + " ")) + 1
+
+            label_finish = "".join((ch if ch in "0123456789" else " ") for ch in segment_no)
+            label_finish = [int(i) for i in label_finish.split()]
+
+            label_no = int(label_finish[0])
+            label_finish = label_start + int(label_finish[0])
+
+            # Select all lines between @.. (+1) and number of segments
+            label = self.spatial_graph[label_start:label_finish]
+            label = [i.split(' ')[0] for i in label]
+
+            # return an array of number of points belonged to each segment
+            label_list = np.zeros((label_no, 1), dtype="int")
+            label_list[0:label_no, 0] = [int(i) for i in label]
+            label_list = np.where(label_list != 0)[0]
+
+            labels_dict.update({i[11:-5]: label_list})
+
+        return labels_dict
+
     def get_image(self):
         """
         General class function to return image file.
@@ -288,8 +335,8 @@ def mrc_header(mrc: str):
     # int nx
     # int ny
     # int nz
-    fstr='3i'
-    names='nx ny nz'
+    fstr = '3i'
+    names = 'nx ny nz'
 
     # int mode
     fstr += 'i'
@@ -383,11 +430,11 @@ def mrc_header(mrc: str):
     fstr += 'i800s'
     names += ' nlabl labels'
 
-    header_struct=struct.Struct(fstr)
-    MRCHeader=namedtuple('MRCHeader', names)
+    header_struct = struct.Struct(fstr)
+    MRCHeader = namedtuple('MRCHeader', names)
 
     with open(mrc, 'rb') as f:
-        header=f.read(1024)
+        header = f.read(1024)
 
     return MRCHeader._make(header_struct.unpack(header))
 
@@ -405,23 +452,23 @@ def mrc_mode(mode: int,
     """
     if mode == 0:
         if amin >= 0:
-            dtype=np.uint8  # Unassigned 8-bit integer (0 - 254)
+            dtype = np.uint8  # Unassigned 8-bit integer (0 - 254)
         elif amin < 0:
-            dtype=np.int8  # Signed 8-bit integer (-128 to 128)
+            dtype = np.int8  # Signed 8-bit integer (-128 to 128)
     elif mode == 1:
-        dtype=np.int16  # Signed 16-bit integer
+        dtype = np.int16  # Signed 16-bit integer
     elif mode == 2:
-        dtype=np.float32  # Signed 32-bit real
+        dtype = np.float32  # Signed 32-bit real
     elif mode == 3:
-        dtype='2h'  # Complex 16-bit integers
+        dtype = '2h'  # Complex 16-bit integers
     elif mode == 4:
-        dtype=np.complex64  # Complex 32-bit reals
+        dtype = np.complex64  # Complex 32-bit reals
     elif mode == 6:
-        dtype=np.uint16  # Unassigned int16
+        dtype = np.uint16  # Unassigned int16
     elif mode == 12:
         dtype == np.float16  # Signed 16-bit half-precision real
     elif mode == 16:
-        dtype='3B'  # RGB values
+        dtype = '3B'  # RGB values
     elif mode == 101:
         raise Exception('4 bit .mrc file are not supported. Ask Dev if you need it!')
     elif mode == 1024:
@@ -445,66 +492,66 @@ def import_am(am_file: str):
     if not isfile(am_file):
         raise Warning(f"Indicated .am {am_file} file does not exist...")
 
-    am=open(am_file, 'r', encoding="iso-8859-1").read(8000)
+    am = open(am_file, 'r', encoding="iso-8859-1").read(8000)
 
     if 'AmiraMesh 3D ASCII' in am:
         raise ValueError('.am file is coordinate file not image!')
 
-    size=[word for word in am.split('\n') if word.startswith(
-            'define Lattice ')][0][15:].split(" ")
+    size = [word for word in am.split('\n') if word.startswith(
+        'define Lattice ')][0][15:].split(" ")
 
-    nx, ny, nz=int(size[0]), int(size[1]), int(size[2])
+    nx, ny, nz = int(size[0]), int(size[1]), int(size[2])
 
     # Fix for ET that were trimmed
     # Trimmed ET boundarybox has wrong size
-    bb=str([word for word in am.split('\n') if word.startswith('    BoundingBox')]).split(" ")
+    bb = str([word for word in am.split('\n') if word.startswith('    BoundingBox')]).split(" ")
 
     if len(bb) == 0:
-        physical_size=np.array((float(bb[6]),
+        physical_size = np.array((float(bb[6]),
                                   float(bb[8]),
                                   float(bb[10][:-3])))
-        binary_start=str.find(am, "\n@1\n") + 4
+        binary_start = str.find(am, "\n@1\n") + 4
     else:
-        am=open(am_file, 'r', encoding="iso-8859-1").read(20000)
-        bb=str([word for word in am.split('\n') if word.startswith('    BoundingBox')]).split(" ")
+        am = open(am_file, 'r', encoding="iso-8859-1").read(20000)
+        bb = str([word for word in am.split('\n') if word.startswith('    BoundingBox')]).split(" ")
 
-        physical_size=np.array((float(bb[6]),
+        physical_size = np.array((float(bb[6]),
                                   float(bb[8]),
                                   float(bb[10][:-3])))
 
-        transformation=np.array((float(bb[5]),
+        transformation = np.array((float(bb[5]),
                                    float(bb[7]),
                                    float(bb[9])))
 
     try:
-        coordinate=str([word for word in am.split('\n') if word.startswith('        Coordinates')]).split(" ")[9][1:2]
+        coordinate = str([word for word in am.split('\n') if word.startswith('        Coordinates')]).split(" ")[9][1:2]
     except IndexError:
-        coordinate=None
+        coordinate = None
 
     if coordinate == 'm':  # Bring meter to angstrom
-        pixel_size=((physical_size[0] - transformation[0]) / (nx - 1)) * 10000000000
+        pixel_size = ((physical_size[0] - transformation[0]) / (nx - 1)) * 10000000000
     else:
-        pixel_size=(physical_size[0] - transformation[0]) / (nx - 1)
-    pixel_size=round(pixel_size, 3)
+        pixel_size = (physical_size[0] - transformation[0]) / (nx - 1)
+    pixel_size = round(pixel_size, 3)
 
     if 'Lattice { byte Data }' in am:
-        binary_start=str.find(am, "\n@1\n") + 4
-        img=np.fromfile(am_file, dtype=np.uint8)
+        binary_start = str.find(am, "\n@1\n") + 4
+        img = np.fromfile(am_file, dtype=np.uint8)
 
         if nz == 1:
-            img=img[binary_start:-1].reshape((ny, nx))
+            img = img[binary_start:-1].reshape((ny, nx))
         else:
-            img=img[binary_start:-1].reshape((nz, ny, nx))
+            img = img[binary_start:-1].reshape((nz, ny, nx))
 
     if 'Lattice { sbyte Data }' in am:
-        binary_start=str.find(am, "\n@1\n") + 4
-        img=np.fromfile(am_file, dtype=np.int8)
-        img=img + 128
+        binary_start = str.find(am, "\n@1\n") + 4
+        img = np.fromfile(am_file, dtype=np.int8)
+        img = img + 128
 
         if nz == 1:
-            img=img[binary_start:-1].reshape((ny, nx))
+            img = img[binary_start:-1].reshape((ny, nx))
         else:
-            img=img[binary_start:-1].reshape((nz, ny, nx))
+            img = img[binary_start:-1].reshape((nz, ny, nx))
     # elif 'Lattice { byte Labels } @1(HxByteRLE' in am:
     #     img = np.fromfile(am_file, dtype=np.uint8)
 
@@ -528,8 +575,8 @@ def import_am(am_file: str):
 
 
 def load_ply_scannet(ply: str,
-                     downsample: Optional[None]=0.1,
-                     color: Optional[str]=None) -> np.ndarray:
+                     downsample: Optional[None] = 0.1,
+                     color: Optional[str] = None) -> np.ndarray:
     """
     Function to read .ply files.
 
@@ -544,11 +591,11 @@ def load_ply_scannet(ply: str,
             each point.
     """
     # Load .ply scannet file
-    pcd=o3d.io.read_point_cloud(ply)
-    coord_org=np.asarray(pcd.points)
-    label_org=np.asarray(pcd.colors)
+    pcd = o3d.io.read_point_cloud(ply)
+    coord_org = np.asarray(pcd.points)
+    label_org = np.asarray(pcd.colors)
 
-    SCANNET_COLOR_MAP_20={
+    SCANNET_COLOR_MAP_20 = {
         0: (0., 0., 0.),
         1: (174., 199., 232.),
         2: (152., 223., 138.),
@@ -592,28 +639,28 @@ def load_ply_scannet(ply: str,
 
     # Downsample point cloud with labels
     if downsample is not None:
-        pcd=pcd.voxel_down_sample(voxel_size=downsample)
-        coord=np.asarray(pcd.points)
+        pcd = pcd.voxel_down_sample(voxel_size=downsample)
+        coord = np.asarray(pcd.points)
     else:
-        coord=coord_org
+        coord = coord_org
 
     # Retrive Node RGB features
     if color is not None:
-        rgb=o3d.io.read_point_cloud(color)
+        rgb = o3d.io.read_point_cloud(color)
         if downsample is not None:
-            rgb=rgb.voxel_down_sample(voxel_size=downsample)
-        rgb=np.asarray(rgb.colors)
+            rgb = rgb.voxel_down_sample(voxel_size=downsample)
+        rgb = np.asarray(rgb.colors)
         assert coord.shape == rgb.shape  # RGB must be the same as coord
 
     # Retrive ScanNet v2 labels after downsampling
-    cls_id=[]
-    tree=KDTree(coord_org, leaf_size=coord_org.shape[0])
+    cls_id = []
+    tree = KDTree(coord_org, leaf_size=coord_org.shape[0])
     for i in coord:
-        _, match_coord=tree.query(i.reshape(1, -1), k=1)
-        match_coord=match_coord[0][0]
+        _, match_coord = tree.query(i.reshape(1, -1), k=1)
+        match_coord = match_coord[0][0]
 
-        color_df=label_org[match_coord] * 255
-        color_id=[key for key in SCANNET_COLOR_MAP_20 if
+        color_df = label_org[match_coord] * 255
+        color_id = [key for key in SCANNET_COLOR_MAP_20 if
                     np.all(SCANNET_COLOR_MAP_20[key] == color_df)]
 
         if len(color_id) > 0:
@@ -621,14 +668,14 @@ def load_ply_scannet(ply: str,
         else:
             cls_id.append(0)
 
-    cls_id=np.asarray(cls_id)[:, None]
+    cls_id = np.asarray(cls_id)[:, None]
 
     # Remove 0 labels
-    coord=coord[np.where(cls_id != 0)[0]]
+    coord = coord[np.where(cls_id != 0)[0]]
 
     if color is not None:
-        rgb=rgb[np.where(cls_id != 0)[0]]  # Remove 0 labels
-        cls_id=cls_id[np.where(cls_id != 0)[0]]
+        rgb = rgb[np.where(cls_id != 0)[0]]  # Remove 0 labels
+        cls_id = cls_id[np.where(cls_id != 0)[0]]
 
         return np.hstack((cls_id, coord)), rgb
     else:
@@ -636,7 +683,7 @@ def load_ply_scannet(ply: str,
 
 
 def load_ply_partnet(ply,
-                     downsample: Optional[None]=0.035) -> np.ndarray:
+                     downsample: Optional[None] = 0.035) -> np.ndarray:
     """
     Function to read .ply files.
 
@@ -648,21 +695,21 @@ def load_ply_partnet(ply,
     Returns:
         np.ndarray: Labeled point cloud coordinates.
     """
-    pcd=o3d.io.read_point_cloud(ply)
-    label_uniq=np.unique(np.asarray(pcd.colors), axis=0)
+    pcd = o3d.io.read_point_cloud(ply)
+    label_uniq = np.unique(np.asarray(pcd.colors), axis=0)
 
-    coord_org=np.asarray(pcd.points)
-    label_org=np.asarray(pcd.colors)
+    coord_org = np.asarray(pcd.points)
+    label_org = np.asarray(pcd.colors)
 
     if downsample is not None:
-        pcd=pcd.voxel_down_sample(voxel_size=downsample)
-    coord=np.asarray(pcd.points)
+        pcd = pcd.voxel_down_sample(voxel_size=downsample)
+    coord = np.asarray(pcd.points)
 
-    label_id=[]
-    tree=KDTree(coord_org, leaf_size=coord_org.shape[0])
+    label_id = []
+    tree = KDTree(coord_org, leaf_size=coord_org.shape[0])
     for i in coord:
-        _, match_coord=tree.query(i.reshape(1, -1), k=1)
-        match_coord=match_coord[0][0]
+        _, match_coord = tree.query(i.reshape(1, -1), k=1)
+        match_coord = match_coord[0][0]
 
         label_id.append(np.where(np.all(label_org[match_coord] == label_uniq, 1))[0][0])
 
