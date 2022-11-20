@@ -174,7 +174,14 @@ def VisualizePointCloud(coord: np.ndarray,
             pcd.points = o3d.utility.Vector3dVector(coord)
         pcd.colors = o3d.utility.Vector3dVector(_rgb(coord, segmented))
 
-        o3d.visualization.draw_geometries([pcd])
+        o3d.visualization.draw_geometries_with_animation_callback([pcd],
+                                                                  rotate_view)
+
+
+def rotate_view(vis):
+    ctr = vis.get_view_control()
+    ctr.rotate(1.0, 0.0)
+    return False
 
 
 def VisualizeFilaments(coord: np.ndarray):
