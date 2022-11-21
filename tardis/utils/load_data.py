@@ -214,7 +214,7 @@ class ImportDataFromAmira:
         # Find line starting with EDGE { int NumEdgePoints } associated with all labels
         labels = [word for word in self.spatial_graph if
                   word.startswith('EDGE { int ') and
-                  not word.startswith('EDGE { int NumEdgePoints } @7')]
+                  not word.startswith('EDGE { int NumEdgePoints }')]
 
         # Find line define EDGE ... <- number indicate number of segments
         segment_no = str([word for word in self.spatial_graph if
@@ -247,7 +247,7 @@ class ImportDataFromAmira:
             label_list[0:label_no, 0] = [int(i) for i in label]
             label_list = np.where(label_list != 0)[0]
 
-            labels_dict.update({i[11:-5]: label_list})
+            labels_dict.update({i[11:-5].replace(" ", "").replace("}", ""): label_list})
 
         return labels_dict
 
