@@ -74,9 +74,7 @@ def test_unet_trainer():
               device=get_device('cpu'),
               epochs=2)
 
-    assert os.listdir('./unet_checkpoint') == ['training_losses.csv', 'unet_checkpoint.pth',
-                                               'model_weights.pth', 'validation_losses.csv',
-                                               'eval_metric.csv']
+    assert len(os.listdir('./unet_checkpoint')) == 5
 
     shutil.rmtree('./unet_checkpoint')
 
@@ -131,9 +129,7 @@ def test_fnet_trainer():
               device=get_device('cpu'),
               epochs=2)
 
-    assert os.listdir('./fnet_checkpoint') == ['training_losses.csv', 'model_weights.pth',
-                                               'validation_losses.csv', 'eval_metric.csv',
-                                               'fnet_checkpoint.pth']
+    assert len(os.listdir('./fnet_checkpoint')) == 5
 
     shutil.rmtree('./fnet_checkpoint')
 
@@ -188,8 +184,6 @@ def test_unet3plus_trainer():
               device=get_device('cpu'),
               epochs=2)
 
-    assert os.listdir('./unet3plus_checkpoint') == ['training_losses.csv', 'model_weights.pth',
-                                                    'validation_losses.csv', 'eval_metric.csv',
-                                                    'unet3plus_checkpoint.pth']
+    assert len(os.listdir('./unet3plus_checkpoint')) == 5
 
     shutil.rmtree('./unet3plus_checkpoint')

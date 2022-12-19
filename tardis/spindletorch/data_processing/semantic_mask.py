@@ -85,4 +85,4 @@ def draw_semantic(mask_size: tuple,
                                  c=c,
                                  label_mask=label_mask,
                                  segment_color=segment_color)
-    return label_mask
+    return label_mask.astype(np.uint8)

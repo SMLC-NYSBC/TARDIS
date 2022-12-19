@@ -64,11 +64,11 @@ def test_rec_mrc():
     assert px == 23.2
 
     mrc, px = import_mrc(mrc='./tests/test_data/data_type/mrc3D.mrc')
-    assert mrc.shape == (78, 64, 32)
+    assert mrc.shape == (64, 78, 32)
     assert px == 23.2
 
     rec, px = import_mrc(mrc='./tests/test_data/data_type/rec3D.rec')
-    assert rec.shape == (78, 64, 32)
+    assert rec.shape == (64, 78, 32)
     assert px == 23.2
 
 

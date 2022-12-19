@@ -273,7 +273,7 @@ def main(dir: str,
             sys.exit()
 
         # Calculate parameters for normalizing image pixel size
-        scale_factor = px / 20
+        scale_factor = px / 25
         org_shape = image.shape
         scale_shape = tuple(np.multiply(org_shape, scale_factor).astype(np.int16))
 
@@ -332,6 +332,9 @@ def main(dir: str,
             else:
                 # Predict & Threshold
                 input = predict_cnn._predict(input[None, :])
+
+            if cnn_threshold != 0:
+                input = np.where(input >= cnn_threshold, 1, 0)
 
             tif.imwrite(join(output, f'{name}.tif'),
                         np.array(input, dtype=input.dtype))

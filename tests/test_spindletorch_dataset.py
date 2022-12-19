@@ -35,7 +35,7 @@ def test_dataloader():
     assert img.shape == (1, 64, 64, 64)
     assert img.min() >= 0 and img.max() <= 1
     assert torch.sum(img) != 0
-    assert idx == '4_0_55_98_25'
+    assert isinstance(idx, str) == True
 
 
 def test_normalization():

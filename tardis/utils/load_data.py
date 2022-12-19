@@ -313,11 +313,10 @@ def import_mrc(mrc: str):
         image = image + 32768
         image = image.astype(np.uint16)
 
-    if nz > ny or nz > nx:
-        if nz > ny:
-            image = image.transpose((1, 0, 2))  # YZX to ZYX
-        else:
-            image = image.transpose((2, 0, 1))  # YXZ to ZYX
+    if nz > ny:
+        image = image.transpose((1, 0, 2))  # YZX to ZYX
+    elif nz > nx:
+        image = image.transpose((2, 1, 0))  # XYZ to ZYX
 
     return image, pixel_size
 

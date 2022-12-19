@@ -11,7 +11,7 @@ import tifffile.tifffile as tif
 
 from tardis.spindletorch.data_processing.semantic_mask import fill_gaps_in_semantic
 from tardis.spindletorch.data_processing.stitch import StitchImages
-from tardis.spindletorch.data_processing.trim import trim_with_stride
+from tardis.spindletorch.data_processing.trim import scale_image, trim_with_stride
 from tardis.spindletorch.datasets.augment import MinMaxNormalize, RescaleNormalize
 from tardis.spindletorch.datasets.dataloader import PredictionDataset
 from tardis.utils.device import get_device
@@ -179,9 +179,9 @@ def main(dir: str,
             sys.exit()
 
         # Calculate parameters for normalizing image pixel size
-        # scale_factor = px / 16.56
+        scale_factor = px / 16.56
         org_shape = image.shape
-        # scale_shape = tuple(np.multiply(org_shape, scale_factor).astype(np.int16))
+        scale_shape = tuple(np.multiply(org_shape, scale_factor).astype(np.int16))
 
         # Tardis progress bar update
         tardis_progress(title=f'Fully-automatic Membrane segmentation module ',
@@ -194,7 +194,7 @@ def main(dir: str,
         # Cut image for fix patch size and normalizing image pixel size
         trim_with_stride(image=image.astype(np.float32),
                          mask=None,
-                         scale=org_shape,
+                         scale=scale_shape,
                          trim_size_xy=patch_size,
                          trim_size_z=patch_size,
                          output=join(dir, 'temp', 'Patches'),
@@ -265,9 +265,9 @@ def main(dir: str,
                                                   :org_shape[2]]
 
         # Restored original image pixel size
-        # image, _ = scale_image(image=image,
-        #                        mask=None,
-        #                        scale=org_shape)
+        image, _ = scale_image(image=image,
+                               mask=None,
+                               scale=org_shape)
 
         # Fill gaps in binary mask after up/downsizing image to 2.5 nm pixel size
         if cnn_threshold != 0:

@@ -3,105 +3,11 @@ from os.path import join
 from typing import Optional
 
 import numpy as np
-import torch
-import torch.nn.functional as F
 from tifffile import tifffile as tif
 
 from tardis.spindletorch.data_processing.semantic_mask import fill_gaps_in_semantic
+from tardis.spindletorch.utils.utils import scale_image
 from tardis.utils.errors import TardisError
-
-
-def scale_image(image: np.ndarray,
-                scale: tuple,
-                mask: Optional[np.ndarray] = None):
-    """
-    Scale image module using torch GPU interpolation
-
-    Args:
-        image: image data
-        mask: Optional binary mask image data
-        scale: scale value for image
-    """
-    if np.all(scale == image.shape):
-        if image.ndim == 4:  # 3D with RGB
-            dim = 3
-        elif image.ndim == 3 and image.shape[2] == 3:  # 2D with RGB
-            dim = 3
-        elif image.ndim == 3 and image.shape[2] != 3:  # 3D with Gray
-            dim = 1
-        else:  # 2D with Gray
-            dim = 1
-
-        if mask is not None:
-            return image, mask, dim
-        else:
-            return image, dim
-
-    type_i = image.dtype
-    if mask is not None:
-        type_m = mask.dtype
-
-    if image.ndim == 4:  # 3D with RGB
-        dim = 3
-
-        image = torch.from_numpy(image).to('cpu').type(torch.float)
-        image = F.interpolate(image[None, :],
-                              size=scale,
-                              mode='trilinear',
-                              align_corners=False).cpu().detach().numpy()[0, :].astype(type_i)
-        if mask is not None:
-            mask = torch.from_numpy(mask).to('cpu').type(torch.float)
-            mask = F.interpolate(mask[None, :],
-                                 size=scale,
-                                 mode='trilinear',
-                                 align_corners=False).cpu().detach().numpy()[0, :].astype(type_m)
-    elif image.ndim == 3 and image.shape[2] == 3:  # 2D with RGB
-        dim = 3
-
-        image = torch.from_numpy(image, (2, 0, 1)).to('cpu').type(torch.float)
-        image = F.interpolate(image[None, :],
-                              size=scale,
-                              mode='bicubic',
-                              align_corners=False).cpu().detach().numpy()[0, :].astype(type_i)
-        if mask is not None:
-            mask = torch.from_numpy(mask).to('cpu').type(torch.float)
-            mask = F.interpolate(mask[None, :],
-                                 size=scale,
-                                 mode='bicubic',
-                                 align_corners=False).cpu().detach().numpy()[0, :].astype(type_m)
-    elif image.ndim == 3 and image.shape[2] != 3:  # 3D with Gray
-        dim = 1
-
-        image = torch.from_numpy(image).to('cpu').type(torch.float)
-        image = F.interpolate(image[None, None, :],
-                              size=scale,
-                              mode='trilinear',
-                              align_corners=False).cpu().detach().numpy()[0, 0, :].astype(type_i)
-        if mask is not None:
-            mask = torch.from_numpy(mask.copy()).to('cpu').type(torch.float)
-            mask = F.interpolate(mask[None, None, :],
-                                 size=scale,
-                                 mode='trilinear',
-                                 align_corners=False).cpu().detach().numpy()[0, 0, :].astype(type_m)
-    else:  # 2D with Gray
-        dim = 1
-
-        image = torch.from_numpy(image).to('cpu').type(torch.float)
-        image = F.interpolate(image[None, None, :],
-                              size=scale,
-                              mode='bicubic',
-                              align_corners=False).cpu().detach().numpy()[0, 0, :].astype(type_i)
-        if mask is not None:
-            mask = torch.from_numpy(mask).to('cpu').type(torch.float)
-            mask = F.interpolate(mask[None, None, :],
-                                 size=scale,
-                                 mode='bicubic',
-                                 align_corners=False).cpu().detach().numpy()[0, 0, :].astype(type_m)
-
-    if mask is not None:
-        return image, np.where(mask > 0.5, 1, 0), dim
-    else:
-        return image, dim
 
 
 def trim_with_stride(image: np.ndarray,
@@ -143,6 +49,11 @@ def trim_with_stride(image: np.ndarray,
         image, mask, dim = scale_image(image=image,
                                        mask=mask,
                                        scale=scale)
+
+        
+        import tifffile.tifffile as tif
+        tif.imwrite('./image.tif', image)
+        tif.imwrite('./mask.tif', mask)
 
         mask = fill_gaps_in_semantic(mask)
         mask = mask.astype(np.uint8)
