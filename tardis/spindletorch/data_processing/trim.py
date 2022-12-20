@@ -50,11 +50,6 @@ def trim_with_stride(image: np.ndarray,
                                        mask=mask,
                                        scale=scale)
 
-        
-        import tifffile.tifffile as tif
-        tif.imwrite('./image.tif', image)
-        tif.imwrite('./mask.tif', mask)
-
         mask = fill_gaps_in_semantic(mask)
         mask = mask.astype(np.uint8)
     else:
