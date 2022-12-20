@@ -11,17 +11,15 @@ def scale_image(image: np.ndarray,
     """
     Scale image module using torch GPU interpolation
 
+    Expect 2D (XY/YX), 3D (ZYX)
+
     Args:
         image: image data
         mask: Optional binary mask image data
         scale: scale value for image
     """
     if np.all(scale == image.shape):
-        if image.ndim == 4:  # 3D with RGB
-            dim = 3
-        elif image.ndim == 3 and image.shape[2] == 3:  # 2D with RGB
-            dim = 3
-        elif image.ndim == 3 and image.shape[2] != 3:  # 3D with Gray
+        if image.ndim == 3 and image.shape[2] != 3:  # 3D with Gray
             dim = 1
         else:  # 2D with Gray
             dim = 1
@@ -35,107 +33,59 @@ def scale_image(image: np.ndarray,
     if mask is not None:
         type_m = mask.dtype
 
-    if image.ndim == 4:  # 3D with RGB
-        dim = 3
-
-        image = torch.from_numpy(image).to('cpu').type(torch.float)
-        image = F.interpolate(image[None, :],
-                              size=scale,
-                              mode='trilinear',
-                              align_corners=False).cpu().detach().numpy()[0, :].astype(type_i)
-        if mask is not None:
-            mask = torch.from_numpy(mask).to('cpu').type(torch.float)
-            mask = F.interpolate(mask[None, :],
-                                 size=scale,
-                                 mode='trilinear',
-                                 align_corners=False).cpu().detach().numpy()[0, :].astype(type_m)
-    elif image.ndim == 3 and image.shape[2] == 3:  # 2D with RGB
-        dim = 3
-
-        image = torch.from_numpy(image, (2, 0, 1)).to('cpu').type(torch.float)
-        image = F.interpolate(image[None, :],
-                              size=scale,
-                              mode='bicubic',
-                              align_corners=False).cpu().detach().numpy()[0, :].astype(type_i)
-        if mask is not None:
-            mask = torch.from_numpy(mask).to('cpu').type(torch.float)
-            mask = F.interpolate(mask[None, :],
-                                 size=scale,
-                                 mode='bicubic',
-                                 align_corners=False).cpu().detach().numpy()[0, :].astype(type_m)
-    elif image.ndim == 3 and image.shape[2] != 3:  # 3D with Gray
+    if image.ndim == 3 and image.shape[2] != 3:  # 3D with Gray
         dim = 1
 
-        size_sc = scale
-        size_sc = [image.shape[0], scale[1], scale[2]]
-        image_scale = np.zeros(size_sc, dtype=type_i)
+        size_Z = [scale[0], image.shape[1], image.shape[2]]
+        image_scale_Z = np.zeros(size_Z, dtype=type_i)
+
+        # Scale Z axis
+        for i in range(image.shape[2]):
+            df_img = torch.from_numpy(image[:, :, i]).to('cpu').type(torch.float)
+            image_scale_Z[:, :, i] = F.interpolate(df_img[None, None, :],
+                                                   size=size_Z[:2],
+                                                   mode='area').cpu().detach().numpy()[0, 0, :].astype(type_i)
 
         # Scale XY axis
-        for i in range(image.shape[0]):
-            df_img = torch.from_numpy(image[i, :]).to('cpu').type(torch.float)
-            image_scale[i, :] = F.interpolate(df_img[None, None, :],
-                                              size=scale[1:],
-                                              mode='area').cpu().detach().numpy()[0, 0, :].astype(type_i)
-
-        scale_Z = image_scale.shape
-        image_scale = np.transpose(image_scale, (1, 2, 0))  # ZYX to YXZ
-        scale_Z = [scale_Z[1], scale_Z[2], scale[0]]
-
-        image = np.zeros(scale_Z, dtype=type_i)
-        for i in range(image_scale.shape[0]):
-            df_img = torch.from_numpy(image_scale[i, :]).to('cpu').type(torch.float)
+        image = np.zeros(scale, dtype=type_i)
+        for i in range(scale[0]):
+            df_img = torch.from_numpy(image_scale_Z[i, :]).to('cpu').type(torch.float)
             image[i, :] = F.interpolate(df_img[None, None, :],
-                                        size=scale_Z[1:],
+                                        size=scale[1:],
                                         mode='area').cpu().detach().numpy()[0, 0, :].astype(type_i)
-        image = np.transpose(image, (2, 0, 1))  # YXZ to ZYX
-
-        # image = torch.from_numpy(image).to('cpu').type(torch.float)
-        # image = F.interpolate(image[None, None, :],
-        #                       size=scale,
-        #                       mode='trilinear',
-        #                       align_corners=False).cpu().detach().numpy()[0, 0, :].astype(type_i)
+        del image_scale_Z
 
         if mask is not None:
-            mask_scale = np.zeros(size_sc, dtype=type_m)
+            mask_scale_Z = np.zeros(size_Z, dtype=type_m)
+
+            # Scale Z axis
+            for i in range(mask.shape[2]):
+                df_img = torch.from_numpy(mask[:, :, i]).to('cpu').type(torch.float)
+                mask_scale_Z[:, :, i] = F.interpolate(df_img[None, None, :],
+                                                      size=size_Z[:2],
+                                                      mode='area').cpu().detach().numpy()[0, 0, :].astype(type_i)
 
             # Scale XY axis
-            for i in range(mask.shape[0]):
-                df_img = torch.from_numpy(mask[i, :]).to('cpu').type(torch.float)
-                mask_scale[i, :] = F.interpolate(df_img[None, None, :],
-                                                 size=scale[1:],
-                                                 mode='area').cpu().detach().numpy()[0, 0, :].astype(type_m)
-
-            scale_Z = mask_scale.shape
-            mask_scale = np.transpose(mask_scale, (1, 2, 0))  # ZYX to YXZ
-            scale_Z = [scale_Z[1], scale_Z[2], scale[0]]
-
-            mask = np.zeros(scale_Z, dtype=type_m)
-            for i in range(mask_scale.shape[0]):
-                df_img = torch.from_numpy(mask_scale[i, :]).to('cpu').type(torch.float)
+            mask = np.zeros(scale, dtype=type_i)
+            for i in range(scale[0]):
+                df_img = torch.from_numpy(mask_scale_Z[i, :]).to('cpu').type(torch.float)
                 mask[i, :] = F.interpolate(df_img[None, None, :],
-                                           size=scale_Z[1:],
-                                           mode='area').cpu().detach().numpy()[0, 0, :].astype(type_m)
-            mask = np.transpose(mask, (2, 0, 1))  # YXZ to ZYX
-
-        # if mask is not None:
-        #     mask = torch.from_numpy(mask.copy()).to('cpu').type(torch.float)
-        #     mask = F.interpolate(mask[None, None, :],
-        #                          size=scale,
-        #                          mode='trilinear',
-        #                          align_corners=False).cpu().detach().numpy()[0, 0, :].astype(type_m)
+                                           size=scale[1:],
+                                           mode='area').cpu().detach().numpy()[0, 0, :].astype(type_i)
+            del mask_scale_Z
     else:  # 2D with Gray
         dim = 1
 
         image = torch.from_numpy(image).to('cpu').type(torch.float)
         image = F.interpolate(image[None, None, :],
                               size=scale,
-                              mode='bicubic',
+                              mode='area',
                               align_corners=False).cpu().detach().numpy()[0, 0, :].astype(type_i)
         if mask is not None:
             mask = torch.from_numpy(mask).to('cpu').type(torch.float)
             mask = F.interpolate(mask[None, None, :],
                                  size=scale,
-                                 mode='bicubic',
+                                 mode='area',
                                  align_corners=False).cpu().detach().numpy()[0, 0, :].astype(type_m)
 
     if mask is not None:
