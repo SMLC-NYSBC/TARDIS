@@ -8,7 +8,7 @@ from skimage.morphology import skeletonize_3d, skeletonize
 
 class ImageToPointCloud:
     def __init__(self):
-        self.postprocess = BuildPointCloud(tqdm=False)
+        self.postprocess = BuildPointCloud()
 
     def __call__(self,
                  image: Optional[str] = np.ndarray,
@@ -42,9 +42,8 @@ class BuildPointCloud:
         clean_close_point: If True, close point will be removed.
     """
 
-    def __init__(self,
-                 tqdm):
-        self.tqdm = tqdm
+    def __init__(self):
+        pass
 
     def check_data(self,
                    image):
