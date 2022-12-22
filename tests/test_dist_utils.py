@@ -11,13 +11,10 @@ def test_build_PC():
     m = np.random.normal(loc=1, scale=0.3, size=n_rnd) 
     b = np.random.normal(loc=5, scale=0.3, size=n_rnd)
     y = m * x[:, np.newaxis] + b
-    y = np.where(y[:, :50] > 5, 1, 0)
+    y = np.where(y[:, :50] > 5.5, 1, 0)
 
 
     pc = builder(image=y)
 
     assert pc.ndim == 2
     assert len(pc) > 0
-
-
-     

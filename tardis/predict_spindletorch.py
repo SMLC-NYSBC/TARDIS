@@ -274,7 +274,6 @@ def main(dir: str,
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image: {i}',
                         text_4=f'Original pixel size: {px} A; Image re-sample to 25 A',
-                        text_5=f'Point Cloud: {point_cloud.shape[0]} Nodes; {np.max(segments[:, 0])} Segments',
                         text_7='Current Task: Segmentation finished!')
 
         """Clean-up temp dir"""
