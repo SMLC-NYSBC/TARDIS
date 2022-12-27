@@ -56,23 +56,10 @@ def scale_image(image: np.ndarray,
         del image_scale_Z
 
         if mask is not None:
-            mask_scale_Z = np.zeros(size_Z, dtype=type_m)
-
-            # Scale Z axis
-            for i in range(mask.shape[2]):
-                df_img = torch.from_numpy(mask[:, :, i]).to('cpu').type(torch.float)
-                mask_scale_Z[:, :, i] = F.interpolate(df_img[None, None, :],
-                                                      size=size_Z[:2],
-                                                      mode='area').cpu().detach().numpy()[0, 0, :].astype(type_m)
-
-            # Scale XY axis
-            mask = np.zeros(scale, dtype=type_m)
-            for i in range(scale[0]):
-                df_img = torch.from_numpy(mask_scale_Z[i, :]).to('cpu').type(torch.float)
-                mask[i, :] = F.interpolate(df_img[None, None, :],
-                                           size=scale[1:],
-                                           mode='area').cpu().detach().numpy()[0, 0, :].astype(type_m)
-            del mask_scale_Z
+            mask = torch.from_numpy(mask[None, None, :]).to('cpu').type(torch.float)
+            mask = F.interpolate(mask,
+                                 size=scale,
+                                 mode='trilinear').cpu().detach().numpy()[0, 0, :].astype(type_m)
     else:  # 2D with Gray
         dim = 1
 

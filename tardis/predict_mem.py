@@ -21,7 +21,6 @@ from tardis.utils.logo import Tardis_Logo, printProgressBar
 from tardis.utils.predictor import Predictor
 from tardis.utils.setup_envir import build_temp_dir, clean_up
 from tardis.version import version
-from tardis.utils.export_data import to_mrc
 warnings.simplefilter("ignore", UserWarning)
 
 
