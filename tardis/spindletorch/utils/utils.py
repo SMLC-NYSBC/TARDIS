@@ -36,49 +36,64 @@ def scale_image(image: np.ndarray,
     if image.ndim == 3 and image.shape[2] != 3:  # 3D with Gray
         dim = 1
 
-        size_Z = [scale[0], image.shape[1], image.shape[2]]
-        image_scale_Z = np.zeros(size_Z, dtype=type_i)
-
-        # Scale Z axis
-        for i in range(image.shape[2]):
-            df_img = torch.from_numpy(image[:, :, i]).to('cpu').type(torch.float)
-            image_scale_Z[:, :, i] = F.interpolate(df_img[None, None, :],
-                                                   size=size_Z[:2],
-                                                   mode='area').cpu().detach().numpy()[0, 0, :].astype(type_i)
-
-        # Scale XY axis
-        image = np.zeros(scale, dtype=type_i)
-        for i in range(scale[0]):
-            df_img = torch.from_numpy(image_scale_Z[i, :]).to('cpu').type(torch.float)
-            image[i, :] = F.interpolate(df_img[None, None, :],
-                                        size=scale[1:],
-                                        mode='area').cpu().detach().numpy()[0, 0, :].astype(type_i)
-        del image_scale_Z
+        image = area_scaling(img=image,
+                             scale=scale,
+                             dtype=type_i)
 
         if mask is not None:
-            mask = torch.from_numpy(mask[None, None, :]).to('cpu').type(torch.float)
-            mask = F.interpolate(mask,
-                                 size=scale,
-                                 mode='trilinear').cpu().detach().numpy()[0, 0, :].astype(type_m)
+            mask = trilinear_scaling(img=mask,
+                                     scale=scale,
+                                     dtype=type_m)
     else:  # 2D with Gray
         dim = 1
 
-        image = torch.from_numpy(image).to('cpu').type(torch.float)
-        image = F.interpolate(image[None, None, :],
-                              size=scale,
-                              mode='area',
-                              align_corners=False).cpu().detach().numpy()[0, 0, :].astype(type_i)
+        image = trilinear_scaling(img=image,
+                                  scale=scale,
+                                  dtype=type_i)
+
         if mask is not None:
-            mask = torch.from_numpy(mask).to('cpu').type(torch.float)
-            mask = F.interpolate(mask[None, None, :],
-                                 size=scale,
-                                 mode='area',
-                                 align_corners=False).cpu().detach().numpy()[0, 0, :].astype(type_m)
+            mask = trilinear_scaling(img=mask,
+                                     scale=scale,
+                                     dtype=type_m)
 
     if mask is not None:
         return image, mask, dim
     else:
         return image, dim
+
+
+def trilinear_scaling(img: np.ndarray,
+                      scale: tuple,
+                      dtype: np.dtype) -> np.ndarray:
+    img = torch.from_numpy(img[None, None, :]).to('cpu').type(torch.float)
+    img = F.interpolate(img,
+                        size=scale,
+                        mode='trilinear').cpu().detach().numpy()[0, 0, :].astype(dtype)
+    return img
+
+
+def area_scaling(img: np.ndarray,
+                 scale: tuple,
+                 dtype: np.dtype) -> np.ndarray:
+    size_Z = [scale[0], img.shape[1], img.shape[2]]
+    image_scale_Z = np.zeros(size_Z, dtype=dtype)
+
+    # Scale Z axis
+    for i in range(img.shape[2]):
+        df_img = torch.from_numpy(img[:, :, i]).to('cpu').type(torch.float)
+        image_scale_Z[:, :, i] = F.interpolate(df_img[None, None, :],
+                                               size=size_Z[:2],
+                                               mode='area').cpu().detach().numpy()[0, 0, :].astype(dtype)
+
+    # Scale XY axis
+    img = np.zeros(scale, dtype=dtype)
+    for i in range(scale[0]):
+        df_img = torch.from_numpy(image_scale_Z[i, :]).to('cpu').type(torch.float)
+        img[i, :] = F.interpolate(df_img[None, None, :],
+                                    size=scale[1:],
+                                    mode='area').cpu().detach().numpy()[0, 0, :].astype(dtype)
+
+    return img
 
 
 def number_of_features_per_level(channel_scaler: int,
