@@ -1,15 +1,15 @@
 import io
-from logging import shutdown
-from cv2 import exp
+import os
+
 import numpy as np
 import torch
-from tardis.utils.device import get_device
-from tardis.utils.load_data import (ImportDataFromAmira, import_am, import_mrc,
-                                    import_tiff)
-from tardis.utils.utils import EarlyStopping
+
 from tardis.utils.aws import get_weights_aws
+from tardis.utils.device import get_device
 from tardis.utils.export_data import NumpyToAmira
-import os
+from tardis.utils.load_data import (import_am, import_mrc, import_tiff,
+                                    ImportDataFromAmira)
+from tardis.utils.utils import EarlyStopping
 
 
 def test_early_stop():

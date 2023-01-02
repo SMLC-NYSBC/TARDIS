@@ -11,7 +11,7 @@ from tardis.spindletorch.datasets.dataloader import CNNDataset
 from tardis.spindletorch.train import train_cnn
 from tardis.utils.dataset import build_test_dataset
 from tardis.utils.device import get_device
-from tardis.utils.logo import Tardis_Logo
+from tardis.utils.logo import TardisLogo
 from tardis.utils.setup_envir import check_dir
 from tardis.version import version
 
@@ -21,7 +21,7 @@ from tardis.version import version
               default=getcwd(),
               type=str,
               help='Directory with train, test folder or folder with dataset '
-              'to be used for training.',
+                   'to be used for training.',
               show_default=True)
 @click.option('-ttr', '--train_test_ratio',
               default=0.0001,
@@ -68,13 +68,13 @@ from tardis.version import version
               default='3gcl',
               type=str,
               help='Define structure of the convolution layer.'
-              '2 or 3 - dimension in 2D or 3D'
-              'c - convolution'
-              'g - group normalization'
-              'b - batch normalization'
-              'r - ReLU'
-              'l - LeakyReLU'
-              'e - GeLu',
+                   '2 or 3 - dimension in 2D or 3D'
+                   'c - convolution'
+                   'g - group normalization'
+                   'b - batch normalization'
+                   'r - ReLU'
+                   'l - LeakyReLU'
+                   'e - GeLu',
               show_default=True)
 @click.option('-ck', '--conv_kernel',
               default=3,
@@ -111,10 +111,10 @@ from tardis.version import version
               default=0,
               type=str,
               help='Define which device use for training: '
-                    'gpu: Use ID 0 gpus'
-                    'cpu: Usa CPU'
-                    'mps: Apple silicon'
-                    '0-9 - specified gpu device id to use',
+                   'gpu: Use ID 0 gpus'
+                   'cpu: Usa CPU'
+                   'mps: Apple silicon'
+                   '0-9 - specified gpu device id to use',
               show_default=True)
 @click.option('-e', '--epochs',
               default=100,
@@ -125,7 +125,7 @@ from tardis.version import version
               default=10,
               type=int,
               help='Number of epoches without improvement after which early stop '
-              'is initiated.',
+                   'is initiated.',
               show_default=True)
 @click.option('-cch', '--cnn_checkpoint',
               default=None,
@@ -163,7 +163,7 @@ def main(dir: str,
     MAIN MODULE FOR TRAINING CNN UNET/RESUNET/UNET3PLUS MODELS
     """
     """Initialize TARDIS progress bar"""
-    tardis_logo = Tardis_Logo()
+    tardis_logo = TardisLogo()
     tardis_logo(title='CNN training module')
 
     """Set environment"""
@@ -190,7 +190,7 @@ def main(dir: str,
         # Check and set-up environment
         assert len([f for f in listdir(dir) if f.endswith(IMG_FORMAT)]) > 0, \
             'Indicated folder for training do not have any compatible data or ' \
-            'one of the following folders: '\
+            'one of the following folders: ' \
             'test/imgs; test/masks; train/imgs; train/masks'
 
         if isdir(join(dir, 'train')):

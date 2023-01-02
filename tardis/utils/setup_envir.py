@@ -3,6 +3,8 @@ from os import listdir, mkdir, rename
 from os.path import isdir, join
 from shutil import rmtree
 
+from tardis.utils.errors import TardisError
+
 
 def build_new_dir(dir: str):
     """
@@ -15,7 +17,9 @@ def build_new_dir(dir: str):
     output = join(dir, "output")
     image_list = glob.glob(dir + '/*.tif')
     assert len(image_list) > 0, \
-        "At least one .tif image has to be in the directory!"
+        TardisError('build_new_dir',
+                    'tardis/utils/setup_envir.py',
+                    'At least one .tif image has to be in the directory!')
 
     if not isdir(output):
         mkdir(output)
@@ -99,7 +103,8 @@ def check_dir(dir: str,
                 if len([f for f in listdir(train_img)
                         if f.endswith(img_format)]) == len([f for f in listdir(train_mask)
                                                             if f.endswith(mask_format)]):
-                    if len([f for f in listdir(train_img) if f.endswith(img_format)]) == 0:
+                    if len([f for f in listdir(train_img)
+                            if f.endswith(img_format)]) == 0:
                         dataset_test = False
                 else:
                     dataset_test = False
@@ -109,13 +114,15 @@ def check_dir(dir: str,
                 if len([f for f in listdir(test_img)
                         if f.endswith(img_format)]) == len([f for f in listdir(test_mask)
                                                             if f.endswith(mask_format)]):
-                    if len([f for f in listdir(test_img) if f.endswith(img_format)]) == 0:
+                    if len([f for f in listdir(test_img)
+                            if f.endswith(img_format)]) == 0:
                         dataset_test = False
                 else:
                     dataset_test = False
         else:
             if isdir(train_img) and isdir(train_mask):
-                if len([f for f in listdir(train_mask) if f.endswith(mask_format)]) > 0:
+                if len([f for f in listdir(train_mask)
+                        if f.endswith(mask_format)]) > 0:
                     pass
                 else:
                     dataset_test = False

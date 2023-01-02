@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union, Tuple
 
 import numpy as np
 import torch
@@ -7,16 +7,17 @@ import torch.nn.functional as F
 
 def scale_image(image: np.ndarray,
                 scale: tuple,
-                mask: Optional[np.ndarray] = None):
+                mask: Optional[np.ndarray] = None) -> Union[Tuple[np.ndarray, np.ndarray, int],
+                                                            Tuple[np.ndarray, int]]:
     """
     Scale image module using torch GPU interpolation
 
     Expect 2D (XY/YX), 3D (ZYX)
 
     Args:
-        image: image data
-        mask: Optional binary mask image data
-        scale: scale value for image
+        image (np.ndarray): image data
+        mask (np.ndarray, Optional): Optional binary mask image data
+        scale (tuple): scale value for image
     """
     if np.all(scale == image.shape):
         if image.ndim == 3 and image.shape[2] != 3:  # 3D with Gray
@@ -30,6 +31,7 @@ def scale_image(image: np.ndarray,
             return image, dim
 
     type_i = image.dtype
+    type_m = None
     if mask is not None:
         type_m = mask.dtype
 
@@ -40,7 +42,7 @@ def scale_image(image: np.ndarray,
                              scale=scale,
                              dtype=type_i)
 
-        if mask is not None:
+        if mask is not None and mask.shape != scale:
             mask = trilinear_scaling(img=mask,
                                      scale=scale,
                                      dtype=type_m)
@@ -90,14 +92,14 @@ def area_scaling(img: np.ndarray,
     for i in range(scale[0]):
         df_img = torch.from_numpy(image_scale_Z[i, :]).to('cpu').type(torch.float)
         img[i, :] = F.interpolate(df_img[None, None, :],
-                                    size=scale[1:],
-                                    mode='area').cpu().detach().numpy()[0, 0, :].astype(dtype)
+                                  size=scale[1:],
+                                  mode='area').cpu().detach().numpy()[0, 0, :].astype(dtype)
 
     return img
 
 
 def number_of_features_per_level(channel_scaler: int,
-                                 num_levels: int) -> int:
+                                 num_levels: int) -> list:
     """
     Compute list of output channels for CNN.
 
@@ -139,9 +141,9 @@ def max_number_of_conv_layer(img=None,
         - F is the max pooling kernel size
 
     Args:
-        img (np.ndarray, optional): Tensor Image data if from which size of data is calculated.
+        img (np.ndarray, Optional): Tensor data from which size of is calculated.
         input_volume (int): Size of the multiplayer for the convolution.
-        max_out (int): Maximal output dimension after maxpooling.
+        max_out (int): Maximal output dimension after max_pooling.
         kernel_size (int): Kernel size for the convolution.
         padding (int): Padding size for the convolution blocks.
         stride: (int) Stride for the convolution blocks.

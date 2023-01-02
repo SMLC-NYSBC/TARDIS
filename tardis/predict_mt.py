@@ -12,7 +12,8 @@ import tifffile.tifffile as tif
 
 from tardis.dist_pytorch.datasets.patches import PatchDataSet
 from tardis.dist_pytorch.utils.build_point_cloud import ImageToPointCloud
-from tardis.dist_pytorch.utils.segment_point_cloud import FilterSpatialGraph, GraphInstanceV2
+from tardis.dist_pytorch.utils.segment_point_cloud import (FilterSpatialGraph,
+                                                           GraphInstanceV2)
 from tardis.dist_pytorch.utils.utils import pc_median_dist
 from tardis.spindletorch.data_processing.semantic_mask import fill_gaps_in_semantic
 from tardis.spindletorch.data_processing.stitch import StitchImages
@@ -22,7 +23,7 @@ from tardis.spindletorch.datasets.dataloader import PredictionDataset
 from tardis.utils.device import get_device
 from tardis.utils.export_data import NumpyToAmira, to_mrc
 from tardis.utils.load_data import import_am, load_image
-from tardis.utils.logo import Tardis_Logo, printProgressBar
+from tardis.utils.logo import print_progress_bar, TardisLogo
 from tardis.utils.predictor import Predictor
 from tardis.utils.setup_envir import build_temp_dir, clean_up
 from tardis.version import version
@@ -75,18 +76,18 @@ warnings.simplefilter("ignore", UserWarning)
               default=0,
               type=int,
               help='Remove MT that are shorter then given A value '
-              'NOT SUPPORTED FOR .TIF FILE FORMAT '
-              'There are two filtering mechanisms: '
-              '- Remove short segments (aka. Segments shorter then XX A. '
-              '- Connect segments that are closer then 17.5 nm',
+                   'NOT SUPPORTED FOR .TIF FILE FORMAT '
+                   'There are two filtering mechanisms: '
+                   '- Remove short segments (aka. Segments shorter then XX A. '
+                   '- Connect segments that are closer then 17.5 nm',
               show_default=True)
 @click.option('-d', '--device',
               default='0',
               type=str,
               help='Define which device use for training: '
-              'gpu: Use ID 0 GPUs '
-              'cpu: Usa CPU '
-              '0-9 - specified GPU device id to use',
+                   'gpu: Use ID 0 GPUs '
+                   'cpu: Usa CPU '
+                   '0-9 - specified GPU device id to use',
               show_default=True)
 @click.option('-o', '--output',
               default=None,
@@ -102,8 +103,8 @@ warnings.simplefilter("ignore", UserWarning)
               default=None,
               type=click.Choice(['f', 'p']),
               help='If not None, output visualization of the prediction'
-              'f: Output as filaments'
-              'p: Output as segmented point cloud',
+                   'f: Output as filaments'
+                   'p: Output as segmented point cloud',
               show_default=True)
 @click.version_option(version=version)
 def main(dir: str,
@@ -128,7 +129,7 @@ def main(dir: str,
     else:
         str_debug = ''
 
-    tardis_progress = Tardis_Logo()
+    tardis_progress = TardisLogo()
     tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}')
 
     # Searching for available images for prediction
@@ -144,7 +145,7 @@ def main(dir: str,
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_5='Point Cloud: Nan',
                         text_7='Current Task: NaN',
-                        text_8=f'Tardis Error: Wrong directory:',
+                        text_8='Tardis Error: Wrong directory:',
                         text_9=f'Given {dir} is does not contain any recognizable file formats!')
         sys.exit()
     else:
@@ -160,7 +161,7 @@ def main(dir: str,
                               type=float)
 
     # Build handler's
-    normalize = RescaleNormalize(range=(1, 99))  # Normalize histogram
+    normalize = RescaleNormalize(clip_range=(1, 99))  # Normalize histogram
     minmax = MinMaxNormalize()
 
     image_stitcher = StitchImages()
@@ -211,7 +212,7 @@ def main(dir: str,
                              device=device)
 
     """Process each image with CNN and DIST"""
-    tardis_progress = Tardis_Logo()
+    tardis_progress = TardisLogo()
     for id, i in enumerate(sorted(predict_list)):
         """Pre-Processing"""
         if i.endswith('CorrelationLines.am'):
@@ -314,7 +315,7 @@ def main(dir: str,
                                 text_4=f'Pixel size: {px} A',
                                 text_5='Point Cloud: In processing...',
                                 text_7='Current Task: CNN prediction...',
-                                text_8=printProgressBar(j, len(patches_DL)))
+                                text_8=print_progress_bar(j, len(patches_DL)))
 
             # Pick image['s]
             input, name = patches_DL.__getitem__(j)
@@ -323,7 +324,7 @@ def main(dir: str,
                 start = time.time()
 
                 # Predict & Threshold
-                input = predict_cnn._predict(input[None, :])
+                input = predict_cnn.predict(input[None, :])
 
                 end = time.time()
                 iter_time = 10 // (end - start)  # Scale progress bar refresh to 10s
@@ -331,7 +332,7 @@ def main(dir: str,
                     iter_time = 1
             else:
                 # Predict & Threshold
-                input = predict_cnn._predict(input[None, :])
+                input = predict_cnn.predict(input[None, :])
 
             tif.imwrite(join(output, f'{name}.tif'),
                         np.array(input, dtype=input.dtype))
@@ -461,7 +462,7 @@ def main(dir: str,
                         text_4=f'Original pixel size: {px} A',
                         text_5=f'Point Cloud: {point_cloud.shape[0]} Nodes; NaN Segments',
                         text_7='Current Task: DIST prediction...',
-                        text_8=printProgressBar(0, len(coords_df)))
+                        text_8=print_progress_bar(0, len(coords_df)))
 
         """DIST prediction"""
         iter_time = 1
@@ -474,19 +475,19 @@ def main(dir: str,
                                 text_4=f'Original pixel size: {px} A',
                                 text_5=f'Point Cloud: {point_cloud.shape[0]} Nodes; NaN Segments',
                                 text_7='Current Task: DIST prediction...',
-                                text_8=printProgressBar(id, len(coords_df)))
+                                text_8=print_progress_bar(id, len(coords_df)))
 
             if id_dist == 0:
                 start = time.time()
 
-                graph = predict_dist._predict(x=coord[None, :])
+                graph = predict_dist.predict(x=coord[None, :])
 
                 end = time.time()
                 iter_time = 10 // (end - start)  # Scale progress bar refresh to 10s
                 if iter_time <= 1:
                     iter_time = 1
             else:
-                graph = predict_dist._predict(x=coord[None, :])
+                graph = predict_dist.predict(x=coord[None, :])
 
             graphs.append(graph)
         if debug:

@@ -16,7 +16,7 @@ def pc_median_dist(pc: np.ndarray,
         avg_over (bool): If True, calculate the median position of all points
             and calculate average k-NN for a selected set of points in that area
             (speed up for big point clouds).
-        box_size: Boundary box size for 'avg_over'.
+        box_size (float): Boundary box size for 'avg_over'.
     """
     if avg_over:
         if isinstance(pc, torch.Tensor):
@@ -33,13 +33,15 @@ def pc_median_dist(pc: np.ndarray,
             min_y = np.min(pc[:, 1])
             max_y = np.max(pc[:, 1])
             offset_y = (max_y - min_y) * box_size
+        else:
+            offset_x = 0
+            offset_y = 0
 
         if box_dim == 3:
             min_z = np.min(pc[:, 2])
             max_z = np.max(pc[:, 2])
             offset_z = (max_z - min_z) * box_size
         else:
-            min_z, max_z = 0, 0
             offset_z = 0
 
         x = np.median(pc[:, 0])
@@ -54,7 +56,7 @@ def pc_median_dist(pc: np.ndarray,
                             min_x=x - offset_x, max_x=x + offset_x,
                             min_y=y - offset_y, max_y=y + offset_y,
                             min_z=z - offset_z, max_z=z + offset_z)
-        voxel = pc[voxel]
+        pc = pc[voxel]
 
         # Calculate KNN dist
         tree = KDTree(pc, leaf_size=pc.shape[0])
@@ -75,8 +77,10 @@ def pc_median_dist(pc: np.ndarray,
 
 
 def point_in_bb(points: np.ndarray,
-                min_x: np.inf, max_x: np.inf,
-                min_y: np.inf, max_y: np.inf,
+                min_x: int,
+                max_x: int,
+                min_y: int,
+                max_y: int,
                 min_z: Optional[np.float32] = None,
                 max_z: Optional[np.float32] = None) -> np.ndarray:
     """
@@ -84,7 +88,7 @@ def point_in_bb(points: np.ndarray,
 
     Args:
         points (np.ndarray): (n,3) array.
-        min_i, max_i (np.inf or int): The bounding box limits for each coordinate.
+        min_i, max_i (int): The bounding box limits for each coordinate.
             If some limits are missing, the default values are -infinite for
             the min_i and infinite for the max_i.
 

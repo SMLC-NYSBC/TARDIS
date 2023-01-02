@@ -16,13 +16,6 @@ class StitchImages:
         1 indicate xyz position
         25 indicate stride value for overlap
         _pf indicate optional prefix in file name
-
-    Args:
-        dir_path: Directory where all images are stored.
-        mask: If True treat image as binary mask and sum-up overlay zones,
-            else do replacement
-        prefix: Optional prefix at the end of image file
-        dtype: Numpy dtype for output
     """
 
     def __init__(self):
@@ -32,8 +25,18 @@ class StitchImages:
         self.stride = 0  # Variable to store step size
 
     def _find_xyz(self,
-                  file_list: str,
+                  file_list: list,
                   idx: int):
+        """
+        Find index from for stitching image patches into one file.
+
+        Args:
+            file_list (list): List of files.
+            idx: Find file index number.
+
+        Returns:
+            Update global class values.
+        """
         self.z = max(list(map(int,
                               [str.split(f[:-4], "_")[1] for f in file_list
                                if f.startswith(f'{idx}')]))) + 1
@@ -49,6 +52,15 @@ class StitchImages:
 
     def _calculate_dim(self,
                        image: np.ndarray):
+        """
+        Find and update image patch size from array.
+
+        Args:
+            image (np.ndarray): Image array.
+
+        Returns:
+            Update global class values.
+        """
         if image.ndim == 3:
             self.nz, self.ny, self.nx = image.shape
         else:
@@ -61,6 +73,21 @@ class StitchImages:
                  prefix='',
                  output: Optional[str] = None,
                  dtype=np.uint8):
+        """
+        STITCH IMAGE FROM IMAGE PATCHES
+
+        Args:
+            image_dir (np.ndarray): Directory where all images are stored.
+            mask (np.ndarray): If True treat image as binary mask and sum-up overlay
+                zones, else do replacement
+            prefix (str): Prefix at the end of image file
+            output (str, Optional): Optional, output directory.
+            dtype (np.dtype): Numpy dtype for output
+
+        Returns:
+            np.ndarray, Optional: If indicated output, image is saved in output directory
+            else stitch images is return as array.
+        """
         """Extract information about images in dir_path"""
         file_list = [f for f in listdir(image_dir) if isfile(join(image_dir, f))]
         file_list = [f for f in file_list if f.endswith('.tif')]

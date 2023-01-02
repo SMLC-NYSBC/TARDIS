@@ -5,11 +5,13 @@ from typing import Optional
 
 import numpy as np
 
+from tardis.utils.errors import TardisError
+
 
 def move_train_dataset(dir: str,
                        coord_format: tuple,
                        with_img: bool,
-                       img_format: Optional[tuple] = None) -> list:
+                       img_format: Optional[tuple] = None):
     """
     Standard builder for train datasets.
 
@@ -18,13 +20,15 @@ def move_train_dataset(dir: str,
     - dir/train/imgs [optional]
 
     Args:
-        dir (str): Directory where the file should outputted.
+        dir (str): Directory where the file should be output.
         coord_format (tuple): Format of the coordinate files.
         with_img (bool): If True, expect corresponding image files.
         img_format (tuple, optional): Allowed format that can be used.
     """
     assert len([f for f in listdir(dir) if f.endswith(coord_format)]) > 0, \
-        f'No file found in given dir {dir}'
+        TardisError('move_train_dataset',
+                    'tardis/utils/dataset.py',
+                    f'No coordinate file found in given dir {dir}')
 
     idx_coord = [f for f in listdir(dir) if f.endswith(coord_format)]
 
@@ -35,7 +39,9 @@ def move_train_dataset(dir: str,
     """Sort coord with images if included"""
     if with_img:
         assert len([f for f in listdir(dir) if f.endswith(img_format)]) > 0, \
-            f'No file found in given dir {dir}'
+            TardisError('move_train_dataset',
+                        'tardis/utils/dataset.py',
+                        f'No image file found in given dir {dir}')
 
         idx_coord = [f for f in listdir(dir) if f.endswith(img_format)]
 
@@ -45,8 +51,7 @@ def move_train_dataset(dir: str,
 
 
 def build_test_dataset(dataset_dir: str,
-                       train_test_ration: float,
-                       prefix: str):
+                       train_test_ration: float):
     """
     Standard builder for test datasets.
 
@@ -59,16 +64,15 @@ def build_test_dataset(dataset_dir: str,
     Args:
         dataset_dir (str): Directory with train test folders.
         train_test_ration (int): Percentage of dataset to be moved.
-        prefix (str): Additional prefix name at the end of the file.
     """
     dataset = dataset_dir
-    prefix = prefix
 
     assert 'test' in listdir(dataset_dir) and 'train' in listdir(dataset_dir), \
-        f'Could not find train or test folder in directory {dataset_dir}'
+        TardisError('build_test_dataset',
+                    'tardis/utils/dataset.py',
+                    f'Could not find train or test folder in directory {dataset_dir}')
 
-    image_list = listdir(join(dataset_dir, 'train', 'imgs'))
-    image_list.sort()
+    image_list = sorted(listdir(join(dataset_dir, 'train', 'imgs')))
     mask_list = listdir(join(dataset_dir, 'train', 'masks'))
     mask_list.sort()
 

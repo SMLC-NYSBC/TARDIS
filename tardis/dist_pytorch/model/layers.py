@@ -1,13 +1,11 @@
-from typing import Optional
+from typing import Optional, Tuple
 
 import torch
-from tardis.dist_pytorch.model.modules import (ComparisonLayer,
-                                                   GeluFeedForward,
-                                                   PairBiasSelfAttention,
-                                                   QuadraticEdgeUpdate,
-                                                   SelfAttention2D,
-                                                   TriangularEdgeUpdate)
 from torch import nn
+
+from tardis.dist_pytorch.model.modules import (ComparisonLayer, GeluFeedForward,
+                                               PairBiasSelfAttention, QuadraticEdgeUpdate,
+                                               SelfAttention2D, TriangularEdgeUpdate)
 
 
 class DistStack(nn.Module):
@@ -64,7 +62,7 @@ class DistStack(nn.Module):
                 edge_features: torch.Tensor,
                 node_features: Optional[torch.Tensor] = None,
                 src_mask=None,
-                src_key_padding_mask=None) -> torch.Tensor:
+                src_key_padding_mask=None) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Forward throw DIST model.
 
@@ -122,7 +120,9 @@ class DistLayer(nn.Module):
         self.pairs_dim = pairs_dim
         self.node_dim = node_dim
         self.structure = structure
-        assert self.structure in ['full', 'full_af', 'self_attn', 'triang', 'quad', 'dualtriang']
+        assert self.structure in ['full', 'full_af',
+                                  'self_attn',
+                                  'triang', 'quad', 'dualtriang']
 
         # Node optional features update
         if node_dim is not None:
@@ -251,10 +251,10 @@ class DistLayer(nn.Module):
         # Update edge features
         if self.structure == 'full':
             h_pairs = h_pairs + \
-                self.row_attention(x=h_pairs, padding_mask=mask) + \
-                self.col_attention(x=h_pairs, padding_mask=mask) + \
-                self.row_update(z=h_pairs, mask=mask) + \
-                self.col_update(z=h_pairs, mask=mask)
+                      self.row_attention(x=h_pairs, padding_mask=mask) + \
+                      self.col_attention(x=h_pairs, padding_mask=mask) + \
+                      self.row_update(z=h_pairs, mask=mask) + \
+                      self.col_update(z=h_pairs, mask=mask)
         elif self.structure == 'full_af':
             h_pairs = h_pairs + self.row_attention(x=h_pairs, padding_mask=mask)
             h_pairs = h_pairs + self.col_attention(x=h_pairs, padding_mask=mask)
@@ -262,19 +262,19 @@ class DistLayer(nn.Module):
             h_pairs = h_pairs + self.col_update(z=h_pairs, mask=mask)
         elif self.structure == 'self_attn':
             h_pairs = h_pairs + \
-                self.row_attention(x=h_pairs, padding_mask=mask) + \
-                self.col_attention(x=h_pairs, padding_mask=mask)
+                      self.row_attention(x=h_pairs, padding_mask=mask) + \
+                      self.col_attention(x=h_pairs, padding_mask=mask)
         elif self.structure in ['triang', 'quad']:
             h_pairs = h_pairs + \
-                self.row_update(z=h_pairs, mask=mask) + \
-                self.col_update(z=h_pairs, mask=mask)
+                      self.row_update(z=h_pairs, mask=mask) + \
+                      self.col_update(z=h_pairs, mask=mask)
         elif self.structure == 'dualtriang':
             h_pairs = h_pairs + \
-                self.row_update_1(z=h_pairs, mask=mask) + \
-                self.col_update_1(z=h_pairs, mask=mask)
+                      self.row_update_1(z=h_pairs, mask=mask) + \
+                      self.col_update_1(z=h_pairs, mask=mask)
             h_pairs = h_pairs + \
-                self.row_update_2(z=h_pairs, mask=mask) + \
-                self.col_update_2(z=h_pairs, mask=mask)
+                      self.row_update_2(z=h_pairs, mask=mask) + \
+                      self.col_update_2(z=h_pairs, mask=mask)
 
         return h_pairs + self.pair_ffn(x=h_pairs)
 
@@ -282,7 +282,7 @@ class DistLayer(nn.Module):
                 h_pairs: torch.Tensor,
                 h_nodes: Optional[torch.Tensor] = None,
                 src_mask=None,
-                src_key_padding_mask=None) -> torch.Tensor:
+                src_key_padding_mask=None) -> Tuple[torch.Tensor, torch.Tensor]:
 
         # Update node features and convert to edge shape
         if h_nodes is not None:

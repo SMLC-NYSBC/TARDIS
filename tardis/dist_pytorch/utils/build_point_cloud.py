@@ -1,27 +1,30 @@
 import gc
-from typing import Optional
+from typing import Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from skimage.morphology import skeletonize_3d, skeletonize
+from numpy import ndarray
+from skimage.morphology import skeletonize, skeletonize_3d
+
+from tardis.utils.errors import TardisError
 
 
 class ImageToPointCloud:
     def __init__(self):
-        self.postprocess = BuildPointCloud()
+        self.post_process = BuildPointCloud()
 
     def __call__(self,
                  image: Optional[str] = np.ndarray,
                  euclidean_transform=True,
                  label_size=2.5,
-                 down_sampling_voxal_size=None,
+                 down_sampling_voxel_size=None,
                  as_2d=False):
 
-        return self.postprocess.build_point_cloud(image=image,
-                                                  EDT=euclidean_transform,
-                                                  label_size=label_size,
-                                                  down_sampling=down_sampling_voxal_size,
-                                                  as_2d=as_2d)
+        return self.post_process.build_point_cloud(image=image,
+                                                   EDT=euclidean_transform,
+                                                   label_size=label_size,
+                                                   down_sampling=down_sampling_voxel_size,
+                                                   as_2d=as_2d)
 
 
 class BuildPointCloud:
@@ -34,19 +37,23 @@ class BuildPointCloud:
     issue with heavily overlapping objects.
 
     The workflow follows: optional(edt_2d -> edt_thresholds -> edt_binary) ->
-        skeletonization_3d -> output point cloud -> (downsampling)
-
-    Args:
-        image: source of the 2D/3D .tif file in [Z x Y x X] or 2D/3D array
-        filter_small_object: Filter size to remove small object .
-        clean_close_point: If True, close point will be removed.
+        skeletonization_3d -> output point cloud -> (down-sampling)
     """
 
     def __init__(self):
         pass
 
-    def check_data(self,
-                   image):
+    @staticmethod
+    def check_data(image: Optional[str] = np.ndarray) -> np.ndarray:
+        """
+        Check image data and correct it if needed to uint8 type.
+
+        Args:
+            image (np.ndarray, str): 2D/3D image array
+
+        Returns:
+            np.ndarray: Check and converted to uint8 data
+        """
         try:
             if isinstance(image, str):
                 from tardis.utils.load_data import import_tiff
@@ -54,13 +61,21 @@ class BuildPointCloud:
                 image, _ = import_tiff(img=image,
                                        dtype=np.int8)
         except RuntimeWarning:
-            raise Warning("Directory/input .tiff file/array is not correct...")
+            TardisError('build_point_cloud',
+                        'tardis/dist/utils',
+                        "Directory/input .tiff file/array is not correct...")
 
-        assert image.ndim in [2, 3], 'File must be 2D or 3D array!'
+        assert image.ndim in [2, 3], \
+            TardisError('build_point_cloud',
+                        'tardis/dist/utils',
+                        f'Image dim expected to be 2 or 3 bu got {image.ndim}')
 
         """Check for binary"""
         unique_val = pd.unique(image.flatten())  # Use panda for speed
-        assert len(unique_val) == 2, 'Not binary image'
+        assert len(unique_val) == 2, \
+            TardisError('build_point_cloud',
+                        'tardis/dist/utils',
+                        'Not binary image')
 
         """Check for int8 vs uint8"""
         if np.any(unique_val > 254):  # Fix uint8 formatting
@@ -68,7 +83,10 @@ class BuildPointCloud:
 
         """Any other exertions"""
         assert unique_val[1] == 1, \
-            'Array or file directory loaded properly but image is not semantic mask...'
+            TardisError('build_point_cloud',
+                        'tardis/dist/utils',
+                        'Array or file directory loaded properly but image '
+                        'is not semantic mask...')
 
         return image
 
@@ -77,7 +95,20 @@ class BuildPointCloud:
                           EDT=False,
                           label_size=2.5,
                           down_sampling: Optional[float] = None,
-                          as_2d=False):
+                          as_2d=False) -> Union[Tuple[ndarray, ndarray], np.ndarray]:
+        """
+        Build point cloud data from semantic mask.
+
+        Args:
+            image (np.ndarray): Predicted semantic mask.
+            EDT (bool): If True, compute EDT to extract line centers.
+            label_size (float): size of semantic labels in pixels.
+            down_sampling (float, None): If not None, down-sample point cloud with open3d.
+            as_2d: Treat data as 2D not 3D.
+
+        Returns:
+            np.ndarray: Point cloud of 2D/3D semantic objects.
+        """
         image = self.check_data(image)
 
         if EDT:
@@ -112,6 +143,9 @@ class BuildPointCloud:
                 image_point = np.where(image_point > 0)
             else:
                 image_point = np.where(skeletonize_3d(image_edt) > 0)
+
+            """CleanUp to avoid memory loss"""
+            del image, image_edt
         else:
             """Skeletonization"""
             if image.flatten().shape[0] > 1000000000 or as_2d:
@@ -130,12 +164,10 @@ class BuildPointCloud:
                         start = i
                 image_point = np.where(image_point > 0)
             else:
-                image_point = np.where(skeletonize_3d(image_edt) > 0)
+                image_point = np.where(skeletonize_3d(image) > 0)
 
-        """CleanUp to avoid memory loss"""
-        image = None
-        self.image_edt = None
-        del image, self.image_edt
+            """CleanUp to avoid memory loss"""
+            del image
 
         """Output point cloud [X x Y x Z]"""
         if len(image_point) == 2:
@@ -149,7 +181,6 @@ class BuildPointCloud:
                                        image_point[0])).T
 
         """CleanUp to avoid memory loss"""
-        image_point = None
         del image_point
         gc.collect()
 
@@ -160,8 +191,8 @@ class BuildPointCloud:
             pcd = o3d.geometry.PointCloud()
             pcd.points = o3d.utility.Vector3dVector(coordinates_HD)
             coordinates_LD = np.asarray(
-                pcd.voxel_down_sample(voxel_size=down_sampling).points)
+                pcd.voxel_down_sample(voxel_size=down_sampling).points
+            )
 
             return coordinates_HD, coordinates_LD
-
         return coordinates_HD

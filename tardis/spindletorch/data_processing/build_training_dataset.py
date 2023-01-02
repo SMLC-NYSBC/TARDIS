@@ -8,7 +8,7 @@ from tardis.spindletorch.data_processing.trim import trim_with_stride
 from tardis.spindletorch.datasets.augment import MinMaxNormalize, RescaleNormalize
 from tardis.utils.errors import TardisError
 from tardis.utils.load_data import ImportDataFromAmira, load_image
-from tardis.utils.logo import Tardis_Logo, printProgressBar
+from tardis.utils.logo import print_progress_bar, TardisLogo
 
 
 def build_train_dataset(dataset_dir: str,
@@ -31,8 +31,8 @@ def build_train_dataset(dataset_dir: str,
     the point cloud. For this module expect that mask file (.csv, .am) contain
     coordinates values. Then for each point module draws 2D label.
 
-    This image array's are then scale up or down to fit given pixel size, and
-    finally array's are trimmed with overlay (stride) for specific size.
+    This image arrays are then scale up or down to fit given pixel size, and
+    finally arrays are trimmed with overlay (stride) for specific size.
 
     Files are saved in ./dir/train/imgs and ./dir/train/masks.
 
@@ -45,14 +45,14 @@ def build_train_dataset(dataset_dir: str,
         multi_layer (bool): If True mask is build in RGB channel instead of
             gray (0-1).
         resize_pixel_size (float): Pixel size for image resizing.
-        trim_xy (int): Voxal size of output image in x and y dimension.
-        trim_z (int): Voxal size of output image in z dimension.
+        trim_xy (int): Voxel size of output image in x and y dimension.
+        trim_z (int): Voxel size of output image in z dimension.
     """
     """Setup"""
-    tardis_progress = Tardis_Logo()
+    tardis_progress = TardisLogo()
     tardis_progress(title='Data pre-processing for CNN training')
 
-    normalize = RescaleNormalize(range=(1, 99))  # Normalize histogram
+    normalize = RescaleNormalize(clip_range=(1, 99))  # Normalize histogram
     minmax = MinMaxNormalize()
 
     IMG_FORMATS = ('.am', '.mrc', '.rec')
@@ -85,22 +85,23 @@ def build_train_dataset(dataset_dir: str,
                         if f.endswith('.CorrelationLines.am')]) == (len(img_list) / 2), \
                 TardisError('TRAINING_DATASET_COMPATIBILITY',
                             'tardis/spindletorch/data_processing',
-                            'Not all image file has corresponding  .CorrelationLines.am file...')
+                            'Not all image file has corresponding .CorrelationLines.am')
             check_am = True
 
     assert np.any([check_csv, check_mask_image, check_am]), \
         TardisError('TRAINING_DATASET_COMPATIBILITY',
-                    'tardis/spindletorch/data_processing',
+                    'tardis/spindletorch/data_processing/build_training_dataset.py',
                     'Could not find any compatible dataset. Refer to documentation for, '
                     'how to structure your dataset properly!')
 
     """Build label mask file list"""
+    mask_list = []
     if check_csv:
         mask_list = [f.endswith('.csv') for f in img_list]
     elif check_mask_image:
         mask_list = [f.endswith(MASK_FORMATS) for f in img_list]
     elif check_am:
-        mask_list = [f.endswith(('.CorrelationLines.am')) for f in img_list]
+        mask_list = [f.endswith('.CorrelationLines.am') for f in img_list]
 
     idx_mask = list(np.array(img_list)[mask_list])
     idx_img = list(np.array(img_list)[np.logical_not(mask_list)])
@@ -116,6 +117,8 @@ def build_train_dataset(dataset_dir: str,
     for id, i in enumerate(range(len(idx_img))):
         """Load image data and store image and mask name"""
         mask = None
+
+        img_name = ''
         mask_name = idx_mask[i]
 
         if mask_name.endswith('.CorrelationLines.am'):
@@ -128,21 +131,30 @@ def build_train_dataset(dataset_dir: str,
             elif isfile(join(dataset_dir, f'{mask_name[:-20]}.tif')):
                 img_name = f'{mask_name[:-20]}.tif'  # .tif image file
             else:
-                raise NameError(f'No image file found for {mask_name}')
+                TardisError('TRAINING_DATASET_COMPATIBILITY',
+                            'tardis/spindletorch/data_processing',
+                            'Number of images and mask is not the same!')
         else:
             img_name = f'{mask_name[:-9]}.mrc'
 
         """Load image file"""
+        pixel_size = 1
+        image = None
         if img_name.endswith(IMG_FORMATS):
             if not check_am:
                 image, pixel_size = load_image(join(dataset_dir, img_name))
             elif img_name.endswith('.am') and check_am:
                 importer = ImportDataFromAmira(src_am=join(dataset_dir,
-                                                        mask_name),
-                                            src_img=join(dataset_dir,
+                                                           mask_name),
+                                               src_img=join(dataset_dir,
                                                             img_name))
                 image, pixel_size = importer.get_image()
                 coord = importer.get_segmented_points()  # [ID x X x Y x Z]
+
+        assert image is not None, \
+            TardisError('LOADING_IMAGE_WHILE_BUILDING_DATASET',
+                        'tardis/spindletorch',
+                        f'Image {img_name} not in {IMG_FORMATS}!')
 
         """Load mask file"""
         # Try to load .CorrelationLines.am files
@@ -177,8 +189,8 @@ def build_train_dataset(dataset_dir: str,
                         text_3=f'px: {pixel_size}',
                         text_4=f'Scale: {round(scale_factor, 2)}',
                         text_6=f'Image dtype: {image.dtype} min: {image.min()} max: {image.max()}',
-                        text_7=printProgressBar(id,
-                                                len(idx_img)))
+                        text_7=print_progress_bar(id,
+                                                  len(idx_img)))
 
         """Draw mask"""
         if coord is not None:
@@ -188,9 +200,13 @@ def build_train_dataset(dataset_dir: str,
                             f'Coord file do not have shape [ID x X x Y x Z]. '
                             f'Given {coord.shape[1]}')
             if not is_mask_image:
-                mask = draw_semantic(mask_size=image.shape,
+                # Scale mask to correct pixel size
+                coord[:, 1:] = coord[:, 1:] * scale_factor
+
+                # Draw mask from coordinates
+                mask = draw_semantic(mask_size=scale_shape,
                                      coordinate=coord,
-                                     pixel_size=pixel_size,
+                                     pixel_size=resize_pixel_size,
                                      circle_size=circle_size,
                                      multi_layer=multi_layer)
         else:
@@ -213,8 +229,8 @@ def build_train_dataset(dataset_dir: str,
 
         assert image.dtype == np.float32, \
             TardisError('TRAINING_DATASET_COMPATIBILITY',
-                            'tardis/spindletorch/data_processing',
-                            f'Image data of type {image.dtype} not float32')
+                        'tardis/spindletorch/data_processing',
+                        f'Image data of type {image.dtype} not float32')
 
         tardis_progress(title='Data pre-processing for CNN training',
                         text_1='Building Training dataset:',
@@ -222,10 +238,10 @@ def build_train_dataset(dataset_dir: str,
                         text_3=f'px: {pixel_size}',
                         text_4=f'Scale: {round(scale_factor, 2)}',
                         text_6=f'Image dtype: {image.dtype} min: {image.min()} max: {image.max()}',
-                        text_7=printProgressBar(id,
-                                                len(idx_img)))
+                        text_7=print_progress_bar(id,
+                                                  len(idx_img)))
 
-        """Voxalize Image and Mask"""
+        """Voxelize Image and Mask"""
         trim_with_stride(image=image,
                          mask=mask,
                          scale=scale_shape,

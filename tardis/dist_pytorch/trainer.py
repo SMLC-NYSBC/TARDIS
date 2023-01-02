@@ -1,8 +1,9 @@
 import numpy as np
 import torch
-from tardis.utils.metrics import calculate_F1
-from tardis.utils.trainer import BasicTrainer
 from torch import nn
+
+from tardis.utils.metrics import calculate_f1
+from tardis.utils.trainer import BasicTrainer
 
 
 class DistTrainer(BasicTrainer):
@@ -21,8 +22,7 @@ class DistTrainer(BasicTrainer):
         Run model training.
         """
         # Update progress bar
-        self._update_progress_bar(loss_desc='Training: (loss 1.000)',
-                                  idx=0)
+        self._update_progress_bar(loss_desc='Training: (loss 1.000)', idx=0)
 
         # Run training for DIST model
         for idx, (e, n, g, _, _) in enumerate(self.training_DataLoader):
@@ -36,11 +36,9 @@ class DistTrainer(BasicTrainer):
 
                 if self.node_input:
                     node = node.to(self.device)
-                    edge = self.model(coords=edge,
-                                      node_features=node)
+                    edge = self.model(coords=edge, node_features=node)
                 else:
-                    edge = self.model(coords=edge,
-                                      node_features=None)
+                    edge = self.model(coords=edge, node_features=None)
 
                 # Back-propagate
                 loss = self.criterion(edge[:, 0, :], graph)  # Calc. loss
@@ -73,17 +71,14 @@ class DistTrainer(BasicTrainer):
                 with torch.no_grad():
                     if self.node_input:
                         node = node.to(self.device)
-                        edge = self.model(coords=edge,
-                                          node_features=node)
+                        edge = self.model(coords=edge, node_features=node)
                     else:
-                        edge = self.model(coords=edge,
-                                          node_features=None)
+                        edge = self.model(coords=edge, node_features=None)
 
-                    loss = self.criterion(edge[0, :],
-                                          graph)
+                    loss = self.criterion(edge[0, :], graph)
                     edge = torch.sigmoid(edge[:, 0, :])
 
-                acc, prec, recall, f1, th = calculate_F1(logits=edge,
+                acc, prec, recall, f1, th = calculate_f1(logits=edge,
                                                          targets=graph,
                                                          best_f1=True)
 
@@ -97,8 +92,7 @@ class DistTrainer(BasicTrainer):
                 valid = f'Validation: (loss {loss.item():.4f} Prec: {prec:.2f} Rec: {recall:.2f} F1: {f1:.2f})'
 
                 # Update progress bar
-                self._update_progress_bar(loss_desc=valid,
-                                          idx=idx)
+                self._update_progress_bar(loss_desc=valid, idx=idx)
 
         # Reduce eval. metric with mean
         self.validation_loss.append(np.mean(valid_losses))
@@ -112,14 +106,14 @@ class DistTrainer(BasicTrainer):
         self.early_stopping(f1_score=self.f1[-1:][0])
 
 
-class C_DistTrainer(BasicTrainer):
+class CDistTrainer(BasicTrainer):
     """
     C_DIST MODEL TRAINER
     """
 
     def __init__(self,
                  **kwargs):
-        super(C_DistTrainer, self).__init__(**kwargs)
+        super(CDistTrainer, self).__init__(**kwargs)
 
         if self.structure['dist_type'] == 'semantic':
             self.criterion_cls = nn.CrossEntropyLoss(reduction='mean')
@@ -129,8 +123,7 @@ class C_DistTrainer(BasicTrainer):
         Run model training.
         """
         # Update progress bar
-        self._update_progress_bar(loss_desc='Training: (loss 1.000)',
-                                  idx=0)
+        self._update_progress_bar(loss_desc='Training: (loss 1.000)', idx=0)
 
         for idx, (e, n, g, _, c) in enumerate(self.training_DataLoader):
             """Mid-training eval"""
@@ -143,15 +136,13 @@ class C_DistTrainer(BasicTrainer):
 
                 if self.node_input:
                     node = node.to(self.device)
-                    edge, out_cls = self.model(coords=edge,
-                                               node_features=node)
+                    edge, out_cls = self.model(coords=edge, node_features=node)
                 else:
-                    edge, out_cls = self.model(coords=edge,
-                                               node_features=None)
+                    edge, out_cls = self.model(coords=edge, node_features=None)
 
                 # Back-propagate
-                loss = self.criterion(edge[0, :], graph) + \
-                    self.criterion_cls(out_cls, cls)
+                loss = self.criterion(edge[0, :], graph) + self.criterion_cls(out_cls,
+                                                                              cls)
                 loss.backward()  # One backward pass
                 self.optimizer.step()  # Update the parameters
 
@@ -183,20 +174,17 @@ class C_DistTrainer(BasicTrainer):
                 with torch.no_grad():
                     if self.node_input:
                         node = node.to(self.device)
-                        edge, out_cls = self.model(coords=edge,
-                                                   node_features=node)
+                        edge, out_cls = self.model(coords=edge, node_features=node)
                     else:
-                        edge, out_cls = self.model(coords=edge,
-                                                   node_features=None)
+                        edge, out_cls = self.model(coords=edge, node_features=None)
 
-                    loss = self.criterion(edge[0, :], graph) + \
-                        self.criterion(out_cls, cls)
+                    loss = self.criterion(edge[0, :], graph) + self.criterion(out_cls,
+                                                                              cls)
 
-                    edge = torch.sigmoid(edge[:, 0, :])\
-
-                acc, prec, recall, f1, th = calculate_F1(logits=edge,
-                                                         targets=graph,
-                                                         best_f1=True)
+                    edge = torch.sigmoid(edge[:, 0, :])
+                    acc, prec, recall, f1, th = calculate_f1(logits=edge,
+                                                             targets=graph,
+                                                             best_f1=True)
 
                 # Avg. precision score
                 valid_losses.append(loss.item())
@@ -208,8 +196,7 @@ class C_DistTrainer(BasicTrainer):
                 valid = f'Validation: (loss {loss.item():.4f} Prec: {prec:.2f} Rec: {recall:.2f} F1: {f1:.2f})'
 
                 # Update progress bar
-                self._update_progress_bar(loss_desc=valid,
-                                          idx=idx)
+                self._update_progress_bar(loss_desc=valid, idx=idx)
         # Reduce eval. metric with mean
         self.validation_loss.append(np.mean(valid_losses))
         self.accuracy.append(np.mean(accuracy_mean))

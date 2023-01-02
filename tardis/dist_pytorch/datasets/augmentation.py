@@ -1,9 +1,10 @@
-from typing import Optional
+from typing import Optional, Tuple, Union
 
 import numpy as np
 import tifffile.tifffile as tiff
 from skimage import exposure
 from sklearn.neighbors import KDTree
+
 from tardis.utils.load_data import ImportDataFromAmira
 
 
@@ -11,7 +12,9 @@ def preprocess_data(coord: str,
                     image: Optional[str] = None,
                     size: Optional[int] = None,
                     include_label=True,
-                    normalization='simple') -> np.ndarray:
+                    normalization='simple') -> Union[Tuple[np.ndarray, np.ndarray],
+                                                     Tuple[np.ndarray, np.ndarray,
+                                                     np.ndarray]]:
     """
     Data augmentation function.
 
@@ -184,10 +187,12 @@ class BuildGraph:
 
                         if dist_th is None:
                             # Select point in contour
-                            knn = [x for id, x in enumerate(points_in_contour) if id in match_coord]
+                            knn = [x for id, x in enumerate(points_in_contour)
+                                   if id in match_coord]
                         else:
                             # Select point in contour
-                            knn = [x for id, x in enumerate(points_in_contour) if id in match_coord]
+                            knn = [x for id, x in enumerate(points_in_contour)
+                                   if id in match_coord]
                             knn = [x for x, y in zip(knn, dist) if y <= dist_th]
 
                         # Self connection
@@ -281,21 +286,21 @@ class RescaleNormalize:
 
     def __call__(self,
                  x: np.ndarray,
-                 range=(2, 98)) -> np.ndarray:
+                 hist_range=(2, 98)) -> np.ndarray:
         """
         Call for image normalization.
 
         Args:
             x (np.ndarray):
                 Image array.
-            range (tuple, optional):
+            hist_range (tuple, optional):
                 Range for image histogram clipping.
                     Defaults to (2, 98).
 
         Returns:
             np.ndarray: Normalized image
         """
-        p2, p98 = np.percentile(x, range)
+        p2, p98 = np.percentile(x, hist_range)
 
         return exposure.rescale_intensity(x, in_range=(p2, p98))
 
@@ -307,16 +312,16 @@ class MinMaxNormalize:
     Image histogram is normalized between given fixed value between 0 and 255.
 
     Args:
-        min (int): Minimum clip value.
-        max (int): Maximum clip value.
+        min_v (int): Minimum clip value.
+        max_v (int): Maximum clip value.
     """
 
     def __init__(self,
-                 min: int,
-                 max: int):
-        assert max > min
-        self.min = min
-        self.range = max - min
+                 min_v: int,
+                 max_v: int):
+        assert max_v > min_v
+        self.min_v = min_v
+        self.range = max_v - min_v
 
     def __call__(self,
                  x: np.ndarray) -> np.ndarray:
@@ -331,7 +336,7 @@ class MinMaxNormalize:
             np.ndarray:
                 Normalized image
         """
-        return (x - self.min) / self.range
+        return (x - self.min_v) / self.range
 
 
 class Crop2D3D:
@@ -363,7 +368,7 @@ class Crop2D3D:
     @staticmethod
     def get_xyz_position(center_point: int,
                          size: int,
-                         max_size: int) -> int:
+                         max_size: int) -> Tuple[int, int]:
         """
         Given the center point calculate the range to crop.
 

@@ -1,24 +1,37 @@
 from datetime import datetime
 
-import numpy as np
-from tardis.version import version
 import mrcfile
+import numpy as np
+
+from tardis.utils.errors import TardisError
+from tardis.version import version
 
 
 class NumpyToAmira:
     """
     Builder of Amira file from numpy array
+        Support for 3D only! If 2D data, Z dim build with Z=0
 
-        Support for 3D only! If 2D data, 3D dim build with Z=0
-
-    coord: Numpy array [Label x X x Y x Z] or [Label x X x Y] of
+    coord (np.ndarray): Numpy array [Label x X x Y x Z] or [Label x X x Y] of
         shape [Length x Dim] / [x, (3,4)]
-    file_dir: Full directory for saving .am file
+    file_dir (str): Full directory for saving .am file
     """
 
     @staticmethod
-    def check_3D(coord: np.ndarray):
-        assert coord.ndim == 2, 'Numpy array should be of the shape [Length x Dim]'
+    def check_3d(coord: np.ndarray):
+        """
+        Check and correct if needed to 3D
+
+        Args:
+            coord (np.ndarray): Coordinate file to check for 3D.
+
+        Returns:
+            np.ndarray: The same or converted to 3D coordinates.
+        """
+        assert coord.ndim == 2, \
+            TardisError('check_3d',
+                        'tardis/utils/export_data.py',
+                        'Numpy array should be of the shape [Length x Dim]')
 
         # Add dummy Z dimension
         if coord.shape[1] == 3:
@@ -26,19 +39,29 @@ class NumpyToAmira:
 
         return coord
 
-    def _build_header(self,
-                      coord: np.ndarray,
+    @staticmethod
+    def _build_header(coord: np.ndarray,
                       file_dir: str):
+        """
+        Standard Amira header builder
+
+        Args:
+            coord (np.ndarray): 3D coordinate file.
+            file_dir (str): Directory where the file should be saved.
+        """
+        # Store common data for the header
         vertex = int(np.max(coord[:, 0]) + 1) * 2
         edge = int(vertex / 2)
         point = int(coord.shape[0])
 
+        # Save header
         with open(file_dir, 'w') as f:
             f.write('# ASCII Spatial Graph \n')
-            f.write(
-                '# TARDIS - Transformer And Rapid Dimensionless Instance Segmentation (R) \n')
+            f.write('# TARDIS - Transformer And Rapid Dimensionless '
+                    'Instance Segmentation (R) \n')
             f.write(f'# tardis-pytorch v{version} \r\n')
-            f.write(f'# MIT License * 2021-{datetime.now().year} * Robert Kiewisz & Tristan Bepler \n')
+            f.write(f'# MIT License * 2021-{datetime.now().year} * '
+                    'Robert Kiewisz & Tristan Bepler \n')
             f.write('\n')
             f.write(f'define VERTEX {vertex} \n')
             f.write(f'define EDGE {edge} \n')
@@ -52,10 +75,20 @@ class NumpyToAmira:
                     'POINT { float[3] EdgePointCoordinates } @4 \n'
                     '\n')
 
-    def _write_to_amira(self,
-                        data: list,
+    @staticmethod
+    def _write_to_amira(data: list,
                         file_dir: str):
-        assert file_dir.endswith('.am'), f'{file_dir} must be and .am file!'
+        """
+        Recursively write all coordinates point
+
+        Args:
+            data (list): List of item's to save recursively.
+            file_dir (str): Directory where the file should be saved.
+        """
+        assert file_dir.endswith('.am'), \
+            TardisError('write_to_amira',
+                        'tardis/utils/export_data.py',
+                        f'{file_dir} must be and .am file!')
 
         with open(file_dir, 'a+') as f:
             f.write('\n')
@@ -66,7 +99,14 @@ class NumpyToAmira:
     def export_amira(self,
                      coord: np.ndarray,
                      file_dir: str):
-        coord = self.check_3D(coord=coord)
+        """
+        Save Amira file
+
+        Args:
+            coord (np.ndarray): 3D coordinate file.
+            file_dir (str): Directory where the file should be saved.
+        """
+        coord = self.check_3d(coord=coord)
 
         self._build_header(coord=coord,
                            file_dir=file_dir)
@@ -75,14 +115,10 @@ class NumpyToAmira:
         vertex_id_1 = -2
         vertex_id_2 = -1
 
-        vertex_coord = []
-        vertex_coord.append('@1')
-        vertex_id = []
-        vertex_id.append('@2')
-        point_no = []
-        point_no.append('@3')
-        point_coord = []
-        point_coord.append('@4')
+        vertex_coord = ['@1']
+        vertex_id = ['@2']
+        point_no = ['@3']
+        point_coord = ['@4']
         for i in range(segments_idx):
             # Collect segment coord and idx
             segment = coord[np.where(coord[:, 0] == i)[0]][:, 1:]
@@ -90,8 +126,14 @@ class NumpyToAmira:
             # Get Coord for vertex #1 and vertex #2
             vertex = np.array((segment[0], segment[-1:][0]), dtype=object)
 
-            vertex_coord.append(f'{vertex[0][0]:.15e} {vertex[0][1]:.15e} {vertex[0][2]:.15e}')
-            vertex_coord.append(f'{vertex[1][0]:.15e} {vertex[1][1]:.15e} {vertex[1][2]:.15e}')
+            # Append vertex #1 (aka Node #1)
+            vertex_coord.append(f'{vertex[0][0]:.15e} '
+                                f'{vertex[0][1]:.15e} '
+                                f'{vertex[0][2]:.15e}')
+            # Append vertex #2 (aka Node #2)
+            vertex_coord.append(f'{vertex[1][0]:.15e} '
+                                f'{vertex[1][1]:.15e} '
+                                f'{vertex[1][2]:.15e}')
 
             # Get Update id number of vertex #1 and #2
             vertex_id_1 += 2
@@ -103,6 +145,7 @@ class NumpyToAmira:
 
             # Get coord of points in edge
             for j in segment:
+                # Append 3D XYZ coord for point
                 point_coord.append(f'{j[0]:.15e} {j[1]:.15e} {j[2]:.15e}')
 
         self._write_to_amira(data=vertex_coord,
@@ -117,6 +160,13 @@ class NumpyToAmira:
 
 def to_mrc(data: np.ndarray,
            file_dir: str):
+    """
+    Save MRC image file
+
+    Args:
+        data (np.ndarray): Image file.
+        file_dir (str): Directory where the file should be saved.
+    """
     try:
         with mrcfile.new(file_dir) as mrc:
             mrc.set_data(data)

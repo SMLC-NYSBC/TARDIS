@@ -3,14 +3,15 @@ from os import getcwd
 from typing import Optional
 
 import torch
-from tardis.dist_pytorch.dist import C_DIST, DIST
-from tardis.dist_pytorch.trainer import C_DistTrainer, DistTrainer
-from tardis.dist_pytorch.utils.utils import check_model_dict
-from tardis.utils.device import get_device
-from tardis.utils.logo import Tardis_Logo
-from tardis.utils.losses import BCELoss, CELoss, DiceLoss
 from torch import optim
 from torch.optim.lr_scheduler import StepLR
+
+from tardis.dist_pytorch.dist import CDIST, DIST
+from tardis.dist_pytorch.trainer import CDistTrainer, DistTrainer
+from tardis.dist_pytorch.utils.utils import check_model_dict
+from tardis.utils.device import get_device
+from tardis.utils.logo import TardisLogo
+from tardis.utils.losses import BCELoss, CELoss, DiceLoss
 
 # Setting for stable release to turn off all debug APIs
 torch.backends.cudnn.benchmark = True
@@ -40,10 +41,10 @@ def train_dist(train_dataloader,
         loss_function (str): Type of loss function.
         learning_rate (float): Learning rate.
         learning_rate_scheduler (bool): If True, StepLR is used with training.
-        early_stop_rate (int): Define max. number of epoches without improvements
+        early_stop_rate (int): Define max. number of epoch's without improvements
         after which training is stopped.
         device (torch.device): Device on which model is trained.
-        epochs (int): Max number of epoches.
+        epochs (int): Max number of epoch's.
     """
     """Check input variable"""
     model_structure = check_model_dict(model_structure)
@@ -64,19 +65,19 @@ def train_dist(train_dataloader,
                      structure=model_structure['structure'],
                      predict=False)
     elif model_structure['dist_type'] == 'semantic':
-        model = C_DIST(n_out=model_structure['n_out'],
-                       node_input=model_structure['node_input'],
-                       node_dim=model_structure['node_dim'],
-                       edge_dim=model_structure['edge_dim'],
-                       num_layers=model_structure['num_layers'],
-                       num_heads=model_structure['num_heads'],
-                       num_cls=model_structure['num_cls'],
-                       coord_embed_sigma=model_structure['coord_embed_sigma'],
-                       dropout_rate=model_structure['dropout_rate'],
-                       structure=model_structure['structure'],
-                       predict=False)
+        model = CDIST(n_out=model_structure['n_out'],
+                      node_input=model_structure['node_input'],
+                      node_dim=model_structure['node_dim'],
+                      edge_dim=model_structure['edge_dim'],
+                      num_layers=model_structure['num_layers'],
+                      num_heads=model_structure['num_heads'],
+                      num_cls=model_structure['num_cls'],
+                      coord_embed_sigma=model_structure['coord_embed_sigma'],
+                      dropout_rate=model_structure['dropout_rate'],
+                      structure=model_structure['structure'],
+                      predict=False)
     else:
-        tardis_logo = Tardis_Logo()
+        tardis_logo = TardisLogo()
         tardis_logo(text_1=f'ValueError: Model type: {type} is not supported!')
         sys.exit()
 
@@ -118,7 +119,6 @@ def train_dist(train_dataloader,
     if checkpoint is not None:
         optimizer.load_state_dict(save_train['optimizer_state_dict'])
 
-        save_train = None
         del save_train
 
     """Optionally: Build learning rate scheduler"""
@@ -142,18 +142,18 @@ def train_dist(train_dataloader,
                             early_stop_rate=early_stop_rate,
                             checkpoint_name=model_structure['dist_type'])
     elif model_structure['dist_type'] == 'semantic':
-        train = C_DistTrainer(model=model,
-                              structure=model_structure,
-                              device=device,
-                              criterion=loss_fn,
-                              optimizer=optimizer,
-                              print_setting=print_setting,
-                              training_DataLoader=train_dataloader,
-                              validation_DataLoader=test_dataloader,
-                              lr_scheduler=learning_rate_scheduler,
-                              epochs=epochs,
-                              early_stop_rate=early_stop_rate,
-                              checkpoint_name=model_structure['dist_type'])
+        train = CDistTrainer(model=model,
+                             structure=model_structure,
+                             device=device,
+                             criterion=loss_fn,
+                             optimizer=optimizer,
+                             print_setting=print_setting,
+                             training_DataLoader=train_dataloader,
+                             validation_DataLoader=test_dataloader,
+                             lr_scheduler=learning_rate_scheduler,
+                             epochs=epochs,
+                             early_stop_rate=early_stop_rate,
+                             checkpoint_name=model_structure['dist_type'])
 
     """Train"""
     train.run_trainer()

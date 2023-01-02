@@ -1,6 +1,7 @@
 import numpy as np
 import torch
-from tardis.utils.metrics import calculate_F1
+
+from tardis.utils.metrics import calculate_f1
 from tardis.utils.trainer import BasicTrainer
 
 
@@ -75,7 +76,7 @@ class CNNTrainer(BasicTrainer):
                     img = torch.sigmoid(img)[0, 0, :]
                     mask = mask[0, 0, :]
 
-                acc, prec, recall, f1, th = calculate_F1(logits=img,
+                acc, prec, recall, f1, th = calculate_f1(logits=img,
                                                          targets=mask,
                                                          best_f1=True)
 

@@ -2,6 +2,7 @@ from typing import Optional
 
 import numpy as np
 import torch
+
 from tardis.dist_pytorch.datasets.augmentation import BuildGraph
 
 
@@ -21,10 +22,10 @@ class PatchDataSet:
     In the end, patches with a smaller number of points are marge with their neighbor
     in a way that will respect 'max_number_of_points' policy.
 
-    Output is given as a list of arrays as torch.tensor or np.ndarray.
+    Output is given as a list of arrays as torch.Tensor or np.ndarray.
 
     Args:
-        label_cls (np.ndarray): Optional class id array for each point in the
+        label_cls (np.ndarray, None): Optional class id array for each point in the
             point cloud.
         rgb (np.ndarray): Optional RGB feature array for each point in the point
             cloud.
@@ -51,7 +52,7 @@ class PatchDataSet:
         self.label_cls = label_cls
         self.rgb = rgb
 
-        # Point cloud downsampling setting
+        # Point cloud down-sampling setting
         self.DOWNSAMPLING_TH = max_number_of_points
 
         # Patch setting

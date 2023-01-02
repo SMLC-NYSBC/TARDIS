@@ -1,4 +1,5 @@
 from tardis.spindletorch.utils.build_cnn import FNet, ResUNet, UNet, UNet3Plus
+from tardis.utils.errors import TardisError
 
 
 def build_cnn_network(network_type: str,
@@ -13,12 +14,14 @@ def build_cnn_network(network_type: str,
 
     Args:
         network_type (str): Name of network [unet, resunet, unet3plus, big_unet, fnet].
-        structure (dict):
-        img_size (int):
-        prediction (bool):
+        structure (dict): Dictionary with all setting to build CNN.
+        img_size (int): Image patch size used for CNN.
+        prediction (bool): If true, build CNN in prediction patch.
     """
     assert network_type in ['unet', 'resunet', 'unet3plus', 'fnet'], \
-        f'Wrong CNN network name {network_type}'
+        TardisError('build_cnn_network',
+                    'tardis/spindletorch/spindletorch.py',
+                    f'Wrong CNN network name {network_type}')
 
     if network_type == 'unet':
         return UNet(in_channels=structure['in_channel'],

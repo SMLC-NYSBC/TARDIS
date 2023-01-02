@@ -1,10 +1,22 @@
 import cv2
 import numpy as np
-from tardis.spindletorch.data_processing.draw_mask_2D import draw_2D
+
+from tardis.spindletorch.data_processing.draw_mask_2D import draw_2d
 from tardis.spindletorch.data_processing.interpolation import interpolation
+from tardis.utils.errors import TardisError
 
 
-def fill_gaps_in_semantic(image: np.ndarray):
+def fill_gaps_in_semantic(image: np.ndarray) -> np.ndarray:
+    """
+    !DEPRECIATED! Restore semantic mask after interpolation when some labels
+        where up- down-scale incorrectly.
+
+    Args:
+        image (np.ndarray): Mask data.
+
+    Returns:
+        np.ndarray: Fixed mask with fill out holes.
+    """
     if image.ndim == 3:
         for id, _ in enumerate(image):
             des = np.array(image[id, :], dtype=image.dtype)
@@ -39,20 +51,22 @@ def draw_semantic(mask_size: tuple,
                   coordinate: np.ndarray,
                   pixel_size: float,
                   circle_size=250,
-                  multi_layer=False):
+                  multi_layer=False) -> np.ndarray:
     """
-    MODULE TO BUILD SEMANTIC MASK FROM CORRESPONDING COORDINATES
+    Module to build semantic mask from corresponding coordinates
 
     Args:
-        mask_size: Size of array that will hold created mask
-        coordinate: Segmented coordinates of a shape [Label x X x Y x (Z)]
-        pixel_size: Pixel size in Angstrom
-        circle_size: Size of a circle the label mask in Angstrom
-        multi_layer: single, or unique value for each lines
-        tqdm: If True build with progress bar
+        mask_size (tuple): Size of array that will hold created mask.
+        coordinate (np.ndarray): Segmented coordinates of a shape [Label x X x Y x (Z)].
+        pixel_size (float): Pixel size in Angstrom.
+        circle_size (int): Size of a circle the label mask in Angstrom.
+        multi_layer (bool): single, or unique value for each line.
     """
     assert coordinate.ndim == 2 and coordinate.shape[1] in [3, 4], \
-        'Included coordinate array is not of a correct shape.'
+        TardisError('TRAINING_DATASET_BUILDING_SEMANTIC',
+                    'tardis/spindletorch/data_processing',
+                    'Coordinates are of not correct shape, expected: '
+                    'shape [Label x X x Y x (Z)]')
 
     label_mask = np.zeros(mask_size)
     if pixel_size == 0:
@@ -60,10 +74,9 @@ def draw_semantic(mask_size: tuple,
 
     r = round((circle_size / 2) / pixel_size)
 
+    segment_color = [1]
     if multi_layer:
         label_mask = np.stack((label_mask,) * 3, axis=-1)
-    else:
-        segment_color = [1]
 
     # Number of segments in coordinates
     segments = np.unique(coordinate[:, 0])
@@ -81,7 +94,7 @@ def draw_semantic(mask_size: tuple,
         for j in range(len(label)):
             c = label[j, :]  # Point center
 
-            label_mask = draw_2D(r=r,
+            label_mask = draw_2d(r=r,
                                  c=c,
                                  label_mask=label_mask,
                                  segment_color=segment_color)

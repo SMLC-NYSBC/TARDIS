@@ -2,8 +2,9 @@ from typing import Optional
 
 import torch
 import torch.nn as nn
+
 from tardis.spindletorch.model.convolution import (DoubleConvolution,
-                                                       RecurrentDoubleConvolution)
+                                                   RecurrentDoubleConvolution)
 from tardis.spindletorch.model.init_weights import init_weights
 from tardis.spindletorch.utils.utils import number_of_features_per_level
 
@@ -38,13 +39,13 @@ class DecoderBlockCNN(nn.Module):
 
         """Build decoders"""
         if '3' in components:
-            self.upsample = nn.Upsample(size=size,
-                                        mode='trilinear',
-                                        align_corners=False)
+            self.upscale = nn.Upsample(size=size,
+                                       mode='trilinear',
+                                       align_corners=False)
         elif '2' in components:
-            self.upsample = nn.Upsample(size=size,
-                                        mode='bilinear',
-                                        align_corners=False)
+            self.upscale = nn.Upsample(size=size,
+                                       mode='bilinear',
+                                       align_corners=False)
 
         self.deconv_module = DoubleConvolution(in_ch=in_ch,
                                                out_ch=out_ch,
@@ -82,7 +83,7 @@ class DecoderBlockCNN(nn.Module):
         Returns:
             torch.Tensor: Image tensor after convolution.
         """
-        x = self.upsample(x)
+        x = self.upscale(x)
         x = self.deconv_module(x)
         x = encoder_features + x
 
@@ -97,7 +98,7 @@ class DecoderBlockRCNN(nn.Module):
     RCNN DECODER BUILDER
 
     Create decoder block consist of indicated number of deconvolution followed
-    by upsampling and connection with torch.cat().
+    by upscale and connection with torch.cat().
 
     Args:
         in_ch (int): Number of input channels.
@@ -122,13 +123,13 @@ class DecoderBlockRCNN(nn.Module):
 
         """Build decoders"""
         if '3' in components:
-            self.upsample = nn.Upsample(size=size,
-                                        mode='trilinear',
-                                        align_corners=False)
+            self.upscale = nn.Upsample(size=size,
+                                       mode='trilinear',
+                                       align_corners=False)
         elif '2' in components:
-            self.upsample = nn.Upsample(size=size,
-                                        mode='bilinear',
-                                        align_corners=False)
+            self.upscale = nn.Upsample(size=size,
+                                       mode='bilinear',
+                                       align_corners=False)
 
         self.deconv_module = DoubleConvolution(in_ch=in_ch,
                                                out_ch=out_ch,
@@ -174,7 +175,7 @@ class DecoderBlockRCNN(nn.Module):
         Returns:
             torch.Tensor: Image tensor after convolution.
         """
-        x = self.upsample(x)
+        x = self.upscale(x)
         x = self.deconv_module(x)
 
         x = encoder_features + x
@@ -191,7 +192,7 @@ class DecoderBlockUnet3Plus(nn.Module):
     CNN DECODER BUILDER FOR UNET3PLUS
 
     Create decoder block consist of indicated number of deconvolution followed
-    by upsampling and connection with torch.cat().
+    by upscale and connection with torch.cat().
 
     Args:
         in_ch (int): Number of input channels.
@@ -201,7 +202,7 @@ class DecoderBlockUnet3Plus(nn.Module):
         components (str): String list of components from which convolution block
             is composed.
         num_group (int): Number ofr groups inc CNN block.
-        num_layers (int): Number of CNN layers.
+        num_layer (int): Number of CNN layers.
         decoder_feature_ch (list): List of decoder outputs.
         encoder_feature_ch (list): List of encode outputs.
         num_group (int): No. of groups for nn.GroupNorm()
@@ -223,13 +224,13 @@ class DecoderBlockUnet3Plus(nn.Module):
 
         """Main Block Up-Convolution"""
         if '3' in components:
-            self.upsample = nn.Upsample(size=size,
-                                        mode='trilinear',
-                                        align_corners=False)
+            self.upscale = nn.Upsample(size=size,
+                                       mode='trilinear',
+                                       align_corners=False)
         elif '2' in components:
-            self.upsample = nn.Upsample(size=size,
-                                        mode='bilinear',
-                                        align_corners=False)
+            self.upscale = nn.Upsample(size=size,
+                                       mode='bilinear',
+                                       align_corners=False)
         self.deconv = DoubleConvolution(in_ch=in_ch,
                                         out_ch=out_ch,
                                         block_type='decoder',
@@ -273,17 +274,17 @@ class DecoderBlockUnet3Plus(nn.Module):
             self.encoder_feature_conv.append(conv)
 
         """Skip-Connection Decoders"""
-        self.decoder_feature_upsample = nn.ModuleList([])
+        self.decoder_feature_upscale = nn.ModuleList([])
         self.decoder_feature_conv = nn.ModuleList([])
         for de_in_channel in decoder_feature_ch:
             if '3' in components:
-                upsample = nn.Upsample(size=size,
-                                       mode='trilinear',
-                                       align_corners=False)
+                upscale = nn.Upsample(size=size,
+                                      mode='trilinear',
+                                      align_corners=False)
             elif '2' in components:
-                upsample = nn.Upsample(size=size,
-                                       mode='bilinear',
-                                       align_corners=False)
+                upscale = nn.Upsample(size=size,
+                                      mode='bilinear',
+                                      align_corners=False)
 
             deconv_module = DoubleConvolution(in_ch=de_in_channel,
                                               out_ch=out_ch,
@@ -292,7 +293,7 @@ class DecoderBlockUnet3Plus(nn.Module):
                                               padding=1,
                                               components=components,
                                               num_group=num_group)
-            self.decoder_feature_upsample.append(upsample)
+            self.decoder_feature_upscale.append(upscale)
             self.decoder_feature_conv.append(deconv_module)
 
         """Optional Dropout"""
@@ -318,15 +319,16 @@ class DecoderBlockUnet3Plus(nn.Module):
         Forward CNN decoder block for Unet3Plus
 
         Args:
-            encoder_features (torch.Tensor): Residual connection.
             x (torch.Tensor): Image tensor before convolution.
+            decoder_features (list): Residual connection from decoder.
+            encoder_features (list): Residual connection from encoder.
 
         Returns:
             torch.Tensor: Image tensor after convolution.
         """
 
         """Main Block"""
-        x = self.upsample(x)
+        x = self.upscale(x)
         x = self.deconv(x)
 
         """Skip-Connections Encoder"""
@@ -348,7 +350,7 @@ class DecoderBlockUnet3Plus(nn.Module):
         """Skip-Connections Decoder"""
         x_de_features = []
         for i, decoder in enumerate(decoder_features):
-            x_de = self.decoder_feature_upsample[i](decoder)
+            x_de = self.decoder_feature_upscale[i](decoder)
             x_de = self.decoder_feature_conv[i](x_de)
             x_de_features.insert(0, x_de)
 
@@ -382,16 +384,17 @@ def build_decoder(conv_layers: int,
     Decoder wrapper for entire CNN model.
 
     Create decoder block from number of convolution and convolution modules.
-    Decoder block is followed by upsampling(interpolation) and joining with
+    Decoder block is followed by upscale(interpolation) and joining with
     torch.cat()
 
     Args:
         conv_layers (int): Number of deconvolution layers.
         conv_layer_scaler (int): Number of channel by which each CNN block is scaled up.
         components (str): Components that are used for deconvolution block.
-        sizes (list): List of tensor sizes for upscaling.
+        sizes (list): List of tensor sizes for upscale.
         num_group (int): Num. of groups for the nn.GroupNorm.
             None -> if nn.GroupNorm is not used.
+        dropout (float, Optional): Dropout value.
         deconv_module: Module of the deconvolution for decoder.
 
     Returns:

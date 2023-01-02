@@ -87,7 +87,9 @@ class DiceLoss(nn.Module):
 
         # Calculate dice loss
         intersection = (logits * targets).sum()
-        dice = (2 * intersection + smooth) / (logits.square().sum() + targets.square().sum() + smooth)
+        dice = (2 * intersection + smooth) / (logits.square().sum() +
+                                              targets.square().sum() +
+                                              smooth)
 
         return 1 - dice
 
@@ -95,25 +97,21 @@ class DiceLoss(nn.Module):
 class BCEDiceLoss(nn.Module):
     """
     DICE BCE COMBO LOSS FUNCTION
-
-    Args:
-        alpha (float): Optional alpha normalizing factor for Dice loss.
     """
 
-    def __init__(self,
-                 alpha=1.0):
+    def __init__(self):
         super(BCEDiceLoss, self).__init__()
         self.bce = BCELoss()
-        self.dice = DiceLoss(alpha=alpha)
+        self.dice = DiceLoss()
 
     def forward(self,
                 inputs: torch.Tensor,
-                targets: torch. Tensor) -> torch.Tensor:
+                targets: torch.Tensor) -> torch.Tensor:
         """
         Forward loos function
 
         Args:
-            logits (torch.Tensor): Logits of a shape
+            inputs (torch.Tensor): Logits of a shape
                 [Batch x Channels x Length x Length].
             targets (torch.Tensor): Target of a shape
                 [Batch x Channels x Length x Length].
@@ -211,14 +209,14 @@ class AdaptiveDiceLoss(nn.Module):
         self.alpha = alpha
 
     def forward(self,
-                inputs,
-                targets,
+                inputs: torch.Tensor,
+                targets: torch.Tensor,
                 smooth=1e-16) -> torch.Tensor:
         """
         Forward loos function
 
         Args:
-            logits (torch.Tensor):
+            inputs (torch.Tensor):
                 logits of a shape [Batch x Channels x Length x Length].
             targets (torch.Tensor):
                 target of a shape [Batch x Channels x Length x Length].
@@ -234,7 +232,9 @@ class AdaptiveDiceLoss(nn.Module):
         inputs = ((1 - inputs) ** self.alpha) * inputs
 
         intersection = (inputs * targets).sum()
-        dice = (2. * intersection + smooth) / (inputs.square().sum() + targets.square().sum() + smooth)
+        dice = (2. * intersection + smooth) / (inputs.square().sum() +
+                                               targets.square().sum() +
+                                               smooth)
 
         return 1 - dice
 

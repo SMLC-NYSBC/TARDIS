@@ -3,14 +3,15 @@ from os import getcwd
 from typing import Optional
 
 import torch
+from torch import optim
+from torch.optim.lr_scheduler import StepLR
+
 from tardis.spindletorch.spindletorch import build_cnn_network
 from tardis.spindletorch.trainer import CNNTrainer
 from tardis.spindletorch.utils.utils import check_model_dict
 from tardis.utils.device import get_device
-from tardis.utils.logo import Tardis_Logo
+from tardis.utils.logo import TardisLogo
 from tardis.utils.losses import BCELoss, CELoss, DiceLoss
-from torch import optim
-from torch.optim.lr_scheduler import StepLR
 
 # Setting for stable release to turn off all debug APIs
 torch.backends.cudnn.benchmark = True
@@ -40,10 +41,10 @@ def train_cnn(train_dataloader,
         loss_function (str): Type of loss function.
         learning_rate (float): Learning rate.
         learning_rate_scheduler (bool): If True, StepLR is used with training.
-        early_stop_rate (int): Define max. number of epoches without improvements
+        early_stop_rate (int): Define max. number of epoch's without improvements
         after which training is stopped.
         device (torch.device): Device on which model is trained.
-        epochs (int): Max number of epoches.
+        epochs (int): Max number of epoch's.
     """
     """Check input variable"""
     model_structure = check_model_dict(model_structure)
@@ -58,7 +59,7 @@ def train_cnn(train_dataloader,
                                   img_size=model_structure['img_size'],
                                   prediction=False)
     except:
-        tardis_logo = Tardis_Logo()
+        tardis_logo = TardisLogo()
         tardis_logo(text_1=f'CNNModelError: Model type: {type} was not build correctly!')
         sys.exit()
 
@@ -87,6 +88,7 @@ def train_cnn(train_dataloader,
     model = model.to(device)
 
     """Define loss function for training"""
+    loss_fn = BCELoss()
     if loss_function == "dice":
         loss_fn = DiceLoss()
     elif loss_function == "bce":

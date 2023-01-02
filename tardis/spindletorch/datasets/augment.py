@@ -1,7 +1,10 @@
-from typing import Optional
+from typing import Optional, Tuple, Union
 
 import numpy as np
+from numpy import ndarray
 from skimage import exposure
+
+from tardis.utils.errors import TardisError
 
 
 class CenterCrop:
@@ -11,12 +14,15 @@ class CenterCrop:
     Rescale the image and mask to a given size for 3D [DxHxW], or 2D images [HxW].
 
     Args:
-        size (int): Output size of image in DHW/HW.
+        size (tuple): Output size of image in DHW/HW.
     """
 
     def __init__(self,
                  size: tuple):
-        assert len(size) in [2, 3]
+        assert len(size) in [2, 3], \
+            TardisError('CenterCrop',
+                        'tardis/spindletorch/dataset/augment.py',
+                        'Image crop supported only for 3D and 2D!')
         self.size = size
 
         if len(self.size) == 2:
@@ -24,7 +30,7 @@ class CenterCrop:
 
     def __call__(self,
                  x: np.ndarray,
-                 y: Optional[np.ndarray] = None) -> np.ndarray:
+                 y: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray]:
         """
         Call for centre crop.
 
@@ -35,9 +41,15 @@ class CenterCrop:
         Returns:
             np.ndarray: Cropped array.
         """
-        assert x.ndim in [2, 3]
+        assert x.ndim in [2, 3], \
+            TardisError('CenterCrop',
+                        'tardis/spindletorch/dataset/augment.py',
+                        'Image crop supported only for 3D and 2D!')
         if y is not None:
-            y.ndim in [2, 3]
+            assert y.ndim in [2, 3], \
+                TardisError('CenterCrop',
+                            'tardis/spindletorch/dataset/augment.py',
+                            'Image crop supported only for 3D and 2D!')
 
         if x.ndim == 3:
             d, h, w = x.shape
@@ -85,14 +97,20 @@ class SimpleNormalize:
         Returns:
             np.ndarray: Normalized array.
         """
-        assert x.dtype == np.uint8, f'Wrong datatype {x.dtype}!'
+        assert x.dtype == np.uint8, \
+            TardisError('SimpleNormalize',
+                        'tardis/spindletorch/dataset/augment.py',
+                        f'Wrong datatype {x.dtype}!')
 
-        # Don't normalized if image is already between 0 and 1
+        # Don't normalize if image is already between 0 and 1
         if x.min() >= 0 and x.max() <= 1:
             return x
 
         assert x.min() >= 0 and x.max() <= 255, \
-            f'Dtype: {x.dtype}, Min: {x.min()}, Max: {x.max()}. Values not in range'
+            TardisError('CenterCrop',
+                        'tardis/spindletorch/dataset/augment.py',
+                        f'Dtype: {x.dtype}, Min: {x.min()}, Max: {x.max()}. '
+                        'Values not in range')
         x = x / 255
 
         return x.astype(np.float32)
@@ -126,7 +144,7 @@ class MinMaxNormalize:
                 x = (x - 0) / 65535
             elif MAX <= 4294967295:
                 x = (x - 0) / 4294967295
-        elif MIN < 0 and MIN >= -1 and MAX <= 1:
+        elif 0 > MIN >= -1 and MAX <= 1:
             x = (x + 1) / 2
 
         return x.astype(np.float32)
@@ -139,12 +157,12 @@ class RescaleNormalize:
     Rescale intensity with top% and bottom% percentiles as default
 
     Args:
-        range: Histogram percentiles range crop.
+        clip_range: Histogram percentiles range crop.
     """
 
     def __init__(self,
-                 range=(2, 98)):
-        self.range = range
+                 clip_range=(2, 98)):
+        self.range = clip_range
 
     def __call__(self,
                  x: np.ndarray) -> np.ndarray:
@@ -181,7 +199,7 @@ class RandomFlip:
 
     def __call__(self,
                  x: np.ndarray,
-                 y: np.ndarray) -> np.ndarray:
+                 y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
         Call for random flip.
 
@@ -190,7 +208,7 @@ class RandomFlip:
             y: 2D/3D label mask array.
 
         Returns:
-            np.ndarray: Flipped array.
+            np.ndarray, np.ndarray: Flipped array.
         """
         random_state = np.random.randint(0, 9)
         if x.ndim == 2 or y.ndim == 2:
@@ -198,9 +216,9 @@ class RandomFlip:
 
         if random_state <= 3:
             random_state = 0
-        elif random_state <= 6 and random_state > 3:
+        elif 6 >= random_state > 3:
             random_state = 1
-        elif random_state <= 9 and random_state > 6:
+        elif 9 >= random_state > 6:
             random_state = 2
 
         return np.flip(x, random_state), np.flip(y, random_state)
@@ -210,7 +228,7 @@ class RandomRotation:
     """
     MULTIPLE 90 RANDOM ROTATION
 
-    Perform 90, 180 or 270 degree rotation for 2D or 3D in left or right
+    Perform 90, 180 or 270-degree rotation for 2D or 3D in left or right
 
         - 0 is 90, 1 is 180, 2 is 270
         - 0 is left, 1 is right
@@ -221,7 +239,7 @@ class RandomRotation:
 
     def __call__(self,
                  x: np.ndarray,
-                 y: np.ndarray) -> np.ndarray:
+                 y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
         Call for random rotation.
 
@@ -230,14 +248,14 @@ class RandomRotation:
             y: 2D/3D label mask array.
 
         Returns:
-            np.ndarray: Rotated array.
+            np.ndarray, np.ndarray: Rotated array.
         """
         random_rotation = np.random.randint(0, 9)
         if random_rotation <= 3:
             random_rotation = 0
-        elif random_rotation <= 6 and random_rotation > 3:
+        elif 6 >= random_rotation > 3:
             random_rotation = 1
-        elif random_rotation <= 9 and random_rotation > 6:
+        elif 9 >= random_rotation > 6:
             random_rotation = 2
 
         random_direction = np.random.randint(0, 10)
@@ -258,8 +276,7 @@ class RandomRotation:
             elif x.ndim == 3:
                 axis = (2, 1)
 
-        return np.rot90(x, random_rotation, axis), \
-            np.rot90(y, random_rotation, axis)
+        return np.rot90(x, random_rotation, axis), np.rot90(y, random_rotation, axis)
 
 
 class ComposeRandomTransformation:
@@ -280,7 +297,7 @@ class ComposeRandomTransformation:
 
     def __call__(self,
                  x: np.ndarray,
-                 y: np.ndarray) -> np.ndarray:
+                 y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
         Call for random transformation.
 
@@ -289,12 +306,12 @@ class ComposeRandomTransformation:
             y: 2D/3D label mask array.
 
         Returns:
-            np.ndarray: Transformed array.
+            np.ndarray, np.ndarray: Transformed array.
         """
         # Run randomize transformation
         for _ in range(self.random_repetition):
-            random_transf = np.random.randint(0, len(self.transforms))
-            transform = self.transforms[random_transf]
+            random_transform = np.random.randint(0, len(self.transforms))
+            transform = self.transforms[random_transform]
             x, y = transform(x, y)
 
         return x, y
@@ -302,9 +319,9 @@ class ComposeRandomTransformation:
 
 def preprocess(image: np.ndarray,
                transformation: bool,
-               size: int,
+               size: Optional[tuple] = int,
                mask: Optional[np.ndarray] = None,
-               output_dim_mask=1) -> np.ndarray:
+               output_dim_mask=1) -> Union[Tuple[ndarray, ndarray], ndarray]:
     """
     Module to augment dataset.
 
@@ -313,14 +330,17 @@ def preprocess(image: np.ndarray,
         mask (np.ndarray, optional): 2D/3D array with semantic labels.
         transformation (bool): If True perform transformation on img and mask with
             same random effect.
-        size (int): Image size output for center crop.
+        size (tuple, int): Image size output for center crop.
         output_dim_mask (int): Number of output channel dimensions for label mask.
 
     Returns:
         np.ndarray: Image and optionally label mask after transformation.
     """
     # Check if image is 2D or 3D
-    assert image.ndim in [2, 3]
+    assert image.ndim in [2, 3], \
+        TardisError('preprocess',
+                    'tardis/spindletorch/dataset/augment.py',
+                    'Image crop supported only for 3D and 2D!')
 
     if isinstance(size, tuple):
         if sum(size) / len(size) == size[0]:  # Check if image has uniform size

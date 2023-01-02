@@ -1,10 +1,11 @@
-import hashlib
 from typing import Optional
 
 import numpy as np
 
+from tardis.utils.errors import TardisError
 
-class EarlyStopping():
+
+class EarlyStopping:
     """
     Early stopping to stop the training when the loss does not improve after
     certain epochs.
@@ -29,7 +30,9 @@ class EarlyStopping():
                  val_loss: Optional[float] = None,
                  f1_score: Optional[float] = None):
         assert val_loss is not None or f1_score is not None, \
-            'Validation loss or F1 score is missing!'
+            TardisError('EarlyStopping',
+                        'tardis/utils/utils.py',
+                        'Validation loss or F1 score is missing!')
 
         if val_loss is not None:
             if self.best_loss is None:

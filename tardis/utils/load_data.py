@@ -1,13 +1,16 @@
 import struct
 from collections import namedtuple
 from os.path import isfile
-from typing import Optional
+from typing import Optional, Tuple, Union
 
 import numpy as np
 import open3d as o3d
 import tifffile.tifffile as tif
+from numpy import ndarray
 from sklearn.neighbors import KDTree
+
 from tardis.spindletorch.datasets.augment import RescaleNormalize
+from tardis.utils.errors import TardisError
 
 
 def load_image(image: str,
@@ -17,10 +20,13 @@ def load_image(image: str,
 
     Args:
         image (str): Image file directory.
+        normalize (bool): Rescale histogram to 1% - 99% percentile.
 
     Returns:
         np.ndarray, float: Image array and associated pixel size.
     """
+    px = 1.0
+
     if image.endswith(('.tif', '.tiff')):
         image, px = import_tiff(image)
     elif image.endswith(('.mrc', '.rec', '.map')):
@@ -29,7 +35,7 @@ def load_image(image: str,
         image, px, _, _ = import_am(image)
 
     if normalize:
-        norm = RescaleNormalize(range=(1, 99))
+        norm = RescaleNormalize(clip_range=(1, 99))
         image = norm(image)
 
     return image, px
@@ -41,7 +47,7 @@ class ImportDataFromAmira:
 
     This class read any .am file and if the spatial graph is recognized it is converted
     into a numpy array as (N, 4) with class ids and coordinates for XYZ.
-    Also due to Amira's design, file properties are encoded only in the image file
+    Also, due to Amira's design, file properties are encoded only in the image file
     therefore in order to properly ready spatial graph, class optionally requires
     amira binary or ASCII image file which contains transformation properties and
     pixel size. If the image file is not included, the spatial graph is returned without
@@ -97,9 +103,11 @@ class ImportDataFromAmira:
 
         # Find in the line directory that starts with @..
         try:
-            segment_start = int(self.spatial_graph.index("@" + str(segment_start[0]))) + 1
+            segment_start = int(self.spatial_graph.index("@" +
+                                                         str(segment_start[0]))) + 1
         except ValueError:
-            segment_start = int(self.spatial_graph.index("@" + str(segment_start[0]) + " ")) + 1
+            segment_start = int(self.spatial_graph.index("@" +
+                                                         str(segment_start[0]) + " ")) + 1
 
         # Find line define EDGE ... <- number indicate number of segments
         segments = str([word for word in self.spatial_graph if
@@ -135,11 +143,13 @@ class ImportDataFromAmira:
         points_start = "".join((ch if ch in "0123456789" else " ")
                                for ch in points)
         points_start = [int(i) for i in points_start.split()]
-        # Find line that start with the directory @.. and select last one
+        # Find line that start with the directory @... and select last one
         try:
-            points_start = int(self.spatial_graph.index("@" + str(points_start[1]))) + 1
+            points_start = int(self.spatial_graph.index("@" +
+                                                        str(points_start[1]))) + 1
         except ValueError:
-            points_start = int(self.spatial_graph.index("@" + str(points_start[1]) + " ")) + 1
+            points_start = int(self.spatial_graph.index("@" +
+                                                        str(points_start[1]) + " ")) + 1
 
         # Find line define POINT ... <- number indicate number of points
         points = str([word for word in self.spatial_graph
@@ -190,7 +200,7 @@ class ImportDataFromAmira:
         points = self.get_points()
         segments = self.__get_segments()
 
-        segmentation = np.zeros((points.shape[0], ))
+        segmentation = np.zeros((points.shape[0],))
         id = 0
         idx = 0
         for i in segments:
@@ -228,11 +238,14 @@ class ImportDataFromAmira:
 
             # Find in the line directory that starts with @..
             try:
-                label_start = int(self.spatial_graph.index("@" + str(label_start[0]))) + 1
+                label_start = int(self.spatial_graph.index("@" +
+                                                           str(label_start[0]))) + 1
             except ValueError:
-                label_start = int(self.spatial_graph.index("@" + str(label_start[0]) + " ")) + 1
+                label_start = int(self.spatial_graph.index("@" +
+                                                           str(label_start[0]) + " ")) + 1
 
-            label_finish = "".join((ch if ch in "0123456789" else " ") for ch in segment_no)
+            label_finish = "".join((ch if ch in "0123456789" else " ")
+                                   for ch in segment_no)
             label_finish = [int(i) for i in label_finish.split()]
 
             label_no = int(label_finish[0])
@@ -449,6 +462,8 @@ def mrc_mode(mode: int,
     Returns:
         np.dtype: Mode as np.dtype.
     """
+    dtype = None
+
     if mode == 0:
         if amin >= 0:
             dtype = np.uint8  # Unassigned 8-bit integer (0 - 254)
@@ -465,7 +480,7 @@ def mrc_mode(mode: int,
     elif mode == 6:
         dtype = np.uint16  # Unassigned int16
     elif mode == 12:
-        dtype == np.float16  # Signed 16-bit half-precision real
+        dtype = np.float16  # Signed 16-bit half-precision real
     elif mode == 16:
         dtype = '3B'  # RGB values
     elif mode == 101:
@@ -502,17 +517,19 @@ def import_am(am_file: str):
     nx, ny, nz = int(size[0]), int(size[1]), int(size[2])
 
     # Fix for ET that were trimmed
-    # Trimmed ET boundarybox has wrong size
-    bb = str([word for word in am.split('\n') if word.startswith('    BoundingBox')]).split(" ")
+    #  ET boundary box has wrong size
+    bb = str([word for word in am.split('\n')
+              if word.startswith('    BoundingBox')]).split(" ")
 
     if len(bb) == 0:
         physical_size = np.array((float(bb[6]),
                                   float(bb[8]),
                                   float(bb[10][:-3])))
-        binary_start = str.find(am, "\n@1\n") + 4
+        transformation = np.array((0.0, 0.0, 0.0))
     else:
         am = open(am_file, 'r', encoding="iso-8859-1").read(20000)
-        bb = str([word for word in am.split('\n') if word.startswith('    BoundingBox')]).split(" ")
+        bb = str([word for word in am.split('\n')
+                  if word.startswith('    BoundingBox')]).split(" ")
 
         physical_size = np.array((float(bb[6]),
                                   float(bb[8]),
@@ -523,7 +540,8 @@ def import_am(am_file: str):
                                    float(bb[9])))
 
     try:
-        coordinate = str([word for word in am.split('\n') if word.startswith('        Coordinates')]).split(" ")[9][1:2]
+        coordinate = str([word for word in am.split('\n')
+                          if word.startswith('        Coordinates')]).split(" ")[9][1:2]
     except IndexError:
         coordinate = None
 
@@ -574,15 +592,15 @@ def import_am(am_file: str):
 
 
 def load_ply_scannet(ply: str,
-                     downsample: Optional[None] = 0.1,
-                     color: Optional[str] = None) -> np.ndarray:
+                     downscaling=0,
+                     color: Optional[str] = None) -> Union[Tuple[ndarray, ndarray],
+                                                           ndarray]:
     """
     Function to read .ply files.
 
     Args:
         ply (str): File directory.
-        downsample (None): Downsampling point cloud by fixing voxel size defaults
-            to 0.1.
+        downscaling (float): Downscaling point cloud by fixing voxel size defaults to 0.1.
         color (str, optional): Optional color feature defaults to None.
 
     Returns:
@@ -636,22 +654,25 @@ def load_ply_scannet(ply: str,
         40: (100., 85., 144.),
     }
 
-    # Downsample point cloud with labels
-    if downsample is not None:
-        pcd = pcd.voxel_down_sample(voxel_size=downsample)
+    # Downscaling point cloud with labels
+    if downscaling > 0:
+        pcd = pcd.voxel_down_sample(voxel_size=downscaling)
         coord = np.asarray(pcd.points)
     else:
         coord = coord_org
 
-    # Retrive Node RGB features
+    # Retrieve Node RGB features
     if color is not None:
         rgb = o3d.io.read_point_cloud(color)
-        if downsample is not None:
-            rgb = rgb.voxel_down_sample(voxel_size=downsample)
+        if downscaling > 0:
+            rgb = rgb.voxel_down_sample(voxel_size=downscaling)
         rgb = np.asarray(rgb.colors)
-        assert coord.shape == rgb.shape  # RGB must be the same as coord
+        assert coord.shape == rgb.shape, \
+            TardisError('load_ply_scannet',
+                        'tardis/utils/load_data.py',
+                        'RGB must be the same as coord!')
 
-    # Retrive ScanNet v2 labels after downsampling
+    # Retrieve ScanNet v2 labels after downscaling
     cls_id = []
     tree = KDTree(coord_org, leaf_size=coord_org.shape[0])
     for i in coord:
@@ -682,14 +703,14 @@ def load_ply_scannet(ply: str,
 
 
 def load_ply_partnet(ply,
-                     downsample: Optional[None] = 0.035) -> np.ndarray:
+                     downscaling=0) -> np.ndarray:
     """
     Function to read .ply files.
 
     Args:
         ply (str): File directory.
-        downsample (None, optional): Downsampling point cloud by fixing voxel
-            size defaults to 0.035.
+        downscaling (float): Downscaling point cloud by fixing voxel size
+            defaults to 0.035.
 
     Returns:
         np.ndarray: Labeled point cloud coordinates.
@@ -700,8 +721,8 @@ def load_ply_partnet(ply,
     coord_org = np.asarray(pcd.points)
     label_org = np.asarray(pcd.colors)
 
-    if downsample is not None:
-        pcd = pcd.voxel_down_sample(voxel_size=downsample)
+    if downscaling > 0:
+        pcd = pcd.voxel_down_sample(voxel_size=downscaling)
     coord = np.asarray(pcd.points)
 
     label_id = []

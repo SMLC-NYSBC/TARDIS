@@ -23,7 +23,7 @@ def get_weights_aws(network: str,
 
     Weights are stored in ~/.tardis_pytorch with the same convention and .txt
     file with file header information to identified update status for local file
-    if the network connection can be establish.
+    if the network connection can be established.
 
     Args:
         network (str): Type of network for which weights are requested.
@@ -50,10 +50,9 @@ def get_weights_aws(network: str,
     if aws_check_with_temp(model_name=[network, subtype, model]):
         return join(dir, 'model_weights.pth')
     else:
-        weight = requests.get(
-            f'https://tardis-weigths.s3.amazonaws.com/{network}_{subtype}/'
-            f'{model}/model_weights.pth'
-        )
+        weight = requests.get('https://tardis-weigths.s3.amazonaws.com/'
+                              f'{network}_{subtype}/'
+                              f'{model}/model_weights.pth')
 
     """Save temp weights"""
     if not isdir(join(expanduser('~'), '.tardis_pytorch')):
@@ -62,9 +61,12 @@ def get_weights_aws(network: str,
     if not isdir(dir):
         makedirs(dir)
 
-    open(join(dir, 'model_weights.pth'), 'wb').write(weight.content)  # Save weights
+    # Save weights
+    open(join(dir, 'model_weights.pth'), 'wb').write(weight.content)
+
+    # Save header
     with open(join(dir, 'model_header.json'), 'w') as f:
-        json.dump(dict(weight.headers), f)  # Save header
+        json.dump(dict(weight.headers), f)
 
     print(f'Pre-Trained model download from S3 and saved/updated in {dir}')
 
@@ -81,15 +83,13 @@ def aws_check_with_temp(model_name: list) -> bool:
         model_name (list): Name of the NN model.
 
     Returns:
-        bool: If True, local file is up to data.
+        bool: If True, local file is up-to-date.
     """
     """Check if temp dir exist"""
     if not isdir(join(expanduser('~'), '.tardis_pytorch')):
         return False  # No weight, first Tardis run, download from aws
 
     """Check for stored file header in ~/tardis_pytorch/..."""
-    save = None
-
     if not isfile(join(expanduser('~'),
                        '.tardis_pytorch',
                        f'{model_name[0]}_{model_name[1]}',
@@ -114,13 +114,13 @@ def aws_check_with_temp(model_name: list) -> bool:
                 save = None
 
     """Compare stored file with file stored on aws"""
-    aws = None
     if save is None:
         return False  # Error loading json, download from aws
     else:
         try:
             weight = requests.get(
-                f'https://tardis-weigths.s3.amazonaws.com/{model_name[0]}_{model_name[1]}/'
+                'https://tardis-weigths.s3.amazonaws.com/'
+                f'{model_name[0]}_{model_name[1]}/'
                 f'{model_name[2]}/model_weights.pth',
                 stream=True
             )

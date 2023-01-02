@@ -1,9 +1,11 @@
+from typing import Tuple
+
 import numpy as np
 import open3d as o3d
 
 
-def _DataSetFormat(coord: np.ndarray,
-                   segmented: bool):
+def _dataset_format(coord: np.ndarray,
+                    segmented: bool) -> Tuple[np.ndarray, bool]:
     """
     Check for an array format and correct 2D datasets to 3D.
 
@@ -116,7 +118,7 @@ def _rgb(coord: np.ndarray,
     return rgb
 
 
-def SegmentToGraph(coord: np.ndarray) -> list:
+def segment_to_graph(coord: np.ndarray) -> list:
     """
     Build filament vector lines for open3D.
 
@@ -124,7 +126,6 @@ def SegmentToGraph(coord: np.ndarray) -> list:
         coord (np.ndarray): 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y].
     """
     graph_list = []
-    start = 0
     stop = 0
 
     for i in np.unique(coord[:, 0]):
@@ -162,8 +163,8 @@ def VisualizePointCloud(coord: np.ndarray,
         coord (np.ndarray): 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y].
         segmented (bool): If True expect (s) in a data format as segmented values.
     """
-    coord, check = _DataSetFormat(coord=coord,
-                                  segmented=segmented)
+    coord, check = _dataset_format(coord=coord,
+                                   segmented=segmented)
 
     if check:
         pcd = o3d.geometry.PointCloud()
@@ -193,11 +194,11 @@ def VisualizeFilaments(coord: np.ndarray):
     Args:
         coord (np.ndarray): 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y].
     """
-    coord, check = _DataSetFormat(coord=coord,
-                                  segmented=True)
+    coord, check = _dataset_format(coord=coord,
+                                   segmented=True)
 
     if check:
-        graph = SegmentToGraph(coord=coord)
+        graph = segment_to_graph(coord=coord)
         line_set = o3d.geometry.LineSet()
 
         line_set.points = o3d.utility.Vector3dVector(coord[:, 1:])
@@ -217,8 +218,8 @@ def VisualizeScanNet(coord: np.ndarray,
         coord (np.ndarray): 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y].
         segmented (bool): If True expect (s) in a data format as segmented values.
     """
-    coord, check = _DataSetFormat(coord=coord,
-                                  segmented=segmented)
+    coord, check = _dataset_format(coord=coord,
+                                   segmented=segmented)
 
     if check:
         pcd = o3d.geometry.PointCloud()

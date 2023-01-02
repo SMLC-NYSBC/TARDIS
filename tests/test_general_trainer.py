@@ -2,82 +2,83 @@ import shutil
 
 import torch
 import torch.nn as nn
-from tardis.dist_pytorch.trainer import C_DistTrainer, DistTrainer
+from torch.utils.data import DataLoader
+
+from tardis.dist_pytorch.trainer import CDistTrainer, DistTrainer
 from tardis.spindletorch.trainer import CNNTrainer
 from tardis.utils.device import get_device
 from tardis.utils.trainer import BasicTrainer
-from torch.utils.data import DataLoader
 
 
 def test_trainer_init():
-    dl = BasicTrainer(model=nn.Conv1d(1, 2, 3),
-                      structure={},
-                      device='cpu',
-                      criterion=None,
-                      optimizer=None,
-                      print_setting=[],
-                      training_DataLoader=None,
-                      validation_DataLoader=None,
-                      lr_scheduler=None,
-                      epochs=100,
-                      early_stop_rate=10,
-                      checkpoint_name='test')
+    BasicTrainer(model=nn.Conv1d(1, 2, 3),
+                 structure={},
+                 device='cpu',
+                 criterion=None,
+                 optimizer=None,
+                 print_setting=(),
+                 training_DataLoader=None,
+                 validation_DataLoader=None,
+                 lr_scheduler=None,
+                 epochs=100,
+                 early_stop_rate=10,
+                 checkpoint_name='test')
 
-    dl = CNNTrainer(model=nn.Conv1d(1, 2, 3),
-                    device='cpu',
-                    criterion=None,
-                    optimizer=None,
-                    print_setting=[],
-                    training_DataLoader=None,
-                    validation_DataLoader=None,
-                    lr_scheduler=None,
-                    epochs=100,
-                    early_stop_rate=10,
-                    checkpoint_name='test',
-                    structure={'cnn_type': 'unet'},
-                    classification=False)
+    CNNTrainer(model=nn.Conv1d(1, 2, 3),
+               device='cpu',
+               criterion=None,
+               optimizer=None,
+               print_setting=[],
+               training_DataLoader=None,
+               validation_DataLoader=None,
+               lr_scheduler=None,
+               epochs=100,
+               early_stop_rate=10,
+               checkpoint_name='test',
+               structure={'cnn_type': 'unet'},
+               classification=False)
 
-    dl = DistTrainer(model=nn.Conv1d(1, 2, 3),
-                     structure={'dist_type': 'instance',
-                                'node_input': 0},
-                     device='cpu',
-                     criterion=None,
-                     optimizer=None,
-                     print_setting=[],
-                     training_DataLoader=None,
-                     validation_DataLoader=None,
-                     lr_scheduler=None,
-                     epochs=100,
-                     early_stop_rate=10,
-                     checkpoint_name='test')
+    DistTrainer(model=nn.Conv1d(1, 2, 3),
+                structure={'dist_type': 'instance',
+                           'node_input': 0},
+                device='cpu',
+                criterion=None,
+                optimizer=None,
+                print_setting=[],
+                training_DataLoader=None,
+                validation_DataLoader=None,
+                lr_scheduler=None,
+                epochs=100,
+                early_stop_rate=10,
+                checkpoint_name='test')
 
-    dl = C_DistTrainer(model=nn.Conv1d(1, 2, 3),
-                       structure={'node_input': 0,
-                                  'dist_type': 'semantic'},
-                       device='cpu',
-                       criterion=None,
-                       optimizer=None,
-                       print_setting=[],
-                       training_DataLoader=None,
-                       validation_DataLoader=None,
-                       lr_scheduler=None,
-                       epochs=100,
-                       early_stop_rate=10,
-                       checkpoint_name='test')
+    CDistTrainer(model=nn.Conv1d(1, 2, 3),
+                 structure={'node_input': 0,
+                             'dist_type': 'semantic'},
+                 device='cpu',
+                 criterion=None,
+                 optimizer=None,
+                 print_setting=[],
+                 training_DataLoader=None,
+                 validation_DataLoader=None,
+                 lr_scheduler=None,
+                 epochs=100,
+                 early_stop_rate=10,
+                 checkpoint_name='test')
 
-    dl = C_DistTrainer(model=nn.Conv1d(1, 2, 3),
-                       structure={'node_input': 0,
-                                  'dist_type': 'instance'},
-                       device='cpu',
-                       criterion=None,
-                       optimizer=None,
-                       print_setting=[],
-                       training_DataLoader=None,
-                       validation_DataLoader=None,
-                       lr_scheduler=None,
-                       epochs=100,
-                       early_stop_rate=10,
-                       checkpoint_name='test')
+    CDistTrainer(model=nn.Conv1d(1, 2, 3),
+                 structure={'node_input': 0,
+                             'dist_type': 'instance'},
+                 device='cpu',
+                 criterion=None,
+                 optimizer=None,
+                 print_setting=[],
+                 training_DataLoader=None,
+                 validation_DataLoader=None,
+                 lr_scheduler=None,
+                 epochs=100,
+                 early_stop_rate=10,
+                 checkpoint_name='test')
 
 
 def test_trainer_utils():
@@ -86,7 +87,7 @@ def test_trainer_utils():
                       device=get_device('cpu'),
                       criterion=None,
                       optimizer=None,
-                      print_setting=['test', 'test', 'test', 'test', 'test'],
+                      print_setting=('test', 'test', 'test', 'test', 'test'),
                       training_DataLoader=DataLoader(dataset=torch.rand(1, 10, 10)),
                       validation_DataLoader=DataLoader(dataset=torch.rand(1, 10, 10)),
                       lr_scheduler=None,

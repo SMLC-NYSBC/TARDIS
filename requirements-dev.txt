@@ -1,5 +1,5 @@
-flake8>=4.0.1
-setuptools>=61.2.0
+flake8>=5.0.4
+setuptools>=65.5.0
 furo>=2022.9.29
 pytest>=7.2.0
 matplotlib>=3.5.3

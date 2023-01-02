@@ -2,20 +2,20 @@ import shutil
 from os.path import join
 
 import numpy as np
+
 from tardis.dist_pytorch.datasets.augmentation import preprocess_data
 from tardis.dist_pytorch.datasets.dataloader import (FilamentDataset,
-                                                         PartnetDataset,
-                                                         ScannetColorDataset,
-                                                         ScannetDataset)
+                                                     PartnetDataset,
+                                                     ScannetColorDataset,
+                                                     ScannetDataset)
 
 
 class TestDataLoader:
     dir = join('tests', 'test_data', 'data_loader')
-    coord_dir = join(dir, 'filament_mt', 'train', 'masks',
-                     'am3D.CorrelationLines.am')
+    coord_dir = join(dir, 'filament_mt', 'train', 'masks', 'am3D.CorrelationLines.am')
     img_dir = join('tests', 'test_data', 'data_loader')
 
-    def test_preprocess_3Dimg(self):
+    def test_preprocess_3d_img(self):
         coord, img = preprocess_data(coord=self.coord_dir,
                                      image=join(self.img_dir, 'filament_mt',
                                                 'train', 'imgs', 'am3D.am'),
@@ -23,157 +23,152 @@ class TestDataLoader:
                                      size=64,
                                      normalization='simple')
         assert coord.ndim == 2
-        assert coord.shape == (10, 4), \
-            f'Coord of wrong shape {coord.shape}'
-        assert img.shape == (10, 262144), \
-            f'img of wrong shape {img.shape}'
+        assert coord.shape == (10, 4), f'Coord of wrong shape {coord.shape}'
+        assert img.shape == (10, 262144), f'img of wrong shape {img.shape}'
 
-    def test_preprocess_3Dseg(self):
+    def test_preprocess_3d_seg(self):
         coord, img = preprocess_data(coord=self.coord_dir,
                                      image=None,
                                      include_label=True,
                                      size=64,
                                      normalization='rescale')
         assert coord.ndim == 2
-        assert coord.shape == (10, 4), \
-            f'Coord of wrong shape {coord.shape}'
+        assert coord.shape == (10, 4), f'Coord of wrong shape {coord.shape}'
         assert np.all(img == 0), 'Image type not zeros'
-        assert img.shape == (64, 64, 64), \
-            f'img of wrong shape {img.shape}'
+        assert img.shape == (64, 64, 64), f'img of wrong shape {img.shape}'
 
-    def test_preprocess3D(self):
+    def test_preprocess3d(self):
         coord, _, graph = preprocess_data(coord=self.coord_dir,
                                           image=None,
                                           include_label=False,
                                           size=64,
                                           normalization='rescale')
         assert coord.ndim == 2, 'Incorrect no. of dimension'
-        assert coord.shape == (10, 3), \
-            f'Coord of wrong shape {coord.shape}'
+        assert coord.shape == (10, 3), f'Coord of wrong shape {coord.shape}'
         assert graph.shape == (10, 10), 'Graph of wrong shape!'
 
     def test_filament_mt_dataloader(self):
-        train_DL = FilamentDataset(coord_dir=join(self.dir, 'filament_mt',
+        train_dl = FilamentDataset(coord_dir=join(self.dir, 'filament_mt',
                                                   'train', 'masks'),
-                                   coord_format=(".CorrelationLines.am"),
+                                   coord_format='.CorrelationLines.am',
                                    patch_if=500)
 
         # Build first time
-        coords_v, _, graph_v, output_idx, _ = train_DL.__getitem__(0)
+        coords_v, _, graph_v, output_idx, _ = train_dl.__getitem__(0)
 
         assert len(coords_v) == 1
         assert coords_v[0].shape == (10, 3)
         assert graph_v[0].shape == (10, 10)
-        assert output_idx[0].shape == (10, )
+        assert output_idx[0].shape == (10,)
 
         # Load from memory
-        coords_v, _, graph_v, output_idx, _ = train_DL.__getitem__(0)
+        coords_v, _, graph_v, output_idx, _ = train_dl.__getitem__(0)
 
         assert len(coords_v) == 1
         assert coords_v[0].shape == (10, 3)
         assert graph_v[0].shape == (10, 10)
-        assert output_idx[0].shape == (10, )
+        assert output_idx[0].shape == (10,)
 
         shutil.rmtree('./temp_train')
 
     def test_filament_mem_dataloader(self):
-        train_DL = FilamentDataset(coord_dir=join(self.dir, 'filament_mem',
+        train_dl = FilamentDataset(coord_dir=join(self.dir, 'filament_mem',
                                                   'train', 'masks'),
-                                   coord_format=(".csv"),
+                                   coord_format='.csv',
                                    patch_if=500)
 
         # Build first time
-        coords_v, _, graph_v, output_idx, _ = train_DL.__getitem__(0)
+        coords_v, _, graph_v, output_idx, _ = train_dl.__getitem__(0)
 
         assert len(coords_v) == 1
         assert coords_v[0].shape == (122, 2)
         assert graph_v[0].shape == (122, 122)
-        assert output_idx[0].shape == (122, )
+        assert output_idx[0].shape == (122,)
 
         # Load from memory
-        coords_v, _, graph_v, output_idx, _ = train_DL.__getitem__(0)
+        coords_v, _, graph_v, output_idx, _ = train_dl.__getitem__(0)
 
         assert len(coords_v) == 1
         assert coords_v[0].shape == (122, 2)
         assert graph_v[0].shape == (122, 122)
-        assert output_idx[0].shape == (122, )
+        assert output_idx[0].shape == (122,)
 
         shutil.rmtree('./temp_train')
 
     def test_scannet_dataloader(self):
-        train_DL = ScannetDataset(coord_dir=join(self.dir, 'scannet',
+        train_dl = ScannetDataset(coord_dir=join(self.dir, 'scannet',
                                                  'train', 'masks'),
-                                  coord_format=(".ply"),
+                                  coord_format='.ply',
                                   patch_if=500)
 
         # Build first time
-        coords_v, _, graph_v, output_idx, clx_idx = train_DL.__getitem__(0)
+        coords_v, _, graph_v, output_idx, clx_idx = train_dl.__getitem__(0)
 
         assert len(coords_v) == 1
         assert coords_v[0].shape == (483, 3)
         assert graph_v[0].shape == (483, 483)
-        assert output_idx[0].shape == (483, )
+        assert output_idx[0].shape == (483,)
         assert clx_idx[0].shape[0] == 483
 
         # Load from memory
-        coords_v, _, graph_v, output_idx, clx_idx = train_DL.__getitem__(0)
+        coords_v, _, graph_v, output_idx, clx_idx = train_dl.__getitem__(0)
 
         assert len(coords_v) == 1
         assert coords_v[0].shape == (483, 3)
         assert graph_v[0].shape == (483, 483)
-        assert output_idx[0].shape == (483, )
+        assert output_idx[0].shape == (483,)
         assert clx_idx[0].shape[0] == 483
 
         shutil.rmtree('./temp_train')
 
     def test_scannet_color_dataloader(self):
-        train_DL = ScannetColorDataset(coord_dir=join(self.dir, 'scannet',
+        train_dl = ScannetColorDataset(coord_dir=join(self.dir, 'scannet',
                                                       'train', 'masks'),
-                                       coord_format=(".ply"),
+                                       coord_format='.ply',
                                        patch_if=500)
 
         # Build first time
-        coords_v, rgb_idx, graph_v, output_idx, clx_idx = train_DL.__getitem__(0)
+        coords_v, rgb_idx, graph_v, output_idx, clx_idx = train_dl.__getitem__(0)
 
         assert len(coords_v) == 1
         assert coords_v[0].shape == (483, 3)
         assert graph_v[0].shape == (483, 483)
-        assert output_idx[0].shape == (483, )
+        assert output_idx[0].shape == (483,)
         assert clx_idx[0].shape[0] == 483
         assert rgb_idx[0].shape[0] == 483
 
         # Load from memory
-        coords_v, rgb_idx, graph_v, output_idx, clx_idx = train_DL.__getitem__(0)
+        coords_v, rgb_idx, graph_v, output_idx, clx_idx = train_dl.__getitem__(0)
 
         assert len(coords_v) == 1
         assert coords_v[0].shape == (483, 3)
         assert graph_v[0].shape == (483, 483)
-        assert output_idx[0].shape == (483, )
+        assert output_idx[0].shape == (483,)
         assert clx_idx[0].shape[0] == 483
         assert rgb_idx[0].shape[0] == 483
 
         shutil.rmtree('./temp_train')
 
     def test_partnet_dataloader(self):
-        train_DL = PartnetDataset(coord_dir=join(self.dir, 'partnet',
+        train_dl = PartnetDataset(coord_dir=join(self.dir, 'partnet',
                                                  'train', 'masks'),
-                                  coord_format=(".ply"),
+                                  coord_format='.ply',
                                   patch_if=500)
 
         # Build first time
-        coords_v, _, graph_v, output_idx, _ = train_DL.__getitem__(0)
+        coords_v, _, graph_v, output_idx, _ = train_dl.__getitem__(0)
 
         assert len(coords_v) == 15
         assert coords_v[0].shape == (351, 3)
         assert graph_v[0].shape == (351, 351)
-        assert output_idx[0].shape == (351, )
+        assert output_idx[0].shape == (351,)
 
         # Load from memory
-        coords_v, _, graph_v, output_idx, _ = train_DL.__getitem__(0)
+        coords_v, _, graph_v, output_idx, _ = train_dl.__getitem__(0)
 
         assert len(coords_v) == 15
         assert coords_v[0].shape == (351, 3)
         assert graph_v[0].shape == (351, 351)
-        assert output_idx[0].shape == (351, )
+        assert output_idx[0].shape == (351,)
 
         shutil.rmtree('./temp_train')

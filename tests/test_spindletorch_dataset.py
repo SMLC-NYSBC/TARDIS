@@ -2,12 +2,10 @@ from os.path import join
 
 import numpy as np
 import torch
-from tardis.spindletorch.datasets.augment import (MinMaxNormalize,
-                                                      RescaleNormalize,
-                                                      SimpleNormalize,
-                                                      preprocess)
-from tardis.spindletorch.datasets.dataloader import (CNNDataset,
-                                                         PredictionDataset)
+
+from tardis.spindletorch.datasets.augment import (MinMaxNormalize, preprocess,
+                                                  RescaleNormalize, SimpleNormalize)
+from tardis.spindletorch.datasets.dataloader import (CNNDataset, PredictionDataset)
 
 
 def test_dataloader():
@@ -35,7 +33,7 @@ def test_dataloader():
     assert img.shape == (1, 64, 64, 64)
     assert img.min() >= 0 and img.max() <= 1
     assert torch.sum(img) != 0
-    assert isinstance(idx, str) == True
+    assert isinstance(idx, str) is True
 
 
 def test_normalization():
@@ -44,7 +42,7 @@ def test_normalization():
 
     s_norm = SimpleNormalize()
     mm_norm = MinMaxNormalize()
-    res_norm = RescaleNormalize(range=(2, 98))
+    res_norm = RescaleNormalize(clip_range=(2, 98))
 
     s_img = s_norm(x=img)
     assert s_img.min() >= 0 and s_img.max() <= 1
@@ -60,7 +58,7 @@ def test_normalization():
 
 
 class TestDataSetBuilder2D3D:
-    def test_data_augmentation3D(self):
+    def test_data_augmentation3d(self):
         img = np.random.rand(64, 64, 64)
         img = img.astype(np.float32)
 
@@ -76,7 +74,7 @@ class TestDataSetBuilder2D3D:
         assert img_proc.min() >= 0 and img_proc.max() <= 1
         assert mask.min() >= 0 and mask.max() <= 1
 
-    def test_data_augmentation2D(self):
+    def test_data_augmentation2d(self):
         img = np.random.rand(64, 64)
         img = img.astype(np.float32)
 

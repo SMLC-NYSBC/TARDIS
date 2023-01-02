@@ -1,24 +1,28 @@
 import numpy as np
 from skimage import draw
 
+from tardis.utils.errors import TardisError
 
-def draw_2D(r: int,
-            c: int,
+
+def draw_2d(r: int,
+            c: np.ndarray,
             label_mask: np.ndarray,
             segment_color: list):
     """
     Module draw_label to construct shape of a label
 
     Args:
-        r: radius of a circle in Angstrom
-        c: point in 3D indicating center of a circle
-        label_mask: array of a mask on which circle is drawn
-        segment_color: single list value for naming drawn line in RGB
+        r (int): radius of a circle in Angstrom.
+        c (np.ndarray): point in 3D indicating center of a circle.
+        label_mask (np.ndarray): array of a mask on which circle is drawn.
+        segment_color (list): single list value for naming drawn line in RGB.
     """
-    assert type(segment_color) == list
+    assert isinstance(segment_color, list)
     assert label_mask.ndim in [2, 3, 4], \
         f'Unsupported dimensions given {label_mask.ndim} expected [2, 3]!'
 
+    nz, ny, nx, nc = 0, 0, 0, 0
+    dim = 0
     if label_mask.ndim == 4:  # 3D multi label
         nz, ny, nx, nc = label_mask.shape
         dim = 3
@@ -38,7 +42,9 @@ def draw_2D(r: int,
         dim = 2
 
     assert len(segment_color) == nc, \
-        f'Not enough colors were supply needed {nc} given {len(segment_color)}!'
+        TardisError('TRAINING_DATASET_COMPATIBILITY',
+                    'tardis/spindletorch/data_processing/build_training_dataset.py',
+                    f'Incorrect color channel given {nc} but expect {len(segment_color)}')
 
     x = int(c[0])
     y = int(c[1])

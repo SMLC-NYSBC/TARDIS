@@ -15,7 +15,7 @@ from tardis.spindletorch.datasets.augment import MinMaxNormalize, RescaleNormali
 from tardis.spindletorch.datasets.dataloader import PredictionDataset
 from tardis.utils.device import get_device
 from tardis.utils.load_data import import_am, load_image
-from tardis.utils.logo import Tardis_Logo, printProgressBar
+from tardis.utils.logo import print_progress_bar, TardisLogo
 from tardis.utils.predictor import Predictor
 from tardis.utils.setup_envir import build_temp_dir, clean_up
 from tardis.utils.utils import check_uint8
@@ -54,9 +54,9 @@ warnings.simplefilter("ignore", UserWarning)
               default='0',
               type=str,
               help='Define which device use for training: '
-              'gpu: Use ID 0 GPUs '
-              'cpu: Usa CPU '
-              '0-9 - specified GPU device id to use',
+                   'gpu: Use ID 0 GPUs '
+                   'cpu: Usa CPU '
+                   '0-9 - specified GPU device id to use',
               show_default=True)
 @click.option('-db', '--debug',
               default=False,
@@ -81,7 +81,7 @@ def main(dir: str,
     else:
         str_debug = ''
 
-    tardis_progress = Tardis_Logo()
+    tardis_progress = TardisLogo()
     tardis_progress(title=f'Fully-automatic CNN prediction {str_debug}')
 
     # Searching for available images for prediction
@@ -105,7 +105,7 @@ def main(dir: str,
                               type=float)
 
     # Build handler's
-    normalize = RescaleNormalize(range=(1, 99))  # Normalize histogram
+    normalize = RescaleNormalize(clip_range=(1, 99))  # Normalize histogram
     minmax = MinMaxNormalize()
 
     image_stitcher = StitchImages()
@@ -125,7 +125,7 @@ def main(dir: str,
                             device=device)
 
     """Process each image with CNN and DIST"""
-    tardis_progress = Tardis_Logo()
+    tardis_progress = TardisLogo()
     for id, i in enumerate(sorted(predict_list)):
         """Pre-Processing"""
         if i.endswith('CorrelationLines.am'):
@@ -209,7 +209,7 @@ def main(dir: str,
                                 text_4=f'Pixel size: {px} A; Image re-sample to 25 A',
                                 text_5='Point Cloud: In processing...',
                                 text_7='Current Task: CNN prediction...',
-                                text_8=printProgressBar(j, len(patches_DL)))
+                                text_8=print_progress_bar(j, len(patches_DL)))
 
             # Pick image['s]
             input, name = patches_DL.__getitem__(j)
@@ -218,7 +218,7 @@ def main(dir: str,
                 start = time.time()
 
                 # Predict & Threshold
-                out = np.where(predict_cnn._predict(input[None, :]) >= cnn_threshold, 1, 0)
+                out = np.where(predict_cnn.predict(input[None, :]) >= cnn_threshold, 1, 0)
 
                 end = time.time()
                 iter_time = 10 // (end - start)  # Scale progress bar refresh to 10s
@@ -226,7 +226,7 @@ def main(dir: str,
                     iter_time = 1
             else:
                 # Predict & Threshold
-                out = np.where(predict_cnn._predict(input[None, :]) >= cnn_threshold, 1, 0)
+                out = np.where(predict_cnn.predict(input[None, :]) >= cnn_threshold, 1, 0)
 
             # Save threshold image
             assert out.min() == 0 and out.max() in [0, 1]
@@ -250,8 +250,8 @@ def main(dir: str,
                                            mask=True,
                                            prefix='',
                                            dtype=np.int8)[:scale_shape[0],
-                                                          :scale_shape[1],
-                                                          :scale_shape[2]])
+                            :scale_shape[1],
+                            :scale_shape[2]])
         assert image.shape == scale_shape, f'Image shape {image.shape} != scale shape {scale_shape}'
 
         # Restored original image pixel size
@@ -264,7 +264,7 @@ def main(dir: str,
 
         # Check if predicted image
         assert image.shape == org_shape, f'Error while converting to {px} A pixel size. ' \
-            f'Org. shape {org_shape} is not the same as converted shape {image.shape}'
+                                         f'Org. shape {org_shape} is not the same as converted shape {image.shape}'
 
         # If prediction fail aka no prediction was produces continue with next image
         if image is None:

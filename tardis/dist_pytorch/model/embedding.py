@@ -24,7 +24,7 @@ class NodeEmbedding(nn.Module):
         self.n_in = n_in
 
     def forward(self,
-                input_node: torch.Tensor) -> torch.Tensor:
+                input_node: Optional[torch.Tensor] = None) -> torch.Tensor:
         """
         Forward node feature embedding.
 
@@ -58,7 +58,7 @@ class EdgeEmbedding(nn.Module):
 
     def __init__(self,
                  n_out: int,
-                 sigma: Optional[tuple] = int):
+                 sigma: float):
         super().__init__()
         self.linear = nn.Linear(1, n_out, bias=False)
         self.n_out = n_out
@@ -76,9 +76,6 @@ class EdgeEmbedding(nn.Module):
         Returns:
             torch.Tensor: Embedded features.
         """
-        if input_coord is None:
-            return 0
-
         dist = torch.cdist(input_coord, input_coord)
         dist = torch.exp(-dist ** 2 / (self.sigma ** 2 * 2))
         isnan = torch.isnan(dist)

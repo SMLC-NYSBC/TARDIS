@@ -15,10 +15,10 @@ def trim_with_stride(image: np.ndarray,
                      trim_size_z: int,
                      output: str,
                      image_counter: int,
+                     scale: tuple,
                      prefix='',
                      clean_empty=True,
                      stride=25,
-                     scale: Optional[tuple] = 1.0,
                      mask: Optional[np.ndarray] = None):
     """
     FUNCTION TO TRIMMED IMAGE AND MASKS TO SPECIFIED SIZE
@@ -27,25 +27,21 @@ def trim_with_stride(image: np.ndarray,
     number indicate grid position in xyz. Last number indicate stride.
 
     Args:
-        image: Corresponding image for the labels
-        trim_size_xy: Size of trimming in xy dimension
-        trim_size_z: Size of trimming in z dimension
-        output: Name of the output directory for saving
-        image_counter: Number id of image
-        prefix: Prefix name at the end of the file
-        clean_empty: Remove empty patches
-        stride: Trimming step size
-        mask: Label mask
+        image (np.ndarray): Corresponding image for the labels.
+        trim_size_xy (int): Size of trimming in xy dimension.
+        trim_size_z (int): Size of trimming in z dimension.
+        output (str): Name of the output directory for saving.
+        image_counter (int): Number id of image.
+        scale (tuple): Up- DownScale image and mask to the given shape or factor.
+        prefix (str): Prefix name at the end of the file.
+        clean_empty (bool): Remove empty patches.
+        stride (int): Trimming step size.
+        mask (np.ndarray, None): Label mask.
     """
     img_dtype = np.float32
 
     if mask is not None:
         mask_dtype = np.uint8
-        assert image.shape == mask.shape, \
-            TardisError('TRAINING_DATASET_COMPATIBILITY',
-                        'tardis/spindletorch/data_processing',
-                        f'Image {image.shape} has different shape from mask {mask.shape}')
-
         image, mask, dim = scale_image(image=image,
                                        mask=mask,
                                        scale=scale)
@@ -56,8 +52,17 @@ def trim_with_stride(image: np.ndarray,
         image, dim = scale_image(image=image,
                                  scale=scale)
 
-    assert img_dtype == image.dtype, f'{img_dtype} != {image.dtype}'
+    assert image.shape == mask.shape, \
+        TardisError('TRAINING_DATASET_BUILD',
+                    'tardis/spindletorch/data_processing',
+                    f'Image {image.shape} has different shape from mask {mask.shape}')
+    assert img_dtype == image.dtype, \
+        TardisError('TRAINING_DATASET_BUILD',
+                    'tardis/spindletorch/data_processing',
+                    f'Image {img_dtype} has different dtype after interpolation {image.dtype}')
 
+    min_px_count = 0
+    nz, ny, nx, nc = 0, 0, 0, None
     if image.ndim == 4 and dim == 3:  # 3D RGB
         nz, ny, nx, nc = image.shape
         min_px_count = trim_size_xy * trim_size_xy * trim_size_z
@@ -75,20 +80,20 @@ def trim_with_stride(image: np.ndarray,
         nc = None  # 2D
         nz = 0  # Gray
         min_px_count = trim_size_xy * trim_size_xy
-    min_px_count = min_px_count * 0.005  # 0.001% of pixels must be occupied
+    min_px_count = min_px_count * 0.001  # 0.001% of pixels must be occupied
 
     if trim_size_xy is not None or trim_size_z is not None:
         assert nx >= trim_size_xy, \
-            TardisError('TRAINING_DATASET_COMPATIBILITY',
+            TardisError('TRAINING_DATASET_BUILD_PATCHES',
                         'tardis/spindletorch/data_processing',
                         "trim_size_xy should be equal or greater then X dimension!")
         assert ny >= trim_size_xy, \
-            TardisError('TRAINING_DATASET_COMPATIBILITY',
+            TardisError('TRAINING_DATASET_BUILD_PATCHES',
                         'tardis/spindletorch/data_processing',
                         "trim_size_xy should be equal or greater then Y dimension!")
     else:
         assert stride is not None, \
-            TardisError('TRAINING_DATASET_COMPATIBILITY',
+            TardisError('TRAINING_DATASET_BUILD_PATCHES',
                         'tardis/spindletorch/data_processing',
                         "Trim sizes or stride has to be indicated!")
         trim_size_xy = 64
@@ -234,7 +239,7 @@ def trim_with_stride(image: np.ndarray,
                                     shape=trim_img.shape)
 
                     else:
-                        tif.imwrite(join(output, 'imgs', dtype=img_name),
+                        tif.imwrite(join(output, 'imgs', img_name),
                                     trim_img,
                                     shape=trim_img.shape)
                         tif.imwrite(join(output, 'masks', f'{img_name[:-4]}_mask.tif'),
@@ -249,9 +254,9 @@ def trim_label_mask(points: np.ndarray,
     MODULE TO TRIM CREATED IMAGES AND MASK TO BOUNDARY BOX OF POINT CLOUD
 
     Args:
-        points: 3D coordinates of pitons
-        image: corresponding image for the labels
-        label_mask: empty label mask
+        points (np.ndarray): 3D coordinates of pitons.
+        image (np.ndarray): corresponding image for the labels.
+        label_mask (np.ndarray): empty label mask.
     """
     max_x, min_x = max(points[:, 0]), min(points[:, 0])
     max_y, min_y = max(points[:, 1]), min(points[:, 1])

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -70,7 +70,9 @@ class PairBiasSelfAttention(nn.Module):
                 attn_mask: Optional[torch.Tensor] = None,
                 key_padding_mask: Optional[torch.Tensor] = None,
                 need_weights: bool = False,
-                need_head_weights: bool = False) -> torch.Tensor:
+                need_head_weights: bool = False) -> Union[Tuple[torch.Tensor,
+                                                                torch.Tensor],
+                                                          torch.Tensor]:
         """
         Forward attention over node features.
 
@@ -173,7 +175,6 @@ class PairBiasSelfAttention(nn.Module):
         attn = attn.transpose(0, 1).contiguous().view(tgt_len, bsz, embed_dim)
         attn = self.out_proj(attn)
 
-        attn_weights: Optional[torch.Tensor] = None
         if need_weights:
             attn_weights = attn_weights_float.view(bsz,
                                                    self.num_heads,
@@ -444,8 +445,8 @@ class MultiHeadAttention(nn.Module):
         num_heads (int): Number of heads for multi-head attention.
         kdim: Key dimensions.
         vdim: Values dimensions.
-        dropout: Dropout probability.
-        bias (float): If True add bias.
+        dropout (float): Dropout probability.
+        bias (bool): If True add bias.
         add_bias_kv (bool): If True add bias for keys and values.
         add_zero_attn (bool): If True replace attention with a zero-out mask.
         self_attention (bool): If True self-attention is used.
@@ -453,21 +454,20 @@ class MultiHeadAttention(nn.Module):
             encode/decoder is used.
         init_scaling (float): The initial scaling factor used for reset parameters.
     """
-
     def __init__(self,
                  embed_dim: int,
                  num_heads: int,
                  kdim=None,
                  vdim=None,
-                 dropout=0,
+                 dropout=0.0,
                  bias=True,
                  add_bias_kv=False,
                  add_zero_attn=False,
                  self_attention=False,
                  encoder_decoder_attention=False,
                  init_scaling=1 / 1.4142135623730951):
-
         super().__init__()
+
         self.embed_dim = embed_dim
         self.kdim = kdim if kdim is not None else embed_dim
         self.vdim = vdim if vdim is not None else embed_dim
@@ -530,7 +530,9 @@ class MultiHeadAttention(nn.Module):
                 need_weights: bool = False,
                 attn_mask: Optional[torch.Tensor] = None,
                 before_softmax: bool = False,
-                need_head_weights: bool = False) -> torch.Tensor:
+                need_head_weights: bool = False) -> Union[Tuple[torch.Tensor,
+                                                                torch.Tensor],
+                                                          torch.Tensor]:
         """
         Forward for MHA.
 
@@ -688,7 +690,7 @@ class MultiHeadAttention(nn.Module):
                                                           bsz,
                                                           embed_dim)
         attn = self.out_proj(attn)
-        attn_weights: Optional[torch.Tensor] = None
+
         if need_weights:
             attn_weights = attn_weights_float.view(bsz,
                                                    self.num_heads,
@@ -722,7 +724,7 @@ class SelfAttention2D(MultiHeadAttention):
                  embed_dim: int,
                  num_heads: int,
                  axis=None,
-                 dropout=0,
+                 dropout=0.0,
                  max_size=4194304):
         super(SelfAttention2D, self).__init__(embed_dim,
                                               num_heads,
@@ -743,7 +745,7 @@ class SelfAttention2D(MultiHeadAttention):
         Args:
             x (torch.Tensor): Edge feature self-attention update.
                 [num_rows X num_cols X batch_size X embed_dim].
-            padding_mask (torch.Tensor, optional): Optional padding mask.
+            padding_mask (torch.Tensor): Optional padding mask.
                 [batch_size X num_rows X num_cols].
         """
 

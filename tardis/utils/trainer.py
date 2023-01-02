@@ -4,7 +4,8 @@ from shutil import rmtree
 
 import numpy as np
 import torch
-from tardis.utils.logo import Tardis_Logo, printProgressBar
+
+from tardis.utils.logo import print_progress_bar, TardisLogo
 from tardis.utils.utils import EarlyStopping
 
 
@@ -22,17 +23,16 @@ class BasicTrainer:
         validation_DataLoader (torch.DataLoader, optional): DataLoader with test dataset.
         print_setting (tuple): Model property to display in TARDIS progress bar.
         lr_scheduler (torch.StepLR, optional): Optional Learning rate schedular.
-        epochs (int): Max number of epoches.
-        early_stop_rate (int): Number of epoches without improvement after which
+        epochs (int): Max number of epoch's.
+        early_stop_rate (int): Number of epoch's without improvement after which
             Trainer stop training.
         checkpoint_name (str): Name of the checkpoint.
-        cnn (bool): If True expect CNN model parameters.
     """
 
     def __init__(self,
                  model,
                  structure: dict,
-                 device: str,
+                 device: torch.device,
                  criterion,
                  optimizer,
                  print_setting: tuple,
@@ -45,6 +45,7 @@ class BasicTrainer:
                  classification=False):
         super(BasicTrainer, self).__init__()
 
+        self.early_stopping = None
         self.model = model.to(device)
         self.device = device
         self.criterion = criterion
@@ -68,8 +69,8 @@ class BasicTrainer:
         self.validation_DataLoader = validation_DataLoader
 
         # Set-up progress bar
-        self.progress_epoch = Tardis_Logo()
-        self.progress_train = Tardis_Logo()
+        self.progress_epoch = TardisLogo()
+        self.progress_train = TardisLogo()
         self.print_setting = print_setting
 
         self.id = 0
@@ -88,7 +89,7 @@ class BasicTrainer:
         self.f1 = []
         self.threshold = []
 
-    @ staticmethod
+    @staticmethod
     def _update_desc(stop_count: int,
                      f1: list) -> str:
         """
@@ -121,11 +122,11 @@ class BasicTrainer:
                             text_4=self.print_setting[3],
                             text_5=self.gpu_info,
                             text_7=self.epoch_desc,
-                            text_8=printProgressBar(self.id,
-                                                    self.epochs),
+                            text_8=print_progress_bar(self.id,
+                                                      self.epochs),
                             text_9=loss_desc,
-                            text_10=printProgressBar(idx,
-                                                     len(self.training_DataLoader)))
+                            text_10=print_progress_bar(idx,
+                                                       len(self.training_DataLoader)))
 
     def _mid_training_eval(self,
                            idx):
@@ -152,7 +153,7 @@ class BasicTrainer:
         # Initialize progress bar.
         self.progress_epoch(title=f'{self.checkpoint_name} training module.',
                             text_2='Epoch: 0',
-                            text_3=printProgressBar(0, self.epochs))
+                            text_3=print_progress_bar(0, self.epochs))
 
         # Initialize early stop check.
         self.early_stopping = EarlyStopping(patience=self.early_stop_rate,
@@ -197,7 +198,7 @@ class BasicTrainer:
                                 text_4=self.print_setting[3],
                                 text_5=self.gpu_info,
                                 text_7=self.epoch_desc,
-                                text_8=printProgressBar(self.id, self.epochs))
+                                text_8=print_progress_bar(self.id, self.epochs))
 
             """Training block"""
             self.model.train()
@@ -240,7 +241,7 @@ class BasicTrainer:
                            delimiter=',')
 
             """ Save current model weights"""
-            # If mean evaluation loss is higher then save checkpoint
+            # If mean evaluation loss is higher than save checkpoint
             if all(self.f1[-1:][0] >= i for i in self.f1[:-1]):
                 torch.save({'model_struct_dict': self.structure,
                             'model_state_dict': self.model.state_dict(),

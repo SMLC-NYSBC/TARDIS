@@ -11,21 +11,20 @@ def get_device(device: Optional[str] = 0):
         device (str, int): Device name or ID.
 
     Returns:
-        str, torch.device: Device type.
+        str or torch.device: Device type.
     """
     if device == "gpu":  # Load GPU ID 0
         if torch.cuda.is_available():
             device = torch.device('cuda:0')
         else:
             device = torch.device('cpu')
-        device = torch.device('cuda:0')
     elif device == 'cpu':  # Load CPU
         device = torch.device('cpu')
     elif device_is_str(device):  # Load specific GPU ID
         device = torch.device(f'cuda:{int(device)}')
     elif device == 'mps':  # Load Apple silicon
         if torch.backends.mps.is_available():
-            device = torch.device('mps') 
+            device = torch.device('mps')
         else:
             device = torch.device('cpu')
     return device
@@ -33,10 +32,10 @@ def get_device(device: Optional[str] = 0):
 
 def device_is_str(device: Optional[str] = 0) -> bool:
     """
-    Check if used device is convertable to int value
+    Check if used device is convertible to int value
 
     Args:
-        device: (str, int): Device ID.
+        device (str, int): Device ID.
 
     Returns:
         bool: Check for input string/int

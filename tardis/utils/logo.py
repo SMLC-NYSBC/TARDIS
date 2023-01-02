@@ -4,17 +4,18 @@ from os import get_terminal_size, system
 
 from IPython.core.interactiveshell import InteractiveShell
 from IPython.display import clear_output
+
 from tardis.version import version
 
 
-def printProgressBar(value: int,
-                     max: int):
+def print_progress_bar(value: int,
+                       max_v: int):
     """
     Builder for ASCII type progress bar.
 
     Args:
         value (int): Current value for the progress bar.
-        max (int): Maximum number of iterations.
+        max_v (int): Maximum number of iterations.
     """
     if is_interactive():
         n_bar = 75
@@ -24,11 +25,11 @@ def printProgressBar(value: int,
         except OSError:
             n_bar = 50
 
-    j = value / max
+    j = value / max_v
     bar = '█' * int(n_bar * j)
     bar = bar + '-' * int(n_bar * (1 - j))
 
-    return f"[{bar:{n_bar}s}] {int(100 * j)}%  [{value} / {max}]"
+    return f"[{bar:{n_bar}s}] {int(100 * j)}%  [{value} / {max_v}]"
 
 
 def is_interactive():
@@ -40,7 +41,7 @@ def is_interactive():
     return not hasattr(main, '__file__')
 
 
-class Tardis_Logo:
+class TardisLogo:
     """
     BUILDER FOR LOG OUTPUT
 
@@ -62,7 +63,7 @@ class Tardis_Logo:
     """
 
     def __init__(self):
-        self.CLEAR  = None
+        self.CLEAR = None
 
         if platform.system() in ['Darwin', 'Linux']:
             self.CLEAR = lambda: system('clear')
@@ -99,7 +100,7 @@ class Tardis_Logo:
             return text[:max]
         else:
             new_len = max - text_len
-            return f'{text +  " " * new_len}'
+            return f'{text + " " * new_len}'
 
     @staticmethod
     def clear_output(wait=True):
@@ -171,8 +172,8 @@ class Tardis_Logo:
                   f' | {self._build_text(WIDTH - 21, text_8)}  | _____ |$_____ |  |\n'
                   f' | {self._build_text(WIDTH - 21, text_9)}  | || || | || || |  |\n'
                   f' | {self._build_text(WIDTH - 21, text_10)}  | ||_|| | ||_|| |  |\n'
-                  f' | {self._build_text(WIDTH - 21, " ",  True)}  | _____ | _____ |  |\n'
-                  f' | {self._build_text(WIDTH - 21, " ",  True)}  | || || | || || |  |\n'
+                  f' | {self._build_text(WIDTH - 21, " ", True)}  | _____ | _____ |  |\n'
+                  f' | {self._build_text(WIDTH - 21, " ", True)}  | || || | || || |  |\n'
                   f' | {self._build_text(WIDTH - 21, self.FN)}  | ||_|| | ||_|| |  |\n'
                   f' | {self._build_text(WIDTH - 21, self.C)}  |       |       |  |\n'
                   f' | {self._build_text(WIDTH - 21, "MIT License")}  *****************  |\n'
@@ -195,8 +196,8 @@ class Tardis_Logo:
                   f' | {self._build_text(WIDTH, text_8)}|\n'
                   f' | {self._build_text(WIDTH, text_9)}|\n'
                   f' | {self._build_text(WIDTH, text_10)}|\n'
-                  f' | {self._build_text(WIDTH, " ",  True)}|\n'
-                  f' | {self._build_text(WIDTH, " ",  True)}|\n'
+                  f' | {self._build_text(WIDTH, " ", True)}|\n'
+                  f' | {self._build_text(WIDTH, " ", True)}|\n'
                   f' | {self._build_text(WIDTH, self.FN)}|\n'
                   f' | {self._build_text(WIDTH, self.C)}|\n'
                   f' | {self._build_text(WIDTH, "MIT License")}|\n'

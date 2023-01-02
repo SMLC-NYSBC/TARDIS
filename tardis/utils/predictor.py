@@ -1,10 +1,11 @@
 from typing import Optional
 
 import torch
-from tardis.utils.logo import Tardis_Logo, printProgressBar
+
 from tardis.dist_pytorch.dist import build_dist_network
 from tardis.spindletorch.spindletorch import build_cnn_network
 from tardis.utils.aws import get_weights_aws
+from tardis.utils.logo import print_progress_bar, TardisLogo
 
 
 class Predictor:
@@ -12,15 +13,16 @@ class Predictor:
     WRAPPER FOR PREDICTION
 
      Args:
-         device: Device on which to predict.
-         checkpoint:
-         network:
-         subtype:
-         model_type:
+         device (torch.device): Device on which to predict.
+         checkpoint (str, Optional): Local weights files.
+         network (str, Optional): Optional network type name.
+         subtype (str, Optional): Optional model subtype name.
+         model_type (str, Optional): Optional model type name.
+         img_size (int, Optional): Optional image patch size.
      """
 
     def __init__(self,
-                 device: str,
+                 device: torch.device,
                  checkpoint: Optional[str] = None,
                  network: Optional[str] = None,
                  subtype: Optional[str] = None,
@@ -42,10 +44,12 @@ class Predictor:
             weights = torch.load(checkpoint,
                                  map_location=device)
 
-        self.model = self._build_model_from_checkpoint(structure=weights['model_struct_dict'])
+        self.model = self._build_model_from_checkpoint(
+            structure=weights['model_struct_dict']
+        )
         self.model.load_state_dict(weights['model_state_dict'])
 
-        weights = None
+        del weights  # Cleanup weight file from memory
         self.network = network
 
     def _build_model_from_checkpoint(self,
@@ -54,17 +58,19 @@ class Predictor:
             model = build_dist_network(network_type=structure['dist_type'],
                                        structure=structure,
                                        prediction=True)
-        if 'cnn_type' in structure:
+        elif 'cnn_type' in structure:
             model = build_cnn_network(network_type=structure['cnn_type'],
                                       structure=structure,
                                       img_size=self.img_size,
                                       prediction=True)
+        else:
+            model = None
 
         return model.to(self.device)
 
-    def _predict(self,
-                 x: torch.Tensor,
-                 y: Optional[torch.Tensor] = None):
+    def predict(self,
+                x: torch.Tensor,
+                y: Optional[torch.Tensor] = None):
         with torch.no_grad():
             self.model.eval()
 
@@ -88,10 +94,9 @@ class BasicPredictor:
     Args:
         model (nn.Module): ML model build with nn.Module or nn.sequential.
         structure (dict): Model structure as dictionary.
-        device (torch.device): Device for prediction.
+        device (str): Device for prediction.
         predicting_DataLoader (torch.DataLoader): DataLoader with prediction dataset.
         print_setting (tuple): Model property to display in TARDIS progress bar.
-        cnn (bool): If True expect CNN model parameters.
     """
 
     def __init__(self,
@@ -119,7 +124,7 @@ class BasicPredictor:
         self.predicting_DataLoader = predicting_DataLoader
 
         # Set-up progress bar
-        self.progress_predict = Tardis_Logo()
+        self.progress_predict = TardisLogo()
         self.print_setting = print_setting
 
         self.id = 0
@@ -135,8 +140,8 @@ class BasicPredictor:
                                   text_2=self.print_setting[1],
                                   text_3=self.print_setting[2],
                                   text_4=self.print_setting[3],
-                                  text_8=printProgressBar(self.id,
-                                                          self.predicting_idx))
+                                  text_8=print_progress_bar(self.id,
+                                                            self.predicting_idx))
 
     def run_predictor(self):
         """
@@ -145,7 +150,7 @@ class BasicPredictor:
         # Initialize progress bar.
         self.progress_predict(title=f'{self.nn_name} prediction module.',
                               text_2='Predicted image: 0',
-                              text_3=printProgressBar(0, self.predicting_idx))
+                              text_3=print_progress_bar(0, self.predicting_idx))
 
         self._update_progress_bar()
 

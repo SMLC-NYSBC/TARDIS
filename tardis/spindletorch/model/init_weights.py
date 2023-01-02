@@ -8,23 +8,23 @@ def weights_init_kaiming(m):
     Args:
         m: CNN block.
     """
-    classname = m.__class__.__name__
+    class_name = m.__class__.__name__
 
-    if classname.find('Conv3d') != -1:
+    if class_name.find('Conv3d') != -1:
         init.kaiming_normal_(tensor=m.weight.data,
                              a=0,
                              mode='fan_in')
-    elif classname.find('Conv2d') != -1:
+    elif class_name.find('Conv2d') != -1:
         init.kaiming_normal_(tensor=m.weight.data,
                              a=0,
                              mode='fan_in')
-    elif classname.find('BatchNorm') != -1:
+    elif class_name.find('BatchNorm') != -1:
         init.normal_(tensor=m.weight.data,
                      mean=1.0,
                      std=0.02)
         init.constant_(tensor=m.bias.data,
                        val=0.0)
-    elif classname.find('GroupNorm') != -1:
+    elif class_name.find('GroupNorm') != -1:
         init.normal_(tensor=m.weight.data,
                      mean=1.0,
                      std=0.02)

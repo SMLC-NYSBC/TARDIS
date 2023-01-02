@@ -3,6 +3,7 @@ from os.path import isdir, join
 from shutil import copy, rmtree
 
 import numpy as np
+
 from tardis.spindletorch.data_processing.build_training_dataset import \
     build_train_dataset
 from tardis.utils.load_data import load_image
@@ -29,8 +30,8 @@ def test_build_datasets():
                         trim_xy=64,
                         trim_z=64)
 
-    assert len(listdir('./tests/test_data/temp/train/imgs')) == 40
-    assert len(listdir('./tests/test_data/temp/train/masks')) == 40
+    assert len(listdir('./tests/test_data/temp/train/imgs')) == 25
+    assert len(listdir('./tests/test_data/temp/train/masks')) == 25
     dir_img = listdir('./tests/test_data/temp/train/imgs')
     img, _ = load_image(join('./tests/test_data/temp/train/imgs', dir_img[5]))
     assert img.shape == (64, 64, 64)

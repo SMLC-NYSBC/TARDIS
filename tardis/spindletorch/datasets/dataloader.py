@@ -1,12 +1,15 @@
 import os
 from os import listdir
 from os.path import join, splitext
+from typing import Tuple
 
 import numpy as np
 import torch
-from tardis.spindletorch.datasets.augment import MinMaxNormalize, preprocess
-from tardis.utils.load_data import load_image
 from torch.utils.data import Dataset
+
+from tardis.spindletorch.datasets.augment import MinMaxNormalize, preprocess
+from tardis.utils.errors import TardisError
+from tardis.utils.load_data import load_image
 
 
 class CNNDataset(Dataset):
@@ -44,7 +47,7 @@ class CNNDataset(Dataset):
         return len(self.ids)
 
     def __getitem__(self,
-                    i: int) -> torch.Tensor:
+                    i: int) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Select and process dataset for CNN.
 
@@ -52,7 +55,7 @@ class CNNDataset(Dataset):
             i (int): Image ID number.
 
         Returns:
-            torch.Tensor: Tensor of processed image and mask.
+            torch.Tensor, torch.Tensor: Tensor of processed image and mask.
         """
         # Find next image and corresponding label mask image
         idx = self.ids[i]
@@ -64,7 +67,10 @@ class CNNDataset(Dataset):
         img = self.minmax(img.astype(np.float32))
 
         mask, _ = load_image(mask_file)
-        assert mask.dtype == np.uint8
+        assert mask.dtype == np.uint8, \
+            TardisError('CNNDataset',
+                        'tardis/spindletorch/dataset/dataloader.py',
+                        f'Mask should be of np.uint8 dtype but is {mask.dtype}!')
 
         # Process image and mask
         img, mask = preprocess(image=img,
@@ -73,8 +79,15 @@ class CNNDataset(Dataset):
                                transformation=self.transform,
                                output_dim_mask=self.out_channels)
 
-        assert img.dtype == np.float32 and mask.dtype == np.uint8
-        assert img.min() >= 0 and img.max() <= 1
+        assert img.dtype == np.float32 and mask.dtype == np.uint8, \
+            TardisError('CNNDataset',
+                        'tardis/spindletorch/dataset/dataloader.py',
+                        f'Mask {mask.dtype} and image  {img.dtype} has wrong dtype!')
+        assert img.min() >= 0 and img.max() <= 1, \
+            TardisError('CNNDataset',
+                        'tardis/spindletorch/dataset/dataloader.py',
+                        'Image file is not binary!')
+
         return torch.from_numpy(img.copy()).type(torch.float32), \
             torch.from_numpy(mask.copy()).type(torch.float32)
 

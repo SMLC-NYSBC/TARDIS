@@ -1,10 +1,8 @@
 import torch
-from tardis.dist_pytorch.model.modules import (ComparisonLayer,
-                                                   GeluFeedForward,
-                                                   PairBiasSelfAttention,
-                                                   QuadraticEdgeUpdate,
-                                                   SelfAttention2D,
-                                                   TriangularEdgeUpdate, gelu)
+
+from tardis.dist_pytorch.model.modules import (ComparisonLayer, gelu, GeluFeedForward,
+                                               PairBiasSelfAttention, QuadraticEdgeUpdate,
+                                               SelfAttention2D, TriangularEdgeUpdate)
 
 
 def test_comparison_layer():
@@ -16,11 +14,11 @@ def test_comparison_layer():
 
 
 def test_gelu_forward():
-    G_forward = GeluFeedForward(input_dim=5, ff_dim=2)
+    g_forward = GeluFeedForward(input_dim=5, ff_dim=2)
     data = torch.rand((1, 10, 10, 5))
 
     with torch.no_grad():
-        data_gelu = G_forward(data)
+        data_gelu = g_forward(data)
 
     assert data.shape == data_gelu.shape
     assert torch.all(data != data_gelu)  # Check if data are modified

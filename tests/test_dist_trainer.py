@@ -2,55 +2,55 @@ import os
 import shutil
 
 import torch.nn as nn
-from tardis.dist_pytorch.trainer import C_DistTrainer, DistTrainer
-from tardis.dist_pytorch.train import train_dist
-from tardis.dist_pytorch.datasets.dataloader import (FilamentDataset,
-                                                         ScannetColorDataset)
-from tardis.utils.device import get_device
 from torch.utils.data import DataLoader
+
+from tardis.dist_pytorch.datasets.dataloader import (FilamentDataset, ScannetColorDataset)
+from tardis.dist_pytorch.train import train_dist
+from tardis.dist_pytorch.trainer import CDistTrainer, DistTrainer
+from tardis.utils.device import get_device
 
 
 def test_init_dist_train():
-    dl = DistTrainer(model=nn.Conv1d(1, 2, 3),
-                     structure={'node_input': 0},
-                     device='cpu',
-                     criterion=None,
-                     optimizer=None,
-                     print_setting=[],
-                     training_DataLoader=None,
-                     validation_DataLoader=None,
-                     lr_scheduler=None,
-                     epochs=100,
-                     early_stop_rate=10,
-                     checkpoint_name='test')
+    DistTrainer(model=nn.Conv1d(1, 2, 3),
+                structure={'node_input': 0},
+                device='cpu',
+                criterion=None,
+                optimizer=None,
+                print_setting=[],
+                training_DataLoader=None,
+                validation_DataLoader=None,
+                lr_scheduler=None,
+                epochs=100,
+                early_stop_rate=10,
+                checkpoint_name='test')
 
-    dl = C_DistTrainer(model=nn.Conv1d(1, 2, 3),
-                       structure={'node_input': 0,
-                                  'dist_type': 'semantic'},
-                       device='cpu',
-                       criterion=None,
-                       optimizer=None,
-                       print_setting=[],
-                       training_DataLoader=None,
-                       validation_DataLoader=None,
-                       lr_scheduler=None,
-                       epochs=100,
-                       early_stop_rate=10,
-                       checkpoint_name='test')
+    CDistTrainer(model=nn.Conv1d(1, 2, 3),
+                 structure={'node_input': 0,
+                             'dist_type': 'semantic'},
+                 device='cpu',
+                 criterion=None,
+                 optimizer=None,
+                 print_setting=[],
+                 training_DataLoader=None,
+                 validation_DataLoader=None,
+                 lr_scheduler=None,
+                 epochs=100,
+                 early_stop_rate=10,
+                 checkpoint_name='test')
 
-    dl = C_DistTrainer(model=nn.Conv1d(1, 2, 3),
-                       structure={'node_input': 0,
-                                  'dist_type': 'instance'},
-                       device='cpu',
-                       criterion=None,
-                       optimizer=None,
-                       print_setting=[],
-                       training_DataLoader=None,
-                       validation_DataLoader=None,
-                       lr_scheduler=None,
-                       epochs=100,
-                       early_stop_rate=10,
-                       checkpoint_name='test')
+    CDistTrainer(model=nn.Conv1d(1, 2, 3),
+                 structure={'node_input': 0,
+                             'dist_type': 'instance'},
+                 device='cpu',
+                 criterion=None,
+                 optimizer=None,
+                 print_setting=[],
+                 training_DataLoader=None,
+                 validation_DataLoader=None,
+                 lr_scheduler=None,
+                 epochs=100,
+                 early_stop_rate=10,
+                 checkpoint_name='test')
 
 
 def test_dist_trainer():
@@ -121,7 +121,7 @@ def test_c_dist_trainer():
                  'structure': 'triang'}
 
     train_dl = ScannetColorDataset(coord_dir='./tests/test_data/data_loader/scannet/train/masks/',
-                                   coord_format=('.ply'),
+                                   coord_format='.ply',
                                    patch_if=50,
                                    train=True)
     train_dl = train_dl + train_dl + train_dl + train_dl
@@ -131,7 +131,7 @@ def test_c_dist_trainer():
                           pin_memory=True)
 
     test_dl = ScannetColorDataset(coord_dir='./tests/test_data/data_loader/scannet/test/masks/',
-                                  coord_format=('.ply'),
+                                  coord_format='.ply',
                                   patch_if=50,
                                   train=False)
     test_dl = DataLoader(dataset=test_dl,

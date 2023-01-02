@@ -1,8 +1,9 @@
 import numpy as np
 import torch
 import torch.nn as nn
+
 from tardis.spindletorch.model.convolution import (DoubleConvolution,
-                                                       RecurrentDoubleConvolution)
+                                                   RecurrentDoubleConvolution)
 from tardis.spindletorch.model.decoder_blocks import build_decoder
 from tardis.spindletorch.model.encoder_blocks import build_encoder
 from tardis.spindletorch.utils.utils import number_of_features_per_level
@@ -17,7 +18,7 @@ class BasicCNN(nn.Module):
         out_channels (int): Number of output channels for last deconvolution.
         sigmoid (bool): If True, use nn.Sigmoid or nn.Softmax if False. Use True if
             nn.BCELoss is used as loss function for (two-class segmentation).
-        no_conv_layer (int): Number of convolution and deconvolution steps. Number of
+        num_conv_layer (int): Number of convolution and deconvolution steps. Number of
             input channels for convolution is calculated as a linear progression.
             E.g. [64, 128, 256, 512].
         conv_layer_scaler (int): Scaler for the output feature channels.
@@ -296,8 +297,8 @@ class UNet3Plus(nn.Module):
             self.activation = nn.Softmax(dim=1)
 
     @staticmethod
-    def dotProduct(x: torch.Tensor,
-                   x_cls: torch.Tensor) -> torch.Tensor:
+    def dot_product(x: torch.Tensor,
+                    x_cls: torch.Tensor) -> torch.Tensor:
         """
         Dot product for two tensors.
 
@@ -358,7 +359,7 @@ class UNet3Plus(nn.Module):
 
         """ Final Layer / Prediction"""
         if self.cls is not None:
-            x = self.dotProduct(self.final_conv_layer(x), x_cls_max)
+            x = self.dot_product(self.final_conv_layer(x), x_cls_max)
 
             if self.prediction:
                 x = self.activation(x)
@@ -387,10 +388,10 @@ class FNet(nn.Module):
         num_conv_layer: Number of convolution and deconvolution steps. Number of
             input channels for convolution is calculated as a linear progression.
             E.g. [64, 128, 256, 512]
-        conv_layer_multiplayer: Feature output of first layer
+        conv_layer_scaler: Feature output of first layer
         conv_kernel: Kernel size for the convolution
         padding: Padding size for convolution
-        maxpool_kernel: kernel size for max_pooling
+        pool_kernel: kernel size for max_pooling
         img_patch_size: Image patch size used for calculation network structure
         layer_components: Convolution module used for build network
         num_group: Number of group for nn.GroupNorm

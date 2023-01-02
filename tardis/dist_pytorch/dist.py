@@ -3,8 +3,10 @@ from typing import Optional
 import numpy as np
 import torch
 import torch.nn as nn
+
 from tardis.dist_pytorch.model.embedding import EdgeEmbedding, NodeEmbedding
 from tardis.dist_pytorch.model.layers import DistStack
+from tardis.utils.errors import TardisError
 
 
 class BasicDIST(nn.Module):
@@ -23,7 +25,7 @@ class BasicDIST(nn.Module):
             features.
         dropout_rate (float): Dropout factor used in MHA dropout layer.
         structure (str): DIST network structure.
-                Options: (full, traing, dualtriang, quad, attn)
+                Options: (full, triang, dualtriang, quad, attn)
         predict (bool): If True sigmoid output.
     """
 
@@ -166,7 +168,7 @@ class DIST(BasicDIST):
         super(DIST, self).__init__(**kwargs)
 
 
-class C_DIST(BasicDIST):
+class CDIST(BasicDIST):
     """
     MAIN DIST FOR CLASSIFYING DIMENSIONLESS INSTANCE SEGMENTATION TRANSFORMER
 
@@ -182,8 +184,11 @@ class C_DIST(BasicDIST):
 
     def __init__(self,
                  **kwargs):
-        super(C_DIST, self).__init__(**kwargs)
-        assert self.num_cls is not None
+        super(CDIST, self).__init__(**kwargs)
+        assert self.num_cls is not None, \
+            TardisError('build_cdist_network',
+                        'tardis/dist',
+                        'Undefined num_cls parameter!')
 
         self.decoder_cls = nn.Linear(in_features=self.edge_dim,
                                      out_features=self.num_cls)
@@ -203,12 +208,15 @@ def build_dist_network(network_type: str,
     and build DIST model.
 
     Args:
-        network_type (str):
-        structure (dict):
-        prediction (bool):
+        network_type (str): Network type name.
+        structure (dict):  Dictionary with all network setting.
+        prediction (bool): If True, build network in prediction path.
     """
     assert network_type in ['instance', 'semantic'], \
-        f'Wrong CNN network name {network_type}'
+        TardisError('build_dist_network',
+                    'tardis/dist',
+                    f'Wrong DIST network name {network_type}')
+
     if network_type == 'instance':
         return DIST(n_out=structure['n_out'],
                     node_input=structure['node_input'],
@@ -221,16 +229,16 @@ def build_dist_network(network_type: str,
                     structure=structure['structure'],
                     predict=prediction)
     elif network_type == 'semantic':
-        return C_DIST(n_out=structure['n_out'],
-                      node_input=structure['node_input'],
-                      node_dim=structure['node_dim'],
-                      edge_dim=structure['edge_dim'],
-                      num_layers=structure['num_layers'],
-                      num_heads=structure['num_heads'],
-                      num_cls=structure['num_cls'],
-                      coord_embed_sigma=structure['coord_embed_sigma'],
-                      dropout_rate=structure['dropout_rate'],
-                      structure=structure['structure'],
-                      predict=prediction)
+        return CDIST(n_out=structure['n_out'],
+                     node_input=structure['node_input'],
+                     node_dim=structure['node_dim'],
+                     edge_dim=structure['edge_dim'],
+                     num_layers=structure['num_layers'],
+                     num_heads=structure['num_heads'],
+                     num_cls=structure['num_cls'],
+                     coord_embed_sigma=structure['coord_embed_sigma'],
+                     dropout_rate=structure['dropout_rate'],
+                     structure=structure['structure'],
+                     predict=prediction)
     else:
         return None

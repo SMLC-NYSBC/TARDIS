@@ -10,7 +10,7 @@ from tardis.dist_pytorch.datasets.dataloader import build_dataset
 from tardis.dist_pytorch.train import train_dist
 from tardis.utils.dataset import build_test_dataset, move_train_dataset
 from tardis.utils.device import get_device
-from tardis.utils.logo import Tardis_Logo
+from tardis.utils.logo import TardisLogo
 from tardis.utils.setup_envir import check_dir
 from tardis.version import version
 
@@ -20,7 +20,7 @@ from tardis.version import version
               default=getcwd(),
               type=str,
               help='Directory with train, test folder or folder with dataset '
-              'to be used for training.',
+                   'to be used for training.',
               show_default=True)
 @click.option('-dst', '--dataset_type',
               default='filament',
@@ -106,9 +106,9 @@ from tardis.version import version
               default=0,
               type=str,
               help='Define which device use for training: '
-              'gpu: Use ID 0 gpus '
-              'cpu: Usa CPU '
-              '0-9 - specified gpu device id to use',
+                   'gpu: Use ID 0 gpus '
+                   'cpu: Usa CPU '
+                   '0-9 - specified gpu device id to use',
               show_default=True)
 @click.option('-e', '--epochs',
               default=100,
@@ -142,7 +142,7 @@ def main(dir: str,
          epochs: int,
          early_stop: int):
     """Initialize TARDIS progress bar"""
-    tardis_logo = Tardis_Logo()
+    tardis_logo = TardisLogo()
     tardis_logo(title='DIST training module')
 
     """Stor all temp. directories"""
@@ -169,7 +169,7 @@ def main(dir: str,
         # Check and set-up environment
         assert len([f for f in listdir(dir) if f.endswith(COORD_FORMAT)]) > 0, \
             'Indicated folder for training do not have any compatible data or ' \
-            'one of the following folders: '\
+            'one of the following folders: ' \
             'test/imgs; test/masks; train/imgs; train/masks'
 
         if isdir(join(dir, 'train')):

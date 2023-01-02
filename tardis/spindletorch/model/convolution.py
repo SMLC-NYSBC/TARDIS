@@ -4,6 +4,8 @@ from typing import Optional
 import torch
 import torch.nn as nn
 
+from tardis.utils.errors import TardisError
+
 
 class GeLU(nn.Module):
     """
@@ -101,7 +103,9 @@ def convolution(in_ch: int,
         "Add GroupNorm"
         if "g" == letter:
             assert num_group is not None, \
-                'Number of group is required if nn.GroupNorm is used.'
+                TardisError('convolution',
+                            'tardis/spindletorch/model/convolution.py',
+                            'Number of group is required if nn.GroupNorm is used.')
 
             if num_group > in_ch:
                 num_group = 1
@@ -216,7 +220,9 @@ class DoubleConvolution(nn.Sequential):
 
         # Define in and out channels for 1st and 2nd convolutions
         assert block_type in ["encoder", "decoder"], \
-            'Only "encoder", "decoder block type is supported.'
+            TardisError('DoubleConvolution',
+                        'tardis/spindletorch/model/convolution.py',
+                        'Only "encoder", decoder block type is supported.')
 
         """Calculate in and out channels for double convolution"""
         if block_type == "encoder":
@@ -274,7 +280,9 @@ class RecurrentDoubleConvolution(nn.Module):
 
         # Define in and out channels for 1st and 2nd convolutions
         assert block_type in ["encoder", "decoder"], \
-            'Only "encoder", "decoder block type is supported.'
+            TardisError('RecurrentDoubleConvolution',
+                        'tardis/spindletorch/model/convolution.py',
+                        'Only "encoder", decoder block type is supported.')
 
         """Calculate in and out channels for double convolution"""
         if block_type == "encoder":

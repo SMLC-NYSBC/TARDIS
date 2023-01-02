@@ -17,10 +17,11 @@ from tardis.spindletorch.datasets.dataloader import PredictionDataset
 from tardis.utils.device import get_device
 from tardis.utils.export_data import to_mrc
 from tardis.utils.load_data import import_am, load_image
-from tardis.utils.logo import Tardis_Logo, printProgressBar
+from tardis.utils.logo import print_progress_bar, TardisLogo
 from tardis.utils.predictor import Predictor
 from tardis.utils.setup_envir import build_temp_dir, clean_up
 from tardis.version import version
+
 warnings.simplefilter("ignore", UserWarning)
 
 
@@ -54,9 +55,9 @@ warnings.simplefilter("ignore", UserWarning)
               default='0',
               type=str,
               help='Define which device use for training: '
-              'gpu: Use ID 0 GPUs '
-              'cpu: Usa CPU '
-              '0-9 - specified GPU device id to use',
+                   'gpu: Use ID 0 GPUs '
+                   'cpu: Usa CPU '
+                   '0-9 - specified GPU device id to use',
               show_default=True)
 @click.version_option(version=version)
 def main(dir: str,
@@ -69,8 +70,8 @@ def main(dir: str,
     MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
     """
     """Initial Setup"""
-    tardis_progress = Tardis_Logo()
-    tardis_progress(title=f'Fully-automatic Membrane segmentation module')
+    tardis_progress = TardisLogo()
+    tardis_progress(title='Fully-automatic Membrane segmentation module')
 
     # Searching for available images for prediction
     available_format = ('.tif', '.mrc', '.rec', '.am', '.map')
@@ -81,15 +82,15 @@ def main(dir: str,
 
     # Tardis progress bar update
     if len(predict_list) == 0:
-        tardis_progress(title=f'Fully-automatic Membrane segmentation module',
+        tardis_progress(title='Fully-automatic Membrane segmentation module',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_5='Point Cloud: Nan',
                         text_7='Current Task: NaN',
-                        text_8=f'Tardis Error: Wrong directory:',
+                        text_8='Tardis Error: Wrong directory:',
                         text_9=f'Given {dir} is does not contain any recognizable file formats!')
         sys.exit()
     else:
-        tardis_progress(title=f'Fully-automatic Membrane segmentation module',
+        tardis_progress(title='Fully-automatic Membrane segmentation module',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_5='Point Cloud: In processing...',
                         text_7='Current Task: Set-up environment...')
@@ -101,7 +102,7 @@ def main(dir: str,
                               type=float)
 
     # Build handler's
-    normalize = RescaleNormalize(range=(1, 99))  # Normalize histogram
+    normalize = RescaleNormalize(clip_range=(1, 99))  # Normalize histogram
     minmax = MinMaxNormalize()
 
     image_stitcher = StitchImages()
@@ -109,7 +110,7 @@ def main(dir: str,
     device = get_device(device)
     cnn_network = cnn_network.split('_')
     if not len(cnn_network) == 2:
-        tardis_progress(title=f'Fully-automatic Membrane segmentation module',
+        tardis_progress(title='Fully-automatic Membrane segmentation module',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_5='Point Cloud: Nan',
                         text_7='Current Task: NaN',
@@ -126,7 +127,7 @@ def main(dir: str,
                             device=device)
 
     """Process each image with CNN and DIST"""
-    tardis_progress = Tardis_Logo()
+    tardis_progress = TardisLogo()
     for id, i in enumerate(sorted(predict_list)):
         """Pre-Processing"""
         if i.endswith('CorrelationLines.am'):
@@ -141,7 +142,7 @@ def main(dir: str,
             out_format = 3
 
         # Tardis progress bar update
-        tardis_progress(title=f'Fully-automatic Membrane segmentation module ',
+        tardis_progress(title='Fully-automatic Membrane segmentation module ',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                         text_4='Pixel size: Nan A',
@@ -168,7 +169,7 @@ def main(dir: str,
             image = minmax(image)
 
         if not image.dtype == np.float32:
-            tardis_progress(title=f'Fully-automatic Membrane segmentation module',
+            tardis_progress(title='Fully-automatic Membrane segmentation module',
                             text_1=f'Found {len(predict_list)} images to predict!',
                             text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                             text_5='Point Cloud: Nan A',
@@ -183,7 +184,7 @@ def main(dir: str,
         scale_shape = tuple(np.multiply(org_shape, scale_factor).astype(np.int16))
 
         # Tardis progress bar update
-        tardis_progress(title=f'Fully-automatic Membrane segmentation module ',
+        tardis_progress(title='Fully-automatic Membrane segmentation module ',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                         text_4=f'Pixel size: {px} A',
@@ -201,34 +202,33 @@ def main(dir: str,
                          clean_empty=False,
                          stride=10,
                          prefix='')
-        image = None
         del image
 
         # Setup CNN dataloader
-        patches_DL = PredictionDataset(img_dir=join(dir, 'temp', 'Patches'),
+        patches_dl = PredictionDataset(img_dir=join(dir, 'temp', 'Patches'),
                                        out_channels=1)
 
         """CNN prediction"""
         iter_time = 1
-        for j in range(len(patches_DL)):
+        for j in range(len(patches_dl)):
             if j % iter_time == 0:
                 # Tardis progress bar update
-                tardis_progress(title=f'Fully-automatic Membrane segmentation module ',
+                tardis_progress(title='Fully-automatic Membrane segmentation module ',
                                 text_1=f'Found {len(predict_list)} images to predict!',
                                 text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                                 text_4=f'Pixel size: {px} A',
                                 text_5='Point Cloud: In processing...',
                                 text_7='Current Task: CNN prediction...',
-                                text_8=printProgressBar(j, len(patches_DL)))
+                                text_8=print_progress_bar(j, len(patches_dl)))
 
             # Pick image['s]
-            input, name = patches_DL.__getitem__(j)
+            input, name = patches_dl.__getitem__(j)
 
             if j == 0:
                 start = time.time()
 
                 # Predict & Threshold
-                input = predict_cnn._predict(input[None, :])
+                input = predict_cnn.predict(input[None, :])
                 if cnn_threshold != 0:
                     input = np.where(input >= cnn_threshold, 1, 0).astype(np.uint8)
 
@@ -238,7 +238,7 @@ def main(dir: str,
                     iter_time = 1
             else:
                 # Predict & Threshold
-                input = predict_cnn._predict(input[None, :])
+                input = predict_cnn.predict(input[None, :])
                 if cnn_threshold != 0:
                     input = np.where(input >= cnn_threshold, 1, 0).astype(np.uint8)
 
@@ -247,7 +247,7 @@ def main(dir: str,
 
         """Post-Processing"""
         # Tardis progress bar update
-        tardis_progress(title=f'Fully-automatic Membrane segmentation module ',
+        tardis_progress(title='Fully-automatic Membrane segmentation module ',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                         text_4=f'Original pixel size: {px} A',
@@ -274,7 +274,7 @@ def main(dir: str,
 
         # Check if predicted image
         if not image.shape == org_shape:
-            tardis_progress(title=f'Fully-automatic Membrane segmentation module',
+            tardis_progress(title='Fully-automatic Membrane segmentation module',
                             text_1=f'Found {len(predict_list)} images to predict!',
                             text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                             text_4=f'Original pixel size: {px} A',

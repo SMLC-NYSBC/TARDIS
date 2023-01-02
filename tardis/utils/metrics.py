@@ -4,21 +4,21 @@ import numpy as np
 import torch
 
 
-def calculate_F1(logits: Optional[np.ndarray] = torch.Tensor,
+def calculate_f1(logits: Optional[np.ndarray] = torch.Tensor,
                  targets: Optional[np.ndarray] = torch.Tensor,
                  best_f1=True):
     """
     MODULE USED FOR CALCULATING TRAINING METRICS
 
-    Works with torch an numpy dataset.
+    Works with torch a numpy dataset.
 
     Args:
-        input (np.ndarray, torch.Tensor): Prediction output from the model.
-        target (np.ndarray, torch.Tensor): Ground truth mask.
+        logits (np.ndarray, torch.Tensor): Prediction output from the model.
+        targets (np.ndarray, torch.Tensor): Ground truth mask.
         best_f1 (bool): If True an expected inputs is probability of classes and
             measured metrics is soft-f1.
     """
-    """Find best f1 based on variating threshold"""
+    """Find best f1 based on variation threshold"""
     if best_f1:
         threshold = 0
         f1 = []
@@ -75,7 +75,7 @@ def calculate_F1(logits: Optional[np.ndarray] = torch.Tensor,
             fn = torch.sum(confusion_vector == 0).item()
         else:
             logits = normalize_image(logits)
-            target = normalize_image(targets)
+            targets = normalize_image(targets)
 
             with np.errstate(divide='ignore', invalid='ignore'):
                 confusion_vector = logits / targets
@@ -95,7 +95,9 @@ def calculate_F1(logits: Optional[np.ndarray] = torch.Tensor,
         recall_score = tp / (tp + fn + 1e-16)
 
         """F1 Score - 2 * [(Prec * Rec) / (Prec + Rec)]"""
-        F1_score = 2 * ((precision_score * recall_score) / (precision_score + recall_score + 1e-16))
+        F1_score = 2 * ((precision_score * recall_score) / (precision_score +
+                                                            recall_score +
+                                                            1e-16))
 
         return accuracy_score, precision_score, recall_score, F1_score
 
@@ -105,7 +107,7 @@ def normalize_image(image: np.ndarray):
     Simple image data normalizer between 0,1
 
     Args:
-        image: Image data set
+        image (np.ndarray): Image data set.
     """
     image_min = np.min(image)
     image_max = np.max(image)
