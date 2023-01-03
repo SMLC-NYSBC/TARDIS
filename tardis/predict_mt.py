@@ -70,7 +70,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option('-pv', '--points_in_patch',
               default=1000,
               type=int,
-              help='Number of point per voxal.',
+              help='Number of point per voxel.',
               show_default=True)
 @click.option('-f', '--filter_mt',
               default=0,
@@ -89,7 +89,7 @@ warnings.simplefilter("ignore", UserWarning)
                    'cpu: Usa CPU '
                    '0-9 - specified GPU device id to use',
               show_default=True)
-@click.option('-o', '--output',
+@click.option('-o', '--output_format',
               default=None,
               type=click.Choice(['csv', 'mrc']),
               help='Define output format type.',
@@ -116,7 +116,7 @@ def main(dir: str,
          filter_mt: float,
          device: str,
          debug: bool,
-         output='amira',
+         output_format='amira',
          visualizer: Optional[str] = None,
          cnn_checkpoint: Optional[str] = None,
          dist_checkpoint: Optional[str] = None):
@@ -165,7 +165,7 @@ def main(dir: str,
     minmax = MinMaxNormalize()
 
     image_stitcher = StitchImages()
-    post_processer = ImageToPointCloud()
+    post_processes = ImageToPointCloud()
     build_amira_file = NumpyToAmira()
     patch_pc = PatchDataSet(label_cls=None,
                             rgb=None,
@@ -411,13 +411,13 @@ def main(dir: str,
                         text_7='Current Task: Image Postprocessing...')
 
         # Post-process predicted image patches
-        point_cloud = post_processer(image=image,
+        point_cloud = post_processes(image=image,
                                      euclidean_transform=True,
                                      label_size=3,
                                      down_sampling_voxal_size=None)
 
         if point_cloud.shape[0] < 100:
-            point_cloud = post_processer(image=image,
+            point_cloud = post_processes(image=image,
                                          euclidean_transform=True,
                                          label_size=0.5,
                                          down_sampling_voxal_size=None)
@@ -434,7 +434,7 @@ def main(dir: str,
                     point_cloud)
 
         """DIST Prediction"""
-        # Find downsampling value by voxal size 5 to reduce noise
+        # Find down-sampling value by voxel size 5 to reduce noise
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(point_cloud)
         point_cloud = np.asarray(pcd.voxel_down_sample(voxel_size=5).points)
@@ -567,7 +567,7 @@ def main(dir: str,
         build_amira_file.export_amira(coord=segments_filter,
                                       file_dir=join(am_output,
                                                     f'{i[:-out_format]}_SpatialGraph_filter.am'))
-        if output == 'csv':
+        if output_format == 'csv':
             np.savetxt(join(am_output,
                             f'{i[:-out_format]}'
                             '_SpatialGraph.csv'),

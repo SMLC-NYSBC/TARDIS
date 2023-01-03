@@ -113,6 +113,7 @@ def build_train_dataset(dataset_dir: str,
     """Load data, build mask is not image and trim"""
     coord = None
     img_counter = 0
+    log_file = np.array((len(idx_mask), 3))
 
     for id, i in enumerate(range(len(idx_img))):
         """Load image data and store image and mask name"""
@@ -120,6 +121,10 @@ def build_train_dataset(dataset_dir: str,
 
         img_name = ''
         mask_name = idx_mask[i]
+        log_file[id, 0] = id
+        np.savetxt(join(dataset_dir, 'log.txt'),
+                   log_file,
+                   delimiter=',')
 
         if mask_name.endswith('.CorrelationLines.am'):
             if isfile(join(dataset_dir, f'{mask_name[:-20]}.am')):
@@ -136,6 +141,11 @@ def build_train_dataset(dataset_dir: str,
                             'Number of images and mask is not the same!')
         else:
             img_name = f'{mask_name[:-9]}.mrc'
+
+        log_file[id, 1] = img_name
+        np.savetxt(join(dataset_dir, 'log.txt'),
+                   log_file,
+                   delimiter=',')
 
         """Load image file"""
         pixel_size = 1
@@ -155,6 +165,11 @@ def build_train_dataset(dataset_dir: str,
             TardisError('LOADING_IMAGE_WHILE_BUILDING_DATASET',
                         'tardis/spindletorch',
                         f'Image {img_name} not in {IMG_FORMATS}!')
+
+        log_file[id, 2] = pixel_size
+        np.savetxt(join(dataset_dir, 'log.txt'),
+                   log_file,
+                   delimiter=',')
 
         """Load mask file"""
         # Try to load .CorrelationLines.am files
@@ -182,6 +197,11 @@ def build_train_dataset(dataset_dir: str,
 
         scale_factor = pixel_size / resize_pixel_size
         scale_shape = tuple(np.multiply(image.shape, scale_factor).astype(np.int16))
+
+        log_file[id, 3] = scale_factor
+        np.savetxt(join(dataset_dir, 'log.txt'),
+                   log_file,
+                   delimiter=',')
 
         tardis_progress(title='Data pre-processing for CNN training',
                         text_1='Building Training dataset:',

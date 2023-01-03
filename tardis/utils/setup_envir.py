@@ -2,6 +2,7 @@ import glob
 from os import listdir, mkdir, rename
 from os.path import isdir, join
 from shutil import rmtree
+from typing import Optional
 
 from tardis.utils.errors import TardisError
 
@@ -75,11 +76,11 @@ def clean_up(dir: str):
 def check_dir(dir: str,
               train_img: str,
               train_mask: str,
-              img_format: tuple,
               test_img: str,
               test_mask: str,
-              mask_format: tuple,
-              with_img: bool):
+              with_img: bool,
+              img_format: Optional[tuple] = str,
+              mask_format: Optional[tuple] = str):
     """
     Check list used to evaluate if directory containing dataset for CNN.
 
@@ -87,12 +88,17 @@ def check_dir(dir: str,
         dir (str): Main directory with all files.
         train_img (str): Directory name with images for training.
         train_mask (str): Directory name with mask images for training.
-        img_format (tuple): Allowed image format.
+        img_format (tuple, str): Allowed image format.
         test_img (str): Directory name with images for validation.
         test_mask (str): Directory name with mask images for validation.
-        mask_format (tuple): Allowed mask image format.
+        mask_format (tuple, str): Allowed mask image format.
         with_img (bool): GraphFormer bool value for training with/without images.
     """
+    if isinstance(img_format, str):
+        img_format = [img_format]
+    if isinstance(mask_format, str):
+        mask_format = [mask_format]
+
     dataset_test = False
     if isdir(join(dir, 'train')) and isdir(join(dir, 'test')):
         dataset_test = True

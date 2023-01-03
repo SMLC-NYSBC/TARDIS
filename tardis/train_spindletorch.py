@@ -11,6 +11,7 @@ from tardis.spindletorch.datasets.dataloader import CNNDataset
 from tardis.spindletorch.train import train_cnn
 from tardis.utils.dataset import build_test_dataset
 from tardis.utils.device import get_device
+from tardis.utils.errors import TardisError
 from tardis.utils.logo import TardisLogo
 from tardis.utils.setup_envir import check_dir
 from tardis.version import version
@@ -189,9 +190,11 @@ def main(dir: str,
     if not DATASET_TEST:
         # Check and set-up environment
         assert len([f for f in listdir(dir) if f.endswith(IMG_FORMAT)]) > 0, \
-            'Indicated folder for training do not have any compatible data or ' \
-            'one of the following folders: ' \
-            'test/imgs; test/masks; train/imgs; train/masks'
+            TardisError('DATA_COMPATIBILITY_TRAINING',
+                        'tardis/',
+                        'Indicated folder for training do not have any compatible '
+                        'data or one of the following folders: '
+                        'test/imgs; test/masks; train/imgs; train/masks')
 
         if isdir(join(dir, 'train')):
             rmtree(join(dir, 'train'))

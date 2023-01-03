@@ -27,7 +27,7 @@ class PatchDataSet:
     Args:
         label_cls (np.ndarray, None): Optional class id array for each point in the
             point cloud.
-        rgb (np.ndarray): Optional RGB feature array for each point in the point
+        rgb (np.ndarray, None): Optional RGB feature array for each point in the point
             cloud.
         patch_3d (bool): If True, compute patches in 3D. If False, patches are
             computed in 2D and if coord (N, 3), Z dimension is np.inf.
