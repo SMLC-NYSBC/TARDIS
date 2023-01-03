@@ -113,7 +113,7 @@ def build_train_dataset(dataset_dir: str,
     """Load data, build mask is not image and trim"""
     coord = None
     img_counter = 0
-    log_file = np.array((len(idx_mask), 3))
+    log_file = np.zeros((len(idx_mask), 4), dtype='|S50')
 
     for id, i in enumerate(range(len(idx_img))):
         """Load image data and store image and mask name"""
@@ -121,9 +121,10 @@ def build_train_dataset(dataset_dir: str,
 
         img_name = ''
         mask_name = idx_mask[i]
-        log_file[id, 0] = id
+        log_file[id, 0] = str(id)
         np.savetxt(join(dataset_dir, 'log.txt'),
                    log_file,
+                   fmt='%s',
                    delimiter=',')
 
         if mask_name.endswith('.CorrelationLines.am'):
@@ -145,6 +146,7 @@ def build_train_dataset(dataset_dir: str,
         log_file[id, 1] = img_name
         np.savetxt(join(dataset_dir, 'log.txt'),
                    log_file,
+                   fmt='%s',
                    delimiter=',')
 
         """Load image file"""
@@ -166,9 +168,10 @@ def build_train_dataset(dataset_dir: str,
                         'tardis/spindletorch',
                         f'Image {img_name} not in {IMG_FORMATS}!')
 
-        log_file[id, 2] = pixel_size
+        log_file[id, 2] = str(pixel_size)
         np.savetxt(join(dataset_dir, 'log.txt'),
                    log_file,
+                   fmt='%s',
                    delimiter=',')
 
         """Load mask file"""
@@ -198,9 +201,10 @@ def build_train_dataset(dataset_dir: str,
         scale_factor = pixel_size / resize_pixel_size
         scale_shape = tuple(np.multiply(image.shape, scale_factor).astype(np.int16))
 
-        log_file[id, 3] = scale_factor
+        log_file[id, 3] = str(scale_factor)
         np.savetxt(join(dataset_dir, 'log.txt'),
                    log_file,
+                   fmt='%s',
                    delimiter=',')
 
         tardis_progress(title='Data pre-processing for CNN training',
