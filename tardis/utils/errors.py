@@ -145,14 +145,13 @@ class TardisError(Exception):
             Tuple[str, str, str, str, str, str, str, str]: Truncate string.
         """
         MAX_TRUNC = 8
-        iter_i = 1
-        text_3, text_4, text_5, text_6, \
-            text_7, text_8, text_9, text_10 = '', '', '', '', '', '', '', ''
+        iter_i = 0
 
-        while MAX_TRUNC != iter_i or len(desc) <= width:
+        text = []
+        while MAX_TRUNC != iter_i:
             iter_i += 1
 
-            text_3 = desc[:width]
+            text.append(desc[:width])
             desc = desc[width:]
 
-        return text_3, text_4, text_5, text_6, text_7, text_8, text_9, text_10
+        return text

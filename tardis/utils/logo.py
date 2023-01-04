@@ -127,7 +127,12 @@ class TardisLogo:
         Returns:
             int: cell width.
         """
-        return get_terminal_size()[0] - 26
+        if is_interactive():
+            n_bar = 75
+        else:
+            n_bar = get_terminal_size()[0] - 26
+
+        return n_bar
 
     def __call__(self,
                  title='', text_1='', text_2='', text_3='', text_4='',
