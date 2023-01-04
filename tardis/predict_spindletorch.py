@@ -1,3 +1,14 @@
+"""
+TARDIS - Transformer And Rapid Dimensionless Instance Segmentation
+
+<module> SpindleTorch - predict
+
+New York Structural Biology Center
+Simons Machine Learning Center
+
+Robert Kiewisz, Tristan Bepler
+MIT License 2021 - 2022
+"""
 import time
 import warnings
 from os import getcwd, listdir

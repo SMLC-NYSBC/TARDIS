@@ -1,3 +1,14 @@
+"""
+TARDIS - Transformer And Rapid Dimensionless Instance Segmentation
+
+<module> Utils - logo
+
+New York Structural Biology Center
+Simons Machine Learning Center
+
+Robert Kiewisz, Tristan Bepler
+MIT License 2021 - 2022
+"""
 import platform
 import sys
 from os import get_terminal_size, system

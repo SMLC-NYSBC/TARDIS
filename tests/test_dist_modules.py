@@ -1,3 +1,14 @@
+"""
+TARDIS - Transformer And Rapid Dimensionless Instance Segmentation
+
+<module> PyTest DIST_pytorch - Modules
+
+New York Structural Biology Center
+Simons Machine Learning Center
+
+Robert Kiewisz, Tristan Bepler
+MIT License 2021 - 2022
+"""
 import torch
 
 from tardis.dist_pytorch.model.modules import (ComparisonLayer, gelu, GeluFeedForward,

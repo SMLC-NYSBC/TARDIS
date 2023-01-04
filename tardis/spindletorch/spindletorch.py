@@ -1,3 +1,14 @@
+"""
+TARDIS - Transformer And Rapid Dimensionless Instance Segmentation
+
+<module> SpindleTorch - spindletorch
+
+New York Structural Biology Center
+Simons Machine Learning Center
+
+Robert Kiewisz, Tristan Bepler
+MIT License 2021 - 2022
+"""
 from tardis.spindletorch.utils.build_cnn import FNet, ResUNet, UNet, UNet3Plus
 from tardis.utils.errors import TardisError
 

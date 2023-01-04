@@ -1,3 +1,14 @@
+"""
+TARDIS - Transformer And Rapid Dimensionless Instance Segmentation
+
+<module> Dist_pytorch - Model - layers
+
+New York Structural Biology Center
+Simons Machine Learning Center
+
+Robert Kiewisz, Tristan Bepler
+MIT License 2021 - 2022
+"""
 from typing import Optional, Tuple
 
 import torch

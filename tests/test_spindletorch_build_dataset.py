@@ -1,3 +1,14 @@
+"""
+TARDIS - Transformer And Rapid Dimensionless Instance Segmentation
+
+<module> PyTest SpindleTorch - DataSet Build
+
+New York Structural Biology Center
+Simons Machine Learning Center
+
+Robert Kiewisz, Tristan Bepler
+MIT License 2021 - 2022
+"""
 from os import listdir, mkdir
 from os.path import isdir, join
 from shutil import copy, rmtree

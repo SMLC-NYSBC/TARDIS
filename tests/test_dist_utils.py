@@ -1,3 +1,14 @@
+"""
+TARDIS - Transformer And Rapid Dimensionless Instance Segmentation
+
+<module> PyTest DIST_pytorch - Utils
+
+New York Structural Biology Center
+Simons Machine Learning Center
+
+Robert Kiewisz, Tristan Bepler
+MIT License 2021 - 2022
+"""
 import numpy as np
 
 from tardis.dist_pytorch.utils.build_point_cloud import ImageToPointCloud
