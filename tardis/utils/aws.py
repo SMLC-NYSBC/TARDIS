@@ -17,9 +17,9 @@ def get_weights_aws(network: str,
 
     Model weight stored on S3 bucket with the naming convention
     network_subtype/model/model_weights.pth
-    ege.:
-        - fnet_32/microtubules/model_weights.pth
-        - dist_triang/microtubules/model_weights.pth
+    References.:
+    - fnet_32/microtubules/model_weights.pth
+    - dist_triang/microtubules/model_weights.pth
 
     Weights are stored in ~/.tardis_pytorch with the same convention and .txt
     file with file header information to identified update status for local file
@@ -34,16 +34,16 @@ def get_weights_aws(network: str,
     dir = join(expanduser('~'), '.tardis_pytorch', f'{network}_{subtype}', f'{model}')
 
     assert network in ['unet', 'unet3plus', 'fnet', 'dist'], \
-        TardisError('aws',
+        TardisError('19',
                     'tardis/utils/aws.py',
                     f'Incorrect CNN network selected {network}_{subtype}')
     assert subtype in ['16', '32', '64', '96', '128', 'triang', 'full'], \
-        TardisError('aws',
+        TardisError('19',
                     'tardis/utils/aws.py',
                     f'Incorrect CNN subtype selected {network}_{subtype}')
 
     assert model in ['microtubules', 'cryo_mem'], \
-        TardisError('aws',
+        TardisError('19',
                     'tardis/utils/aws.py',
                     f'Incorrect CNN model selected {model}')
 

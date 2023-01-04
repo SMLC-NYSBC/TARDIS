@@ -72,7 +72,7 @@ class StitchImages:
                  mask: bool,
                  prefix='',
                  output: Optional[str] = None,
-                 dtype=np.uint8):
+                 dtype=np.uint8) -> np.ndarray:
         """
         STITCH IMAGE FROM IMAGE PATCHES
 
@@ -85,7 +85,7 @@ class StitchImages:
             dtype (np.dtype): Numpy dtype for output
 
         Returns:
-            np.ndarray, Optional: If indicated output, image is saved in output directory
+            np.ndarray: If indicated output, image is saved in output directory
             else stitch images is return as array.
         """
         """Extract information about images in dir_path"""

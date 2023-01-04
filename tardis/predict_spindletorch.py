@@ -14,6 +14,7 @@ from tardis.spindletorch.data_processing.trim import scale_image, trim_with_stri
 from tardis.spindletorch.datasets.augment import MinMaxNormalize, RescaleNormalize
 from tardis.spindletorch.datasets.dataloader import PredictionDataset
 from tardis.utils.device import get_device
+from tardis.utils.errors import TardisError
 from tardis.utils.load_data import import_am, load_image
 from tardis.utils.logo import print_progress_bar, TardisLogo
 from tardis.utils.predictor import Predictor
@@ -70,7 +71,6 @@ def main(dir: str,
          cnn_threshold: float,
          device: str,
          debug: bool,
-         visualizer: Optional[str] = None,
          cnn_checkpoint: Optional[str] = None):
     """
     MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
@@ -87,7 +87,6 @@ def main(dir: str,
     # Searching for available images for prediction
     available_format = ('.tif', '.mrc', '.rec', '.am')
     output = join(dir, 'temp', 'Predictions')
-    am_output = join(dir, 'Predictions')
 
     predict_list = [f for f in listdir(dir) if f.endswith(available_format)]
     assert len(predict_list) > 0, 'No file found in given directory!'
@@ -111,7 +110,7 @@ def main(dir: str,
     image_stitcher = StitchImages()
 
     # Build CNN from checkpoints
-    checkpoints = (cnn_checkpoint)
+    checkpoints = cnn_checkpoint
 
     device = get_device(device)
     cnn_network = cnn_network.split('_')
@@ -131,14 +130,6 @@ def main(dir: str,
         if i.endswith('CorrelationLines.am'):
             continue
 
-        out_format = 0
-        if i.endswith(('.tif', '.mrc', '.rec')):
-            out_format = 4
-        elif i.endswith('.tiff'):
-            out_format = 5
-        elif i.endswith('.am'):
-            out_format = 3
-
         # Tardis progress bard update
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
@@ -155,7 +146,6 @@ def main(dir: str,
             image, px, _, transformation = import_am(am_file=join(dir, i))
         else:
             image, px = load_image(join(dir, i))
-            transformation = [0, 0, 0]
 
         if tif_px is not None:
             px = tif_px
@@ -182,21 +172,17 @@ def main(dir: str,
 
         # Cut image for fix patch size and normalizing image pixel size
         trim_with_stride(image=image.astype(np.float32),
-                         mask=None,
                          scale=scale_shape,
                          trim_size_xy=patch_size,
                          trim_size_z=patch_size,
                          output=join(dir, 'temp', 'Patches'),
                          image_counter=0,
                          clean_empty=False,
-                         stride=10,
-                         prefix='')
-        image = None
+                         stride=10)
         del image
 
         # Setup CNN dataloader
-        patches_DL = PredictionDataset(img_dir=join(dir, 'temp', 'Patches'),
-                                       out_channels=1)
+        patches_DL = PredictionDataset(img_dir=join(dir, 'temp', 'Patches'))
 
         """CNN prediction"""
         iter_time = 1
@@ -246,25 +232,25 @@ def main(dir: str,
 
         # Stitch predicted image patches
         image = check_uint8(image_stitcher(image_dir=output,
-                                           output=None,
                                            mask=True,
-                                           prefix='',
                                            dtype=np.int8)[:scale_shape[0],
-                            :scale_shape[1],
-                            :scale_shape[2]])
+                                                          :scale_shape[1],
+                                                          :scale_shape[2]])
         assert image.shape == scale_shape, f'Image shape {image.shape} != scale shape {scale_shape}'
 
         # Restored original image pixel size
-        image, _ = scale_image(image=image,
-                               mask=None,
-                               scale=scale_factor)
+        image, _ = scale_image(image=image, scale=scale_factor)
 
         # Fill gaps in binary mask after up/downsizing image to 2.5 nm pixel size
         image = fill_gaps_in_semantic(image)
 
         # Check if predicted image
-        assert image.shape == org_shape, f'Error while converting to {px} A pixel size. ' \
-                                         f'Org. shape {org_shape} is not the same as converted shape {image.shape}'
+        assert image.shape == org_shape, \
+            TardisError('145',
+                        'tardis/predict_spindletorch.py',
+                        f'Error while converting to {px} A pixel size. '
+                        f'Org. shape {org_shape} is not the same as '
+                        f'converted shape {image.shape}')
 
         # If prediction fail aka no prediction was produces continue with next image
         if image is None:

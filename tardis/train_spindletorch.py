@@ -41,8 +41,7 @@ from tardis.version import version
               show_default=True)
 @click.option('-cnn', '--cnn_type',
               default='unet',
-              type=click.Choice(['unet', 'resunet', 'unet3plus', 'big_unet', 'fnet'],
-                                case_sensitive=True),
+              type=click.Choice(['unet', 'resunet', 'unet3plus', 'big_unet', 'fnet']),
               help='Type of NN used for training.',
               show_default=True)
 @click.option('-co', '--cnn_out_channel',
@@ -94,8 +93,7 @@ from tardis.version import version
               show_default=True)
 @click.option('-l', '--cnn_loss',
               default='bce',
-              type=click.Choice(['bce', 'dice', 'hybrid', 'adaptive_dice'],
-                                case_sensitive=True),
+              type=click.Choice(['bce', 'dice', 'hybrid', 'adaptive_dice']),
               help='Loss function use for training.',
               show_default=True)
 @click.option('-lr', '--loss_lr_rate',
@@ -174,7 +172,6 @@ def main(dir: str,
     TEST_MASK_DIR = join(dir, 'test', 'masks')
 
     IMG_FORMAT = ('.tif', '.am', '.mrc', '.rec')
-    DATASET_TEST = False
 
     """Check if dir has train/test folder and if folder have compatible data"""
     DATASET_TEST = check_dir(dir=dir,
@@ -190,8 +187,8 @@ def main(dir: str,
     if not DATASET_TEST:
         # Check and set-up environment
         assert len([f for f in listdir(dir) if f.endswith(IMG_FORMAT)]) > 0, \
-            TardisError('DATA_COMPATIBILITY_TRAINING',
-                        'tardis/',
+            TardisError('100',
+                        'tardis/train_spindletorch.py',
                         'Indicated folder for training do not have any compatible '
                         'data or one of the following folders: '
                         'test/imgs; test/masks; train/imgs; train/masks')
@@ -226,8 +223,6 @@ def main(dir: str,
     train_DL = DataLoader(dataset=CNNDataset(img_dir=TRAIN_IMAGE_DIR,
                                              mask_dir=TRAIN_MASK_DIR,
                                              size=patch_size,
-                                             mask_suffix='_mask',
-                                             transform=True,
                                              out_channels=cnn_out_channel),
                           batch_size=training_batch_size,
                           shuffle=True,
@@ -237,10 +232,7 @@ def main(dir: str,
     test_DL = DataLoader(dataset=CNNDataset(img_dir=TEST_IMAGE_DIR,
                                             mask_dir=TEST_MASK_DIR,
                                             size=patch_size,
-                                            mask_suffix='_mask',
-                                            transform=True,
                                             out_channels=cnn_out_channel),
-                         batch_size=1,
                          shuffle=True,
                          num_workers=8,
                          pin_memory=True)

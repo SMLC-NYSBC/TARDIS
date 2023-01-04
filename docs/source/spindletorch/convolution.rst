@@ -1,4 +1,4 @@
 SpindleTorch -> Convolutions
 ============================
 
-.. automodule:: tardis_dev.spindletorch.model.convolution
+.. automodule:: tardis.spindletorch.model.convolution

@@ -7,11 +7,15 @@ import open3d as o3d
 def _dataset_format(coord: np.ndarray,
                     segmented: bool) -> Tuple[np.ndarray, bool]:
     """
-    Check for an array format and correct 2D datasets to 3D.
+    Silently check for an array format and correct 2D datasets to 3D.
 
     Args:
         coord (np.ndarray): 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y].
         segmented (bool): If True expect (s) in a data format as segmented values.
+
+    Returns:
+        Tuple[np.ndarray, bool]: Checked and corrected coord array with boolean
+        statement if array is compatible.
     """
     check = True
 
@@ -49,6 +53,9 @@ def _rgb(coord: np.ndarray,
         coord (np.ndarray): 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y].
         segmented (bool): If True expect (s) in a data format as segmented values.
         ScanNet (bool): If True output scannet v2 classes.
+
+    Returns:
+        np.ndarray: 3D array with RGB values for each point.
     """
     rgb = np.zeros((coord.shape[0], 3), dtype=np.float64)
 
@@ -124,6 +131,9 @@ def segment_to_graph(coord: np.ndarray) -> list:
 
     Args:
         coord (np.ndarray): 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y].
+
+    Returns:
+        list: list of segments converted for open3D
     """
     graph_list = []
     stop = 0
@@ -180,6 +190,11 @@ def VisualizePointCloud(coord: np.ndarray,
 
 
 def rotate_view(vis):
+    """
+    Optional viewing parameter for open3D to constantly rotate scene.
+    Args:
+        vis: Open3D view control setting.
+    """
     ctr = vis.get_view_control()
     ctr.rotate(1.0, 0.0)
     return False

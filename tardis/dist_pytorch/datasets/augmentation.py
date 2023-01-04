@@ -5,6 +5,7 @@ import tifffile.tifffile as tiff
 from skimage import exposure
 from sklearn.neighbors import KDTree
 
+from tardis.utils.errors import TardisError
 from tardis.utils.load_data import ImportDataFromAmira
 
 
@@ -25,13 +26,14 @@ def preprocess_data(coord: str,
 
     Args:
         coord (str): Directory for the file containing coordinate data.
-        image (str, optional): Directory to the supported image file.
-        size (int, optional): Image patch size.
+        image (str, None): Directory to the supported image file.
+        size (int, None): Image patch size.
         include_label (bool): If True output coordinate array with label ids.
         normalization (str): Type of image normalization.
 
     Returns:
-        np.ndarray: Returns coordinates and optionally image patch list.
+        Tuple[np.ndarray, np.ndarray]: Returns coordinates and optionally
+        graph patch list.
     """
 
     """ Collect Coordinates [Length x Dimension] """
@@ -43,8 +45,7 @@ def preprocess_data(coord: str,
         coord_label = np.load(coord)
     elif coord[-3:] == ".am":
         if image is None:
-            amira_import = ImportDataFromAmira(src_am=coord,
-                                               src_img=None)
+            amira_import = ImportDataFromAmira(src_am=coord)
             coord_label = amira_import.get_segmented_points()
         else:
             amira_import = ImportDataFromAmira(src_am=coord,
@@ -65,7 +66,12 @@ def preprocess_data(coord: str,
     """ Collect Image Patches [Channels x Length] """
     # Normalize image between 0,1
     if image is not None:
-        assert normalization in ['simple', 'minmax']
+        assert normalization in ['simple', 'minmax'], \
+            TardisError('124',
+                        'tardis/dist_pytorch/dataset/augmentation.py',
+                        f'Not implemented normalization. Given {normalization} '
+                        'But expected simple or minmax!')
+
         if normalization == "simple":
             normalization = SimpleNormalize()
         elif normalization == 'minmax':
@@ -124,7 +130,7 @@ def preprocess_data(coord: str,
     if include_label:
         return coord_label, img
     else:
-        graph_builder = BuildGraph(mesh=False)
+        graph_builder = BuildGraph()
         graph = graph_builder(coord=coord_label)
 
         return coords, img, graph
@@ -144,7 +150,7 @@ class BuildGraph:
     all points in the class and searching for 4 KNN for each node inside the class.
 
     Args:
-        mesh (bool, optional): If True graph representation is computed for
+        mesh (bool): If True graph representation is computed for
             object-like structures.
     """
 
@@ -160,7 +166,7 @@ class BuildGraph:
 
         Args:
             coord (np.ndarray): A coordinate array of the shape (Nx[2,3]).
-            dist_th (float, optional): Distance threshold for identifiers correct
+            dist_th (float, None): Distance threshold for identifiers correct
                 connection. Especially useful for better resolving edges on the
                 corners of the objects.
 
@@ -258,12 +264,10 @@ class SimpleNormalize:
         Call for image normalization.
 
         Args:
-            x (np.ndarray):
-                Image array.
+            x (np.ndarray): Image array.
 
         Returns:
-            np.ndarray:
-                Normalized image.
+            np.ndarray: Normalized image.
         """
         if x.min() >= 0 and x.max() <= 255:
             norm = x / 255
@@ -291,11 +295,8 @@ class RescaleNormalize:
         Call for image normalization.
 
         Args:
-            x (np.ndarray):
-                Image array.
-            hist_range (tuple, optional):
-                Range for image histogram clipping.
-                    Defaults to (2, 98).
+            x (np.ndarray): Image array.
+            hist_range (tuple): Range for image histogram clipping.
 
         Returns:
             np.ndarray: Normalized image
@@ -319,7 +320,11 @@ class MinMaxNormalize:
     def __init__(self,
                  min_v: int,
                  max_v: int):
-        assert max_v > min_v
+        assert max_v > min_v, \
+            TardisError('124',
+                        'tardis/dist_pytorch/dataset/augmentation.py',
+                        f'Given max: {max_v} and min: {min_v} but max must be greater!')
+
         self.min_v = min_v
         self.range = max_v - min_v
 
@@ -329,12 +334,10 @@ class MinMaxNormalize:
         Call for image normalization.
 
         Args:
-            x (np.ndarray):
-                Image array
+            x (np.ndarray): Image array.
 
         Returns:
-            np.ndarray:
-                Normalized image
+            np.ndarray: Normalized image.
         """
         return (x - self.min_v) / self.range
 
@@ -378,7 +381,7 @@ class Crop2D3D:
             max_size (int): Axis maximum size is used to calculate the offset.
 
         Returns:
-            int: Min and max int values refer to the position on the axis.
+            Tuple[int, int]: Min and max int values refer to the position on the axis.
         """
         x0 = center_point - (size / 2)
         x1 = center_point + (size / 2)
@@ -408,7 +411,10 @@ class Crop2D3D:
             np.ndarray: Cropped image patch.
         """
         assert len(center_point) in [2, 3], \
-            'Given position for cropping is not 2D or 3D!'
+            TardisError('113',
+                        'tardis/dist_pytorch/dataset/augmentation.py',
+                        'Given position for cropping is not 2D or 3D!. '
+                        f'Given {center_point}. But expected shape in [2, 3]!')
 
         if len(center_point) == 3:
             z0, z1 = self.get_xyz_position(center_point=center_point[-1],

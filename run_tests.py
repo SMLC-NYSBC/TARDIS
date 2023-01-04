@@ -1,3 +1,27 @@
+# ##############################################################################
+#  TARDIS - Transformer And Rapid Dimensionless Instance Segmentation
+#
+#  New York Structural Biology Center
+#  Simons Machine Learning Center
+#
+#  Robert Kiewisz, Tristan Bepler
+#  MIT License
+#
+#  Last Modified: 1/4/23, 4:39 PM
+# ##############################################################################
+
+# ##############################################################################
+#  """
+#  TARDIS - Transformer And Rapid Dimensionless Instance Segmentation
+#
+#  New York Structural Biology Center
+#  Simons Machine Learning Center
+#
+#
+#  Last Modified: 1/4/23, 11:29 AM
+#  """
+# ##############################################################################
+import os
 import subprocess as subp
 import sys
 
@@ -6,117 +30,84 @@ from tardis.utils.logo import TardisLogo
 from tardis.version import version
 
 
-def py37():
-    ################
-    # PYTHON 3.7.* #
-    ################
-    # Set up Python 3.7 env and update
-    subp.run("conda run -n tardis37 conda update python -y", shell=True)
+def py(python: str):
+    """
+    Run pytest on specified python version inside conda environment
+
+    Args:
+        python (str): Python version.
+
+    Returns:
+        list: Output log from pytest.
+    """
+
+    # Set up Python 3.X env and update
+    subp.run(f"conda run -n tardis{python} conda update python -y",
+             shell=True)
 
     # Check and reinstall if needed requirements
-    subp.run("conda run -n tardis37 pip install -r requirements.txt", shell=True)
-    subp.run("conda run -n tardis37 pip install -r requirements-dev.txt", shell=True)
-    subp.run("conda run -n tardis37 conda clean -a -y", shell=True)
-    subp.run("conda run -n tardis37 pip cache purge", shell=True)
+    subp.run(f"conda run -n tardis{python} pip install -r requirements.txt",
+             shell=True)
+    subp.run(f"conda run -n tardis{python} pip install -r requirements-dev.txt",
+             shell=True)
+    subp.run(f"conda run -n tardis{python} conda clean -a -y",
+             shell=True)
+    subp.run(f"conda run -n tardis{python} pip cache purge",
+             shell=True)
 
     # Install tardis-pytorch
-    subp.run("conda run -n tardis37 pip install -e .", shell=True)
+    subp.run(f"conda run -n tardis{python} pip install -e .",
+             shell=True)
 
-    # Test on Python 3.7.*
-    return subp.run("conda run -n tardis37 pytest", shell=True, capture_output=True)
-
-
-def py38():
-    ################
-    # PYTHON 3.8.* #
-    ################
-    # Set up Python 3.8 env and update
-    subp.run("conda run -n tardis38 conda update python -y", shell=True)
-
-    # Check and reinstall if needed requirements
-    subp.run("conda run -n tardis38 pip install -r requirements.txt", shell=True)
-    subp.run("conda run -n tardis38 pip install -r requirements-dev.txt", shell=True)
-    subp.run("conda run -n tardis38 conda clean -a -y", shell=True)
-    subp.run("conda run -n tardis38 pip cache purge", shell=True)
-
-    # Install tardis-pytorch
-    subp.run("conda run -n tardis38 pip install -e .", shell=True)
-
-    # Test on Python 3.8.*
-    return subp.run("conda run -n tardis38 pytest", shell=True, capture_output=True)
-
-
-def py39():
-    ################
-    # PYTHON 3.9.* #
-    ################
-    # Set up Python 3.9 env and update
-    subp.run("conda run -n tardis39 conda update python -y", shell=True)
-
-    # Check and reinstall if needed requirements
-    try:
-        subp.run("conda run -n tardis39 pip install -r requirements.txt", shell=True)
-        subp.run("conda run -n tardis39 pip install -r requirements-dev.txt", shell=True)
-        subp.run("conda run -n tardis39 conda clean -a -y", shell=True)
-        subp.run("conda run -n tardis39 pip cache purge", shell=True)
-    except:
-        print("Skipped conda and pip update!")
-
-    # Install tardis-pytorch
-    subp.run("conda run -n tardis39 pip install -e .", shell=True)
-
-    # Test on Python 3.9.*
-    return subp.run("conda run -n tardis39 pytest", shell=True, capture_output=True)
-
-
-def py310():
-    #################
-    # PYTHON 3.10.* #
-    #################
-    # Set up Python 3.10 env and update
-    subp.run("conda run -n tardis310 conda update python -y", shell=True)
-
-    # Check and reinstall if needed requirements
-    try:
-        subp.run("conda run -n tardis310 pip install -r requirements.txt", shell=True)
-        subp.run("conda run -n tardis310 pip install -r requirements-dev.txt", shell=True)
-        subp.run("conda run -n tardis310 conda clean -a -y", shell=True)
-        subp.run("conda run -n tardis310 pip cache purge", shell=True)
-    except:
-        print("Skipped conda and pip update!")
-
-    # Install tardis-pytorch
-    subp.run("conda run -n tardis310 pip install -e .", shell=True)
-
-    # Test on Python 3.10.*
-    return subp.run("conda run -n tardis310 pytest", shell=True, capture_output=True)
+    # Test on Python 3.X.*
+    return subp.run(f"conda run -n tardis{python} pytest",
+                    shell=True,
+                    capture_output=True)
 
 
 if __name__ == "__main__":
     tardis_progress = TardisLogo()
     tardis_progress(title=f'Development - TARDIS {version} - pytest')
 
-    if sys.platform != "darwin":
-        out = py37()
-        print(out)
+    """ Run Pytest on python 3.7 - 3.11"""
+    if sys.platform != "darwin":  # Python 3.7 on Macos is only available throw x64
+        out = py(python='37')
+        if not out.retuncode == 0:
+            TardisError(f'{out}'
+                        'Pyton 3.7 pytest Failed')
+            exit()
 
-    out = py38()
-    if not out.returncode == 0:
-        TardisError(f'{out}'
-                    'Pyton 3.7 pytest Failed')
-        exit()
-
-    out = py39()
+    out = py(python='38')
     if not out.returncode == 0:
         TardisError(f'{out}'
                     'Pyton 3.8 pytest Failed')
         exit()
 
-    out = py310()
+    out = py(python='39')
+    if not out.returncode == 0:
+        TardisError(f'{out}'
+                    'Pyton 3.9 pytest Failed')
+        exit()
+
+    out = py(python='310')
     if not out.returncode == 0:
         TardisError(f'{out}'
                     'Pyton 3.10 pytest Failed')
         exit()
 
+    # !!! Python 3.11 missing compatibility with numpy open3d and pytorch !!!
+    #
+    # out = py(python='311')
+    # if not out.returncode == 0:
+    #     TardisError(f'{out}'
+    #                 'Pyton 3.11 pytest Failed')
+    #     exit()
+
+    """ Compile documentation """
+    os.rmdir('docs/build')  # Remove old build
+    subp.run('conda run -n tardis38 sphinx-build -b html docs/source/ docs/build/html')
+
+    """ Return output """
     tardis_progress(title=f'Development - TARDIS {version} - pytest',
-                    text_1='All test passed correctly on pyton 3.7, 3.8, 3.9, 3.10')
+                    text_1='All test passed correctly on pyton 3.7, 3.8, 3.9, 3.10',
+                    text_2='Sphinx-build Completed.')

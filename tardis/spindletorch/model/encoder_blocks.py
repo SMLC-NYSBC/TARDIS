@@ -1,6 +1,8 @@
 from typing import Optional
+
 import torch
 import torch.nn as nn
+
 from tardis.spindletorch.model.init_weights import init_weights
 from tardis.spindletorch.utils.utils import number_of_features_per_level
 
@@ -42,11 +44,11 @@ class EncoderBlock(nn.Module):
         """Optionally, add maxpool"""
         if max_pool:
             if '3' in components:
-                self.max_pool = nn.MaxPool3d(kernel_size=pool_kernel)
+                self.maxpool = nn.MaxPool3d(kernel_size=pool_kernel)
             elif '2' in components:
-                self.max_pool = nn.MaxPool2d(kernel_size=pool_kernel)
+                self.maxpool = nn.MaxPool2d(kernel_size=pool_kernel)
         else:
-            self.max_pool = None
+            self.maxpool = None
 
         """Optionally, add dropout layer"""
         if dropout is not None:
@@ -63,7 +65,7 @@ class EncoderBlock(nn.Module):
 
         """Initialise the blocks"""
         for m in self.children():
-            init_weights(m, init_type='kaiming')
+            init_weights(m)
 
     def forward(self,
                 x: torch.Tensor) -> torch.Tensor:
@@ -76,8 +78,8 @@ class EncoderBlock(nn.Module):
         Returns:
             torch.Tensor: Image after convolution.
         """
-        if self.max_pool is not None:
-            x = self.max_pool(x)
+        if self.maxpool is not None:
+            x = self.maxpool(x)
 
         x = self.conv_module(x)
 
@@ -140,7 +142,6 @@ def build_encoder(in_ch: int,
                                    conv_module=conv_module,
                                    conv_kernel=conv_kernel,
                                    dropout=dropout,
-                                   max_pool=True,
                                    pool_kernel=pool_kernel,
                                    padding=padding,
                                    components=components,

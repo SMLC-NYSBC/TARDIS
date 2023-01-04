@@ -26,7 +26,7 @@ def move_train_dataset(dir: str,
         img_format (tuple, optional): Allowed format that can be used.
     """
     assert len([f for f in listdir(dir) if f.endswith(coord_format)]) > 0, \
-        TardisError('move_train_dataset',
+        TardisError('121',
                     'tardis/utils/dataset.py',
                     f'No coordinate file found in given dir {dir}')
 
@@ -39,7 +39,7 @@ def move_train_dataset(dir: str,
     """Sort coord with images if included"""
     if with_img:
         assert len([f for f in listdir(dir) if f.endswith(img_format)]) > 0, \
-            TardisError('move_train_dataset',
+            TardisError('121',
                         'tardis/utils/dataset.py',
                         f'No image file found in given dir {dir}')
 
@@ -68,7 +68,7 @@ def build_test_dataset(dataset_dir: str,
     dataset = dataset_dir
 
     assert 'test' in listdir(dataset_dir) and 'train' in listdir(dataset_dir), \
-        TardisError('build_test_dataset',
+        TardisError('122',
                     'tardis/utils/dataset.py',
                     f'Could not find train or test folder in directory {dataset_dir}')
 

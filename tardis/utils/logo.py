@@ -119,6 +119,16 @@ class TardisLogo:
             print('\033[2K\r', end='')
             sys.stderr.flush()
 
+    @staticmethod
+    def cell_width() -> int:
+        """
+        Ask for current shell window width
+
+        Returns:
+            int: cell width.
+        """
+        return get_terminal_size()[0] - 26
+
     def __call__(self,
                  title='', text_1='', text_2='', text_3='', text_4='',
                  text_5='', text_6='', text_7='', text_8='', text_9='', text_10='',

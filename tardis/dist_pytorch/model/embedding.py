@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 import torch
 import torch.nn as nn
@@ -24,7 +24,8 @@ class NodeEmbedding(nn.Module):
         self.n_in = n_in
 
     def forward(self,
-                input_node: Optional[torch.Tensor] = None) -> torch.Tensor:
+                input_node: Optional[torch.Tensor] = None) -> Union[torch.Tensor,
+                                                                    None]:
         """
         Forward node feature embedding.
 

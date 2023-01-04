@@ -10,6 +10,7 @@ from tardis.dist_pytorch.datasets.dataloader import build_dataset
 from tardis.dist_pytorch.train import train_dist
 from tardis.utils.dataset import build_test_dataset, move_train_dataset
 from tardis.utils.device import get_device
+from tardis.utils.errors import TardisError
 from tardis.utils.logo import TardisLogo
 from tardis.utils.setup_envir import check_dir
 from tardis.version import version
@@ -24,7 +25,8 @@ from tardis.version import version
               show_default=True)
 @click.option('-dst', '--dataset_type',
               default='filament',
-              type=click.Choice(['filament', 'scannet', 'scannet_color', 'partnet', 'general']),
+              type=click.Choice(['filament', 'scannet', 'scannet_color',
+                                 'partnet', 'general']),
               help='Define training dataset type.',
               show_default=True)
 @click.option('-ttr', '--train_test_ratio',
@@ -69,15 +71,17 @@ from tardis.version import version
               show_default=True)
 @click.option('-st', '--structure',
               default='triang',
-              type=click.Choice(['full', 'full_af', 'self_attn', 'triang', 'dualtriang', 'quad']),
+              type=click.Choice(['full', 'full_af',
+                                 'self_attn',
+                                 'triang', 'dualtriang', 'quad']),
               help='Structure of the DIST layers.',
               show_default=True)
-@click.option('-t', '--type',
+@click.option('-t', '--dist_type',
               default='instance',
               type=click.Choice(['instance', 'semantic']),
               help='Type of DIST model prediction.',
               show_default=True)
-@click.option('-pcds', '--pc_downsampling',
+@click.option('-pcs', '--pc_sampling',
               default=500,
               type=int,
               help='Max number of points per patch.',
@@ -118,7 +122,8 @@ from tardis.version import version
 @click.option('-ers', '--early_stop',
               default=10,
               type=int,
-              help='Number or epoches without improvement, after which training is stopped.',
+              help="Number or epoch's without improvement, "
+                   'after which training is stopped.',
               show_default=True)
 @click.version_option(version=version)
 def main(dir: str,
@@ -132,8 +137,8 @@ def main(dir: str,
          dropout: float,
          sigma: int,
          structure: str,
-         type: str,
-         pc_downsampling: int,
+         dist_type: str,
+         pc_sampling: int,
          loss: str,
          loss_lr: float,
          lr_rate_schedule: bool,
@@ -152,7 +157,6 @@ def main(dir: str,
     TEST_COORD_DIR = join(dir, 'test', 'masks')
 
     COORD_FORMAT = ('.CorrelationLines.am', '.npy', '.csv', '.ply')
-    DATASET_TEST = False
 
     """Check if dir has train/test folder and if folder have compatible data"""
     DATASET_TEST = check_dir(dir=dir,
@@ -168,9 +172,11 @@ def main(dir: str,
     if not DATASET_TEST:
         # Check and set-up environment
         assert len([f for f in listdir(dir) if f.endswith(COORD_FORMAT)]) > 0, \
-            'Indicated folder for training do not have any compatible data or ' \
-            'one of the following folders: ' \
-            'test/imgs; test/masks; train/imgs; train/masks'
+            TardisError('12',
+                        'tardis/train_DIST.py',
+                        'Indicated folder for training do not have any compatible '
+                        'data or one of the following folders: '
+                        'test/imgs; test/masks; train/imgs; train/masks')
 
         if isdir(join(dir, 'train')):
             rmtree(join(dir, 'train'))
@@ -187,12 +193,10 @@ def main(dir: str,
         # Build train and test dataset
         move_train_dataset(dir=dir,
                            coord_format=COORD_FORMAT,
-                           with_img=False,
-                           img_format=None)
+                           with_img=False)
 
         build_test_dataset(dataset_dir=dir,
-                           train_test_ration=train_test_ratio,
-                           prefix='')
+                           train_test_ration=train_test_ratio)
 
     """Pre-setting for building DataLoader"""
     # Check for general dataset
@@ -200,14 +204,11 @@ def main(dir: str,
         tardis_logo(text_1=f'General DataSet loader is not supported in TARDIS {version}')
         sys.exit()
 
-    TRAIN_IMAGE_DIR = None
-    TEST_IMAGE_DIR = None
-
     """Build DataLoader for training/validation"""
     dl_train_graph, dl_test_graph = build_dataset(dataset_type=dataset_type,
                                                   dirs=[TRAIN_COORD_DIR,
                                                         TEST_COORD_DIR],
-                                                  max_points_per_patch=pc_downsampling)
+                                                  max_points_per_patch=pc_sampling)
 
     """Setup training"""
     device = get_device(device)
@@ -217,12 +218,12 @@ def main(dir: str,
     else:
         node_input = 0
 
-    if type == 'instance':
+    if dist_type == 'instance':
         num_cls = None
-    elif type == 'semantic':
+    elif dist_type == 'semantic':
         num_cls = 200
     else:
-        tardis_logo(text_1=f'ValueError: Wrong DIST type {type}!')
+        tardis_logo(text_1=f'ValueError: Wrong DIST type {dist_type}!')
         sys.exit()
 
     """Optionally: pre-load model structure from checkpoint"""
@@ -233,7 +234,7 @@ def main(dir: str,
             model_dict = save_train['model_struct_dict']
             globals().update(model_dict)
 
-    model_dict = {'dist_type': type,
+    model_dict = {'dist_type': dist_type,
                   'n_out': n_out,
                   'node_input': node_input,
                   'node_dim': node_dim,

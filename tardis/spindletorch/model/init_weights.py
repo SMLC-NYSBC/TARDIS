@@ -1,5 +1,7 @@
 from torch.nn import init
 
+from tardis.utils.errors import TardisError
+
 
 def weights_init_kaiming(m):
     """
@@ -11,13 +13,9 @@ def weights_init_kaiming(m):
     class_name = m.__class__.__name__
 
     if class_name.find('Conv3d') != -1:
-        init.kaiming_normal_(tensor=m.weight.data,
-                             a=0,
-                             mode='fan_in')
+        init.kaiming_normal_(tensor=m.weight.data)
     elif class_name.find('Conv2d') != -1:
-        init.kaiming_normal_(tensor=m.weight.data,
-                             a=0,
-                             mode='fan_in')
+        init.kaiming_normal_(tensor=m.weight.data)
     elif class_name.find('BatchNorm') != -1:
         init.normal_(tensor=m.weight.data,
                      mean=1.0,
@@ -47,5 +45,6 @@ def init_weights(net,
     if init_type == 'kaiming':
         net.apply(weights_init_kaiming)
     else:
-        raise NotImplementedError(
-            f'initialization method {init_type} is not implemented!')
+        TardisError('140',
+                    'tardis/spindletorch/ini_weights.py',
+                    f'initialization method {init_type} is not implemented!')

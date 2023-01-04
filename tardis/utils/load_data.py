@@ -67,16 +67,23 @@ class ImportDataFromAmira:
         # Read image and its property if existing
         if self.src_img is not None:
             if not self.src_img[-3:] == '.am':
-                raise Warning("Not a .am file...")
+                TardisError('130',
+                            'tardis/utils/load_data.py',
+                            f"{self.src_img} Not a .am file...")
 
             if src_img.split('/')[-1:][:-3] != src_am.split('/')[-1:][:-20]:
-                raise Warning(f'Image file {src_img} has wrong extension for {src_am}!')
+                TardisError('131',
+                            'tardis/utils/load_data.py',
+                            f'Image file {src_img} has wrong extension for {src_am}!')
 
             try:
                 # Image file [Z x Y x X]
                 self.image, self.pixel_size, _, self.transformation = import_am(src_img)
             except RuntimeWarning:
-                raise Warning("Directory or input .am image file is not correct...")
+                TardisError('130',
+                            'tardis/utils/load_data.py',
+                            "Directory or input .am image file is not correct..."
+                            f'for given dir: {src_img}')
         else:
             self.pixel_size = 1
 
@@ -262,7 +269,13 @@ class ImportDataFromAmira:
         """
         return self.image, self.pixel_size
 
-    def get_pixel_size(self):
+    def get_pixel_size(self) -> float:
+        """
+        Catch pixel size value from image.
+
+        Returns:
+            float: Pixel size.
+        """
         return self.pixel_size
 
 
@@ -277,7 +290,9 @@ def import_tiff(tiff: str):
         np.ndarray, float: Image data and unified pixel size.
     """
     if not isfile(tiff):
-        raise Warning("Indicated .tif file does not exist...")
+        TardisError('130',
+                    'tardis/utils/load_data.py',
+                    f"Indicated .tif  {tiff} file does not exist...")
 
     return np.array(tif.imread(tiff)), 1.0
 
@@ -293,7 +308,9 @@ def import_mrc(mrc: str):
         np.ndarray, float: Image data and pixel size.
     """
     if not isfile(mrc):
-        raise Warning("Indicated .mrc file does not exist...")
+        TardisError('130',
+                    'tardis/utils/load_data.py',
+                    f"Indicated .mrc {mrc} file does not exist...")
 
     header = mrc_header(mrc)
 
@@ -473,11 +490,17 @@ def mrc_mode(mode: int,
     elif mode == 16:
         dtype = '3B'  # RGB values
     elif mode == 101:
-        raise Exception('4 bit .mrc file are not supported. Ask Dev if you need it!')
+        TardisError('130',
+                    'tardis/utils/load_data.py',
+                    '4 bit .mrc file are not supported. Ask Dev if you need it!')
     elif mode == 1024:
-        raise Exception('Are your trying to load tiff file as mrc?')
+        TardisError('130',
+                    'tardis/utils/load_data.py',
+                    'Are your trying to load tiff file as mrc?')
     else:
-        raise Exception('Unknown dtype mode:' + str(mode) + str(amin))
+        TardisError('130',
+                    'tardis/utils/load_data.py',
+                    'Unknown dtype mode:' + str(mode) + str(amin))
 
     return dtype
 
@@ -493,14 +516,18 @@ def import_am(am_file: str):
         np.ndarray, float, float, list: Image file as well images parameters.
     """
     if not isfile(am_file):
-        raise Warning(f"Indicated .am {am_file} file does not exist...")
+        TardisError('130',
+                    'tardis/utils/load_data.py',
+                    f"Indicated .am {am_file} file does not exist...")
 
     am = open(am_file, 'r', encoding="iso-8859-1").read(8000)
 
     asci = False
     if 'AmiraMesh 3D ASCII' in am:
         if 'define Lattice' not in am:
-            raise ValueError('.am file is coordinate file not image!')
+            TardisError('130',
+                        'tardis/utils/load_data.py',
+                        f'.am {am_file} file is coordinate file not image!')
         asci = True
 
     size = [word for word in am.split('\n') if word.startswith('define Lattice ')][0][
@@ -627,7 +654,8 @@ def load_ply_scannet(ply: str,
             158., 218., 229.), 29: (100., 125., 154.), 30: (178., 127., 135.), 32: (
             146., 111., 194.), 33: (44., 160., 44.), 34: (112., 128., 144.), 35: (
             96., 207., 209.), 36: (227., 119., 194.), 37: (213., 92., 176.), 38: (
-            94., 106., 211.), 39: (82., 84., 163.), 40: (100., 85., 144.), }
+            94., 106., 211.), 39: (82., 84., 163.), 40: (100., 85., 144.),
+    }
 
     # Downscaling point cloud with labels
     if downscaling > 0:
@@ -642,15 +670,17 @@ def load_ply_scannet(ply: str,
         if downscaling > 0:
             rgb = rgb.voxel_down_sample(voxel_size=downscaling)
         rgb = np.asarray(rgb.colors)
-        assert coord.shape == rgb.shape, TardisError('load_ply_scannet',
-                                                     'tardis/utils/load_data.py',
-                                                     'RGB must be the same as coord!')
+        assert coord.shape == rgb.shape, \
+            TardisError('131',
+                        'tardis/utils/load_data.py',
+                        'RGB shape must be the same as coord!'
+                        f'But {coord.shape} != {rgb.shape}')
 
     # Retrieve ScanNet v2 labels after downscaling
     cls_id = []
     tree = KDTree(coord_org, leaf_size=coord_org.shape[0])
     for i in coord:
-        _, match_coord = tree.query(i.reshape(1, -1), k=1)
+        _, match_coord = tree.query(i.reshape(1, -1))
         match_coord = match_coord[0][0]
 
         color_df = label_org[match_coord] * 255

@@ -68,7 +68,7 @@ class CNNDataset(Dataset):
 
         mask, _ = load_image(mask_file)
         assert mask.dtype == np.uint8, \
-            TardisError('CNNDataset',
+            TardisError('147',
                         'tardis/spindletorch/dataset/dataloader.py',
                         f'Mask should be of np.uint8 dtype but is {mask.dtype}!')
 
@@ -80,11 +80,11 @@ class CNNDataset(Dataset):
                                output_dim_mask=self.out_channels)
 
         assert img.dtype == np.float32 and mask.dtype == np.uint8, \
-            TardisError('CNNDataset',
+            TardisError('147',
                         'tardis/spindletorch/dataset/dataloader.py',
                         f'Mask {mask.dtype} and image  {img.dtype} has wrong dtype!')
         assert img.min() >= 0 and img.max() <= 1, \
-            TardisError('CNNDataset',
+            TardisError('147',
                         'tardis/spindletorch/dataset/dataloader.py',
                         'Image file is not binary!')
 
@@ -137,7 +137,6 @@ class PredictionDataset(Dataset):
 
         # Process image and mask
         img = preprocess(image=img,
-                         mask=None,
                          size=img.shape,
                          transformation=False,
                          output_dim_mask=self.out_channels)

@@ -3,25 +3,28 @@ Global Utils Functions
 
 AWS
 ---
-.. automodule:: tardis_dev.utils.aws
-
-TARDIS logo
------------
-.. automodule:: tardis_dev.utils.logo
-
-Environment setting
--------------------
-.. automodule:: tardis_dev.utils.setup_envir
-.. automodule:: tardis_dev.utils.dataset
-
-Loss functions
---------------
-.. automodule:: tardis_dev.utils.losses
+.. automodule:: tardis.utils.aws
 
 Device
 ------
-.. automodule:: tardis_dev.utils.device
+.. automodule:: tardis.utils.device
+
+
+TARDIS log
+----------
+.. automodule:: tardis.utils.errors
+.. automodule:: tardis.utils.logo
+
+Environment setting
+-------------------
+.. automodule:: tardis.utils.dataset
+.. automodule:: tardis.utils.setup_envir
+
+Loss functions
+--------------
+.. automodule:: tardis.utils.losses
+.. automodule:: tardis.utils.metrics
 
 Utils
 -----
-.. automodule:: tardis_dev.utils.utils
+.. automodule:: tardis.utils.utils

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -37,7 +37,7 @@ class BasicDIST(nn.Module):
                  num_layers=6,
                  num_heads=8,
                  num_cls=None,
-                 coord_embed_sigma: Optional[tuple] = 1.0,
+                 coord_embed_sigma=1.0,
                  dropout_rate=0,
                  structure='full',
                  predict=False):
@@ -84,7 +84,7 @@ class BasicDIST(nn.Module):
 
         Args:
             coords (torch.Tensor): Coordinate features.
-            node_features (torch.Tensor, optional): Optional Node features.
+            node_features (torch.Tensor, None): Optional Node features.
 
         Returns:
             torch.tensor: Embedded features for prediction.
@@ -101,14 +101,15 @@ class BasicDIST(nn.Module):
 
     def forward(self,
                 coords: torch.Tensor,
-                node_features: Optional[torch.Tensor] = None):
+                node_features=None) -> Union[Tuple[torch.Tensor],
+                                               torch.Tensor]:
         """
         Forward DIST model.
 
         Args:
             coords (torch.Tensor): Coordinates input of a shape
                 [Batch x Channels x Length].
-            node_features (torch.Tensor, optional): Image patch input of a shape
+            node_features (torch.Tensor, None): Image patch input of a shape
                 [Batch x Length x Dimensions].
         """
         node, edge = self.embed_input(coords=coords,
@@ -211,6 +212,9 @@ def build_dist_network(network_type: str,
         network_type (str): Network type name.
         structure (dict):  Dictionary with all network setting.
         prediction (bool): If True, build network in prediction path.
+
+    Returns:
+        DIST: DIST network structure.
     """
     assert network_type in ['instance', 'semantic'], \
         TardisError('build_dist_network',

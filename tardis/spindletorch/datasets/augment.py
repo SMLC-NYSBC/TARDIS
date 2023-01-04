@@ -20,9 +20,10 @@ class CenterCrop:
     def __init__(self,
                  size: tuple):
         assert len(size) in [2, 3], \
-            TardisError('CenterCrop',
+            TardisError('146',
                         'tardis/spindletorch/dataset/augment.py',
-                        'Image crop supported only for 3D and 2D!')
+                        'Image crop supported only for 3D and 2D! '
+                        f'But {size} was given.')
         self.size = size
 
         if len(self.size) == 2:
@@ -42,12 +43,12 @@ class CenterCrop:
             np.ndarray: Cropped array.
         """
         assert x.ndim in [2, 3], \
-            TardisError('CenterCrop',
+            TardisError('146',
                         'tardis/spindletorch/dataset/augment.py',
                         'Image crop supported only for 3D and 2D!')
         if y is not None:
             assert y.ndim in [2, 3], \
-                TardisError('CenterCrop',
+                TardisError('146',
                             'tardis/spindletorch/dataset/augment.py',
                             'Image crop supported only for 3D and 2D!')
 
@@ -98,7 +99,7 @@ class SimpleNormalize:
             np.ndarray: Normalized array.
         """
         assert x.dtype == np.uint8, \
-            TardisError('SimpleNormalize',
+            TardisError('146',
                         'tardis/spindletorch/dataset/augment.py',
                         f'Wrong datatype {x.dtype}!')
 
@@ -107,7 +108,7 @@ class SimpleNormalize:
             return x
 
         assert x.min() >= 0 and x.max() <= 255, \
-            TardisError('CenterCrop',
+            TardisError('146',
                         'tardis/spindletorch/dataset/augment.py',
                         f'Dtype: {x.dtype}, Min: {x.min()}, Max: {x.max()}. '
                         'Values not in range')
@@ -338,7 +339,7 @@ def preprocess(image: np.ndarray,
     """
     # Check if image is 2D or 3D
     assert image.ndim in [2, 3], \
-        TardisError('preprocess',
+        TardisError('146',
                     'tardis/spindletorch/dataset/augment.py',
                     'Image crop supported only for 3D and 2D!')
 

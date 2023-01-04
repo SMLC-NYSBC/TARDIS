@@ -1,4 +1,4 @@
 SpindleTorch -> Decoder block
 =============================
 
-.. automodule:: tardis_dev.spindletorch.model.decoder_blocks
+.. automodule:: tardis.spindletorch.model.decoder_blocks

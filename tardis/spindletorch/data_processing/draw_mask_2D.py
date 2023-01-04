@@ -7,7 +7,7 @@ from tardis.utils.errors import TardisError
 def draw_2d(r: int,
             c: np.ndarray,
             label_mask: np.ndarray,
-            segment_color: list):
+            segment_color: list) -> np.ndarray:
     """
     Module draw_label to construct shape of a label
 
@@ -16,10 +16,15 @@ def draw_2d(r: int,
         c (np.ndarray): point in 3D indicating center of a circle.
         label_mask (np.ndarray): array of a mask on which circle is drawn.
         segment_color (list): single list value for naming drawn line in RGB.
+
+    Returns:
+        np.ndarray: Binary mask.
     """
     assert isinstance(segment_color, list)
     assert label_mask.ndim in [2, 3, 4], \
-        f'Unsupported dimensions given {label_mask.ndim} expected [2, 3]!'
+        TardisError('113',
+                    'tardis/spindletorch/data_processing/draw_mask_2D.py'
+                    f'Unsupported dimensions given {label_mask.ndim} expected [2, 3]!')
 
     nz, ny, nx, nc = 0, 0, 0, 0
     dim = 0
@@ -42,8 +47,8 @@ def draw_2d(r: int,
         dim = 2
 
     assert len(segment_color) == nc, \
-        TardisError('TRAINING_DATASET_COMPATIBILITY',
-                    'tardis/spindletorch/data_processing/build_training_dataset.py',
+        TardisError('113',
+                    'tardis/spindletorch/data_processing/draw_mask_2D.py',
                     f'Incorrect color channel given {nc} but expect {len(segment_color)}')
 
     x = int(c[0])

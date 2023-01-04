@@ -1,10 +1,12 @@
 from typing import Optional
 
+import numpy as np
 import torch
 
 from tardis.dist_pytorch.dist import build_dist_network
 from tardis.spindletorch.spindletorch import build_cnn_network
 from tardis.utils.aws import get_weights_aws
+from tardis.utils.errors import TardisError
 from tardis.utils.logo import print_progress_bar, TardisLogo
 
 
@@ -30,7 +32,10 @@ class Predictor:
                  model_type: Optional[str] = None):
         self.device = device
         self.img_size = img_size
-        assert checkpoint is not None or network is not None
+        assert checkpoint is not None or network is not None, \
+            TardisError('139',
+                        'tardis/utils/predictor.py',
+                        'Missing network weights or network name!')
 
         if checkpoint is None:
             print(f'Searching for weight file for {network}_{subtype}...')
@@ -54,6 +59,15 @@ class Predictor:
 
     def _build_model_from_checkpoint(self,
                                      structure: dict):
+        """
+        Use checkpoint metadata to build compatible network
+
+        Args:
+            structure (dict): Metadata dictionary with network setting.
+
+        Returns:
+            pytorch model: NN pytorch model.
+        """
         if 'dist_type' in structure:
             model = build_dist_network(network_type=structure['dist_type'],
                                        structure=structure,
@@ -70,7 +84,17 @@ class Predictor:
 
     def predict(self,
                 x: torch.Tensor,
-                y: Optional[torch.Tensor] = None):
+                y: Optional[torch.Tensor] = None) -> np.ndarra:
+        """
+        General predictor.
+
+        Args:
+            x (torch.Tensor): Main feature used for prediction.
+            y (torch.Tensor, None): Optional feature used for prediction.
+
+        Returns:
+            np.ndarray: Predicted features.
+        """
         with torch.no_grad():
             self.model.eval()
 

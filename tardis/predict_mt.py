@@ -167,19 +167,10 @@ def main(dir: str,
     image_stitcher = StitchImages()
     post_processes = ImageToPointCloud()
     build_amira_file = NumpyToAmira()
-    patch_pc = PatchDataSet(label_cls=None,
-                            rgb=None,
-                            patch_3d=False,
-                            max_number_of_points=points_in_patch,
-                            init_patch_size=0,
-                            drop_rate=1,
-                            graph=False,
-                            tensor=True)
-    GraphToSegment = GraphInstanceV2(threshold=dist_threshold,
-                                     connection=2,
-                                     smooth=True)
-    filter_segments = FilterSpatialGraph(filter_unconnected_segments=True,
-                                         filter_short_spline=filter_mt)
+    patch_pc = PatchDataSet(max_number_of_points=points_in_patch,
+                            graph=False)
+    GraphToSegment = GraphInstanceV2(threshold=dist_threshold, smooth=True)
+    filter_segments = FilterSpatialGraph(filter_short_spline=filter_mt)
 
     # Build CNN from checkpoints
     checkpoints = (cnn_checkpoint, dist_checkpoint)
@@ -208,7 +199,6 @@ def main(dir: str,
                              network='dist',
                              subtype='triang',
                              model_type='microtubules',
-                             img_size=None,
                              device=device)
 
     """Process each image with CNN and DIST"""
@@ -288,21 +278,17 @@ def main(dir: str,
 
         # Cut image for fix patch size and normalizing image pixel size
         trim_with_stride(image=image.astype(np.float32),
-                         mask=None,
                          scale=scale_shape,
                          trim_size_xy=patch_size,
                          trim_size_z=patch_size,
                          output=join(dir, 'temp', 'Patches'),
                          image_counter=0,
                          clean_empty=False,
-                         stride=10,
-                         prefix='')
-        image = None
+                         stride=10)
         del image
 
         # Setup CNN dataloader
-        patches_DL = PredictionDataset(img_dir=join(dir, 'temp', 'Patches'),
-                                       out_channels=1)
+        patches_DL = PredictionDataset(img_dir=join(dir, 'temp', 'Patches'))
 
         """CNN prediction"""
         iter_time = 1
@@ -349,17 +335,13 @@ def main(dir: str,
                         text_7='Current Task: Stitching...')
 
         # Stitch predicted image patches
-        image = image_stitcher(image_dir=output,
-                               output=None,
-                               mask=True,
-                               prefix='',
+        image = image_stitcher(image_dir=output, mask=True,
                                dtype=input.dtype)[:org_shape[0],
                                                   :org_shape[1],
                                                   :org_shape[2]]
 
         # Restored original image pixel size
         image, _ = scale_image(image=image,
-                               mask=None,
                                scale=org_shape)
 
         if cnn_threshold == 0:
@@ -412,15 +394,11 @@ def main(dir: str,
 
         # Post-process predicted image patches
         point_cloud = post_processes(image=image,
-                                     euclidean_transform=True,
-                                     label_size=3,
-                                     down_sampling_voxal_size=None)
+                                     label_size=3)
 
         if point_cloud.shape[0] < 100:
             point_cloud = post_processes(image=image,
-                                         euclidean_transform=True,
-                                         label_size=0.5,
-                                         down_sampling_voxal_size=None)
+                                         label_size=0.5)
 
         if point_cloud.shape[0] < 100:
             continue
@@ -451,9 +429,7 @@ def main(dir: str,
         dist = pc_median_dist(point_cloud, avg_over=True)
 
         # Build patches dataset
-        coords_df, _, output_idx, _ = patch_pc.patched_dataset(coord=point_cloud / dist,
-                                                               mesh=False,
-                                                               dist_th=None)
+        coords_df, _, output_idx, _ = patch_pc.patched_dataset(coord=point_cloud / dist)
 
         # Predict point cloud
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
@@ -491,9 +467,8 @@ def main(dir: str,
 
             graphs.append(graph)
         if debug:
-            np.save(join(am_output, f'{i[:-out_format]}_graph_voxal.npy'),
-                    graphs,
-                    allow_pickle=True)
+            np.save(join(am_output, f'{i[:-out_format]}_graph_voxel.npy'),
+                    graphs)
 
         """DIST post-processing"""
         if i.endswith(('.am', '.rec', '.mrc')):
@@ -522,7 +497,6 @@ def main(dir: str,
                                                    coord=point_cloud,
                                                    idx=output_idx,
                                                    prune=5,
-                                                   sort=True,
                                                    visualize=visualizer)
 
         segments_filter = filter_segments(segments)
@@ -530,23 +504,15 @@ def main(dir: str,
         # Save debugging check point
         if debug:
             if device == 'cpu':
-                np.save(join(am_output,
-                             f'{i[:-out_format]}_coord_voxal.npy'),
-                        point_cloud,
-                        allow_pickle=True)
-                np.save(join(am_output,
-                             f'{i[:-out_format]}_idx_voxal.npy'),
-                        output_idx,
-                        allow_pickle=True)
+                np.save(join(am_output, f'{i[:-out_format]}_coord_voxel.npy'),
+                        point_cloud)
+                np.save(join(am_output, f'{i[:-out_format]}_idx_voxel.npy'),
+                        output_idx)
             else:
-                np.save(join(am_output,
-                             f'{i[:-out_format]}_coord_voxal.npy'),
-                        point_cloud,
-                        allow_pickle=True)
-                np.save(join(am_output,
-                             f'{i[:-out_format]}_idx_voxal.npy'),
-                        output_idx,
-                        allow_pickle=True)
+                np.save(join(am_output, f'{i[:-out_format]}_coord_voxel.npy'),
+                        point_cloud)
+                np.save(join(am_output, f'{i[:-out_format]}_idx_voxel.npy'),
+                        output_idx)
 
         if debug:
             np.save(join(am_output,
@@ -571,11 +537,13 @@ def main(dir: str,
             np.savetxt(join(am_output,
                             f'{i[:-out_format]}'
                             '_SpatialGraph.csv'),
-                       segments, delimiter=",")
+                       segments,
+                       delimiter=",")
             np.savetxt(join(am_output,
                             f'{i[:-out_format]}'
                             '_SpatialGraph_filter.csv'),
-                       segments_filter, delimiter=",")
+                       segments_filter,
+                       delimiter=",")
 
         """Clean-up temp dir"""
         clean_up(dir=dir)

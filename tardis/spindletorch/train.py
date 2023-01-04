@@ -10,7 +10,7 @@ from tardis.spindletorch.spindletorch import build_cnn_network
 from tardis.spindletorch.trainer import CNNTrainer
 from tardis.spindletorch.utils.utils import check_model_dict
 from tardis.utils.device import get_device
-from tardis.utils.logo import TardisLogo
+from tardis.utils.errors import TardisError
 from tardis.utils.losses import BCELoss, CELoss, DiceLoss
 
 # Setting for stable release to turn off all debug APIs
@@ -59,8 +59,9 @@ def train_cnn(train_dataloader,
                                   img_size=model_structure['img_size'],
                                   prediction=False)
     except:
-        tardis_logo = TardisLogo()
-        tardis_logo(text_1=f'CNNModelError: Model type: {type} was not build correctly!')
+        TardisError('14',
+                    'tardis/spindletorch/train.py',
+                    f'CNNModelError: Model type: {type} was not build correctly!')
         sys.exit()
 
     """Build TARDIS progress bar output"""
@@ -105,8 +106,7 @@ def train_cnn(train_dataloader,
     if checkpoint is not None:
         optimizer.load_state_dict(save_train['optimizer_state_dict'])
 
-        save_train = None
-        del save_train
+    del save_train
 
     """Optionally: Build learning rate scheduler"""
     if learning_rate_scheduler:

@@ -3,14 +3,17 @@ import numpy as np
 
 def interpolation_1d(start: int,
                      stop: int,
-                     max_len: int):
+                     max_len: int) -> np.ndarray:
     """
     1D INTERPOLATION FOR BUILDING SEMANTIC MASK
 
     Args:
-        start (int): 1D single coordinate to start interpolation
-        stop (int): 1D single coordinate to stop interpolation
-        max_len (int): 1D axis length
+        start (int): 1D single coordinate to start interpolation.
+        stop (int): 1D single coordinate to stop interpolation.
+        max_len (int): 1D axis length.
+
+    Returns:
+        np.ndarray: Interpolated 1D array
     """
     points_seq = np.linspace(start=int(start),
                              stop=int(stop),
@@ -19,13 +22,16 @@ def interpolation_1d(start: int,
     return points_seq
 
 
-def interpolation(points: np.ndarray):
+def interpolation(points: np.ndarray) -> np.ndarray:
     """
     3D INTERPOLATION FOR BUILDING SEMANTIC MASK
 
     Args:
         points (np.ndarray): numpy array with points belonging to individual segments
-            given by x, y, (z) coordinates
+            given by x, y, (z) coordinates.
+
+    Returns:
+        np.ndarray: Interpolated 2 or 3D array
     """
     coord = points
 

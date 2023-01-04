@@ -1,12 +1,6 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# For the full list of built-in configuration values, see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
-
-# -- Project information -----------------------------------------------------
-
-import sys
 import os
+import sys
+
 project = 'TARDIS-pytorch'
 copyright = '2021, Robert Kiewisz, Tristan Bepler'
 author = 'Robert Kiewisz, Tristan Bepler'

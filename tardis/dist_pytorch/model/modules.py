@@ -10,12 +10,6 @@ class PairBiasSelfAttention(nn.Module):
     SELF-ATTENTION WITH EDGE FEATURE-BASED BIAS AND PRE-LAYER NORMALIZATION
 
     Self-attention block that attends coordinate and image patches or RGB.
-
-    Args:
-        embed_dim (int): Number of embedded dimensions for node dimensions.
-        pairs_dim (int): Number of pairs dimensions.
-        num_heads (int): Number of heads for multi-head attention.
-        init_scaling (float): Initial scaling factor used for reset parameters.
     """
 
     def __init__(self,
@@ -23,6 +17,14 @@ class PairBiasSelfAttention(nn.Module):
                  pairs_dim: int,
                  num_heads: int,
                  init_scaling=1 / 1.4142135623730951):
+        """
+
+        Args:
+            embed_dim (int): Number of embedded dimensions for node dimensions.
+            pairs_dim (int): Number of pairs dimensions.
+            num_heads (int): Number of heads for multi-head attention.
+            init_scaling (float): Initial scaling factor used for reset parameters.
+        """
         super().__init__()
         # Embedding setting
         self.embed_dim = self.kdim = self.vdim = embed_dim
@@ -77,10 +79,8 @@ class PairBiasSelfAttention(nn.Module):
         Forward attention over node features.
 
         Args:
-            query (torch.Tensor): Nodes features
-                [Length x Batch x Channel].
-            pairs (torch.Tensor): Edges features
-                [Batch x Length x Length x Channel].
+            query (torch.Tensor): Nodes features  [Length x Batch x Channel].
+            pairs (torch.Tensor): Edges features [Batch x Length x Length x Channel].
             attn_mask (torch.Tensor): Typically used to implement causal attention,
                 where the mask prevents the attention from looking forward in time.
             key_padding_mask (torch.Tensor): Mask to exclude keys that are pads,
@@ -91,7 +91,8 @@ class PairBiasSelfAttention(nn.Module):
                 for each head.
 
         Returns:
-            torch.Tensor: Attention tensor for node features.
+            Union[Tuple[torch.Tensor, torch.Tensor], torch.Tensor]: Attention tensor
+            for node features.
         """
         if need_head_weights:
             need_weights = True
@@ -229,8 +230,8 @@ class ComparisonLayer(nn.Module):
             x (torch.Tensor): Node features after attention layer.
 
         Returns:
-            torch.Tensor: Converted Node features to
-                [Batch x Length x Length x Out_Channels] shape.
+            torch.Tensor: Converted Node features to [Batch x Length x Length x
+            Out_Channels] shape.
         """
         x = x.transpose(0, 1)
         x = self.norm(x)
@@ -655,8 +656,10 @@ class MultiHeadAttention(nn.Module):
                                              tgt_len,
                                              src_len)
             if not self.tpu:
-                attn_weights = attn_weights.masked_fill(key_padding_mask.unsqueeze(1).unsqueeze(2).to(torch.bool),
-                                                        float("-inf"))
+                attn_weights = attn_weights.masked_fill(
+                    key_padding_mask.unsqueeze(1).unsqueeze(2).to(torch.bool),
+                    float("-inf")
+                )
             else:
                 attn_weights = attn_weights.transpose(0, 2)
                 attn_weights = attn_weights.masked_fill(key_padding_mask,

@@ -1,4 +1,4 @@
 SpindleTorch -> Encoder block
 =============================
 
-.. automodule:: tardis_dev.spindletorch.model.encoder_blocks
+.. automodule:: tardis.spindletorch.model.encoder_blocks

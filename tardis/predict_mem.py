@@ -193,20 +193,17 @@ def main(dir: str,
 
         # Cut image for fix patch size and normalizing image pixel size
         trim_with_stride(image=image.astype(np.float32),
-                         mask=None,
                          scale=scale_shape,
                          trim_size_xy=patch_size,
                          trim_size_z=patch_size,
                          output=join(dir, 'temp', 'Patches'),
                          image_counter=0,
                          clean_empty=False,
-                         stride=10,
-                         prefix='')
+                         stride=10)
         del image
 
         # Setup CNN dataloader
-        patches_dl = PredictionDataset(img_dir=join(dir, 'temp', 'Patches'),
-                                       out_channels=1)
+        patches_dl = PredictionDataset(img_dir=join(dir, 'temp', 'Patches'))
 
         """CNN prediction"""
         iter_time = 1
@@ -255,18 +252,13 @@ def main(dir: str,
                         text_7='Current Task: Stitching...')
 
         # Stitch predicted image patches
-        image = image_stitcher(image_dir=output,
-                               output=None,
-                               mask=True,
-                               prefix='',
+        image = image_stitcher(image_dir=output, mask=True,
                                dtype=input.dtype)[:org_shape[0],
                                                   :org_shape[1],
                                                   :org_shape[2]]
 
         # Restored original image pixel size
-        image, _ = scale_image(image=image,
-                               mask=None,
-                               scale=org_shape)
+        image, _ = scale_image(image=image, scale=org_shape)
 
         # Fill gaps in binary mask after up/downsizing image to 2.5 nm pixel size
         if cnn_threshold != 0:

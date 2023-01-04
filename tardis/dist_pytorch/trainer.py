@@ -79,8 +79,7 @@ class DistTrainer(BasicTrainer):
                     edge = torch.sigmoid(edge[:, 0, :])
 
                 acc, prec, recall, f1, th = calculate_f1(logits=edge,
-                                                         targets=graph,
-                                                         best_f1=True)
+                                                         targets=graph)
 
                 # Avg. precision score
                 valid_losses.append(loss.item())
@@ -116,7 +115,7 @@ class CDistTrainer(BasicTrainer):
         super(CDistTrainer, self).__init__(**kwargs)
 
         if self.structure['dist_type'] == 'semantic':
-            self.criterion_cls = nn.CrossEntropyLoss(reduction='mean')
+            self.criterion_cls = nn.CrossEntropyLoss()
 
     def _train(self):
         """
@@ -183,8 +182,7 @@ class CDistTrainer(BasicTrainer):
 
                     edge = torch.sigmoid(edge[:, 0, :])
                     acc, prec, recall, f1, th = calculate_f1(logits=edge,
-                                                             targets=graph,
-                                                             best_f1=True)
+                                                             targets=graph)
 
                 # Avg. precision score
                 valid_losses.append(loss.item())

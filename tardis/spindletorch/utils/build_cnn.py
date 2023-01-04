@@ -256,14 +256,14 @@ class UNet3Plus(nn.Module):
         """ UNet3Plus classifier """
         if classifies:
             if '3' in layer_components:
-                self.cls = nn.Sequential(nn.Dropout(p=0.5),
+                self.cls = nn.Sequential(nn.Dropout(),
                                          nn.Conv3d(in_channels=feature_map[len(feature_map) - 1],
                                                    out_channels=2,
                                                    kernel_size=1),
                                          nn.AdaptiveAvgPool3d(output_size=1),
                                          nn.Sigmoid())
             elif '2' in layer_components:
-                self.cls = nn.Sequential(nn.Dropout(p=0.5),
+                self.cls = nn.Sequential(nn.Dropout(),
                                          nn.Conv2d(in_channels=feature_map[len(feature_map) - 1],
                                                    out_channels=2,
                                                    kernel_size=1),
@@ -436,8 +436,7 @@ class FNet(nn.Module):
                                           conv_layer_scaler=conv_layer_scaler,
                                           components=layer_components,
                                           sizes=patch_sizes,
-                                          num_group=num_group,
-                                          deconv_module='CNN')
+                                          num_group=num_group)
         self.decoder_3plus = build_decoder(conv_layers=num_conv_layer,
                                            conv_layer_scaler=conv_layer_scaler,
                                            components=layer_components,
@@ -477,6 +476,15 @@ class FNet(nn.Module):
 
     def forward(self,
                 x: torch.Tensor):
+        """
+        Forward for FNet model.
+
+            Args:
+                x (torch.Tensor): Input image features.
+
+            Returns:
+                torch.Tensor: Probability mask of predicted image.
+        """
         encoder_features = []
 
         """ Encoder """

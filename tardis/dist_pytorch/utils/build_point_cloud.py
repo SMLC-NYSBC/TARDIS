@@ -10,6 +10,13 @@ from tardis.utils.errors import TardisError
 
 
 class ImageToPointCloud:
+    """
+    WRAPPER FOR CONVERTING BINARY IMAGE TO POINT CLOUD
+
+    By assuming each object is line, wrapper compute EDT and skeletonization
+    to output skeletonize binary mask that can be converted to point cloud by taking
+    each pixel as a point in 2D or 3D space.
+    """
     def __init__(self):
         self.post_process = BuildPointCloud()
 
@@ -18,7 +25,22 @@ class ImageToPointCloud:
                  euclidean_transform=True,
                  label_size=2.5,
                  down_sampling_voxel_size=None,
-                 as_2d=False):
+                 as_2d=False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+        """
+        Function call for reusing ImageToPointCloud
+
+        Args:
+            image (str, np.ndarray): Image array, or directory to the image file.
+            euclidean_transform (bool): If Ture, compute edt before skeletonization.
+            label_size (float): Size of expected label in pixels.
+            down_sampling_voxel_size (None, float): If not None, indicate downscaling
+            effect.
+            as_2d (bool): If True, expect 2D image array.
+
+        Returns:
+            Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]: 2D or 3D array with
+            point cloud, if down sampling was activated return HD and LD point cloud.
+        """
 
         return self.post_process.build_point_cloud(image=image,
                                                    EDT=euclidean_transform,
@@ -40,9 +62,6 @@ class BuildPointCloud:
         skeletonization_3d -> output point cloud -> (down-sampling)
     """
 
-    def __init__(self):
-        pass
-
     @staticmethod
     def check_data(image: Optional[str] = np.ndarray) -> np.ndarray:
         """
@@ -58,24 +77,23 @@ class BuildPointCloud:
             if isinstance(image, str):
                 from tardis.utils.load_data import import_tiff
 
-                image, _ = import_tiff(img=image,
-                                       dtype=np.int8)
+                image, _ = import_tiff(tiff=image)
         except RuntimeWarning:
-            TardisError('build_point_cloud',
+            TardisError('121',
                         'tardis/dist/utils',
                         "Directory/input .tiff file/array is not correct...")
 
         assert image.ndim in [2, 3], \
-            TardisError('build_point_cloud',
+            TardisError('113',
                         'tardis/dist/utils',
                         f'Image dim expected to be 2 or 3 bu got {image.ndim}')
 
         """Check for binary"""
         unique_val = pd.unique(image.flatten())  # Use panda for speed
         assert len(unique_val) == 2, \
-            TardisError('build_point_cloud',
+            TardisError('115',
                         'tardis/dist/utils',
-                        'Not binary image')
+                        f'Not binary image. Expected 0-1 value but got: {unique_val}')
 
         """Check for int8 vs uint8"""
         if np.any(unique_val > 254):  # Fix uint8 formatting
@@ -83,10 +101,11 @@ class BuildPointCloud:
 
         """Any other exertions"""
         assert unique_val[1] == 1, \
-            TardisError('build_point_cloud',
+            TardisError('115',
                         'tardis/dist/utils',
                         'Array or file directory loaded properly but image '
-                        'is not semantic mask...')
+                        'is not semantic mask... '
+                        f'Expected 0-1 value but got: {unique_val}')
 
         return image
 
@@ -107,7 +126,8 @@ class BuildPointCloud:
             as_2d: Treat data as 2D not 3D.
 
         Returns:
-            np.ndarray: Point cloud of 2D/3D semantic objects.
+            Union[Tuple[ndarray, ndarray], np.ndarray]: Point cloud of 2D/3D
+            semantic objects.
         """
         image = self.check_data(image)
 

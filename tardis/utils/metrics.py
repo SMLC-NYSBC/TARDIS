@@ -8,7 +8,7 @@ def calculate_f1(logits: Optional[np.ndarray] = torch.Tensor,
                  targets: Optional[np.ndarray] = torch.Tensor,
                  best_f1=True):
     """
-    MODULE USED FOR CALCULATING TRAINING METRICS
+    Module used for calculating training metrics
 
     Works with torch a numpy dataset.
 

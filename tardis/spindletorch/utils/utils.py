@@ -1,4 +1,4 @@
-from typing import Optional, Union, Tuple
+from typing import Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -67,6 +67,17 @@ def scale_image(image: np.ndarray,
 def trilinear_scaling(img: np.ndarray,
                       scale: tuple,
                       dtype: np.dtype) -> np.ndarray:
+    """
+    Saling of 3D array using trilinear method from pytorch
+
+    Args:
+        img: 3D array.
+        scale: Scale array size.
+        dtype: Output dtype for scale array.
+
+    Returns:
+        no.ndarray: Up or Down scale 3D array.
+    """
     img = torch.from_numpy(img[None, None, :]).to('cpu').type(torch.float)
     img = F.interpolate(img,
                         size=scale,
@@ -77,6 +88,18 @@ def trilinear_scaling(img: np.ndarray,
 def area_scaling(img: np.ndarray,
                  scale: tuple,
                  dtype: np.dtype) -> np.ndarray:
+    """
+    Saling of 3D array using area method from pytorch
+
+    Args:
+        img: 3D array.
+        scale: Scale array size.
+        dtype: Output dtype for scale array.
+
+    Returns:
+        no.ndarray: Up or Down scale 3D array.
+    """
+
     size_Z = [scale[0], img.shape[1], img.shape[2]]
     image_scale_Z = np.zeros(size_Z, dtype=dtype)
 

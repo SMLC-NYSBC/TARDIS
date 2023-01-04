@@ -156,8 +156,7 @@ class BasicTrainer:
                             text_3=print_progress_bar(0, self.epochs))
 
         # Initialize early stop check.
-        self.early_stopping = EarlyStopping(patience=self.early_stop_rate,
-                                            min_delta=0)
+        self.early_stopping = EarlyStopping(patience=self.early_stop_rate)
 
         # Build training directory.
         if isdir(f'{self.checkpoint_name}_checkpoint'):

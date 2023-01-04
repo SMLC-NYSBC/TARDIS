@@ -30,9 +30,9 @@ class EarlyStopping:
                  val_loss: Optional[float] = None,
                  f1_score: Optional[float] = None):
         assert val_loss is not None or f1_score is not None, \
-            TardisError('EarlyStopping',
-                        'tardis/utils/utils.py',
-                        'Validation loss or F1 score is missing!')
+            TardisError('124',
+                        'tardis/utils/utils',
+                        'Validation loss or F1 score is missing in early stop!')
 
         if val_loss is not None:
             if self.best_loss is None:

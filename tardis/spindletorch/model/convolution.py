@@ -84,8 +84,7 @@ def convolution(in_ch: int,
                     modules.append(("Conv3D", nn.Conv3d(in_channels=in_ch,
                                                         out_channels=out_ch,
                                                         kernel_size=kernel,
-                                                        padding=padding,
-                                                        bias=True)))
+                                                        padding=padding)))
             # Add 2DConv
             if '2' in components:
                 if 'g' in components or 'b' in components:
@@ -98,12 +97,11 @@ def convolution(in_ch: int,
                     modules.append(("Conv2D", nn.Conv2d(in_channels=in_ch,
                                                         out_channels=out_ch,
                                                         kernel_size=kernel,
-                                                        padding=padding,
-                                                        bias=True)))
+                                                        padding=padding)))
         "Add GroupNorm"
         if "g" == letter:
             assert num_group is not None, \
-                TardisError('convolution',
+                TardisError('142',
                             'tardis/spindletorch/model/convolution.py',
                             'Number of group is required if nn.GroupNorm is used.')
 
@@ -220,7 +218,7 @@ class DoubleConvolution(nn.Sequential):
 
         # Define in and out channels for 1st and 2nd convolutions
         assert block_type in ["encoder", "decoder"], \
-            TardisError('DoubleConvolution',
+            TardisError('143',
                         'tardis/spindletorch/model/convolution.py',
                         'Only "encoder", decoder block type is supported.')
 
@@ -280,7 +278,7 @@ class RecurrentDoubleConvolution(nn.Module):
 
         # Define in and out channels for 1st and 2nd convolutions
         assert block_type in ["encoder", "decoder"], \
-            TardisError('RecurrentDoubleConvolution',
+            TardisError('143',
                         'tardis/spindletorch/model/convolution.py',
                         'Only "encoder", decoder block type is supported.')
 
@@ -321,6 +319,14 @@ class RecurrentDoubleConvolution(nn.Module):
 
     def forward(self,
                 x: torch.Tensor) -> torch.Tensor:
+        """
+        Forward function for customized convolution
+        Args:
+            x: Image patch.
+
+        Returns:
+            torch.Tensor: Up or down convoluted image patch.
+        """
         out = self.conv1(x)
         out = self.conv2(out)
         residual = out

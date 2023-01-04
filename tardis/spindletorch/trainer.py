@@ -76,9 +76,7 @@ class CNNTrainer(BasicTrainer):
                     img = torch.sigmoid(img)[0, 0, :]
                     mask = mask[0, 0, :]
 
-                acc, prec, recall, f1, th = calculate_f1(logits=img,
-                                                         targets=mask,
-                                                         best_f1=True)
+                acc, prec, recall, f1, th = calculate_f1(logits=img, targets=mask)
 
                 # Avg. precision score
                 valid_losses.append(loss.item())

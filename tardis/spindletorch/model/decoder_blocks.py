@@ -68,7 +68,7 @@ class DecoderBlockCNN(nn.Module):
             if m.__class__.__name__.find('GroupNorm') != -1:
                 continue
 
-            init_weights(m, init_type='kaiming')
+            init_weights(m)
 
     def forward(self,
                 encoder_features: torch.Tensor,
@@ -160,7 +160,7 @@ class DecoderBlockRCNN(nn.Module):
             if m.__class__.__name__.find('GroupNorm') != -1:
                 continue
 
-            init_weights(m, init_type='kaiming')
+            init_weights(m)
 
     def forward(self,
                 encoder_features: torch.Tensor,
@@ -252,12 +252,10 @@ class DecoderBlockUnet3Plus(nn.Module):
             if pool_kernel is not None and '3' in components:
                 max_pool = nn.MaxPool3d(kernel_size=pool_kernel,
                                         stride=pool_kernel,
-                                        dilation=1,
                                         ceil_mode=True)
             elif pool_kernel is not None and '2' in components:
                 max_pool = nn.MaxPool2d(kernel_size=pool_kernel,
                                         stride=pool_kernel,
-                                        dilation=1,
                                         ceil_mode=True)
             else:
                 max_pool = None
@@ -309,7 +307,7 @@ class DecoderBlockUnet3Plus(nn.Module):
             if m.__class__.__name__.find('GroupNorm') != -1:
                 continue
 
-            init_weights(m, init_type='kaiming')
+            init_weights(m)
 
     def forward(self,
                 x: torch.Tensor,

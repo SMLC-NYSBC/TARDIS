@@ -9,12 +9,8 @@ from tardis.version import version
 
 class NumpyToAmira:
     """
-    Builder of Amira file from numpy array
-        Support for 3D only! If 2D data, Z dim build with Z=0
-
-    coord (np.ndarray): Numpy array [Label x X x Y x Z] or [Label x X x Y] of
-        shape [Length x Dim] / [x, (3,4)]
-    file_dir (str): Full directory for saving .am file
+    Builder of Amira file from numpy array.
+    Support for 3D only! If 2D data, Z dim build with Z=0
     """
 
     @staticmethod
@@ -29,7 +25,7 @@ class NumpyToAmira:
             np.ndarray: The same or converted to 3D coordinates.
         """
         assert coord.ndim == 2, \
-            TardisError('check_3d',
+            TardisError('132',
                         'tardis/utils/export_data.py',
                         'Numpy array should be of the shape [Length x Dim]')
 
@@ -86,7 +82,7 @@ class NumpyToAmira:
             file_dir (str): Directory where the file should be saved.
         """
         assert file_dir.endswith('.am'), \
-            TardisError('write_to_amira',
+            TardisError('133',
                         'tardis/utils/export_data.py',
                         f'{file_dir} must be and .am file!')
 

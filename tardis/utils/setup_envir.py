@@ -18,7 +18,7 @@ def build_new_dir(dir: str):
     output = join(dir, "output")
     image_list = glob.glob(dir + '/*.tif')
     assert len(image_list) > 0, \
-        TardisError('build_new_dir',
+        TardisError('12',
                     'tardis/utils/setup_envir.py',
                     'At least one .tif image has to be in the directory!')
 
@@ -80,7 +80,7 @@ def check_dir(dir: str,
               test_mask: str,
               with_img: bool,
               img_format: Optional[tuple] = str,
-              mask_format: Optional[tuple] = str):
+              mask_format: Optional[tuple] = str) -> bool:
     """
     Check list used to evaluate if directory containing dataset for CNN.
 
@@ -93,6 +93,9 @@ def check_dir(dir: str,
         test_mask (str): Directory name with mask images for validation.
         mask_format (tuple, str): Allowed mask image format.
         with_img (bool): GraphFormer bool value for training with/without images.
+
+    Returns:
+        bool: Bool value indicating detection of the correct structure dataset
     """
     if isinstance(img_format, str):
         img_format = [img_format]

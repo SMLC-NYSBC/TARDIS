@@ -32,48 +32,93 @@ warnings.simplefilter("ignore", UserWarning)
 
 
 @click.command()
-@click.option('-dir', '--dir', default=getcwd(), type=str,
+@click.option('-dir', '--dir',
+              default=getcwd(),
+              type=str,
               help='Directory with images for prediction with CNN model.',
               show_default=True)
-@click.option('-ps', '--patch_size', default=96, type=int,
-              help='Size of image size used for prediction.', show_default=True)
-@click.option('-cnn', '--cnn_network', default='fnet_32', type=str,
-              help='CNN network name.', show_default=True)
-@click.option('-cch', '--cnn_checkpoint', default=None, type=str,
-              help='If not None, str checkpoints for CNN', show_default=True)
-@click.option('-ct', '--cnn_threshold', default=0.2, type=float,
-              help='Threshold use for model prediction.', show_default=True)
-@click.option('-dch', '--dist_checkpoint', default=None, type=str,
-              help='If not None, str checkpoints for DIST', show_default=True)
-@click.option('-dt', '--dist_threshold', default=0.5, type=float,
-              help='Threshold use for graph segmentation.', show_default=True)
-@click.option('-pv', '--points_in_patch', default=1000, type=int,
-              help='Number of point per voxel.', show_default=True)
-@click.option('-f', '--filter_mt', default=0, type=int,
+@click.option('-ps', '--patch_size',
+              default=96,
+              type=int,
+              help='Size of image size used for prediction.',
+              show_default=True)
+@click.option('-cnn', '--cnn_network',
+              default='fnet_32',
+              type=str,
+              help='CNN network name.',
+              show_default=True)
+@click.option('-cch', '--cnn_checkpoint',
+              default=None,
+              type=str,
+              help='If not None, str checkpoints for CNN',
+              show_default=True)
+@click.option('-ct', '--cnn_threshold',
+              default=0.2,
+              type=float,
+              help='Threshold use for model prediction.',
+              show_default=True)
+@click.option('-dch', '--dist_checkpoint',
+              default=None,
+              type=str,
+              help='If not None, str checkpoints for DIST',
+              show_default=True)
+@click.option('-dt', '--dist_threshold',
+              default=0.5,
+              type=float,
+              help='Threshold use for graph segmentation.',
+              show_default=True)
+@click.option('-pv', '--points_in_patch',
+              default=1000,
+              type=int,
+              help='Number of point per voxel.',
+              show_default=True)
+@click.option('-f', '--filter_mt',
+              default=0,
+              type=int,
               help='Remove MT that are shorter then given A value '
                    'NOT SUPPORTED FOR .TIF FILE FORMAT '
                    'There are two filtering mechanisms: '
                    '- Remove short segments (aka. Segments shorter then XX A. '
-                   '- Connect segments that are closer then 17.5 nm', show_default=True)
-@click.option('-d', '--device', default='0', type=str,
+                   '- Connect segments that are closer then 17.5 nm',
+              show_default=True)
+@click.option('-d', '--device',
+              default='0',
+              type=str,
               help='Define which device use for training: '
                    'gpu: Use ID 0 GPUs '
                    'cpu: Usa CPU '
-                   '0-9 - specified GPU device id to use', show_default=True)
-@click.option('-o', '--output', default=None, type=click.Choice(['csv', 'mrc']),
-              help='Define output format type.', show_default=True)
-@click.option('-db', '--debug', default=False, type=bool,
+                   '0-9 - specified GPU device id to use',
+              show_default=True)
+@click.option('-o', '--output',
+              default=None,
+              type=click.Choice(['csv', 'mrc']),
+              help='Define output format type.',
+              show_default=True)
+@click.option('-db', '--debug',
+              default=False,
+              type=bool,
               help='If True, save output from each step for debugging.',
               show_default=True)
-@click.option('-v', '--visualizer', default=None, type=click.Choice(['f', 'p']),
+@click.option('-v', '--visualizer',
+              default=None,
+              type=click.Choice(['f', 'p']),
               help='If not None, output visualization of the prediction'
                    'f: Output as filaments'
-                   'p: Output as segmented point cloud', show_default=True)
+                   'p: Output as segmented point cloud',
+              show_default=True)
 @click.version_option(version=version)
-def main(dir: str, patch_size: int, cnn_network: str, cnn_threshold: float,
-         dist_threshold: float, points_in_patch: int, filter_mt: float, device: str,
-         debug: bool, output='amira', visualizer: Optional[str] = None,
-         cnn_checkpoint: Optional[str] = None, dist_checkpoint: Optional[str] = None, ):
+def main(dir: str,
+         patch_size: int,
+         cnn_network: str,
+         cnn_threshold: float,
+         dist_threshold: float,
+         points_in_patch: int,
+         filter_mt: float,
+         device: str,
+         debug: bool,
+         visualizer: Optional[str] = None,
+         cnn_checkpoint: Optional[str] = None,
+         dist_checkpoint: Optional[str] = None):
     """
     MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
     """
@@ -120,12 +165,11 @@ def main(dir: str, patch_size: int, cnn_network: str, cnn_threshold: float,
     image_stitcher = StitchImages()
     post_processes = ImageToPointCloud()
     build_amira_file = NumpyToAmira()
-    patch_pc = PatchDataSet(label_cls=None, rgb=None, patch_3d=False,
-                            max_number_of_points=points_in_patch, init_patch_size=0,
-                            drop_rate=1, graph=False, tensor=True, )
-    GraphToSegment = GraphInstanceV2(threshold=dist_threshold, connection=2, smooth=True)
-    filter_segments = FilterSpatialGraph(filter_unconnected_segments=True,
-                                         filter_short_spline=filter_mt)
+    patch_pc = PatchDataSet(max_number_of_points=points_in_patch,
+                            graph=False)
+    GraphToSegment = GraphInstanceV2(threshold=dist_threshold,
+                                     smooth=True)
+    filter_segments = FilterSpatialGraph(filter_short_spline=filter_mt)
 
     # Build CNN from checkpoints
     checkpoints = (cnn_checkpoint, dist_checkpoint)
@@ -141,13 +185,19 @@ def main(dir: str, patch_size: int, cnn_network: str, cnn_threshold: float,
         sys.exit()
 
     # Build CNN network with loaded pre-trained weights
-    predict_cnn = Predictor(checkpoint=checkpoints[0], network=cnn_network[0],
-                            subtype=cnn_network[1], model_type='microtubules',
-                            img_size=patch_size, device=device, )
+    predict_cnn = Predictor(checkpoint=checkpoints[0],
+                            network=cnn_network[0],
+                            subtype=cnn_network[1],
+                            model_type='microtubules',
+                            img_size=patch_size,
+                            device=device, )
 
     # Build DIST network with loaded pre-trained weights
-    predict_dist = Predictor(checkpoint=checkpoints[1], network='dist', subtype='triang',
-                             model_type='microtubules', img_size=None, device=device, )
+    predict_dist = Predictor(checkpoint=checkpoints[1],
+                             network='dist',
+                             subtype='triang',
+                             model_type='microtubules',
+                             device=device)
 
     """Process each image with CNN and DIST"""
     tardis_progress = TardisLogo()
@@ -187,11 +237,13 @@ def main(dir: str, patch_size: int, cnn_network: str, cnn_threshold: float,
 
         if px == 0:
             px = click.prompt(
-                f"Image file has pixel size {px}, that's obviously wrong... " "What is the correct value:",
+                f"Image file has pixel size {px}, that's obviously wrong... "
+                "What is the correct value:",
                 type=float)
         if px == 1:
             px = click.prompt(
-                f"Image file has pixel size {px}, that's maybe wrong... " 'What is the correct value:',
+                f"Image file has pixel size {px}, that's maybe wrong... "
+                'What is the correct value:',
                 default=px, type=float, )
 
         # Check image structure and normalize histogram
@@ -220,18 +272,21 @@ def main(dir: str, patch_size: int, cnn_network: str, cnn_threshold: float,
                         text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                         text_4=f'Pixel size: {px} A',
                         text_5='Point Cloud: In processing...',
-                        text_7=f'Current Task: Sub-dividing images for {patch_size} size', )
+                        text_7=f'Current Task: Sub-dividing images for {patch_size} size')
 
         # Cut image for fix patch size and normalizing image pixel size
-        trim_with_stride(image=image.astype(np.float32), mask=None, scale=scale_shape,
-                         trim_size_xy=patch_size, trim_size_z=patch_size,
-                         output=join(dir, 'temp', 'Patches'), image_counter=0,
-                         clean_empty=False, stride=10, prefix='', )
+        trim_with_stride(image=image.astype(np.float32),
+                         scale=scale_shape,
+                         trim_size_xy=patch_size,
+                         trim_size_z=patch_size,
+                         output=join(dir, 'temp', 'Patches'),
+                         image_counter=0,
+                         clean_empty=False,
+                         stride=10)
         del image
 
         # Setup CNN dataloader
-        patches_DL = PredictionDataset(img_dir=join(dir, 'temp', 'Patches'),
-                                       out_channels=1)
+        patches_DL = PredictionDataset(img_dir=join(dir, 'temp', 'Patches'))
 
         """CNN prediction"""
         iter_time = 1
@@ -269,8 +324,6 @@ def main(dir: str, patch_size: int, cnn_network: str, cnn_threshold: float,
             tif.imwrite(join(output, f'{name}.tif'), np.array(input, dtype=input.dtype))
 
         """Post-Processing"""
-        scale_factor = org_shape
-
         # Tardis progress bar update
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
@@ -280,12 +333,15 @@ def main(dir: str, patch_size: int, cnn_network: str, cnn_threshold: float,
                         text_7='Current Task: Stitching...', )
 
         # Stitch predicted image patches
-        image = image_stitcher(image_dir=output, output=None, mask=True, prefix='',
-                               dtype=input.dtype)[: org_shape[0], : org_shape[1],
+        image = image_stitcher(image_dir=output,
+                               mask=True,
+                               dtype=input.dtype)[: org_shape[0],
+                                                  : org_shape[1],
                                                   : org_shape[2]]
 
         # Restored original image pixel size
-        image, _ = scale_image(image=image, mask=None, scale=org_shape)
+        image, _ = scale_image(image=image,
+                               scale=org_shape)
 
         if cnn_threshold == 0:
             """Clean-up temp dir"""
@@ -333,25 +389,24 @@ def main(dir: str, patch_size: int, cnn_network: str, cnn_threshold: float,
                         text_7='Current Task: Image Postprocessing...', )
 
         # Post-process predicted image patches
-        point_cloud = post_processes(image=image, euclidean_transform=True, label_size=3,
-                                     down_sampling_voxal_size=None)
+        point_cloud = post_processes(image=image,
+                                     label_size=3)
 
         if point_cloud.shape[0] < 100:
-            point_cloud = post_processes(image=image, euclidean_transform=True,
-                                         label_size=0.5, down_sampling_voxal_size=None)
+            point_cloud = post_processes(image=image,
+                                         label_size=0.5)
 
         if point_cloud.shape[0] < 100:
             continue
 
         # Transform for xyz and pixel size for coord
-        image = None
         del image
 
         if debug:  # Debugging checkpoint
             np.save(join(am_output, f'{i[:-out_format]}_raw_pc.npy'), point_cloud)
 
         """DIST Prediction"""
-        # Find downsampling value by voxal size 5 to reduce noise
+        # Find down-sampling value by voxel size 5 to reduce noise
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(point_cloud)
         point_cloud = np.asarray(pcd.voxel_down_sample(voxel_size=5).points)
@@ -368,8 +423,7 @@ def main(dir: str, patch_size: int, cnn_network: str, cnn_threshold: float,
         dist = pc_median_dist(point_cloud, avg_over=True)
 
         # Build patches dataset
-        coords_df, _, output_idx, _ = patch_pc.patched_dataset(coord=point_cloud / dist,
-                                                               mesh=False, dist_th=None)
+        coords_df, _, output_idx, _ = patch_pc.patched_dataset(coord=point_cloud / dist)
 
         # Predict point cloud
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
@@ -408,8 +462,7 @@ def main(dir: str, patch_size: int, cnn_network: str, cnn_threshold: float,
 
             graphs.append(graph)
         if debug:
-            np.save(join(am_output, f'{i[:-out_format]}_graph_voxal.npy'), graphs,
-                    allow_pickle=True)
+            np.save(join(am_output, f'{i[:-out_format]}_graph_voxel.npy'), graphs)
 
         """DIST post-processing"""
         if i.endswith(('.am', '.rec', '.mrc')):
@@ -434,8 +487,10 @@ def main(dir: str, patch_size: int, cnn_network: str, cnn_threshold: float,
                             text_5=f'Point Cloud: {point_cloud.shape[0]} Nodes; NaN Segments',
                             text_7='Current Task: MT Segmentation...', )
 
-        segments = GraphToSegment.patch_to_segment(graph=graphs, coord=point_cloud,
-                                                   idx=output_idx, prune=5, sort=True,
+        segments = GraphToSegment.patch_to_segment(graph=graphs,
+                                                   coord=point_cloud,
+                                                   idx=output_idx,
+                                                   prune=5,
                                                    visualize=visualizer)
 
         segments_filter = filter_segments(segments)
@@ -443,15 +498,15 @@ def main(dir: str, patch_size: int, cnn_network: str, cnn_threshold: float,
         # Save debugging check point
         if debug:
             if device == 'cpu':
-                np.save(join(am_output, f'{i[:-out_format]}_coord_voxal.npy'),
-                        point_cloud, allow_pickle=True)
-                np.save(join(am_output, f'{i[:-out_format]}_idx_voxal.npy'), output_idx,
-                        allow_pickle=True)
+                np.save(join(am_output, f'{i[:-out_format]}_coord_voxel.npy'),
+                        point_cloud)
+                np.save(join(am_output, f'{i[:-out_format]}_idx_voxel.npy'),
+                        output_idx)
             else:
-                np.save(join(am_output, f'{i[:-out_format]}_coord_voxal.npy'),
-                        point_cloud, allow_pickle=True)
-                np.save(join(am_output, f'{i[:-out_format]}_idx_voxal.npy'), output_idx,
-                        allow_pickle=True)
+                np.save(join(am_output, f'{i[:-out_format]}_coord_voxel.npy'),
+                        point_cloud)
+                np.save(join(am_output, f'{i[:-out_format]}_idx_voxel.npy'),
+                        output_idx)
 
         if debug:
             np.save(join(am_output, f'{i[:-out_format]}_segments.npy'), segments)
@@ -464,15 +519,19 @@ def main(dir: str, patch_size: int, cnn_network: str, cnn_threshold: float,
                         text_7='Current Task: Segmentation finished!', )
 
         """Save as .am"""
-        build_amira_file.export_amira(coord=segments, file_dir=join(am_output,
-                                                                    f'{i[:-out_format]}_SpatialGraph.am'))
-        build_amira_file.export_amira(coord=segments_filter, file_dir=join(am_output,
-                                                                           f'{i[:-out_format]}_SpatialGraph_filter.am'))
+        build_amira_file.export_amira(coord=segments,
+                                      file_dir=join(am_output,
+                                                    f'{i[:-out_format]}_SpatialGraph.am'))
+        build_amira_file.export_amira(coord=segments_filter,
+                                      file_dir=join(am_output,
+                                                    f'{i[:-out_format]}_SpatialGraph_filter.am'))
         if output == 'csv':
             np.savetxt(join(am_output, f'{i[:-out_format]}' '_SpatialGraph.csv'),
-                       segments, delimiter=",")
+                       segments,
+                       delimiter=",")
             np.savetxt(join(am_output, f'{i[:-out_format]}' '_SpatialGraph_filter.csv'),
-                       segments_filter, delimiter=",")
+                       segments_filter,
+                       delimiter=",")
 
         """Clean-up temp dir"""
         clean_up(dir=dir)

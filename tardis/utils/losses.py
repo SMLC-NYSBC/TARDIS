@@ -6,9 +6,10 @@ import torch.nn as nn
 
 class SigmoidFocalLoss(nn.Module):
     """
-    SIGMOID FOCAL LOSS FUNCTION
+    Sigmoid focal loss function
 
-    As in: doi:10.1088/1742-6596/1229/1/012045
+    References:
+        10.1088/1742-6596/1229/1/012045
 
     Args:
         gamma (float): Gamma factor used in term1 of SFL.

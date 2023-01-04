@@ -64,7 +64,7 @@ class DistStack(nn.Module):
                 src_mask=None,
                 src_key_padding_mask=None) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        Forward throw DIST model.
+        Forward throw individual DIST layer.
 
         Args:
             edge_features (torch.Tensor): Edge features as a tensor of shape
@@ -77,7 +77,7 @@ class DistStack(nn.Module):
                 feature padding.
 
         Returns:
-            torch.Tensor: Updated graph representation.
+            Tuple[torch.Tensor, torch.Tensor]: Updated graph representation.
         """
         for layer in self.layers:
             node_features, edge_features = layer(h_pairs=edge_features,
@@ -150,8 +150,7 @@ class DistLayer(nn.Module):
         # Edge triangular update
         if self.structure in ['full', 'full_af', 'triang']:
             self.row_update = TriangularEdgeUpdate(input_dim=pairs_dim,
-                                                   channel_dim=32,
-                                                   axis=1)
+                                                   channel_dim=32)
             self.col_update = TriangularEdgeUpdate(input_dim=pairs_dim,
                                                    channel_dim=32,
                                                    axis=0)
@@ -159,8 +158,7 @@ class DistLayer(nn.Module):
         # Edge Optional Quadratic
         if self.structure == 'quad':
             self.row_update = QuadraticEdgeUpdate(input_dim=pairs_dim,
-                                                  channel_dim=32,
-                                                  axis=1)
+                                                  channel_dim=32)
             self.col_update = QuadraticEdgeUpdate(input_dim=pairs_dim,
                                                   channel_dim=32,
                                                   axis=0)
@@ -168,15 +166,13 @@ class DistLayer(nn.Module):
         # Edge Optional dual-triang update
         if self.structure == 'dualtriang':
             self.row_update_1 = TriangularEdgeUpdate(input_dim=pairs_dim,
-                                                     channel_dim=32,
-                                                     axis=1)
+                                                     channel_dim=32)
             self.col_update_1 = TriangularEdgeUpdate(input_dim=pairs_dim,
                                                      channel_dim=32,
                                                      axis=0)
 
             self.row_update_2 = TriangularEdgeUpdate(input_dim=pairs_dim,
-                                                     channel_dim=32,
-                                                     axis=1)
+                                                     channel_dim=32)
             self.col_update_2 = TriangularEdgeUpdate(input_dim=pairs_dim,
                                                      channel_dim=32,
                                                      axis=0)
@@ -283,7 +279,18 @@ class DistLayer(nn.Module):
                 h_nodes: Optional[torch.Tensor] = None,
                 src_mask=None,
                 src_key_padding_mask=None) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Wrapped forward throw all DIST layers.
 
+        Args:
+            h_pairs: Pairs representation.
+            h_nodes: Node feature representation.
+            src_mask: Optional attention mask.
+            src_key_padding_mask: Optional padding mask for attention.
+
+        Returns:
+            Tuple[torch,Tensor, torch.Tensor]:
+        """
         # Update node features and convert to edge shape
         if h_nodes is not None:
             h_nodes = self.update_nodes(h_pairs=h_pairs,

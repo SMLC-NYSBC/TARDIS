@@ -1,9 +1,10 @@
-from typing import Optional
+from typing import Optional, Tuple, Union
 
 import numpy as np
 import torch
 
 from tardis.dist_pytorch.datasets.augmentation import BuildGraph
+from tardis.utils.errors import TardisError
 
 
 class PatchDataSet:
@@ -18,7 +19,7 @@ class PatchDataSet:
     action is continue till 'init_patch_size' is < 0 or, class found 'init_patch_size'
     where all computed patches have a number of points below the threshold.
 
-    Patches are computed building voxel 2D or 3D grid of the size given by 'init_patch_size'.
+    Patches are computed building voxel 2D/3D grid of the size given by 'init_patch_size'
     In the end, patches with a smaller number of points are marge with their neighbor
     in a way that will respect 'max_number_of_points' policy.
 
@@ -51,6 +52,8 @@ class PatchDataSet:
         # Global data setting
         self.label_cls = label_cls
         self.rgb = rgb
+        self.segments_id = None
+        self.coord = None
 
         # Point cloud down-sampling setting
         self.DOWNSAMPLING_TH = max_number_of_points
@@ -93,7 +96,7 @@ class PatchDataSet:
         Utile class function to compute boundary box in 2D or 3D
 
         Returns:
-        (np.ndarray (2, 3)): Boundary box dimensions
+            np.ndarray: Boundary box dimensions
         """
         box_dim = self.coord.shape[1]
 
@@ -114,7 +117,7 @@ class PatchDataSet:
                         (max_x, max_y, max_z)])
 
     def _collect_patch_idx(self,
-                           patches: np.ndarray):
+                           patches: np.ndarray) -> Tuple[list, list]:
         """
         Utile class function to compute patch metrics.
 
@@ -122,8 +125,8 @@ class PatchDataSet:
             patches (np.ndarray): List of all patch centers.
 
         Returns:
-            list: ID's list of all patches with more than 1 point and list of
-                point numbers in each patch.
+            Tuple[list, list]: ID's list of all patches with more than 1 point
+            and list of point numbers in each patch.
         """
         not_empty_patch = []
         points_no = []
@@ -134,7 +137,8 @@ class PatchDataSet:
 
             # Select points from full point cloud array
             if self.coord.shape[1] == 2:
-                coord_patch = np.hstack((np.array([0] * self.coord[idx, :].shape[0])[:, None],
+                coord_patch = np.hstack((np.array([0] *
+                                                  self.coord[idx, :].shape[0])[:, None],
                                         self.coord[idx, :]))
             else:
                 coord_patch = self.coord[idx, :]
@@ -156,8 +160,7 @@ class PatchDataSet:
         Args:
             coord_with_idx (np.ndarray): Coordinate id value i.
         Returns:
-            np.ndarray (N, (2, 3)): An array all points in a patch with corrected
-                ID value.
+            np.ndarray: An array all points in a patch with corrected ID value.
         """
         unique_idx = list(np.unique(coord_with_idx[:, 0]))
         norm_idx = list(range(len(np.unique(coord_with_idx[:, 0]))))
@@ -171,7 +174,7 @@ class PatchDataSet:
         return coord_with_idx
 
     def _output_format(self,
-                       data: np.ndarray) -> np.ndarray:
+                       data: np.ndarray) -> Union[np.ndarray, torch.Tensor]:
         """
         Utile class function to output array in the correct format (numpy or tensor).
 
@@ -179,7 +182,7 @@ class PatchDataSet:
             data (np.ndarray): Input data for format change.
 
         Returns:
-            np.ndarray or tensor: Array in file format specified by self.torch_output.
+            np.ndarray: Array in file format specified by self.torch_output.
         """
         if self.TORCH_OUTPUT:
             data = torch.from_numpy(data).type(torch.float32)
@@ -197,7 +200,7 @@ class PatchDataSet:
             boundary_box (np.ndarray): Computer point cloud boundary box.
 
         Returns:
-            np.ndarray: (N, 3): Array with XYZ coordinates to localize patch centers.
+            np.ndarray: Array with XYZ coordinates to localize patch centers.
         """
         patch = []
         patch_positions_x = []
@@ -264,7 +267,7 @@ class PatchDataSet:
             patch_center (np.ndarray): Array (1, 3) for the given patch center.
 
         Returns:
-            np.ndarray[bool]: Array of all points that are enclosed in the given patch.
+            tuple(bool): Array of all points that are enclosed in the given patch.
         """
         patch_size = self.INIT_PATCH_SIZE + self.PATCH_STRIDE
 
@@ -275,11 +278,11 @@ class PatchDataSet:
 
         return coord_idx
 
-    def optimize_patch_size(self):
+    def optimize_patch_size(self) -> Union[Tuple[list, list], Tuple[np.ndarray, list]]:
         """
         Main class function to compute optimal patch size.
 
-        The function takes __init__ stored variable and iteratively searches for patch size
+        The function takes init stored variable and iteratively searches for patch size
         small enough that allow for all patches to have an equal or less max number
         of points.
         """
@@ -337,7 +340,10 @@ class PatchDataSet:
     def patched_dataset(self,
                         coord: np.ndarray,
                         mesh=False,
-                        dist_th: Optional[float] = None) -> list:
+                        dist_th: Optional[float] = None) -> Union[Tuple[list, list,
+                                                                        list, list, list],
+                                                                  Tuple[list, list,
+                                                                        list, list]]:
         """
         Main function for processing dataset and return patches.
 
@@ -366,20 +372,29 @@ class PatchDataSet:
         self._init_parameters()
 
         if self.GRAPH_OUTPUT:
-            assert coord.shape[1] in [3, 4], 'If graph True, coord must by of shape' \
-                '[Dim x X x Y x (Z)]'
+            assert coord.shape[1] in [3, 4], \
+                TardisError('113',
+                            'tardis/dist_pytorch/datasets/patches.py',
+                            'If graph True, coord must by of shape'
+                            f'[Dim x X x Y x (Z)], but is: {coord.shape}')
             self.segments_id = coord
             self.coord = coord[:, 1:]
 
             graph_builder = BuildGraph(mesh=mesh)
         else:
-            assert coord.shape[1] in [2, 3], 'If graph True, coord must by of shape' \
-                '[X x Y x (Z)]'
+            assert coord.shape[1] in [2, 3], \
+                TardisError('113',
+                            'tardis/dist_pytorch/datasets/patches.py',
+                            'If graph True, coord must by of shape'
+                            f'[X x Y x (Z)], but is: {coord.shape}')
             self.segments_id = None
             self.coord = coord
 
         if mesh:
-            assert dist_th is not None, 'If mesh, dist_th cannot be None!'
+            assert dist_th is not None, \
+                TardisError('124',
+                            'tardis/dist_pytorch/datasets/patches.py',
+                            'If mesh, dist_th cannot be None!')
 
         # Check if point cloud is smaller than max allowed point
         if self.coord.shape[0] <= self.DOWNSAMPLING_TH:
@@ -401,10 +416,14 @@ class PatchDataSet:
                 coord_label = self._normalize_idx(coord_label)
 
                 if mesh:
-                    graph_patch.append(self._output_format(graph_builder(coord=coord_label,
-                                                                         dist_th=dist_th)))
+                    graph_patch.append(
+                        self._output_format(graph_builder(coord=coord_label,
+                                                          dist_th=dist_th))
+                    )
                 else:
-                    graph_patch.append(self._output_format(graph_builder(coord=coord_label)))
+                    graph_patch.append(
+                        self._output_format(graph_builder(coord=coord_label))
+                    )
 
             """ Build output index for each patch """
             output_idx.append(np.where(coord_ds)[0])
@@ -436,7 +455,6 @@ class PatchDataSet:
             new_patch = []
             while len(all_patch) > 0:
                 df = all_patch[0]
-                i = 1
 
                 if df.sum() >= self.DOWNSAMPLING_TH:
                     new_patch.append(df)
@@ -481,10 +499,14 @@ class PatchDataSet:
                     segment_patch = self._normalize_idx(segment_patch[coord_ds, :])
 
                     if mesh:
-                        graph_patch.append(self._output_format(graph_builder(coord=segment_patch,
-                                                                             dist_th=dist_th)))
+                        graph_patch.append(
+                            self._output_format(graph_builder(coord=segment_patch,
+                                                              dist_th=dist_th))
+                        )
                     else:
-                        graph_patch.append(self._output_format(graph_builder(coord=segment_patch)))
+                        graph_patch.append(
+                            self._output_format(graph_builder(coord=segment_patch))
+                        )
 
                 """ Build output index for each patch """
                 output_idx.append(output_df[coord_ds])
@@ -497,9 +519,9 @@ class PatchDataSet:
                     cls_df = [0]
                     cls_new = np.zeros((1, 200))
 
-                for id, i in enumerate(cls_df):
+                for id, j in enumerate(cls_df):
                     df = np.zeros((1, 200))
-                    df[0, int(i)] = 1
+                    df[0, int(j)] = 1
                     cls_new[id, :] = df
 
                 cls_patch.append(self._output_format(cls_new))

@@ -17,6 +17,9 @@ def pc_median_dist(pc: np.ndarray,
             and calculate average k-NN for a selected set of points in that area
             (speed up for big point clouds).
         box_size (float): Boundary box size for 'avg_over'.
+
+    Returns:
+        float: Median distance between points in given point cloud.
     """
     if avg_over:
         if isinstance(pc, torch.Tensor):

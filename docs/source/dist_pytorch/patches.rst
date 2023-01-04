@@ -1,4 +1,4 @@
 DIST -> Build optimal patches from point cloud
 ==============================================
 
-.. autoclass:: tardis_dev.dist_pytorch.datasets.patches.PatchDataSet
+.. autoclass:: tardis.dist_pytorch.datasets.patches.PatchDataSet

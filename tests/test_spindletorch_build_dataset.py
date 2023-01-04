@@ -4,8 +4,7 @@ from shutil import copy, rmtree
 
 import numpy as np
 
-from tardis.spindletorch.data_processing.build_training_dataset import \
-    build_train_dataset
+from tardis.spindletorch.data_processing.build_training_dataset import build_train_dataset
 from tardis.utils.load_data import load_image
 
 

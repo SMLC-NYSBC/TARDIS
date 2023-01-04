@@ -14,23 +14,22 @@ from tardis.utils.errors import TardisError
 
 class GraphInstanceV2:
     """
+    GRAPH CUT
 
+    Perform graph cut on predicted point cloud graph representation using in-coming
+    and out-coming edges probability.
+
+    Args:
+        threshold (float): Edge connection threshold.
+        connection (int): Max allowed number of connections per node.
+        smooth (bool): If True, smooth splines.
     """
 
     def __init__(self,
                  threshold=float,
                  connection=2,
                  smooth=False):
-        """
-        PRE-SETTING FOR GRAPHINSTANCE BUILDER
-
-        Args:
-            threshold (float): Edge connection threshold.
-            connection (int): Max allowed number of connections per node.
-            smooth (bool): If True, smooth splines.
-        """
         self.threshold = threshold
-
         self.connection = connection
         self.smooth = smooth
 
@@ -144,7 +143,6 @@ class GraphInstanceV2:
 
         Args:
             graph (np.ndarray): Stitched graph from DIST.
-
 
         Returns:
              list, list: Adjacency list of node id's and corresponding edge probability.
@@ -338,7 +336,8 @@ class GraphInstanceV2:
         coord_segment_smooth = np.concatenate(smooth_spline)
 
         for i in np.unique(coord_segment_smooth[:, 0]):
-            filament = coord_segment_smooth[np.where(coord_segment_smooth[:, 0] == int(i))[0], :]
+            filament = coord_segment_smooth[np.where(coord_segment_smooth[:, 0] ==
+                                                     int(i))[0], :]
             tortuosity_spline.append(tortuosity(filament))
 
         # Remove errors with the highest tortuosity
@@ -395,9 +394,10 @@ class GraphInstanceV2:
             idx = [idx.cpu().detach().numpy()]
 
         assert isinstance(coord, np.ndarray), \
-            TardisError('Building_Adjacency',
-                        'tardis/dist/utils',
-                        'Coord must be an array of all nodes!')
+            TardisError('114',
+                        'tardis/dist/utils/segment_point_cloud.py',
+                        'Coord must be an array of all nodes! '
+                        f'Expected list of ndarrays but got {type(coord)}')
 
         """Build Adjacency list from graph representation"""
         adjacency_matrix = self._adjacency_matrix(graphs=graph,
@@ -448,8 +448,8 @@ class GraphInstanceV2:
 
         if visualize is not None:
             assert visualize in ['f', 'p'], \
-                TardisError('Building_Adjacency',
-                            'tardis/dist/utils',
+                TardisError('124',
+                            'tardis/dist/utils/segment_point_cloud.py',
                             'To visualize output use "f" for filament '
                             'or "p" for point cloud!')
 
@@ -509,13 +509,16 @@ class FilterSpatialGraph:
 def reorder_segments_id(coord: np.ndarray,
                         order_range: Optional[list] = None) -> np.ndarray:
     """
+    Reorder list of segments to remove missing IDs
+
+    E.g. Change IDs from [1, 2, 3, 5, 6, 8] to [1, 2, 3, 4, 5, 6]
 
     Args:
-        coord:
-        order_range:
+        coord: Array of points in 3D or 3D with their segment ID
+        order_range: Costume id range for reordering
 
     Returns:
-
+        np.ndarray: Array of points with reordered IDs values
     """
     df = np.unique(coord[:, 0])
 
@@ -537,18 +540,22 @@ def sort_segment(coord: np.ndarray) -> np.ndarray:
 
     Args:
         coord (np.ndarray): Coordinates for each unsorted point idx.
+
+    Returns:
+        np.ndarray: Array of point in line order.
     """
     new_c = []
     for i in range(len(coord) - 1):
         if i == 0:
             id = np.where([sum(i) for i in cdist(coord, coord)] == max(
-                [sum(i) for i in cdist(coord, coord)]))[0]
+                [sum(i) for i in cdist(coord, coord)]
+            ))[0]
 
             new_c.append(coord[id[0]])
             coord = np.delete(coord, id[0], 0)
 
         kd = KDTree(coord)
-        points = kd.query(np.expand_dims(new_c[len(new_c) - 1], 0), 1)[1][0][0]
+        points = kd.query(np.expand_dims(new_c[len(new_c) - 1], 0))[1][0][0]
 
         new_c.append(coord[points])
         coord = np.delete(coord, points, 0)
@@ -561,6 +568,9 @@ def total_length(coord: np.ndarray) -> float:
 
     Args:
         coord (np.ndarray): Coordinates for each unsorted point idx.
+
+    Returns:
+        float: Spline length.
     """
     length = 0
     c_len = len(coord) - 1
@@ -582,6 +592,9 @@ def tortuosity(coord: np.ndarray) -> float:
 
     Args:
         coord (np.ndarray): Coordinates for each unsorted point idx.
+
+    Returns:
+        float: Spline curvature measured with tortuosity.
     """
     length = total_length(coord)
     end_length = sqrt((coord[0][0] - coord[-1][0]) ** 2 +
@@ -599,6 +612,9 @@ def filter_connect_near_segment(segments: np.ndarray,
     Args:
         segments (np.ndarray): 3D array of all segments [ID, XYZ].
         dist_th (int): Distance threshold for connecting spline ends.
+
+    Returns:
+        np.ndarray: Array of segments with segments connected based on end distance.
     """
     seg_list = [segments[np.where(segments[:, 0] == i), :][0]
                 for i in np.unique(segments[:, 0])]
@@ -645,8 +661,8 @@ def filter_connect_near_segment(segments: np.ndarray,
     connect_seg = np.hstack(connect_seg)[0, :]
 
     assert len(new_seg) + len(connect_seg) == len(segments), \
-        TardisError('Filter_splines',
-                    'tardis/dist/utils',
+        TardisError('116',
+                    'tardis/dist/utils/segment_point_cloud.py',
                     f'New segment has incorrect number of points '
                     f'{len(new_seg) + len(connect_seg)} != {len(segments)}')
 
@@ -658,8 +674,8 @@ def filter_connect_near_segment(segments: np.ndarray,
             connect_seg[df, 0] = idx
         idx += 1
     assert len(new_seg) + len(connect_seg) == len(segments), \
-        TardisError('Filter_splines',
-                    'tardis/dist/utils',
+        TardisError('116',
+                    'tardis/dist/utils/segment_point_cloud.py',
                     f'New segment has incorrect number of points '
                     f'{len(new_seg) + len(connect_seg)} != {len(segments)}')
 

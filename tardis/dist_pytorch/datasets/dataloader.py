@@ -1,7 +1,7 @@
 from os import getcwd, listdir, mkdir
 from os.path import isdir, join
 from shutil import rmtree
-from typing import Tuple
+from typing import List, Tuple
 
 import numpy as np
 import torch
@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader, Dataset
 from tardis.dist_pytorch.datasets.augmentation import preprocess_data
 from tardis.dist_pytorch.datasets.patches import PatchDataSet
 from tardis.dist_pytorch.utils.utils import pc_median_dist
+from tardis.utils.errors import TardisError
 from tardis.utils.load_data import load_ply_partnet, load_ply_scannet
 
 
@@ -73,7 +74,7 @@ class BasicDataset(Dataset):
             np.save(join(self.cwd, self.temp, f'{key}_{i}.npy'),
                     np.asarray(values, dtype=object))
 
-    def load_temp(self, i: int, **kwargs) -> list:
+    def load_temp(self, i: int, **kwargs) -> List[np.ndarray]:
         """
         General class function to load temp data
 
@@ -82,14 +83,14 @@ class BasicDataset(Dataset):
             kwargs (bool): Dictionary of all arrays to load.
 
         Returns:
-            List (list[np.ndarray]): List of kwargs arrays as a tensor arrays.
+            List (list[np.ndarray's]): List of kwargs arrays as a tensor arrays.
         """
 
         return [np.load(join(self.cwd, self.temp, f'{key}_{i}.npy'), allow_pickle=True)
                 for key, _ in kwargs.items()]
 
     @staticmethod
-    def list_to_tensor(**kwargs) -> list:
+    def list_to_tensor(**kwargs) -> List[List[np.ndarray]]:
         """
         Static class function to transform a list of numpy arrays to a list of
         tensor arrays.
@@ -112,7 +113,7 @@ class FilamentDataset(BasicDataset):
     FILAMENT-TYPE DATASET CONSTRUCTION
 
     Returns:
-        List ((list[list[np.ndarray]] or list[list[torch.Tensor]])):
+        Tuple (list[np.ndarray]):
         coords_idx: Numpy or Tensor list of coordinates (N, (2, 3)).
 
         df_idx: Normalize zero-out output for standardized dummy.
@@ -142,10 +143,7 @@ class FilamentDataset(BasicDataset):
 
         if self.patch_size[i, 0] == 0:
             # Pre-process coord and image data also, if exist remove duplicates
-            coord, _ = preprocess_data(coord=coord_file,
-                                       include_label=True,
-                                       size=None,
-                                       normalization='simple')
+            coord, _ = preprocess_data(coord=coord_file)
 
             # Normalize point cloud
             dist = pc_median_dist(coord[:, 1:])
@@ -153,16 +151,10 @@ class FilamentDataset(BasicDataset):
             if dist is not None:
                 coord[:, 1:] = coord[:, 1:] / dist  # Normalize point cloud to px unit
 
-            VD = PatchDataSet(init_patch_size=0,
-                              drop_rate=1,
-                              max_number_of_points=self.max_point_in_patch,
-                              label_cls=None,
-                              graph=True,
+            VD = PatchDataSet(max_number_of_points=self.max_point_in_patch,
                               tensor=False)
             coords_idx, df_idx, \
-                graph_idx, output_idx, _ = VD.patched_dataset(coord=coord,
-                                                              mesh=False,
-                                                              dist_th=None)
+                graph_idx, output_idx, _ = VD.patched_dataset(coord=coord)
 
             # save data for faster access later
             self.save_temp(i=i,
@@ -195,7 +187,7 @@ class PartnetDataset(BasicDataset):
     PARTNET TYPE DATASET CONSTRUCTION
 
     Returns:
-        List ((list[list[np.ndarray]] or list[list[torch.Tensor]])):
+        Tuple (list[np.ndarray]):
         coords_idx: Numpy or Tensor list of coordinates (N, (2, 3)).
 
         df_idx: Normalize zero-out output for standardized dummy.
@@ -228,11 +220,8 @@ class PartnetDataset(BasicDataset):
             coord = load_ply_partnet(coord_file,
                                      downscaling=0.035)
 
-            VD = PatchDataSet(init_patch_size=0,
-                              drop_rate=0.01,
+            VD = PatchDataSet(drop_rate=0.01,
                               max_number_of_points=self.max_point_in_patch,
-                              label_cls=None,
-                              graph=True,
                               tensor=False)
 
             coords_idx, df_idx, graph_idx, \
@@ -270,7 +259,7 @@ class ScannetDataset(BasicDataset):
     SCANNET V2 TYPE DATASET CONSTRUCTION
 
     Returns:
-        List ((list[list[np.ndarray]] or list[list[torch.Tensor]])):
+        Tuple (list[np.ndarray]):
         coords_idx: Numpy or Tensor list of coordinates (N, (2, 3)).
 
         df_idx: Normalize zero-out output for standardized dummy.
@@ -303,11 +292,9 @@ class ScannetDataset(BasicDataset):
             coord = load_ply_scannet(coord_file,
                                      downscaling=0.1)
 
-            VD = PatchDataSet(init_patch_size=0,
-                              drop_rate=0.01,
+            VD = PatchDataSet(drop_rate=0.01,
                               max_number_of_points=self.max_point_in_patch,
                               label_cls=coord[:, 0],
-                              graph=True,
                               tensor=False)
 
             coords_idx, df_idx, graph_idx, \
@@ -350,7 +337,7 @@ class ScannetColorDataset(BasicDataset):
     SCANNET V2 + COLORS TYPE DATASET CONSTRUCTION
 
     Returns:
-        List ((list[list[np.ndarray]] or list[list[torch.Tensor]])):
+        Tuple (list[np.ndarray]):
         coords_idx: Numpy or Tensor list of coordinates (N, (2, 3)).
 
         rgb_idx: Numpy or Tensor list of RGB values (N, 3).
@@ -368,7 +355,11 @@ class ScannetColorDataset(BasicDataset):
         self.color_dir = join(self.coord_dir, '../../', 'color')
 
     def __getitem__(self, i):
-        assert isdir(self.color_dir)  # Check if color folder exist
+        # Check if color folder exist
+        assert isdir(self.color_dir), \
+            TardisError('12',
+                        'tardis/dist_pytorch/datasets/dataloader.py',
+                        f'Given dir: {self.color_dir} is not a directory!')
 
         """ Get list of all coordinates and image patches """
         idx = self.ids[i]
@@ -388,12 +379,10 @@ class ScannetColorDataset(BasicDataset):
                                           color=join(self.color_dir, f'{idx[:-11]}.ply'))
 
             classes = coord[:, 0]
-            VD = PatchDataSet(init_patch_size=0,
-                              drop_rate=0.01,
+            VD = PatchDataSet(drop_rate=0.01,
                               max_number_of_points=self.max_point_in_patch,
                               label_cls=classes,
                               rgb=rgb,
-                              graph=True,
                               tensor=False)
 
             coords_idx, rgb_idx, graph_idx, \
@@ -432,31 +421,23 @@ class ScannetColorDataset(BasicDataset):
         return coords_idx, rgb_idx, graph_idx, output_idx, cls_idx
 
 
-def build_dataset(dataset_type: list,
-                  dirs: str,
+def build_dataset(dataset_type: str,
+                  dirs: list,
                   max_points_per_patch: int):
     """
-    WRAPPER FOR DATALOADER
+    Wrapper for DataLoader
 
     Function that wraps all data loader and outputs only one asked for depending
     on a dataset
 
     Args:
-        dataset_type (list):
-            Ask to recognize and process the dataset.
-        dirs (list):
-            Ask for a list with the directory given as [train, test].
-        max_points_per_patch (int):
-            Max number of points per patch.
+        dataset_type (str):  Ask to recognize and process the dataset.
+        dirs (list): Ask for a list with the directory given as [train, test].
+        max_points_per_patch (int):  Max number of points per patch.
 
     Returns:
-        (torch.DataLoader):
-
-        dl_train:
-            Output DataLoader with the specified dataset for training.
-
-        dl_test:
-            Output DataLoader with the specified dataset for evaluation.
+        Tuple[torch.DataLoader, torch.DataLoader]: Output DataLoader with
+        the specified dataset for training and evaluation.
     """
 
     if dataset_type == 'filament':
@@ -510,11 +491,9 @@ def build_dataset(dataset_type: list,
         pass
 
     dl_train = DataLoader(dataset=dl_train,
-                          batch_size=1,
                           shuffle=True,
                           pin_memory=True)
     dl_test = DataLoader(dataset=dl_test,
-                         batch_size=1,
                          shuffle=False,
                          pin_memory=True)
     return dl_train, dl_test

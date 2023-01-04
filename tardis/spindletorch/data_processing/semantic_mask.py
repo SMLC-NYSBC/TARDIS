@@ -61,12 +61,15 @@ def draw_semantic(mask_size: tuple,
         pixel_size (float): Pixel size in Angstrom.
         circle_size (int): Size of a circle the label mask in Angstrom.
         multi_layer (bool): single, or unique value for each line.
+
+    Returns:
+        np.ndarray: Binary mask with drawn all coordinates as lines.
     """
     assert coordinate.ndim == 2 and coordinate.shape[1] in [3, 4], \
-        TardisError('TRAINING_DATASET_BUILDING_SEMANTIC',
-                    'tardis/spindletorch/data_processing',
+        TardisError('113',
+                    'tardis/spindletorch/data_processing/semantic_mask.py',
                     'Coordinates are of not correct shape, expected: '
-                    'shape [Label x X x Y x (Z)]')
+                    f'shape [Label x X x Y x (Z)] but {coordinate.shape} given!')
 
     label_mask = np.zeros(mask_size)
     if pixel_size == 0:
