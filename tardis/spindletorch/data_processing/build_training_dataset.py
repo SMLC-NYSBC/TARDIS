@@ -192,6 +192,7 @@ def build_train_dataset(dataset_dir: str,
         """Calculate normalization factor for image and mask"""
         if mask_px is None:
             mask_px = pixel_size
+
         assert mask_px == pixel_size, \
             TardisError('111',
                         'tardis/spindletorch/data_processing/build_training_dataset',

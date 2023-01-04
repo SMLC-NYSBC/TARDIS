@@ -599,21 +599,19 @@ def import_am(am_file: str):
     #         img = np.asarray(img[-binary_start:]).astype(np.uint8).reshape((nz, ny, nx))
 
     binary_start = str.find(am, "\n@1\n") + 4
+    img = img[binary_start:-1]
     if nz == 1:
-        img = img[binary_start:-1]
-
-        if len(img[binary_start:-1]) == ny * nz:
+        if len(img) == ny * nx:
             img = img.reshape((ny, nx))
         else:
-            df_img = np.zeros((ny * nx, ))
+            df_img = np.zeros((ny * nx), dtype=np.uint8)
             df_img[:len(img)] = img
             img = df_img.reshape((ny, nx))
     else:
-        img = img[binary_start:-1]
-        if len(img[binary_start:-1]) == ny * nz * ny:
+        if len(img) == nz * ny * nx:
             img = img.reshape((nz, ny, nx))
         else:
-            df_img = np.zeros((nz * ny * nx, ))
+            df_img = np.zeros((nz * ny * nx), dtype=np.uint8)
             df_img[:len(img)] = img
             img = df_img.reshape((nz * ny * nx))
 

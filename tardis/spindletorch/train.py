@@ -105,8 +105,7 @@ def train_cnn(train_dataloader,
     """Optionally: Checkpoint model"""
     if checkpoint is not None:
         optimizer.load_state_dict(save_train['optimizer_state_dict'])
-
-    del save_train
+        del save_train
 
     """Optionally: Build learning rate scheduler"""
     if learning_rate_scheduler:

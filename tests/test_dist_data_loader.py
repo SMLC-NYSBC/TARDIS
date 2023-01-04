@@ -15,19 +15,18 @@ class TestDataLoader:
 
     def test_preprocess_3d_img(self):
         coord, img = preprocess_data(coord=self.coord_dir,
-                                     image=join(self.img_dir, 'filament_mt',
-                                                'train', 'imgs', 'am3D.am'),
-                                     include_label=True,
-                                     size=64,
-                                     normalization='simple')
+                                     image=join(self.img_dir,
+                                                'filament_mt',
+                                                'train',
+                                                'imgs',
+                                                'am3D.am'),
+                                     size=64)
         assert coord.ndim == 2
         assert coord.shape == (10, 4), f'Coord of wrong shape {coord.shape}'
         assert img.shape == (10, 262144), f'img of wrong shape {img.shape}'
 
     def test_preprocess_3d_seg(self):
         coord, img = preprocess_data(coord=self.coord_dir,
-                                     image=None,
-                                     include_label=True,
                                      size=64,
                                      normalization='rescale')
         assert coord.ndim == 2
@@ -37,7 +36,6 @@ class TestDataLoader:
 
     def test_preprocess3d(self):
         coord, _, graph = preprocess_data(coord=self.coord_dir,
-                                          image=None,
                                           include_label=False,
                                           size=64,
                                           normalization='rescale')
