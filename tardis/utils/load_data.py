@@ -81,9 +81,7 @@ class ImportDataFromAmira:
             self.pixel_size = 1
 
         # Read spatial graph
-        self.spatial_graph = open(src_am,
-                                  "r",
-                                  encoding="iso-8859-1").read().split("\n")
+        self.spatial_graph = open(src_am, "r", encoding="iso-8859-1").read().split("\n")
         self.spatial_graph = [x for x in self.spatial_graph if x != '']
 
     def __get_segments(self) -> np.ndarray:
@@ -97,17 +95,15 @@ class ImportDataFromAmira:
         segments = str([word for word in self.spatial_graph if
                         word.startswith('EDGE { int NumEdgePoints }')])
 
-        segment_start = "".join((ch if ch in "0123456789" else " ")
-                                for ch in segments)
+        segment_start = "".join((ch if ch in "0123456789" else " ") for ch in segments)
         segment_start = [int(i) for i in segment_start.split()]
 
         # Find in the line directory that starts with @..
         try:
-            segment_start = int(self.spatial_graph.index("@" +
-                                                         str(segment_start[0]))) + 1
+            segment_start = int(self.spatial_graph.index("@" + str(segment_start[0]))) + 1
         except ValueError:
-            segment_start = int(self.spatial_graph.index("@" +
-                                                         str(segment_start[0]) + " ")) + 1
+            segment_start = int(self.spatial_graph.index("@" + str(
+                segment_start[0]) + " ")) + 1
 
         # Find line define EDGE ... <- number indicate number of segments
         segments = str([word for word in self.spatial_graph if
@@ -136,27 +132,24 @@ class ImportDataFromAmira:
             np.ndarray: Set of all points.
         """
         # Find line starting with POINT { float[3] EdgePointCoordinates }
-        points = str([word for word in self.spatial_graph
-                      if word.startswith('POINT { float[3] EdgePointCoordinates }')])
+        points = str([word for word in self.spatial_graph if
+                      word.startswith('POINT { float[3] EdgePointCoordinates }')])
 
         # Find in the line directory that starts with @..
-        points_start = "".join((ch if ch in "0123456789" else " ")
-                               for ch in points)
+        points_start = "".join((ch if ch in "0123456789" else " ") for ch in points)
         points_start = [int(i) for i in points_start.split()]
         # Find line that start with the directory @... and select last one
         try:
-            points_start = int(self.spatial_graph.index("@" +
-                                                        str(points_start[1]))) + 1
+            points_start = int(self.spatial_graph.index("@" + str(points_start[1]))) + 1
         except ValueError:
-            points_start = int(self.spatial_graph.index("@" +
-                                                        str(points_start[1]) + " ")) + 1
+            points_start = int(self.spatial_graph.index("@" + str(
+                points_start[1]) + " ")) + 1
 
         # Find line define POINT ... <- number indicate number of points
-        points = str([word for word in self.spatial_graph
-                      if word.startswith('define POINT')])
+        points = str([word for word in self.spatial_graph if
+                      word.startswith('define POINT')])
 
-        points_finish = "".join(
-            (ch if ch in "0123456789" else " ") for ch in points)
+        points_finish = "".join((ch if ch in "0123456789" else " ") for ch in points)
         points_finish = [int(i) for i in points_finish.split()][0]
         points_no = points_finish
         points_finish = points_start + points_finish
@@ -209,10 +202,7 @@ class ImportDataFromAmira:
             idx += 1
             id += int(i)
 
-        return np.stack((segmentation,
-                         points[:, 0],
-                         points[:, 1],
-                         points[:, 2])).T
+        return np.stack((segmentation, points[:, 0], points[:, 1], points[:, 2])).T
 
     def get_labels(self) -> dict:
         """
@@ -223,8 +213,8 @@ class ImportDataFromAmira:
         """
         # Find line starting with EDGE { int NumEdgePoints } associated with all labels
         labels = [word for word in self.spatial_graph if
-                  word.startswith('EDGE { int ') and
-                  not word.startswith('EDGE { int NumEdgePoints }')]
+                  word.startswith('EDGE { int ') and not word.startswith(
+                      'EDGE { int NumEdgePoints }')]
 
         # Find line define EDGE ... <- number indicate number of segments
         segment_no = str([word for word in self.spatial_graph if
@@ -238,14 +228,13 @@ class ImportDataFromAmira:
 
             # Find in the line directory that starts with @..
             try:
-                label_start = int(self.spatial_graph.index("@" +
-                                                           str(label_start[0]))) + 1
+                label_start = int(self.spatial_graph.index("@" + str(label_start[0]))) + 1
             except ValueError:
-                label_start = int(self.spatial_graph.index("@" +
-                                                           str(label_start[0]) + " ")) + 1
+                label_start = int(self.spatial_graph.index("@" + str(
+                    label_start[0]) + " ")) + 1
 
-            label_finish = "".join((ch if ch in "0123456789" else " ")
-                                   for ch in segment_no)
+            label_finish = "".join(
+                (ch if ch in "0123456789" else " ") for ch in segment_no)
             label_finish = [int(i) for i in label_finish.split()]
 
             label_no = int(label_finish[0])
@@ -508,40 +497,37 @@ def import_am(am_file: str):
 
     am = open(am_file, 'r', encoding="iso-8859-1").read(8000)
 
+    asci = False
     if 'AmiraMesh 3D ASCII' in am:
-        raise ValueError('.am file is coordinate file not image!')
+        if 'define Lattice' not in am:
+            raise ValueError('.am file is coordinate file not image!')
+        asci = True
 
-    size = [word for word in am.split('\n') if word.startswith(
-        'define Lattice ')][0][15:].split(" ")
+    size = [word for word in am.split('\n') if word.startswith('define Lattice ')][0][
+           15:].split(" ")
 
     nx, ny, nz = int(size[0]), int(size[1]), int(size[2])
 
     # Fix for ET that were trimmed
     #  ET boundary box has wrong size
-    bb = str([word for word in am.split('\n')
-              if word.startswith('    BoundingBox')]).split(" ")
+    bb = str([word for word in am.split('\n') if
+              word.startswith('    BoundingBox')]).split(" ")
 
     if len(bb) == 0:
-        physical_size = np.array((float(bb[6]),
-                                  float(bb[8]),
-                                  float(bb[10][:-3])))
+        physical_size = np.array((float(bb[6]), float(bb[8]), float(bb[10][:-3])))
         transformation = np.array((0.0, 0.0, 0.0))
     else:
         am = open(am_file, 'r', encoding="iso-8859-1").read(20000)
-        bb = str([word for word in am.split('\n')
-                  if word.startswith('    BoundingBox')]).split(" ")
+        bb = str([word for word in am.split('\n') if
+                  word.startswith('    BoundingBox')]).split(" ")
 
-        physical_size = np.array((float(bb[6]),
-                                  float(bb[8]),
-                                  float(bb[10][:-3])))
+        physical_size = np.array((float(bb[6]), float(bb[8]), float(bb[10][:-3])))
 
-        transformation = np.array((float(bb[5]),
-                                   float(bb[7]),
-                                   float(bb[9])))
+        transformation = np.array((float(bb[5]), float(bb[7]), float(bb[9])))
 
     try:
-        coordinate = str([word for word in am.split('\n')
-                          if word.startswith('        Coordinates')]).split(" ")[9][1:2]
+        coordinate = str([word for word in am.split('\n') if
+                          word.startswith('        Coordinates')]).split(" ")[9][1:2]
     except IndexError:
         coordinate = None
 
@@ -552,23 +538,20 @@ def import_am(am_file: str):
     pixel_size = round(pixel_size, 3)
 
     if 'Lattice { byte Data }' in am:
-        binary_start = str.find(am, "\n@1\n") + 4
-        img = np.fromfile(am_file, dtype=np.uint8)
-
-        if nz == 1:
-            img = img[binary_start:-1].reshape((ny, nx))
+        if asci:
+            img = open('../../rand_sample/T216_grid3b.am',
+                       'r',
+                       encoding="iso-8859-1").read().split("\n")
+            img = [x for x in img if x != '']
+            img = np.asarray(img)
+            return img
         else:
-            img = img[binary_start:-1].reshape((nz, ny, nx))
+            img = np.fromfile(am_file, dtype=np.uint8)
 
-    if 'Lattice { sbyte Data }' in am:
-        binary_start = str.find(am, "\n@1\n") + 4
+    elif 'Lattice { sbyte Data }' in am:
         img = np.fromfile(am_file, dtype=np.int8)
         img = img + 128
 
-        if nz == 1:
-            img = img[binary_start:-1].reshape((ny, nx))
-        else:
-            img = img[binary_start:-1].reshape((nz, ny, nx))
     # elif 'Lattice { byte Labels } @1(HxByteRLE' in am:
     #     img = np.fromfile(am_file, dtype=np.uint8)
 
@@ -588,13 +571,32 @@ def import_am(am_file: str):
     #         binary_start = nx * ny * nz
     #         img = np.asarray(img[-binary_start:]).astype(np.uint8).reshape((nz, ny, nx))
 
+    binary_start = str.find(am, "\n@1\n") + 4
+    if nz == 1:
+        img = img[binary_start:-1]
+
+        if len(img[binary_start:-1]) == ny * nz:
+            img = img.reshape((ny, nx))
+        else:
+            df_img = np.zeros((ny * nx, ))
+            df_img[:len(img)] = img
+            img = df_img.reshape((ny, nx))
+    else:
+        img = img[binary_start:-1]
+        if len(img[binary_start:-1]) == ny * nz * ny:
+            img = img.reshape((nz, ny, nx))
+        else:
+            df_img = np.zeros((nz * ny * nx, ))
+            df_img[:len(img)] = img
+            img = df_img.reshape((nz * ny * nx))
+
     return img, pixel_size, physical_size, transformation
 
 
 def load_ply_scannet(ply: str,
                      downscaling=0,
-                     color: Optional[str] = None) -> Union[Tuple[ndarray, ndarray],
-                                                           ndarray]:
+                     color: Optional[str] = None) -> Union[
+        Tuple[ndarray, ndarray], ndarray]:
     """
     Function to read .ply files.
 
@@ -613,46 +615,19 @@ def load_ply_scannet(ply: str,
     label_org = np.asarray(pcd.colors)
 
     SCANNET_COLOR_MAP_20 = {
-        0: (0., 0., 0.),
-        1: (174., 199., 232.),
-        2: (152., 223., 138.),
-        3: (31., 119., 180.),
-        4: (255., 187., 120.),
-        5: (188., 189., 34.),
-        6: (140., 86., 75.),
-        7: (255., 152., 150.),
-        8: (214., 39., 40.),
-        9: (197., 176., 213.),
-        10: (148., 103., 189.),
-        11: (196., 156., 148.),
-        12: (23., 190., 207.),
-        14: (247., 182., 210.),
-        15: (66., 188., 102.),
-        16: (219., 219., 141.),
-        17: (140., 57., 197.),
-        18: (202., 185., 52.),
-        19: (51., 176., 203.),
-        20: (200., 54., 131.),
-        21: (92., 193., 61.),
-        22: (78., 71., 183.),
-        23: (172., 114., 82.),
-        24: (255., 127., 14.),
-        25: (91., 163., 138.),
-        26: (153., 98., 156.),
-        27: (140., 153., 101.),
-        28: (158., 218., 229.),
-        29: (100., 125., 154.),
-        30: (178., 127., 135.),
-        32: (146., 111., 194.),
-        33: (44., 160., 44.),
-        34: (112., 128., 144.),
-        35: (96., 207., 209.),
-        36: (227., 119., 194.),
-        37: (213., 92., 176.),
-        38: (94., 106., 211.),
-        39: (82., 84., 163.),
-        40: (100., 85., 144.),
-    }
+        0: (0., 0., 0.), 1: (174., 199., 232.), 2: (152., 223., 138.), 3: (
+            31., 119., 180.), 4: (255., 187., 120.), 5: (188., 189., 34.), 6: (
+            140., 86., 75.), 7: (255., 152., 150.), 8: (214., 39., 40.), 9: (
+            197., 176., 213.), 10: (148., 103., 189.), 11: (196., 156., 148.), 12: (
+            23., 190., 207.), 14: (247., 182., 210.), 15: (66., 188., 102.), 16: (
+            219., 219., 141.), 17: (140., 57., 197.), 18: (202., 185., 52.), 19: (
+            51., 176., 203.), 20: (200., 54., 131.), 21: (92., 193., 61.), 22: (
+            78., 71., 183.), 23: (172., 114., 82.), 24: (255., 127., 14.), 25: (
+            91., 163., 138.), 26: (153., 98., 156.), 27: (140., 153., 101.), 28: (
+            158., 218., 229.), 29: (100., 125., 154.), 30: (178., 127., 135.), 32: (
+            146., 111., 194.), 33: (44., 160., 44.), 34: (112., 128., 144.), 35: (
+            96., 207., 209.), 36: (227., 119., 194.), 37: (213., 92., 176.), 38: (
+            94., 106., 211.), 39: (82., 84., 163.), 40: (100., 85., 144.), }
 
     # Downscaling point cloud with labels
     if downscaling > 0:
@@ -667,10 +642,9 @@ def load_ply_scannet(ply: str,
         if downscaling > 0:
             rgb = rgb.voxel_down_sample(voxel_size=downscaling)
         rgb = np.asarray(rgb.colors)
-        assert coord.shape == rgb.shape, \
-            TardisError('load_ply_scannet',
-                        'tardis/utils/load_data.py',
-                        'RGB must be the same as coord!')
+        assert coord.shape == rgb.shape, TardisError('load_ply_scannet',
+                                                     'tardis/utils/load_data.py',
+                                                     'RGB must be the same as coord!')
 
     # Retrieve ScanNet v2 labels after downscaling
     cls_id = []
