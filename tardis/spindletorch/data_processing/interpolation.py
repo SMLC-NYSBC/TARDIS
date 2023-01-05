@@ -9,28 +9,84 @@ Simons Machine Learning Center
 Robert Kiewisz, Tristan Bepler
 MIT License 2021 - 2022
 """
+from typing import Iterable
+
 import numpy as np
 
+from tardis.utils.errors import TardisError
 
-def interpolation_1d(start: int,
-                     stop: int,
-                     max_len: int) -> np.ndarray:
+
+def interpolate_generator(points: np.ndarray) -> Iterable:
     """
-    1D INTERPOLATION FOR BUILDING SEMANTIC MASK
 
     Args:
-        start (int): 1D single coordinate to start interpolation.
-        stop (int): 1D single coordinate to stop interpolation.
-        max_len (int): 1D axis length.
+        points: Expect array of 2 point in 3D as [X x Y x Z] of [2, 3] shape
 
     Returns:
-        np.ndarray: Interpolated 1D array
+        Iterable: Iterable object to generate 3D list of points between given 2
+        points
     """
-    points_seq = np.linspace(start=int(start),
-                             stop=int(stop),
-                             num=max_len).round()
+    assert points.shape in ((2, 3), (2, 2)), \
+        TardisError('134',
+                    'tardis/spindletorch/data_processing/interpolation.py',
+                    'Interpolation supports only 2D or 3D for 2 points at a time; '
+                    f'But {points.shape} was given!')
 
-    return points_seq
+    is_3d = False
+    if points.ndim == 2:
+        is_3d = True
+
+    x0, x1 = points[0, 0], points[1, 0]
+    y0, y1 = points[0, 1], points[1, 1]
+    if is_3d:  # 3D only
+        z0, z1 = points[0, 2], points[1, 2]
+
+    delta_x = x1 - x0
+    if delta_x == 0:
+        dx_sign = 0
+    else:
+        dx_sign = int(abs(delta_x) / delta_x)
+
+    delta_y = y1 - y0
+    if delta_y == 0:
+        dy_sign = 0
+    else:
+        dy_sign = int(abs(delta_y) / delta_y)
+
+    delta_err_yx = abs(delta_y / delta_x)
+    error_xy = 0
+    y = y0
+    z = z0
+
+    if is_3d:  # 3D only
+        delta_z = z1 - z0
+
+        if delta_z == 0:
+            dz_sign = 0
+        else:
+            dz_sign = int(abs(delta_z) / delta_z)
+
+        delta_err_zx = abs(delta_z / delta_x)
+        delta_err_zy = abs(delta_z / delta_y)
+        delta_err_z = np.min((delta_err_zx, delta_err_zy))
+        error_z = 0
+
+    for x in range(x0, x1, dx_sign):
+        yield x, y, z
+
+        error_xy = error_xy + delta_err_yx
+        while error_xy >= 0.5:
+            y += dy_sign
+            error_xy -= 1
+
+        if is_3d:  # 3D only
+            error_z = error_z + delta_err_z
+            while error_z >= 0.5:
+                z += dz_sign
+                error_z -= 1
+            yield x1, y1, z1
+        else:
+            yield x1, y1
 
 
 def interpolation(points: np.ndarray) -> np.ndarray:
@@ -44,43 +100,9 @@ def interpolation(points: np.ndarray) -> np.ndarray:
     Returns:
         np.ndarray: Interpolated 2 or 3D array
     """
-    coord = points
-
+    new_coord = []
     for i in range(0, len(points) - 1):
-        """1D interpolation for X dimension"""
-        x = points[i:i + 2, 0]
-        x_len = abs(x[0] - x[1])
+        """3D interpolation for XYZ dimension"""
+        new_coord.append(list(interpolate_generator(points[i:i + 2, :]))[:-1])
 
-        """1D interpolation for Y dimension"""
-        y = points[i:i + 2, 1]
-        y_len = abs(y[0] - y[1])
-
-        """1D interpolation for optional Z dimension"""
-        if points.shape[1] == 3:
-            z = points[i:i + 2, 2]
-            z_len = abs(z[0] - z[1])
-
-            max_len = int(max([x_len, y_len, z_len]) + 1)
-        else:
-            z = None
-            max_len = int(max([x_len, y_len]) + 1)
-
-        new_coord = np.zeros((max_len, 3))
-
-        x_new = interpolation_1d(start=x[0],
-                                 stop=x[1],
-                                 max_len=max_len)
-        y_new = interpolation_1d(start=y[0],
-                                 stop=y[1],
-                                 max_len=max_len)
-        z_new = interpolation_1d(start=z[0],
-                                 stop=z[1],
-                                 max_len=max_len)
-
-        new_coord[0:max_len, 0] = list(map(int, x_new))
-        new_coord[0:max_len, 1] = list(map(int, y_new))
-
-        if z is not None:
-            new_coord[0:max_len, 2] = list(map(int, z_new))
-
-    return np.append(arr=coord, values=new_coord, axis=0)
+    return np.concatenate(new_coord)

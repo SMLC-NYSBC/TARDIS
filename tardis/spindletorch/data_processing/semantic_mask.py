@@ -97,6 +97,7 @@ def draw_semantic(mask_size: tuple,
 
     """Build semantic mask by drawing circle in 2D for each coordinate point"""
     for i in range(len(segments)):
+        # Pick coordinates for each segment
         points = coordinate[np.where(coordinate[:, 0] == i)[0]][:, 1:]
 
         label = interpolation(points)
