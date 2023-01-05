@@ -24,13 +24,16 @@ def interpolate_generator(points: np.ndarray) -> Iterable:
 
     Returns:
         Iterable: Iterable object to generate 3D list of points between given 2
-        points
+        points as [X x Y x (Z)]
     """
     assert points.shape in ((2, 3), (2, 2)), \
         TardisError('134',
                     'tardis/spindletorch/data_processing/interpolation.py',
                     'Interpolation supports only 2D or 3D for 2 points at a time; '
                     f'But {points.shape} was given!')
+
+    if points.dtype not in [np.uint8, np.int8, np.uint16, np.int16]:
+        points = np.round(points).astype(np.int16)
 
     is_3d = False
     if points.ndim == 2:
@@ -41,22 +44,16 @@ def interpolate_generator(points: np.ndarray) -> Iterable:
     if is_3d:  # 3D only
         z0, z1 = points[0, 2], points[1, 2]
 
-    delta_x = x1 - x0
-    if delta_x == 0:
-        dx_sign = 0
-    else:
-        dx_sign = int(abs(delta_x) / delta_x)
+    delta_x = x1 - x0 + 1e-16
+    dx_sign = int(abs(delta_x) / delta_x)
+    x = x0
 
-    delta_y = y1 - y0
-    if delta_y == 0:
-        dy_sign = 0
-    else:
-        dy_sign = int(abs(delta_y) / delta_y)
+    delta_y = y1 - y0 + 1e-16
+    dy_sign = int(abs(delta_y) / delta_y)
 
-    delta_err_yx = abs(delta_y / delta_x)
+    delta_err_yx = abs(delta_x / delta_y)
     error_xy = 0
     y = y0
-    z = z0
 
     if is_3d:  # 3D only
         delta_z = z1 - z0
@@ -66,17 +63,22 @@ def interpolate_generator(points: np.ndarray) -> Iterable:
         else:
             dz_sign = int(abs(delta_z) / delta_z)
 
-        delta_err_zx = abs(delta_z / delta_x)
-        delta_err_zy = abs(delta_z / delta_y)
-        delta_err_z = np.min((delta_err_zx, delta_err_zy))
+        if dz_sign == 0:
+            delta_err_z = 0
+        else:
+            delta_err_z = np.min((abs(delta_z / delta_x), abs(delta_z / delta_y)))
         error_z = 0
+        z = z0
 
-    for x in range(x0, x1, dx_sign):
-        yield x, y, z
+    for y in range(y0, y1, dy_sign):
+        if is_3d:
+            yield x, y, z
+        else:
+            yield x, y
 
         error_xy = error_xy + delta_err_yx
         while error_xy >= 0.5:
-            y += dy_sign
+            x += dx_sign
             error_xy -= 1
 
         if is_3d:  # 3D only
@@ -84,9 +86,6 @@ def interpolate_generator(points: np.ndarray) -> Iterable:
             while error_z >= 0.5:
                 z += dz_sign
                 error_z -= 1
-            yield x1, y1, z1
-        else:
-            yield x1, y1
 
 
 def interpolation(points: np.ndarray) -> np.ndarray:
@@ -103,6 +102,7 @@ def interpolation(points: np.ndarray) -> np.ndarray:
     new_coord = []
     for i in range(0, len(points) - 1):
         """3D interpolation for XYZ dimension"""
-        new_coord.append(list(interpolate_generator(points[i:i + 2, :]))[:-1])
+
+        new_coord.append(list(interpolate_generator(points[i:i + 2, :])))
 
     return np.concatenate(new_coord)

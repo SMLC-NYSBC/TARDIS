@@ -34,7 +34,7 @@ def print_progress_bar(value: int,
         try:
             n_bar = get_terminal_size()[0] - 50
         except OSError:
-            n_bar = 50
+            n_bar = 55
 
     j = value / max_v
     bar = '█' * int(n_bar * j)
@@ -139,7 +139,7 @@ class TardisLogo:
             int: cell width.
         """
         if is_interactive():
-            n_bar = 75
+            n_bar = 55
         else:
             n_bar = get_terminal_size()[0] - 26
 

@@ -227,8 +227,7 @@ def main(dir: str,
                             trim_z=patch_size)
 
         build_test_dataset(dataset_dir=dir,
-                           train_test_ration=train_test_ratio,
-                           prefix='_mask')
+                           train_test_ration=train_test_ratio)
 
     """Build training and test dataset 2D/3D"""
     train_DL = DataLoader(dataset=CNNDataset(img_dir=TRAIN_IMAGE_DIR,

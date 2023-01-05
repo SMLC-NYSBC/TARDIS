@@ -17,6 +17,7 @@ from tardis.utils.logo import TardisLogo
 
 id_dict = {
     '0': 'NO_ERROR',  # All good
+    '01': 'FEATURE_NOT_SUPPORTED_ASK_DEVELOPER',
 
     '1': 'UNKNOWN_DATA_COMPATIBILITY_ERROR',  # Data compatibility
     '100': 'DATA_COMPATIBILITY | NO_DATA_FOUND',
