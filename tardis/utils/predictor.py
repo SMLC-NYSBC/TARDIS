@@ -95,7 +95,7 @@ class Predictor:
 
     def predict(self,
                 x: torch.Tensor,
-                y: Optional[torch.Tensor] = None) -> np.ndarra:
+                y: Optional[torch.Tensor] = None) -> np.ndarray:
         """
         General predictor.
 

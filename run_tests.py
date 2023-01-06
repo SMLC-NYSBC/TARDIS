@@ -10,6 +10,7 @@ Robert Kiewisz, Tristan Bepler
 MIT License 2021 - 2022
 """
 import os
+import shutil
 import subprocess as subp
 import sys
 
@@ -30,9 +31,11 @@ def py(python: str):
     """
 
     # Set up Python 3.X env and update
-    subp.run(f"conda run -n tardis{python} conda update python -y",
+    subp.run(f"conda run -n tardis{python} conda install python={'3.' + python[1:]} -y",
              shell=True)
-
+    subp.run(f"conda run -n tardis{python} pip uninstall torch -y",
+             shell=True)
+    
     # Check and reinstall if needed requirements
     subp.run(f"conda run -n tardis{python} pip install -r requirements.txt",
              shell=True)
@@ -92,10 +95,10 @@ if __name__ == "__main__":
     #     exit()
 
     """ Compile documentation """
-    os.rmdir('docs/build')  # Remove old build
+    shutil.rmtree('docs/build')  # Remove old build
     subp.run('conda run -n tardis38 sphinx-build -b html docs/source/ docs/build/html')
 
     """ Return output """
     tardis_progress(title=f'Development - TARDIS {version} - pytest',
-                    text_1='All test passed correctly on pyton 3.7, 3.8, 3.9, 3.10',
+                    text_1='All test passed correctly on python 3.7, 3.8, 3.9, 3.10',
                     text_2='Sphinx-build Completed.')
