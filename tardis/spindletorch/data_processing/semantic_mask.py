@@ -12,7 +12,7 @@ MIT License 2021 - 2022
 import cv2
 import numpy as np
 
-from tardis.spindletorch.data_processing.draw_mask import draw_circle, draw_3d
+from tardis.spindletorch.data_processing.draw_mask import draw_mask
 from tardis.spindletorch.data_processing.interpolation import interpolation
 from tardis.utils.errors import TardisError
 
@@ -62,7 +62,7 @@ def draw_semantic(mask_size: tuple,
                   coordinate: np.ndarray,
                   pixel_size: float,
                   circle_size=250,
-                  multi_layer=False) -> np.ndarray:
+                  mask_shape='c') -> np.ndarray:
     """
     Module to build semantic mask from corresponding coordinates
 
@@ -71,7 +71,7 @@ def draw_semantic(mask_size: tuple,
         coordinate (np.ndarray): Segmented coordinates of a shape [Label x X x Y x (Z)].
         pixel_size (float): Pixel size in Angstrom.
         circle_size (int): Size of a circle the label mask in Angstrom.
-        multi_layer (bool): single, or unique value for each line.
+        mask_shape (str): Type of mask shape to draw for each coordinate point.
 
     Returns:
         np.ndarray: Binary mask with drawn all coordinates as lines.
@@ -88,12 +88,6 @@ def draw_semantic(mask_size: tuple,
 
     r = round((circle_size / 2) / pixel_size)
 
-    if multi_layer:
-        TardisError('01',
-                    'tardis/spindletorch/data_processing/semantic_mask.py',
-                    'Multi label data (aka RGB) are note currently supported. '
-                    'Ask developer for developing it.')
-
     # Number of segments in coordinates
     segments = np.unique(coordinate[:, 0])
 
@@ -107,15 +101,9 @@ def draw_semantic(mask_size: tuple,
         for j in range(len(label)):
             c = label[j, :]  # Point center
 
-            if c.ndim == 2:
-                label_mask = draw_circle(r=r,
-                                         c=c,
-                                         label_mask=label_mask,
-                                         segment_color=1)
-            else:
-                label_mask = draw_3d(r=r,
-                                     c=c,
-                                     label_mask=label_mask,
-                                     segment_color=1)
+            label_mask = draw_mask(r=r,
+                                   c=c,
+                                   label_mask=label_mask,
+                                   segment_shape=mask_shape)
 
     return label_mask.astype(np.uint8)
