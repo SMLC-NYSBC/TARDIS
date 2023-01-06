@@ -243,8 +243,7 @@ def build_train_dataset(dataset_dir: str,
                 mask = draw_semantic(mask_size=scale_shape,
                                      coordinate=coord,
                                      pixel_size=resize_pixel_size,
-                                     circle_size=circle_size,
-                                     multi_layer=multi_layer)
+                                     circle_size=circle_size)
         else:
             assert mask.min() >= 0, \
                 TardisError('115',

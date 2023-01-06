@@ -10,7 +10,7 @@ Robert Kiewisz, Tristan Bepler
 MIT License 2021 - 2023
 """
 from math import pow, sqrt
-from typing import Tuple
+from typing import Tuple, Union
 
 import numpy as np
 from skimage import draw
@@ -39,10 +39,12 @@ def draw_mask(r: int,
                     'tardis/spindletorch/data_processing/draw_mask.py'
                     f'Unsupported dimensions given {label_mask.ndim} expected 2!')
 
-    nz, ny, nx = label_mask.shape
     x = int(c[0])
     y = int(c[1])
-    z = int(c[2])
+    if len(c) == 3:
+        z = int(c[2])
+    else:
+        z = None
 
     assert segment_shape in ['s', 'c'], \
         TardisError('123',
@@ -53,19 +55,26 @@ def draw_mask(r: int,
         cz, cy, cx = draw_sphere(r=r,
                                  c=(z, y, x),
                                  shape=label_mask.shape)
+        label_mask[cz, cy, cx] = 1
     else:
-        cz, cy, cx = draw_circle(r=r,
+        if z is not None:
+            cz, cy, cx = draw_circle(r=r,
+                                     c=(z, y, x),
+                                     shape=label_mask.shape)
+            label_mask[cz, cy, cx] = 1
+        else:
+            cy, cx = draw_circle(r=r,
                                  c=(z, y, x),
                                  shape=label_mask.shape)
-
-    label_mask[cz, cy, cx] = 1
+            label_mask[cy, cx] = 1
 
     return label_mask
 
 
 def draw_circle(r: int,
                 c: tuple,
-                shape: tuple) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+                shape: tuple) -> Union[Tuple[np.ndarray, np.ndarray],
+                                       Tuple[np.ndarray, np.ndarray, np.ndarray]]:
     """
     Draw a circle and shit coordinate to c position.
 
@@ -81,21 +90,36 @@ def draw_circle(r: int,
     c_frame = round(r)
 
     ny, nx = draw.disk((r, r), r, shape=(r_dim, r_dim))
-    nz = np.repeat(c[0], len(nx))
+    if len(c) == 3:
+        nz = np.repeat(c[0], len(nx))
 
-    c = ((c[1] - c_frame), (c[2] - c_frame))
-    z, y, x = nz, ny + c[0], nx + c[1]
+        c = ((c[1] - c_frame), (c[2] - c_frame))
+        z, y, x = nz, ny + c[0], nx + c[1]
 
-    # Remove pixel out of frame
-    zyx = np.array((z, y, x)).T
-    del_id = []
-    for id, i in enumerate(zyx):
-        if i[0] >= shape[0] or i[1] >= shape[1] or i[2] >= shape[2]:
-            del_id.append(id)
+        # Remove pixel out of frame
+        zyx = np.array((z, y, x)).T
+        del_id = []
+        for id, i in enumerate(zyx):
+            if i[0] >= shape[0] or i[1] >= shape[1] or i[2] >= shape[2]:
+                del_id.append(id)
 
-    zyx = np.delete(zyx, del_id, 0)
+        zyx = np.delete(zyx, del_id, 0)
 
-    return zyx[:, 0], zyx[:, 1], zyx[:, 2]
+        return zyx[:, 0], zyx[:, 1], zyx[:, 2]
+    else:
+        c = ((c[1] - c_frame), (c[2] - c_frame))
+        y, x = ny + c[0], nx + c[1]
+
+        # Remove pixel out of frame
+        yx = np.array((y, x)).T
+        del_id = []
+        for id, i in enumerate(yx):
+            if i[1] >= shape[1] or i[2] >= shape[2]:
+                del_id.append(id)
+
+        yx = np.delete(yx, del_id, 0)
+
+        return yx[:, 0], yx[:, 1]
 
 
 def draw_sphere(r: int,
@@ -103,7 +127,7 @@ def draw_sphere(r: int,
                 shape: tuple) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Draw a sphere and shit coordinate to c position.
-    
+
     Args:
         r (int): radius of a sphere in Angstrom.
         c (tuple): point in 3D indicating center of a sphere [Z, Y, X].
@@ -114,7 +138,7 @@ def draw_sphere(r: int,
     """
     r_dim = round(r * 2)
     sphere_frame = np.zeros((r_dim, r_dim, r_dim), dtype=np.int8)
-
+    trim = round(r_dim / 6)
     c_frame = round(r)
 
     z, y, x = sphere_frame.shape
@@ -128,7 +152,7 @@ def draw_sphere(r: int,
                     sphere_frame[z_dim, y_dim, x_dim] = False
                 else:
                     sphere_frame[z_dim, y_dim, x_dim] = True
-    sphere_frame = sphere_frame[1:-1, :]
+    sphere_frame = sphere_frame[trim:-trim, :]  # Trim top and bottom of the sphere
     z, y, x = np.where(sphere_frame)
 
     c = ((c[0] - c_frame), (c[1] - c_frame), (c[2] - c_frame))
@@ -140,7 +164,7 @@ def draw_sphere(r: int,
     for id, i in enumerate(zyx):
         if i[0] >= shape[0] or i[1] >= shape[1] or i[2] >= shape[2]:
             del_id.append(id)
-        if i[0] < 0:  # Remove negative value 
+        if i[0] < 0:  # Remove negative value
             del_id.append(id)
 
     zyx = np.delete(zyx, del_id, 0)

@@ -9,7 +9,6 @@ Simons Machine Learning Center
 Robert Kiewisz, Tristan Bepler
 MIT License 2021 - 2022
 """
-import os
 import shutil
 import subprocess as subp
 import sys
@@ -35,7 +34,7 @@ def py(python: str):
              shell=True)
     subp.run(f"conda run -n tardis{python} pip uninstall torch -y",
              shell=True)
-    
+
     # Check and reinstall if needed requirements
     subp.run(f"conda run -n tardis{python} pip install -r requirements.txt",
              shell=True)

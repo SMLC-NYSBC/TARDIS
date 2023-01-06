@@ -18,6 +18,7 @@ from tardis.utils.errors import TardisError
 
 def interpolate_generator(points: np.ndarray) -> Iterable:
     """
+    Generator for 3D array interpolation
 
     Args:
         points: Expect array of 2 point in 3D as [X x Y x Z] of [2, 3] shape
@@ -35,10 +36,6 @@ def interpolate_generator(points: np.ndarray) -> Iterable:
     if points.dtype not in [np.uint8, np.int8, np.uint16, np.int16]:
         points = np.round(points).astype(np.int16)
 
-    is_3d = False
-    if points.ndim == 2:
-        is_3d = True
-
     # Collect first and last point in array for XYZ
     x0, x1 = points[0, 0], points[1, 0]
     y0, y1 = points[0, 1], points[1, 1]
@@ -52,6 +49,8 @@ def interpolate_generator(points: np.ndarray) -> Iterable:
     # Calculate axis to iterate throw
     max_delta = np.where((abs(delta_x), abs(delta_y), abs(delta_z)) ==
                          np.max((abs(delta_x), abs(delta_y), abs(delta_z))))[0][0]
+    if delta_x == 0 and delta_y == 0 and delta_z == 0:
+        max_delta = 3
 
     # Calculate scaling step for XYZ
     if delta_x == 0:
@@ -145,6 +144,8 @@ def interpolate_generator(points: np.ndarray) -> Iterable:
     if max_delta == 2:  # Scale XYZ by iterating throw Z axis
         for z in range(z0, z1, dz_sign):
             yield x, y, z
+    if max_delta == 3:  # Nothing to do
+        yield x, y, z
 
 
 def interpolation(points: np.ndarray) -> np.ndarray:

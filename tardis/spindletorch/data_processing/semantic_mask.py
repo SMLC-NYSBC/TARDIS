@@ -61,8 +61,7 @@ def fill_gaps_in_semantic(image: np.ndarray) -> np.ndarray:
 def draw_semantic(mask_size: tuple,
                   coordinate: np.ndarray,
                   pixel_size: float,
-                  circle_size=250,
-                  mask_shape='c') -> np.ndarray:
+                  circle_size=250) -> np.ndarray:
     """
     Module to build semantic mask from corresponding coordinates
 
@@ -71,7 +70,6 @@ def draw_semantic(mask_size: tuple,
         coordinate (np.ndarray): Segmented coordinates of a shape [Label x X x Y x (Z)].
         pixel_size (float): Pixel size in Angstrom.
         circle_size (int): Size of a circle the label mask in Angstrom.
-        mask_shape (str): Type of mask shape to draw for each coordinate point.
 
     Returns:
         np.ndarray: Binary mask with drawn all coordinates as lines.
@@ -87,6 +85,11 @@ def draw_semantic(mask_size: tuple,
         pixel_size = 1
 
     r = round((circle_size / 2) / pixel_size)
+
+    if coordinate.shape[1] == 3:  # Draw 2D mask
+        mask_shape = 'c'
+    else:  # Draw 3D mask
+        mask_shape = 's'
 
     # Number of segments in coordinates
     segments = np.unique(coordinate[:, 0])
