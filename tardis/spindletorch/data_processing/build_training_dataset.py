@@ -24,7 +24,6 @@ from tardis.utils.logo import print_progress_bar, TardisLogo
 
 def build_train_dataset(dataset_dir: str,
                         circle_size: int,
-                        multi_layer: bool,
                         resize_pixel_size: float,
                         trim_xy: int,
                         trim_z: int):
