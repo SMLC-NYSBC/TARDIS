@@ -108,11 +108,6 @@ def check_dir(dir: str,
     Returns:
         bool: Bool value indicating detection of the correct structure dataset
     """
-    if isinstance(img_format, str):
-        img_format = [img_format]
-    if isinstance(mask_format, str):
-        mask_format = [mask_format]
-
     dataset_test = False
     if isdir(join(dir, 'train')) and isdir(join(dir, 'test')):
         dataset_test = True

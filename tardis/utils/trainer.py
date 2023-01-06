@@ -181,15 +181,18 @@ class BasicTrainer:
             self.id = id
 
             if self.device.type == 'cuda':
-                import nvidia_smi
+                try:
+                    import nvidia_smi
 
-                nvidia_smi.nvmlInit()
-                handle = nvidia_smi.nvmlDeviceGetHandleByIndex(self.device.index)
-                info = nvidia_smi.nvmlDeviceGetMemoryInfo(handle)
-                self.gpu_info = "Device {}: {}, Memory : {:.2f}% free".format(self.device.index,
-                                                                              nvidia_smi.nvmlDeviceGetName(handle),
-                                                                              100 * info.free / info.total)
-                nvidia_smi.nvmlShutdown()
+                    nvidia_smi.nvmlInit()
+                    handle = nvidia_smi.nvmlDeviceGetHandleByIndex(self.device.index)
+                    info = nvidia_smi.nvmlDeviceGetMemoryInfo(handle)
+                    self.gpu_info = "Device {}: {}, Memory : {:.2f}% free".format(self.device.index,
+                                                                                nvidia_smi.nvmlDeviceGetName(handle),
+                                                                                100 * info.free / info.total)
+                    nvidia_smi.nvmlShutdown()
+                except:
+                    self.gpu_info = " "
             else:
                 self.gpu_info = " "
 
