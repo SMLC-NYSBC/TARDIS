@@ -7,7 +7,7 @@ New York Structural Biology Center
 Simons Machine Learning Center
 
 Robert Kiewisz, Tristan Bepler
-MIT License 2021 - 2022
+MIT License 2021 - 2023
 """
 import inspect
 from os.path import expanduser, join
@@ -55,6 +55,7 @@ id_dict = {
     '147': 'DATA_DTYPE_ERROR',
 
     '19': 'AWS_INCORRECT_VALUE',  # AWS
+    '20': 'PYTEST_ERROR'
 }
 
 
@@ -101,16 +102,16 @@ class TardisError(Exception):
         with open(dir, 'w') as f:
             f.write(f'TARDIS ERROR CODE: {id} {id_desc} \n')
             f.write(f'{prev_frame} \n')
-
+            f.write('\n')
             f.write('Location :\n')
             f.write(f'{py} \n')
-
+            f.write('\n')
             f.write('Description : \n')
             f.write(f'{desc} \n')
 
         desc_3, desc_4, desc_5, desc_6, \
             desc_7, desc_8, desc_9, desc_10 = self.cut_desc(desc)
-        self.tardis_error_rise(title=f'TARDIS ERROR CODE {id}',
+        self.tardis_error_rise(title=f'TARDIS ERROR CODE {id} {id_desc} \n',
                                text_1='Error accounted in:',
                                text_2=f'{prev_frame.f_code.co_name}: {py}',
                                text_3=desc_3,
