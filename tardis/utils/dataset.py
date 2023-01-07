@@ -9,12 +9,12 @@ Simons Machine Learning Center
 Robert Kiewisz, Tristan Bepler
 MIT License 2021 - 2023
 """
+import random
+import shutil
 from os import listdir
 from os.path import join
 from shutil import move
 from typing import Optional
-
-import numpy as np
 
 from tardis.utils.errors import TardisError
 
@@ -24,7 +24,7 @@ def move_train_dataset(dir: str,
                        with_img: bool,
                        img_format: Optional[tuple] = None):
     """
-    Standard builder for train datasets.
+    ! DEPRECIATED ! Standard builder for train datasets.
 
     Train dataset builder. Detected files of specific format and moved to:
     - dir/train/masks
@@ -62,7 +62,7 @@ def move_train_dataset(dir: str,
 
 
 def build_test_dataset(dataset_dir: str,
-                       train_test_ration: float):
+                       dataset_no: int):
     """
     Standard builder for test datasets.
 
@@ -74,7 +74,7 @@ def build_test_dataset(dataset_dir: str,
 
     Args:
         dataset_dir (str): Directory with train test folders.
-        train_test_ration (int): Percentage of dataset to be moved.
+        dataset_no (int): UNumber of datasets to iterate throw.
     """
     dataset = dataset_dir
 
@@ -83,45 +83,25 @@ def build_test_dataset(dataset_dir: str,
                     'tardis/utils/dataset.py',
                     f'Could not find train or test folder in directory {dataset_dir}')
 
-    image_list = sorted(listdir(join(dataset_dir, 'train', 'imgs')))
+    image_list = listdir(join(dataset_dir, 'train', 'imgs'))
     mask_list = listdir(join(dataset_dir, 'train', 'masks'))
-    mask_list.sort()
 
-    train_test_ratio = (len(mask_list) * train_test_ration) // 1
-    train_test_ratio = int(train_test_ratio)
+    images = []
+    masks = []
+    for i in range(dataset_no):
+        df_imgs = [img for img in image_list if img.startswith(f'{i}')]
+        df_mask = [mask for mask in mask_list if mask.startswith(f'{i}')]
 
-    if train_test_ratio == 0:
-        train_test_ratio = 1
+        images.append(df_imgs)
+        masks.append(df_mask)
 
-    test_idx = []
-    if len(image_list) == 0:
-        data_no = len(mask_list)
-    else:
-        data_no = len(image_list)
+    for i in images:
+        list_move = []
+        for j in range(4):
+            list_move.append(i[random.randint(0, len(i) - 1)])
 
-    for _ in range(train_test_ratio):
-        random_idx = np.random.choice(data_no)
-
-        while random_idx in test_idx:
-            random_idx = np.random.choice(data_no)
-
-        test_idx.append(random_idx)
-
-    if len(image_list) != 0:
-        test_image_idx = list(np.array(image_list)[test_idx])
-        test_mask_idx = list(np.array(mask_list)[test_idx])
-    else:
-        test_image_idx = []
-        test_mask_idx = list(np.array(mask_list)[test_idx])
-
-    for i in range(len(test_idx)):
-        if len(image_list) != 0:
-            # Move image file to test dir
-            move(join(dataset, 'train', 'imgs', test_image_idx[i]),
-                 join(dataset, 'test', 'imgs', test_image_idx[i]))
-            move(join(dataset, 'train', 'masks', test_mask_idx[i]),
-                 join(dataset, 'test', 'masks', test_mask_idx[i]))
-        elif len(image_list) == 0 and len(mask_list) != 0:
-            # Move mask file to test dir
-            move(join(dataset, 'train', 'masks', test_mask_idx[i]),
-                 join(dataset, 'test', 'masks', test_mask_idx[i]))
+        for j in list_move:
+            shutil.move(join(dataset_dir, 'train', 'imgs', j),
+                        join(dataset_dir, 'test', 'imgs', j))
+            shutil.move(join(dataset_dir, 'train', 'masks', j[:-4] + '_mask.tif'),
+                        join(dataset_dir, 'test', 'masks', j[:-4] + '_mask.tif'))

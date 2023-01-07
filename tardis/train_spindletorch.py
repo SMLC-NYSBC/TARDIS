@@ -225,8 +225,9 @@ def main(dir: str,
                             trim_xy=patch_size,
                             trim_z=patch_size)
 
+        no_dataset = int(len([f for f in listdir(dir) if f.endswith(IMG_FORMAT)]) / 2)
         build_test_dataset(dataset_dir=dir,
-                           train_test_ration=train_test_ratio)
+                           dataset_no=no_dataset)
 
     """Build training and test dataset 2D/3D"""
     train_DL = DataLoader(dataset=CNNDataset(img_dir=TRAIN_IMAGE_DIR,

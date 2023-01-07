@@ -52,8 +52,6 @@ def build_train_dataset(dataset_dir: str,
     Args:
         dataset_dir (str): Directory with train test folders.
         circle_size (int): Size of the segmented object in A.
-        multi_layer (bool): If True mask is build in RGB channel instead of
-            gray (0-1).
         resize_pixel_size (float): Pixel size for image resizing.
         trim_xy (int): Voxel size of output image in x and y dimension.
         trim_z (int): Voxel size of output image in z dimension.
