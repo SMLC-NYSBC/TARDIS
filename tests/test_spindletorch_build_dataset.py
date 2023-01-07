@@ -7,7 +7,7 @@ New York Structural Biology Center
 Simons Machine Learning Center
 
 Robert Kiewisz, Tristan Bepler
-MIT License 2021 - 2022
+MIT License 2021 - 2023
 """
 from os import listdir, mkdir
 from os.path import isdir, join
@@ -35,7 +35,6 @@ def test_build_datasets():
 
     build_train_dataset(dataset_dir='./tests/test_data/temp/',
                         circle_size=250,
-                        multi_layer=False,
                         resize_pixel_size=25,
                         trim_xy=64,
                         trim_z=64)

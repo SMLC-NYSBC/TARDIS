@@ -7,7 +7,7 @@ New York Structural Biology Center
 Simons Machine Learning Center
 
 Robert Kiewisz, Tristan Bepler
-MIT License 2021 - 2022
+MIT License 2021 - 2023
 """
 from os import getcwd, listdir, mkdir
 from os.path import isdir, join

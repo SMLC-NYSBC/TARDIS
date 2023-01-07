@@ -7,7 +7,7 @@ New York Structural Biology Center
 Simons Machine Learning Center
 
 Robert Kiewisz, Tristan Bepler
-MIT License 2021 - 2022
+MIT License 2021 - 2023
 """
 import shutil
 import subprocess as subp
@@ -32,6 +32,8 @@ def py(python: str):
     # Set up Python 3.X env and update
     subp.run(f"conda run -n tardis{python} conda install python={'3.' + python[1:]} -y",
              shell=True)
+
+    # Reinstall pytorch - HotFix - Sometimes pytest stacks running pytorch tests
     subp.run(f"conda run -n tardis{python} pip uninstall torch -y",
              shell=True)
 
@@ -63,19 +65,22 @@ if __name__ == "__main__":
     if sys.platform != "darwin":  # Python 3.7 on Macos is only available throw x64
         out = py(python='37')
         if not out.retuncode == 0:
-            TardisError(f'{out}'
+            TardisError('20',
+                        f'{out}'
                         'Pyton 3.7 pytest Failed')
             exit()
 
     out = py(python='38')
     if not out.returncode == 0:
-        TardisError(f'{out}'
+        TardisError('20',
+                    f'{out}'
                     'Pyton 3.8 pytest Failed')
         exit()
 
     out = py(python='39')
     if not out.returncode == 0:
-        TardisError(f'{out}'
+        TardisError('20',
+                    f'{out}'
                     'Pyton 3.9 pytest Failed')
         exit()
 
@@ -95,7 +100,7 @@ if __name__ == "__main__":
 
     """ Compile documentation """
     shutil.rmtree('docs/build')  # Remove old build
-    subp.run('conda run -n tardis38 sphinx-build -b html docs/source/ docs/build/html')
+    subp.run('conda run -n tardis38 sphinx-build -b html docs/source docs/build/html')
 
     """ Return output """
     tardis_progress(title=f'Development - TARDIS {version} - pytest',
