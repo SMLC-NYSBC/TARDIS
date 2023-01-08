@@ -142,7 +142,9 @@ class BasicTrainer:
     def _mid_training_eval(self,
                            idx):
         if idx % (len(self.training_DataLoader) // 4) == 0:
-            self._validate()
+            # Do not validate at first idx and last 10%
+            if idx != 0 or idx >= int(len(self.training_DataLoader * 0.9)):
+                self._validate()
 
             self.epoch_desc = self._update_desc(self.early_stopping.counter,
                                                 [round(np.max(self.f1), 3),
