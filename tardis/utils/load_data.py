@@ -24,34 +24,6 @@ from tardis.spindletorch.datasets.augment import RescaleNormalize
 from tardis.utils.errors import TardisError
 
 
-def load_image(image: str,
-               normalize=False):
-    """
-    Quick wrapper for loading image data based on detected file format.
-
-    Args:
-        image (str): Image file directory.
-        normalize (bool): Rescale histogram to 1% - 99% percentile.
-
-    Returns:
-        np.ndarray, float: Image array and associated pixel size.
-    """
-    px = 1.0
-
-    if image.endswith(('.tif', '.tiff')):
-        image, px = import_tiff(image)
-    elif image.endswith(('.mrc', '.rec', '.map')):
-        image, px = import_mrc(image)
-    elif image.endswith('.am'):
-        image, px, _, _ = import_am(image)
-
-    if normalize:
-        norm = RescaleNormalize(clip_range=(1, 99))
-        image = norm(image)
-
-    return image, px
-
-
 class ImportDataFromAmira:
     """
     LOADER FOR AMIRA SPATIAL GRAPH FILES
@@ -308,50 +280,7 @@ def import_tiff(tiff: str):
     return np.array(tif.imread(tiff)), 1.0
 
 
-def import_mrc(mrc: str):
-    """
-    Function to load MRC 2014 file format.
-
-    Args:
-        mrc (str): MRC file directory.
-
-    Returns:
-        np.ndarray, float: Image data and pixel size.
-    """
-    if not isfile(mrc):
-        TardisError('130',
-                    'tardis/utils/load_data.py',
-                    f"Indicated .mrc {mrc} file does not exist...")
-
-    header = mrc_header(mrc)
-
-    pixel_size = round(header.xlen / header.nx, 3)
-    dtype = mrc_mode(header.mode, header.amin)
-    nz, ny, nx = header.nz, header.ny, header.nx
-
-    bit_len = nz * ny * nx  # Calculate file size
-    if nz == 1:
-        image = np.fromfile(mrc, dtype=dtype)[-bit_len:].reshape((ny, nx))
-    else:
-        image = np.fromfile(mrc, dtype=dtype)[-bit_len:].reshape((nz, ny, nx))
-
-    if image.min() < 0 and image.dtype == np.int8:
-        image = image + 128
-        image = image.astype(np.uint8)
-
-    if image.min() < 0 and image.dtype == np.int16:
-        image = image + 32768
-        image = image.astype(np.uint16)
-
-    if nz > ny:
-        image = image.transpose((1, 0, 2))  # YZX to ZYX
-    elif nz > nx:
-        image = image.transpose((2, 1, 0))  # XYZ to ZYX
-
-    return image, pixel_size
-
-
-def mrc_header(mrc: str):
+def mrc_file_header(mrc: str):
     """
     Helper function to read MRC header.
 
@@ -629,6 +558,49 @@ def import_am(am_file: str):
     return img, pixel_size, physical_size, transformation
 
 
+def load_mrc_file(mrc: str):
+    """
+    Function to load MRC 2014 file format.
+
+    Args:
+        mrc (str): MRC file directory.
+
+    Returns:
+        np.ndarray, float: Image data and pixel size.
+    """
+    if not isfile(mrc):
+        TardisError('130',
+                    'tardis/utils/load_data.py',
+                    f"Indicated .mrc {mrc} file does not exist...")
+
+    header = mrc_file_header(mrc)
+
+    pixel_size = round(header.xlen / header.nx, 3)
+    dtype = mrc_mode(header.mode, header.amin)
+    nz, ny, nx = header.nz, header.ny, header.nx
+
+    bit_len = nz * ny * nx  # Calculate file size
+    if nz == 1:
+        image = np.fromfile(mrc, dtype=dtype)[-bit_len:].reshape((ny, nx))
+    else:
+        image = np.fromfile(mrc, dtype=dtype)[-bit_len:].reshape((nz, ny, nx))
+
+    if image.min() < 0 and image.dtype == np.int8:
+        image = image + 128
+        image = image.astype(np.uint8)
+
+    if image.min() < 0 and image.dtype == np.int16:
+        image = image + 32768
+        image = image.astype(np.uint16)
+
+    if nz > ny:
+        image = image.transpose((1, 0, 2))  # YZX to ZYX
+    elif nz > nx:
+        image = image.transpose((2, 1, 0))  # XYZ to ZYX
+
+    return image, pixel_size
+
+
 def load_ply_scannet(ply: str,
                      downscaling=0,
                      color: Optional[str] = None) -> Union[
@@ -747,3 +719,31 @@ def load_ply_partnet(ply,
         label_id.append(np.where(np.all(label_org[match_coord] == label_uniq, 1))[0][0])
 
     return np.hstack((np.asarray(label_id)[:, None], coord))
+
+
+def load_image(image: str,
+               normalize=False):
+    """
+    Quick wrapper for loading image data based on detected file format.
+
+    Args:
+        image (str): Image file directory.
+        normalize (bool): Rescale histogram to 1% - 99% percentile.
+
+    Returns:
+        np.ndarray, float: Image array and associated pixel size.
+    """
+    px = 1.0
+
+    if image.endswith(('.tif', '.tiff')):
+        image, px = import_tiff(image)
+    elif image.endswith(('.mrc', '.rec', '.map')):
+        image, px = load_mrc_file(image)
+    elif image.endswith('.am'):
+        image, px, _, _ = import_am(image)
+
+    if normalize:
+        norm = RescaleNormalize(clip_range=(1, 99))
+        image = norm(image)
+
+    return image, px

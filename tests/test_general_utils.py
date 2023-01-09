@@ -18,8 +18,8 @@ import torch
 from tardis.utils.aws import get_weights_aws
 from tardis.utils.device import get_device
 from tardis.utils.export_data import NumpyToAmira
-from tardis.utils.load_data import (import_am, import_mrc, import_tiff,
-                                    ImportDataFromAmira)
+from tardis.utils.load_data import (import_am, import_tiff, ImportDataFromAmira,
+                                    load_mrc_file)
 from tardis.utils.utils import EarlyStopping
 
 
@@ -66,19 +66,19 @@ def test_tif():
 
 
 def test_rec_mrc():
-    mrc, px = import_mrc(mrc='./tests/test_data/data_type/mrc2D.mrc')
+    mrc, px = load_mrc_file(mrc='./tests/test_data/data_type/mrc2D.mrc')
     assert mrc.shape == (64, 32)
     assert px == 23.2
 
-    rec, px = import_mrc(mrc='./tests/test_data/data_type/rec2D.rec')
+    rec, px = load_mrc_file(mrc='./tests/test_data/data_type/rec2D.rec')
     assert rec.shape == (64, 32)
     assert px == 23.2
 
-    mrc, px = import_mrc(mrc='./tests/test_data/data_type/mrc3D.mrc')
+    mrc, px = load_mrc_file(mrc='./tests/test_data/data_type/mrc3D.mrc')
     assert mrc.shape == (64, 78, 32)
     assert px == 23.2
 
-    rec, px = import_mrc(mrc='./tests/test_data/data_type/rec3D.rec')
+    rec, px = load_mrc_file(mrc='./tests/test_data/data_type/rec3D.rec')
     assert rec.shape == (64, 78, 32)
     assert px == 23.2
 
