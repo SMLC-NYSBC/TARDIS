@@ -100,7 +100,8 @@ class CNNTrainer(BasicTrainer):
 
                 # Update progress bar
                 self._update_progress_bar(loss_desc=valid,
-                                          idx=idx)
+                                          idx=idx,
+                                          train=False)
 
         # Reduce eval. metric with mean
         self.validation_loss.append(np.mean(valid_losses))

@@ -118,14 +118,22 @@ class BasicTrainer:
 
     def _update_progress_bar(self,
                              loss_desc: str,
-                             idx: int):
+                             idx: int,
+                             train=True):
         """
         Update entire Tardis progress bar.
 
         Args:
             loss_desc (str): Description for loss function current state.
             idx (int): Number of the current epoch step.
+            train (bool): If true, count progressbar for training dataset, else
+                progressbar for validation
         """
+        if train:
+            data_set_len = len(self.training_DataLoader)
+        else:
+            data_set_len = len(self.validation_DataLoader)
+
         self.progress_train(title=f'{self.checkpoint_name} training module',
                             text_1=self.print_setting[0],
                             text_2=self.print_setting[1],
@@ -137,7 +145,7 @@ class BasicTrainer:
                                                       self.epochs),
                             text_9=loss_desc,
                             text_10=print_progress_bar(idx,
-                                                       len(self.training_DataLoader)))
+                                                       data_set_len))
 
     def _mid_training_eval(self,
                            idx):
@@ -146,18 +154,18 @@ class BasicTrainer:
             if idx != 0 or idx >= int(len(self.training_DataLoader * 0.9)):
                 self._validate()
 
-            self.epoch_desc = self._update_desc(self.early_stopping.counter,
-                                                [round(np.max(self.f1), 3),
-                                                 self.f1[-1:][0]])
+                self.epoch_desc = self._update_desc(self.early_stopping.counter,
+                                                    [round(np.max(self.f1), 3),
+                                                     self.f1[-1:][0]])
 
-            # Update checkpoint weights if validation loss dropped
-            if all(self.f1[-1:][0] >= i for i in self.f1[:-1]):
-                torch.save({'model_struct_dict': self.structure,
-                            'model_state_dict': self.model.state_dict(),
-                            'optimizer_state_dict': self.optimizer.state_dict()},
-                           join(getcwd(),
-                                f'{self.checkpoint_name}_checkpoint',
-                                f'{self.checkpoint_name}_checkpoint.pth'))
+                # Update checkpoint weights if validation loss dropped
+                if all(self.f1[-1:][0] >= i for i in self.f1[:-1]):
+                    torch.save({'model_struct_dict': self.structure,
+                                'model_state_dict': self.model.state_dict(),
+                                'optimizer_state_dict': self.optimizer.state_dict()},
+                               join(getcwd(),
+                                    f'{self.checkpoint_name}_checkpoint',
+                                    f'{self.checkpoint_name}_checkpoint.pth'))
 
     def run_trainer(self):
         """
@@ -190,8 +198,8 @@ class BasicTrainer:
                     handle = nvidia_smi.nvmlDeviceGetHandleByIndex(self.device.index)
                     info = nvidia_smi.nvmlDeviceGetMemoryInfo(handle)
                     self.gpu_info = "Device {}: {}, Memory : {:.2f}% free".format(self.device.index,
-                                                                                nvidia_smi.nvmlDeviceGetName(handle),
-                                                                                100 * info.free / info.total)
+                                                                                  nvidia_smi.nvmlDeviceGetName(handle),
+                                                                                  100 * info.free / info.total)
                     nvidia_smi.nvmlShutdown()
                 except:
                     self.gpu_info = " "
