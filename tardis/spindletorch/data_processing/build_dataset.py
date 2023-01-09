@@ -130,7 +130,7 @@ def build_train_dataset(dataset_dir: str,
         np.savetxt(join(dataset_dir, 'log.txt'), log_file, fmt='%s', delimiter=',')
 
         """Draw mask for coord or process mask if needed"""
-        if mask.ndim == 2 and mask.shape[1] in [3, 4]:
+        if mask.ndim == 2 and mask.shape[1] in [3, 4]:  # Detect coordinate array
             assert mask.shape[1] == 4, \
                 TardisError('113',
                             'tardis/spindletorch/data_processing/build_training_dataset',
@@ -145,7 +145,7 @@ def build_train_dataset(dataset_dir: str,
                                  coordinate=mask,
                                  pixel_size=resize_pixel_size,
                                  circle_size=circle_size)
-        else:
+        else:  # Detect mask array
             assert mask.min() >= 0, \
                 TardisError('115',
                             'tardis/spindletorch/data_processing/build_training_dataset',
