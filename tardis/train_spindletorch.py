@@ -17,7 +17,7 @@ from typing import Optional
 import click
 from torch.utils.data import DataLoader
 
-from tardis.spindletorch.data_processing.build_training_dataset import build_train_dataset
+from tardis.spindletorch.data_processing.build_dataset import build_train_dataset
 from tardis.spindletorch.datasets.dataloader import CNNDataset
 from tardis.spindletorch.train import train_cnn
 from tardis.utils.dataset import build_test_dataset
