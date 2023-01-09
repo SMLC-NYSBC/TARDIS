@@ -1,6 +1,26 @@
 History
 =======
 
+0.1.0-RC1 (2023-01-15)
+----------------------------
+* **Code restructure:**
+    * Extra pytest + automatization of tests for all python version
+
+* **SpindleTorch module changes:**
+    * Rebuild interpolation for images and mask to make it more reliable and store
+      image feature regardless from scaling factor
+    * Simplified building training/testing of datasets
+    * Fixed image normalization for few very specific cases
+
+* **DIST module changes:**
+    * New general dataloader
+    * Change how DIST distance embedding is computed for GT data.
+
+* **General changes:**
+    * Added data competition with Amira mesh output
+    * Added license footnote
+    * Small changes and bug fixes for post-processing of spatial-graphs
+
 0.1.0-beta2 (2022-09-14)
 ----------------------------
 * **Code restructure:**
@@ -51,14 +71,14 @@ History
 * **General changes:**
     * Load image data, marge and fixed for int8 and uint8
     * Amira binary import fixes. Amira defined import type. Previously assumption was
-        that Amira load all binary as uint8. Amira loads files as uint8 or int8 and
-        have different structures when loading mask data which can be binary or ascii.
+      that Amira load all binary as uint8. Amira loads files as uint8 or int8 and
+      have different structures when loading mask data which can be binary or ascii.
     * Overall stability improvements
     * Tardis logo was integrated with all TARDIS modules
     * Build tests for the whole tardis-pytorch
     * Introduced tardis_dev and divided stable and developmental branches
     * Fixed image normalization and ensure correct normalized output for training
-        and prediction
+      and prediction
     * Added MRC export
     * Minor bugfixes from prebeta2 and new additions to beta2
 
@@ -76,7 +96,7 @@ History
     * Speed improved dataloader during training
     * Added support for .ply file format and meshes
     * Re-train model on different DIST structure for the paper and for searching 
-        of the best approach
+      of the best approach
     * Bugfixes for segmentation of point cloud from graph probabilities
         * Speed-up boost with simplifying the building and reading adjacency matrix
         * Fix in masking adjacency matrix for points already connected
@@ -103,10 +123,10 @@ History
         * Change floating point from 3 to 15
     * Improvements from importing data from binary Amira file format
         * Change how pixel size is calculated. Amira has weird behavior whenever ET 
-            is trimmed. Include this in pixel size calculation
+          is trimmed. Include this in pixel size calculation
     * Improvements in .rec, .mrc file loader
         * .rec and .mrc file are format with uint8 (value from -128 to 128) or 
-            int8 (value from 0 to 255). Fix reading of these files
+          int8 (value from 0 to 255). Fix reading of these files
 
 * **TARDIS**
     * Cleaned log output for easier reading
