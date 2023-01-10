@@ -1,14 +1,13 @@
-"""
-TARDIS - Transformer And Rapid Dimensionless Instance Segmentation
+#######################################################################
+#  TARDIS - Transformer And Rapid Dimensionless Instance Segmentation #
+#                                                                     #
+#  New York Structural Biology Center                                 #
+#  Simons Machine Learning Center                                     #
+#                                                                     #
+#  Robert Kiewisz, Tristan Bepler                                     #
+#  MIT License 2021 - 2023                                            #
+#######################################################################
 
-<module> PyTest SpindleTorch - Trainer
-
-New York Structural Biology Center
-Simons Machine Learning Center
-
-Robert Kiewisz, Tristan Bepler
-MIT License 2021 - 2023
-"""
 import os
 import shutil
 
@@ -22,18 +21,18 @@ from tardis.utils.device import get_device
 
 
 def test_init_spindletorch_train():
-    dl = CNNTrainer(model=nn.Conv1d(1, 2, 3),
-                    structure={'cnn_type': 'unet'},
-                    device='cpu',
-                    criterion=None,
-                    optimizer=None,
-                    print_setting=[],
-                    training_DataLoader=None,
-                    validation_DataLoader=None,
-                    lr_scheduler=None,
-                    epochs=100,
-                    early_stop_rate=10,
-                    checkpoint_name='test')
+    CNNTrainer(model=nn.Conv1d(1, 2, 3),
+               structure={'cnn_type': 'unet'},
+               device='cpu',
+               criterion=None,
+               optimizer=None,
+               print_setting=[],
+               training_DataLoader=None,
+               validation_DataLoader=None,
+               lr_scheduler=None,
+               epochs=100,
+               early_stop_rate=10,
+               checkpoint_name='test')
 
 
 def test_unet_trainer():
@@ -55,8 +54,6 @@ def test_unet_trainer():
     train_dl = CNNDataset(img_dir='./tests/test_data/data_loader/cnn/train/imgs',
                           mask_dir='./tests/test_data/data_loader/cnn/train/masks',
                           size=structure['img_size'],
-                          mask_suffix='_mask',
-                          transform=True,
                           out_channels=structure['out_channel'])
     train_dl = train_dl + train_dl + train_dl + train_dl
     train_dl = DataLoader(dataset=train_dl,
@@ -67,22 +64,14 @@ def test_unet_trainer():
     test_dl = CNNDataset(img_dir='./tests/test_data/data_loader/cnn/test/imgs',
                          mask_dir='./tests/test_data/data_loader/cnn/test/masks',
                          size=structure['img_size'],
-                         mask_suffix='_mask',
-                         transform=True,
                          out_channels=structure['out_channel'])
     test_dl = DataLoader(dataset=test_dl,
-                         batch_size=1,
                          shuffle=True,
                          pin_memory=True)
 
     train_cnn(train_dataloader=train_dl,
               test_dataloader=test_dl,
               model_structure=structure,
-              checkpoint=None,
-              loss_function='bce',
-              learning_rate=0.001,
-              learning_rate_scheduler=False,
-              early_stop_rate=10,
               device=get_device('cpu'),
               epochs=2)
 
@@ -110,34 +99,23 @@ def test_fnet_trainer():
     train_dl = CNNDataset(img_dir='./tests/test_data/data_loader/cnn/train/imgs',
                           mask_dir='./tests/test_data/data_loader/cnn/train/masks',
                           size=structure['img_size'],
-                          mask_suffix='_mask',
-                          transform=True,
                           out_channels=structure['out_channel'])
     train_dl = train_dl + train_dl + train_dl + train_dl
     train_dl = DataLoader(dataset=train_dl,
-                          batch_size=1,
                           shuffle=True,
                           pin_memory=True)
 
     test_dl = CNNDataset(img_dir='./tests/test_data/data_loader/cnn/test/imgs',
                          mask_dir='./tests/test_data/data_loader/cnn/test/masks',
                          size=structure['img_size'],
-                         mask_suffix='_mask',
-                         transform=True,
                          out_channels=structure['out_channel'])
     test_dl = DataLoader(dataset=test_dl,
-                         batch_size=1,
                          shuffle=True,
                          pin_memory=True)
 
     train_cnn(train_dataloader=train_dl,
               test_dataloader=test_dl,
               model_structure=structure,
-              checkpoint=None,
-              loss_function='bce',
-              learning_rate=0.001,
-              learning_rate_scheduler=False,
-              early_stop_rate=10,
               device=get_device('cpu'),
               epochs=2)
 
@@ -165,34 +143,23 @@ def test_unet3plus_trainer():
     train_dl = CNNDataset(img_dir='./tests/test_data/data_loader/cnn/train/imgs',
                           mask_dir='./tests/test_data/data_loader/cnn/train/masks',
                           size=structure['img_size'],
-                          mask_suffix='_mask',
-                          transform=True,
                           out_channels=structure['out_channel'])
     train_dl = train_dl + train_dl + train_dl + train_dl
     train_dl = DataLoader(dataset=train_dl,
-                          batch_size=1,
                           shuffle=True,
                           pin_memory=True)
 
     test_dl = CNNDataset(img_dir='./tests/test_data/data_loader/cnn/test/imgs',
                          mask_dir='./tests/test_data/data_loader/cnn/test/masks',
                          size=structure['img_size'],
-                         mask_suffix='_mask',
-                         transform=True,
                          out_channels=structure['out_channel'])
     test_dl = DataLoader(dataset=test_dl,
-                         batch_size=1,
                          shuffle=True,
                          pin_memory=True)
 
     train_cnn(train_dataloader=train_dl,
               test_dataloader=test_dl,
               model_structure=structure,
-              checkpoint=None,
-              loss_function='bce',
-              learning_rate=0.001,
-              learning_rate_scheduler=False,
-              early_stop_rate=10,
               device=get_device('cpu'),
               epochs=2)
 

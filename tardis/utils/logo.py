@@ -1,14 +1,13 @@
-"""
-TARDIS - Transformer And Rapid Dimensionless Instance Segmentation
+#######################################################################
+#  TARDIS - Transformer And Rapid Dimensionless Instance Segmentation #
+#                                                                     #
+#  New York Structural Biology Center                                 #
+#  Simons Machine Learning Center                                     #
+#                                                                     #
+#  Robert Kiewisz, Tristan Bepler                                     #
+#  MIT License 2021 - 2023                                            #
+#######################################################################
 
-<module> Utils - logo
-
-New York Structural Biology Center
-Simons Machine Learning Center
-
-Robert Kiewisz, Tristan Bepler
-MIT License 2021 - 2023
-"""
 import platform
 import sys
 from os import get_terminal_size, system
@@ -133,9 +132,13 @@ class TardisLogo:
             int: cell width.
         """
         if is_interactive():
-            return 55
+            WIDTH = 75
         else:
-            return get_terminal_size()[0] - 26
+            try:
+                WIDTH = get_terminal_size()[0] - 5
+            except OSError:
+                WIDTH = 50
+        return WIDTH
 
     def __call__(self,
                  title='', text_1='', text_2='', text_3='', text_4='',
@@ -163,13 +166,7 @@ class TardisLogo:
                 window or jupyter notebook.
         """
         # Check and update window size
-        if is_interactive():
-            WIDTH = 75
-        else:
-            try:
-                WIDTH = get_terminal_size()[0] - 5
-            except OSError:
-                WIDTH = 50
+        WIDTH = self.cell_width()
 
         self.CLEAR()
         if logo:

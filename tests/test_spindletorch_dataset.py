@@ -1,14 +1,13 @@
-"""
-TARDIS - Transformer And Rapid Dimensionless Instance Segmentation
+#######################################################################
+#  TARDIS - Transformer And Rapid Dimensionless Instance Segmentation #
+#                                                                     #
+#  New York Structural Biology Center                                 #
+#  Simons Machine Learning Center                                     #
+#                                                                     #
+#  Robert Kiewisz, Tristan Bepler                                     #
+#  MIT License 2021 - 2023                                            #
+#######################################################################
 
-<module> PyTest SpindleTorch - DataSet
-
-New York Structural Biology Center
-Simons Machine Learning Center
-
-Robert Kiewisz, Tristan Bepler
-MIT License 2021 - 2023
-"""
 from os.path import join
 
 import numpy as np
@@ -22,11 +21,7 @@ from tardis.spindletorch.datasets.dataloader import (CNNDataset, PredictionDatas
 def test_dataloader():
     dir = './tests/test_data/data_loader/cnn/test/'
     dataset = CNNDataset(img_dir=join(dir, 'imgs'),
-                         mask_dir=join(dir, 'masks'),
-                         size=64,
-                         mask_suffix='_mask',
-                         transform=True,
-                         out_channels=1)
+                         mask_dir=join(dir, 'masks'))
     assert len(dataset) == 2
 
     img, mask = dataset.__getitem__(0)
@@ -35,8 +30,7 @@ def test_dataloader():
     assert img.min() >= 0 and img.max() <= 1
     assert torch.sum(img) != 0
 
-    dataset = PredictionDataset(img_dir=join(dir, 'imgs'),
-                                out_channels=1)
+    dataset = PredictionDataset(img_dir=join(dir, 'imgs'))
     assert len(dataset) == 2
 
     img, idx = dataset.__getitem__(0)
@@ -76,8 +70,7 @@ class TestDataSetBuilder2D3D:
         img_proc, mask = preprocess(image=img,
                                     mask=img,
                                     transformation=True,
-                                    size=64,
-                                    output_dim_mask=1)
+                                    size=64)
         assert img_proc.shape == (1, 64, 64, 64)
         assert mask.shape == (1, 64, 64, 64)
         assert img_proc.dtype == np.float32
@@ -92,8 +85,7 @@ class TestDataSetBuilder2D3D:
         img_proc, mask = preprocess(image=img,
                                     mask=img,
                                     transformation=True,
-                                    size=64,
-                                    output_dim_mask=1)
+                                    size=64)
         assert img_proc.shape == (1, 64, 64)
         assert mask.shape == (1, 64, 64)
         assert img_proc.dtype == np.float32

@@ -1,14 +1,13 @@
-"""
-TARDIS - Transformer And Rapid Dimensionless Instance Segmentation
+#######################################################################
+#  TARDIS - Transformer And Rapid Dimensionless Instance Segmentation #
+#                                                                     #
+#  New York Structural Biology Center                                 #
+#  Simons Machine Learning Center                                     #
+#                                                                     #
+#  Robert Kiewisz, Tristan Bepler                                     #
+#  MIT License 2021 - 2023                                            #
+#######################################################################
 
-<module> PyTest General - Utils
-
-New York Structural Biology Center
-Simons Machine Learning Center
-
-Robert Kiewisz, Tristan Bepler
-MIT License 2021 - 2023
-"""
 import io
 import os
 
@@ -17,14 +16,16 @@ import torch
 
 from tardis.utils.aws import get_weights_aws
 from tardis.utils.device import get_device
+from tardis.utils.errors import TardisError
 from tardis.utils.export_data import NumpyToAmira
 from tardis.utils.load_data import (import_am, import_tiff, ImportDataFromAmira,
                                     load_mrc_file)
+from tardis.utils.logo import TardisLogo
 from tardis.utils.utils import EarlyStopping
 
 
 def test_early_stop():
-    er_stop = EarlyStopping(patience=10, min_delta=0)
+    er_stop = EarlyStopping()
     assert er_stop.counter == 0
 
     er_stop(val_loss=0.1)
@@ -36,7 +37,7 @@ def test_early_stop():
     er_stop(val_loss=0.1)
     assert er_stop.counter == 1
 
-    er_stop = EarlyStopping(patience=10, min_delta=0)
+    er_stop = EarlyStopping()
     assert er_stop.counter == 0
 
     er_stop(f1_score=0.1)
@@ -116,14 +117,10 @@ def test_am_sg():
 
 
 def test_aws():
-    aws = get_weights_aws(network='dist',
-                          subtype='triang',
-                          model='microtubules')
+    aws = get_weights_aws(network='dist', subtype='triang', model='microtubules')
     assert isinstance(aws, str) or isinstance(aws, io.BytesIO)
 
-    aws = get_weights_aws(network='dist',
-                          subtype='triang',
-                          model='microtubules')
+    aws = get_weights_aws(network='dist', subtype='triang', model='microtubules')
     assert isinstance(aws, str)
 
 
@@ -132,7 +129,8 @@ def test_device():
 
     assert get_device(0) == torch.device('cpu') or get_device(0) == torch.device('cuda:0')
 
-    assert get_device('mps') == torch.device('cpu') or get_device('mps') == torch.device('mps')
+    assert get_device('mps') == torch.device('cpu') or get_device('mps') == torch.device(
+        'mps')
 
 
 def test_am_export():
@@ -146,3 +144,20 @@ def test_am_export():
 
     assert os.path.isfile('./test.am')
     os.remove('./test.am')
+
+
+def test_logo():
+    logo = TardisLogo()
+    # Test short
+    logo(title='Test_pytest')
+
+    # Test long
+    logo(title='Test_pytest',
+         text_1='xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' +
+                'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
+
+
+def test_error():
+    TardisError(id='20',
+                py='tests/test_general_utils.py',
+                desc='PyTest Failed!')

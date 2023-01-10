@@ -1,14 +1,13 @@
-"""
-TARDIS - Transformer And Rapid Dimensionless Instance Segmentation
+#######################################################################
+#  TARDIS - Transformer And Rapid Dimensionless Instance Segmentation #
+#                                                                     #
+#  New York Structural Biology Center                                 #
+#  Simons Machine Learning Center                                     #
+#                                                                     #
+#  Robert Kiewisz, Tristan Bepler                                     #
+#  MIT License 2021 - 2023                                            #
+#######################################################################
 
-<module> SpindleTorch - Data_Processing - stitch
-
-New York Structural Biology Center
-Simons Machine Learning Center
-
-Robert Kiewisz, Tristan Bepler
-MIT License 2021 - 2023
-"""
 from os import listdir
 from os.path import isfile, join
 from typing import Optional
@@ -81,7 +80,6 @@ class StitchImages:
     def __call__(self,
                  image_dir: str,
                  mask: bool,
-                 prefix='',
                  output: Optional[str] = None,
                  dtype=np.uint8) -> np.ndarray:
         """
@@ -90,8 +88,7 @@ class StitchImages:
         Args:
             image_dir (np.ndarray): Directory where all images are stored.
             mask (np.ndarray): If True treat image as binary mask and sum-up overlay
-                zones, else do replacement
-            prefix (str): Prefix at the end of image file
+                zones, else do replacement.
             output (str, Optional): Optional, output directory.
             dtype (np.dtype): Numpy dtype for output
 
@@ -99,6 +96,11 @@ class StitchImages:
             np.ndarray: If indicated output, image is saved in output directory
             else stitch images is return as array.
         """
+        if mask:
+            prefix = '_mask'
+        else:
+            prefix = ''
+
         """Extract information about images in dir_path"""
         file_list = [f for f in listdir(image_dir) if isfile(join(image_dir, f))]
         file_list = [f for f in file_list if f.endswith('.tif')]

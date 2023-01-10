@@ -1,14 +1,13 @@
-"""
-TARDIS - Transformer And Rapid Dimensionless Instance Segmentation
+#######################################################################
+#  TARDIS - Transformer And Rapid Dimensionless Instance Segmentation #
+#                                                                     #
+#  New York Structural Biology Center                                 #
+#  Simons Machine Learning Center                                     #
+#                                                                     #
+#  Robert Kiewisz, Tristan Bepler                                     #
+#  MIT License 2021 - 2023                                            #
+#######################################################################
 
-<module> Utils - Errors
-
-New York Structural Biology Center
-Simons Machine Learning Center
-
-Robert Kiewisz, Tristan Bepler
-MIT License 2021 - 2023
-"""
 import inspect
 from os.path import expanduser, join
 from typing import Tuple
@@ -134,7 +133,7 @@ class TardisError(Exception):
         Returns:
             list[str]: list of cut string
         """
-        WIDTH = self.tardis_error_rise.cell_width()
+        WIDTH = self.tardis_error_rise.cell_width() - 21
         if len(desc) <= WIDTH:
             text_3 = desc
             text_4, text_5, text_6, \

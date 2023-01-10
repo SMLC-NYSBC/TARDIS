@@ -1,14 +1,13 @@
-"""
-TARDIS - Transformer And Rapid Dimensionless Instance Segmentation
+#######################################################################
+#  TARDIS - Transformer And Rapid Dimensionless Instance Segmentation #
+#                                                                     #
+#  New York Structural Biology Center                                 #
+#  Simons Machine Learning Center                                     #
+#                                                                     #
+#  Robert Kiewisz, Tristan Bepler                                     #
+#  MIT License 2021 - 2023                                            #
+#######################################################################
 
-<module> PyTest General - Trainer
-
-New York Structural Biology Center
-Simons Machine Learning Center
-
-Robert Kiewisz, Tristan Bepler
-MIT License 2021 - 2023
-"""
 import shutil
 
 import torch
@@ -29,10 +28,6 @@ def test_trainer_init():
                  optimizer=None,
                  print_setting=(),
                  training_DataLoader=None,
-                 validation_DataLoader=None,
-                 lr_scheduler=None,
-                 epochs=100,
-                 early_stop_rate=10,
                  checkpoint_name='test')
 
     CNNTrainer(model=nn.Conv1d(1, 2, 3),
@@ -50,8 +45,7 @@ def test_trainer_init():
                classification=False)
 
     DistTrainer(model=nn.Conv1d(1, 2, 3),
-                structure={'dist_type': 'instance',
-                           'node_input': 0},
+                structure={'dist_type': 'instance', 'node_input': 0},
                 device='cpu',
                 criterion=None,
                 optimizer=None,
@@ -64,8 +58,7 @@ def test_trainer_init():
                 checkpoint_name='test')
 
     CDistTrainer(model=nn.Conv1d(1, 2, 3),
-                 structure={'node_input': 0,
-                             'dist_type': 'semantic'},
+                 structure={'node_input': 0, 'dist_type': 'semantic'},
                  device='cpu',
                  criterion=None,
                  optimizer=None,
@@ -78,8 +71,7 @@ def test_trainer_init():
                  checkpoint_name='test')
 
     CDistTrainer(model=nn.Conv1d(1, 2, 3),
-                 structure={'node_input': 0,
-                             'dist_type': 'instance'},
+                 structure={'node_input': 0, 'dist_type': 'instance'},
                  device='cpu',
                  criterion=None,
                  optimizer=None,
@@ -101,16 +93,11 @@ def test_trainer_utils():
                       print_setting=('test', 'test', 'test', 'test', 'test'),
                       training_DataLoader=DataLoader(dataset=torch.rand(1, 10, 10)),
                       validation_DataLoader=DataLoader(dataset=torch.rand(1, 10, 10)),
-                      lr_scheduler=None,
-                      epochs=100,
-                      early_stop_rate=10,
                       checkpoint_name='test')
 
-    dl._update_desc(stop_count=1,
-                    f1=[0.1, 0.2])
+    dl._update_desc(stop_count=1, f1=[0.1, 0.2])
 
-    dl._update_progress_bar(loss_desc='test text',
-                            idx=5)
+    dl._update_progress_bar(loss_desc='test text', idx=5)
 
     # Test training path till torch.save model state
     try:

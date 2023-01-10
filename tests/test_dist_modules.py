@@ -1,14 +1,13 @@
-"""
-TARDIS - Transformer And Rapid Dimensionless Instance Segmentation
+#######################################################################
+#  TARDIS - Transformer And Rapid Dimensionless Instance Segmentation #
+#                                                                     #
+#  New York Structural Biology Center                                 #
+#  Simons Machine Learning Center                                     #
+#                                                                     #
+#  Robert Kiewisz, Tristan Bepler                                     #
+#  MIT License 2021 - 2023                                            #
+#######################################################################
 
-<module> PyTest DIST_pytorch - Modules
-
-New York Structural Biology Center
-Simons Machine Learning Center
-
-Robert Kiewisz, Tristan Bepler
-MIT License 2021 - 2023
-"""
 import torch
 
 from tardis.dist_pytorch.model.modules import (ComparisonLayer, gelu, GeluFeedForward,
@@ -51,8 +50,8 @@ def test_pair_attention():
 
 def test_quadratic_attn():
     data = torch.rand((1, 10, 10, 64))
-    quad_0 = QuadraticEdgeUpdate(input_dim=64, channel_dim=128, axis=0)
-    quad_1 = QuadraticEdgeUpdate(input_dim=64, channel_dim=128, axis=1)
+    quad_0 = QuadraticEdgeUpdate(input_dim=64, axis=0)
+    quad_1 = QuadraticEdgeUpdate(input_dim=64)
 
     with torch.no_grad():
         q_0 = quad_0(data)
@@ -64,8 +63,8 @@ def test_quadratic_attn():
 
 def test_triang_attn():
     data = torch.rand((1, 10, 10, 64))
-    quad_0 = TriangularEdgeUpdate(input_dim=64, channel_dim=128, axis=0)
-    quad_1 = TriangularEdgeUpdate(input_dim=64, channel_dim=128, axis=1)
+    quad_0 = TriangularEdgeUpdate(input_dim=64, axis=0)
+    quad_1 = TriangularEdgeUpdate(input_dim=64)
 
     with torch.no_grad():
         q_0 = quad_0(data)

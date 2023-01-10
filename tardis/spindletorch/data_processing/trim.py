@@ -1,22 +1,21 @@
-"""
-TARDIS - Transformer And Rapid Dimensionless Instance Segmentation
+#######################################################################
+#  TARDIS - Transformer And Rapid Dimensionless Instance Segmentation #
+#                                                                     #
+#  New York Structural Biology Center                                 #
+#  Simons Machine Learning Center                                     #
+#                                                                     #
+#  Robert Kiewisz, Tristan Bepler                                     #
+#  MIT License 2021 - 2023                                            #
+#######################################################################
 
-<module> SpindleTorch - Data_Processing - trim
-
-New York Structural Biology Center
-Simons Machine Learning Center
-
-Robert Kiewisz, Tristan Bepler
-MIT License 2021 - 2023
-"""
 from math import ceil
-from os.path import join
+from os import mkdir
+from os.path import isdir, join
 from typing import Optional, Tuple
 
 import numpy as np
 from tifffile import tifffile as tif
 
-from tardis.spindletorch.data_processing.semantic_mask import fill_gaps_in_semantic
 from tardis.spindletorch.utils.utils import scale_image
 from tardis.utils.errors import TardisError
 
@@ -27,7 +26,6 @@ def trim_with_stride(image: np.ndarray,
                      output: str,
                      image_counter: int,
                      scale: tuple,
-                     prefix='',
                      clean_empty=True,
                      stride=25,
                      mask: Optional[np.ndarray] = None):
@@ -44,12 +42,16 @@ def trim_with_stride(image: np.ndarray,
         output (str): Name of the output directory for saving.
         image_counter (int): Number id of image.
         scale (tuple): Up- DownScale image and mask to the given shape or factor.
-        prefix (str): Prefix name at the end of the file.
         clean_empty (bool): Remove empty patches.
         stride (int): Trimming step size.
         mask (np.ndarray, None): Label mask.
     """
     img_dtype = np.float32
+
+    if not isdir(join(output, 'imgs')):
+        mkdir(join(output, 'imgs'))
+    if not isdir(join(output, 'masks')) and mask is not None:
+        mkdir(join(output, 'masks'))
 
     if mask is not None:
         mask_dtype = np.uint8
@@ -57,7 +59,6 @@ def trim_with_stride(image: np.ndarray,
                                        mask=mask,
                                        scale=scale)
 
-        mask = fill_gaps_in_semantic(mask)
         mask = mask.astype(np.uint8)
     else:
         image, dim = scale_image(image=image,
@@ -185,7 +186,7 @@ def trim_with_stride(image: np.ndarray,
                 x_stop = x_start + trim_size_xy
 
                 img_name = str(
-                    f'{image_counter}_{i}_{j}_{k}_{stride}{prefix}.tif')
+                    f'{image_counter}_{i}_{j}_{k}_{stride}.tif')
 
                 if nc is None:
                     if nz > 0:

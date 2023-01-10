@@ -1,14 +1,13 @@
-"""
-TARDIS - Transformer And Rapid Dimensionless Instance Segmentation
+#######################################################################
+#  TARDIS - Transformer And Rapid Dimensionless Instance Segmentation #
+#                                                                     #
+#  New York Structural Biology Center                                 #
+#  Simons Machine Learning Center                                     #
+#                                                                     #
+#  Robert Kiewisz, Tristan Bepler                                     #
+#  MIT License 2021 - 2023                                            #
+#######################################################################
 
-<module> SpindleTorch - train
-
-New York Structural Biology Center
-Simons Machine Learning Center
-
-Robert Kiewisz, Tristan Bepler
-MIT License 2021 - 2023
-"""
 from os import getcwd, listdir, mkdir
 from os.path import isdir, join
 from shutil import rmtree
@@ -34,11 +33,6 @@ from tardis.version import version
               type=str,
               help='Directory with train, test folder or folder with dataset '
                    'to be used for training.',
-              show_default=True)
-@click.option('-ttr', '--train_test_ratio',
-              default=0.0001,
-              type=float,
-              help='Percentage value of train dataset that will become test.',
               show_default=True)
 @click.option('-ps', '--patch_size',
               default=64,
@@ -149,7 +143,6 @@ from tardis.version import version
               show_default=True)
 @click.version_option(version=version)
 def main(dir: str,
-         train_test_ratio: float,
          patch_size: int,
          pixel_size: float,
          cnn_type: str,
