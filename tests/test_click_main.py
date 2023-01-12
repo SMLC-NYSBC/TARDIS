@@ -7,11 +7,13 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
+from warnings import filterwarnings
 
 from click.testing import CliRunner
 
 
 def test_cnn_trainer():
+    filterwarnings(action='ignore', category=DeprecationWarning)
     from tardis.train_spindletorch import main
 
     runner = CliRunner()
@@ -21,6 +23,7 @@ def test_cnn_trainer():
 
 def test_cnn_predictor():
     from tardis.predict_spindletorch import main
+    filterwarnings(action='ignore', category=DeprecationWarning)
 
     runner = CliRunner()
     result = runner.invoke(main, ['--version'])
@@ -29,6 +32,7 @@ def test_cnn_predictor():
 
 def test_predictor_mt():
     from tardis.predict_mt import main
+    filterwarnings(action='ignore', category=DeprecationWarning)
 
     runner = CliRunner()
     result = runner.invoke(main, ['--version'])
@@ -37,6 +41,7 @@ def test_predictor_mt():
 
 def test_predictor_cryo_mt():
     from tardis.predict_cro_mt import main
+    filterwarnings(action='ignore', category=DeprecationWarning)
 
     runner = CliRunner()
     result = runner.invoke(main, ['--version'])
@@ -52,6 +57,7 @@ def test_predictor_mem():
 
 def test_gf_trainer():
     from tardis.train_DIST import main
+    filterwarnings(action='ignore', category=DeprecationWarning)
 
     runner = CliRunner()
     result = runner.invoke(main, ['--version'])
