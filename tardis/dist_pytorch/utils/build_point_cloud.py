@@ -99,7 +99,7 @@ class BuildPointCloud:
                         f'Image dim expected to be 2 or 3 bu got {image.ndim}')
 
         """Check for binary"""
-        unique_val = pd.unique(image.flatten())  # Use panda for speed
+        unique_val = np.sort(pd.unique(image.flatten()))  # Use panda for speed
         assert len(unique_val) == 2, \
             TardisError('115',
                         'tardis/dist/utils',

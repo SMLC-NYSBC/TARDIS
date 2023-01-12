@@ -9,7 +9,7 @@
 #######################################################################
 
 import itertools
-from math import sqrt
+from math import sqrt, pow
 from typing import Optional, Tuple
 
 import numpy as np
@@ -477,35 +477,32 @@ class FilterSpatialGraph:
     """
 
     def __init__(self,
-                 filter_unconnected_segments=True,
-                 filter_short_spline=1000):
-        self.filter_connections = filter_unconnected_segments
-        self.filter_short_segment = filter_short_spline
+                 connect_seg_if_closer_then=175,
+                 filter_short_segments=1000):
+        self.connect_seg_if_closer_then = connect_seg_if_closer_then
+        self.filter_short_segments = filter_short_segments
 
     def __call__(self,
                  segments: np.ndarray) -> np.ndarray:
         """
 
         Args:
-            segments:
+            segments (np.ndarray):
 
         Returns:
-
+            np.ndarray: Filtered array of of connected MTs
         """
-        if self.filter_connections:
-            # Gradually connect segments with ends close to each other
-            segments = filter_connect_near_segment(segments, 50)
-            segments = filter_connect_near_segment(segments, 100)
-            segments = filter_connect_near_segment(segments, 150)
-            segments = filter_connect_near_segment(segments, 175)
+        if self.connect_seg_if_closer_then > 0:
+            # Connect segments with ends close to each other
+            segments = filter_connect_near_segment(segments, self.connect_seg_if_closer_then)
 
-        if self.filter_short_segment > 0:
+        if self.filter_short_segments > 0:
             length = []
             for i in np.unique(segments[:, 0]):
                 length.append(total_length(segments[np.where(segments[:, 0] == int(i))[0],
                                            1:]))
 
-            length = [id for id, i in enumerate(length) if i > self.filter_short_segment]
+            length = [id for id, i in enumerate(length) if i > self.filter_short_segments]
 
             new_seg = []
             for i in length:
@@ -554,6 +551,9 @@ def sort_segment(coord: np.ndarray) -> np.ndarray:
     Returns:
         np.ndarray: Array of point in line order.
     """
+    if len(coord) == 0:
+        return coord
+
     new_c = []
     for i in range(len(coord) - 1):
         if i == 0:
@@ -588,10 +588,11 @@ def total_length(coord: np.ndarray) -> float:
     for id, _ in enumerate(coord):
         if id == c_len:
             break
+
         # sqrt((x2 - x1)2 + (y2 - y1)2 + (z2 - z1)2)
-        length += sqrt((coord[id][0] - coord[id + 1][0]) ** 2 +
-                       (coord[id][1] - coord[id + 1][1]) ** 2 +
-                       (coord[id][2] - coord[id + 1][2]) ** 2)
+        length += sqrt(pow((coord[id][0] - coord[id + 1][0]), 2) +
+                       pow((coord[id][1] - coord[id + 1][1]), 2) +
+                       pow((coord[id][1] - coord[id + 1][1]), 2))
 
     return length
 
@@ -606,6 +607,9 @@ def tortuosity(coord: np.ndarray) -> float:
     Returns:
         float: Spline curvature measured with tortuosity.
     """
+    if len(coord) == 0:
+        return 1.0
+
     length = total_length(coord)
     end_length = sqrt((coord[0][0] - coord[-1][0]) ** 2 +
                       (coord[0][1] - coord[-1][1]) ** 2 +
@@ -659,10 +663,11 @@ def filter_connect_near_segment(segments: np.ndarray,
     for i in [int(id) for id in np.unique(segments[:, 0])
               if id not in np.unique(np.concatenate(idx_connect))]:
         new_seg.append(segments[np.where(segments[:, 0] == i), :])
-    new_seg = np.hstack(new_seg)[0, :]
+    if len(new_seg) > 0:
+        new_seg = np.hstack(new_seg)[0, :]
 
-    # Fix breaks in spline numbering
-    new_seg = reorder_segments_id(new_seg)
+        # Fix breaks in spline numbering
+        new_seg = reorder_segments_id(new_seg)
 
     connect_seg = []
     for i in [int(id) for id in np.unique(segments[:, 0])
@@ -690,10 +695,13 @@ def filter_connect_near_segment(segments: np.ndarray,
                     f'{len(new_seg) + len(connect_seg)} != {len(segments)}')
 
     # Fix breaks in spline numbering
-    connect_seg = reorder_segments_id(connect_seg,
-                                      order_range=[int(np.max(new_seg[:, 0])) + 1,
-                                                   int(np.max(new_seg[:, 0])) + 1 +
-                                                   len(np.unique(connect_seg[:, 0]))])
+    if len(new_seg) > 0:
+        connect_seg = reorder_segments_id(connect_seg,
+                                        order_range=[int(np.max(new_seg[:, 0])) + 1,
+                                                    int(np.max(new_seg[:, 0])) + 1 +
+                                                    len(np.unique(connect_seg[:, 0]))])
+    else:
+        connect_seg = reorder_segments_id(connect_seg)
 
     connect_seg_sort = []
     for i in np.unique(connect_seg[:, 0]):
@@ -701,6 +709,9 @@ def filter_connect_near_segment(segments: np.ndarray,
             connect_seg[np.where(connect_seg[:, 0] == int(i)), :][0]))
     connect_seg = np.vstack(connect_seg_sort)
 
-    new_seg = np.concatenate((new_seg, connect_seg))
+    if len(new_seg) > 0:
+        new_seg = np.concatenate((new_seg, connect_seg))
 
-    return new_seg
+        return new_seg
+    else:
+        return connect_seg

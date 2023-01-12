@@ -19,7 +19,6 @@ import click
 import numpy as np
 import tifffile.tifffile as tif
 
-from tardis.spindletorch.data_processing.semantic_mask import fill_gaps_in_semantic
 from tardis.spindletorch.data_processing.stitch import StitchImages
 from tardis.spindletorch.data_processing.trim import scale_image, trim_with_stride
 from tardis.spindletorch.datasets.augment import MinMaxNormalize, RescaleNormalize
@@ -269,10 +268,6 @@ def main(dir: str,
 
         # Restored original image pixel size
         image, _ = scale_image(image=image, scale=org_shape)
-
-        # Fill gaps in binary mask after up/downsizing image to 2.5 nm pixel size
-        if cnn_threshold != 0:
-            image = fill_gaps_in_semantic(image)
 
         # Check if predicted image
         if not image.shape == org_shape:

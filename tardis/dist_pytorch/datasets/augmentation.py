@@ -58,9 +58,20 @@ def preprocess_data(coord: str,
             amira_import = ImportDataFromAmira(src_am=coord)
             coord_label = amira_import.get_segmented_points()
         else:
-            amira_import = ImportDataFromAmira(src_am=coord,
-                                               src_img=image)
-            coord_label = amira_import.get_segmented_points()
+            if image.endswith('.am'):
+                amira_import = ImportDataFromAmira(src_am=coord,
+                                                   src_img=image)
+                coord_label = amira_import.get_segmented_points()
+            else:
+                amira_import = ImportDataFromAmira(src_am=coord)
+                coord_label = amira_import.get_segmented_points()
+
+    assert coord_label.shape[1] in [3, 4], \
+        TardisError('',
+                    'tardis/dist_pytorch/dataset/augmentation.py',
+                    f'Coord file {coord} is without labels.'
+                    'Expected dim to be in [3, 4] for 2D or 3D '
+                    f'coord but got {coord_label.shape[1]}')
 
     """ Coordinates without labels """
     coords = coord_label[:, 1:]
@@ -68,15 +79,15 @@ def preprocess_data(coord: str,
     if size is None:
         size = 1
 
-    if coords.shape[1] == 2:
-        size = (size, size)
-    elif coords.shape[1] == 3:
+    if coords.shape[1] == 3:
         size = (size, size, size)
+    else:
+        size = (size, size)
 
     """ Collect Image Patches [Channels x Length] """
     # Normalize image between 0,1
     if image is not None:
-        assert normalization in ['simple', 'minmax'], \
+        assert normalization in ['simple', 'minmax', None], \
             TardisError('124',
                         'tardis/dist_pytorch/dataset/augmentation.py',
                         f'Not implemented normalization. Given {normalization} '
@@ -84,8 +95,8 @@ def preprocess_data(coord: str,
 
         if normalization == "simple":
             normalization = SimpleNormalize()
-        elif normalization == 'minmax':
-            normalization = MinMaxNormalize(0, 255)
+        elif normalization == 'rescale':
+            normalization = RescaleNormalize()
 
     if image is not None and coord[-3:] != ".am":
         # Crop images size around coordinates
@@ -264,7 +275,7 @@ class SimpleNormalize:
     """
     SIMPLE IMAGE NORMALIZATION
 
-    Take int8 image file with 0 - 255 value. All image value are spread
+    Take int8-int32 image file with 0 - 255 value. All image value are spread
     between 0 - 1.
     """
 
@@ -279,15 +290,20 @@ class SimpleNormalize:
         Returns:
             np.ndarray: Normalized image.
         """
-        if x.min() >= 0 and x.max() <= 255:
-            norm = x / 255
-        elif x.min() >= 0 and x.max() <= 65535:
-            norm = x / 65535
-        elif x.min() < 0:
-            x = x + abs(x.min())  # Move px values from negative numbers
-            norm = x / x.max()  # Convert 32 to 16 bit and normalize
+        if x.dtype == np.uint8:
+            x = x / 255
+        elif x.dtype == np.int8:
+            x = (x + 128) / 255
+        elif x.dtype == np.uint16:
+            x = x / 65535
+        elif x.dtype == np.int16:
+            x = (x + 32768) / 65535
+        elif x.dtype == np.uint32:
+            x = x / 4294967295
+        else:
+            x = (x + 2147483648) / 4294967295
 
-        return norm
+        return x
 
 
 class RescaleNormalize:
@@ -295,7 +311,7 @@ class RescaleNormalize:
     IMAGE CLIPPING NORMALIZATION
 
     The image histogram is clipped and spread between 0 and 255, given the
-    prudential range.
+    prudential range rescale to dtype min max.
     """
 
     def __call__(self,
@@ -314,42 +330,6 @@ class RescaleNormalize:
         p2, p98 = np.percentile(x, hist_range)
 
         return exposure.rescale_intensity(x, in_range=(p2, p98))
-
-
-class MinMaxNormalize:
-    """
-    MINMAX NORMALIZATION
-
-    Image histogram is normalized between given fixed value between 0 and 255.
-
-    Args:
-        min_v (int): Minimum clip value.
-        max_v (int): Maximum clip value.
-    """
-
-    def __init__(self,
-                 min_v: int,
-                 max_v: int):
-        assert max_v > min_v, \
-            TardisError('124',
-                        'tardis/dist_pytorch/dataset/augmentation.py',
-                        f'Given max: {max_v} and min: {min_v} but max must be greater!')
-
-        self.min_v = min_v
-        self.range = max_v - min_v
-
-    def __call__(self,
-                 x: np.ndarray) -> np.ndarray:
-        """
-        Call for image normalization.
-
-        Args:
-            x (np.ndarray): Image array.
-
-        Returns:
-            np.ndarray: Normalized image.
-        """
-        return (x - self.min_v) / self.range
 
 
 class Crop2D3D:
@@ -386,7 +366,7 @@ class Crop2D3D:
         Given the center point calculate the range to crop.
 
         Args:
-            center_point (tuple): XYZ coordinate for center point.
+            center_point (int): XYZ coordinate for center point.
             size (int): Crop size.
             max_size (int): Axis maximum size is used to calculate the offset.
 
@@ -425,6 +405,11 @@ class Crop2D3D:
                         'tardis/dist_pytorch/dataset/augmentation.py',
                         'Given position for cropping is not 2D or 3D!. '
                         f'Given {center_point}. But expected shape in [2, 3]!')
+        assert len(center_point) == len(self.size), \
+            TardisError('124',
+                        'tardis/dist_pytorch/dataset/augmentation.py',
+                        f'Given cropping shape {len(self.size)} is not compatible '
+                        f'with given cropping coordinates shape {len(center_point)}!')
 
         if len(center_point) == 3:
             z0, z1 = self.get_xyz_position(center_point=center_point[-1],
@@ -458,4 +443,7 @@ class Crop2D3D:
                 crop_img = np.zeros((self.size[0], self.size[1]))
                 crop_img[0:shape[0], 0:shape[1]] = crop_df
 
-        return self.normalization(crop_img)
+        if self.normalization is not None:
+            return self.normalization(crop_img)
+        else:
+            return crop_img

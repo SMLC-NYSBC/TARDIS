@@ -54,10 +54,12 @@ def interpolate_generator(points: np.ndarray) -> Iterable:
     # Calculating scaling threshold
     delta_err_x = 0.0 if delta_x == 0 \
         else abs(delta_x / delta_y) if delta_y != 0 \
-        else abs(delta_x / delta_z)
+        else abs(delta_x / delta_z) if delta_z != 0 \
+        else 0.0
     delta_err_y = 0.0 if delta_y == 0 \
         else abs(delta_y / delta_x) if delta_x != 0 \
-        else abs(delta_y / delta_z)
+        else abs(delta_y / delta_z) if delta_z != 0 \
+        else 0.0
     delta_err_z = 0.0 if delta_z == 0 \
         else np.minimum(abs(delta_z / delta_x),
                         abs(delta_z / delta_y)) if delta_x != 0 and delta_y != 0 \

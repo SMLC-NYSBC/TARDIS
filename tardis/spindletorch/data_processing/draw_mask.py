@@ -79,7 +79,7 @@ def draw_circle(r: int,
 
     Args:
         r (int): radius of a circle in Angstrom.
-        c (tuple): point in 3D indicating center of a circle [Z, Y, X].
+        c (tuple): point in 3D indicating center of a circle [(Z), Y, X].
         shape (tuple): Shape of mask to eliminated ofe-flowed pixel.
 
     Returns:
@@ -106,14 +106,14 @@ def draw_circle(r: int,
 
         return zyx[:, 0], zyx[:, 1], zyx[:, 2]
     else:
-        c = ((c[1] - c_frame), (c[2] - c_frame))
+        c = ((c[0] - c_frame), (c[1] - c_frame))
         y, x = ny + c[0], nx + c[1]
 
         # Remove pixel out of frame
         yx = np.array((y, x)).T
         del_id = []
         for id, i in enumerate(yx):
-            if i[1] >= shape[1] or i[2] >= shape[2]:
+            if i[0] >= shape[0] or i[1] >= shape[1]:
                 del_id.append(id)
 
         yx = np.delete(yx, del_id, 0)
@@ -151,7 +151,8 @@ def draw_sphere(r: int,
                     sphere_frame[z_dim, y_dim, x_dim] = False
                 else:
                     sphere_frame[z_dim, y_dim, x_dim] = True
-    sphere_frame = sphere_frame[trim:-trim, :]  # Trim top and bottom of the sphere
+    sphere_frame[:trim, :] = False  # Trim bottom of the sphere
+    sphere_frame[-(trim - 1):, :] = False  # Trim top of the sphere
     z, y, x = np.where(sphere_frame)
 
     c = ((c[0] - c_frame), (c[1] - c_frame), (c[2] - c_frame))

@@ -25,7 +25,6 @@ from tardis.dist_pytorch.utils.build_point_cloud import ImageToPointCloud
 from tardis.dist_pytorch.utils.segment_point_cloud import (FilterSpatialGraph,
                                                            GraphInstanceV2)
 from tardis.dist_pytorch.utils.utils import pc_median_dist
-from tardis.spindletorch.data_processing.semantic_mask import fill_gaps_in_semantic
 from tardis.spindletorch.data_processing.stitch import StitchImages
 from tardis.spindletorch.data_processing.trim import scale_image, trim_with_stride
 from tardis.spindletorch.datasets.augment import MinMaxNormalize, RescaleNormalize
@@ -180,7 +179,7 @@ def main(dir: str,
     patch_pc = PatchDataSet(max_number_of_points=points_in_patch,
                             graph=False)
     GraphToSegment = GraphInstanceV2(threshold=dist_threshold, smooth=True)
-    filter_segments = FilterSpatialGraph(filter_short_spline=filter_mt)
+    filter_segments = FilterSpatialGraph(connect_seg_if_closer_then=filter_mt)
 
     # Build CNN from checkpoints
     checkpoints = (cnn_checkpoint, dist_checkpoint)
@@ -364,9 +363,6 @@ def main(dir: str,
         else:
             # Threshold image
             image = np.where(image >= cnn_threshold, 1, 0).astype(np.uint8)
-
-            # Fill gaps in binary mask after up/downsizing image to 2.5 nm pixel size
-            image = fill_gaps_in_semantic(image)
 
         # Check if predicted image
         if not image.shape == org_shape:
