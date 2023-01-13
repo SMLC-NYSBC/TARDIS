@@ -1,6 +1,7 @@
-flake8>=5.0.4
-setuptools>=65.5.0
-furo>=2022.9.29
+flake8>=6.0.0
+setuptools>=65.7.0
+furo>=2022.12.07
 pytest>=7.2.0
-matplotlib>=3.5.3
+matplotlib>=3.6.3
 tqdm>=4.64.1
+sphinx==6.1.3

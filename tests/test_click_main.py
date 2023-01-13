@@ -47,6 +47,7 @@ def test_predictor_cryo_mt():
     result = runner.invoke(main, ['--version'])
     assert str(result) == '<Result okay>'
 
+
 def test_predictor_mem():
     from tardis.predict_mem import main
 

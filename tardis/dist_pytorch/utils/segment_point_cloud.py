@@ -697,9 +697,9 @@ def filter_connect_near_segment(segments: np.ndarray,
     # Fix breaks in spline numbering
     if len(new_seg) > 0:
         connect_seg = reorder_segments_id(connect_seg,
-                                        order_range=[int(np.max(new_seg[:, 0])) + 1,
-                                                    int(np.max(new_seg[:, 0])) + 1 +
-                                                    len(np.unique(connect_seg[:, 0]))])
+                                          order_range=[int(np.max(new_seg[:, 0])) + 1,
+                                                       int(np.max(new_seg[:, 0])) + 1 +
+                                                       len(np.unique(connect_seg[:, 0]))])
     else:
         connect_seg = reorder_segments_id(connect_seg)
 

@@ -2,10 +2,9 @@ from os.path import join
 from typing import Tuple
 
 import numpy as np
-import pytest
 
-from tardis.dist_pytorch.datasets.augmentation import Crop2D3D, RescaleNormalize, SimpleNormalize, preprocess_data
-from tardis.utils.errors import TardisError
+from tardis.dist_pytorch.datasets.augmentation import (Crop2D3D, preprocess_data,
+                                                       RescaleNormalize, SimpleNormalize)
 
 
 def test_preprocess_data_general():
@@ -222,8 +221,6 @@ def test_Normalize():
     assert result_rescale.max() <= 2147483647
 
 
-
-
 class TestCropImage:
     # create test image data
     test_image_2d = np.random.rand(10, 10)
@@ -246,7 +243,6 @@ class TestCropImage:
         assert crop_3d.width == 10
         assert crop_3d.height == 10
 
-
     def test_get_xyz_position(self):
         crop_2d = Crop2D3D(self.test_image_2d, (5, 5), None)
         assert crop_2d.get_xyz_position(5, 5, 5) == (0, 5)
@@ -261,9 +257,9 @@ class TestCropImage:
 
     def test_call(self):
         crop_2d = Crop2D3D(self.test_image_2d, (5, 5), None)
-        crop_2d_result = crop_2d((5,5))
+        crop_2d_result = crop_2d((5, 5))
         assert crop_2d_result.shape == (5, 5)
 
         crop_3d = Crop2D3D(self.test_image_3d, (5, 5, 5), None)
-        crop_3d_result = crop_3d((2,5,5))
+        crop_3d_result = crop_3d((2, 5, 5))
         assert crop_3d_result.shape == (5, 5, 5)

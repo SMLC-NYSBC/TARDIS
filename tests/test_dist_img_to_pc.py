@@ -9,22 +9,22 @@ def test_BuildPointCloud():
     Test the BuildPointCloud class.
     """
     # Test check_data method
-    image = np.array([[0, 0, 0], 
-                      [0, 1, 0], 
-                      [0, 0, 0]], 
+    image = np.array([[0, 0, 0],
+                      [0, 1, 0],
+                      [0, 0, 0]],
                      dtype=np.uint8)
     assert (BuildPointCloud.check_data(image) == image).all()
 
     # Check if binary
-    image = np.array([[0, 0, 0], 
-                      [0, 2, 0], 
+    image = np.array([[0, 0, 0],
+                      [0, 2, 0],
                       [0, 0, 0]], dtype=np.uint8)
     with pytest.raises(AssertionError):
         BuildPointCloud.check_data(image)
 
     # Test build_point_cloud method
-    image = np.array([[1, 0, 0, 0], 
-                      [0, 1, 0, 0], 
+    image = np.array([[1, 0, 0, 0],
+                      [0, 1, 0, 0],
                       [0, 0, 1, 0],
                       [0, 0, 0, 1]], dtype=np.uint8)
 
@@ -36,7 +36,7 @@ def test_BuildPointCloud():
     assert (point_cloud == expected_point_cloud).all()
 
     with pytest.raises(AssertionError):
-        BuildPointCloud().build_point_cloud(np.array([[0, 0, 0], 
-                                                      [0, 2, 0], 
-                                                      [0, 0, 0]], 
+        BuildPointCloud().build_point_cloud(np.array([[0, 0, 0],
+                                                      [0, 2, 0],
+                                                      [0, 0, 0]],
                                                      dtype=np.uint8))

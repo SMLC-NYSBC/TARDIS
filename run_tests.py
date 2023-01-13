@@ -9,13 +9,31 @@ Simons Machine Learning Center
 Robert Kiewisz, Tristan Bepler
 MIT License 2021 - 2023
 """
-import shutil
+import subprocess
 import subprocess as subp
 import sys
 
 from tardis.utils.errors import TardisError
 from tardis.utils.logo import TardisLogo
 from tardis.version import version
+
+
+def env_exists(env_name: str) -> bool:
+    """
+    Simple check if environment exist
+
+    Args:
+        env_name (str): Environment name
+
+    Returns:
+        bool: If True, environment exist.
+    """
+    command = "conda info --envs"
+    process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
+    output, error = process.communicate()
+    envs = output.decode().split("\n")
+
+    return env_name in envs
 
 
 def py(python: str):
@@ -28,31 +46,35 @@ def py(python: str):
     Returns:
         list: Output log from pytest.
     """
+    if env_exists('PythonEnvTest'):
+        # Remove test environment
+        subp.run("conda remove -n PythonEnvTest --all -y", shell=True)
+    else:
+        # Create clean environment
+        subp.run("conda create --name PythonEnvTest -y", shell=True)
 
     # Set up Python 3.X env and update
-    subp.run(f"conda run -n tardis{python} conda install python={'3.' + python[1:]} -y",
-             shell=True)
-
-    # Reinstall pytorch - HotFix - Sometimes pytest stacks running pytorch tests
-    subp.run(f"conda run -n tardis{python} pip uninstall torch -y",
+    subp.run(f"conda run -n PythonEnvTest conda install python={'3.' + python[1:]} -y",
              shell=True)
 
     # Check and reinstall if needed requirements
-    subp.run(f"conda run -n tardis{python} pip install -r requirements.txt",
+    subp.run("conda run -n PythonEnvTest pip install -r requirements-dev.txt",
              shell=True)
-    subp.run(f"conda run -n tardis{python} pip install -r requirements-dev.txt",
+    subp.run("conda run -n PythonEnvTest pip install -r requirements.txt",
              shell=True)
-    subp.run(f"conda run -n tardis{python} conda clean -a -y",
+
+    # Clean-up
+    subp.run("conda run -n PythonEnvTest conda clean -a -y",
              shell=True)
-    subp.run(f"conda run -n tardis{python} pip cache purge",
+    subp.run("conda run -n PythonEnvTest pip cache purge",
              shell=True)
 
     # Install tardis-pytorch
-    subp.run(f"conda run -n tardis{python} pip install -e .",
+    subp.run("conda run -n PythonEnvTest pip install -e .",
              shell=True)
 
     # Test on Python 3.X.*
-    return subp.run(f"conda run -n tardis{python} pytest",
+    return subp.run("conda run -n PythonEnvTest pytest",
                     shell=True,
                     capture_output=True)
 
@@ -97,10 +119,6 @@ if __name__ == "__main__":
     #     TardisError(f'{out}'
     #                 'Pyton 3.11 pytest Failed')
     #     exit()
-
-    """ Compile documentation """
-    shutil.rmtree('docs/build')  # Remove old build
-    subp.run('conda run -n tardis38 sphinx-build -b html docs/source docs/build/html')
 
     """ Return output """
     tardis_progress(title=f'Development - TARDIS {version} - pytest',
