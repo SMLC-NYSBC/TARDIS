@@ -60,14 +60,15 @@ def trim_with_stride(image: np.ndarray,
                                        scale=scale)
 
         mask = mask.astype(np.uint8)
+
+        assert image.shape == mask.shape, \
+            TardisError('111',
+                        'tardis/spindletorch/data_processing/trim.py',
+                        f'Image {image.shape} has different shape from mask {mask.shape}')
     else:
         image, dim = scale_image(image=image,
                                  scale=scale)
 
-    assert image.shape == mask.shape, \
-        TardisError('111',
-                    'tardis/spindletorch/data_processing/trim.py',
-                    f'Image {image.shape} has different shape from mask {mask.shape}')
     assert img_dtype == image.dtype, \
         TardisError('111',
                     'tardis/spindletorch/data_processing/trim.py',
@@ -234,7 +235,7 @@ def trim_with_stride(image: np.ndarray,
                                     shape=trim_mask.shape)
                 else:
                     if mask is None:
-                        tif.imwrite(join(output, img_name),
+                        tif.imwrite(join(output, 'imgs', img_name),
                                     trim_img,
                                     shape=trim_img.shape)
 

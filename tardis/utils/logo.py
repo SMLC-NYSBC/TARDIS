@@ -131,13 +131,13 @@ class TardisLogo:
         Returns:
             int: cell width.
         """
-        if is_interactive():
-            WIDTH = 75
+        if is_interactive():  # Jupyter
+            WIDTH = 150
         else:
-            try:
+            try:  # Console
                 WIDTH = get_terminal_size()[0] - 5
-            except OSError:
-                WIDTH = 50
+            except OSError:  # Any other
+                WIDTH = 100
         return WIDTH
 
     def __call__(self,

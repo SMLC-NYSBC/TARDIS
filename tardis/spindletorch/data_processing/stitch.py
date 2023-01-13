@@ -81,6 +81,7 @@ class StitchImages:
                  image_dir: str,
                  mask: bool,
                  output: Optional[str] = None,
+                 prefix='',
                  dtype=np.uint8) -> np.ndarray:
         """
         STITCH IMAGE FROM IMAGE PATCHES
@@ -91,16 +92,12 @@ class StitchImages:
                 zones, else do replacement.
             output (str, Optional): Optional, output directory.
             dtype (np.dtype): Numpy dtype for output
+            prefix (str): Prefix name if avaiable.
 
         Returns:
             np.ndarray: If indicated output, image is saved in output directory
             else stitch images is return as array.
         """
-        if mask:
-            prefix = '_mask'
-        else:
-            prefix = ''
-
         """Extract information about images in dir_path"""
         file_list = [f for f in listdir(image_dir) if isfile(join(image_dir, f))]
         file_list = [f for f in file_list if f.endswith('.tif')]
