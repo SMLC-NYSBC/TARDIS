@@ -155,7 +155,7 @@ def main(dir: str,
                         text_5='Point Cloud: Nan',
                         text_7='Current Task: NaN',
                         text_8='Tardis Error: Wrong directory:',
-                        text_9=f'Given {dir} is does not contain any recognizable file formats!')
+                        text_9=f'Given {dir} does not contain any recognizable file!')
         sys.exit()
     else:
         tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}',
@@ -169,17 +169,22 @@ def main(dir: str,
         tif_px = click.prompt('Detected .tif files, please provide pixel size:',
                               type=float)
 
-    # Build handler's
+    # Build handler's for reading data to correct format
     normalize = RescaleNormalize(clip_range=(1, 99))  # Normalize histogram
     minmax = MinMaxNormalize()
 
+    # Build handler's for transforming data
     image_stitcher = StitchImages()
     post_processes = ImageToPointCloud()
-    build_amira_file = NumpyToAmira()
+
+    # Build handler's for DIST input and output
     patch_pc = PatchDataSet(max_number_of_points=points_in_patch,
                             graph=False)
     GraphToSegment = GraphInstanceV2(threshold=dist_threshold, smooth=True)
     filter_segments = FilterSpatialGraph(connect_seg_if_closer_then=filter_mt)
+
+    # Build handler to output amira file
+    build_amira_file = NumpyToAmira()
 
     # Build CNN from checkpoints
     checkpoints = (cnn_checkpoint, dist_checkpoint)
@@ -217,13 +222,15 @@ def main(dir: str,
         if i.endswith('CorrelationLines.am'):
             continue
 
-        out_format = 0
+        in_format = 0
         if i.endswith(('.tif', '.mrc', '.rec')):
-            out_format = 4
+            in_format = 4
         elif i.endswith('.tiff'):
-            out_format = 5
+            in_format = 5
         elif i.endswith('.am'):
-            out_format = 3
+            in_format = 3
+
+        # TODO Check if i has spatial graph in folder from amira/tadis comp.
 
         # Tardis progress bar update
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
@@ -236,7 +243,7 @@ def main(dir: str,
         # Build temp dir
         build_temp_dir(dir=dir)
 
-        # Cut image for smaller image
+        # Read amira image and metadata
         if i.endswith('.am'):
             image, px, _, transformation = import_am(am_file=join(dir, i))
         else:
@@ -246,6 +253,7 @@ def main(dir: str,
         if tif_px is not None:
             px = tif_px
 
+        # In case of unreadable pixel size ask user
         if px == 0:
             px = click.prompt(f'Image file has pixel size {px}, thats obviously wrong... '
                               'What is the correct value:',
@@ -257,9 +265,8 @@ def main(dir: str,
                               type=float)
 
         # Check image structure and normalize histogram
-        if image.min() > 5 or image.max() < 250:  # Rescale image intensity
-            image = normalize(image)
-        if not image.min() >= 0 or not image.max() <= 1:  # Normalized between 0 and 1
+        image = normalize(image)
+        if not image.min() >= -1 or not image.max() <= 1:  # Normalized between 0 and 1
             image = minmax(image)
 
         if not image.dtype == np.float32:
@@ -355,7 +362,7 @@ def main(dir: str,
 
         if cnn_threshold == 0:
             """Clean-up temp dir"""
-            tif.imwrite(join(am_output, f'{i[:-out_format]}_CNN.tif'),
+            tif.imwrite(join(am_output, f'{i[:-in_format]}_CNN.tif'),
                         image)
             clean_up(dir=dir)
             continue
@@ -381,11 +388,11 @@ def main(dir: str,
             continue
 
         if debug:  # Debugging checkpoint
-            tif.imwrite(join(am_output, f'{i[:-out_format]}_CNN.tif'),
+            tif.imwrite(join(am_output, f'{i[:-in_format]}_CNN.tif'),
                         image)
         if output == 'mrc':
             to_mrc(data=image,
-                   file_dir=join(am_output, f'{i[:-out_format]}_CNN.mrc'))
+                   file_dir=join(am_output, f'{i[:-in_format]}_CNN.mrc'))
 
         if not image.min() == 0 and not image.max() == 1:
             continue
@@ -414,7 +421,7 @@ def main(dir: str,
         del image
 
         if debug:  # Debugging checkpoint
-            np.save(join(am_output, f'{i[:-out_format]}_raw_pc.npy'),
+            np.save(join(am_output, f'{i[:-in_format]}_raw_pc.npy'),
                     point_cloud)
 
         """DIST Prediction"""
@@ -473,7 +480,7 @@ def main(dir: str,
 
             graphs.append(graph)
         if debug:
-            np.save(join(am_output, f'{i[:-out_format]}_graph_voxel.npy'),
+            np.save(join(am_output, f'{i[:-in_format]}_graph_voxel.npy'),
                     graphs)
 
         """DIST post-processing"""
@@ -510,19 +517,19 @@ def main(dir: str,
         # Save debugging check point
         if debug:
             if device == 'cpu':
-                np.save(join(am_output, f'{i[:-out_format]}_coord_voxel.npy'),
+                np.save(join(am_output, f'{i[:-in_format]}_coord_voxel.npy'),
                         point_cloud)
-                np.save(join(am_output, f'{i[:-out_format]}_idx_voxel.npy'),
+                np.save(join(am_output, f'{i[:-in_format]}_idx_voxel.npy'),
                         output_idx)
             else:
-                np.save(join(am_output, f'{i[:-out_format]}_coord_voxel.npy'),
+                np.save(join(am_output, f'{i[:-in_format]}_coord_voxel.npy'),
                         point_cloud)
-                np.save(join(am_output, f'{i[:-out_format]}_idx_voxel.npy'),
+                np.save(join(am_output, f'{i[:-in_format]}_idx_voxel.npy'),
                         output_idx)
 
         if debug:
             np.save(join(am_output,
-                         f'{i[:-out_format]}_segments.npy'),
+                         f'{i[:-in_format]}_segments.npy'),
                     segments)
 
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
@@ -535,18 +542,18 @@ def main(dir: str,
         """Save as .am"""
         build_amira_file.export_amira(coord=segments,
                                       file_dir=join(am_output,
-                                                    f'{i[:-out_format]}_SpatialGraph.am'))
+                                                    f'{i[:-in_format]}_SpatialGraph.am'))
         build_amira_file.export_amira(coord=segments_filter,
                                       file_dir=join(am_output,
-                                                    f'{i[:-out_format]}_SpatialGraph_filter.am'))
+                                                    f'{i[:-in_format]}_SpatialGraph_filter.am'))
         if output_format == 'csv':
             np.savetxt(join(am_output,
-                            f'{i[:-out_format]}'
+                            f'{i[:-in_format]}'
                             '_SpatialGraph.csv'),
                        segments,
                        delimiter=",")
             np.savetxt(join(am_output,
-                            f'{i[:-out_format]}'
+                            f'{i[:-in_format]}'
                             '_SpatialGraph_filter.csv'),
                        segments_filter,
                        delimiter=",")

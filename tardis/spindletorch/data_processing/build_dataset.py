@@ -171,9 +171,7 @@ def build_train_dataset(dataset_dir: str,
         # Rescale image intensity
         image = normalize(image)
 
-        if not image.min() >= 0 or not image.max() <= 1:  # Image between in 0 and 255
-            image = minmax(image)
-        elif image.min() >= -1 and image.max() <= 1:  # int8 normalize
+        if not image.min() >= -1 or not image.max() <= 1:  # Image between in 0 and 255
             image = minmax(image)
 
         assert image.dtype == np.float32, \
