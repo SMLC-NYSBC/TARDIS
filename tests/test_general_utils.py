@@ -21,6 +21,7 @@ from tardis.utils.export_data import NumpyToAmira
 from tardis.utils.load_data import (import_am, import_tiff, ImportDataFromAmira,
                                     load_mrc_file)
 from tardis.utils.logo import TardisLogo
+from tardis.utils.spline_metric import compare_splines_probability
 from tardis.utils.utils import EarlyStopping
 
 
@@ -161,3 +162,46 @@ def test_error():
     TardisError(id='20',
                 py='tests/test_general_utils.py',
                 desc='PyTest Failed!')
+
+
+def test_compare_splines_probability():
+    # Test with matching splines
+    spline_tardis = np.array([[0, 0, 0], [1, 1, 1], [2, 2, 2]])
+    spline_amira = np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3]])
+    threshold = 1
+    assert round(compare_splines_probability(spline_tardis, spline_amira, threshold),
+                 2) == 0.67
+
+    # Test with non-matching splines
+    spline_tardis = np.array([[0, 0], [1, 1], [2, 2]])
+    spline_amira = np.array([[4, 4], [5, 5], [6, 6]])
+    threshold = 1
+    assert compare_splines_probability(spline_tardis, spline_amira, threshold) == 0.0
+
+    # Test with matching splines and threshold set too high
+    spline_tardis = np.array([[0, 0], [1, 1], [2, 2]])
+    spline_amira = np.array([[1, 1], [2, 2], [3, 3]])
+    threshold = 10
+    assert compare_splines_probability(spline_tardis, spline_amira, threshold) == 1.0
+
+    # Test with matching splines and threshold set too low
+    spline_tardis = np.array([[0, 0, 0], [1, 1, 1], [2, 2, 2],
+                              [4, 4, 4], [5, 5, 5], [6, 6, 6]])
+    spline_amira = np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3]])
+    threshold = 1
+    assert round(compare_splines_probability(spline_tardis, spline_amira, threshold),
+                 2) == 0.33
+
+    # Test with matching splines and threshold set too low
+    spline_tardis = np.array([[1, 1, 1], [2, 2, 2], [4, 4, 4]])
+    spline_amira = np.array([[0, 0, 0], [1, 1, 1], [2, 2, 2],
+                             [4, 4, 4], [5, 5, 5], [6, 6, 6]])
+    threshold = 1
+    assert round(compare_splines_probability(spline_tardis, spline_amira, threshold),
+                 2) == 1.0
+
+    # Test with empty spline
+    spline_tardis = np.array([[0, 0], [1, 1], [2, 2]])
+    spline_amira = np.array([])
+    threshold = 1
+    assert compare_splines_probability(spline_tardis, spline_amira, threshold) == 0.0
