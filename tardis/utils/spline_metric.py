@@ -71,7 +71,7 @@ class SpatialGraphCompare:
         return match_sg1_sg2
 
     def __call__(self,
-                 amria_sg: np.ndarray,
+                 amira_sg: np.ndarray,
                  tardis_sg: np.ndarray) -> Tuple[np.ndarray, np.ndarray,
                                                  np.ndarray, np.ndarray]:
         """
@@ -83,34 +83,42 @@ class SpatialGraphCompare:
             - Label4: MT in Amira without match
 
         Args:
-            amria_sg (np.ndarray): Spatial graph [ID, X, Y, Z] from Amira.
+            amira_sg (np.ndarray): Spatial graph [ID, X, Y, Z] from Amira.
             tardis_sg (np.ndarray): Spatial graph [ID, X, Y, Z] from Tardis.
 
         Returns:
             Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]: Tuple of all arrays
         """
-        # Compare Amira with Tardis
-        amira_tardis = self._compare_spatial_graphs(amria_sg, tardis_sg)
+        """Compare Amira with Tardis"""
+        amira_tardis = self._compare_spatial_graphs(amira_sg, tardis_sg)
 
-        amira_tardis_match = [x for x in amira_tardis if x[1] != []]
-        amira_tardis_noise = [y for y in np.unique(tardis_sg[:, 0])
-                              if y not in np.concatenate([x[1] for x in amira_tardis_match])]
-        amira_tardis_noise = tardis_sg[[id for id, x in enumerate(tardis_sg[:, 0])
-                                        if x in amira_tardis_noise], :]
+        # Select all splines from Tardis that match Amira
+        tardis_match_sg = [x for x in amira_tardis if x[1] != []]
+        all_tardis_matches = np.unique(np.concatenate([x[1] for x in tardis_match_sg]))
 
-        # Compare Tardis with Amira
-        tardis_amira = self._compare_spatial_graphs(tardis_sg, amria_sg)
+        # Select all splines from Tardis that do not have match with Amira
+        tardis_noise = [y for y in np.unique(tardis_sg[:, 0])
+                              if y not in all_tardis_matches]
+        tardis_noise = tardis_sg[[id for id, x in enumerate(tardis_sg[:, 0])
+                                  if x in tardis_noise], :]
 
-        tardis_amira_match = [x for x in tardis_amira if x[1] != []]
-        tardis_amira_noise = [y for y in np.unique(amria_sg[:, 0])
-                              if y not in np.concatenate([x[1] for x in tardis_amira_match])]
-        tardis_amira_noise = tardis_sg[[id for id, x in enumerate(tardis_sg[:, 0])
-                                        if x in tardis_amira_noise], :]
+        """Compare Tardis with Amira"""
+        tardis_amira = self._compare_spatial_graphs(tardis_sg, amira_sg)
+
+        # Select all splines from Amira that match Tardis
+        amira_match_sg = [x for x in tardis_amira if x[1] != []]
+        all_amira_matches = np.unique(np.concatenate([x[1] for x in amira_match_sg]))
+
+        # Select all splines from Tardis that do not have match with Amira
+        amira_noise = [y for y in np.unique(amira_sg[:, 0])
+                              if y not in all_amira_matches]
+        amira_noise = amira_sg[[id for id, x in enumerate(amira_sg[:, 0])
+                                if x in amira_noise], :]
 
         # Select MT from comparison
         new_tardis = []
         mt_new_id = 0
-        for i in amira_tardis_match:
+        for i in tardis_match_sg:
             df = tardis_sg[[id for id, x in enumerate(tardis_sg[:, 0]) if x in i[1]], :]
             df[:, 1:] = sort_segment(df[:, 1:])
             df[:, 0] = mt_new_id
@@ -120,15 +128,15 @@ class SpatialGraphCompare:
 
         new_amira = []
         mt_new_id = 0
-        for i in tardis_amira_match:
-            df = amria_sg[[id for id, x in enumerate(amria_sg[:, 0]) if x in i[1]], :]
+        for i in amira_match_sg:
+            df = amira_sg[[id for id, x in enumerate(amira_sg[:, 0]) if x in i[1]], :]
             df[:, 1:] = sort_segment(df[:, 1:])
             df[:, 0] = mt_new_id
             mt_new_id += 1
             new_amira.append(df)
         new_amira = np.concatenate(new_amira)
 
-        return new_tardis, new_amira, amira_tardis_noise, amira_tardis_noise
+        return new_tardis, tardis_noise, new_amira, amira_noise
 
 
 def compare_splines_probability(spline_1: np.ndarray,
