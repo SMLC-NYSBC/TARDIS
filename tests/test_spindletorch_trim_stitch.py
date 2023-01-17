@@ -110,6 +110,7 @@ def test_trim_stitch_2d():
 
     stitch_2d_15 = stitch(image_dir='./tests/test_data/temp/masks',
                           mask=True,
+                          prefix='_mask',
                           dtype=np.uint8)
     assert stitch_2d_15.shape == (15, 15)
 
@@ -134,6 +135,7 @@ def test_trim_stitch_2d():
     assert stitch_2d_15.shape == (192, 192)
     stitch_2d_15 = stitch(image_dir='./tests/test_data/temp/masks',
                           mask=True,
+                          prefix='_mask',
                           dtype=np.uint8)
     assert stitch_2d_15.shape == (192, 192)
 
