@@ -141,7 +141,7 @@ def test_am_export():
     df[:, 0] = df_line
 
     exporter = NumpyToAmira()
-    exporter.export_amira(df, './test.am')
+    exporter.export_single_label_amira(df, './test.am')
 
     assert os.path.isfile('./test.am')
     os.remove('./test.am')

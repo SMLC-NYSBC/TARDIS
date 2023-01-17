@@ -2,13 +2,10 @@ from math import sqrt
 
 import numpy as np
 
-from tardis.dist_pytorch.utils.segment_point_cloud import (FilterSpatialGraph,
-                                                           filter_connect_near_segment,
-                                                           reorder_segments_id,
-                                                           sort_segment,
-                                                           tortuosity,
-                                                           total_length)
 from tardis.utils.load_data import ImportDataFromAmira
+from tardis.utils.spline_metric import (filter_connect_near_segment, FilterSpatialGraph,
+                                        reorder_segments_id, sort_segment, tortuosity,
+                                        total_length)
 
 
 def test_reorder_segments():

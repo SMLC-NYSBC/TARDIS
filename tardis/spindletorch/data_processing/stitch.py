@@ -92,7 +92,7 @@ class StitchImages:
                 zones, else do replacement.
             output (str, Optional): Optional, output directory.
             dtype (np.dtype): Numpy dtype for output
-            prefix (str): Prefix name if avaiable.
+            prefix (str): Prefix name if available.
 
         Returns:
             np.ndarray: If indicated output, image is saved in output directory

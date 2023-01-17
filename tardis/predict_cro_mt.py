@@ -22,8 +22,7 @@ import tifffile.tifffile as tif
 
 from tardis.dist_pytorch.datasets.patches import PatchDataSet
 from tardis.dist_pytorch.utils.build_point_cloud import ImageToPointCloud
-from tardis.dist_pytorch.utils.segment_point_cloud import (FilterSpatialGraph,
-                                                           GraphInstanceV2)
+from tardis.dist_pytorch.utils.segment_point_cloud import GraphInstanceV2
 from tardis.dist_pytorch.utils.utils import pc_median_dist
 from tardis.spindletorch.data_processing.stitch import StitchImages
 from tardis.spindletorch.data_processing.trim import scale_image, trim_with_stride
@@ -35,6 +34,7 @@ from tardis.utils.load_data import import_am, load_image
 from tardis.utils.logo import print_progress_bar, TardisLogo
 from tardis.utils.predictor import Predictor
 from tardis.utils.setup_envir import build_temp_dir, clean_up
+from tardis.utils.spline_metric import FilterSpatialGraph
 from tardis.version import version
 
 warnings.simplefilter("ignore", UserWarning)
@@ -525,11 +525,11 @@ def main(dir: str,
                         text_7='Current Task: Segmentation finished!', )
 
         """Save as .am"""
-        build_amira_file.export_amira(coord=segments,
-                                      file_dir=join(am_output,
+        build_amira_file.export_single_label_amira(coord=segments,
+                                                   file_dir=join(am_output,
                                                     f'{i[:-out_format]}_SpatialGraph.am'))
-        build_amira_file.export_amira(coord=segments_filter,
-                                      file_dir=join(am_output,
+        build_amira_file.export_single_label_amira(coord=segments_filter,
+                                                   file_dir=join(am_output,
                                                     f'{i[:-out_format]}_SpatialGraph_filter.am'))
         if output == 'csv':
             np.savetxt(join(am_output, f'{i[:-out_format]}' '_SpatialGraph.csv'),
