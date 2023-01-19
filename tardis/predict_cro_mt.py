@@ -525,10 +525,10 @@ def main(dir: str,
                         text_7='Current Task: Segmentation finished!', )
 
         """Save as .am"""
-        build_amira_file.export_amira(coord=segments,
+        build_amira_file.export_amira(coords=segments,
                                       file_dir=join(am_output,
                                                     f'{i[:-out_format]}_SpatialGraph.am'))
-        build_amira_file.export_amira(coord=segments_filter,
+        build_amira_file.export_amira(coords=segments_filter,
                                       file_dir=join(am_output,
                                                     f'{i[:-out_format]}_SpatialGraph_filter.am'))
         if output == 'csv':

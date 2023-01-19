@@ -9,7 +9,7 @@
 #######################################################################
 
 from datetime import datetime
-from typing import List, Optional, Union
+from typing import List, Optional
 
 import mrcfile
 import numpy as np
@@ -68,9 +68,32 @@ class NumpyToAmira:
         return [coord]
 
     @staticmethod
+    def _build_labels(labels: Optional[tuple] = None) -> list:
+        """
+        Build label list
+
+        Args:
+            labels (tuple, None): List of labels.
+
+        Returns:
+            list: Set of labels.
+        """
+        label = ['LabelGroup']
+
+        if labels is None:
+            return label
+        elif isinstance(labels[0], np.ndarray):
+            for i in range(len(labels) - 1):
+                label.append(f'LabelGroup{i+2}')
+        elif isinstance(labels[0], str):
+            label = labels
+
+        return label
+
+    @staticmethod
     def _build_header(coord: np.ndarray,
                       file_dir: str,
-                      label=1):
+                      label: list):
         """
         Standard Amira header builder
 
@@ -99,34 +122,18 @@ class NumpyToAmira:
             f.write('\n')
             f.write('Parameters { \n'
                     '    SpatialGraphUnitsVertex { \n')
-            id = 0
-            for i in range(label):
-                if i == 0:
-                    f.write('        LabelGroup { \n'
-                            '            Unit -1, \n'
-                            '            Dimension -1 \n'
-                            '        } \n')
-                else:
-                    f.write(f'        LabelGroup{id}' + ' { \n'
-                            '            Unit -1, \n'
-                            '            Dimension -1 \n'
-                            '        } \n')
-                id += 1
+            for i in label:
+                f.write(f'        {i}' + ' { \n'
+                        '            Unit -1, \n'
+                        '            Dimension -1 \n'
+                        '        } \n')
             f.write('    } \n')
             f.write('    SpatialGraphUnitsEdge { \n')
-            id = 0
-            for i in range(label):
-                if i == 0:
-                    f.write('        LabelGroup { \n'
-                            '            Unit -1, \n'
-                            '            Dimension -1 \n'
-                            '        } \n')
-                else:
-                    f.write(f'        LabelGroup{id}' + ' { \n'
-                            '            Unit -1, \n'
-                            '            Dimension -1 \n'
-                            '        } \n')
-                id += 1
+            for i in label:
+                f.write(f'        {i}' + ' { \n'
+                        '            Unit -1, \n'
+                        '            Dimension -1 \n'
+                        '        } \n')
             f.write('    } \n')
             f.write('    Units { \n'
                     '        Coordinates "nm" \n'
@@ -141,14 +148,9 @@ class NumpyToAmira:
 
             label_id = 5
             id = 0
-            for i in range(label):
-                if i == 0:
-                    f.write('VERTEX { int LabelGroup } @5 \n'
-                            'EDGE { int LabelGroup } @6 \n')
-                else:
-                    f.write('VERTEX { int ' + f'LabelGroup{id}' + '} ' + f'@{label_id} \n')
-                    f.write('EDGE { int ' + f'LabelGroup{id}' + '} ' + f'@{label_id + 1} \n')
-                id += 1
+            for i in label:
+                f.write('VERTEX { int ' + f'{i}' + '} ' + f'@{label_id} \n')
+                f.write('EDGE { int ' + f'{i}' + '} ' + f'@{label_id + 1} \n')
                 label_id += 2
 
             f.write('\n')
@@ -177,23 +179,30 @@ class NumpyToAmira:
 
     def export_amira(self,
                      file_dir: str,
-                     coord: Optional[list] = np.ndarray):
+                     coords: Optional[tuple] = np.ndarray,
+                     labels: Optional[list] = None):
         """
         Save Amira file with all filaments without any labels
 
         Args:
-            coord (np.ndarray, list): 3D coordinate file.
             file_dir (str): Directory where the file should be saved.
+            coords (np.ndarray, tuple): 3D coordinate file.
+            labels: Labels names.
         """
-        coord_list = self.check_3d(coord=coord)
-        coord = np.concatenate(coord_list)
+        coord_list = self.check_3d(coord=coords)
+        coords = np.concatenate(coord_list)
 
+        if labels is not None:
+            if len(labels) != len(coords):
+                TardisError(id='117',
+                            py='tardis/utils/export_data.py',
+                            desc='Number of labels do not mach number of Arrays!')
         # Build Amira header
-        self._build_header(coord=coord,
+        self._build_header(coord=coords,
                            file_dir=file_dir,
-                           label=len(coord_list))
+                           label=self._build_labels(labels))
 
-        segments_idx = int(np.max(coord[:, 0]) + 1)
+        segments_idx = int(np.max(coords[:, 0]) + 1)
         vertex_id_1 = -2
         vertex_id_2 = -1
 
@@ -203,7 +212,7 @@ class NumpyToAmira:
         point_coord = ['@4']
         for i in range(segments_idx):
             # Collect segment coord and idx
-            segment = coord[np.where(coord[:, 0] == i)[0]][:, 1:]
+            segment = coords[np.where(coords[:, 0] == i)[0]][:, 1:]
 
             # Get Coord for vertex #1 and vertex #2
             vertex = np.array((segment[0], segment[-1:][0]), dtype=object)
@@ -242,8 +251,8 @@ class NumpyToAmira:
         edge_id = 1
 
         start = 0
-        total_vertex = len(np.unique(coord[:, 0])) * 2
-        total_edge = len(np.unique(coord[:, 0]))
+        total_vertex = len(np.unique(coords[:, 0])) * 2
+        total_edge = len(np.unique(coords[:, 0]))
         for i in coord_list:
             vertex_label = [f'@{label_id}']
             edge_label = [f'@{label_id + 1}']
@@ -256,7 +265,7 @@ class NumpyToAmira:
 
                 edge_label.extend(list(np.repeat(edge_id, edge)))
                 edge_label.extend(list(np.repeat(0, total_edge - edge)))
-            else:  # 0 0 0 0 1 1 1 1 1 1 0 0 0 
+            else:  # 0 0 0 0 1 1 1 1 1 1 0 0 0
                 vertex_label.extend(list(np.repeat(0, start * 2)))
                 vertex_label.extend(list(np.repeat(vertex_id, vertex)))
                 fill_up = total_vertex - start * 2 - vertex
@@ -273,7 +282,7 @@ class NumpyToAmira:
             vertex_id += 1
             edge_id += 1
             start = edge
-            
+
             self._write_to_amira(data=vertex_label, file_dir=file_dir)
             self._write_to_amira(data=edge_label, file_dir=file_dir)
 

@@ -150,12 +150,9 @@ def main(dir: str,
 
     # Tardis progress bar update
     if len(predict_list) == 0:
-        tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}',
-                        text_1=f'Found {len(predict_list)} images to predict!',
-                        text_5='Point Cloud: Nan',
-                        text_7='Current Task: NaN',
-                        text_8='Tardis Error: Wrong directory:',
-                        text_9=f'Given {dir} does not contain any recognizable file!')
+        TardisError(id='122',
+                    py='tardis/compare_spatial_graphs.py',
+                    desc=f'Given {dir} does not contain any recognizable file!')
         sys.exit()
     else:
         tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}',
@@ -540,10 +537,10 @@ def main(dir: str,
                         text_7='Current Task: Segmentation finished!')
 
         """Save as .am"""
-        build_amira_file.export_amira(coord=segments,
+        build_amira_file.export_amira(coords=segments,
                                       file_dir=join(am_output,
                                                     f'{i[:-in_format]}_SpatialGraph.am'))
-        build_amira_file.export_amira(coord=segments_filter,
+        build_amira_file.export_amira(coords=segments_filter,
                                       file_dir=join(am_output,
                                                     f'{i[:-in_format]}_SpatialGraph_filter.am'))
         if output_format == 'csv':
