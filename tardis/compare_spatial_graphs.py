@@ -7,6 +7,7 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
+from datetime import datetime
 from os import getcwd, listdir, mkdir
 from os.path import isdir, join
 from shutil import rmtree
@@ -78,6 +79,9 @@ def main(distance_threshold: int,
     else:
         str_debug = ''
 
+    with open(join(output, 'log.txt'), 'w') as f:
+        f.write(f'Spline matching module {datetime.now()}')
+
     tardis_progress = TardisLogo()
     tardis_progress(title=f'Spline matching module {str_debug}',
                     text_1=f'Found NA spatial graphs to compare.',
@@ -112,6 +116,13 @@ def main(distance_threshold: int,
     amira_files = [d for d in dir_list if d.endswith(amira_prefix + '.am')]
     tardis_files = [d for d in dir_list if d.endswith(tardis_prefix + '.am')]
 
+    with open(join(output, 'log.txt'), 'a+') as f:
+        f.write('List of Amira files: \n'
+                f'{amira_files} \n')
+        f.write('List of Tardis files: \n'
+                f'{tardis_files}\n'
+                '\n')
+
     if len(amira_files) == 0 and len(tardis_files) == 0:
         TardisError(id='121',
                     py='tardis/compare_spatial_graphs.py',
@@ -139,6 +150,16 @@ def main(distance_threshold: int,
                            i[:(-3 - len(amira_prefix))] + tardis_prefix + '.am')
         output_file = join(output, i[:(-3 - len(amira_prefix))] + '_match' + '.am')
 
+        with open(join(output, 'log.txt'), 'a+') as f:
+            f.write('\n'
+                    f'{datetime.now()}'
+                    'Amira file: \n'
+                    f'{amira_files} \n'
+                    'Tardis files: \n'
+                    f'{tardis_file}\n'
+                    'Output: \n'
+                    f'{output_file}')
+
         tardis_progress(title=f'Spline matching module {str_debug}',
                         text_1=f'Found {len(amira_files)} spatial graphs to compare.',
                         text_5=f'Amira: {amira_file}',
@@ -148,11 +169,17 @@ def main(distance_threshold: int,
 
         amira_sg = ImportDataFromAmira(src_am=amira_file)
         amira_px = amira_sg.get_pixel_size()
-        amira_sg = amira_sg.get_segmented_points() / amira_px
+        amira_sg = amira_sg.get_segmented_points()
 
         tardis_sg = ImportDataFromAmira(src_am=tardis_file)
         tardis_px = tardis_sg.get_pixel_size()
-        tardis_sg = tardis_sg.get_segmented_points() / tardis_px
+        tardis_sg = tardis_sg.get_segmented_points()
+
+        with open(join(output, 'log.txt'), 'a+') as f:
+            f.write('\n'
+                    f'{datetime.now()}'
+                    f'Pixel size Amira: {amira_px} \n'
+                    f'Pixel size Tardis: {tardis_px} \n')
 
         tardis_progress(title=f'Spline matching module {str_debug}',
                         text_1=f'Found {len(amira_files)} spatial graphs to compare.',
@@ -162,17 +189,23 @@ def main(distance_threshold: int,
                         text_9='Task: Comparing and saving Amira file...',
                         text_10=print_progress_bar(id, len(amira_files)))
 
-        if debug:
-            np.save(join(output, i[:(-3 - len(amira_prefix))] + '_debug' + '.npy'),
-                    compare_spline(amira_sg=amira_sg, tardis_sg=tardis_sg))
+        if amira_px == tardis_px:
+            if debug:
+                np.save(join(output, i[:(-3 - len(amira_prefix))] + '_debug' + '.npy'),
+                        compare_spline(amira_sg=amira_sg, tardis_sg=tardis_sg))
 
-        export_to_amira.export_amira(file_dir=output_file,
-                                     coords=compare_spline(amira_sg=amira_sg,
-                                                           tardis_sg=tardis_sg),
-                                     labels=['TardisFilterBasedOnAmira',
-                                             'TardisNoise',
-                                             'AmiraFilterBasedOnTardis',
-                                             'AmiraNoise'])
+            export_to_amira.export_amira(file_dir=output_file,
+                                         coords=compare_spline(amira_sg=amira_sg,
+                                                               tardis_sg=tardis_sg),
+                                         labels=['TardisFilterBasedOnAmira',
+                                                 'TardisNoise',
+                                                 'AmiraFilterBasedOnTardis',
+                                                 'AmiraNoise'])
+        else:
+            with open(join(output, 'log.txt'), 'a+') as f:
+                f.write('\n'
+                        f'{datetime.now()}'
+                        f'Skipped comparison - not matching pixel size!')
 
     tardis_progress(title=f'Spline matching module {str_debug}',
                     text_1=f'Found {len(amira_files)} spatial graphs to compare.',
