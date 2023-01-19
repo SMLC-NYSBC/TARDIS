@@ -1,12 +1,12 @@
-"""
-TARDIS - Transformer And Rapid Dimensionless Instance Segmentation
-
-New York Structural Biology Center
-Simons Machine Learning Center
-
-Robert Kiewisz, Tristan Bepler
-MIT License 2021 - 2023
-"""
+#######################################################################
+#  TARDIS - Transformer And Rapid Dimensionless Instance Segmentation #
+#                                                                     #
+#  New York Structural Biology Center                                 #
+#  Simons Machine Learning Center                                     #
+#                                                                     #
+#  Robert Kiewisz, Tristan Bepler                                     #
+#  MIT License 2021 - 2023                                            #
+#######################################################################
 from setuptools import find_packages, setup
 
 from tardis.version import version
@@ -44,6 +44,7 @@ setup(
             "tardis_dist_train = tardis.train_DIST:main",
             "tardis_mt = tardis.predict_mt:main",
             "tardis_mem = tardis.predict_mem:main",
+            "tardis_compare_sg = tardis.compare_spatial_graphs:main",
         ],
     },
     license="MIT License",

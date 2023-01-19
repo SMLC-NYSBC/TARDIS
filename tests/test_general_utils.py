@@ -141,7 +141,7 @@ def test_am_single_export():
     df[:, 0] = df_line
 
     exporter = NumpyToAmira()
-    exporter.export_amira(coord=df, file_dir='./test.am')
+    exporter.export_amira(coords=df, file_dir='./test.am')
 
     assert os.path.isfile('./test.am')
     os.remove('./test.am')
@@ -157,8 +157,26 @@ def test_am_multi_export():
     df_2 = np.array(df_1)
 
     exporter = NumpyToAmira()
-    exporter.export_amira(coord=(df_1, df_2),
+    exporter.export_amira(coords=(df_1, df_2),
                           file_dir='./test.am')
+
+    assert os.path.isfile('./test.am')
+    os.remove('./test.am')
+
+
+def test_am_label_export():
+    df = np.zeros((25, 4))
+    df_line = np.linspace(0, 5, 25)
+    df_line = np.round(df_line)
+    df[:, 0] = df_line
+
+    df_1 = np.array(df)
+    df_2 = np.array(df_1)
+
+    exporter = NumpyToAmira()
+    exporter.export_amira(coords=(df_1, df_2),
+                          file_dir='./test.am',
+                          labels=['test1', 'test2'])
 
     assert os.path.isfile('./test.am')
     os.remove('./test.am')

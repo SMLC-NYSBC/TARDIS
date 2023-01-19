@@ -39,6 +39,15 @@ def test_predictor_mt():
     assert str(result) == '<Result okay>'
 
 
+def test_compare_mt():
+    from tardis.compare_spatial_graphs import main
+    filterwarnings(action='ignore', category=DeprecationWarning)
+
+    runner = CliRunner()
+    result = runner.invoke(main, ['--version'])
+    assert str(result) == '<Result okay>'
+
+
 def test_predictor_cryo_mt():
     from tardis.predict_cro_mt import main
     filterwarnings(action='ignore', category=DeprecationWarning)
