@@ -143,6 +143,7 @@ class StitchImages:
 
                         img_name = str(join(image_dir,
                                             f"{idx}_{i}_{j}_{k}_{self.stride}{prefix}.tif"))
+
                         img = tif.imread(img_name)
 
                         if self.nz == 0:
@@ -165,8 +166,8 @@ class StitchImages:
                                            y_start:y_stop,
                                            x_start:x_stop] = img
 
-            if mask and stitched_image.dtype in [(np.int8, np.uint8)]:
-                stitched_image = np.where(stitched_image > 0, 1, 0)
+            if mask:
+                stitched_image = np.where(stitched_image > 0, 1, 0).astype(np.uint8)
 
             if output is None:
                 return np.array(stitched_image, dtype=dtype)

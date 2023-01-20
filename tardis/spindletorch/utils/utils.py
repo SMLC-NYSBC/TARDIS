@@ -15,8 +15,8 @@ import torch
 import torch.nn.functional as F
 
 
-def scale_image(image: np.ndarray,
-                scale: tuple,
+def scale_image(scale: tuple,
+                image: Optional[np.ndarray] = None,
                 mask: Optional[np.ndarray] = None) -> Union[Tuple[np.ndarray, np.ndarray, int],
                                                             Tuple[np.ndarray, int]]:
     """
@@ -25,51 +25,35 @@ def scale_image(image: np.ndarray,
     Expect 2D (XY/YX), 3D (ZYX)
 
     Args:
-        image (np.ndarray): image data
+        image (np.ndarray, Optional): image data
         mask (np.ndarray, Optional): Optional binary mask image data
         scale (tuple): scale value for image
     """
-    if np.all(scale == image.shape):
-        if image.ndim == 3 and image.shape[2] != 3:  # 3D with Gray
-            dim = 1
-        else:  # 2D with Gray
-            dim = 1
-
-        if mask is not None:
-            return image, mask, dim
-        else:
-            return image, dim
-
+    dim = 1
     type_i = image.dtype
     type_m = None
     if mask is not None:
         type_m = mask.dtype
 
-    if image.ndim == 3 and image.shape[2] != 3:  # 3D with Gray
-        dim = 1
-
-        image = area_scaling(img=image,
-                             scale=scale,
-                             dtype=type_i)
-
-        if mask is not None and mask.shape != scale:
-            mask = trilinear_scaling(img=mask,
+    if image is not None:
+        if not np.all(scale == image.shape):
+            if image.ndim == 3 and image.shape[2] != 3:  # 3D with Gray
+                image = area_scaling(img=image,
                                      scale=scale,
-                                     dtype=type_m)
-    else:  # 2D with Gray
-        dim = 1
-
-        image = trilinear_scaling(img=image,
-                                  scale=scale,
-                                  dtype=type_i)
-
-        if mask is not None:
-            mask = trilinear_scaling(img=mask,
-                                     scale=scale,
-                                     dtype=type_m)
+                                     dtype=type_i)
+            else:
+                image = trilinear_scaling(img=image, scale=scale, dtype=type_i)
 
     if mask is not None:
+        if not np.all(scale == mask.shape):
+            mask = area_scaling(img=mask,
+                                scale=scale,
+                                dtype=type_m)
+
+    if image is not None and mask is not None:
         return image, mask, dim
+    elif image is None and mask is not None:
+        return mask, dim
     else:
         return image, dim
 

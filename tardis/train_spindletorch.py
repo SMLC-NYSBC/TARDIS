@@ -213,7 +213,7 @@ def main(dir: str,
 
         # Build train and test dataset
         build_train_dataset(dataset_dir=dir,
-                            circle_size=200,
+                            circle_size=150,
                             resize_pixel_size=pixel_size,
                             trim_xy=patch_size,
                             trim_z=patch_size)

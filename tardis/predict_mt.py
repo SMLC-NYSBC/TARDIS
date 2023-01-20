@@ -18,7 +18,6 @@ import numpy as np
 import open3d as o3d
 import tifffile.tifffile as tif
 
-from tardis.dist_pytorch.datasets.patches import PatchDataSet
 from tardis.dist_pytorch.utils.build_point_cloud import ImageToPointCloud
 from tardis.dist_pytorch.utils.segment_point_cloud import GraphInstanceV2
 from tardis.dist_pytorch.utils.utils import pc_median_dist
@@ -189,8 +188,7 @@ def main(dir: str,
     post_processes = ImageToPointCloud()
 
     # Build handler's for DIST input and output
-    patch_pc = PatchDataSet(max_number_of_points=points_in_patch,
-                            graph=False)
+    c
     GraphToSegment = GraphInstanceV2(threshold=dist_threshold, smooth=True)
     filter_segments = FilterSpatialGraph(filter_short_segments=filter_mt)
 
@@ -238,7 +236,7 @@ def main(dir: str,
         elif i.endswith('.am'):
             in_format = 3
 
-        # Check if i has spatial graph in folder from amira/tardis comp.
+        # Check for spatial graph in folder from amira/tardis comp.
         if amira_prefix != '':
             count = 0
             dir_amira = join(dir, 'amira')
@@ -276,11 +274,11 @@ def main(dir: str,
 
         # In case of unreadable pixel size ask user
         if px == 0:
-            px = click.prompt(f'Image file has pixel size {px}, thats obviously wrong... '
+            px = click.prompt(f"Image file has pixel size {px}, that's obviously wrong... "
                               'What is the correct value:',
                               type=float)
         if px == 1:
-            px = click.prompt(f'Image file has pixel size {px}, thats maybe wrong... '
+            px = click.prompt(f"Image file has pixel size {px}, that's maybe wrong... "
                               'What is the correct value:',
                               default=px,
                               type=float)
@@ -297,7 +295,7 @@ def main(dir: str,
                              f'Image loaded correctly, but output format {image.dtype} is not float32!')
 
         # Calculate parameters for normalizing image pixel size
-        scale_factor = px / 20
+        scale_factor = px / 25
         org_shape = image.shape
         scale_shape = tuple(np.multiply(org_shape, scale_factor).astype(np.int16))
 
@@ -342,19 +340,21 @@ def main(dir: str,
             if j == 0:
                 start = time.time()
 
-                # Predict & Threshold
+                # Predict
                 input = predict_cnn.predict(input[None, :])
 
+                # Scale progress bar refresh to 10s
                 end = time.time()
-                iter_time = 10 // (end - start)  # Scale progress bar refresh to 10s
+                iter_time = 10 // (end - start)
                 if iter_time <= 1:
                     iter_time = 1
             else:
-                # Predict & Threshold
+                # Predict
                 input = predict_cnn.predict(input[None, :])
-                if cnn_threshold != 0:
-                    input = np.where(input >= cnn_threshold, 1, 0).astype(np.uint8)
 
+            # Threshold
+            if cnn_threshold != 0:
+                input = np.where(input >= cnn_threshold, 1, 0).astype(np.uint8)
             tif.imwrite(join(output, f'{name}.tif'),
                         np.array(input, dtype=input.dtype))
 
@@ -370,7 +370,6 @@ def main(dir: str,
         # Stitch predicted image patches
         image = image_stitcher(image_dir=output,
                                mask=True,
-                               prefix='',
                                dtype=input.dtype)[:scale_shape[0],
                                                   :scale_shape[1],
                                                   :scale_shape[2]]
@@ -429,7 +428,6 @@ def main(dir: str,
             continue
 
         # Transform for xyz and pixel size for coord
-        image = None
         del image
 
         if debug:  # Debugging checkpoint
@@ -487,6 +485,8 @@ def main(dir: str,
                 iter_time = 10 // (end - start)  # Scale progress bar refresh to 10s
                 if iter_time <= 1:
                     iter_time = 1
+                if (end - start) < 0.5:
+                    iter_time = 10
             else:
                 graph = predict_dist.predict(x=coord[None, :])
 
@@ -571,7 +571,7 @@ def main(dir: str,
                        segments_filter,
                        delimiter=",")
 
-        # TODO Run comparison if amira file was detected
+        # Run comparison if amira file was detected
         if amira_prefix != '':
             dir_amira_file = join(dir_amira[:-in_format] + amira_prefix + '.am')
             amira_sg = ImportDataFromAmira(src_am=dir_amira_file)
