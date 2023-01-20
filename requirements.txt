@@ -1,5 +1,5 @@
 click>=8.0.4
-numpy>=1.24.1
+numpy>=1.21.6
 tifffile>=2021.11.2
 scikit-learn>=1.2.0
 scikit-image>=0.19.2
