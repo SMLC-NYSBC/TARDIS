@@ -7,12 +7,10 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
-
-import sys
 import time
 import warnings
 from os import getcwd, listdir
-from os.path import join
+from os.path import isdir, isfile, join
 from typing import Optional
 
 import click
@@ -29,12 +27,13 @@ from tardis.spindletorch.data_processing.trim import scale_image, trim_with_stri
 from tardis.spindletorch.datasets.augment import MinMaxNormalize, RescaleNormalize
 from tardis.spindletorch.datasets.dataloader import PredictionDataset
 from tardis.utils.device import get_device
+from tardis.utils.errors import TardisError
 from tardis.utils.export_data import NumpyToAmira, to_mrc
-from tardis.utils.load_data import import_am, load_image
+from tardis.utils.load_data import import_am, ImportDataFromAmira, load_image
 from tardis.utils.logo import print_progress_bar, TardisLogo
 from tardis.utils.predictor import Predictor
 from tardis.utils.setup_envir import build_temp_dir, clean_up
-from tardis.utils.spline_metric import FilterSpatialGraph
+from tardis.utils.spline_metric import FilterSpatialGraph, SpatialGraphCompare
 from tardis.version import version
 
 warnings.simplefilter("ignore", UserWarning)
@@ -87,8 +86,8 @@ warnings.simplefilter("ignore", UserWarning)
               help='Remove MT that are shorter then given A value '
                    'NOT SUPPORTED FOR .TIF FILE FORMAT '
                    'There are two filtering mechanisms: '
-                   '- Remove short segments (aka. Segments shorter then XX A. '
-                   '- Connect segments that are closer then 17.5 nm',
+                   '- Connect segments that are closer then 17.5 nm'
+                   '- Remove short segments (aka. Segments shorter then XX A. ',
               show_default=True)
 @click.option('-d', '--device',
               default='0',
@@ -97,6 +96,18 @@ warnings.simplefilter("ignore", UserWarning)
                    'gpu: Use ID 0 GPUs '
                    'cpu: Usa CPU '
                    '0-9 - specified GPU device id to use',
+              show_default=True)
+@click.option('-th_dist', '--distance_threshold',
+              default=None,
+              type=int,
+              help='Distance threshold used to evaluate similarity between two '
+                   'splines based on its coordinates.',
+              show_default=True)
+@click.option('-th_inter', '--interaction_threshold',
+              default=None,
+              type=float,
+              help='Interaction threshold used to evaluate reject splines that are'
+                   'similar below that threshold.',
               show_default=True)
 @click.option('-o', '--output_format',
               default=None,
@@ -126,9 +137,12 @@ def main(dir: str,
          device: str,
          debug: bool,
          output_format='amira',
+         amira_prefix='',
          visualizer: Optional[str] = None,
          cnn_checkpoint: Optional[str] = None,
-         dist_checkpoint: Optional[str] = None):
+         dist_checkpoint: Optional[str] = None,
+         distance_threshold=None,
+         interaction_threshold=None):
     """
     MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
     """
@@ -153,7 +167,6 @@ def main(dir: str,
         TardisError(id='122',
                     py='tardis/compare_spatial_graphs.py',
                     desc=f'Given {dir} does not contain any recognizable file!')
-        sys.exit()
     else:
         tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
@@ -166,6 +179,7 @@ def main(dir: str,
         tif_px = click.prompt('Detected .tif files, please provide pixel size:',
                               type=float)
 
+    """Build handler's"""
     # Build handler's for reading data to correct format
     normalize = RescaleNormalize(clip_range=(1, 99))  # Normalize histogram
     minmax = MinMaxNormalize()
@@ -178,24 +192,22 @@ def main(dir: str,
     patch_pc = PatchDataSet(max_number_of_points=points_in_patch,
                             graph=False)
     GraphToSegment = GraphInstanceV2(threshold=dist_threshold, smooth=True)
-    filter_segments = FilterSpatialGraph(connect_seg_if_closer_then=filter_mt)
+    filter_segments = FilterSpatialGraph(filter_short_segments=filter_mt)
 
     # Build handler to output amira file
     build_amira_file = NumpyToAmira()
+    compare_spline = SpatialGraphCompare(distance_threshold=distance_threshold,
+                                         interaction_threshold=interaction_threshold)
 
-    # Build CNN from checkpoints
+    """Build NN from checkpoints"""
     checkpoints = (cnn_checkpoint, dist_checkpoint)
 
     device = get_device(device)
     cnn_network = cnn_network.split('_')
     if not len(cnn_network) == 2:
-        tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}',
-                        text_1=f'Found {len(predict_list)} images to predict!',
-                        text_5='Point Cloud: Nan',
-                        text_7='Current Task: NaN',
-                        text_8='Tardis Error: Given CNN type is wrong!:',
-                        text_9=f'Given {cnn_network} but should be e.g. `unet_32`')
-        sys.exit()
+        TardisError(id='151',
+                    py='tardis/predict_mt.py',
+                    desc=f'Given {cnn_network} but should be e.g. `unet_32`')
 
     # Build CNN network with loaded pre-trained weights
     predict_cnn = Predictor(checkpoint=checkpoints[0],
@@ -213,7 +225,6 @@ def main(dir: str,
                              device=device)
 
     """Process each image with CNN and DIST"""
-    tardis_progress = TardisLogo()
     for id, i in enumerate(sorted(predict_list)):
         """Pre-Processing"""
         if i.endswith('CorrelationLines.am'):
@@ -227,7 +238,20 @@ def main(dir: str,
         elif i.endswith('.am'):
             in_format = 3
 
-        # TODO Check if i has spatial graph in folder from amira/tadis comp.
+        # Check if i has spatial graph in folder from amira/tardis comp.
+        if amira_prefix != '':
+            count = 0
+            dir_amira = join(dir, 'amira')
+            while count != 3 or isdir(dir_amira):
+                dir_amira = click.prompt('Amira directory not found, please indicate '
+                                         'it again:',
+                                         type=str)
+                count += 1
+
+            if not isdir(dir_amira):
+                TardisError(id='151',
+                            py='tardis/predict_mt.py',
+                            desc='Incorrect directory for amira spatial graphs.')
 
         # Tardis progress bar update
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
@@ -267,14 +291,10 @@ def main(dir: str,
             image = minmax(image)
 
         if not image.dtype == np.float32:
-            tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}',
-                            text_1=f'Found {len(predict_list)} images to predict!',
-                            text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
-                            text_5='Point Cloud: Nan A',
-                            text_7='Current Task: NaN',
-                            text_8=f'Tardis Error: Error while loading image {i}:',
-                            text_9=f'Image loaded correctly, but output format {image.dtype} is not float32!')
-            sys.exit()
+            TardisError(id='11',
+                        py='tardis/predict_mt.py',
+                        desc=f'Error while loading image {i}: '
+                             f'Image loaded correctly, but output format {image.dtype} is not float32!')
 
         # Calculate parameters for normalizing image pixel size
         scale_factor = px / 20
@@ -301,7 +321,7 @@ def main(dir: str,
         del image
 
         # Setup CNN dataloader
-        patches_DL = PredictionDataset(img_dir=join(dir, 'temp', 'Patches'))
+        patches_DL = PredictionDataset(img_dir=join(dir, 'temp', 'Patches', 'imgs'))
 
         """CNN prediction"""
         iter_time = 1
@@ -332,13 +352,13 @@ def main(dir: str,
             else:
                 # Predict & Threshold
                 input = predict_cnn.predict(input[None, :])
+                if cnn_threshold != 0:
+                    input = np.where(input >= cnn_threshold, 1, 0).astype(np.uint8)
 
             tif.imwrite(join(output, f'{name}.tif'),
                         np.array(input, dtype=input.dtype))
 
         """Post-Processing"""
-        scale_factor = org_shape
-
         # Tardis progress bar update
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
@@ -348,10 +368,12 @@ def main(dir: str,
                         text_7='Current Task: Stitching...')
 
         # Stitch predicted image patches
-        image = image_stitcher(image_dir=output, mask=True,
-                               dtype=input.dtype)[:org_shape[0],
-                                                  :org_shape[1],
-                                                  :org_shape[2]]
+        image = image_stitcher(image_dir=output,
+                               mask=True,
+                               prefix='',
+                               dtype=input.dtype)[:scale_shape[0],
+                                                  :scale_shape[1],
+                                                  :scale_shape[2]]
 
         # Restored original image pixel size
         image, _ = scale_image(image=image,
@@ -364,21 +386,14 @@ def main(dir: str,
             clean_up(dir=dir)
             continue
 
-        else:
-            # Threshold image
-            image = np.where(image >= cnn_threshold, 1, 0).astype(np.uint8)
-
         # Check if predicted image
         if not image.shape == org_shape:
-            tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}',
-                            text_1=f'Found {len(predict_list)} images to predict!',
-                            text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
-                            text_4=f'Original pixel size: {px} A',
-                            text_5='Point Cloud: NaN.',
-                            text_7='Last Task: Stitching/Scaling/Make correction...',
-                            text_8=f'Tardis Error: Error while converting to {px} A pixel size.',
-                            text_9=f'Org. shape {org_shape} is not the same as converted shape {image.shape}')
-            sys.exit()
+            TardisError(id='116',
+                        py='tardis/predict_mt.py',
+                        desc='Last Task: Stitching/Scaling/Make correction...'
+                             f'Tardis Error: Error while converting to {px} A '
+                             f'Org. shape {org_shape} is not the same as '
+                             f'converted shape {image.shape}')
 
         # If prediction fail aka no prediction was produces continue with next image
         if image is None:
@@ -539,7 +554,8 @@ def main(dir: str,
         """Save as .am"""
         build_amira_file.export_amira(coords=segments,
                                       file_dir=join(am_output,
-                                                    f'{i[:-in_format]}_SpatialGraph.am'))
+                                                    f'{i[:-in_format]}_SpatialGraph.am'),
+                                      labels=['TardisPrediction'])
         build_amira_file.export_amira(coords=segments_filter,
                                       file_dir=join(am_output,
                                                     f'{i[:-in_format]}_SpatialGraph_filter.am'))
@@ -554,6 +570,22 @@ def main(dir: str,
                             '_SpatialGraph_filter.csv'),
                        segments_filter,
                        delimiter=",")
+
+        # TODO Run comparison if amira file was detected
+        if amira_prefix != '':
+            dir_amira_file = join(dir_amira[:-in_format] + amira_prefix + '.am')
+            amira_sg = ImportDataFromAmira(src_am=dir_amira_file)
+            amira_sg = amira_sg.get_segmented_points()
+
+            if isfile(dir_amira_file):
+                build_amira_file.export_amira(file_dir=join(am_output,
+                                                            f'{i[:-in_format]}_AmiraCompare.am'),
+                                              coords=compare_spline(amira_sg=amira_sg,
+                                                                    tardis_sg=segments_filter),
+                                              labels=['TardisFilterBasedOnAmira',
+                                                      'TardisNoise',
+                                                      'AmiraFilterBasedOnTardis',
+                                                      'AmiraNoise'])
 
         """Clean-up temp dir"""
         clean_up(dir=dir)

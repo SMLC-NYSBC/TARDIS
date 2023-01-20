@@ -147,7 +147,6 @@ class NumpyToAmira:
                     'POINT { float[3] EdgePointCoordinates } @4 \n')
 
             label_id = 5
-            id = 0
             for i in label:
                 f.write('VERTEX { int ' + f'{i}' + '} ' + f'@{label_id} \n')
                 f.write('EDGE { int ' + f'{i}' + '} ' + f'@{label_id + 1} \n')

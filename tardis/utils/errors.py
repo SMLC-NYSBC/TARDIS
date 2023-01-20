@@ -54,6 +54,8 @@ id_dict = {
     '146': 'DATA_AUGMENTATION_ERROR',
     '147': 'DATA_DTYPE_ERROR',
 
+    '151': 'INCORRECT_PARAMETER_IN_MAIN',  # Main entry's
+
     '19': 'AWS_INCORRECT_VALUE',  # AWS
     '20': 'PYTEST_ERROR'
 }

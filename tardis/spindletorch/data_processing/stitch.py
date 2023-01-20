@@ -87,7 +87,7 @@ class StitchImages:
         STITCH IMAGE FROM IMAGE PATCHES
 
         Args:
-            image_dir (np.ndarray): Directory where all images are stored.
+            image_dir (str): Directory where all images are stored.
             mask (np.ndarray): If True treat image as binary mask and sum-up overlay
                 zones, else do replacement.
             output (str, Optional): Optional, output directory.
