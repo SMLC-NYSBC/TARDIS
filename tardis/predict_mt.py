@@ -188,7 +188,6 @@ def main(dir: str,
     post_processes = ImageToPointCloud()
 
     # Build handler's for DIST input and output
-    c
     GraphToSegment = GraphInstanceV2(threshold=dist_threshold, smooth=True)
     filter_segments = FilterSpatialGraph(filter_short_segments=filter_mt)
 
