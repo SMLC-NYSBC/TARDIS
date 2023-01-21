@@ -10,11 +10,11 @@
 
 import numpy as np
 
-from tardis.dist_pytorch.utils.build_point_cloud import ImageToPointCloud
+from tardis.dist_pytorch.utils.build_point_cloud import BuildPointCloud
 
 
 def test_build_pc():
-    builder = ImageToPointCloud()
+    builder = BuildPointCloud()
 
     # Build rand data
     x = np.arange(start=0, stop=5, step=0.1)
@@ -25,7 +25,24 @@ def test_build_pc():
     y = m * x[:, np.newaxis] + b
     y = np.where(y[:, :50] > 5.5, 1, 0)
 
-    pc = builder(image=y)
-
+    pc = builder.build_point_cloud(image=y)
     assert pc.ndim == 2
     assert len(pc) > 0
+
+    pc = builder.build_point_cloud(image=y,
+                                   EDT=True)
+    assert pc.ndim == 2
+    assert len(pc) > 0
+
+    pc = builder.build_point_cloud(image=y,
+                                   EDT=True,
+                                   as_2d=True)
+    assert pc.ndim == 2
+    assert len(pc) > 0
+
+    pc_hd, pc_ld = builder.build_point_cloud(image=y,
+                                             EDT=True,
+                                             down_sampling=1)
+    assert pc_hd.ndim == 2 and pc_ld.ndim == 2
+    assert len(pc_hd) > 0
+    assert len(pc_ld) > 0

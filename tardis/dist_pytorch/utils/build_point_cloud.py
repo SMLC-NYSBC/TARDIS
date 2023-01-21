@@ -19,46 +19,6 @@ from skimage.morphology import skeletonize, skeletonize_3d
 from tardis.utils.errors import TardisError
 
 
-class ImageToPointCloud:
-    """
-    WRAPPER FOR CONVERTING BINARY IMAGE TO POINT CLOUD
-
-    By assuming each object is line, wrapper compute EDT and skeletonization
-    to output skeletonize binary mask that can be converted to point cloud by taking
-    each pixel as a point in 2D or 3D space.
-    """
-    def __init__(self):
-        self.post_process = BuildPointCloud()
-
-    def __call__(self,
-                 image: Optional[str] = np.ndarray,
-                 euclidean_transform=True,
-                 label_size=2.5,
-                 down_sampling_voxel_size=None,
-                 as_2d=False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
-        """
-        Function call for reusing ImageToPointCloud
-
-        Args:
-            image (str, np.ndarray): Image array, or directory to the image file.
-            euclidean_transform (bool): If Ture, compute edt before skeletonization.
-            label_size (float): Size of expected label in pixels.
-            down_sampling_voxel_size (None, float): If not None, indicate downscaling
-            effect.
-            as_2d (bool): If True, expect 2D image array.
-
-        Returns:
-            Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]: 2D or 3D array with
-            point cloud, if down sampling was activated return HD and LD point cloud.
-        """
-
-        return self.post_process.build_point_cloud(image=image,
-                                                   EDT=euclidean_transform,
-                                                   label_size=label_size,
-                                                   down_sampling=down_sampling_voxel_size,
-                                                   as_2d=as_2d)
-
-
 class BuildPointCloud:
     """
     MAIN MODULE FOR SEMANTIC MASK IMAGE DATA TRANSFORMATION INTO POINT CLOUD
@@ -93,14 +53,14 @@ class BuildPointCloud:
                         'tardis/dist/utils',
                         "Directory/input .tiff file/array is not correct...")
 
-        assert image.ndim in [2, 3], \
+        if image.ndim not in [2, 3]:
             TardisError('113',
                         'tardis/dist/utils',
                         f'Image dim expected to be 2 or 3 bu got {image.ndim}')
 
         """Check for binary"""
         unique_val = np.sort(pd.unique(image.flatten()))  # Use panda for speed
-        assert len(unique_val) == 2, \
+        if len(unique_val) != 2:
             TardisError('115',
                         'tardis/dist/utils',
                         f'Not binary image. Expected 0-1 value but got: {unique_val}')
@@ -110,7 +70,7 @@ class BuildPointCloud:
             image = image / 255
 
         """Any other exertions"""
-        assert unique_val[1] == 1, \
+        if unique_val[1] != 1:
             TardisError('115',
                         'tardis/dist/utils',
                         'Array or file directory loaded properly but image '
@@ -122,7 +82,6 @@ class BuildPointCloud:
     def build_point_cloud(self,
                           image: Optional[str] = np.ndarray,
                           EDT=False,
-                          label_size=2.5,
                           down_sampling: Optional[float] = None,
                           as_2d=False) -> Union[Tuple[ndarray, ndarray], np.ndarray]:
         """
@@ -131,7 +90,6 @@ class BuildPointCloud:
         Args:
             image (np.ndarray): Predicted semantic mask.
             EDT (bool): If True, compute EDT to extract line centers.
-            label_size (float): size of semantic labels in pixels.
             down_sampling (float, None): If not None, down-sample point cloud with open3d.
             as_2d: Treat data as 2D not 3D.
 
@@ -147,20 +105,27 @@ class BuildPointCloud:
             """Calculate EDT and apply threshold based on predefine mask size"""
             if image.ndim == 2:
                 image_edt = edt.edt(image)
-                image_edt = np.array(np.where(image_edt > label_size, 1, 0),
-                                     dtype=np.int8)
+                image_edt = np.where(image_edt > (image_edt.max() / 2), 1, 0)
             else:
-                image_edt = np.zeros(image.shape, dtype=np.int8)
+                image_edt = np.zeros(image.shape, dtype=np.uint8)
 
-                for i in range(image_edt.shape[0]):
-                    image_edt[i, :] = np.where(edt.edt(image[i, :]) > label_size, 1, 0)
+                if image_edt.flatten().shape[0] > 1000000000 or as_2d:
+                    for i in range(image_edt.shape[0]):
+                        df_edt = edt.edt(image[i, :])
+                        image_edt[i, :] = np.where(df_edt > (df_edt.max() / 2), 1, 0)
+                else:
+                    image_edt = edt.edt(image)
+                    image_edt = np.where(image_edt > (image_edt.max() / 2), 1, 0)
+            image_edt = image_edt.astype(np.uint8)
 
             """Skeletonization"""
             if image_edt.flatten().shape[0] > 1000000000 or as_2d:
                 image_point = np.zeros(image_edt.shape, dtype=np.int8)
                 start = 0
 
-                if as_2d:
+                if image.ndim == 2:
+                    image_point = skeletonize(image_edt)
+                elif as_2d:
                     for i in range(image_edt.shape[0]):
                         image_point[i, :] = skeletonize(image_edt[i, :])
                 else:
@@ -182,7 +147,9 @@ class BuildPointCloud:
                 image_point = np.zeros(image.shape, dtype=np.int8)
                 start = 0
 
-                if as_2d:
+                if image.ndim == 2:
+                    image_point = skeletonize(image)
+                elif as_2d:
                     for i in range(image.shape[0]):
                         image_point[i, :] = skeletonize(image[i, :])
                 else:
@@ -205,7 +172,7 @@ class BuildPointCloud:
             coordinates_HD = np.stack((image_point[1],
                                        image_point[0],
                                        np.zeros(image_point[0].shape))).T
-        elif len(image_point) == 3:
+        else:
             coordinates_HD = np.stack((image_point[2],
                                        image_point[1],
                                        image_point[0])).T

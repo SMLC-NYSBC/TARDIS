@@ -1,16 +1,17 @@
 History
 =======
 
-0.1.0-RC1 (2023-01-15)
+Pre-Release 0.1.0-RC1 (2023-01-21)
 ----------------------------
 * **Code restructure:**
-    * Extra pytest + automatization of tests for all python version
+    * Extra pytest + aromatization of tests for all python version
 
 * **SpindleTorch module changes:**
     * Rebuild interpolation for images and mask to make it more reliable and store
       image feature regardless from scaling factor
     * Simplified building training/testing of datasets
     * Fixed image normalization for few very specific cases
+    * Redo mask building from coordinates
 
 * **DIST module changes:**
     * New general dataloader

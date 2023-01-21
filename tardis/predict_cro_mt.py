@@ -17,11 +17,10 @@ from typing import Optional
 
 import click
 import numpy as np
-import open3d as o3d
 import tifffile.tifffile as tif
 
 from tardis.dist_pytorch.datasets.patches import PatchDataSet
-from tardis.dist_pytorch.utils.build_point_cloud import ImageToPointCloud
+from tardis.dist_pytorch.utils.build_point_cloud import BuildPointCloud
 from tardis.dist_pytorch.utils.segment_point_cloud import GraphInstanceV2
 from tardis.dist_pytorch.utils.utils import pc_median_dist
 from tardis.spindletorch.data_processing.stitch import StitchImages
@@ -172,7 +171,7 @@ def main(dir: str,
     minmax = MinMaxNormalize()
 
     image_stitcher = StitchImages()
-    post_processes = ImageToPointCloud()
+    post_processes = BuildPointCloud()
     build_amira_file = NumpyToAmira()
     patch_pc = PatchDataSet(max_number_of_points=points_in_patch,
                             graph=False)
@@ -395,28 +394,17 @@ def main(dir: str,
                         text_7='Current Task: Image Postprocessing...', )
 
         # Post-process predicted image patches
-        point_cloud = post_processes(image=image,
-                                     label_size=3)
-
-        if point_cloud.shape[0] < 100:
-            point_cloud = post_processes(image=image,
-                                         label_size=0.5)
-
-        if point_cloud.shape[0] < 100:
-            continue
+        point_cloud_hd, point_cloud = post_processes.build_point_cloud(image=image,
+                                                                       EDT=True,
+                                                                       down_sampling=5)
 
         # Transform for xyz and pixel size for coord
         del image
 
         if debug:  # Debugging checkpoint
-            np.save(join(am_output, f'{i[:-out_format]}_raw_pc.npy'), point_cloud)
+            np.save(join(am_output, f'{i[:-out_format]}_raw_pc.npy'), point_cloud_hd)
 
         """DIST Prediction"""
-        # Find down-sampling value by voxel size 5 to reduce noise
-        pcd = o3d.geometry.PointCloud()
-        pcd.points = o3d.utility.Vector3dVector(point_cloud)
-        point_cloud = np.asarray(pcd.voxel_down_sample(voxel_size=5).points)
-
         # Tardis progress bar update
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',

@@ -15,11 +15,10 @@ from typing import Optional
 
 import click
 import numpy as np
-import open3d as o3d
 import tifffile.tifffile as tif
 
 from tardis.dist_pytorch.datasets.patches import PatchDataSet
-from tardis.dist_pytorch.utils.build_point_cloud import ImageToPointCloud
+from tardis.dist_pytorch.utils.build_point_cloud import BuildPointCloud
 from tardis.dist_pytorch.utils.segment_point_cloud import GraphInstanceV2
 from tardis.dist_pytorch.utils.utils import pc_median_dist
 from tardis.spindletorch.data_processing.stitch import StitchImages
@@ -186,7 +185,7 @@ def main(dir: str,
 
     # Build handler's for transforming data
     image_stitcher = StitchImages()
-    post_processes = ImageToPointCloud()
+    post_processes = BuildPointCloud()
 
     # Build handler's for DIST input and output
     patch_pc = PatchDataSet(max_number_of_points=points_in_patch,
@@ -419,49 +418,38 @@ def main(dir: str,
                         text_7='Current Task: Image Postprocessing...')
 
         # Post-process predicted image patches
-        point_cloud = post_processes(image=image,
-                                     label_size=3)
-
-        if point_cloud.shape[0] < 100:
-            point_cloud = post_processes(image=image,
-                                         label_size=0.5)
-
-        if point_cloud.shape[0] < 100:
-            continue
+        point_cloud_hd, point_cloud_ld = post_processes.build_point_cloud(image=image,
+                                                                          EDT=True,
+                                                                          down_sampling=5)
 
         # Transform for xyz and pixel size for coord
         del image
 
         if debug:  # Debugging checkpoint
-            np.save(join(am_output, f'{i[:-in_format]}_raw_pc.npy'),
-                    point_cloud)
+            np.save(join(am_output, f'{i[:-in_format]}_raw_pc_hd.npy'),
+                    point_cloud_hd)
 
         """DIST Prediction"""
-        # Find down-sampling value by voxel size 5 to reduce noise
-        pcd = o3d.geometry.PointCloud()
-        pcd.points = o3d.utility.Vector3dVector(point_cloud)
-        point_cloud = np.asarray(pcd.voxel_down_sample(voxel_size=5).points)
-
         # Tardis progress bar update
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                         text_4=f'Original pixel size: {px} A',
-                        text_5=f'Point Cloud: {point_cloud.shape[0]} Nodes; NaN Segments',
+                        text_5=f'Point Cloud: {point_cloud_ld.shape[0]} Nodes; NaN Segments',
                         text_7='Current Task: Preparing for MT segmentation...')
 
         # Normalize point cloud KNN distance !Soon depreciated!
-        dist = pc_median_dist(point_cloud, avg_over=True)
+        dist = pc_median_dist(point_cloud_ld, avg_over=True)
 
         # Build patches dataset
-        coords_df, _, output_idx, _ = patch_pc.patched_dataset(coord=point_cloud / dist)
+        coords_df, _, output_idx, _ = patch_pc.patched_dataset(coord=point_cloud_ld / dist)
 
         # Predict point cloud
         tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                         text_4=f'Original pixel size: {px} A',
-                        text_5=f'Point Cloud: {point_cloud.shape[0]} Nodes; NaN Segments',
+                        text_5=f'Point Cloud: {point_cloud_ld.shape[0]} Nodes; NaN Segments',
                         text_7='Current Task: DIST prediction...',
                         text_8=print_progress_bar(0, len(coords_df)))
 
@@ -474,7 +462,7 @@ def main(dir: str,
                                 text_1=f'Found {len(predict_list)} images to predict!',
                                 text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                                 text_4=f'Original pixel size: {px} A',
-                                text_5=f'Point Cloud: {point_cloud.shape[0]} Nodes; NaN Segments',
+                                text_5=f'Point Cloud: {point_cloud_ld.shape[0]} Nodes; NaN Segments',
                                 text_7='Current Task: DIST prediction...',
                                 text_8=print_progress_bar(id, len(coords_df)))
 
@@ -503,25 +491,25 @@ def main(dir: str,
                             text_1=f'Found {len(predict_list)} images to predict!',
                             text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                             text_4=f'Original pixel size: {px} A',
-                            text_5=f'Point Cloud: {point_cloud.shape[0]} Nodes; NaN Segments',
+                            text_5=f'Point Cloud: {point_cloud_ld.shape[0]} Nodes; NaN Segments',
                             text_7='Current Task: MT Segmentation...',
                             text_8='MTs segmentation is fitted to:',
                             text_9=f'pixel size: {px}; transformation: {transformation}')
 
-            point_cloud = point_cloud * px
-            point_cloud[:, 0] = point_cloud[:, 0] + transformation[0]
-            point_cloud[:, 1] = point_cloud[:, 1] + transformation[1]
-            point_cloud[:, 2] = point_cloud[:, 2] + transformation[2]
+            point_cloud_ld = point_cloud_ld * px
+            point_cloud_ld[:, 0] = point_cloud_ld[:, 0] + transformation[0]
+            point_cloud_ld[:, 1] = point_cloud_ld[:, 1] + transformation[1]
+            point_cloud_ld[:, 2] = point_cloud_ld[:, 2] + transformation[2]
         else:
             tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
                             text_1=f'Found {len(predict_list)} images to predict!',
                             text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                             text_4=f'Original pixel size: {px} A',
-                            text_5=f'Point Cloud: {point_cloud.shape[0]} Nodes; NaN Segments',
+                            text_5=f'Point Cloud: {point_cloud_ld.shape[0]} Nodes; NaN Segments',
                             text_7='Current Task: MT Segmentation...')
 
         segments = GraphToSegment.patch_to_segment(graph=graphs,
-                                                   coord=point_cloud,
+                                                   coord=point_cloud_ld,
                                                    idx=output_idx,
                                                    prune=5,
                                                    visualize=visualizer)
@@ -532,12 +520,12 @@ def main(dir: str,
         if debug:
             if device == 'cpu':
                 np.save(join(am_output, f'{i[:-in_format]}_coord_voxel.npy'),
-                        point_cloud)
+                        point_cloud_ld)
                 np.save(join(am_output, f'{i[:-in_format]}_idx_voxel.npy'),
                         output_idx)
             else:
                 np.save(join(am_output, f'{i[:-in_format]}_coord_voxel.npy'),
-                        point_cloud)
+                        point_cloud_ld)
                 np.save(join(am_output, f'{i[:-in_format]}_idx_voxel.npy'),
                         output_idx)
 
@@ -550,7 +538,8 @@ def main(dir: str,
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                         text_4=f'Original pixel size: {px} A',
-                        text_5=f'Point Cloud: {point_cloud.shape[0]} Nodes; {np.max(segments[:, 0])} Segments',
+                        text_5=f'Point Cloud: {point_cloud_ld.shape[0]} Nodes;'
+                               f' {np.max(segments[:, 0])} Segments',
                         text_7='Current Task: Segmentation finished!')
 
         """Save as .am"""
