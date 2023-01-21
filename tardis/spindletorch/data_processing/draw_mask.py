@@ -26,7 +26,7 @@ def draw_mask(r: int,
 
     Args:
         r (int): radius of a circle in Angstrom.
-        c (np.ndarray): point in 3D indicating center of a circle.
+        c (np.ndarray): point in 3D indicating center of a circle [X x Y x Z].
         label_mask (np.ndarray): array of a mask on which circle is drawn.
         segment_shape (str): Type of shape to draw. Expect ['s', 'c'].
 
@@ -152,7 +152,7 @@ def draw_sphere(r: int,
                 else:
                     sphere_frame[z_dim, y_dim, x_dim] = True
     sphere_frame[:trim, :] = False  # Trim bottom of the sphere
-    sphere_frame[-(trim - 1):, :] = False  # Trim top of the sphere
+    sphere_frame[-trim:, :] = False  # Trim top of the sphere
     z, y, x = np.where(sphere_frame)
 
     c = ((c[0] - c_frame), (c[1] - c_frame), (c[2] - c_frame))

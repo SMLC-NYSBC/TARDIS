@@ -136,12 +136,6 @@ def build_train_dataset(dataset_dir: str,
 
         """Draw mask for coord or process mask if needed"""
         if mask.ndim == 2 and mask.shape[1] in [3, 4]:  # Detect coordinate array
-            assert mask.shape[1] == 4, \
-                TardisError('113',
-                            'tardis/spindletorch/data_processing/build_training_dataset',
-                            'Coord file do not have shape [ID x X x Y x Z]. '
-                            f'Given {mask.shape[1]}')
-
             # Scale mask to correct pixel size
             mask[:, 1:] = mask[:, 1:] * scale_factor
 
@@ -151,13 +145,14 @@ def build_train_dataset(dataset_dir: str,
                                  pixel_size=resize_pixel_size,
                                  circle_size=circle_size)
         else:  # Detect mask array
-            assert mask.min() >= 0, \
-                TardisError('115',
-                            'tardis/spindletorch/data_processing/build_training_dataset',
-                            f'Mask min: {mask.min()}; max: {mask.max()}')
+            if mask.min() == 0:
+                TardisError(id='115',
+                            py='tardis/spindletorch/data_processing/build_training_dataset',
+                            desc=f'Mask min: {mask.min()}; max: {mask.max()}'
+                            'but expected min: 0 and max: >1')
 
             # Convert to binary
-            if not mask.min() == 0 and mask.max() == 1:
+            if mask.min() == 0 and mask.max() > 1:
                 mask = np.where(mask > 0, 1, 0).astype(np.uint8)
 
             # Flip mask if MRC/REC
@@ -236,7 +231,10 @@ def load_img_mask_data(image: str,
         if mask.endswith('.CorrelationLines.am'):  # Found Amira (coord)
             importer = ImportDataFromAmira(src_am=mask, src_img=image)
             image, img_px = importer.get_image()
+
             coord = importer.get_segmented_points()  # [ID x X x Y x Z]
+            coord[:, 1:] = coord[:, 1:]
+
             mask_px = img_px
         else:  # Image is Amira (image)
             image, img_px = load_image(image)

@@ -37,7 +37,7 @@ def draw_semantic(mask_size: tuple,
                     'Coordinates are of not correct shape, expected: '
                     f'shape [Label x X x Y x (Z)] but {coordinate.shape} given!')
 
-    label_mask = np.zeros(mask_size, dtype=np.int8)
+    label_mask = np.zeros(mask_size, dtype=np.uint8)
     if pixel_size == 0:
         pixel_size = 1
 
@@ -66,4 +66,4 @@ def draw_semantic(mask_size: tuple,
                                    label_mask=label_mask,
                                    segment_shape=mask_shape)
 
-    return label_mask.astype(np.uint8)
+    return label_mask
