@@ -94,12 +94,18 @@ def build_train_dataset(dataset_dir: str,
             continue
 
         """Get matching mask file and check if maks is a file"""
-        mask_dir = [m for m in mask_list if m.startswith(i[:-4])]
-        if len(mask_dir) != 1:
-            continue
-        else:
-            mask_name = mask_dir[0]
+        mask_prefix = 0
+        mask_name = ''
+        mask_dir = join(dataset_dir, mask_name)
+        while not isfile(mask_dir):
+            mask_name = i[:-3] + MASK_FORMATS[mask_prefix] \
+                if i.endswith('.am') else i[:-4] + MASK_FORMATS[mask_prefix]
+
             mask_dir = join(dataset_dir, mask_name)
+            mask_prefix += 1
+
+            if mask_prefix > len(MASK_FORMATS):
+                break
 
         if not isfile(mask_dir):
             # Store fail in the log file

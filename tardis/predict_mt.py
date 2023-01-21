@@ -18,6 +18,7 @@ import numpy as np
 import open3d as o3d
 import tifffile.tifffile as tif
 
+from tardis.dist_pytorch.datasets.patches import PatchDataSet
 from tardis.dist_pytorch.utils.build_point_cloud import ImageToPointCloud
 from tardis.dist_pytorch.utils.segment_point_cloud import GraphInstanceV2
 from tardis.dist_pytorch.utils.utils import pc_median_dist
@@ -188,6 +189,8 @@ def main(dir: str,
     post_processes = ImageToPointCloud()
 
     # Build handler's for DIST input and output
+    patch_pc = PatchDataSet(max_number_of_points=points_in_patch,
+                            graph=False)
     GraphToSegment = GraphInstanceV2(threshold=dist_threshold, smooth=True)
     filter_segments = FilterSpatialGraph(filter_short_segments=filter_mt)
 
