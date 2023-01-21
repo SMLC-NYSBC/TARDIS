@@ -56,14 +56,31 @@ def draw_semantic(mask_size: tuple,
         # Pick coordinates for each segment
         points = coordinate[np.where(coordinate[:, 0] == i)[0]][:, 1:]
         label = interpolation(points)
+        all_cz, all_cy, all_cx = [], [], []
 
         """Draw label"""
         for j in range(len(label)):
             c = label[j, :]  # Point center
 
-            label_mask = draw_mask(r=r,
+            if len(c) == 3:
+                cz, cy, cx = draw_mask(r=r,
+                                       c=c,
+                                       label_mask=label_mask,
+                                       segment_shape=mask_shape)
+                all_cz.append(cz)
+                all_cy.append(cy)
+                all_cx.append(cx)
+            else:
+                cy, cx = draw_mask(r=r,
                                    c=c,
                                    label_mask=label_mask,
                                    segment_shape=mask_shape)
+                all_cy.append(cy)
+                all_cx.append(cx)
 
-    return label_mask
+        all_cz, all_cy, all_cx = np.concatenate(all_cz), np.concatenate(all_cy), \
+            np.concatenate(all_cx)
+
+        label_mask[all_cz, all_cy, all_cx] = 1
+
+    return np.where(label_mask == 1, 1, 0).astype(np.uint8)

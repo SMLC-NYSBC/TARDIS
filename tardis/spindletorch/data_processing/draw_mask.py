@@ -20,7 +20,8 @@ from tardis.utils.errors import TardisError
 def draw_mask(r: int,
               c: np.ndarray,
               label_mask: np.ndarray,
-              segment_shape: str) -> np.ndarray:
+              segment_shape: str) -> Union[Tuple[np.ndarray, np.ndarray],
+                                           Tuple[np.ndarray, np.ndarray, np.ndarray]]:
     """
     Module draw_label to construct sphere shape of a label
 
@@ -54,20 +55,18 @@ def draw_mask(r: int,
         cz, cy, cx = draw_sphere(r=r,
                                  c=(z, y, x),
                                  shape=label_mask.shape)
-        label_mask[cz, cy, cx] = 1
+        return cz, cy, cx
     else:
         if z is not None:
             cz, cy, cx = draw_circle(r=r,
                                      c=(z, y, x),
                                      shape=label_mask.shape)
-            label_mask[cz, cy, cx] = 1
+            return cz, cy, cx
         else:
             cy, cx = draw_circle(r=r,
                                  c=(z, y, x),
                                  shape=label_mask.shape)
-            label_mask[cy, cx] = 1
-
-    return label_mask
+            return cy, cx
 
 
 def draw_circle(r: int,
