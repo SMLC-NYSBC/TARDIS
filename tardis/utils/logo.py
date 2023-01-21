@@ -1,161 +1,222 @@
+#######################################################################
+#  TARDIS - Transformer And Rapid Dimensionless Instance Segmentation #
+#                                                                     #
+#  New York Structural Biology Center                                 #
+#  Simons Machine Learning Center                                     #
+#                                                                     #
+#  Robert Kiewisz, Tristan Bepler                                     #
+#  MIT License 2021 - 2023                                            #
+#######################################################################
+
 import platform
 import sys
 from os import get_terminal_size, system
 
 from IPython.core.interactiveshell import InteractiveShell
+from IPython.display import clear_output
+
 from tardis.version import version
 
 
-def printProgressBar(value: int,
-                     max: int):
+def print_progress_bar(value: int,
+                       max_v: int):
     """
-    BUILDER FOR ASCII TYPE PROGRESS BAR
+    Builder for ASCII type progress bar.
 
-        Args:
-            value: Current value for the progress bar
-            max: Maximum number of iterations
+    Args:
+        value (int): Current value for the progress bar.
+        max_v (int): Maximum number of iterations.
     """
     if is_interactive():
         n_bar = 75
     else:
-        n_bar = get_terminal_size()[0] - 50
+        try:
+            n_bar = get_terminal_size()[0] - 50
+        except OSError:
+            n_bar = 55
 
-    j = value / max
+    j = value / max_v
     bar = '█' * int(n_bar * j)
     bar = bar + '-' * int(n_bar * (1 - j))
 
-    return f"[{bar:{n_bar}s}] {int(100 * j)}%  [{value} / {max}]"
-
-
-def build_text(max=80,
-               text='',
-               repeat=False):
-    """
-    BUILD TEXT WITH UNIFIED STYLE FOR LOG WINDOW
-
-    Args:
-        max: Width of console window. Defaults to 80.
-        text: Text value to be included in the output. Defaults to ''.
-        repeat: If True repeat text input till end of max value. Defaults to False.
-    """
-    max = max
-    if repeat:
-        text = text * max
-    text_len = len(text)
-
-    if text_len > max:
-        return text[:max]
-    else:
-        new_len = max - text_len
-        return f'{text +  " " * new_len}'
+    return f"[{bar:{n_bar}s}] {int(100 * j)}%  [{value} / {max_v}]"
 
 
 def is_interactive():
     """
-    CHECK IF JUPYTER
+    Simple check if command line window is from Jupiter.
     """
     import __main__ as main
+
     return not hasattr(main, '__file__')
 
 
-def clear_output(wait=True):
-    """
-    CLEAR THE OUTPUT OF THE WINDOW
-
-    Args:
-        wait: Wait to clear the output until new output is available to replace it.
-    """
-    if InteractiveShell.initialized():
-        InteractiveShell.instance().display_pub.clear_output(wait)
-    else:
-        print('\033[2K\r', end='')
-        sys.stdout.flush()
-        print('\033[2K\r', end='')
-        sys.stderr.flush()
-
-
-class Tardis_Logo:
+class TardisLogo:
     """
     BUILDER FOR LOG OUTPUT
 
-    ============= The log output is build to fit into given window (cmd or Jupyter)
-    |           | Side Logo is optional and can be removed upon; set logo to False
-    |  Example  | Title and text are optional
-    |           | Ex. log = Tardis_Logo()
-    =============     log(title='Example',
-                          text_1='Progress bar:',
-                          text_2=printProgressBar(value=i, max=len(range(10))),
-                          ....)
+    The log output is built to fit into the given window (cmd or Jupyter)
+    The side Logo is optional and can be removed upon; set the logo to False
+    The title and text are optional.
+
+    Example:
+
+    log = Tardis_Logo()
+
+    log(title='Example',
+
+    text_1='Progress bar:',
+
+    text_2=printProgressBar(value=i, max=len(range(10))),
+
+    ....)
     """
 
     def __init__(self):
-        clear = None
+        self.CLEAR = None
 
         if platform.system() in ['Darwin', 'Linux']:
-            self.clear = lambda: system('clear')
+            self.CLEAR = lambda: system('clear')
         else:
-            self.clear = lambda: system('cls')
+            self.CLEAR = lambda: system('cls')
 
-        if clear is None and is_interactive():
-            self.clear = clear_output
-        self.fn = "TARDIS-pytorch Copyright Information:"
-        self.c = "Copyright (c) 2021 Robert Kiewisz, Tristan Bepler"
+        if is_interactive():
+            self.CLEAR = lambda: clear_output(wait=True)
+
+        self.FN = "TARDIS-pytorch Copyright Information:"
+        self.C = "Copyright (c) 2021 Robert Kiewisz, Tristan Bepler"
+
+    @staticmethod
+    def _build_text(max=80,
+                    text='',
+                    repeat=False) -> str:
+        """
+        Format text input to fit the pre-define window size.
+
+        Args:
+            max (int): Width of the console window. Defaults to 80.
+            text (str): Text value to be included in the output.
+            repeat (bool): If True repeat text input till the end of max value.
+
+        Returns:
+            str: Formatted text string with max number of characters.
+        """
+        if repeat:
+            text = text * max
+
+        return f'{text[:max] + " " * (max - len(text))}'
+
+    @staticmethod
+    def clear_output(wait=True):
+        """
+        Clear window output other Jupyter of the command line window.
+
+        Args:
+            wait (bool):  Wait to clear the output until the new output is
+                available to replace it.
+        """
+        if InteractiveShell.initialized():
+            InteractiveShell.instance().display_pub.clear_output(wait)
+        else:
+            print('\033[2K\r', end='')
+            sys.stdout.flush()
+            print('\033[2K\r', end='')
+            sys.stderr.flush()
+
+    @staticmethod
+    def cell_width() -> int:
+        """
+        Ask for current shell window width
+
+        Returns:
+            int: cell width.
+        """
+        if is_interactive():  # Jupyter
+            WIDTH = 150
+        else:
+            try:  # Console
+                WIDTH = get_terminal_size()[0] - 5
+            except OSError:  # Any other
+                WIDTH = 100
+        return WIDTH
 
     def __call__(self,
                  title='', text_1='', text_2='', text_3='', text_4='',
                  text_5='', text_6='', text_7='', text_8='', text_9='', text_10='',
                  logo=True):
-        if is_interactive():
-            max_width = 75
-        else:
-            max_width = get_terminal_size()[0] - 5
+        """
+        Builder call function to output nice looking progress bar.
 
-        self.clear()
+        Args:
+            title (str, optional): Any text string.
+            text_1 (str, optional): Any text string.
+            text_2 (str, optional): Any text string.
+            text_3 (str, optional): Any text string.
+            text_4 (str, optional): Any text string.
+            text_5 (str, optional): Any text string.
+            text_6 (str, optional): Any text string.
+            text_7 (str, optional): Any text string.
+            text_8 (str, optional): Any text string.
+            text_9 (str, optional): Any text string.
+            text_10 (str, optional): Any text string.
+            logo (bool, optional): Any text string.
+
+        Returns:
+            print: Print progress bar with all text options into cmd commend line
+                window or jupyter notebook.
+        """
+        # Check and update window size
+        WIDTH = self.cell_width()
+
+        self.CLEAR()
         if logo:
-            print(f'  {build_text(max_width + 1, "=", True)}\n'
-                  f' | {build_text(max_width, "TARDIS  " + version + "  " + title)}|\n'
-                  f' | {build_text(max_width, " ", True)}|\n'
-                  f' | {build_text(max_width, "New York Structural Biology Center")}|\n'
-                  f' | {build_text(max_width - 13, "Simons Machine Learning Center")} ___         |\n'
-                  f' | {build_text(max_width - 21, " ", True)} _______(_@_)_______ |\n'
-                  f' | {build_text(max_width - 21, " ", True)} |  TARDIS-pytorch | |\n'
-                  f' | {build_text(max_width - 21, text_1)} |_________________| |\n'
-                  f' | {build_text(max_width - 21, text_2)}  | _____ | _____ |  |\n'
-                  f' | {build_text(max_width - 21, text_3)}  | |###| | |###| |  |\n'
-                  f' | {build_text(max_width - 21, text_4)}  | |###| | |###| |  |\n'
-                  f' | {build_text(max_width - 21, text_5)}  | _____ | _____ |  |\n'
-                  f' | {build_text(max_width - 21, text_6)}  | || || | || || |  |\n'
-                  f' | {build_text(max_width - 21, text_7)}  | ||_|| | ||_|| |  |\n'
-                  f' | {build_text(max_width - 21, text_8)}  | _____ |$_____ |  |\n'
-                  f' | {build_text(max_width - 21, text_9)}  | || || | || || |  |\n'
-                  f' | {build_text(max_width - 21, text_10)}  | ||_|| | ||_|| |  |\n'
-                  f' | {build_text(max_width - 21, " ",  True)}  | _____ | _____ |  |\n'
-                  f' | {build_text(max_width - 21, " ",  True)}  | || || | || || |  |\n'
-                  f' | {build_text(max_width - 21, self.fn)}  | ||_|| | ||_|| |  |\n'
-                  f' | {build_text(max_width - 21, self.c)}  |       |       |  |\n'
-                  f' | {build_text(max_width - 21, "MIT License")}  *****************  |\n'
-                  f'  {build_text(max_width + 1, "=", True)}\n')
+            logo = f'  {self._build_text(WIDTH + 1, "=", True)}\n' + \
+                   f' | {self._build_text(WIDTH, "TARDIS  " + version + "  " + title)}|\n' + \
+                   f' | {self._build_text(WIDTH, " ", True)}|\n' + \
+                   f' | {self._build_text(WIDTH, "New York Structural Biology Center")}|\n' + \
+                   f' | {self._build_text(WIDTH - 13, "Simons Machine Learning Center")} ___         |\n' + \
+                   f' | {self._build_text(WIDTH - 21, " ", True)} _______(_@_)_______ |\n' + \
+                   f' | {self._build_text(WIDTH - 21, " ", True)} |  TARDIS-pytorch | |\n' + \
+                   f' | {self._build_text(WIDTH - 21, text_1)} |_________________| |\n' + \
+                   f' | {self._build_text(WIDTH - 21, text_2)}  | _____ | _____ |  |\n' + \
+                   f' | {self._build_text(WIDTH - 21, text_3)}  | |###| | |###| |  |\n' + \
+                   f' | {self._build_text(WIDTH - 21, text_4)}  | |###| | |###| |  |\n' + \
+                   f' | {self._build_text(WIDTH - 21, text_5)}  | _____ | _____ |  |\n' + \
+                   f' | {self._build_text(WIDTH - 21, text_6)}  | || || | || || |  |\n' + \
+                   f' | {self._build_text(WIDTH - 21, text_7)}  | ||_|| | ||_|| |  |\n' + \
+                   f' | {self._build_text(WIDTH - 21, text_8)}  | _____ |$_____ |  |\n' + \
+                   f' | {self._build_text(WIDTH - 21, text_9)}  | || || | || || |  |\n' + \
+                   f' | {self._build_text(WIDTH - 21, text_10)}  | ||_|| | ||_|| |  |\n' + \
+                   f' | {self._build_text(WIDTH - 21, " ", True)}  | _____ | _____ |  |\n' + \
+                   f' | {self._build_text(WIDTH - 21, " ", True)}  | || || | || || |  |\n' + \
+                   f' | {self._build_text(WIDTH - 21, self.FN)}  | ||_|| | ||_|| |  |\n' + \
+                   f' | {self._build_text(WIDTH - 21, self.C)}  |       |       |  |\n' + \
+                   f' | {self._build_text(WIDTH - 21, "MIT License")}  *****************  |\n' + \
+                   f'  {self._build_text(WIDTH + 1, "=", True)}\n'
+
+            print(logo)
         else:
-            print(f'  {build_text(max_width + 1, "=", True)}\n'
-                  f' | {build_text(max_width, "TARDIS  " + version + "  " + title)}|\n'
-                  f' | {build_text(max_width, " ", True)}|\n'
-                  f' | {build_text(max_width, "New York Structural Biology Center")}|\n'
-                  f' | {build_text(max_width, "Simons Machine Learning Center")}|\n'
-                  f' | {build_text(max_width, " ", True)}|\n'
-                  f' | {build_text(max_width, " ", True)}|\n'
-                  f' | {build_text(max_width, text_1)}|\n'
-                  f' | {build_text(max_width, text_2)}|\n'
-                  f' | {build_text(max_width, text_3)}|\n'
-                  f' | {build_text(max_width, text_4)}|\n'
-                  f' | {build_text(max_width, text_5)}|\n'
-                  f' | {build_text(max_width, text_6)}|\n'
-                  f' | {build_text(max_width, text_7)}|\n'
-                  f' | {build_text(max_width, text_8)}|\n'
-                  f' | {build_text(max_width, text_9)}|\n'
-                  f' | {build_text(max_width, text_10)}|\n'
-                  f' | {build_text(max_width, " ",  True)}|\n'
-                  f' | {build_text(max_width, " ",  True)}|\n'
-                  f' | {build_text(max_width, self.fn)}|\n'
-                  f' | {build_text(max_width, self.c)}|\n'
-                  f' | {build_text(max_width, "MIT License")}|\n'
-                  f'  {build_text(max_width + 1, "=", True)}\n')
+            logo = f'  {self._build_text(WIDTH + 1, "=", True)}\n' + \
+                   f' | {self._build_text(WIDTH, "TARDIS  " + version + "  " + title)}|\n' + \
+                   f' | {self._build_text(WIDTH, " ", True)}|\n' + \
+                   f' | {self._build_text(WIDTH, "New York Structural Biology Center")}|\n' + \
+                   f' | {self._build_text(WIDTH, "Simons Machine Learning Center")}|\n' + \
+                   f' | {self._build_text(WIDTH, " ", True)}|\n' + \
+                   f' | {self._build_text(WIDTH, " ", True)}|\n' + \
+                   f' | {self._build_text(WIDTH, text_1)}|\n' + \
+                   f' | {self._build_text(WIDTH, text_2)}|\n' + \
+                   f' | {self._build_text(WIDTH, text_3)}|\n' + \
+                   f' | {self._build_text(WIDTH, text_4)}|\n' + \
+                   f' | {self._build_text(WIDTH, text_5)}|\n' + \
+                   f' | {self._build_text(WIDTH, text_6)}|\n' + \
+                   f' | {self._build_text(WIDTH, text_7)}|\n' + \
+                   f' | {self._build_text(WIDTH, text_8)}|\n' + \
+                   f' | {self._build_text(WIDTH, text_9)}|\n' + \
+                   f' | {self._build_text(WIDTH, text_10)}|\n' + \
+                   f' | {self._build_text(WIDTH, " ", True)}|\n' + \
+                   f' | {self._build_text(WIDTH, " ", True)}|\n' + \
+                   f' | {self._build_text(WIDTH, self.FN)}|\n' + \
+                   f' | {self._build_text(WIDTH, self.C)}|\n' + \
+                   f' | {self._build_text(WIDTH, "MIT License")}|\n' + \
+                   f'  {self._build_text(WIDTH + 1, "=", True)}\n'
+            print(logo)

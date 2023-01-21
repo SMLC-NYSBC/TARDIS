@@ -1,0 +1,17 @@
+name: "TARDIS_pytorch Documentation Build"
+on: 
+  workflow_dispatch:
+  push:
+    branches:
+      - 'release/**'
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: ammaraskar/sphinx-action@master
+        with:
+          docs-folder: "docs/"
+          pre-build-command: "apt-get update -y && apt-get install -y -r ./requirements_dev.txt"
+          build-command: "sphinx-build -b html ./source ./docs/build -T"

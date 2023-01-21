@@ -1,15 +1,31 @@
+#######################################################################
+#  TARDIS - Transformer And Rapid Dimensionless Instance Segmentation #
+#                                                                     #
+#  New York Structural Biology Center                                 #
+#  Simons Machine Learning Center                                     #
+#                                                                     #
+#  Robert Kiewisz, Tristan Bepler                                     #
+#  MIT License 2021 - 2023                                            #
+#######################################################################
+
+from typing import Tuple
+
 import numpy as np
 import open3d as o3d
 
 
-def _DataSetFormat(coord: np.ndarray,
-                   segmented: bool):
+def _dataset_format(coord: np.ndarray,
+                    segmented: bool) -> Tuple[np.ndarray, bool]:
     """
-    CHECK FOR ARRAY FORMAT AND CORRECT FOR 2D DATASETS
+    Silently check for an array format and correct 2D datasets to 3D.
 
     Args:
-        coord: 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y]
-        segmented: If True expect (s) in data format as segmented values
+        coord (np.ndarray): 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y].
+        segmented (bool): If True expect (s) in a data format as segmented values.
+
+    Returns:
+        Tuple[np.ndarray, bool]: Checked and corrected coord array with boolean
+        statement if array is compatible.
     """
     check = True
 
@@ -37,13 +53,19 @@ def _DataSetFormat(coord: np.ndarray,
 
 def _rgb(coord: np.ndarray,
          segmented: bool,
-         ScanNet=False):
+         ScanNet=False) -> np.ndarray:
     """
-    OUTPUT RGB VALUES FOR EACH SEGMENT OR POINT IN POINT CLOUD
+    Convert float to RGB classes.
+
+    Use predefined Scannet V2 RBG classes or random RGB classes.
 
     Args:
-        coord: 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y]
-        segmented: If True expect (s) in data format as segmented values
+        coord (np.ndarray): 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y].
+        segmented (bool): If True expect (s) in a data format as segmented values.
+        ScanNet (bool): If True output scannet v2 classes.
+
+    Returns:
+        np.ndarray: 3D array with RGB values for each point.
     """
     rgb = np.zeros((coord.shape[0], 3), dtype=np.float64)
 
@@ -113,15 +135,17 @@ def _rgb(coord: np.ndarray,
     return rgb
 
 
-def SegmentToGraph(coord: np.ndarray):
+def segment_to_graph(coord: np.ndarray) -> list:
     """
-    TRANSFORMATION FOR POINT CLOUD ARRAY TO GRAPH LIST
+    Build filament vector lines for open3D.
 
     Args:
-        coord: 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y]
+        coord (np.ndarray): 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y].
+
+    Returns:
+        list: list of segments converted for open3D
     """
     graph_list = []
-    start = 0
     stop = 0
 
     for i in np.unique(coord[:, 0]):
@@ -151,16 +175,16 @@ def SegmentToGraph(coord: np.ndarray):
 def VisualizePointCloud(coord: np.ndarray,
                         segmented: True):
     """
-    SEGMENTER FOR POINT CLOUDS AS POINTS
+    Visualized point cloud.
 
-    Output color coded point cloud. Color values indicate individual segment
+    Output color coded point cloud. Color values indicate individual segments.
 
     Args:
-        coord: 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y]
-        segmented: If True expect (s) in data format as segmented values
+        coord (np.ndarray): 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y].
+        segmented (bool): If True expect (s) in a data format as segmented values.
     """
-    coord, check = _DataSetFormat(coord=coord,
-                                  segmented=segmented)
+    coord, check = _dataset_format(coord=coord,
+                                   segmented=segmented)
 
     if check:
         pcd = o3d.geometry.PointCloud()
@@ -171,24 +195,35 @@ def VisualizePointCloud(coord: np.ndarray,
             pcd.points = o3d.utility.Vector3dVector(coord)
         pcd.colors = o3d.utility.Vector3dVector(_rgb(coord, segmented))
 
-        o3d.visualization.draw_geometries([pcd])
+        o3d.visualization.draw_geometries_with_animation_callback([pcd],
+                                                                  rotate_view)
+
+
+def rotate_view(vis):
+    """
+    Optional viewing parameter for open3D to constantly rotate scene.
+    Args:
+        vis: Open3D view control setting.
+    """
+    ctr = vis.get_view_control()
+    ctr.rotate(1.0, 0.0)
+    return False
 
 
 def VisualizeFilaments(coord: np.ndarray):
     """
-    SEGMENTER FOR POINT CLOUDS AS SPLINES
+    Visualized filaments.
 
-    Output color coded point cloud. Color values indicate individual segment
+    Output color coded point cloud. Color values indicate individual segments.
 
     Args:
-        coord: 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y]
+        coord (np.ndarray): 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y].
     """
-
-    coord, check = _DataSetFormat(coord=coord,
-                                  segmented=True)
+    coord, check = _dataset_format(coord=coord,
+                                   segmented=True)
 
     if check:
-        graph = SegmentToGraph(coord=coord)
+        graph = segment_to_graph(coord=coord)
         line_set = o3d.geometry.LineSet()
 
         line_set.points = o3d.utility.Vector3dVector(coord[:, 1:])
@@ -200,16 +235,16 @@ def VisualizeFilaments(coord: np.ndarray):
 def VisualizeScanNet(coord: np.ndarray,
                      segmented: True):
     """
-    SEGMENTER FOR POINT CLOUDS AS POINTS
+    Visualized scannet scene
 
-    Output color coded point cloud. Color values indicate individual segment
+    Output color-coded point cloud. Color values indicate individual segments.
 
     Args:
-        coord: 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y]
-        segmented: If True expect (s) in data format as segmented values
+        coord (np.ndarray): 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y].
+        segmented (bool): If True expect (s) in a data format as segmented values.
     """
-    coord, check = _DataSetFormat(coord=coord,
-                                  segmented=segmented)
+    coord, check = _dataset_format(coord=coord,
+                                   segmented=segmented)
 
     if check:
         pcd = o3d.geometry.PointCloud()

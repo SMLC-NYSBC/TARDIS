@@ -1,15 +1,27 @@
-from os import mkdir
-from os.path import isdir, join
+#######################################################################
+#  TARDIS - Transformer And Rapid Dimensionless Instance Segmentation #
+#                                                                     #
+#  New York Structural Biology Center                                 #
+#  Simons Machine Learning Center                                     #
+#                                                                     #
+#  Robert Kiewisz, Tristan Bepler                                     #
+#  MIT License 2021 - 2023                                            #
+#######################################################################
+
+import sys
+from os import getcwd
 from typing import Optional
 
 import torch
-from tardis.spindletorch.unet.trainer import Trainer
-from tardis.spindletorch.utils.build_network import build_network
-from tardis.utils.losses import (AdaptiveDiceLoss, BCEDiceLoss, BCELoss,
-                                 CELoss, DiceLoss)
 from torch import optim
 from torch.optim.lr_scheduler import StepLR
-from torch.utils.data import DataLoader
+
+from tardis.spindletorch.spindletorch import build_cnn_network
+from tardis.spindletorch.trainer import CNNTrainer
+from tardis.spindletorch.utils.utils import check_model_dict
+from tardis.utils.device import get_device
+from tardis.utils.errors import TardisError
+from tardis.utils.losses import BCELoss, CELoss, DiceLoss
 
 # Setting for stable release to turn off all debug APIs
 torch.backends.cudnn.benchmark = True
@@ -18,78 +30,65 @@ torch.autograd.profiler.profile(enabled=False)
 torch.autograd.profiler.emit_nvtx(enabled=False)
 
 
-def train(train_dataloader: DataLoader,
-          test_dataloader: DataLoader,
-          type: dict,
-          img_size=64,
-          cnn_type='unet',
-          classification=False,
-          dropout: Optional[float] = None,
-          convolution_layer=5,
-          convolution_multiplayer=64,
-          conv_kernel=3,
-          padding=1,
-          pool_kernel=2,
-          convolution_structure='3gcl',
-          cnn_checkpoint: Optional[str] = None,
-          loss_function='bce',
-          loss_alpha: Optional[float] = None,
-          learning_rate=0.001,
-          learning_rate_scheduler=False,
-          early_stop_rate=10,
-          device='gpu',
-          epochs=100):
+def train_cnn(train_dataloader,
+              test_dataloader,
+              model_structure: dict,
+              checkpoint: Optional[str] = None,
+              loss_function='bce',
+              learning_rate=0.001,
+              learning_rate_scheduler=False,
+              early_stop_rate=10,
+              device='gpu',
+              epochs=1000):
     """
-    CNN MAIN TRAINING WRAPPER
+    Wrapper for CNN models.
 
     Args:
-        train_dataloader: DataLoader with train dataset
-        test_dataloader: DataLoader with validation dataset
-        img_size: Image patch size, needed to calculate CNN layers
-        cnn_type: Name of CNN type
-        classification: If True Unet3Plus use classification before loss evaluation
-        dropout: Dropout value, if None dropout is not used
-        convolution_layer: Number of convolution layers
-        convolution_multiplayer: Number of output channels in first CNN layer
-        convolution_structure: Structure and order of CNN layer components
-        cnn_checkpoint: If not None, indicate dir. with a checkpoint weights
-        loss_function: Name of loss function used for evaluation
-        loss_alpha: Alpha value for Adaptive_Dice loss function
-        learning_rate: Float value of learning rate
-        learning_rate_scheduler: If True, build optimizer with lr scheduler
-        early_stop_rate: Number of epoches without improvement needed for early stop of the training
-        tqdm: If True, build Trainer with progress bar
-        device: Device ID used for training
-        epochs: Number of epoches
+        train_dataloader (torch.DataLoader): DataLoader with train dataset.
+        test_dataloader (torch.DataLoader): DataLoader with test dataset.
+        model_structure (dict): Dictionary with model setting.
+        checkpoint (None, optional): Optional, CNN model checkpoint.
+        loss_function (str): Type of loss function.
+        learning_rate (float): Learning rate.
+        learning_rate_scheduler (bool): If True, StepLR is used with training.
+        early_stop_rate (int): Define max. number of epoch's without improvements
+        after which training is stopped.
+        device (torch.device): Device on which model is trained.
+        epochs (int): Max number of epoch's.
     """
-    img, mask = next(iter(train_dataloader))
-    print(f'x = shape: {img.shape}; '
-          f'type: {img.dtype}')
-    print(f'x = min: {img.min()}; '
-          f'max: {img.max()}')
-    print(f'y = shape: {mask.shape}; '
-          f'class: {mask.unique()}; '
-          f'type: {mask.dtype}')
+    """Check input variable"""
+    model_structure = check_model_dict(model_structure)
 
-    """Build CNN"""
-    model = build_network(network_type=cnn_type,
-                          classification=classification,
-                          in_channel=1,
-                          out_channel=1,
-                          img_size=img_size,
-                          dropout=dropout,
-                          conv_kernel=conv_kernel,
-                          conv_padding=padding,
-                          maxpool_kernel=pool_kernel,
-                          no_conv_layers=convolution_layer,
-                          conv_multiplayer=convolution_multiplayer,
-                          layer_components=convolution_structure,
-                          no_groups=8,
-                          prediction=False)
+    if not isinstance(device, torch.device) and isinstance(device, str):
+        device = get_device(device)
 
-    """Load checkpoint for retraining"""
-    if cnn_checkpoint is not None:
-        save_train = torch.load(cnn_checkpoint, map_location=device)
+    """Build DIST model"""
+    try:
+        model = build_cnn_network(network_type=model_structure['cnn_type'],
+                                  structure=model_structure,
+                                  img_size=model_structure['img_size'],
+                                  prediction=False)
+    except:
+        TardisError('14',
+                    'tardis/spindletorch/train.py',
+                    f'CNNModelError: Model type: {type} was not build correctly!')
+        sys.exit()
+
+    """Build TARDIS progress bar output"""
+    print_setting = [f"Training is started for {model_structure['cnn_type']}:",
+                     f"Local dir: {getcwd()}",
+                     f"Training for {model_structure['cnn_type']} with "
+                     f"No. of Layers: {model_structure['num_conv_layers']} with "
+                     f"{model_structure['in_channel']} input and "
+                     f"{model_structure['out_channel']} output channel",
+                     f"Layers are build of {model_structure['layer_components']} modules, "
+                     f"train on {model_structure['img_size']} pixel images, "
+                     f"with {model_structure['conv_scaler']} up/down sampling "
+                     "channel scaler."]
+
+    """Optionally: Load checkpoint for retraining"""
+    if checkpoint is not None:
+        save_train = torch.load(checkpoint, map_location=device)
 
         if 'model_struct_dict' in save_train.keys():
             model_dict = save_train['model_struct_dict']
@@ -100,67 +99,43 @@ def train(train_dataloader: DataLoader,
     model = model.to(device)
 
     """Define loss function for training"""
+    loss_fn = BCELoss()
     if loss_function == "dice":
         loss_fn = DiceLoss()
     elif loss_function == "bce":
-        loss_fn = BCELoss()
-    elif loss_function == 'ce':
-        loss_fn = CELoss()
-    elif loss_function == "adaptive_dice":
-        loss_fn = AdaptiveDiceLoss(alpha=loss_alpha)
-    elif loss_function == "hybrid":
-        loss_fn = BCEDiceLoss(alpha=loss_alpha)
+        if model_structure['out_channel'] > 1:
+            loss_fn = CELoss()
+        else:
+            loss_fn = BCELoss()
 
-    """Define Optimizer for training"""
+    """Build training optimizer"""
     optimizer = optim.Adam(params=model.parameters(),
                            lr=learning_rate)
-    if cnn_checkpoint is not None:
-        optimizer.load_state_dict(save_train['optimizer_state_dict'])
 
-        save_train = None
+    """Optionally: Checkpoint model"""
+    if checkpoint is not None:
+        optimizer.load_state_dict(save_train['optimizer_state_dict'])
         del save_train
 
-    """Learning rate for the optimizer"""
+    """Optionally: Build learning rate scheduler"""
     if learning_rate_scheduler:
         learning_rate_scheduler = StepLR(optimizer, step_size=2, gamma=0.5)
     else:
         learning_rate_scheduler = None
 
-    """Output build CNN specification"""
-    print(f"Training is started on {device}, with: "
-          f"Loss function = {loss_function} "
-          f"LR = {optimizer.param_groups[0]['lr']}, and "
-          f"LRS = {learning_rate_scheduler}")
+    """Build trainer"""
+    train = CNNTrainer(model=model,
+                       structure=model_structure,
+                       device=device,
+                       criterion=loss_fn,
+                       optimizer=optimizer,
+                       print_setting=print_setting,
+                       training_DataLoader=train_dataloader,
+                       validation_DataLoader=test_dataloader,
+                       lr_scheduler=learning_rate_scheduler,
+                       epochs=epochs,
+                       early_stop_rate=early_stop_rate,
+                       checkpoint_name=model_structure['cnn_type'])
 
-    print('The Network was build:')
-    print(f"Network: {cnn_type}, "
-          f"No. of Layers: {convolution_layer} with {convolution_multiplayer} multiplayer, "
-          f"Each layer is build of {convolution_structure}, "
-          f"Image patch size: {img.shape[2:]}, ")
-
-    if dropout is None:
-        print('No dropout layer are used.')
-    else:
-        print(
-            f'Dropout with {dropout} probability is used for each conv. layer')
-
-    trainer = Trainer(model=model,
-                      type=type,
-                      device=device,
-                      criterion=loss_fn,
-                      optimizer=optimizer,
-                      training_DataLoader=train_dataloader,
-                      validation_DataLoader=test_dataloader,
-                      epochs=epochs,
-                      lr_scheduler=learning_rate_scheduler,
-                      early_stop_rate=early_stop_rate,
-                      checkpoint_name=cnn_type,
-                      classification=classification)
-
-    trainer.run_trainer()
-
-    if not isdir('model'):
-        mkdir('model')
-    torch.save({'model_state_dict': model.state_dict(),
-                'optimizer_state_dict': optimizer.state_dict()},
-               join('model', 'model_weights.pth'))
+    """Train"""
+    train.run_trainer()

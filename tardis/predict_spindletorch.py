@@ -1,3 +1,15 @@
+#######################################################################
+#  TARDIS - Transformer And Rapid Dimensionless Instance Segmentation #
+#                                                                     #
+#  New York Structural Biology Center                                 #
+#  Simons Machine Learning Center                                     #
+#                                                                     #
+#  Robert Kiewisz, Tristan Bepler                                     #
+#  MIT License 2021 - 2023                                            #
+#######################################################################
+
+import time
+import warnings
 from os import getcwd, listdir
 from os.path import join
 from typing import Optional
@@ -6,201 +18,258 @@ import click
 import numpy as np
 import tifffile.tifffile as tif
 
-from tardis.slcpy.utils.load_data import import_am, import_mrc, import_tiff
-from tardis.slcpy.utils.stitch import StitchImages
-from tardis.slcpy.utils.trim import trim_image
-from tardis.spindletorch.predict import predict
-from tardis.spindletorch.utils.dataset_loader import PredictionDataSet
-from tardis.utils.logo import Tardis_Logo
+from tardis.spindletorch.data_processing.stitch import StitchImages
+from tardis.spindletorch.data_processing.trim import scale_image, trim_with_stride
+from tardis.spindletorch.datasets.augment import MinMaxNormalize, RescaleNormalize
+from tardis.spindletorch.datasets.dataloader import PredictionDataset
+from tardis.utils.device import get_device
+from tardis.utils.errors import TardisError
+from tardis.utils.load_data import import_am, load_image
+from tardis.utils.logo import print_progress_bar, TardisLogo
+from tardis.utils.predictor import Predictor
 from tardis.utils.setup_envir import build_temp_dir, clean_up
+from tardis.utils.utils import check_uint8
 from tardis.version import version
+
+warnings.simplefilter("ignore", UserWarning)
 
 
 @click.command()
-@click.option('-dir', '--prediction_dir',
+@click.option('-dir', '--dir',
               default=getcwd(),
               type=str,
               help='Directory with images for prediction with CNN model.',
               show_default=True)
 @click.option('-ps', '--patch_size',
-              default=64,
+              default=96,
               type=int,
               help='Size of image size used for prediction.',
               show_default=True)
-@click.option('-cnn', '--cnn_type',
-              default='unet',
-              type=click.Choice(['unet', 'resunet', 'unet3plus', 'big_unet', 'fnet'],
-                                case_sensitive=True),
-              help='Type of NN used for training.',
-              show_default=True)
-@click.option('-co', '--cnn_out_channel',
-              default=1,
-              type=int,
-              help='Number of output channels for the NN.',
-              show_default=True)
-@click.option('-cl', '--cnn_layers',
-              default=5,
-              type=int,
-              help='Number of convolution layer for NN.',
-              show_default=True)
-@click.option('-cm', '--cnn_multiplayer',
-              default=64,
-              type=int,
-              help='Convolution multiplayer for CNN layers.',
-              show_default=True)
-@click.option('-cs', '--cnn_structure',
-              default='gcl',
+@click.option('-cnn', '--cnn_network',
+              default='unet_32',
               type=str,
-              help='Define structure of the convolution layer.'
-              '2 or 3 - dimensions in 2D or 3D'
-              'c - convolution'
-              'g - group normalization'
-              'b - batch normalization'
-              'r - ReLU'
-              'l - LeakyReLU',
+              help='CNN network name.',
               show_default=True)
-@click.option('-ck', '--conv_kernel',
-              default=3,
-              type=int,
-              help='Kernel size for 2D or 3D convolution.',
-              show_default=True)
-@click.option('-cp', '--conv_padding',
-              default=1,
-              type=int,
-              help='Padding size for convolution.',
-              show_default=True)
-@click.option('-cmpk', '--pool_kernel',
-              default=2,
-              type=int,
-              help='Maxpooling kernel.',
-              show_default=True)
-@click.option('-cch', '--checkpoints',
-              default=(None, None),
-              type=(str, str),
-              help='Convolution multiplayer for CNN layers.',
-              show_default=True)
-@click.option('-dp', '--dropout',
+@click.option('-cch', '--cnn_checkpoint',
               default=None,
-              type=float,
-              help='If not None, define dropout rate.',
-              show_default=True)
-@click.option('-d', '--device',
-              default=0,
               type=str,
-              help='Define which device use for training: '
-              'gpu: Use ID 0 gpus'
-              'cpu: Usa CPU'
-              '0-9 - specified gpu device id to use',
+              help='If not None, str checkpoints for Big_Unet',
               show_default=True)
-@click.option('-th', '--threshold',
-              default=0.5,
+@click.option('-ct', '--cnn_threshold',
+              default=0.1,
               type=float,
               help='Threshold use for model prediction.',
               show_default=True)
+@click.option('-d', '--device',
+              default='0',
+              type=str,
+              help='Define which device use for training: '
+                   'gpu: Use ID 0 GPUs '
+                   'cpu: Usa CPU '
+                   '0-9 - specified GPU device id to use',
+              show_default=True)
+@click.option('-db', '--debug',
+              default=False,
+              type=bool,
+              help='If True, save output from each step for debugging.',
+              show_default=True)
 @click.version_option(version=version)
-def main(prediction_dir: str,
+def main(dir: str,
          patch_size: int,
-         cnn_type: tuple,
-         cnn_out_channel: int,
-         cnn_layers: int,
-         conv_kernel: int,
-         conv_padding: int,
-         pool_kernel: int,
-         cnn_multiplayer: int,
-         cnn_structure: str,
-         checkpoints: tuple,
+         cnn_network: str,
+         cnn_threshold: float,
          device: str,
-         threshold: float,
-         dropout: Optional[float] = None):
+         debug: bool,
+         cnn_checkpoint: Optional[str] = None):
     """
-    MAIN MODULE FOR PREDICTION WITH CNN UNET/RESUNET/UNET3PLUS MODELS
-
-    Supported 3D images only!
+    MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
     """
-    tardis_logo = Tardis_Logo()
-    tardis_logo(title='Semantic MT prediction module')
+    """Initial Setup"""
+    if debug:
+        str_debug = '<Debugging Mode>'
+    else:
+        str_debug = ''
 
-    """Searching for available images for prediction"""
+    tardis_progress = TardisLogo()
+    tardis_progress(title=f'Fully-automatic CNN prediction {str_debug}')
+
+    # Searching for available images for prediction
     available_format = ('.tif', '.mrc', '.rec', '.am')
-    predict_list = [f for f in listdir(
-        prediction_dir) if f.endswith(available_format)]
+    output = join(dir, 'temp', 'Predictions')
+
+    predict_list = [f for f in listdir(dir) if f.endswith(available_format)]
     assert len(predict_list) > 0, 'No file found in given directory!'
 
-    if cnn_type == 'multi':
-        cnn_type = ['unet', 'unet3plus']
-    else:
-        cnn_type = [cnn_type]
+    # Tardis progress bard update
+    tardis_progress(title=f'Fully-automatic CNN prediction {str_debug}',
+                    text_1=f'Found {len(predict_list)} images to predict!',
+                    text_5='Point Cloud: In processing...',
+                    text_7='Current Task: Set-up environment...')
 
-    stitcher = StitchImages(tqdm=False)
+    # Hard fix for dealing with tif file lack of pixel sizes...
+    tif_px = None
+    if np.any([True for x in predict_list if x.endswith(('.tif', '.tiff'))]):
+        tif_px = click.prompt('Detected .tif files, please provide pixel size:',
+                              type=float)
 
-    for i in predict_list:
-        """Build temp dir"""
-        build_temp_dir(dir=prediction_dir)
+    # Build handler's
+    normalize = RescaleNormalize(clip_range=(1, 99))  # Normalize histogram
+    minmax = MinMaxNormalize()
 
-        """Voxalize image"""
-        check_format = False
+    image_stitcher = StitchImages()
 
-        if i.endswith('.tif'):
-            image, _ = import_tiff(img=join(prediction_dir, i),
-                                   dtype=np.uint8)
-            format = 4
-            check_format = True
-        elif i.endswith(('.mrc', '.rec')):
-            image, _ = import_mrc(img=join(prediction_dir, i))
-            format = 4
-            check_format = True
-        elif i.endswith('.am'):
-            image, _ = import_am(img=join(prediction_dir, i))
-            format = 3
-            check_format = True
+    # Build CNN from checkpoints
+    checkpoints = cnn_checkpoint
 
-        if not check_format:
+    device = get_device(device)
+    cnn_network = cnn_network.split('_')
+    assert len(cnn_network) == 2, 'CNN type should be formatted as `unet_32`'
+
+    # Build CNN network with loaded pre-trained weights
+    predict_cnn = Predictor(checkpoint=checkpoints[0],
+                            network=cnn_network[0],
+                            subtype=cnn_network[1],
+                            img_size=patch_size,
+                            device=device)
+
+    """Process each image with CNN and DIST"""
+    tardis_progress = TardisLogo()
+    for id, i in enumerate(sorted(predict_list)):
+        """Pre-Processing"""
+        if i.endswith('CorrelationLines.am'):
             continue
 
+        # Tardis progress bard update
+        tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
+                        text_1=f'Found {len(predict_list)} images to predict!',
+                        text_3=f'Image: {i}',
+                        text_4='Pixel size: Nan A',
+                        text_5='Point Cloud: In processing...',
+                        text_7='Current Task: Preprocessing for CNN...')
+
+        # Build temp dir
+        build_temp_dir(dir=dir)
+
+        # Cut image for smaller image
+        if i.endswith('.am'):
+            image, px, _, transformation = import_am(am_file=join(dir, i))
+        else:
+            image, px = load_image(join(dir, i))
+
+        if tif_px is not None:
+            px = tif_px
+
+        # Check image structure and normalize histogram
+        if image.min() > 5 or image.max() < 250:  # Rescale image intensity
+            image = normalize(image)
+        if not image.min() >= 0 or not image.max() <= 1:  # Normalized between 0 and 1
+            image = minmax(image)
+        assert image.dtype == np.float32
+
+        # Calculate parameters for normalizing image pixel size
+        scale_factor = px / 25
         org_shape = image.shape
+        scale_shape = tuple(np.multiply(org_shape, scale_factor).astype(np.int16))
 
-        trim_image(image=image,
-                   trim_size_xy=patch_size,
-                   trim_size_z=patch_size,
-                   output=join(prediction_dir, 'temp', 'Patches'),
-                   image_counter=0,
-                   clean_empty=False,
-                   prefix='')
+        # Tardis progress bard update
+        tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
+                        text_1=f'Found {len(predict_list)} images to predict!',
+                        text_3=f'Image: {i}',
+                        text_4=f'Pixel size: {px} A; Image re-sample to 25 A',
+                        text_5='Point Cloud: In processing...',
+                        text_7=f'Current Task: Sub-dividing images for {patch_size} size')
 
-        image = None
+        # Cut image for fix patch size and normalizing image pixel size
+        trim_with_stride(image=image.astype(np.float32),
+                         scale=scale_shape,
+                         trim_size_xy=patch_size,
+                         trim_size_z=patch_size,
+                         output=join(dir, 'temp', 'Patches'),
+                         image_counter=0,
+                         clean_empty=False,
+                         stride=10)
         del image
 
-        """Predict image patches"""
-        patches_DL = PredictionDataSet(img_dir=join(prediction_dir, 'temp', 'Patches'),
-                                       out_channels=cnn_out_channel)
+        # Setup CNN dataloader
+        patches_DL = PredictionDataset(img_dir=join(dir, 'temp', 'Patches'))
 
-        predict(image_DL=patches_DL,
-                output=join(prediction_dir, 'temp', 'Predictions'),
-                cnn_type=cnn_type,
-                cnn_in_channel=1,
-                cnn_out_channel=cnn_out_channel,
-                image_patch_size=patch_size,
-                cnn_layers=cnn_layers,
-                cnn_multiplayer=cnn_multiplayer,
-                cnn_composition=cnn_structure,
-                conv_kernel=conv_kernel,
-                conv_padding=conv_padding,
-                pool_kernel=pool_kernel,
-                checkpoints=checkpoints,
-                device=device,
-                threshold=threshold,
-                cnn_dropout=dropout)
+        """CNN prediction"""
+        iter_time = 1
+        for j in range(len(patches_DL)):
+            if j % iter_time == 0:
+                # Tardis progress bard update
+                tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
+                                text_1=f'Found {len(predict_list)} images to predict!',
+                                text_3=f'Image: {i}',
+                                text_4=f'Pixel size: {px} A; Image re-sample to 25 A',
+                                text_5='Point Cloud: In processing...',
+                                text_7='Current Task: CNN prediction...',
+                                text_8=print_progress_bar(j, len(patches_DL)))
 
-        """Stitch patches from temp dir and save image"""
-        tif.imsave(file=join(prediction_dir, 'Predictions', f'{i[:-format]}.tif'),
-                   data=stitcher(image_dir=join(prediction_dir, 'temp', 'Predictions'),
-                                 output=None,
-                                 mask=True,
-                                 prefix='',
-                                 dtype=np.int8)[:org_shape[0], :org_shape[1], :org_shape[2]])
+            # Pick image['s]
+            input, name = patches_DL.__getitem__(j)
+
+            if j == 0:
+                start = time.time()
+
+                # Predict & Threshold
+                out = np.where(predict_cnn.predict(input[None, :]) >= cnn_threshold, 1, 0)
+
+                end = time.time()
+                iter_time = 10 // (end - start)  # Scale progress bar refresh to 10s
+                if iter_time <= 1:
+                    iter_time = 1
+            else:
+                # Predict & Threshold
+                out = np.where(predict_cnn.predict(input[None, :]) >= cnn_threshold, 1, 0)
+
+            # Save threshold image
+            assert out.min() == 0 and out.max() in [0, 1]
+            tif.imwrite(join(output, f'{name}.tif'),
+                        np.array(out, dtype=np.uint8))
+
+        """Post-Processing"""
+        scale_factor = org_shape
+
+        # Tardis progress bard update
+        tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
+                        text_1=f'Found {len(predict_list)} images to predict!',
+                        text_3=f'Image: {i}',
+                        text_4=f'Original pixel size: {px} A; Image re-sample to 25 A',
+                        text_5='Point Cloud: In processing...',
+                        text_7='Current Task: Stitching...')
+
+        # Stitch predicted image patches
+        image = check_uint8(image_stitcher(image_dir=output,
+                                           mask=True,
+                                           dtype=np.int8)[:scale_shape[0],
+                                                          :scale_shape[1],
+                                                          :scale_shape[2]])
+        assert image.shape == scale_shape, f'Image shape {image.shape} != scale shape {scale_shape}'
+
+        # Restored original image pixel size
+        image, _ = scale_image(image=image, scale=scale_factor)
+
+        # Check if predicted image
+        assert image.shape == org_shape, \
+            TardisError('145',
+                        'tardis/predict_spindletorch.py',
+                        f'Error while converting to {px} A pixel size. '
+                        f'Org. shape {org_shape} is not the same as '
+                        f'converted shape {image.shape}')
+
+        # If prediction fail aka no prediction was produces continue with next image
+        if image is None:
+            continue
+
+        tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
+                        text_1=f'Found {len(predict_list)} images to predict!',
+                        text_3=f'Image: {i}',
+                        text_4=f'Original pixel size: {px} A; Image re-sample to 25 A',
+                        text_7='Current Task: Segmentation finished!')
 
         """Clean-up temp dir"""
-        clean_up(dir=prediction_dir)
+        clean_up(dir=dir)
 
 
 if __name__ == '__main__':

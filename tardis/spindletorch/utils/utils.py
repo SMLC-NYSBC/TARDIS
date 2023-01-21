@@ -1,17 +1,137 @@
+#######################################################################
+#  TARDIS - Transformer And Rapid Dimensionless Instance Segmentation #
+#                                                                     #
+#  New York Structural Biology Center                                 #
+#  Simons Machine Learning Center                                     #
+#                                                                     #
+#  Robert Kiewisz, Tristan Bepler                                     #
+#  MIT License 2021 - 2023                                            #
+#######################################################################
+
+from typing import Optional, Tuple, Union
+
 import numpy as np
+import torch
+import torch.nn.functional as F
 
 
-def number_of_features_per_level(init_channel_number=64,
-                                 num_levels=5):
+def scale_image(scale: tuple,
+                image: Optional[np.ndarray] = None,
+                mask: Optional[np.ndarray] = None) -> Union[Tuple[np.ndarray, np.ndarray, int],
+                                                            Tuple[np.ndarray, int]]:
     """
-    COMPUTE LIST OF OUTPUT_CHANNELS FOR CNN FEATURES
+    Scale image module using torch GPU interpolation
+
+    Expect 2D (XY/YX), 3D (ZYX)
 
     Args:
-        init_channel_number: Number of initial input channels for CNN
-        num_levels: Number of channels from max_number_of_conv_layer()
-
+        image (np.ndarray, Optional): image data
+        mask (np.ndarray, Optional): Optional binary mask image data
+        scale (tuple): scale value for image
     """
-    return [init_channel_number * 2 ** k for k in range(num_levels)]
+    dim = 1
+    type_i = image.dtype
+    type_m = None
+    if mask is not None:
+        type_m = mask.dtype
+
+    if image is not None:
+        if not np.all(scale == image.shape):
+            if image.ndim == 3 and image.shape[2] != 3:  # 3D with Gray
+                image = area_scaling(img=image,
+                                     scale=scale,
+                                     dtype=type_i)
+            else:
+                image = trilinear_scaling(img=image, scale=scale, dtype=type_i)
+
+    if mask is not None:
+        if not np.all(scale == mask.shape):
+            mask = area_scaling(img=mask,
+                                scale=scale,
+                                dtype=type_m)
+
+    if image is not None and mask is not None:
+        return image, mask, dim
+    elif image is None and mask is not None:
+        return mask, dim
+    else:
+        return image, dim
+
+
+def trilinear_scaling(img: np.ndarray,
+                      scale: tuple,
+                      dtype: np.dtype) -> np.ndarray:
+    """
+    Saling of 3D array using trilinear method from pytorch
+
+    Args:
+        img: 3D array.
+        scale: Scale array size.
+        dtype: Output dtype for scale array.
+
+    Returns:
+        no.ndarray: Up or Down scale 3D array.
+    """
+    img = torch.from_numpy(img[None, None, :]).to('cpu').type(torch.float)
+    img = F.interpolate(img,
+                        size=scale,
+                        mode='trilinear').cpu().detach().numpy()[0, 0, :].astype(dtype)
+    return img
+
+
+def area_scaling(img: np.ndarray,
+                 scale: tuple,
+                 dtype: np.dtype) -> np.ndarray:
+    """
+    Saling of 3D array using area method from pytorch
+
+    Args:
+        img: 3D array.
+        scale: Scale array size.
+        dtype: Output dtype for scale array.
+
+    Returns:
+        no.ndarray: Up or Down scale 3D array.
+    """
+
+    size_Z = [scale[0], img.shape[1], img.shape[2]]
+    image_scale_Z = np.zeros(size_Z, dtype=dtype)
+
+    # Scale Z axis
+    for i in range(img.shape[2]):
+        df_img = torch.from_numpy(img[:, :, i]).to('cpu').type(torch.float)
+        image_scale_Z[:, :, i] = F.interpolate(df_img[None, None, :],
+                                               size=size_Z[:2],
+                                               mode='area').cpu().detach().numpy()[0, 0, :].astype(dtype)
+
+    # Scale XY axis
+    img = np.zeros(scale, dtype=dtype)
+    for i in range(scale[0]):
+        df_img = torch.from_numpy(image_scale_Z[i, :]).to('cpu').type(torch.float)
+        img[i, :] = F.interpolate(df_img[None, None, :],
+                                  size=scale[1:],
+                                  mode='area').cpu().detach().numpy()[0, 0, :].astype(dtype)
+
+    return img
+
+
+def number_of_features_per_level(channel_scaler: int,
+                                 num_levels: int) -> list:
+    """
+    Compute list of output channels for CNN.
+
+    Features = channel_scaler * 2^k
+        where:
+        - k is layer number
+
+    Args:
+        channel_scaler (int): Number of initial input channels for CNN.
+        num_levels (int): Number of channels from max_number_of_conv_layer().
+
+    Returns:
+        list: List of output channels.
+    """
+    return [channel_scaler * 2 ** k for k in range(num_levels)]
 
 
 def max_number_of_conv_layer(img=None,
@@ -22,9 +142,9 @@ def max_number_of_conv_layer(img=None,
                              stride=1,
                              pool_size=2,
                              pool_stride=2,
-                             first_max_pool=False):
+                             first_max_pool=False) -> int:
     """
-    CALCULATION OF MAXIMUM POSSIBLE LAYERS IN CNN
+    Calculate maximum possible number of layers given image size.
 
     Based on the torch input automatically select number of convolution blocks,
     based on a standard settings.
@@ -38,15 +158,18 @@ def max_number_of_conv_layer(img=None,
         - F is the max pooling kernel size
 
     Args:
-        img: Tensor Image data if from which size of data is calculated
-        input_volume: Size of the multiplayer for the convolution
-        max_out: Maximal output dimension after maxpooling
-        kernel_size: Kernel size for the convolution
-        padding: Padding size for the convolution blocks
-        stride: Stride for the convolution blocks
-        pool_size: Max Pooling kernel size
-        pool_stride: Max Pooling stride size
-        first_max_pool: If first CNN block has max pooling
+        img (np.ndarray, Optional): Tensor data from which size of is calculated.
+        input_volume (int): Size of the multiplayer for the convolution.
+        max_out (int): Maximal output dimension after max_pooling.
+        kernel_size (int): Kernel size for the convolution.
+        padding (int): Padding size for the convolution blocks.
+        stride: (int) Stride for the convolution blocks.
+        pool_size (int) Max Pooling kernel size.
+        pool_stride (int): Max Pooling stride size.
+        first_max_pool (bool): If first CNN block has max pooling.
+
+    Returns:
+        int: Maximum number of CNN layers.
     """
     if img is not None:
         # In case of anisotropic image select smallest size
@@ -74,12 +197,15 @@ def max_number_of_conv_layer(img=None,
     return max_layers
 
 
-def normalize_image(image: np.ndarray):
+def normalize_image(image: np.ndarray) -> np.ndarray:
     """
-    Simple image data normalizer between 0,1
+    Simple image data normalizer between 0,1.
 
     Args:
-        image: Image data set
+        image: Image data set.
+
+    Returns:
+        np.ndarray: Normalized image between 0 and 1 values.
     """
     image_min = np.min(image)
     image_max = np.max(image)
@@ -93,3 +219,46 @@ def normalize_image(image: np.ndarray):
         image = np.where(image < image_max, 1, 0)
 
     return image
+
+
+def check_model_dict(model_dict: dict) -> dict:
+    """
+    Check and rebuild model structure dictionary to ensure back-compatibility.
+
+    Args:
+        model_dict (dict): Model structure dictionary.
+
+    Returns:
+        dict: Standardize model structure dictionary.
+    """
+    new_dict = {}
+
+    for key, value in model_dict.items():
+        if key.endswith('type'):
+            new_dict['cnn_type'] = value
+        if key.endswith('cation'):
+            new_dict['classification'] = value
+        if key.endswith('_in') or key.startswith('in_'):
+            new_dict['in_channel'] = value
+        if key.endswith('_out') or key.startswith('out_'):
+            new_dict['out_channel'] = value
+        if key.endswith('size'):
+            new_dict['img_size'] = value
+        if key.endswith('dropout'):
+            new_dict['dropout'] = value
+        if key.endswith('layers'):
+            new_dict['num_conv_layers'] = value
+        if key.endswith('scaler') or key.endswith('multiplayer'):
+            new_dict['conv_scaler'] = value
+        if key.endswith('v_kernel'):
+            new_dict['conv_kernel'] = value
+        if key.endswith('padding'):
+            new_dict['conv_padding'] = value
+        if key.endswith('l_kernel'):
+            new_dict['maxpool_kernel'] = value
+        if key.endswith('components'):
+            new_dict['layer_components'] = value
+        if key.endswith('group'):
+            new_dict['num_group'] = value
+
+    return new_dict

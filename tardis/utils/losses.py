@@ -1,3 +1,13 @@
+#######################################################################
+#  TARDIS - Transformer And Rapid Dimensionless Instance Segmentation #
+#                                                                     #
+#  New York Structural Biology Center                                 #
+#  Simons Machine Learning Center                                     #
+#                                                                     #
+#  Robert Kiewisz, Tristan Bepler                                     #
+#  MIT License 2021 - 2023                                            #
+#######################################################################
+
 from typing import Optional
 
 import torch
@@ -6,12 +16,14 @@ import torch.nn as nn
 
 class SigmoidFocalLoss(nn.Module):
     """
-    SIGMOID FOCAL LOSS FUNCTION
-    As in: doi:10.1088/1742-6596/1229/1/012045
+    Sigmoid focal loss function
 
-    Input:
-        logits of a shape [Batch x Channels x Length x Length]
-        target of a shape [Batch x Channels x Length x Length]
+    References:
+        10.1088/1742-6596/1229/1/012045
+
+    Args:
+        gamma (float): Gamma factor used in term1 of SFL.
+        alpha (int, optional): Optional alpha factor used for normalizing SPF.
     """
 
     def __init__(self,
@@ -23,7 +35,16 @@ class SigmoidFocalLoss(nn.Module):
 
     def forward(self,
                 logits: torch.Tensor,
-                targets: torch.Tensor):
+                targets: torch.Tensor) -> torch.Tensor:
+        """
+        Forward loos function
+
+        Args:
+            logits (torch.Tensor): Logits of a shape
+                [Batch x Channels x Length x Length].
+            targets (torch.Tensor): Target of a shape
+                [Batch x Channels x Length x Length].
+        """
         y = targets.unsqueeze(1)
         p = torch.sigmoid(logits)
         term1 = (1 - p) ** self.gamma * torch.log(p)
@@ -43,9 +64,11 @@ class SigmoidFocalLoss(nn.Module):
 class DiceLoss(nn.Module):
     """
     Dice coefficient loss function.
-        Dice=2|A∩B||A|+|B| ;
-        where |A∩B| represents the common elements between sets A and B
-        |A| ann |B| represents the number of elements in set A ans set B
+
+    Dice=2(A∩B)(A)+(B);
+    where 'A∩B' represents the common elements between sets A and B
+    'A' ann 'B' represents the number of elements in set A ans set B
+
     This loss effectively zero-out any pixels from our prediction which
     are not "activated" in the target mask.
     """
@@ -56,7 +79,17 @@ class DiceLoss(nn.Module):
     def forward(self,
                 logits: torch.Tensor,
                 targets: torch.Tensor,
-                smooth=1e-16):
+                smooth=1e-16) -> torch.Tensor:
+        """
+        Forward loos function
+
+        Args:
+            logits (torch.Tensor): Logits of a shape
+                [Batch x Channels x Length x Length].
+            targets (torch.Tensor): Target of a shape
+                [Batch x Channels x Length x Length].
+            smooth (float): Smooth factor to ensure  no 0 division.
+        """
         logits = torch.sigmoid(logits)
 
         # Flatten label and prediction tensors
@@ -65,21 +98,35 @@ class DiceLoss(nn.Module):
 
         # Calculate dice loss
         intersection = (logits * targets).sum()
-        dice = (2 * intersection + smooth) / (logits.square().sum() + targets.square().sum() + smooth)
+        dice = (2 * intersection + smooth) / (logits.square().sum() +
+                                              targets.square().sum() +
+                                              smooth)
 
         return 1 - dice
 
 
 class BCEDiceLoss(nn.Module):
-    def __init__(self,
-                 alpha=1.0):
+    """
+    DICE BCE COMBO LOSS FUNCTION
+    """
+
+    def __init__(self):
         super(BCEDiceLoss, self).__init__()
         self.bce = BCELoss()
-        self.dice = DiceLoss(alpha=alpha)
+        self.dice = DiceLoss()
 
     def forward(self,
                 inputs: torch.Tensor,
-                targets: torch. Tensor):
+                targets: torch.Tensor) -> torch.Tensor:
+        """
+        Forward loos function
+
+        Args:
+            inputs (torch.Tensor): Logits of a shape
+                [Batch x Channels x Length x Length].
+            targets (torch.Tensor): Target of a shape
+                [Batch x Channels x Length x Length].
+        """
         bce_loss = self.bce(inputs=inputs,
                             targets=targets)
 
@@ -92,6 +139,14 @@ class BCEDiceLoss(nn.Module):
 
 
 class BCELoss(nn.Module):
+    """
+    STANDARD BINARY CROSS-ENTROPY LOSS FUNCTION
+
+    Args:
+        reduction (str, optional): BCE reduction over batch type.
+        weight (Optional[float], optional): Optional weigh factor for positive samples.
+    """
+
     def __init__(self,
                  reduction='mean',
                  weight: Optional[float] = None):
@@ -100,12 +155,30 @@ class BCELoss(nn.Module):
 
     def forward(self,
                 logits: torch.Tensor,
-                targets: torch.Tensor):
+                targets: torch.Tensor) -> torch.Tensor:
+        """
+        Forward loos function
+
+        Args:
+            logits (torch.Tensor): Logits of a shape
+                [Batch x Channels x Length x Length].
+            targets (torch.Tensor): Target of a shape
+                [Batch x Channels x Length x Length].
+        """
 
         return self.loss(logits, targets)
 
 
 class CELoss(nn.Module):
+    """
+    STANDARD CROSS-ENTROPY LOSS FUNCTION
+
+    Args:
+        reduction (str, optional):
+            BCE reduction over batch type.
+                Defaults to 'mean'.
+    """
+
     def __init__(self,
                  reduction='mean'):
         super(CELoss, self).__init__()
@@ -113,19 +186,32 @@ class CELoss(nn.Module):
 
     def forward(self,
                 logits: torch.Tensor,
-                targets: torch.Tensor):
+                targets: torch.Tensor) -> torch.Tensor:
+        """
+        Forward loos function
+
+        Args:
+            logits (torch.Tensor):
+                logits of a shape [Batch x Channels x Length x Length]
+            targets (torch.Tensor):
+                target of a shape [Batch x Channels x Length x Length]
+        """
 
         return self.loss(logits, targets)
 
 
 class AdaptiveDiceLoss(nn.Module):
     """
+    ADAPTIVE DICE LOSS FUNCTION
+
     AdaptiveDice =  2∑[(1-p_i)^a * p_i] * g_i
                    --------------------------
                    ∑[(1-p_i)^a * p_i]  + ∑g_i^2
+
     Args:
-        alpha: Scaling factor
-        smooth: Smooth factor to remove division by 0
+        alpha (float):
+            Optional alpha scaling factor.
+                Defaults to 0.1.
     """
 
     def __init__(self,
@@ -134,9 +220,21 @@ class AdaptiveDiceLoss(nn.Module):
         self.alpha = alpha
 
     def forward(self,
-                inputs,
-                targets,
-                smooth=1e-16):
+                inputs: torch.Tensor,
+                targets: torch.Tensor,
+                smooth=1e-16) -> torch.Tensor:
+        """
+        Forward loos function
+
+        Args:
+            inputs (torch.Tensor):
+                logits of a shape [Batch x Channels x Length x Length].
+            targets (torch.Tensor):
+                target of a shape [Batch x Channels x Length x Length].
+            smooth (float):
+                Smooth factor to ensure  no 0 division.
+                    Defaults to 1e-16.
+        """
         inputs = torch.sigmoid(inputs)
 
         inputs = inputs.view(-1)
@@ -145,18 +243,35 @@ class AdaptiveDiceLoss(nn.Module):
         inputs = ((1 - inputs) ** self.alpha) * inputs
 
         intersection = (inputs * targets).sum()
-        dice = (2. * intersection + smooth) / (inputs.square().sum() + targets.square().sum() + smooth)
+        dice = (2. * intersection + smooth) / (inputs.square().sum() +
+                                               targets.square().sum() +
+                                               smooth)
 
         return 1 - dice
 
 
 class SoftF1:
+    """
+    SOFT F1 LOSS FUNCTION FOR EVALUATION
+
+    Standard F1 loss function operating on probability's
+    """
+
     def __init__(self):
         super(SoftF1, self).__init__()
 
     def __call__(self,
                  logits: torch.Tensor,
                  targets: torch.Tensor):
+        """
+        Forward loos function
+
+        Args:
+            logits (torch.Tensor):
+                logits of a shape [Batch x Channels x Length x Length].
+            targets (torch.Tensor):
+                target of a shape [Batch x Channels x Length x Length].
+        """
         with torch.no_grad():
             logits = torch.sigmoid(logits)
             logits = logits.flatten().cpu().detach().numpy()

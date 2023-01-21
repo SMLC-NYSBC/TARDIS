@@ -11,6 +11,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 GF_checkpoint/
+DIST_checkpoint/
 cnn_checkpoint/
 data/
 env/
@@ -29,6 +30,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+docs/_build/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
