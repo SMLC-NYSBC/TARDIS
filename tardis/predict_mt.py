@@ -79,14 +79,17 @@ warnings.simplefilter("ignore", UserWarning)
               type=int,
               help='Number of point per voxel.',
               show_default=True)
-@click.option('-f', '--filter_mt',
-              default=0,
+@click.option('-f', '--filter_connect',
+              default=175,
               type=int,
-              help='Remove MT that are shorter then given A value '
-                   'NOT SUPPORTED FOR .TIF FILE FORMAT '
-                   'There are two filtering mechanisms: '
-                   '- Connect segments that are closer then 17.5 nm'
-                   '- Remove short segments (aka. Segments shorter then XX A. ',
+              help='Connect MT which ends are closer then given value in A: '
+                   'NOT SUPPORTED FOR .TIF FILE FORMAT ',
+              show_default=True)
+@click.option('-f', '--filter_mt',
+              default=1000,
+              type=int,
+              help='Remove MT that are shorter then given value in A: '
+                   'NOT SUPPORTED FOR .TIF FILE FORMAT ',
               show_default=True)
 @click.option('-d', '--device',
               default='0',
@@ -96,14 +99,19 @@ warnings.simplefilter("ignore", UserWarning)
                    'cpu: Usa CPU '
                    '0-9 - specified GPU device id to use',
               show_default=True)
+@click.option('-ap', '--amira_prefix',
+              default='.CorrelationLines',
+              type=str,
+              help='Prefix name for amira files.',
+              show_default=True)
 @click.option('-th_dist', '--distance_threshold',
-              default=None,
+              default=1000,
               type=int,
               help='Distance threshold used to evaluate similarity between two '
                    'splines based on its coordinates.',
               show_default=True)
 @click.option('-th_inter', '--interaction_threshold',
-              default=None,
+              default=0.25,
               type=float,
               help='Interaction threshold used to evaluate reject splines that are'
                    'similar below that threshold.',
@@ -132,16 +140,17 @@ def main(dir: str,
          cnn_threshold: float,
          dist_threshold: float,
          points_in_patch: int,
-         filter_mt: float,
+         filter_connect: int,
+         filter_mt: int,
          device: str,
          debug: bool,
+         amira_prefix: str,
+         distance_threshold: int,
+         interaction_threshold: float,
          output_format='amira',
-         amira_prefix='',
          visualizer: Optional[str] = None,
          cnn_checkpoint: Optional[str] = None,
-         dist_checkpoint: Optional[str] = None,
-         distance_threshold=None,
-         interaction_threshold=None):
+         dist_checkpoint: Optional[str] = None):
     """
     MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
     """
@@ -152,7 +161,15 @@ def main(dir: str,
         str_debug = ''
 
     tardis_progress = TardisLogo()
-    tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}')
+    title = f'Fully-automatic MT segmentation module {str_debug}'
+    tardis_progress(title=title)
+
+    # Check for spatial graph in folder from amira/tardis comp.
+    amira_check = False
+    if isdir(join(dir, 'amira')):
+        amira_check = True
+        dir_amira = join(dir, 'amira')
+        title = f'Fully-automatic MT segmentation with Amira comparison {str_debug}'
 
     # Searching for available images for prediction
     available_format = ('.tif', '.mrc', '.rec', '.am')
@@ -167,7 +184,7 @@ def main(dir: str,
                     py='tardis/compare_spatial_graphs.py',
                     desc=f'Given {dir} does not contain any recognizable file!')
     else:
-        tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}',
+        tardis_progress(title=title,
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_5='Point Cloud: In processing...',
                         text_7='Current Task: Set-up environment...')
@@ -191,10 +208,11 @@ def main(dir: str,
     patch_pc = PatchDataSet(max_number_of_points=points_in_patch,
                             graph=False)
     GraphToSegment = GraphInstanceV2(threshold=dist_threshold, smooth=True)
-    filter_segments = FilterSpatialGraph(filter_short_segments=filter_mt)
+    filter_segments = FilterSpatialGraph(connect_seg_if_closer_then=filter_connect,
+                                         filter_short_segments=filter_mt)
 
     # Build handler to output amira file
-    build_amira_file = NumpyToAmira()
+    amira_file = NumpyToAmira()
     compare_spline = SpatialGraphCompare(distance_threshold=distance_threshold,
                                          interaction_threshold=interaction_threshold)
 
@@ -237,23 +255,8 @@ def main(dir: str,
         elif i.endswith('.am'):
             in_format = 3
 
-        # Check for spatial graph in folder from amira/tardis comp.
-        if amira_prefix != '':
-            count = 0
-            dir_amira = join(dir, 'amira')
-            while count != 3 or isdir(dir_amira):
-                dir_amira = click.prompt('Amira directory not found, please indicate '
-                                         'it again:',
-                                         type=str)
-                count += 1
-
-            if not isdir(dir_amira):
-                TardisError(id='151',
-                            py='tardis/predict_mt.py',
-                            desc='Incorrect directory for amira spatial graphs.')
-
         # Tardis progress bar update
-        tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
+        tardis_progress(title=title,
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                         text_4='Pixel size: Nan A',
@@ -301,7 +304,7 @@ def main(dir: str,
         scale_shape = tuple(np.multiply(org_shape, scale_factor).astype(np.int16))
 
         # Tardis progress bar update
-        tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
+        tardis_progress(title=title,
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                         text_4=f'Pixel size: {px} A',
@@ -327,7 +330,7 @@ def main(dir: str,
         for j in range(len(patches_DL)):
             if j % iter_time == 0:
                 # Tardis progress bar update
-                tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
+                tardis_progress(title=title,
                                 text_1=f'Found {len(predict_list)} images to predict!',
                                 text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                                 text_4=f'Pixel size: {px} A',
@@ -361,7 +364,7 @@ def main(dir: str,
 
         """Post-Processing"""
         # Tardis progress bar update
-        tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
+        tardis_progress(title=title,
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                         text_4=f'Original pixel size: {px} A',
@@ -410,7 +413,7 @@ def main(dir: str,
             continue
 
         # Tardis progress bar update
-        tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
+        tardis_progress(title=title,
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                         text_4=f'Original pixel size: {px} A',
@@ -431,7 +434,7 @@ def main(dir: str,
 
         """DIST Prediction"""
         # Tardis progress bar update
-        tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
+        tardis_progress(title=title,
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                         text_4=f'Original pixel size: {px} A',
@@ -445,7 +448,7 @@ def main(dir: str,
         coords_df, _, output_idx, _ = patch_pc.patched_dataset(coord=point_cloud_ld / dist)
 
         # Predict point cloud
-        tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
+        tardis_progress(title=title,
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                         text_4=f'Original pixel size: {px} A',
@@ -458,7 +461,7 @@ def main(dir: str,
         graphs = []
         for id_dist, coord in enumerate(coords_df):
             if id_dist % iter_time == 0:
-                tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
+                tardis_progress(title=title,
                                 text_1=f'Found {len(predict_list)} images to predict!',
                                 text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                                 text_4=f'Original pixel size: {px} A',
@@ -487,7 +490,7 @@ def main(dir: str,
 
         """DIST post-processing"""
         if i.endswith(('.am', '.rec', '.mrc')):
-            tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
+            tardis_progress(title=title,
                             text_1=f'Found {len(predict_list)} images to predict!',
                             text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                             text_4=f'Original pixel size: {px} A',
@@ -501,7 +504,7 @@ def main(dir: str,
             point_cloud_ld[:, 1] = point_cloud_ld[:, 1] + transformation[1]
             point_cloud_ld[:, 2] = point_cloud_ld[:, 2] + transformation[2]
         else:
-            tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
+            tardis_progress(title=title,
                             text_1=f'Found {len(predict_list)} images to predict!',
                             text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                             text_4=f'Original pixel size: {px} A',
@@ -513,7 +516,6 @@ def main(dir: str,
                                                    idx=output_idx,
                                                    prune=5,
                                                    visualize=visualizer)
-
         segments_filter = filter_segments(segments)
 
         # Save debugging check point
@@ -534,7 +536,7 @@ def main(dir: str,
                          f'{i[:-in_format]}_segments.npy'),
                     segments)
 
-        tardis_progress(title=f'Fully-automatic MT segmentation module  {str_debug}',
+        tardis_progress(title=title,
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                         text_4=f'Original pixel size: {px} A',
@@ -543,13 +545,13 @@ def main(dir: str,
                         text_7='Current Task: Segmentation finished!')
 
         """Save as .am"""
-        build_amira_file.export_amira(coords=segments,
-                                      file_dir=join(am_output,
-                                                    f'{i[:-in_format]}_SpatialGraph.am'),
-                                      labels=['TardisPrediction'])
-        build_amira_file.export_amira(coords=segments_filter,
-                                      file_dir=join(am_output,
-                                                    f'{i[:-in_format]}_SpatialGraph_filter.am'))
+        amira_file.export_amira(coords=segments,
+                                file_dir=join(am_output,
+                                              '{i[:-in_format]}_SpatialGraph.am'),
+                                labels=['TardisPrediction'])
+        amira_file.export_amira(coords=segments_filter,
+                                file_dir=join(am_output,
+                                              f'{i[:-in_format]}_SpatialGraph_filter.am'))
         if output_format == 'csv':
             np.savetxt(join(am_output,
                             f'{i[:-in_format]}'
@@ -563,20 +565,20 @@ def main(dir: str,
                        delimiter=",")
 
         # Run comparison if amira file was detected
-        if amira_prefix != '':
+        if amira_check:
             dir_amira_file = join(dir_amira[:-in_format] + amira_prefix + '.am')
             amira_sg = ImportDataFromAmira(src_am=dir_amira_file)
             amira_sg = amira_sg.get_segmented_points()
 
             if isfile(dir_amira_file):
-                build_amira_file.export_amira(file_dir=join(am_output,
-                                                            f'{i[:-in_format]}_AmiraCompare.am'),
-                                              coords=compare_spline(amira_sg=amira_sg,
-                                                                    tardis_sg=segments_filter),
-                                              labels=['TardisFilterBasedOnAmira',
-                                                      'TardisNoise',
-                                                      'AmiraFilterBasedOnTardis',
-                                                      'AmiraNoise'])
+                amira_file.export_amira(file_dir=join(am_output,
+                                                      f'{i[:-in_format]}_AmiraCompare.am'),
+                                        coords=compare_spline(amira_sg=amira_sg,
+                                                              tardis_sg=segments_filter),
+                                        labels=['TardisFilterBasedOnAmira',
+                                                'TardisNoise',
+                                                'AmiraFilterBasedOnTardis',
+                                                'AmiraNoise'])
 
         """Clean-up temp dir"""
         clean_up(dir=dir)
