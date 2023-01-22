@@ -16,7 +16,7 @@ from scipy.interpolate import splev, splprep
 
 from tardis.dist_pytorch.utils.visualize import VisualizeFilaments, VisualizePointCloud
 from tardis.utils.errors import TardisError
-from tardis.utils.spline_metric import reorder_segments_id, sort_segment, tortuosity
+from tardis.utils.spline_metric import sort_segment
 
 
 class GraphInstanceV2:
@@ -341,17 +341,19 @@ class GraphInstanceV2:
                 smooth_spline.append(x)
 
         coord_segment_smooth = np.concatenate(smooth_spline)
+        return coord_segment_smooth
+        #
+        # # Remove outlier splines with high tortuosity
+        # for i in np.unique(coord_segment_smooth[:, 0]):
+        #     filament = coord_segment_smooth[np.where(coord_segment_smooth[:, 0] ==
+        #                                              int(i))[0], :]
+        #     tortuosity_spline.append(tortuosity(filament))
+        #
+        # # Remove errors with the highest tortuosity
+        # error = [id for id, i in enumerate(tortuosity_spline) if i > 1.1]
+        # segments = np.stack([i for i in coord_segment_smooth if i[0] not in error])
 
-        for i in np.unique(coord_segment_smooth[:, 0]):
-            filament = coord_segment_smooth[np.where(coord_segment_smooth[:, 0] ==
-                                                     int(i))[0], :]
-            tortuosity_spline.append(tortuosity(filament))
-
-        # Remove errors with the highest tortuosity
-        error = [id for id, i in enumerate(tortuosity_spline) if i > 1.1]
-        segments = np.stack([i for i in coord_segment_smooth if i[0] not in error])
-
-        return reorder_segments_id(segments)
+        # return reorder_segments_id(segments)
 
     def patch_to_segment(self,
                          graph: list,

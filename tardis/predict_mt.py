@@ -20,7 +20,6 @@ import tifffile.tifffile as tif
 from tardis.dist_pytorch.datasets.patches import PatchDataSet
 from tardis.dist_pytorch.utils.build_point_cloud import BuildPointCloud
 from tardis.dist_pytorch.utils.segment_point_cloud import GraphInstanceV2
-from tardis.dist_pytorch.utils.utils import pc_median_dist
 from tardis.spindletorch.data_processing.stitch import StitchImages
 from tardis.spindletorch.data_processing.trim import scale_image, trim_with_stride
 from tardis.spindletorch.datasets.augment import MinMaxNormalize, RescaleNormalize
@@ -441,11 +440,8 @@ def main(dir: str,
                         text_5=f'Point Cloud: {point_cloud_ld.shape[0]} Nodes; NaN Segments',
                         text_7='Current Task: Preparing for MT segmentation...')
 
-        # Normalize point cloud KNN distance !Soon depreciated!
-        dist = pc_median_dist(point_cloud_ld, avg_over=True)
-
         # Build patches dataset
-        coords_df, _, output_idx, _ = patch_pc.patched_dataset(coord=point_cloud_ld / dist)
+        coords_df, _, output_idx, _ = patch_pc.patched_dataset(coord=point_cloud_ld / 5)
 
         # Predict point cloud
         tardis_progress(title=title,

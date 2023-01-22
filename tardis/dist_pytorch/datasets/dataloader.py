@@ -93,7 +93,7 @@ class BasicDataset(Dataset):
             kwargs (bool): Dictionary of all arrays to load.
 
         Returns:
-            List (list[np.ndarray's]): List of kwargs arrays as a tensor arrays.
+            List (list[np.ndarray]): List of kwargs arrays as a tensor arrays.
         """
 
         return [np.load(join(self.cwd, self.temp, f'{key}_{i}.npy'), allow_pickle=True)

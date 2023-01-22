@@ -205,8 +205,9 @@ def main(dir: str,
                            coord_format=COORD_FORMAT,
                            with_img=False)
 
+        no_dataset = int(len([f for f in listdir(dir) if f.endswith(COORD_FORMAT)]) / 2)
         build_test_dataset(dataset_dir=dir,
-                           train_test_ration=train_test_ratio)
+                           dataset_no=no_dataset)
 
     """Pre-setting for building DataLoader"""
     # Check for general dataset
