@@ -128,7 +128,7 @@ def main(dir: str,
          cnn_checkpoint: Optional[str] = None,
          dist_checkpoint: Optional[str] = None):
     """
-    MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
+    !DEPRECIATED! MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
     """
     """Initial Setup"""
     if debug:

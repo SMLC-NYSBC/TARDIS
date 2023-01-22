@@ -82,7 +82,7 @@ def main(dir: str,
          debug: bool,
          cnn_checkpoint: Optional[str] = None):
     """
-    MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
+    !DEPRECIATE! MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
     """
     """Initial Setup"""
     if debug:
