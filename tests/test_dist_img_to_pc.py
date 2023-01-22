@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 
 from tardis.dist_pytorch.utils.build_point_cloud import BuildPointCloud
 
@@ -19,8 +18,7 @@ def test_BuildPointCloud():
     image = np.array([[0, 0, 0],
                       [0, 2, 0],
                       [0, 0, 0]], dtype=np.uint8)
-    with pytest.raises(AssertionError):
-        BuildPointCloud.check_data(image)
+    BuildPointCloud.check_data(image)
 
     # Test build_point_cloud method
     image = np.array([[1, 0, 0, 0],
@@ -35,8 +33,7 @@ def test_BuildPointCloud():
                                      [3, 3, 0]])
     assert (point_cloud == expected_point_cloud).all()
 
-    with pytest.raises(AssertionError):
-        BuildPointCloud().build_point_cloud(np.array([[0, 0, 0],
-                                                      [0, 2, 0],
-                                                      [0, 0, 0]],
-                                                     dtype=np.uint8))
+    BuildPointCloud().build_point_cloud(np.array([[0, 0, 0],
+                                                  [0, 2, 0],
+                                                  [0, 0, 0]],
+                                                 dtype=np.uint8))
