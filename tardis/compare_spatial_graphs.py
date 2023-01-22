@@ -84,7 +84,7 @@ def main(distance_threshold: int,
 
     tardis_progress = TardisLogo()
     tardis_progress(title=f'Spline matching module {str_debug}',
-                    text_1=f'Found NA spatial graphs to compare.',
+                    text_1='Found NA spatial graphs to compare.',
                     text_5='Amira: Nan',
                     text_7='Tardis: NaN',
                     text_9='Task: Searching for data...')
@@ -93,7 +93,7 @@ def main(distance_threshold: int,
         mkdir(output)
     else:
         tardis_progress(title=f'Spline matching module {str_debug}',
-                        text_1=f'Found NA spatial graphs to compare.',
+                        text_1='Found NA spatial graphs to compare.',
                         text_5='Amira: Nan',
                         text_7='Tardis: NaN',
                         text_9='Task: Output folder already exist...')
@@ -104,7 +104,7 @@ def main(distance_threshold: int,
             mkdir(output)
         else:
             while not isdir(output):
-                output = click.prompt(f'Type new directory', type=str)
+                output = click.prompt('Type new directory', type=str)
 
     if dir is None:
         TardisError(id='122',
@@ -209,7 +209,7 @@ def main(distance_threshold: int,
 
     tardis_progress(title=f'Spline matching module {str_debug}',
                     text_1=f'Found {len(amira_files)} spatial graphs to compare.',
-                    text_5=f'All amira files compared successfully!',
+                    text_5='All amira files compared successfully!',
                     text_10=print_progress_bar(len(amira_files), len(amira_files)))
 
 

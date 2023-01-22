@@ -121,7 +121,7 @@ class BuildPointCloud:
                 else:
                     image_edt = edt.edt(image)
                     edt_factor = image_edt.max()
-    
+
                     if edt_factor > 3:
                         image_edt = np.where(image_edt > (edt_factor / 1.5), 1, 0)
                     else:
