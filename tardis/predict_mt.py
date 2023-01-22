@@ -547,7 +547,7 @@ def main(dir: str,
         """Save as .am"""
         amira_file.export_amira(coords=segments,
                                 file_dir=join(am_output,
-                                              '{i[:-in_format]}_SpatialGraph.am'),
+                                              f'{i[:-in_format]}_SpatialGraph.am'),
                                 labels=['TardisPrediction'])
         amira_file.export_amira(coords=segments_filter,
                                 file_dir=join(am_output,
@@ -567,10 +567,11 @@ def main(dir: str,
         # Run comparison if amira file was detected
         if amira_check:
             dir_amira_file = join(dir_amira[:-in_format] + amira_prefix + '.am')
-            amira_sg = ImportDataFromAmira(src_am=dir_amira_file)
-            amira_sg = amira_sg.get_segmented_points()
 
             if isfile(dir_amira_file):
+                amira_sg = ImportDataFromAmira(src_am=dir_amira_file)
+                amira_sg = amira_sg.get_segmented_points()
+
                 amira_file.export_amira(file_dir=join(am_output,
                                                       f'{i[:-in_format]}_AmiraCompare.am'),
                                         coords=compare_spline(amira_sg=amira_sg,

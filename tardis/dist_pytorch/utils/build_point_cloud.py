@@ -112,10 +112,21 @@ class BuildPointCloud:
                 if image_edt.flatten().shape[0] > 1000000000 or as_2d:
                     for i in range(image_edt.shape[0]):
                         df_edt = edt.edt(image[i, :])
-                        image_edt[i, :] = np.where(df_edt > (df_edt.max() / 2), 1, 0)
+                        edt_factor = df_edt.max()
+
+                        if edt_factor > 3:
+                            image_edt[i, :] = np.where(df_edt > (edt_factor / 1.5), 1, 0)
+                        else:
+                            image_edt[i, :] = np.where(df_edt > 0, 1, 0)
                 else:
                     image_edt = edt.edt(image)
-                    image_edt = np.where(image_edt > (image_edt.max() / 2), 1, 0)
+                    edt_factor = image_edt.max()
+    
+                    if edt_factor > 3:
+                        image_edt = np.where(image_edt > (edt_factor / 1.5), 1, 0)
+                    else:
+                        image_edt = np.where(image_edt > 0, 1, 0)
+
             image_edt = image_edt.astype(np.uint8)
 
             """Skeletonization"""
