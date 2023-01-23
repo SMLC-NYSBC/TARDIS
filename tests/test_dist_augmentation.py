@@ -3,8 +3,8 @@ from typing import Tuple
 
 import numpy as np
 
-from tardis.dist_pytorch.datasets.augmentation import (Crop2D3D, preprocess_data,
-                                                       RescaleNormalize, SimpleNormalize)
+from tardis.dist_pytorch.datasets.augmentation import Crop2D3D, preprocess_data
+from tardis.utils.nomalization import RescaleNormalize, SimpleNormalize
 
 
 def test_preprocess_data_general():
@@ -139,7 +139,7 @@ def test_preprocess_data_label():
 
 def test_Normalize():
     norm = SimpleNormalize()
-    rescale = RescaleNormalize()
+    rescale = RescaleNormalize(clip_range=(1, 99))
 
     # uint8
     x = np.random.randint(0, 255, size=(25, 25), dtype=np.uint8)
@@ -149,7 +149,7 @@ def test_Normalize():
     assert result_norm.min() >= 0
     assert result_norm.max() <= 1
 
-    result_rescale = rescale(x, (1, 99))
+    result_rescale = rescale(x)
     assert isinstance(result_rescale, np.ndarray)
     assert result_rescale.min() >= 0
     assert result_rescale.max() <= 255
@@ -163,7 +163,7 @@ def test_Normalize():
     assert result_norm.min() >= 0
     assert result_norm.max() <= 1
 
-    result_rescale = rescale(x, (1, 99))
+    result_rescale = rescale(x)
     assert isinstance(result_rescale, np.ndarray)
     assert result_rescale.min() >= -128
     assert result_rescale.max() <= 127
@@ -176,7 +176,7 @@ def test_Normalize():
     assert result_norm.min() >= 0
     assert result_norm.max() <= 1
 
-    result_rescale = rescale(x, (1, 99))
+    result_rescale = rescale(x)
     assert isinstance(result_rescale, np.ndarray)
     assert result_rescale.min() >= 0
     assert result_rescale.max() <= 65535
@@ -189,7 +189,7 @@ def test_Normalize():
     assert result_norm.min() >= 0
     assert result_norm.max() <= 1
 
-    result_rescale = rescale(x, (1, 99))
+    result_rescale = rescale(x)
     assert isinstance(result_rescale, np.ndarray)
     assert result_rescale.min() >= -32768
     assert result_rescale.max() <= 32767
@@ -202,7 +202,7 @@ def test_Normalize():
     assert result_norm.min() >= 0
     assert result_norm.max() <= 1
 
-    result_rescale = rescale(x, (1, 99))
+    result_rescale = rescale(x)
     assert isinstance(result_rescale, np.ndarray)
     assert result_rescale.min() >= 0
     assert result_rescale.max() <= 4294967295
@@ -215,7 +215,7 @@ def test_Normalize():
     assert result_norm.min() >= 0
     assert result_norm.max() <= 1
 
-    result_rescale = rescale(x, (1, 99))
+    result_rescale = rescale(x)
     assert isinstance(result_rescale, np.ndarray)
     assert result_rescale.min() >= -2147483648
     assert result_rescale.max() <= 2147483647

@@ -25,12 +25,12 @@ from tardis.dist_pytorch.utils.segment_point_cloud import GraphInstanceV2
 from tardis.dist_pytorch.utils.utils import pc_median_dist
 from tardis.spindletorch.data_processing.stitch import StitchImages
 from tardis.spindletorch.data_processing.trim import scale_image, trim_with_stride
-from tardis.spindletorch.datasets.augment import MinMaxNormalize, RescaleNormalize
 from tardis.spindletorch.datasets.dataloader import PredictionDataset
 from tardis.utils.device import get_device
 from tardis.utils.export_data import NumpyToAmira, to_mrc
 from tardis.utils.load_data import import_am, load_image
 from tardis.utils.logo import print_progress_bar, TardisLogo
+from tardis.utils.nomalization import MinMaxNormalize, RescaleNormalize
 from tardis.utils.predictor import Predictor
 from tardis.utils.setup_envir import build_temp_dir, clean_up
 from tardis.utils.spline_metric import FilterSpatialGraph

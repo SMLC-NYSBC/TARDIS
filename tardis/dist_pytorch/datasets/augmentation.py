@@ -12,11 +12,11 @@ from typing import Optional, Tuple, Union
 
 import numpy as np
 import tifffile.tifffile as tiff
-from skimage import exposure
 from sklearn.neighbors import KDTree
 
 from tardis.utils.errors import TardisError
 from tardis.utils.load_data import ImportDataFromAmira
+from tardis.utils.nomalization import RescaleNormalize, SimpleNormalize
 
 
 def preprocess_data(coord: str,
@@ -66,7 +66,7 @@ def preprocess_data(coord: str,
                 amira_import = ImportDataFromAmira(src_am=coord)
                 coord_label = amira_import.get_segmented_points()
 
-    assert coord_label.shape[1] in [3, 4], \
+    if coord_label.shape[1] in [3, 4]:
         TardisError('',
                     'tardis/dist_pytorch/dataset/augmentation.py',
                     f'Coord file {coord} is without labels.'
@@ -133,17 +133,12 @@ def preprocess_data(coord: str,
         # Load images patches into an array
         if len(size) == 2:
             img = np.zeros((len(coords), size[0] * size[1]))
-
-            for i in range(img.shape[0]):
-                point = coords[i]  # X x Y
-                img[i, :] = np.array(crop_tiff(center_point=point)).flatten()
-
-        elif len(size) == 3:
+        else:
             img = np.zeros((len(coords), size[0] * size[1] * size[2]))
 
-            for i in range(img.shape[0]):
-                point = coords[i]  # X x Y x Z
-                img[i, :] = np.array(crop_tiff(center_point=point)).flatten()
+        for i in range(img.shape[0]):
+            point = coords[i]  # X x Y x Z
+            img[i, :] = np.array(crop_tiff(center_point=point)).flatten()
     else:
         img = np.zeros(size)
 
@@ -225,7 +220,7 @@ class BuildGraph:
                         # Self connection
                         graph[j, j] = 1
 
-                        # Pentangular connection
+                        # Rectangular connection
                         graph[j, knn] = 1
                         graph[knn, j] = 1
 
@@ -269,67 +264,6 @@ class BuildGraph:
                     graph[points_in_contour[-1], points_in_contour[0]] = 1
 
         return graph
-
-
-class SimpleNormalize:
-    """
-    SIMPLE IMAGE NORMALIZATION
-
-    Take int8-int32 image file with 0 - 255 value. All image value are spread
-    between 0 - 1.
-    """
-
-    def __call__(self,
-                 x: np.ndarray) -> np.ndarray:
-        """
-        Call for image normalization.
-
-        Args:
-            x (np.ndarray): Image array.
-
-        Returns:
-            np.ndarray: Normalized image.
-        """
-        if x.dtype == np.uint8:
-            x = x / 255
-        elif x.dtype == np.int8:
-            x = (x + 128) / 255
-        elif x.dtype == np.uint16:
-            x = x / 65535
-        elif x.dtype == np.int16:
-            x = (x + 32768) / 65535
-        elif x.dtype == np.uint32:
-            x = x / 4294967295
-        else:
-            x = (x + 2147483648) / 4294967295
-
-        return x
-
-
-class RescaleNormalize:
-    """
-    IMAGE CLIPPING NORMALIZATION
-
-    The image histogram is clipped and spread between 0 and 255, given the
-    prudential range rescale to dtype min max.
-    """
-
-    def __call__(self,
-                 x: np.ndarray,
-                 hist_range=(2, 98)) -> np.ndarray:
-        """
-        Call for image normalization.
-
-        Args:
-            x (np.ndarray): Image array.
-            hist_range (tuple): Range for image histogram clipping.
-
-        Returns:
-            np.ndarray: Normalized image
-        """
-        p2, p98 = np.percentile(x, hist_range)
-
-        return exposure.rescale_intensity(x, in_range=(p2, p98))
 
 
 class Crop2D3D:
@@ -426,6 +360,7 @@ class Crop2D3D:
             if crop_img.shape != (self.size[-1], self.size[0], self.size[1]):
                 crop_df = np.array(crop_img)
                 shape = crop_img.shape
+
                 crop_img = np.zeros((self.size[2], self.size[0], self.size[1]))
                 crop_img[0:shape[0], 0:shape[1], 0:shape[2]] = crop_df
         elif len(center_point) == 2:

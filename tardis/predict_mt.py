@@ -22,16 +22,16 @@ from tardis.dist_pytorch.utils.build_point_cloud import BuildPointCloud
 from tardis.dist_pytorch.utils.segment_point_cloud import GraphInstanceV2
 from tardis.spindletorch.data_processing.stitch import StitchImages
 from tardis.spindletorch.data_processing.trim import scale_image, trim_with_stride
-from tardis.spindletorch.datasets.augment import MinMaxNormalize, RescaleNormalize
 from tardis.spindletorch.datasets.dataloader import PredictionDataset
 from tardis.utils.device import get_device
 from tardis.utils.errors import TardisError
 from tardis.utils.export_data import NumpyToAmira, to_mrc
 from tardis.utils.load_data import import_am, ImportDataFromAmira, load_image
 from tardis.utils.logo import print_progress_bar, TardisLogo
+from tardis.utils.nomalization import MinMaxNormalize, RescaleNormalize
 from tardis.utils.predictor import Predictor
 from tardis.utils.setup_envir import build_temp_dir, clean_up
-from tardis.utils.spline_metric import FilterSpatialGraph, SpatialGraphCompare
+from tardis.utils.spline_metric import SpatialGraphCompare
 from tardis.version import version
 
 warnings.simplefilter("ignore", UserWarning)
@@ -78,18 +78,6 @@ warnings.simplefilter("ignore", UserWarning)
               type=int,
               help='Number of point per voxel.',
               show_default=True)
-@click.option('-f', '--filter_connect',
-              default=175,
-              type=int,
-              help='Connect MT which ends are closer then given value in A: '
-                   'NOT SUPPORTED FOR .TIF FILE FORMAT ',
-              show_default=True)
-@click.option('-f', '--filter_mt',
-              default=1000,
-              type=int,
-              help='Remove MT that are shorter then given value in A: '
-                   'NOT SUPPORTED FOR .TIF FILE FORMAT ',
-              show_default=True)
 @click.option('-d', '--device',
               default='0',
               type=str,
@@ -104,7 +92,7 @@ warnings.simplefilter("ignore", UserWarning)
               help='Prefix name for amira files.',
               show_default=True)
 @click.option('-th_dist', '--distance_threshold',
-              default=1000,
+              default=100,
               type=int,
               help='Distance threshold used to evaluate similarity between two '
                    'splines based on its coordinates.',
@@ -139,8 +127,6 @@ def main(dir: str,
          cnn_threshold: float,
          dist_threshold: float,
          points_in_patch: int,
-         filter_connect: int,
-         filter_mt: int,
          device: str,
          debug: bool,
          amira_prefix: str,
@@ -207,8 +193,6 @@ def main(dir: str,
     patch_pc = PatchDataSet(max_number_of_points=points_in_patch,
                             graph=False)
     GraphToSegment = GraphInstanceV2(threshold=dist_threshold, smooth=True)
-    filter_segments = FilterSpatialGraph(connect_seg_if_closer_then=filter_connect,
-                                         filter_short_segments=filter_mt)
 
     # Build handler to output amira file
     amira_file = NumpyToAmira()
@@ -512,7 +496,6 @@ def main(dir: str,
                                                    idx=output_idx,
                                                    prune=5,
                                                    visualize=visualizer)
-        segments_filter = filter_segments(segments)
 
         # Save debugging check point
         if debug:
@@ -526,8 +509,6 @@ def main(dir: str,
                         point_cloud_ld)
                 np.save(join(am_output, f'{i[:-in_format]}_idx_voxel.npy'),
                         output_idx)
-
-        if debug:
             np.save(join(am_output,
                          f'{i[:-in_format]}_segments.npy'),
                     segments)
@@ -545,19 +526,11 @@ def main(dir: str,
                                 file_dir=join(am_output,
                                               f'{i[:-in_format]}_SpatialGraph.am'),
                                 labels=['TardisPrediction'])
-        amira_file.export_amira(coords=segments_filter,
-                                file_dir=join(am_output,
-                                              f'{i[:-in_format]}_SpatialGraph_filter.am'))
         if output_format == 'csv':
             np.savetxt(join(am_output,
                             f'{i[:-in_format]}'
                             '_SpatialGraph.csv'),
                        segments,
-                       delimiter=",")
-            np.savetxt(join(am_output,
-                            f'{i[:-in_format]}'
-                            '_SpatialGraph_filter.csv'),
-                       segments_filter,
                        delimiter=",")
 
         # Run comparison if amira file was detected
@@ -571,7 +544,7 @@ def main(dir: str,
                 amira_file.export_amira(file_dir=join(am_output,
                                                       f'{i[:-in_format]}_AmiraCompare.am'),
                                         coords=compare_spline(amira_sg=amira_sg,
-                                                              tardis_sg=segments_filter),
+                                                              tardis_sg=segments),
                                         labels=['TardisFilterBasedOnAmira',
                                                 'TardisNoise',
                                                 'AmiraFilterBasedOnTardis',

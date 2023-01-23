@@ -192,7 +192,7 @@ class NumpyToAmira:
         coords = np.concatenate(coord_list)
 
         if labels is not None:
-            if len(labels) != len(coords):
+            if len(labels) != len(coord_list):
                 TardisError(id='117',
                             py='tardis/utils/export_data.py',
                             desc='Number of labels do not mach number of Arrays!')
