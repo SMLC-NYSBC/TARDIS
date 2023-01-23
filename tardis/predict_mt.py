@@ -506,7 +506,7 @@ def main(dir: str,
                         output_idx)
             else:
                 np.save(join(am_output, f'{i[:-in_format]}_coord_voxel.npy'),
-                        point_cloud_ld)
+                        coords_df)
                 np.save(join(am_output, f'{i[:-in_format]}_idx_voxel.npy'),
                         output_idx)
             np.save(join(am_output,

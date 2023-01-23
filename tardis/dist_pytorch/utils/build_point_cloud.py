@@ -105,7 +105,7 @@ class BuildPointCloud:
             """Calculate EDT and apply threshold based on predefine mask size"""
             if image.ndim == 2:
                 image_edt = edt.edt(image)
-                image_edt = np.where(image_edt > (image_edt.max() / 2), 1, 0)
+                image_edt = np.where(image_edt > (image_edt.max() / 1.5), 1, 0)
             else:
                 image_edt = np.zeros(image.shape, dtype=np.uint8)
 

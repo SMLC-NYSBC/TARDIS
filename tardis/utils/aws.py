@@ -43,22 +43,28 @@ def get_weights_aws(network: str,
     """Get weights for CNN"""
     dir = join(expanduser('~'), '.tardis_pytorch', f'{network}_{subtype}', f'{model}')
 
-    assert network in ['unet', 'unet3plus', 'fnet', 'dist'], \
+    if network not in ['unet', 'unet3plus', 'fnet', 'dist']:
         TardisError('19',
                     'tardis/utils/aws.py',
                     f'Incorrect CNN network selected {network}_{subtype}')
-    assert subtype in ['16', '32', '64', '96', '128', 'triang', 'full'], \
+    if subtype not in ['16', '32', '64', '96', '128', 'triang', 'full']:
         TardisError('19',
                     'tardis/utils/aws.py',
                     f'Incorrect CNN subtype selected {network}_{subtype}')
 
-    assert model in ['microtubules', 'cryo_mem'], \
+    if model not in ['microtubules', 'cryo_mem']:
         TardisError('19',
                     'tardis/utils/aws.py',
                     f'Incorrect CNN model selected {model}')
 
     if aws_check_with_temp(model_name=[network, subtype, model]):
-        return join(dir, 'model_weights.pth')
+        if isfile(join(dir, 'model_weights.pth')):
+            print('Network weights need update! Connect to the internet next time!')
+            return join(dir, 'model_weights.pth')
+        else:
+            TardisError('19',
+                        'tardis/utils/aws.py',
+                        f'No weights found')
     else:
         weight = requests.get('https://tardis-weigths.s3.amazonaws.com/'
                               f'{network}_{subtype}/'
@@ -99,7 +105,7 @@ def aws_check_with_temp(model_name: list) -> bool:
     if not isdir(join(expanduser('~'), '.tardis_pytorch')):
         return False  # No weight, first Tardis run, download from aws
 
-    """Check for stored file header in ~/tardis_pytorch/..."""
+    """Check for stored file header in ~/.tardis_pytorch/..."""
     if not isfile(join(expanduser('~'),
                        '.tardis_pytorch',
                        f'{model_name[0]}_{model_name[1]}',
