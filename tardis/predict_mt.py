@@ -91,14 +91,19 @@ warnings.simplefilter("ignore", UserWarning)
               type=str,
               help='Prefix name for amira files.',
               show_default=True)
-@click.option('-th_dist', '--distance_threshold',
+@click.option('-f', '--filter_by_length',
               default=1000,
+              type=int,
+              help='Filter out splines with length shorter then given A value.',
+              show_default=True)
+@click.option('-th_dist', '--distance_threshold',
+              default=175,
               type=int,
               help='Distance threshold used to evaluate similarity between two '
                    'splines based on its coordinates.',
               show_default=True)
 @click.option('-th_inter', '--interaction_threshold',
-              default=None,
+              default=0.25,
               type=float,
               help='Interaction threshold used to evaluate reject splines that are'
                    'similar below that threshold.',
@@ -129,6 +134,7 @@ def main(dir: str,
          points_in_patch: int,
          device: str,
          debug: bool,
+         filter_by_length: float,
          amira_prefix: str,
          distance_threshold: int,
          interaction_threshold: float,
@@ -195,7 +201,7 @@ def main(dir: str,
     GraphToSegment = GraphInstanceV2(threshold=dist_threshold,
                                      smooth=False)
 
-    filter_splines = FilterSpatialGraph(filter_short_segments=distance_threshold,
+    filter_splines = FilterSpatialGraph(filter_short_segments=filter_by_length,
                                         connect_seg_if_closer_then=0)
 
     # Build handler to output amira file
@@ -552,7 +558,7 @@ def main(dir: str,
 
         # Run comparison if amira file was detected
         if amira_check:
-            dir_amira_file = join(dir_amira[:-in_format] + amira_prefix + '.am')
+            dir_amira_file = join(dir_amira, i[:-in_format] + amira_prefix + '.am')
 
             if isfile(dir_amira_file):
                 amira_sg = ImportDataFromAmira(src_am=dir_amira_file)
