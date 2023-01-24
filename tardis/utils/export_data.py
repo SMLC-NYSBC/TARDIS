@@ -134,6 +134,13 @@ class NumpyToAmira:
                         '            Unit -1, \n'
                         '            Dimension -1 \n'
                         '        } \n')
+            for i in label:
+                f.write(f'        {i}' + ' { \n'
+                        '            label0' + ' { \n'
+                        '               Color 1 0 0, \n'
+                        '               Id 1 \n'
+                        '               } \n'
+                        '        } \n')
             f.write('    } \n')
             f.write('    Units { \n'
                     '        Coordinates "nm" \n'
