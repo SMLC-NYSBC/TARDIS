@@ -31,7 +31,7 @@ from tardis.utils.logo import print_progress_bar, TardisLogo
 from tardis.utils.nomalization import MinMaxNormalize, RescaleNormalize
 from tardis.utils.predictor import Predictor
 from tardis.utils.setup_envir import build_temp_dir, clean_up
-from tardis.utils.spline_metric import SpatialGraphCompare
+from tardis.utils.spline_metric import FilterSpatialGraph, SpatialGraphCompare
 from tardis.version import version
 
 warnings.simplefilter("ignore", UserWarning)
@@ -59,7 +59,7 @@ warnings.simplefilter("ignore", UserWarning)
               help='If not None, str checkpoints for CNN',
               show_default=True)
 @click.option('-ct', '--cnn_threshold',
-              default=0.2,
+              default=0.25,
               type=float,
               help='Threshold use for model prediction.',
               show_default=True)
@@ -92,13 +92,13 @@ warnings.simplefilter("ignore", UserWarning)
               help='Prefix name for amira files.',
               show_default=True)
 @click.option('-th_dist', '--distance_threshold',
-              default=100,
+              default=1000,
               type=int,
               help='Distance threshold used to evaluate similarity between two '
                    'splines based on its coordinates.',
               show_default=True)
 @click.option('-th_inter', '--interaction_threshold',
-              default=0.25,
+              default=None,
               type=float,
               help='Interaction threshold used to evaluate reject splines that are'
                    'similar below that threshold.',
@@ -192,7 +192,11 @@ def main(dir: str,
     # Build handler's for DIST input and output
     patch_pc = PatchDataSet(max_number_of_points=points_in_patch,
                             graph=False)
-    GraphToSegment = GraphInstanceV2(threshold=dist_threshold, smooth=True)
+    GraphToSegment = GraphInstanceV2(threshold=dist_threshold,
+                                     smooth=False)
+
+    filter_splines = FilterSpatialGraph(filter_short_segments=distance_threshold,
+                                        connect_seg_if_closer_then=0)
 
     # Build handler to output amira file
     amira_file = NumpyToAmira()
@@ -414,6 +418,8 @@ def main(dir: str,
         if debug:  # Debugging checkpoint
             np.save(join(am_output, f'{i[:-in_format]}_raw_pc_hd.npy'),
                     point_cloud_hd)
+            np.save(join(am_output, f'{i[:-in_format]}_raw_pc_ld.npy'),
+                    point_cloud_ld)
 
         """DIST Prediction"""
         # Tardis progress bar update
@@ -526,11 +532,22 @@ def main(dir: str,
                                 file_dir=join(am_output,
                                               f'{i[:-in_format]}_SpatialGraph.am'),
                                 labels=['TardisPrediction'])
+
+        segments_filter = filter_splines(segments=segments)
+        amira_file.export_amira(coords=segments_filter,
+                                file_dir=join(am_output,
+                                              f'{i[:-in_format]}_SpatialGraph_filter.am'),
+                                labels=['TardisPrediction'])
+
         if output_format == 'csv':
             np.savetxt(join(am_output,
                             f'{i[:-in_format]}'
                             '_SpatialGraph.csv'),
                        segments,
+                       delimiter=",")
+            np.savetxt(join(am_output, f'{i[:-in_format]}'
+                                       '_SpatialGraph.csv'),
+                       segments_filter,
                        delimiter=",")
 
         # Run comparison if amira file was detected
@@ -544,7 +561,7 @@ def main(dir: str,
                 amira_file.export_amira(file_dir=join(am_output,
                                                       f'{i[:-in_format]}_AmiraCompare.am'),
                                         coords=compare_spline(amira_sg=amira_sg,
-                                                              tardis_sg=segments),
+                                                              tardis_sg=segments_filter),
                                         labels=['TardisFilterBasedOnAmira',
                                                 'TardisNoise',
                                                 'AmiraFilterBasedOnTardis',

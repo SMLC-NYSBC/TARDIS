@@ -105,27 +105,44 @@ class BuildPointCloud:
             """Calculate EDT and apply threshold based on predefine mask size"""
             if image.ndim == 2:
                 image_edt = edt.edt(image)
-                image_edt = np.where(image_edt > (image_edt.max() / 1.5), 1, 0)
+                image_edt = np.where(image_edt > (image_edt.max() / 2), 1, 0)
             else:
                 image_edt = np.zeros(image.shape, dtype=np.uint8)
 
-                if image_edt.flatten().shape[0] > 1000000000 or as_2d:
+                if as_2d:
                     for i in range(image_edt.shape[0]):
                         df_edt = edt.edt(image[i, :])
                         edt_factor = df_edt.max()
 
                         if edt_factor > 3:
-                            image_edt[i, :] = np.where(df_edt > (edt_factor / 1.5), 1, 0)
+                            image_edt[i, :] = np.where(df_edt > (edt_factor / 3),
+                                                       df_edt, 0)
+                elif image_edt.flatten().shape[0] > 1000000000:
+                    start = 0
+
+                    for i in range(10, image_edt.shape[0], 10):
+                        if (image_edt.shape[0] - i) // 10 == 0:
+                            i = image_edt.shape[0]
+
+                        df_edt = edt.edt(image[start:i, :])
+                        edt_factor = df_edt.max()
+
+                        if edt_factor > 3:
+                            image_edt[start:i, :] = np.where(df_edt > (edt_factor / 3),
+                                                             df_edt, 0)
                         else:
-                            image_edt[i, :] = np.where(df_edt > 0, 1, 0)
+                            image_edt[start:i, :] = image[start:i, :]
+                        start = i
                 else:
                     image_edt = edt.edt(image)
                     edt_factor = image_edt.max()
 
                     if edt_factor > 3:
-                        image_edt = np.where(image_edt > (edt_factor / 1.5), 1, 0)
+                        image_edt = np.where(image_edt > (edt_factor / 3),
+                                             image_edt, 0)
                     else:
-                        image_edt = np.where(image_edt > 0, 1, 0)
+                        image_edt = image
+                image_edt = np.where(image_edt > 0, 1, 0)
 
             image_edt = image_edt.astype(np.uint8)
 
