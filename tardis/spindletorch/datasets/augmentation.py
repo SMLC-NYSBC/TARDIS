@@ -12,7 +12,6 @@ from typing import Optional, Tuple, Union
 
 import numpy as np
 from numpy import ndarray
-from skimage import exposure
 
 from tardis.utils.errors import TardisError
 
@@ -31,7 +30,7 @@ class CenterCrop:
                  size: tuple):
         assert len(size) in [2, 3], \
             TardisError('146',
-                        'tardis/spindletorch/dataset/augment.py',
+                        'tardis/spindletorch/dataset/augmentation.py',
                         'Image crop supported only for 3D and 2D! '
                         f'But {size} was given.')
         self.size = size
@@ -54,12 +53,12 @@ class CenterCrop:
         """
         assert x.ndim in [2, 3], \
             TardisError('146',
-                        'tardis/spindletorch/dataset/augment.py',
+                        'tardis/spindletorch/dataset/augmentation.py',
                         'Image crop supported only for 3D and 2D!')
         if y is not None:
             assert y.ndim in [2, 3], \
                 TardisError('146',
-                            'tardis/spindletorch/dataset/augment.py',
+                            'tardis/spindletorch/dataset/augmentation.py',
                             'Image crop supported only for 3D and 2D!')
 
         if x.ndim == 3:
@@ -90,112 +89,6 @@ class CenterCrop:
                 return x[up_d:down_d, top_h:bottom_h, left_w:right_w]
             elif x.ndim == 2:
                 return x[top_h:bottom_h, left_w:right_w]
-
-
-class SimpleNormalize:
-    """
-    SIMPLE ARRAY NORMALIZATION FOR NP.UINT8
-    """
-
-    def __call__(self,
-                 x: np.ndarray) -> np.ndarray:
-        """
-        Call for normalization.
-
-        Args:
-            x (np.ndarray): Image or label mask.
-
-        Returns:
-            np.ndarray: Normalized array.
-        """
-        assert x.dtype == np.uint8, \
-            TardisError('146',
-                        'tardis/spindletorch/dataset/augment.py',
-                        f'Wrong datatype {x.dtype}!')
-
-        # Don't normalize if image is already between 0 and 1
-        if x.min() >= 0 and x.max() <= 1:
-            return x
-
-        assert x.min() >= 0 and x.max() <= 255, \
-            TardisError('146',
-                        'tardis/spindletorch/dataset/augment.py',
-                        f'Dtype: {x.dtype}, Min: {x.min()}, Max: {x.max()}. '
-                        'Values not in range')
-        x = x / 255
-
-        return x.astype(np.float32)
-
-
-class MinMaxNormalize:
-    """
-    IMAGE NORMALIZATION BETWEEN MIN AND MAX VALUE
-    """
-
-    def __call__(self,
-                 x: np.ndarray) -> np.ndarray:
-        """
-        Call for normalization.
-
-        Args:
-            x (np.ndarray): Image or label mask.
-
-        Returns:
-            np.ndarray: Normalized array.
-        """
-        MIN = x.min()
-        MAX = x.max()
-
-        if MIN >= 0:
-            if MAX <= 1:
-                return x.astype(np.float32)
-            elif MAX <= 255:
-                x = (x - 0) / 255
-            elif MAX <= 65535:
-                x = (x - 0) / 65535
-            elif MAX <= 4294967295:
-                x = (x - 0) / 4294967295
-        elif 0 > MIN >= -1 and MAX <= 1:
-            x = (x + 1) / 2
-
-        return x.astype(np.float32)
-
-
-class RescaleNormalize:
-    """
-    NORMALIZE IMAGE VALUE USING Skimage
-
-    Rescale intensity with top% and bottom% percentiles as default
-
-    Args:
-        clip_range: Histogram percentiles range crop.
-    """
-
-    def __init__(self,
-                 clip_range=(2, 98)):
-        self.range = clip_range
-
-    def __call__(self,
-                 x: np.ndarray) -> np.ndarray:
-        """
-        Call for normalization.
-
-        Args:
-            x (np.ndarray): Image or label mask.
-
-        Returns:
-            np.ndarray: Normalized array.
-        """
-        p2, p98 = np.percentile(x, self.range)
-        if x.dtype == np.uint8:
-            if p98 >= 250:
-                p98 = 256
-            if p2 <= 5:
-                p2 = 0
-
-        x = exposure.rescale_intensity(x, in_range=(p2, p98))
-
-        return x
 
 
 class RandomFlip:
@@ -350,7 +243,7 @@ def preprocess(image: np.ndarray,
     # Check if image is 2D or 3D
     assert image.ndim in [2, 3], \
         TardisError('146',
-                    'tardis/spindletorch/dataset/augment.py',
+                    'tardis/spindletorch/dataset/augmentation.py',
                     'Image crop supported only for 3D and 2D!')
 
     if isinstance(size, tuple):

@@ -16,10 +16,10 @@ import numpy as np
 
 from tardis.spindletorch.data_processing.semantic_mask import draw_semantic
 from tardis.spindletorch.data_processing.trim import trim_with_stride
-from tardis.spindletorch.datasets.augment import MinMaxNormalize, RescaleNormalize
 from tardis.utils.errors import TardisError
 from tardis.utils.load_data import ImportDataFromAmira, load_image
 from tardis.utils.logo import print_progress_bar, TardisLogo
+from tardis.utils.nomalization import MinMaxNormalize, RescaleNormalize
 
 
 def build_train_dataset(dataset_dir: str,

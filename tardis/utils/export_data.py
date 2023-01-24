@@ -134,6 +134,13 @@ class NumpyToAmira:
                         '            Unit -1, \n'
                         '            Dimension -1 \n'
                         '        } \n')
+            for i in label:
+                f.write(f'        {i}' + ' { \n'
+                        '            label0' + ' { \n'
+                        '               Color 1 0 0, \n'
+                        '               Id 1 \n'
+                        '               } \n'
+                        '        } \n')
             f.write('    } \n')
             f.write('    Units { \n'
                     '        Coordinates "nm" \n'
@@ -192,7 +199,7 @@ class NumpyToAmira:
         coords = np.concatenate(coord_list)
 
         if labels is not None:
-            if len(labels) != len(coords):
+            if len(labels) != len(coord_list):
                 TardisError(id='117',
                             py='tardis/utils/export_data.py',
                             desc='Number of labels do not mach number of Arrays!')

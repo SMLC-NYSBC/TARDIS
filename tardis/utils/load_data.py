@@ -19,8 +19,8 @@ import tifffile.tifffile as tif
 from numpy import ndarray
 from sklearn.neighbors import KDTree
 
-from tardis.spindletorch.datasets.augment import RescaleNormalize
 from tardis.utils.errors import TardisError
+from tardis.utils.nomalization import RescaleNormalize
 
 
 class ImportDataFromAmira:

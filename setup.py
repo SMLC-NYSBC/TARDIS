@@ -11,7 +11,7 @@ from setuptools import find_packages, setup
 
 from tardis.version import version
 
-with open("README.rst") as readme_file:
+with open("docs/source/README.rst") as readme_file:
     readme = readme_file.read()
 
 with open("requirements.txt") as r:
@@ -61,7 +61,7 @@ setup(
         "FNet",
     ],
     name="tardis_pytorch",
-    packages=find_packages(include=["tardis", "tardis.*"], exclude=["tests"]),
+    packages=find_packages(),
     url="https://github.com/SMLC-NYSBC/tardis-pytorch",
     version=version,
 )

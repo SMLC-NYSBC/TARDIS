@@ -22,13 +22,13 @@ from tardis.dist_pytorch.utils.build_point_cloud import BuildPointCloud
 from tardis.dist_pytorch.utils.segment_point_cloud import GraphInstanceV2
 from tardis.spindletorch.data_processing.stitch import StitchImages
 from tardis.spindletorch.data_processing.trim import scale_image, trim_with_stride
-from tardis.spindletorch.datasets.augment import MinMaxNormalize, RescaleNormalize
 from tardis.spindletorch.datasets.dataloader import PredictionDataset
 from tardis.utils.device import get_device
 from tardis.utils.errors import TardisError
 from tardis.utils.export_data import NumpyToAmira, to_mrc
 from tardis.utils.load_data import import_am, ImportDataFromAmira, load_image
 from tardis.utils.logo import print_progress_bar, TardisLogo
+from tardis.utils.nomalization import MinMaxNormalize, RescaleNormalize
 from tardis.utils.predictor import Predictor
 from tardis.utils.setup_envir import build_temp_dir, clean_up
 from tardis.utils.spline_metric import FilterSpatialGraph, SpatialGraphCompare
@@ -59,7 +59,7 @@ warnings.simplefilter("ignore", UserWarning)
               help='If not None, str checkpoints for CNN',
               show_default=True)
 @click.option('-ct', '--cnn_threshold',
-              default=0.2,
+              default=0.25,
               type=float,
               help='Threshold use for model prediction.',
               show_default=True)
@@ -77,18 +77,6 @@ warnings.simplefilter("ignore", UserWarning)
               default=1000,
               type=int,
               help='Number of point per voxel.',
-              show_default=True)
-@click.option('-f', '--filter_connect',
-              default=175,
-              type=int,
-              help='Connect MT which ends are closer then given value in A: '
-                   'NOT SUPPORTED FOR .TIF FILE FORMAT ',
-              show_default=True)
-@click.option('-f', '--filter_mt',
-              default=1000,
-              type=int,
-              help='Remove MT that are shorter then given value in A: '
-                   'NOT SUPPORTED FOR .TIF FILE FORMAT ',
               show_default=True)
 @click.option('-d', '--device',
               default='0',
@@ -110,7 +98,7 @@ warnings.simplefilter("ignore", UserWarning)
                    'splines based on its coordinates.',
               show_default=True)
 @click.option('-th_inter', '--interaction_threshold',
-              default=0.25,
+              default=None,
               type=float,
               help='Interaction threshold used to evaluate reject splines that are'
                    'similar below that threshold.',
@@ -139,8 +127,6 @@ def main(dir: str,
          cnn_threshold: float,
          dist_threshold: float,
          points_in_patch: int,
-         filter_connect: int,
-         filter_mt: int,
          device: str,
          debug: bool,
          amira_prefix: str,
@@ -206,9 +192,11 @@ def main(dir: str,
     # Build handler's for DIST input and output
     patch_pc = PatchDataSet(max_number_of_points=points_in_patch,
                             graph=False)
-    GraphToSegment = GraphInstanceV2(threshold=dist_threshold, smooth=True)
-    filter_segments = FilterSpatialGraph(connect_seg_if_closer_then=filter_connect,
-                                         filter_short_segments=filter_mt)
+    GraphToSegment = GraphInstanceV2(threshold=dist_threshold,
+                                     smooth=False)
+
+    filter_splines = FilterSpatialGraph(filter_short_segments=distance_threshold,
+                                        connect_seg_if_closer_then=0)
 
     # Build handler to output amira file
     amira_file = NumpyToAmira()
@@ -430,6 +418,8 @@ def main(dir: str,
         if debug:  # Debugging checkpoint
             np.save(join(am_output, f'{i[:-in_format]}_raw_pc_hd.npy'),
                     point_cloud_hd)
+            np.save(join(am_output, f'{i[:-in_format]}_raw_pc_ld.npy'),
+                    point_cloud_ld)
 
         """DIST Prediction"""
         # Tardis progress bar update
@@ -512,7 +502,6 @@ def main(dir: str,
                                                    idx=output_idx,
                                                    prune=5,
                                                    visualize=visualizer)
-        segments_filter = filter_segments(segments)
 
         # Save debugging check point
         if debug:
@@ -523,11 +512,9 @@ def main(dir: str,
                         output_idx)
             else:
                 np.save(join(am_output, f'{i[:-in_format]}_coord_voxel.npy'),
-                        point_cloud_ld)
+                        coords_df)
                 np.save(join(am_output, f'{i[:-in_format]}_idx_voxel.npy'),
                         output_idx)
-
-        if debug:
             np.save(join(am_output,
                          f'{i[:-in_format]}_segments.npy'),
                     segments)
@@ -545,18 +532,21 @@ def main(dir: str,
                                 file_dir=join(am_output,
                                               f'{i[:-in_format]}_SpatialGraph.am'),
                                 labels=['TardisPrediction'])
+
+        segments_filter = filter_splines(segments=segments)
         amira_file.export_amira(coords=segments_filter,
                                 file_dir=join(am_output,
-                                              f'{i[:-in_format]}_SpatialGraph_filter.am'))
+                                              f'{i[:-in_format]}_SpatialGraph_filter.am'),
+                                labels=['TardisPrediction'])
+
         if output_format == 'csv':
             np.savetxt(join(am_output,
                             f'{i[:-in_format]}'
                             '_SpatialGraph.csv'),
                        segments,
                        delimiter=",")
-            np.savetxt(join(am_output,
-                            f'{i[:-in_format]}'
-                            '_SpatialGraph_filter.csv'),
+            np.savetxt(join(am_output, f'{i[:-in_format]}'
+                                       '_SpatialGraph.csv'),
                        segments_filter,
                        delimiter=",")
 

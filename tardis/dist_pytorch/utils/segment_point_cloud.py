@@ -319,7 +319,6 @@ class GraphInstanceV2:
             np.ndarray: Smooth splines.
         """
         smooth_spline = []
-        tortuosity_spline = []
 
         # Smooth spline
         for i in np.unique(coord[:, 0]):
@@ -340,20 +339,7 @@ class GraphInstanceV2:
             else:
                 smooth_spline.append(x)
 
-        coord_segment_smooth = np.concatenate(smooth_spline)
-        return coord_segment_smooth
-        #
-        # # Remove outlier splines with high tortuosity
-        # for i in np.unique(coord_segment_smooth[:, 0]):
-        #     filament = coord_segment_smooth[np.where(coord_segment_smooth[:, 0] ==
-        #                                              int(i))[0], :]
-        #     tortuosity_spline.append(tortuosity(filament))
-        #
-        # # Remove errors with the highest tortuosity
-        # error = [id for id, i in enumerate(tortuosity_spline) if i > 1.1]
-        # segments = np.stack([i for i in coord_segment_smooth if i[0] not in error])
-
-        # return reorder_segments_id(segments)
+        return np.concatenate(smooth_spline)
 
     def patch_to_segment(self,
                          graph: list,

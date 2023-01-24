@@ -13,6 +13,7 @@ edt>=2.3.0
 mrcfile >= 1.4.3
 open3d==0.9.0; sys_platform == "linux" and python_version < "3.8"
 open3d>=0.9.0; sys_platform == "linux" and python_version >= "3.8"
-open3d>=0.16.1; sys_platform != "linux"
+open3d>=0.16.0; sys_platform != "linux"
 nvidia-smi>=0.1.3; sys_platform != 'darwin'
-torch>=1.13.1
+torch>=1.13.1; sys_platform == 'darwin'
+torch>=1.13.1+cu116; sys_platform != 'darwin'
