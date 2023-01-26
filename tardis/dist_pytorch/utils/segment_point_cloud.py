@@ -12,11 +12,10 @@ from typing import Optional, Tuple
 
 import numpy as np
 import torch
-from scipy.interpolate import splev, splprep
 
 from tardis.dist_pytorch.utils.visualize import VisualizeFilaments, VisualizePointCloud
 from tardis.utils.errors import TardisError
-from tardis.utils.spline_metric import sort_segment
+from tardis.utils.spline_metric import smooth_spline, sort_segment
 
 
 class GraphInstanceV2:
@@ -318,28 +317,18 @@ class GraphInstanceV2:
         Returns:
             np.ndarray: Smooth splines.
         """
-        smooth_spline = []
+        splines = []
 
         # Smooth spline
         for i in np.unique(coord[:, 0]):
             x = coord[np.where(coord[:, 0] == int(i))[0], :]
 
             if len(x) > 4:
-                tck, _ = splprep([x[:, 1], x[:, 2], x[:, 3]])
-
-                # Output half number of len(x)
-                u_fine = np.linspace(0, 1, int(len(x) * 0.5))
-                x_fine, y_fine, z_fine = splev(u_fine, tck)
-                filament = np.vstack((x_fine, y_fine, z_fine)).T
-
-                id = np.zeros((len(filament), 1))
-                id += i
-                df = np.hstack((id, filament))
-                smooth_spline.append(df)
+                splines.append(smooth_spline(x))
             else:
-                smooth_spline.append(x)
+                splines.append(x)
 
-        return np.concatenate(smooth_spline)
+        return np.concatenate(splines)
 
     def patch_to_segment(self,
                          graph: list,

@@ -140,12 +140,12 @@ class NumpyToAmira:
                     '    } \n')
             for id, i in enumerate(label):
                 f.write(f'    {i}' + ' { \n'
-                        '        label0' + ' { \n'
-                        '        Color 1 0 0, \n'
-                        f'        Id {id + 1} \n'
+                        '		Label0' + ' { \n'
+                        '			Color 1 0 0, \n'
+                        f'          Id {id + 1} \n'
                         '     } \n'
                         '    } \n')
-            f.write('ContentType "HxSpatialGraph" \n'
+            f.write('	ContentType "HxSpatialGraph" \n'
                     '} \n')
             f.write('\n')
             f.write('VERTEX { float[3] VertexCoordinates } @1 \n'

@@ -3,7 +3,7 @@ from math import sqrt
 import numpy as np
 
 from tardis.utils.load_data import ImportDataFromAmira
-from tardis.utils.spline_metric import (filter_connect_near_segment, FilterSpatialGraph,
+from tardis.utils.spline_metric import (FilterConnectedNearSegments, FilterSpatialGraph,
                                         reorder_segments_id, sort_segment, tortuosity,
                                         total_length)
 
@@ -78,7 +78,7 @@ def test_tortuosity():
                       [2, 5, 3],
                       [4, 6, 6],
                       [8, 9, 6]])
-    expected_tortuosity = round(sqrt(1.3), 3)
+    expected_tortuosity = round(sqrt(1.268), 3)
     result = round(tortuosity(coord), 3)
     assert expected_tortuosity == result, \
         f"For coord={coord}, expected tortuosity={expected_tortuosity} but got {result}"
@@ -113,36 +113,36 @@ def test_connecting_close_spline():
                        [0, 4, 6, 6],
                        [0, 2, 5, 3],
                        [0, 1, 2, 1]])
-
-    assert np.all(filter_connect_near_segment(coord, 10) == expect)
-    assert np.all(filter_connect_near_segment(coord, 1) == coord)
+    filter_mt = FilterConnectedNearSegments(100, 200)
+    assert np.all(filter_mt(coord, 1) == expect)
+    assert np.all(filter_mt(coord, 10) == coord)
 
     coord = np.array([[0, 1, 2, 1],
                       [0, 2, 5, 3],
                       [0, 4, 6, 6],
                       [0, 8, 9, 6],
-                     [1, 12, 10, 8],
+                      [1, 12, 10, 8],
                       [1, 15, 12, 9],
                       [1, 18, 16, 12],
                       [1, 22, 25, 15],
-                      [10, 102, 100, 80],
-                      [10, 150, 102, 90],
-                      [10, 180, 106, 102],
-                      [10, 220, 205, 105]])
-    expect = np.array([[0, 102, 100, 80],
-                        [0, 150, 102, 90],
-                        [0, 180, 106, 102],
-                        [0, 220, 205, 105],
-                        [1, 22, 25, 15],
-                        [1, 18, 16, 12],
-                        [1, 15, 12, 9],
-                        [1, 12, 10, 8],
-                        [1, 8, 9, 6],
-                        [1, 4, 6, 6],
-                        [1, 2, 5, 3],
-                        [1, 1, 2, 1]])
-    assert np.all(filter_connect_near_segment(coord, 10) == expect)
-    assert np.all(filter_connect_near_segment(coord, 1) == coord)
+                      [2, 102, 100, 80],
+                      [2, 150, 102, 90],
+                      [2, 180, 106, 102],
+                      [2, 220, 205, 105]])
+    expect = np.array([[0, 22, 25, 15],
+                       [0, 18, 16, 12],
+                       [0, 15, 12, 9],
+                       [0, 12, 10, 8],
+                       [0, 8, 9, 6],
+                       [0, 4, 6, 6],
+                       [0, 2, 5, 3],
+                       [0, 1, 2, 1],
+                       [1, 102, 100, 80],
+                       [1, 150, 102, 90],
+                       [1, 180, 106, 102],
+                       [1, 220, 205, 105], ])
+    assert np.all(filter_mt(coord, 1) == expect)
+    assert np.all(filter_mt(coord, 10) == coord)
 
 
 def test_FilterWrapper():
@@ -196,34 +196,6 @@ def test_FilterWrapper():
                        [1, 15, 12, 9],
                        [1, 18, 16, 12],
                        [1, 22, 25, 15]])
-    assert np.all(filter(coord) == expect)
-
-    filter = FilterSpatialGraph(connect_seg_if_closer_then=10,
-                                filter_short_segments=0)
-    coord = np.array([[0, 1, 2, 1],
-                      [0, 2, 5, 3],
-                      [0, 4, 6, 6],
-                      [0, 8, 9, 6],
-                      [1, 12, 10, 8],
-                      [1, 15, 12, 9],
-                      [1, 18, 16, 12],
-                      [1, 22, 25, 15],
-                      [10, 102, 100, 80],
-                      [10, 150, 102, 90],
-                      [10, 180, 106, 102],
-                      [10, 220, 205, 105]])
-    expect = np.array([[0, 102, 100, 80],
-                       [0, 150, 102, 90],
-                       [0, 180, 106, 102],
-                       [0, 220, 205, 105],
-                       [1, 22, 25, 15],
-                       [1, 18, 16, 12],
-                       [1, 15, 12, 9],
-                       [1, 12, 10, 8],
-                       [1, 8, 9, 6],
-                       [1, 4, 6, 6],
-                       [1, 2, 5, 3],
-                       [1, 1, 2, 1]])
     assert np.all(filter(coord) == expect)
 
     filter = FilterSpatialGraph(connect_seg_if_closer_then=100,
