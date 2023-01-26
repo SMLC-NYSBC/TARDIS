@@ -71,7 +71,7 @@ class ImportDataFromAmira:
 
         # Read spatial graph
         am = open(src_am, 'r', encoding="iso-8859-1").read(500)
-        if 'AmiraMesh 3D ASCII' not in am:
+        if 'AmiraMesh 3D ASCII' not in am and '# ASCII Spatial Graph' not in am:
             self.spatial_graph = None
         else:
             self.spatial_graph = open(src_am, "r", encoding="iso-8859-1").read().split("\n")

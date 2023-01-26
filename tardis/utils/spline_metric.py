@@ -11,6 +11,7 @@ from math import sqrt
 from typing import Optional, Tuple
 
 import numpy as np
+from scipy.interpolate import splev, splprep
 from scipy.spatial.distance import cdist
 from sklearn.neighbors import KDTree
 
@@ -71,8 +72,8 @@ class SpatialGraphCompare:
 
     def __call__(self,
                  amira_sg: np.ndarray,
-                 tardis_sg: np.ndarray) -> Tuple[np.ndarray, np.ndarray,
-                                                 np.ndarray, np.ndarray]:
+                 tardis_sg: np.ndarray) -> Tuple[
+        np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
         Compute comparison of Amira and Tardis spatial graphs and output tuple of
         arrays with different selected MTs:
@@ -96,10 +97,11 @@ class SpatialGraphCompare:
         all_tardis_matches = np.unique(np.concatenate([x[1] for x in tardis_match_sg]))
 
         # Select all splines from Tardis that do not have match with Amira
-        tardis_noise = [y for y in np.unique(tardis_sg[:, 0])
-                        if y not in all_tardis_matches]
-        tardis_noise = tardis_sg[[id for id, x in enumerate(tardis_sg[:, 0])
-                                  if x in tardis_noise], :]
+        tardis_noise = [y for y in np.unique(tardis_sg[:, 0]) if
+                        y not in all_tardis_matches]
+        tardis_noise = tardis_sg[
+                       [id for id, x in enumerate(tardis_sg[:, 0]) if x in tardis_noise],
+                       :]
 
         """Compare Tardis with Amira"""
         tardis_amira = self._compare_spatial_graphs(tardis_sg, amira_sg)
@@ -109,10 +111,9 @@ class SpatialGraphCompare:
         all_amira_matches = np.unique(np.concatenate([x[1] for x in amira_match_sg]))
 
         # Select all splines from Tardis that do not have match with Amira
-        amira_noise = [y for y in np.unique(amira_sg[:, 0])
-                       if y not in all_amira_matches]
-        amira_noise = amira_sg[[id for id, x in enumerate(amira_sg[:, 0])
-                                if x in amira_noise], :]
+        amira_noise = [y for y in np.unique(amira_sg[:, 0]) if y not in all_amira_matches]
+        amira_noise = amira_sg[
+                      [id for id, x in enumerate(amira_sg[:, 0]) if x in amira_noise], :]
 
         # Select MT from comparison
         new_tardis = []
@@ -194,13 +195,17 @@ class FilterSpatialGraph:
     Then it calculate length of all the splines (also new one) and filter out
     ones that are too short.
     """
+
     def __init__(self,
                  connect_seg_if_closer_then=1000,
                  filter_short_segments=1000):
         self.connect_seg_if_closer_then = connect_seg_if_closer_then
         self.filter_short_segments = filter_short_segments
 
-        self.marge_splines = FilterConnectedNearSegments(distance_th=connect_seg_if_closer_then)
+        self.marge_splines = FilterConnectedNearSegments(
+            distance_th=connect_seg_if_closer_then,
+            cylinder_radius=200
+        )
 
     def __call__(self,
                  segments: np.ndarray) -> np.ndarray:
@@ -279,9 +284,9 @@ def sort_segment(coord: np.ndarray) -> np.ndarray:
     new_c = []
     for i in range(len(coord) - 1):
         if i == 0:
-            id = np.where([sum(i) for i in cdist(coord, coord)] == max(
-                [sum(i) for i in cdist(coord, coord)]
-            ))[0]
+            id = np.where([sum(i) for i in cdist(coord, coord)] == max([sum(i) for i in
+                                                                        cdist(coord,
+                                                                              coord)]))[0]
 
             new_c.append(coord[id[0]])
             coord = np.delete(coord, id[0], 0)
@@ -312,9 +317,9 @@ def total_length(coord: np.ndarray) -> float:
             break
 
         # sqrt((x2 - x1)2 + (y2 - y1)2 + (z2 - z1)2)
-        length += sqrt((coord[id][0] - coord[id + 1][0]) ** 2 +
-                       (coord[id][1] - coord[id + 1][1]) ** 2 +
-                       (coord[id][2] - coord[id + 1][2]) ** 2)
+        length += sqrt((coord[id][0] - coord[id + 1][0]) ** 2 + (
+                    coord[id][1] - coord[id + 1][1]) ** 2 + (
+                                   coord[id][2] - coord[id + 1][2]) ** 2)
 
     return length
 
@@ -333,17 +338,48 @@ def tortuosity(coord: np.ndarray) -> float:
         return 1.0
 
     length = total_length(coord) + 1e-16
-    end_length = sqrt((coord[0][0] - coord[-1][0]) ** 2 +
-                      (coord[0][1] - coord[-1][1]) ** 2 +
-                      (coord[0][2] - coord[-1][2]) ** 2) + 1e-16
+    end_length = sqrt((coord[0][0] - coord[-1][0]) ** 2 + (
+                coord[0][1] - coord[-1][1]) ** 2 + (
+                                  coord[0][2] - coord[-1][2]) ** 2) + 1e-16
 
     return length / end_length
+
+
+def smooth_spline(points: np.ndarray,
+                  s=1000.0):
+    """
+    Spline smoothing given an 's' smoothness factor.
+
+    Args:
+        points (np.ndarray): Point array [(ID), X, Y, Z] with optional ID and Z
+        dimension.
+        s (float): Smoothness factor.
+
+    Returns:
+        Returns: Smooth spline
+    """
+    if points.shape[1] == 4:  # [ID, X, Y, Z]
+        id = points[0, 0]
+        points = points[:, 1:]
+
+        tck, u = splprep(points.T, s=s)
+        spline = np.stack(splev(u, tck)).T
+
+        ids = np.zeros((len(spline), 1))
+        ids += id
+
+        return np.hstack((ids, spline))
+    else:  # [X, Y, Z]
+        tck, u = splprep(points.T, s=s)
+
+        return np.stack(splev(u, tck)).T
 
 
 class FilterConnectedNearSegments:
     """
     Connect splines based on spline trajectory and splines end distances.
     """
+
     def __init__(self,
                  distance_th=1000,
                  cylinder_radius=150):
@@ -371,8 +407,8 @@ class FilterConnectedNearSegments:
             dict: dictionary containing unique splines.
         """
         new_d = {}
-        [new_d.update({k: v.tolist()}) for k, v in d.items()
-         if v.tolist() not in new_d.values()]
+        [new_d.update({k: v.tolist()}) for k, v in d.items() if
+         v.tolist() not in new_d.values()]
 
         return new_d
 
@@ -397,7 +433,8 @@ class FilterConnectedNearSegments:
         return axis / np.linalg.norm(axis)
 
     def __call__(self,
-                 point_cloud: np.ndarray) -> np.ndarray:
+                 point_cloud: np.ndarray,
+                 omit_border=500) -> np.ndarray:
         """
         Connect splines in the point_cloud that are close enough to each other
          and return the reordered splines.
@@ -436,14 +473,14 @@ class FilterConnectedNearSegments:
                     end02 = splines_list[id2][0]
                     end20 = splines_list[id2][-1]
                     distance0102 = np.sqrt((end01[0] - end02[0]) ** 2 + (
-                                end01[1] - end02[1]) ** 2 + (end01[2] - end02[2]) ** 2)
+                            end01[1] - end02[1]) ** 2 + (end01[2] - end02[2]) ** 2)
                     distance0120 = np.sqrt((end01[0] - end20[0]) ** 2 + (
-                                end01[1] - end20[1]) ** 2 + (end01[2] - end20[2]) ** 2)
+                            end01[1] - end20[1]) ** 2 + (end01[2] - end20[2]) ** 2)
 
                     distance1002 = np.sqrt((end10[0] - end02[0]) ** 2 + (
-                                end10[1] - end02[1]) ** 2 + (end10[2] - end02[2]) ** 2)
+                            end10[1] - end02[1]) ** 2 + (end10[2] - end02[2]) ** 2)
                     distance1020 = np.sqrt((end10[0] - end20[0]) ** 2 + (
-                                end10[1] - end20[1]) ** 2 + (end10[2] - end20[2]) ** 2)
+                            end10[1] - end20[1]) ** 2 + (end10[2] - end20[2]) ** 2)
 
                     distance = np.min((distance0102, distance0120, distance1002,
                                        distance1020))
@@ -453,6 +490,8 @@ class FilterConnectedNearSegments:
                         # Check which ends potentially interact
                         min_dist = np.where((distance0102, distance0120, distance1002,
                                              distance1020) == distance)[0]
+                        if len(min_dist) > 1:
+                            min_dist = min_dist[0]
 
                         if min_dist in [0, 1]:
                             id1_end = splines_list[id1][0:2][::-1]
@@ -460,7 +499,7 @@ class FilterConnectedNearSegments:
                             # Check if id1 ends are not on the border of tomogram
                             dist_to_border = [np.sqrt((end01[2] - MIN_Z) ** 2),
                                               np.sqrt((end01[2] - MAX_Z) ** 2)]
-                            if np.any([True for d in dist_to_border if d <= 100]):
+                            if np.any([True for d in dist_to_border if d <= omit_border]):
                                 continue
                         else:
                             id1_end = splines_list[id1][-2:]
@@ -468,7 +507,7 @@ class FilterConnectedNearSegments:
                             # Check if id1 ends are not on the border of tomogram
                             dist_to_border = [np.sqrt((end10[2] - MIN_Z) ** 2),
                                               np.sqrt((end10[2] - MAX_Z) ** 2)]
-                            if np.any([True for d in dist_to_border if d <= 100]):
+                            if np.any([True for d in dist_to_border if d <= omit_border]):
                                 continue
 
                         if min_dist in [0, 2]:
