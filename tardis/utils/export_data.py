@@ -142,7 +142,7 @@ class NumpyToAmira:
                 f.write(f'    {i}' + ' { \n'
                         '        label0' + ' { \n'
                         '        Color 1 0 0, \n'
-                        f'        Id {id} \n'
+                        f'        Id {id + 1} \n'
                         '     } \n'
                         '    } \n')
             f.write('ContentType "HxSpatialGraph" \n'
