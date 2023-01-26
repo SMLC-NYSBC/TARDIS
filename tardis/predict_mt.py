@@ -564,14 +564,15 @@ def main(dir: str,
                 amira_sg = ImportDataFromAmira(src_am=dir_amira_file)
                 amira_sg = amira_sg.get_segmented_points()
 
-                amira_file.export_amira(file_dir=join(am_output,
-                                                      f'{i[:-in_format]}_AmiraCompare.am'),
-                                        coords=compare_spline(amira_sg=amira_sg,
-                                                              tardis_sg=segments_filter),
-                                        labels=['TardisFilterBasedOnAmira',
-                                                'TardisNoise',
-                                                'AmiraFilterBasedOnTardis',
-                                                'AmiraNoise'])
+                if amira_sg is not None:
+                    amira_file.export_amira(file_dir=join(am_output,
+                                                          f'{i[:-in_format]}_AmiraCompare.am'),
+                                            coords=compare_spline(amira_sg=amira_sg,
+                                                                  tardis_sg=segments_filter),
+                                            labels=['TardisFilterBasedOnAmira',
+                                                    'TardisNoise',
+                                                    'AmiraFilterBasedOnTardis',
+                                                    'AmiraNoise'])
 
         """Clean-up temp dir"""
         clean_up(dir=dir)
