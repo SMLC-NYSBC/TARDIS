@@ -296,21 +296,21 @@ class SpatialGraphCompare:
             spatial_graph_2 (np.ndarray): Spatial graph 2.
 
         Returns:
-            list: list of MT from spatial graph 1 that match spatial graph 2.
+            list: List of MT from spatial graph 1 that match spatial graph 2.
         """
         match_sg1_sg2 = []
 
         for k in range(int(spatial_graph_1[:, 0].max())):
-            tardis_rand = spatial_graph_1[spatial_graph_1[:, 0] == k, :]
+            sg1_spline = spatial_graph_1[spatial_graph_1[:, 0] == k, :]
             iou = []
 
             for j in range(int(spatial_graph_2[:, 0].max())):
-                amira_rand = spatial_graph_2[spatial_graph_2[:, 0] == j, :]
-                iou.append(compare_splines_probability(amira_rand[:, 1:],
-                                                       tardis_rand[:, 1:],
+                sg2_spline = spatial_graph_2[spatial_graph_2[:, 0] == j, :]
+                iou.append(compare_splines_probability(sg1_spline[:, 1:],
+                                                       sg2_spline[:, 1:],
                                                        self.dist_th))
-            ids = [id for id, i in enumerate(iou) if np.sum(i) > 0 and i > self.inter_th]
 
+            ids = [id for id, i in enumerate(iou) if np.sum(i) > 0 and i >= self.inter_th]
             match_sg1_sg2.append([k, ids])
 
         return match_sg1_sg2
@@ -337,34 +337,30 @@ class SpatialGraphCompare:
         """Compare Amira with Tardis"""
         amira_tardis = self._compare_spatial_graphs(amira_sg, tardis_sg)
 
-        # Select all splines from Tardis that match Amira
-        tardis_match_sg = [x for x in amira_tardis if x[1] != []]
-        all_tardis_matches = np.unique(np.concatenate([x[1] for x in tardis_match_sg]))
+        # Select all splines from Amira that match Tardis
+        match_with_tardis = [x for x in amira_tardis if x[1] != []]  # Splines with match
+        amira_matches_with_tardis = np.unique([x[0] for x in match_with_tardis])
 
-        # Select all splines from Tardis that do not have match with Amira
-        tardis_noise = [y for y in np.unique(tardis_sg[:, 0]) if
-                        y not in all_tardis_matches]
-        tardis_noise = tardis_sg[
-                       [id for id, x in enumerate(tardis_sg[:, 0]) if x in tardis_noise],
-                       :]
+        # Select all splines from Amira that do not have match with Tardis
+        amira_noise = [y for y in np.unique(amira_sg[:, 0]) if y not in amira_matches_with_tardis]
+        amira_noise = np.stack([x for x in amira_sg if x[0] in amira_noise])
 
         """Compare Tardis with Amira"""
         tardis_amira = self._compare_spatial_graphs(tardis_sg, amira_sg)
 
-        # Select all splines from Amira that match Tardis
-        amira_match_sg = [x for x in tardis_amira if x[1] != []]
-        all_amira_matches = np.unique(np.concatenate([x[1] for x in amira_match_sg]))
+        # Select all splines from Tardis that match Amira
+        match_with_amira = [x for x in tardis_amira if x[1] != []]  # Splines with match
+        tardis_matches_with_amira = np.unique([x[0] for x in match_with_amira])
 
         # Select all splines from Tardis that do not have match with Amira
-        amira_noise = [y for y in np.unique(amira_sg[:, 0]) if y not in all_amira_matches]
-        amira_noise = amira_sg[
-                      [id for id, x in enumerate(amira_sg[:, 0]) if x in amira_noise], :]
+        tardis_noise = [y for y in np.unique(tardis_sg[:, 0]) if y not in tardis_matches_with_amira]
+        tardis_noise = np.stack([x for x in tardis_sg if x[0] in tardis_noise])
 
-        # Select MT from comparison
+        # Select matching splines from comparison
         new_tardis = []
         mt_new_id = 0
-        for i in tardis_match_sg:
-            df = tardis_sg[[id for id, x in enumerate(tardis_sg[:, 0]) if x in i[1]], :]
+        for i in tardis_matches_with_amira:
+            df = np.stack([x for x in tardis_sg if x[0] == i])
             df[:, 1:] = sort_segment(df[:, 1:])
             df[:, 0] = mt_new_id
             mt_new_id += 1
@@ -373,8 +369,8 @@ class SpatialGraphCompare:
 
         new_amira = []
         mt_new_id = 0
-        for i in amira_match_sg:
-            df = amira_sg[[id for id, x in enumerate(amira_sg[:, 0]) if x in i[1]], :]
+        for i in amira_matches_with_tardis:
+            df = np.stack([x for x in amira_sg if x[0] == i])
             df[:, 1:] = sort_segment(df[:, 1:])
             df[:, 0] = mt_new_id
             mt_new_id += 1
