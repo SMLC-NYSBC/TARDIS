@@ -257,7 +257,7 @@ class FilterConnectedNearSegments:
             point_cloud = self.marge_splines(point_cloud, omit_border)
 
         return point_cloud
-    
+
 
 class FilterSpatialGraph:
     """
