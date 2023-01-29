@@ -70,8 +70,12 @@ class ImportDataFromAmira:
             self.pixel_size = 1
 
         # Read spatial graph
-        self.spatial_graph = open(src_am, "r", encoding="iso-8859-1").read().split("\n")
-        self.spatial_graph = [x for x in self.spatial_graph if x != '']
+        am = open(src_am, 'r', encoding="iso-8859-1").read(500)
+        if 'AmiraMesh 3D ASCII' not in am and '# ASCII Spatial Graph' not in am:
+            self.spatial_graph = None
+        else:
+            self.spatial_graph = open(src_am, "r", encoding="iso-8859-1").read().split("\n")
+            self.spatial_graph = [x for x in self.spatial_graph if x != '']
 
     def __get_segments(self) -> np.ndarray:
         """
@@ -80,6 +84,9 @@ class ImportDataFromAmira:
         Returns:
             np.ndarray: Array (N, 1) indicating a number of points per segment.
         """
+        if self.spatial_graph is None:
+            return None
+
         # Find line starting with EDGE { int NumEdgePoints }
         segments = str([word for word in self.spatial_graph if
                         word.startswith('EDGE { int NumEdgePoints }')])
@@ -120,6 +127,9 @@ class ImportDataFromAmira:
         Returns:
             np.ndarray: Set of all points.
         """
+        if self.spatial_graph is None:
+            return None
+
         # Find line starting with POINT { float[3] EdgePointCoordinates }
         points = str([word for word in self.spatial_graph if
                       word.startswith('POINT { float[3] EdgePointCoordinates }')])
@@ -162,6 +172,9 @@ class ImportDataFromAmira:
             np.ndarray: Point cloud as [X, Y, Z] after transformation and
                 pixel size correction.
         """
+        if self.spatial_graph is None:
+            return None
+
         if self.src_img is None:
             self.transformation = [0, 0, 0]
         points_coord = self.__find_points()
@@ -179,6 +192,9 @@ class ImportDataFromAmira:
         Returns:
             np.ndarray:  Point cloud as [ID, X, Y, Z].
         """
+        if self.spatial_graph is None:
+            return None
+
         points = self.get_points()
         segments = self.__get_segments()
 
@@ -198,8 +214,11 @@ class ImportDataFromAmira:
         General class function to read all labels from amira file.
 
         Returns:
-            dict: _description_
+            dict: Dictionary with label IDs
         """
+        if self.spatial_graph is None:
+            return None
+
         # Find line starting with EDGE { int NumEdgePoints } associated with all labels
         labels = [word for word in self.spatial_graph if
                   word.startswith('EDGE { int ') and not word.startswith(

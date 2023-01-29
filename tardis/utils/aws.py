@@ -63,7 +63,7 @@ def get_weights_aws(network: str,
         else:
             TardisError('19',
                         'tardis/utils/aws.py',
-                        f'No weights found')
+                        'No weights found')
     else:
         weight = requests.get('https://tardis-weigths.s3.amazonaws.com/'
                               f'{network}_{subtype}/'

@@ -91,14 +91,25 @@ warnings.simplefilter("ignore", UserWarning)
               type=str,
               help='Prefix name for amira files.',
               show_default=True)
-@click.option('-th_dist', '--distance_threshold',
+@click.option('-fl', '--filter_by_length',
               default=1000,
+              type=int,
+              help='Filter out splines with length shorter then given A value.',
+              show_default=True)
+@click.option('-cs', '--connect_splines',
+              default=1000,
+              type=float,
+              help='Connect splines that are facing the same direction and are at'
+                   'given max distance in A.',
+              show_default=True)
+@click.option('-am_dist', '--amira_comp_distance',
+              default=175,
               type=int,
               help='Distance threshold used to evaluate similarity between two '
                    'splines based on its coordinates.',
               show_default=True)
-@click.option('-th_inter', '--interaction_threshold',
-              default=None,
+@click.option('-am_inter', '--amira_inter_probability',
+              default=0.25,
               type=float,
               help='Interaction threshold used to evaluate reject splines that are'
                    'similar below that threshold.',
@@ -129,9 +140,11 @@ def main(dir: str,
          points_in_patch: int,
          device: str,
          debug: bool,
+         filter_by_length: float,
+         connect_splines: float,
          amira_prefix: str,
-         distance_threshold: int,
-         interaction_threshold: float,
+         amira_comp_distance: int,
+         amira_inter_probability: float,
          output_format='amira',
          visualizer: Optional[str] = None,
          cnn_checkpoint: Optional[str] = None,
@@ -193,15 +206,15 @@ def main(dir: str,
     patch_pc = PatchDataSet(max_number_of_points=points_in_patch,
                             graph=False)
     GraphToSegment = GraphInstanceV2(threshold=dist_threshold,
-                                     smooth=False)
+                                     smooth=True)
 
-    filter_splines = FilterSpatialGraph(filter_short_segments=distance_threshold,
-                                        connect_seg_if_closer_then=0)
+    filter_splines = FilterSpatialGraph(filter_short_segments=filter_by_length,
+                                        connect_seg_if_closer_then=connect_splines)
 
     # Build handler to output amira file
     amira_file = NumpyToAmira()
-    compare_spline = SpatialGraphCompare(distance_threshold=distance_threshold,
-                                         interaction_threshold=interaction_threshold)
+    compare_spline = SpatialGraphCompare(distance_threshold=amira_comp_distance,
+                                         interaction_threshold=amira_inter_probability)
 
     """Build NN from checkpoints"""
     checkpoints = (cnn_checkpoint, dist_checkpoint)
@@ -552,20 +565,21 @@ def main(dir: str,
 
         # Run comparison if amira file was detected
         if amira_check:
-            dir_amira_file = join(dir_amira[:-in_format] + amira_prefix + '.am')
+            dir_amira_file = join(dir_amira, i[:-in_format] + amira_prefix + '.am')
 
             if isfile(dir_amira_file):
                 amira_sg = ImportDataFromAmira(src_am=dir_amira_file)
                 amira_sg = amira_sg.get_segmented_points()
 
-                amira_file.export_amira(file_dir=join(am_output,
-                                                      f'{i[:-in_format]}_AmiraCompare.am'),
-                                        coords=compare_spline(amira_sg=amira_sg,
-                                                              tardis_sg=segments_filter),
-                                        labels=['TardisFilterBasedOnAmira',
-                                                'TardisNoise',
-                                                'AmiraFilterBasedOnTardis',
-                                                'AmiraNoise'])
+                if amira_sg is not None:
+                    amira_file.export_amira(file_dir=join(am_output,
+                                                          f'{i[:-in_format]}_AmiraCompare.am'),
+                                            coords=compare_spline(amira_sg=amira_sg,
+                                                                  tardis_sg=segments_filter),
+                                            labels=['TardisFilterBasedOnAmira',
+                                                    'TardisNoise',
+                                                    'AmiraFilterBasedOnTardis',
+                                                    'AmiraNoise'])
 
         """Clean-up temp dir"""
         clean_up(dir=dir)

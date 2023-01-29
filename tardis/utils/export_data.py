@@ -46,7 +46,7 @@ class NumpyToAmira:
             if coord.shape[1] == 3:
                 coord = np.hstack((coord, np.zeros((coord.shape[0], 1))))
         else:
-            assert not isinstance(coord, list), \
+            if not isinstance(coord, list):
                 TardisError('130',
                             'tardis/utils/export_data.py',
                             'Expected list of np.ndarrays!')
@@ -57,15 +57,16 @@ class NumpyToAmira:
 
             # Fixed ordering
             ordered_coord = []
-            min_id = 0
+            last_id = 0
             for c in coord:
-                max_id = len(np.unique(c[:, 0])) + min_id
+                ordered_c = reorder_segments_id(c)  # ID starts from 0
+                max_id = len(np.unique(ordered_c[:, 0])) + last_id
 
-                ordered_coord.append(reorder_segments_id(c, [min_id, max_id]))
-                min_id = max_id
+                ordered_coord.append(reorder_segments_id(c, [last_id, max_id]))
+                last_id = max_id
+
             return ordered_coord
-
-        return [coord]
+        return [reorder_segments_id(coord)]
 
     @staticmethod
     def _build_labels(labels: Optional[tuple] = None) -> list:
@@ -134,18 +135,20 @@ class NumpyToAmira:
                         '            Unit -1, \n'
                         '            Dimension -1 \n'
                         '        } \n')
-            for i in label:
-                f.write(f'        {i}' + ' { \n'
-                        '            label0' + ' { \n'
-                        '               Color 1 0 0, \n'
-                        '               Id 1 \n'
-                        '               } \n'
-                        '        } \n')
             f.write('    } \n')
             f.write('    Units { \n'
                     '        Coordinates "nm" \n'
                     '    } \n')
-            f.write('ContentType "HxSpatialGraph" \n'
+            for id, i in enumerate(label):
+                f.write(f'    {i}' + ' { \n'
+                        '		Label0' + ' { \n'
+                        '			Color 1 0.5 0.5, \n'
+                        f'          Id {id + 1} \n'
+                        '     } \n'
+                        '        Id 0,'
+                        '        Color 1 0 0'
+                        '    } \n')
+            f.write('	ContentType "HxSpatialGraph" \n'
                     '} \n')
             f.write('\n')
             f.write('VERTEX { float[3] VertexCoordinates } @1 \n'
@@ -185,7 +188,7 @@ class NumpyToAmira:
 
     def export_amira(self,
                      file_dir: str,
-                     coords: Optional[tuple] = np.ndarray,
+                     coords: Optional[list] = np.ndarray,
                      labels: Optional[list] = None):
         """
         Save Amira file with all filaments without any labels
@@ -199,16 +202,20 @@ class NumpyToAmira:
         coords = np.concatenate(coord_list)
 
         if labels is not None:
+            if isinstance(labels, str):
+                labels = [labels]
+
             if len(labels) != len(coord_list):
                 TardisError(id='117',
                             py='tardis/utils/export_data.py',
                             desc='Number of labels do not mach number of Arrays!')
+
         # Build Amira header
         self._build_header(coord=coords,
                            file_dir=file_dir,
                            label=self._build_labels(labels))
 
-        segments_idx = int(np.max(coords[:, 0]) + 1)
+        segments_idx = len(np.unique(coords[:, 0]))
         vertex_id_1 = -2
         vertex_id_2 = -1
 

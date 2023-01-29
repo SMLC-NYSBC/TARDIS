@@ -141,8 +141,8 @@ def fnet_2d(image_size: int,
 
 
 class TestNetwork3D:
-    image_sizes = [16, 32, 64]
-    conv_scaler = [4, 8, 16]
+    image_sizes = [16, 32, 64, 96]
+    conv_scaler = [4, 8, 16, 32]
 
     def test_unet3d(self):
         for i in self.image_sizes:
