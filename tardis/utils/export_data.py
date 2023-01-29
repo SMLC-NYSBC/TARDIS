@@ -142,9 +142,11 @@ class NumpyToAmira:
             for id, i in enumerate(label):
                 f.write(f'    {i}' + ' { \n'
                         '		Label0' + ' { \n'
-                        '			Color 1 0 0, \n'
+                        '			Color 1 0.5 0.5, \n'
                         f'          Id {id + 1} \n'
                         '     } \n'
+                        '        Id 0,'
+                        '        Color 1 0 0'
                         '    } \n')
             f.write('	ContentType "HxSpatialGraph" \n'
                     '} \n')
@@ -200,6 +202,9 @@ class NumpyToAmira:
         coords = np.concatenate(coord_list)
 
         if labels is not None:
+            if isinstance(labels, str):
+                labels = [labels]
+
             if len(labels) != len(coord_list):
                 TardisError(id='117',
                             py='tardis/utils/export_data.py',
