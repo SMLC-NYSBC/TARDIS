@@ -463,7 +463,7 @@ def main(dir: str,
                         text_8=print_progress_bar(0, len(coords_df)))
 
         """DIST prediction"""
-        iter_time = 1
+        iter_time = int(round(len(coords_df) / 10))
         graphs = []
         for id_dist, coord in enumerate(coords_df):
             if id_dist % iter_time == 0:
@@ -475,21 +475,9 @@ def main(dir: str,
                                 text_7='Current Task: DIST prediction...',
                                 text_8=print_progress_bar(id, len(coords_df)))
 
-            if id_dist == 0:
-                start = time.time()
-
-                graph = predict_dist.predict(x=coord[None, :])
-
-                end = time.time()
-                iter_time = 10 // (end - start)  # Scale progress bar refresh to 10s
-                if iter_time <= 1:
-                    iter_time = 1
-                if (end - start) < 0.5:
-                    iter_time = 10
-            else:
-                graph = predict_dist.predict(x=coord[None, :])
-
+            graph = predict_dist.predict(x=coord[None, :])
             graphs.append(graph)
+
         if debug:
             np.save(join(am_output, f'{i[:-in_format]}_graph_voxel.npy'),
                     graphs)
