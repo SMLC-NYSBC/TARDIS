@@ -137,7 +137,7 @@ class NumpyToAmira:
                         '        } \n')
             f.write('    } \n')
             f.write('    Units { \n'
-                    '        Coordinates "Å" \n'
+                    '        Coordinates "\xc3" \n'
                     '    } \n')
             for id, i in enumerate(label):
                 f.write(f'    {i}' + ' { \n'
