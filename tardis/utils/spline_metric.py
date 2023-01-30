@@ -87,7 +87,8 @@ class FilterConnectedNearSegments:
 
     def marge_splines(self,
                       point_cloud: np.ndarray,
-                      omit_border: int) -> np.ndarray:
+                      omit_border: int,
+                      initial: bool) -> np.ndarray:
         """
         Connect splines in the point_cloud that are close enough to each other
          and return the reordered splines.
@@ -104,29 +105,30 @@ class FilterConnectedNearSegments:
                     - Calculate initial end vector
                     - Calculate distance to the cylinder
 
-                    @ If any picked ends are within cylinder radius
-                        # Pick one with the smallest distance
-                        # Save two spline IDs to connected
+                    - If any picked ends are within cylinder radius
+                        - Pick one with the smallest distance
+                        - Save two spline IDs to connected
 
-                @ If Connected ID list not empty:
-                    # Marge and sort points from two IDs
-                    # Check tortuosity
+                - If Connected ID list not empty:
+                    - Marge and sort points from two IDs
+                    - Check tortuosity
 
-                    @ If tortuosity <= 1.5:
-                        # Add to the connected dict
-                        # Remove from dict
-                        # start over
+                    - If tortuosity <= 1.5:
+                        - Add to the connected dict
+                        - Remove from dict
+                        - start over
 
-                @ If connected ID list is empty or tortuosity > 1.5:
-                    # Add only initial spline to the connected dict
-                    # Remove from dict
-                    # start over
+                - If connected ID list is empty or tortuosity > 1.5:
+                    - Add only initial spline to the connected dict
+                    - Remove from dict
+                    - start over
 
         Args:
             point_cloud (np.ndarray): Array with segmented and sorted point cloud
-            of a  shape [ID, X, Y, Z].
+                of a  shape [ID, X, Y, Z].
             omit_border (int): In A, distance from the border as a limit not to
-            connect splines.
+                connect splines.
+            initial (bool): Initial run for the operation.
 
         Returns:
             np.ndarray: Array of segmented point cloud with connected splines
@@ -138,11 +140,26 @@ class FilterConnectedNearSegments:
 
         # Create a dictionary to store spline information
         # Iterate through the point cloud and add points to their respective splines
-        for point in point_cloud:
-            id, x, y, z = point
-            if id not in splines_list:
-                splines_list[id] = []
-            splines_list[id].append([x, y, z])
+        if initial:
+            splines_list_df = {}
+            for point in point_cloud:
+                id, x, y, z = point
+                if id not in splines_list_df:
+                    splines_list_df[id] = []
+                splines_list_df[id].append([x, y, z])
+
+            splines_list = {}
+            for i in splines_list_df:
+                value = splines_list_df[i]
+                if len(value) > 5:
+                    splines_list[i] = value[2:-2]
+        else:
+            splines_list = {}
+            for point in point_cloud:
+                id, x, y, z = point
+                if id not in splines_list:
+                    splines_list[id] = []
+                splines_list[id].append([x, y, z])
 
         # Iterate throw every spline in the list
         merge_splines = {}
@@ -251,11 +268,17 @@ class FilterConnectedNearSegments:
                  point_cloud: np.ndarray,
                  omit_border: int):
         past_l = 0
-
         while len(np.unique(point_cloud[:, 0])) != past_l:
-            past_l = len(np.unique(point_cloud[:, 0]))
-            point_cloud = self.marge_splines(point_cloud, omit_border)
-
+            if past_l == 0:
+                past_l = len(np.unique(point_cloud[:, 0]))
+                point_cloud = self.marge_splines(point_cloud=point_cloud,
+                                                 omit_border=omit_border,
+                                                 initial=True)
+            else:
+                past_l = len(np.unique(point_cloud[:, 0]))
+                point_cloud = self.marge_splines(point_cloud=point_cloud,
+                                                 omit_border=omit_border,
+                                                 initial=False)
         return point_cloud
 
 
@@ -295,22 +318,6 @@ class FilterSpatialGraph:
         Returns:
             np.ndarray: Filtered array of connected MTs
         """
-        """Pre-Remove short splines"""
-        if self.filter_short_segments > 0:
-            length = []
-            pre_filter_length = self.filter_short_segments / 2
-            for i in np.unique(segments[:, 0]):
-                length.append(total_length(segments[np.where(segments[:, 0] == int(i))[0],
-                                           1:]))
-
-            length = [id for id, i in enumerate(length) if i > pre_filter_length]
-
-            new_seg = []
-            for i in length:
-                new_seg.append(segments[np.where(segments[:, 0] == i), :])
-
-            segments = np.hstack(new_seg)[0, :]
-
         """Connect segments with ends close to each other"""
         border = [np.min(segments[:, 3]), np.max(segments[:, 3])]
         border = (border[1] - border[0]) / 50

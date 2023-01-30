@@ -92,7 +92,7 @@ warnings.simplefilter("ignore", UserWarning)
               help='Prefix name for amira files.',
               show_default=True)
 @click.option('-fl', '--filter_by_length',
-              default=1000,
+              default=50,
               type=int,
               help='Filter out splines with length shorter then given A value.',
               show_default=True)
