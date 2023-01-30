@@ -311,22 +311,10 @@ class FilterSpatialGraph:
 
             segments = np.hstack(new_seg)[0, :]
 
-        """Remove splines with tortuous higher than 1.5"""
-        tortuosity_list = []
-        for i in np.unique(segments[:, 0]):
-            x = segments[np.where(segments[:, 0] == int(i))[0], 1:]
-            tortuosity_list.append(tortuosity(x))
-
-        tortuosity_list = [id for id, i in enumerate(tortuosity_list) if i < 1.5]
-        new_seg = []
-        for i in tortuosity_list:
-            new_seg.append(segments[np.where(segments[:, 0] == i), :])
-        segments = np.hstack(new_seg)[0, :]
-
         """Connect segments with ends close to each other"""
         border = [np.min(segments[:, 3]), np.max(segments[:, 3])]
         border = (border[1] - border[0]) / 50
-        print(border)
+
         if self.connect_seg_if_closer_then > 0:
             segments = self.marge_splines(point_cloud=segments,
                                           omit_border=border)
@@ -345,6 +333,18 @@ class FilterSpatialGraph:
                 new_seg.append(segments[np.where(segments[:, 0] == i), :])
 
             segments = np.hstack(new_seg)[0, :]
+
+        """Remove splines with tortuous higher than 1.5"""
+        tortuosity_list = []
+        for i in np.unique(segments[:, 0]):
+            x = segments[np.where(segments[:, 0] == int(i))[0], 1:]
+            tortuosity_list.append(tortuosity(x))
+
+        tortuosity_list = [id for id, i in enumerate(tortuosity_list) if i < 1.5]
+        new_seg = []
+        for i in tortuosity_list:
+            new_seg.append(segments[np.where(segments[:, 0] == i), :])
+        segments = np.hstack(new_seg)[0, :]
 
         return reorder_segments_id(segments)
 
