@@ -46,7 +46,7 @@ class NumpyToAmira:
             if coord.shape[1] == 3:
                 coord = np.hstack((coord, np.zeros((coord.shape[0], 1))))
         else:
-            if not isinstance(coord, list):
+            if not isinstance(coord, list) or not isinstance(coord, tuple):
                 TardisError('130',
                             'tardis/utils/export_data.py',
                             'Expected list of np.ndarrays!')
@@ -137,7 +137,7 @@ class NumpyToAmira:
                         '        } \n')
             f.write('    } \n')
             f.write('    Units { \n'
-                    '        Coordinates "nm" \n'
+                    '        Coordinates "Å" \n'
                     '    } \n')
             for id, i in enumerate(label):
                 f.write(f'    {i}' + ' { \n'

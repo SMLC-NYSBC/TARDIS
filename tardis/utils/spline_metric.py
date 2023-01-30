@@ -311,7 +311,7 @@ class FilterConnectedNearSegments:
                     if len(end_lists_id) > 0:
                         end_lists_id = min(end_lists_id, key=lambda x: end_lists[x])
                         merged_spline = np.concatenate((value, splines_list[end_lists_id]))
-                        
+
                         merge_splines[spline_id] = sort_segment(merged_spline)
                         del splines_list[end_lists_id]
             else:  # No merge found
@@ -500,7 +500,8 @@ class SpatialGraphCompare:
             Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]: Tuple of all arrays
         """
         """Compare Amira with Tardis"""
-        amira_tardis = self._compare_spatial_graphs(amira_sg, tardis_sg)
+        amira_tardis = self._compare_spatial_graphs(spatial_graph_1=amira_sg,
+                                                    spatial_graph_2=tardis_sg)
 
         # Select all splines from Amira that match Tardis
         match_with_tardis = [x for x in amira_tardis if x[1] != []]  # Splines with match
@@ -511,7 +512,8 @@ class SpatialGraphCompare:
         amira_noise = np.stack([x for x in amira_sg if x[0] in amira_noise])
 
         """Compare Tardis with Amira"""
-        tardis_amira = self._compare_spatial_graphs(tardis_sg, amira_sg)
+        tardis_amira = self._compare_spatial_graphs(spatial_graph_1=tardis_sg,
+                                                    spatial_graph_2=amira_sg)
 
         # Select all splines from Tardis that match Amira
         match_with_amira = [x for x in tardis_amira if x[1] != []]  # Splines with match
