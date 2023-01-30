@@ -258,8 +258,11 @@ class FilterConnectedNearSegments:
             spline_id += 1
 
         # Add last spline to the new list
-        key = list(splines_list.keys())[0]
-        merge_splines[spline_id] = splines_list[key]
+        try:
+            key = list(splines_list.keys())[0]
+            merge_splines[spline_id] = splines_list[key]
+        except IndexError:
+            pass
 
         return np.concatenate([np.hstack((np.expand_dims(np.repeat(id, len(array)), 1),
                                           array)) for id, array in merge_splines.items()])
