@@ -463,10 +463,10 @@ def main(dir: str,
                         text_8=print_progress_bar(0, len(coords_df)))
 
         """DIST prediction"""
-        try:
-            iter_time = int(round(len(coords_df) / 10))
-        except ZeroDivisionError:
+        iter_time = int(round(len(coords_df) / 10))
+        if iter_time == 0:
             iter_time = 1
+
         graphs = []
         for id_dist, coord in enumerate(coords_df):
             if id_dist % iter_time == 0:
