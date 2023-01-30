@@ -295,6 +295,22 @@ class FilterSpatialGraph:
         Returns:
             np.ndarray: Filtered array of connected MTs
         """
+        """Pre-Remove short splines"""
+        if self.filter_short_segments > 0:
+            length = []
+            pre_filter_length = self.filter_short_segments / 2
+            for i in np.unique(segments[:, 0]):
+                length.append(total_length(segments[np.where(segments[:, 0] == int(i))[0],
+                                           1:]))
+
+            length = [id for id, i in enumerate(length) if i > pre_filter_length]
+
+            new_seg = []
+            for i in length:
+                new_seg.append(segments[np.where(segments[:, 0] == i), :])
+
+            segments = np.hstack(new_seg)[0, :]
+
         """Remove splines with tortuous higher than 1.5"""
         tortuosity_list = []
         for i in np.unique(segments[:, 0]):
@@ -308,8 +324,12 @@ class FilterSpatialGraph:
         segments = np.hstack(new_seg)[0, :]
 
         """Connect segments with ends close to each other"""
+        border = [np.min(segments[:, 3]), np.max(segments[:, 3])]
+        border = (border[1] - border[0]) / 50
+        print(border)
         if self.connect_seg_if_closer_then > 0:
-            segments = self.marge_splines(segments)
+            segments = self.marge_splines(point_cloud=segments,
+                                          omit_border=border)
 
         """Remove too short splines"""
         if self.filter_short_segments > 0:
