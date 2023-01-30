@@ -37,23 +37,6 @@ class FilterConnectedNearSegments:
         self.cylinder_radius = cylinder_radius
 
     @staticmethod
-    def _remove_duplicates(d: dict) -> dict:
-        """
-        Remove duplicate splines
-
-        Args:
-            d (dict): Dictionary containing splines.
-
-        Returns:
-            dict: dictionary containing unique splines.
-        """
-        new_d = {}
-        [new_d.update({k: v.tolist()}) for k, v in d.items() if
-         v.tolist() not in new_d.values()]
-
-        return new_d
-
-    @staticmethod
     def _in_cylinder(point: np.ndarray,
                      axis: tuple,
                      r: int,
@@ -84,6 +67,61 @@ class FilterConnectedNearSegments:
 
         # check if d is less than the radius
         return d <= r
+
+    @staticmethod
+    def _remove_duplicates(d: dict) -> dict:
+        """
+        Remove duplicate splines
+
+        Args:
+            d (dict): Dictionary containing splines.
+
+        Returns:
+            dict: dictionary containing unique splines.
+        """
+        new_d = {}
+        [new_d.update({k: v.tolist()}) for k, v in d.items() if
+         v.tolist() not in new_d.values()]
+
+        return new_d
+
+    def splines_direction(self,
+                          spline1: list,
+                          spline2: list) -> bool:
+        """
+        Check if two splines facing the same direction. Knowing that spline1 facing
+        direction of spline2, check if spline2 also face direction of spline1.
+
+        Args:
+            spline1 (list): Sorted array of point with 3D coordinates.
+            spline2 (list): Sorted array of point with 3D coordinates.
+
+        Returns:
+            bool: If true, given splines facing the same direction
+        """
+        splines_in_same_direction = False
+        # Check 01 - 01 & Check 01 - 10
+        ax = [(np.array(spline2[1]), np.array(spline2[0])),
+              (np.array(spline2[1]), np.array(spline2[0]))]
+        points = [np.array(spline1[0]), np.array(spline1[-1])]
+        s201_s101, s201_s110 = [self._in_cylinder(point=p,
+                                                  axis=a,
+                                                  r=self.cylinder_radius,
+                                                  h=self.distance_th)
+                                for p, a in zip(points, ax)]
+
+        # Check 10 - 01 and Check 10 - 10
+        ax = [(np.array(spline2[-2]), np.array(spline2[-1])),
+              (np.array(spline2[-2]), np.array(spline2[-1]))]
+        points = [np.array(spline1[0]), np.array(spline1[-1])]
+        s210_s101, s210_s110 = [self._in_cylinder(point=p,
+                                                  axis=a,
+                                                  r=self.cylinder_radius,
+                                                  h=self.distance_th)
+                                for p, a in zip(points, ax)]
+
+        # Check if splines facing same direction in any way
+        return np.any((s201_s101, s201_s110, s210_s101, s210_s110))
 
     def marge_splines(self,
                       point_cloud: np.ndarray,
@@ -135,7 +173,6 @@ class FilterConnectedNearSegments:
             that fit the criteria
         """
         # Find Z bordered to filter out MT connection at the borders
-        splines_list = {}
         MIN_Z, MAX_Z = np.min(point_cloud[:, 3]), np.max(point_cloud[:, 3])
 
         # Create a dictionary to store spline information
@@ -214,16 +251,18 @@ class FilterConnectedNearSegments:
                                                  else 0][2]) >= omit_border])
 
                     if not_at_the_border:
-                        in_cylinder = self._in_cylinder(point=np.array(m_end[-1
-                                                                       if end_list in [end10_list01,
-                                                                                       end10_list10]
-                                                                       else 0]),
-                                                        axis=(np.array(value[-2 if end_list in [end10_list01,
-                                                                                                end10_list10]
-                                                                             else 1]),
-                                                              np.array(value[-1 if end_list in [end10_list01,
-                                                                                                end10_list10]
-                                                                             else 0])),
+                        points = np.array(m_end[-1 if end_list in [end10_list01,
+                                                                   end10_list10]
+                                                else 0])
+                        axis = (np.array(value[-2 if end_list in [end10_list01,
+                                                                  end10_list10]
+                                               else 1]),
+                                np.array(value[-1 if end_list in [end10_list01,
+                                                                  end10_list10]
+                                               else 0]))
+
+                        in_cylinder = self._in_cylinder(point=points,
+                                                        axis=axis,
                                                         r=self.cylinder_radius,
                                                         h=self.distance_th)
                         if in_cylinder:
@@ -231,27 +270,55 @@ class FilterConnectedNearSegments:
 
             # Check if any ends fit criteria for connection
             if len(splines_to_merge) == 1:  # Merge
-                merged_spline = np.concatenate((value, splines_to_merge[0][1]))
-                merge_splines[spline_id] = sort_segment(merged_spline)
+                # Check if selected spline facing the same direction
+                same_direction = self.splines_direction(value,
+                                                        splines_to_merge[0][1])
 
-                del splines_list[splines_to_merge[0][0]]
+                # Connect splines
+                if same_direction:
+                    merged_spline = np.concatenate((value, splines_to_merge[0][1]))
+                    merge_splines[spline_id] = sort_segment(merged_spline)
+
+                    del splines_list[splines_to_merge[0][0]]
             elif len(splines_to_merge) > 1:  # If more than one find best
                 if len(np.unique([x[0] for x in splines_to_merge])) == 1:
-                    merged_spline = np.concatenate((value, splines_to_merge[0][1]))
-                    del splines_list[splines_to_merge[0][0]]
+                    # Check if selected spline facing the same direction
+                    same_direction = self.splines_direction(value,
+                                                            splines_to_merge[0][1])
+
+                    # Connect splines
+                    if same_direction:
+                        merged_spline = np.concatenate((value, splines_to_merge[0][1]))
+
+                        merge_splines[spline_id] = sort_segment(merged_spline)
+                        del splines_list[splines_to_merge[0][0]]
                 else:
                     end_lists = {}
                     for d in np.concatenate([end01_list01, end01_list10,
                                              end10_list01, end10_list10]):
                         end_lists.update(d)
-                    end_lists_id = min(splines_to_merge, key=lambda x: end_lists[x[0]])[0]
-                    end_lists = [x[1] for x in splines_to_merge if x[0] == end_lists_id]
 
-                    merged_spline = np.concatenate((value, end_lists[0]))
-                    del splines_list[end_lists_id]
+                    # Check which splines facing the same direction
+                    same_direction = []
+                    for d in end_lists:
+                        same_direction.append(self.splines_direction(value,
+                                                                     splines_list[d]))
 
-                merge_splines[spline_id] = sort_segment(merged_spline)
+                    # Pick splines with the smallest distance that facing same direction
+                    end_lists_id = [x for x, b in zip(end_lists, same_direction) if b]
+                    same_direction = np.any(same_direction)
+
+                    if len(end_lists_id) > 0:
+                        end_lists_id = min(end_lists_id, key=lambda x: end_lists[x])
+                        merged_spline = np.concatenate((value, splines_list[end_lists_id]))
+                        
+                        merge_splines[spline_id] = sort_segment(merged_spline)
+                        del splines_list[end_lists_id]
             else:  # No merge found
+                same_direction = True
+                merge_splines[spline_id] = sort_segment(value)
+
+            if not same_direction:
                 merge_splines[spline_id] = sort_segment(value)
 
             del splines_list[key]

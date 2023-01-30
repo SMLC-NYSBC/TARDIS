@@ -59,7 +59,7 @@ warnings.simplefilter("ignore", UserWarning)
               help='If not None, str checkpoints for CNN',
               show_default=True)
 @click.option('-ct', '--cnn_threshold',
-              default=0.25,
+              default=0.5,
               type=float,
               help='Threshold use for model prediction.',
               show_default=True)

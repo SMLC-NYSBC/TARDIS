@@ -2,7 +2,7 @@ History
 =======
 
 Pre-Release 0.1.0-RC1 (2023-01-21)
-----------------------------
+----------------------------------
 * **Code restructure:**
     * Extra pytest + aromatization of tests for all python version
 

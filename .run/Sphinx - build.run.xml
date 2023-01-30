@@ -9,6 +9,7 @@
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
+    <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
     <option name="docutils_input_file" value="$PROJECT_DIR$/docs/source" />
     <option name="docutils_output_file" value="$PROJECT_DIR$/docs/build/html" />
     <option name="docutils_params" value="" />
@@ -16,10 +17,9 @@
     <option name="docutils_open_in_browser" value="false" />
     <method v="2">
       <option name="FwBeforeLaunchTask" enabled="true" />
+      <option name="RunConfigurationTask" enabled="true" run_configuration_name="pytest - Python 3.8" run_configuration_type="tests" />
       <option name="RunConfigurationTask" enabled="true" run_configuration_name="pytest - Python 3.9" run_configuration_type="tests" />
       <option name="RunConfigurationTask" enabled="true" run_configuration_name="pytest - Python 3.10" run_configuration_type="tests" />
-      <option name="RunConfigurationTask" enabled="true" run_configuration_name="pytest - Python 3.11" run_configuration_type="tests" />
-      <option name="RunConfigurationTask" enabled="true" run_configuration_name="pytest - Python 3.8" run_configuration_type="tests" />
     </method>
   </configuration>
 </component>
