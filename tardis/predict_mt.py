@@ -97,10 +97,15 @@ warnings.simplefilter("ignore", UserWarning)
               help='Filter out splines with length shorter then given A value.',
               show_default=True)
 @click.option('-cs', '--connect_splines',
-              default=1000,
-              type=float,
+              default=2500,
+              type=int,
               help='Connect splines that are facing the same direction and are at'
                    'given max distance in A.',
+              show_default=True)
+@click.option('-cr', '--connect_cylinder',
+              default=250,
+              type=int,
+              help='Cylinder radius used to for searching of the near spline in A.',
               show_default=True)
 @click.option('-am_dist', '--amira_comp_distance',
               default=175,
@@ -141,7 +146,8 @@ def main(dir: str,
          device: str,
          debug: bool,
          filter_by_length: float,
-         connect_splines: float,
+         connect_splines: int,
+         connect_cylinder: int,
          amira_prefix: str,
          amira_comp_distance: int,
          amira_inter_probability: float,
@@ -208,8 +214,9 @@ def main(dir: str,
     GraphToSegment = GraphInstanceV2(threshold=dist_threshold,
                                      smooth=True)
 
-    filter_splines = FilterSpatialGraph(filter_short_segments=filter_by_length,
-                                        connect_seg_if_closer_then=connect_splines)
+    filter_splines = FilterSpatialGraph(connect_seg_if_closer_then=connect_splines,
+                                        cylinder_radius=connect_cylinder,
+                                        filter_short_segments=filter_by_length)
 
     # Build handler to output amira file
     amira_file = NumpyToAmira()

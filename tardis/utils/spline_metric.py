@@ -273,13 +273,14 @@ class FilterSpatialGraph:
 
     def __init__(self,
                  connect_seg_if_closer_then=1000,
+                 cylinder_radius=200,
                  filter_short_segments=1000):
         self.connect_seg_if_closer_then = connect_seg_if_closer_then
         self.filter_short_segments = filter_short_segments
 
         self.marge_splines = FilterConnectedNearSegments(
             distance_th=connect_seg_if_closer_then,
-            cylinder_radius=200
+            cylinder_radius=cylinder_radius
         )
 
     def __call__(self,
