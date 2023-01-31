@@ -7,7 +7,7 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
-
+import codecs
 from datetime import datetime
 from typing import List, Optional
 
@@ -109,7 +109,7 @@ class NumpyToAmira:
         point = int(coord.shape[0])
 
         # Save header
-        with open(file_dir, 'w') as f:
+        with codecs.open(file_dir, mode='w', encoding="utf-8") as f:
             f.write('# ASCII Spatial Graph \n')
             f.write('# TARDIS - Transformer And Rapid Dimensionless '
                     'Instance Segmentation (R) \n')
@@ -137,7 +137,7 @@ class NumpyToAmira:
                         '        } \n')
             f.write('    } \n')
             f.write('    Units { \n'
-                    '        Coordinates "\xc3" \n'
+                    u'        Coordinates "Å" \n'
                     '    } \n')
             for id, i in enumerate(label):
                 f.write(f'    {i}' + ' { \n'
@@ -145,8 +145,8 @@ class NumpyToAmira:
                         '			Color 1 0.5 0.5, \n'
                         f'          Id {id + 1} \n'
                         '     } \n'
-                        '        Id 0,'
-                        '        Color 1 0 0'
+                        '        Id 0, \n'
+                        '        Color 1 0 0 \n'
                         '    } \n')
             f.write('	ContentType "HxSpatialGraph" \n'
                     '} \n')
@@ -180,7 +180,7 @@ class NumpyToAmira:
                         'tardis/utils/export_data.py',
                         f'{file_dir} must be and .am file!')
 
-        with open(file_dir, 'a+') as f:
+        with codecs.open(file_dir, mode='a+', encoding="utf-8") as f:
             f.write('\n')
 
             for i in data:
