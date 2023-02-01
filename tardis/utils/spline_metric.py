@@ -465,25 +465,24 @@ class SpatialGraphCompare:
         """
         match_sg1_sg2 = []
 
-        for k in range(int(spatial_graph_1[:, 0].max())):
-            sg1_spline = spatial_graph_1[spatial_graph_1[:, 0] == k, :]
+        for i in np.unique(spatial_graph_1[:, 0]):
+            sg1_spline = spatial_graph_1[spatial_graph_1[:, 0] == i, :]
             iou = []
 
-            for j in range(int(spatial_graph_2[:, 0].max())):
+            for j in np.unique(spatial_graph_2[:, 0]):
                 sg2_spline = spatial_graph_2[spatial_graph_2[:, 0] == j, :]
                 iou.append(compare_splines_probability(sg1_spline[:, 1:],
                                                        sg2_spline[:, 1:],
                                                        self.dist_th))
 
             ids = [id for id, i in enumerate(iou) if np.sum(i) > 0 and i >= self.inter_th]
-            match_sg1_sg2.append([k, ids])
+            match_sg1_sg2.append([i, ids])
 
         return match_sg1_sg2
 
     def __call__(self,
                  amira_sg: np.ndarray,
-                 tardis_sg: np.ndarray) -> Tuple[np.ndarray, np.ndarray,
-                                                 np.ndarray, np.ndarray]:
+                 tardis_sg: np.ndarray) -> Tuple[list, list]:
         """
         Compute comparison of Amira and Tardis spatial graphs and output tuple of
         arrays with different selected MTs:
@@ -499,52 +498,38 @@ class SpatialGraphCompare:
         Returns:
             Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]: Tuple of all arrays
         """
-        """Compare Amira with Tardis"""
-        amira_tardis = self._compare_spatial_graphs(spatial_graph_1=amira_sg,
-                                                    spatial_graph_2=tardis_sg)
+        label = ['TardisFilterBasedOnAmira', 'TardisNoise',
+                 'AmiraFilterBasedOnTardis', 'AmiraNoise']
 
-        # Select all splines from Amira that match Tardis
-        match_with_tardis = [x for x in amira_tardis if x[1] != []]  # Splines with match
-        amira_matches_with_tardis = np.unique([x[0] for x in match_with_tardis])
-
-        # Select all splines from Amira that do not have match with Tardis
-        amira_noise = [y for y in np.unique(amira_sg[:, 0]) if y not in amira_matches_with_tardis]
-        amira_noise = np.stack([x for x in amira_sg if x[0] in amira_noise])
+        """Amira splines scores"""
+        amira_comp = self._compare_spatial_graphs(spatial_graph_1=amira_sg,
+                                                  spatial_graph_2=tardis_sg)
 
         """Compare Tardis with Amira"""
-        tardis_amira = self._compare_spatial_graphs(spatial_graph_1=tardis_sg,
-                                                    spatial_graph_2=amira_sg)
+        tardis_comp = self._compare_spatial_graphs(spatial_graph_1=tardis_sg,
+                                                   spatial_graph_2=amira_sg)
 
         # Select all splines from Tardis that match Amira
-        match_with_amira = [x for x in tardis_amira if x[1] != []]  # Splines with match
-        tardis_matches_with_amira = np.unique([x[0] for x in match_with_amira])
+        match = [x[0] for x in tardis_comp if x[1] != []]
+        tardis_match = np.stack([x for x in tardis_sg if x[0] in match])
 
-        # Select all splines from Tardis that do not have match with Amira
-        tardis_noise = [y for y in np.unique(tardis_sg[:, 0]) if y not in tardis_matches_with_amira]
-        tardis_noise = np.stack([x for x in tardis_sg if x[0] in tardis_noise])
+        noise = [x[0] for x in tardis_comp if x[1] == []]
+        tardis_noise = np.stack([x for x in tardis_sg if x[0] in noise])
 
-        # Select matching splines from comparison
-        new_tardis = []
-        mt_new_id = 0
-        for i in tardis_matches_with_amira:
-            df = np.stack([x for x in tardis_sg if x[0] == i])
-            df[:, 1:] = sort_segment(df[:, 1:])
-            df[:, 0] = mt_new_id
-            mt_new_id += 1
-            new_tardis.append(df)
-        new_tardis = np.concatenate(new_tardis)
+        # Select all splines from Amira that match Tardis
+        match = [x[0] for x in amira_comp if x[1] != []]
+        amira_match = np.stack([x for x in amira_sg if x[0] in match])
 
-        new_amira = []
-        mt_new_id = 0
-        for i in amira_matches_with_tardis:
-            df = np.stack([x for x in amira_sg if x[0] == i])
-            df[:, 1:] = sort_segment(df[:, 1:])
-            df[:, 0] = mt_new_id
-            mt_new_id += 1
-            new_amira.append(df)
-        new_amira = np.concatenate(new_amira)
+        noise = [x[0] for x in amira_comp if x[1] == []]
+        amira_noise = np.stack([x for x in amira_sg if x[0] in noise])
 
-        return new_tardis, tardis_noise, new_amira, amira_noise
+        spatial_graphs = [g for g in (tardis_match, tardis_noise,
+                                      amira_match, amira_noise) if g is not None]
+        label = [l for g, l in zip((tardis_match, tardis_noise,
+                                    amira_match, amira_noise), label) if
+                 g is not None]
+
+        return spatial_graphs, label
 
 
 def compare_splines_probability(spline_1: np.ndarray,
@@ -561,11 +546,11 @@ def compare_splines_probability(spline_1: np.ndarray,
 
     Parameters:
         spline_1 (np.ndarray): The first spline to compare, represented
-        as an array of points.
+            as an array of points.
         spline_2 (np.ndarray): The second spline to compare, represented
-        as an array of points.
+            as an array of points.
         threshold (int): The maximum distance between points for them to be
-        considered matching.
+            considered matching.
 
     Returns:
         float: The probability of the splines being similar, ranging from 0.0 to 1.0.
@@ -576,18 +561,18 @@ def compare_splines_probability(spline_1: np.ndarray,
     # Calculating distance matrix between points of 2 splines
     dist_matrix = cdist(spline_1, spline_2)
 
-    # Calculating the matching point from both splines
-    matching_points = np.min(dist_matrix, axis=1)
+    # Calculating the matching point on spline1
+    matching_points = np.min(dist_matrix, axis=0)
 
-    # Filtering out distance below threshold
-    matching_points = matching_points[matching_points < threshold]
+    # Check how many points on spline1 match spline2
+    m_s1 = [1 if x < threshold else 0 for x in np.min(dist_matrix, axis=1)]
 
     # If no matching points probability is 0
-    if len(matching_points) == 0:
+    if sum(m_s1) == 0:
         return 0.0
 
-    # Calculating probability using mean of the matching point below threshold
-    probability = len(matching_points) / len(spline_1)
+    # Calculating intersection using % of the matching point below threshold
+    probability = sum(m_s1) / len(spline_1)
 
     return probability
 

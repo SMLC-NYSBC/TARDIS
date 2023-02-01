@@ -46,7 +46,7 @@ class NumpyToAmira:
             if coord.shape[1] == 3:
                 coord = np.hstack((coord, np.zeros((coord.shape[0], 1))))
         else:
-            if not isinstance(coord, list) or not isinstance(coord, tuple):
+            if not isinstance(coord, list) and not isinstance(coord, tuple):
                 TardisError('130',
                             'tardis/utils/export_data.py',
                             'Expected list of np.ndarrays!')
@@ -259,7 +259,6 @@ class NumpyToAmira:
 
         # Write down all labels
         label_id = 5
-
         vertex_id = 1
         edge_id = 1
 
@@ -294,7 +293,7 @@ class NumpyToAmira:
             label_id += 2
             vertex_id += 1
             edge_id += 1
-            start = edge
+            start += edge
 
             self._write_to_amira(data=vertex_label, file_dir=file_dir)
             self._write_to_amira(data=edge_label, file_dir=file_dir)
