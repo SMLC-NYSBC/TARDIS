@@ -7,7 +7,7 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
-
+import math
 import struct
 from collections import namedtuple
 from os.path import isfile
@@ -19,6 +19,7 @@ import tifffile.tifffile as tif
 from numpy import ndarray
 from sklearn.neighbors import KDTree
 
+from tardis.dist_pytorch.utils.utils import RandomDownSampling
 from tardis.utils.errors import TardisError
 from tardis.utils.nomalization import RescaleNormalize
 
@@ -74,7 +75,8 @@ class ImportDataFromAmira:
         if 'AmiraMesh 3D ASCII' not in am and '# ASCII Spatial Graph' not in am:
             self.spatial_graph = None
         else:
-            self.spatial_graph = open(src_am, "r", encoding="iso-8859-1").read().split("\n")
+            self.spatial_graph = open(src_am, "r", encoding="iso-8859-1").read().split(
+                "\n")
             self.spatial_graph = [x for x in self.spatial_graph if x != '']
 
     def __get_segments(self) -> np.ndarray:
@@ -620,16 +622,15 @@ def load_mrc_file(mrc: str):
 
 
 def load_ply_scannet(ply: str,
-                     downscaling=0,
-                     color: Optional[str] = None) -> Union[
-        Tuple[ndarray, ndarray], ndarray]:
+                     downscaling=False,
+                     color: Optional[str] = None) -> Union[Tuple[ndarray, ndarray], ndarray]:
     """
     Function to read .ply files.
 
     Args:
         ply (str): File directory.
-        downscaling (float): Downscaling point cloud by fixing voxel size defaults to 0.1.
-        color (str, optional): Optional color feature defaults to None.
+        downscaling (bool): Downscaling point cloud by fixing voxel size.
+        color (str, optional): Optional color feature.
 
     Returns:
         np.ndarray: Label point cloud coordinates and optionally RGB value for
@@ -653,36 +654,23 @@ def load_ply_scannet(ply: str,
             158., 218., 229.), 29: (100., 125., 154.), 30: (178., 127., 135.), 32: (
             146., 111., 194.), 33: (44., 160., 44.), 34: (112., 128., 144.), 35: (
             96., 207., 209.), 36: (227., 119., 194.), 37: (213., 92., 176.), 38: (
-            94., 106., 211.), 39: (82., 84., 163.), 40: (100., 85., 144.),
+            94., 106., 211.), 39: (82., 84., 163.), 40: (100., 85., 144.)
     }
 
     # Downscaling point cloud with labels
-    if downscaling > 0:
-        pcd = pcd.voxel_down_sample(voxel_size=downscaling)
-        coord = np.asarray(pcd.points)
+    if downscaling:
+        sampling = lambda x: abs(int((len(x) / 2) / math.log(len(x), 0.005)))
+
+        coord, label = RandomDownSampling(threshold=sampling)(coord_org, label_org)
     else:
         coord = coord_org
-
-    # Retrieve Node RGB features
-    if color is not None:
-        rgb = o3d.io.read_point_cloud(color)
-        if downscaling > 0:
-            rgb = rgb.voxel_down_sample(voxel_size=downscaling)
-        rgb = np.asarray(rgb.colors)
-        assert coord.shape == rgb.shape, \
-            TardisError('131',
-                        'tardis/utils/load_data.py',
-                        'RGB shape must be the same as coord!'
-                        f'But {coord.shape} != {rgb.shape}')
+        label = label_org
 
     # Retrieve ScanNet v2 labels after downscaling
     cls_id = []
-    tree = KDTree(coord_org, leaf_size=coord_org.shape[0])
-    for i in coord:
-        _, match_coord = tree.query(i.reshape(1, -1))
-        match_coord = match_coord[0][0]
+    for id, i in enumerate(coord):
+        color_df = label[id] * 255
 
-        color_df = label_org[match_coord] * 255
         color_id = [key for key in SCANNET_COLOR_MAP_20 if
                     np.all(SCANNET_COLOR_MAP_20[key] == color_df)]
 
@@ -693,11 +681,17 @@ def load_ply_scannet(ply: str,
 
     cls_id = np.asarray(cls_id)[:, None]
 
-    # Remove 0 labels
+    # Remove 0 label
     coord = coord[np.where(cls_id != 0)[0]]
 
     if color is not None:
-        rgb = rgb[np.where(cls_id != 0)[0]]  # Remove 0 labels
+        rgb = o3d.io.read_point_cloud(color)
+        rgb_xyz = np.array(rgb.points)
+        rgb_c = np.asarray(rgb.colors)
+
+        rgb = np.stack([c for xyz, c in zip(rgb_xyz, rgb_c) if
+                        np.any(np.all(xyz == coord, 1))])
+
         cls_id = cls_id[np.where(cls_id != 0)[0]]
 
         return np.hstack((cls_id, coord)), rgb
@@ -706,14 +700,13 @@ def load_ply_scannet(ply: str,
 
 
 def load_ply_partnet(ply,
-                     downscaling=0) -> np.ndarray:
+                     downscaling=False) -> np.ndarray:
     """
     Function to read .ply files.
 
     Args:
         ply (str): File directory.
-        downscaling (float): Downscaling point cloud by fixing voxel size
-            defaults to 0.035.
+        downscaling (bool): Downscaling point cloud by fixing voxel size.
 
     Returns:
         np.ndarray: Labeled point cloud coordinates.
@@ -721,20 +714,21 @@ def load_ply_partnet(ply,
     pcd = o3d.io.read_point_cloud(ply)
     label_uniq = np.unique(np.asarray(pcd.colors), axis=0)
 
-    coord_org = np.asarray(pcd.points)
-    label_org = np.asarray(pcd.colors)
-
-    if downscaling > 0:
-        pcd = pcd.voxel_down_sample(voxel_size=downscaling)
     coord = np.asarray(pcd.points)
+    label = np.asarray(pcd.colors)
+
+    if downscaling:
+        sampling = lambda x: abs(int((len(x) / 2) / math.log(len(x), 0.005)))
+
+        coord, label = RandomDownSampling(threshold=sampling)(coord, label)
 
     label_id = []
-    tree = KDTree(coord_org, leaf_size=coord_org.shape[0])
+    tree = KDTree(coord, leaf_size=coord.shape[0])
     for i in coord:
-        _, match_coord = tree.query(i.reshape(1, -1), k=1)
+        _, match_coord = tree.query(i.reshape(1, -1))
         match_coord = match_coord[0][0]
 
-        label_id.append(np.where(np.all(label_org[match_coord] == label_uniq, 1))[0][0])
+        label_id.append(np.where(np.all(label[match_coord] == label_uniq, 1))[0][0])
 
     return np.hstack((np.asarray(label_id)[:, None], coord))
 
