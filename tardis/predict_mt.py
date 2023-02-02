@@ -59,7 +59,7 @@ warnings.simplefilter("ignore", UserWarning)
               help='If not None, str checkpoints for CNN',
               show_default=True)
 @click.option('-ct', '--cnn_threshold',
-              default=0.25,
+              default=0.5,
               type=float,
               help='Threshold use for model prediction.',
               show_default=True)
@@ -92,15 +92,20 @@ warnings.simplefilter("ignore", UserWarning)
               help='Prefix name for amira files.',
               show_default=True)
 @click.option('-fl', '--filter_by_length',
-              default=1000,
+              default=50,
               type=int,
               help='Filter out splines with length shorter then given A value.',
               show_default=True)
 @click.option('-cs', '--connect_splines',
-              default=1000,
-              type=float,
+              default=2500,
+              type=int,
               help='Connect splines that are facing the same direction and are at'
                    'given max distance in A.',
+              show_default=True)
+@click.option('-cr', '--connect_cylinder',
+              default=250,
+              type=int,
+              help='Cylinder radius used to for searching of the near spline in A.',
               show_default=True)
 @click.option('-am_dist', '--amira_comp_distance',
               default=175,
@@ -141,7 +146,8 @@ def main(dir: str,
          device: str,
          debug: bool,
          filter_by_length: float,
-         connect_splines: float,
+         connect_splines: int,
+         connect_cylinder: int,
          amira_prefix: str,
          amira_comp_distance: int,
          amira_inter_probability: float,
@@ -208,8 +214,9 @@ def main(dir: str,
     GraphToSegment = GraphInstanceV2(threshold=dist_threshold,
                                      smooth=True)
 
-    filter_splines = FilterSpatialGraph(filter_short_segments=filter_by_length,
-                                        connect_seg_if_closer_then=connect_splines)
+    filter_splines = FilterSpatialGraph(connect_seg_if_closer_then=connect_splines,
+                                        cylinder_radius=connect_cylinder,
+                                        filter_short_segments=filter_by_length)
 
     # Build handler to output amira file
     amira_file = NumpyToAmira()
@@ -456,7 +463,10 @@ def main(dir: str,
                         text_8=print_progress_bar(0, len(coords_df)))
 
         """DIST prediction"""
-        iter_time = 1
+        iter_time = int(round(len(coords_df) / 10))
+        if iter_time == 0:
+            iter_time = 1
+
         graphs = []
         for id_dist, coord in enumerate(coords_df):
             if id_dist % iter_time == 0:
@@ -468,21 +478,9 @@ def main(dir: str,
                                 text_7='Current Task: DIST prediction...',
                                 text_8=print_progress_bar(id, len(coords_df)))
 
-            if id_dist == 0:
-                start = time.time()
-
-                graph = predict_dist.predict(x=coord[None, :])
-
-                end = time.time()
-                iter_time = 10 // (end - start)  # Scale progress bar refresh to 10s
-                if iter_time <= 1:
-                    iter_time = 1
-                if (end - start) < 0.5:
-                    iter_time = 10
-            else:
-                graph = predict_dist.predict(x=coord[None, :])
-
+            graph = predict_dist.predict(x=coord[None, :])
             graphs.append(graph)
+
         if debug:
             np.save(join(am_output, f'{i[:-in_format]}_graph_voxel.npy'),
                     graphs)
@@ -572,14 +570,13 @@ def main(dir: str,
                 amira_sg = amira_sg.get_segmented_points()
 
                 if amira_sg is not None:
+                    compare_sg, label_sg = compare_spline(amira_sg=amira_sg,
+                                                          tardis_sg=segments_filter)
+
                     amira_file.export_amira(file_dir=join(am_output,
                                                           f'{i[:-in_format]}_AmiraCompare.am'),
-                                            coords=compare_spline(amira_sg=amira_sg,
-                                                                  tardis_sg=segments_filter),
-                                            labels=['TardisFilterBasedOnAmira',
-                                                    'TardisNoise',
-                                                    'AmiraFilterBasedOnTardis',
-                                                    'AmiraNoise'])
+                                            coords=compare_sg,
+                                            labels=label_sg)
 
         """Clean-up temp dir"""
         clean_up(dir=dir)

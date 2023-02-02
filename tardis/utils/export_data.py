@@ -7,7 +7,7 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
-
+import codecs
 from datetime import datetime
 from typing import List, Optional
 
@@ -46,7 +46,7 @@ class NumpyToAmira:
             if coord.shape[1] == 3:
                 coord = np.hstack((coord, np.zeros((coord.shape[0], 1))))
         else:
-            if not isinstance(coord, list):
+            if not isinstance(coord, list) and not isinstance(coord, tuple):
                 TardisError('130',
                             'tardis/utils/export_data.py',
                             'Expected list of np.ndarrays!')
@@ -109,7 +109,7 @@ class NumpyToAmira:
         point = int(coord.shape[0])
 
         # Save header
-        with open(file_dir, 'w') as f:
+        with codecs.open(file_dir, mode='w', encoding="utf-8") as f:
             f.write('# ASCII Spatial Graph \n')
             f.write('# TARDIS - Transformer And Rapid Dimensionless '
                     'Instance Segmentation (R) \n')
@@ -137,7 +137,7 @@ class NumpyToAmira:
                         '        } \n')
             f.write('    } \n')
             f.write('    Units { \n'
-                    '        Coordinates "nm" \n'
+                    u'        Coordinates "Å" \n'
                     '    } \n')
             for id, i in enumerate(label):
                 f.write(f'    {i}' + ' { \n'
@@ -145,8 +145,8 @@ class NumpyToAmira:
                         '			Color 1 0.5 0.5, \n'
                         f'          Id {id + 1} \n'
                         '     } \n'
-                        '        Id 0,'
-                        '        Color 1 0 0'
+                        '        Id 0, \n'
+                        '        Color 1 0 0 \n'
                         '    } \n')
             f.write('	ContentType "HxSpatialGraph" \n'
                     '} \n')
@@ -180,7 +180,7 @@ class NumpyToAmira:
                         'tardis/utils/export_data.py',
                         f'{file_dir} must be and .am file!')
 
-        with open(file_dir, 'a+') as f:
+        with codecs.open(file_dir, mode='a+', encoding="utf-8") as f:
             f.write('\n')
 
             for i in data:
@@ -259,7 +259,6 @@ class NumpyToAmira:
 
         # Write down all labels
         label_id = 5
-
         vertex_id = 1
         edge_id = 1
 
@@ -294,7 +293,7 @@ class NumpyToAmira:
             label_id += 2
             vertex_id += 1
             edge_id += 1
-            start = edge
+            start += edge
 
             self._write_to_amira(data=vertex_label, file_dir=file_dir)
             self._write_to_amira(data=edge_label, file_dir=file_dir)
