@@ -153,7 +153,7 @@ class FilamentDataset(BasicDataset):
         if self.patch_size[i, 0] == 0:
             # Pre-process coord and image data also, if exist remove duplicates
             coord, _ = preprocess_data(coord=coord_file)
-            px = float(coord_file.split('_')[0])
+            px = float(str(idx).split('_')[0])
 
             # Normalize point cloud to pixel size
             coord[:, 1:] = coord[:, 1:] / px
