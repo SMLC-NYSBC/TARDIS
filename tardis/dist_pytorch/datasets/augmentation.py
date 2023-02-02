@@ -66,7 +66,7 @@ def preprocess_data(coord: str,
                 amira_import = ImportDataFromAmira(src_am=coord)
                 coord_label = amira_import.get_segmented_points()
 
-    if coord_label.shape[1] in [3, 4]:
+    if coord_label.shape[1] not in [3, 4]:
         TardisError('',
                     'tardis/dist_pytorch/dataset/augmentation.py',
                     f'Coord file {coord} is without labels.'
