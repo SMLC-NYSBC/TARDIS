@@ -196,13 +196,14 @@ def main(dir: str,
         mkdir(TEST_COORD_DIR)
 
         # Build train and test dataset
-        move_train_dataset(dir=dir,
-                           coord_format=COORD_FORMAT,
-                           with_img=False)
+        if not dataset_type == 'stanford':
+            move_train_dataset(dir=dir,
+                               coord_format=COORD_FORMAT,
+                               with_img=False)
 
-        no_dataset = int(len([f for f in listdir(dir) if f.endswith(COORD_FORMAT)]) / 2)
-        build_test_dataset(dataset_dir=dir,
-                           dataset_no=no_dataset)
+            no_dataset = int(len([f for f in listdir(dir) if f.endswith(COORD_FORMAT)]) / 2)
+            build_test_dataset(dataset_dir=dir,
+                               dataset_no=no_dataset)
 
     """Pre-setting for building DataLoader"""
     # Check for general dataset
