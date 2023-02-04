@@ -377,11 +377,14 @@ class GraphInstanceV2:
         elif isinstance(graph, torch.Tensor):
             idx = [idx.cpu().detach().numpy()]
 
-        assert isinstance(coord, np.ndarray), \
-            TardisError('114',
-                        'tardis/dist/utils/segment_point_cloud.py',
-                        'Coord must be an array of all nodes! '
-                        f'Expected list of ndarrays but got {type(coord)}')
+        if not isinstance(coord, np.ndarray):
+            try:
+                coord = self._stitch_coord(coord, idx)
+            except:
+                TardisError('114',
+                            'tardis/dist/utils/segment_point_cloud.py',
+                            'Coord must be an array of all nodes! '
+                            f'Expected list of ndarrays but got {type(coord)}')
 
         """Build Adjacency list from graph representation"""
         adjacency_matrix = self._adjacency_matrix(graphs=graph,

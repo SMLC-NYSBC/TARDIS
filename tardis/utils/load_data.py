@@ -659,7 +659,7 @@ def load_ply_scannet(ply: str,
 
     # Downscaling point cloud with labels
     if downscaling:
-        sampling = lambda x: abs(int((len(x) / 2) / math.log(len(x), 0.005)))
+        sampling = lambda x: abs(int((len(x) / 4) / math.log(len(x), 0.005)))
 
         coord, label = RandomDownSampling(threshold=sampling)(coord_org, label_org)
     else:
