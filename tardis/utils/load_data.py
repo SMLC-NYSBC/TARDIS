@@ -788,7 +788,7 @@ def load_s3dis_scene(dir: str,
     Returns:
         np.ndarray: Labeled point cloud coordinates.
     """
-    dir_list = [x for x in listdir(dir) if x != '.DS_Store']
+    dir_list = [x for x in listdir(dir) if x not in ['.DS_Store', 'Icon']]
 
     coord_scene = []
     rgb_scene = []
