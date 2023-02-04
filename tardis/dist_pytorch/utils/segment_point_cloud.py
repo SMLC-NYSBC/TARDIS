@@ -373,9 +373,11 @@ class GraphInstanceV2:
             graph = [graph.cpu().detach().numpy()]
 
         if isinstance(idx, np.ndarray):
-            idx = [idx]
+            idx = [idx.astype(int)]
         elif isinstance(graph, torch.Tensor):
-            idx = [idx.cpu().detach().numpy()]
+            idx = [idx.cpu().detach().numpy().astype(int)]
+        else:
+            idx = [i.astype(int) for i in idx]
 
         if not isinstance(coord, np.ndarray):
             try:

@@ -7,10 +7,10 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
-import math
 import struct
 from collections import namedtuple
-from os.path import isfile
+from os import listdir
+from os.path import isfile, join
 from typing import Optional, Tuple, Union
 
 import numpy as np
@@ -19,7 +19,6 @@ import tifffile.tifffile as tif
 from numpy import ndarray
 from sklearn.neighbors import KDTree
 
-from tardis.dist_pytorch.utils.utils import RandomDownSampling
 from tardis.utils.errors import TardisError
 from tardis.utils.nomalization import RescaleNormalize
 
@@ -657,7 +656,7 @@ def load_ply_scannet(ply: str,
     }
 
     # Downscaling point cloud with labels
-    if downscaling > 0:
+    if downscaling != 0 and downscaling > 0:
         pcd = pcd.voxel_down_sample(voxel_size=downscaling)
         coord = np.asarray(pcd.points)
     else:
@@ -706,37 +705,114 @@ def load_ply_scannet(ply: str,
 
 
 def load_ply_partnet(ply,
-                     downscaling=False) -> np.ndarray:
+                     downscaling=0) -> np.ndarray:
     """
     Function to read .ply files.
-
     Args:
         ply (str): File directory.
-        downscaling (bool): Downscaling point cloud by fixing voxel size.
-
+        downscaling (float): Downscaling point cloud by fixing voxel size.
     Returns:
         np.ndarray: Labeled point cloud coordinates.
     """
     pcd = o3d.io.read_point_cloud(ply)
     label_uniq = np.unique(np.asarray(pcd.colors), axis=0)
 
+    coord_org = np.asarray(pcd.points)
+    label_org = np.asarray(pcd.colors)
+
+    if downscaling != 0 and downscaling > 0:
+        pcd = pcd.voxel_down_sample(voxel_size=downscaling)
     coord = np.asarray(pcd.points)
-    label = np.asarray(pcd.colors)
-
-    if downscaling:
-        sampling = lambda x: abs(int((len(x) / 2) / math.log(len(x), 0.005)))
-
-        coord, label = RandomDownSampling(threshold=sampling)(coord, label)
 
     label_id = []
-    tree = KDTree(coord, leaf_size=coord.shape[0])
+    tree = KDTree(coord_org, leaf_size=coord_org.shape[0])
     for i in coord:
-        _, match_coord = tree.query(i.reshape(1, -1))
+        _, match_coord = tree.query(i.reshape(1, -1), k=1)
         match_coord = match_coord[0][0]
 
-        label_id.append(np.where(np.all(label[match_coord] == label_uniq, 1))[0][0])
+        label_id.append(np.where(np.all(label_org[match_coord] == label_uniq, 1))[0][0])
 
     return np.hstack((np.asarray(label_id)[:, None], coord))
+
+
+def load_txt_s3dis(txt: str,
+                   downscaling=0,
+                   rgb=False) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
+    """
+    Function to read .txt Stanford 3D instance scene file.
+
+    Args:
+        txt (str): File directory.
+        downscaling (float): Downscaling point cloud by fixing voxel size.
+        rgb (bool):
+
+    Returns:
+        np.ndarray: Labeled point cloud coordinates.
+    """
+    coord = np.genfromtxt(txt)
+
+    if rgb:
+        rgb = coord[:, 3:] / 255
+        rgb = rgb.astype(np.float32)
+    coord = coord[:, :3]
+
+    if downscaling != 0 and downscaling > 0:
+        pcd = o3d.geometry.PointCloud()
+
+        pcd.points = o3d.utility.Vector3dVector(coord)
+        if not isinstance(rgb, bool):
+            pcd.colors = o3d.utility.Vector3dVector(rgb)
+
+        pcd = pcd.voxel_down_sample(voxel_size=downscaling)
+
+        coord = np.asarray(pcd.points)
+        if not isinstance(rgb, bool):
+            rgb = np.asarray(pcd.colors)
+
+    if isinstance(rgb, bool):
+        return coord
+    return coord, rgb
+
+
+def load_s3dis_scene(dir: str,
+                     downscaling=0,
+                     rgb=False) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
+    """
+    Function to read .txt Stanford 3D instance scene files.
+
+    Args:
+        dir (str): Folder directory with all instances.
+        downscaling (float): Downscaling point cloud by fixing voxel size.
+        rgb (bool):
+
+    Returns:
+        np.ndarray: Labeled point cloud coordinates.
+    """
+    dir_list = [x for x in listdir(dir) if x != '..DS_Store']
+
+    coord_scene = []
+    rgb_scene = []
+    id = 0
+    for i in dir_list:
+        if rgb:
+            coord_inst, rgb_inst = load_txt_s3dis(join(dir, i),
+                                                  downscaling=downscaling,
+                                                  rgb=rgb)
+            rgb_scene.append(rgb_inst)
+        else:
+            coord_inst = load_txt_s3dis(join(dir, i),
+                                        downscaling=downscaling,
+                                        rgb=rgb)
+
+        ids = np.expand_dims(np.repeat(id, len(coord_inst)), 1)
+        coord_inst = np.hstack((ids, coord_inst))
+        coord_scene.append(coord_inst)
+
+        id += 1
+
+    if rgb:
+        return np.concatenate(coord_scene), np.concatenate(rgb_scene)
+    return np.concatenate(coord_scene)
 
 
 def load_image(image: str,
