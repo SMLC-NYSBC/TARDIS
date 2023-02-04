@@ -203,8 +203,10 @@ def main(dir: str,
                            with_img=False)
 
         no_dataset = int(len([f for f in listdir(dir) if f.endswith(COORD_FORMAT)]) / 2)
-        build_test_dataset(dataset_dir=dir,
-                           dataset_no=no_dataset)
+        if dataset_type == 'stanford':
+            build_test_dataset(dataset_dir=dir, dataset_no=no_dataset, stanford=True)
+        else:
+            build_test_dataset(dataset_dir=dir, dataset_no=no_dataset)
 
     """Pre-setting for building DataLoader"""
     # Check for general dataset
