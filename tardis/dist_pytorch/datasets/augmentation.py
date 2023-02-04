@@ -200,20 +200,20 @@ class BuildGraph:
                 coord_df = coord[points_in_contour]
                 tree = KDTree(coord_df, leaf_size=coord_df.shape[0])
 
-                if coord_df.shape[0] > 3:
+                if coord_df.shape[0] > 4:
                     for j in points_in_contour:
                         if dist_th is None:
                             _, match_coord = tree.query(coord[j].reshape(1, -1),
-                                                        k=3)
+                                                        k=4)
                             match_coord = match_coord[0]
 
                             # Select point in contour
                             knn = [x for id, x in enumerate(points_in_contour)
                                    if id in match_coord]
                         else:
-                            if coord_df.shape[0] > 25:
+                            if coord_df.shape[0] > 8:
                                 dist, match_coord = tree.query(coord[j].reshape(1, -1),
-                                                               k=25)
+                                                               k=8)
                             else:
                                 dist, match_coord = tree.query(coord[j].reshape(1, -1),
                                                                k=coord_df.shape[0])
@@ -225,8 +225,8 @@ class BuildGraph:
                                    if id in match_coord]
                             knn = [x for x, y in zip(knn, dist) if y <= dist_th]
 
-                            if len(knn) > 3:
-                                knn = random.sample(knn, 3)
+                            if len(knn) > 4:
+                                knn = random.sample(knn, 4)
 
                         # Self connection
                         graph[j, j] = 1

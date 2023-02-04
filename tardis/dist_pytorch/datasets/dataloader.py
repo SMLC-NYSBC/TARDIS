@@ -297,7 +297,7 @@ class ScannetDataset(BasicDataset):
         if self.patch_size[i, 0] == 0:
             # Pre-process coord and image data also, if exist remove duplicates
             coord = load_ply_scannet(coord_file,
-                                     downscaling=True)
+                                     downscaling=0.1)
 
             VD = PatchDataSet(drop_rate=0.01,
                               max_number_of_points=self.max_point_in_patch,
@@ -307,7 +307,7 @@ class ScannetDataset(BasicDataset):
             coords_idx, df_idx, graph_idx, \
                 output_idx, cls_idx = VD.patched_dataset(coord=coord,
                                                          mesh=True,
-                                                         dist_th=0.05)
+                                                         dist_th=0.15)
             # save data for faster access later
             self.save_temp(i=i,
                            coords=coords_idx,

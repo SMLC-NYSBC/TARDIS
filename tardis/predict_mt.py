@@ -451,7 +451,7 @@ def main(dir: str,
                         text_7='Current Task: Preparing for MT segmentation...')
 
         # Build patches dataset
-        coords_df, _, output_idx, _ = patch_pc.patched_dataset(coord=point_cloud_ld / 5)
+        coords_df, _, output_idx, _ = patch_pc.patched_dataset(coord=point_cloud_ld)
 
         # Predict point cloud
         tardis_progress(title=title,
