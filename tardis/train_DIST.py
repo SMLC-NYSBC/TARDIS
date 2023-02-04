@@ -160,9 +160,11 @@ def main(dir: str,
     TEST_IMAGE_DIR = join(dir, 'test', 'imgs')
     TEST_COORD_DIR = join(dir, 'test', 'masks')
 
-    COORD_FORMAT = ('.CorrelationLines.am', '.npy', '.csv', '.ply')
+    COORD_FORMAT = '.txt'
+    if dataset_type != 'stanford':
+        COORD_FORMAT = ('.CorrelationLines.am', '.npy', '.csv', '.ply')
 
-    """Check if dir has train/test folder and if folder have compatible data"""
+    """Check if dir has train/test folder and if f  older have compatible data"""
     DATASET_TEST = check_dir(dir=dir,
                              train_img=TRAIN_IMAGE_DIR,
                              train_mask=TRAIN_COORD_DIR,

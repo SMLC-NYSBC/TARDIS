@@ -37,7 +37,7 @@ def move_train_dataset(dir: str,
     """
     if coord_format == '.txt':
         area_list = [d for d in listdir(dir) if isdir(join(dir, d))]
-        area_list = [f for f in area_list if not f.startswith('.')]
+        area_list = [f for f in area_list if not f.startswith(('.', 'train', 'test'))]
 
         for i in area_list:
             copytree(join(dir, i), join(dir, 'train', 'masks', i))
