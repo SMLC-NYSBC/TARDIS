@@ -749,7 +749,8 @@ def load_txt_s3dis(txt: str,
     Returns:
         np.ndarray: Labeled point cloud coordinates.
     """
-    coord = np.genfromtxt(txt)
+    coord = np.genfromtxt(txt,
+                          invalid_raise=False)
 
     if rgb:
         rgb = coord[:, 3:] / 255
@@ -794,19 +795,15 @@ def load_s3dis_scene(dir: str,
     rgb_scene = []
     id = 0
     for i in dir_list:
+        coord_inst = load_txt_s3dis(join(dir, i),
+                                    downscaling=downscaling,
+                                    rgb=rgb)
         if rgb:
-            coord_inst, rgb_inst = load_txt_s3dis(join(dir, i),
-                                                  downscaling=downscaling,
-                                                  rgb=rgb)
-            rgb_scene.append(rgb_inst)
-        else:
-            coord_inst = load_txt_s3dis(join(dir, i),
-                                        downscaling=downscaling,
-                                        rgb=rgb)
+            rgb_scene.append(coord_inst[1])
+            coord_inst = coord_inst[0]
 
-        ids = np.expand_dims(np.repeat(id, len(coord_inst)), 1)
-        coord_inst = np.hstack((ids, coord_inst))
-        coord_scene.append(coord_inst)
+        coord_scene.append(np.hstack((np.expand_dims(np.repeat(id, len(coord_inst)), 1),
+                                      coord_inst)))
 
         id += 1
 

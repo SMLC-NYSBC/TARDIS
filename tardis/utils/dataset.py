@@ -96,8 +96,8 @@ def build_test_dataset(dataset_dir: str,
              join(dataset_dir, 'test', 'masks', 'Area_1', 'office_1'))
         move(join(dataset_dir, 'train', 'masks', 'Area_3', 'WC_1'),
              join(dataset_dir, 'test', 'masks', 'Area_3', 'WC_1'))
-        move(join(dataset_dir, 'train', 'masks', 'Area_5', 'office_1'),
-             join(dataset_dir, 'test', 'masks', 'Area_5', 'office_1'))
+        move(join(dataset_dir, 'train', 'masks', 'Area_5', 'storage_1'),
+             join(dataset_dir, 'test', 'masks', 'Area_5', 'storage_1'))
 
     image_list = listdir(join(dataset_dir, 'train', 'imgs'))
     mask_list = listdir(join(dataset_dir, 'train', 'masks'))
