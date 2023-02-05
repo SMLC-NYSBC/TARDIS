@@ -7,20 +7,32 @@ Pre-Release 0.1.0-RC1 (2023-01-21)
     * Extra pytest + aromatization of tests for all python version
 
 * **SpindleTorch module changes:**
-    * Rebuild interpolation for images and mask to make it more reliable and store
-      image feature regardless from scaling factor
-    * Simplified building training/testing of datasets
-    * Fixed image normalization for few very specific cases
-    * Redo mask building from coordinates
+    * *#Optimize* Rebuild interpolation for images and mask
+    * *#Optimize* Simplified building training/testing of datasets
+    * *#BugFix* image normalization for few very specific cases
+    * *#Optimize* Redo mask building from coordinates
+    * *#Optimize* Build_Point_Cloud
+    * *#Optimize* New model train with optimize image normalization
 
 * **DIST module changes:**
-    * New general dataloader
-    * Change how DIST distance embedding is computed for GT data.
+    * *#Optimize* Change how DIST distance embedding is computed for GT data.
+    * *#New_Feature* DataLoader for stanford data
+    * *#Optimize* Change normalization for point cloud
+     * MT normalized by pixel size
+     * All other by open3d downsampling value
+    * *#BugFix*  in point cloud segmenter when feed with coord idx as float not int
+    * *#Optimize* F1 eval metric without diagonal
+    * *#New_Feature* spline filtering include geometric filtering and margin of spline
 
 * **General changes:**
-    * Added data competition with Amira mesh output
-    * Added license footnote
-    * Small changes and bug fixes for post-processing of spatial-graphs
+    * *#General* Added data competition with Amira mesh output
+    * *#General* Added license footnote
+    * *#BugFix* and *#Optimize* for post-processing of spatial-graphs
+    * *#BugFix*  AWS weight import when aws don't allow read access
+    * *#General* code *#Optimize* for speed
+    * *#BugFix* and *#New_Feature* for amira export format (now build multi-label)
+    * *#Optimize* Full pytest and documentation
+    * *#New_Feature* TardisError for all error handling
 
 0.1.0-beta2 (2022-09-14)
 ----------------------------
