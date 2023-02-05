@@ -484,7 +484,6 @@ class Stanford3DDataset(BasicDataset):
 
             VD = PatchDataSet(drop_rate=0.01,
                               max_number_of_points=self.max_point_in_patch,
-                              label_cls=coord[:, 0],
                               tensor=False)
 
             coords_idx, df_idx, graph_idx, \
