@@ -395,7 +395,7 @@ class PatchDataSet:
             assert coord.shape[1] in [2, 3], \
                 TardisError('113',
                             'tardis/dist_pytorch/datasets/patches.py',
-                            'If graph True, coord must by of shape'
+                            'If graph False, coord must by of shape'
                             f'[X x Y x (Z)], but is: {coord.shape}')
             self.segments_id = None
             self.coord = coord

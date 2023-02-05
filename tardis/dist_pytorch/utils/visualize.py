@@ -114,23 +114,18 @@ def _rgb(coord: np.ndarray,
     if segmented:
         if ScanNet:
             for id, i in enumerate(coord[:, 0]):
-                if i in SCANNET_COLOR_MAP_20:
-                    rgb[id, :] = [x / 255 for x in SCANNET_COLOR_MAP_20[i]]
-                else:
-                    rgb[id, :] = SCANNET_COLOR_MAP_20[0]
+                color = SCANNET_COLOR_MAP_20.get(i, SCANNET_COLOR_MAP_20[0])
+                rgb[id, :] = [x / 255 for x in color]
         else:
-            rgb_list = [np.array((np.random.rand(),
-                                  np.random.rand(),
-                                  np.random.rand())) for _ in np.unique(coord[:, 0])]
-
-            for id, _ in enumerate(rgb):
-                df = rgb_list[np.where(np.unique(coord[:, 0]) == int(coord[id, 0]))[0][0]]
+            unique_ids = np.unique(coord[:, 0])
+            rgb_list = [np.array((np.random.rand(), np.random.rand(), np.random.rand()))
+                        for _ in unique_ids]
+            id_to_rgb = {idx: color for idx, color in zip(unique_ids, rgb_list)}
+            for id, i in enumerate(coord[:, 0]):
+                df = id_to_rgb[i]
                 rgb[id, :] = df
     else:
-        rgb_list = [[1, 0, 0]]
-
-        for id, _ in enumerate(rgb):
-            rgb[id, :] = rgb_list[0]
+        rgb[:] = [1, 0, 0]
 
     return rgb
 
