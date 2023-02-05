@@ -464,7 +464,7 @@ class Stanford3DDataset(BasicDataset):
 
         # Save patch size value for speed-up
         self.patch_size = np.zeros((len(self.ids), 1))
-        
+
     def __getitem__(self, i):
         """ Get list of all coordinates and image patches"""
         idx = self.ids[i]
