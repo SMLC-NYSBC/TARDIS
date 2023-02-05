@@ -373,15 +373,20 @@ class GraphInstanceV2:
             graph = [graph.cpu().detach().numpy()]
 
         if isinstance(idx, np.ndarray):
-            idx = [idx]
+            idx = [idx.astype(int)]
         elif isinstance(graph, torch.Tensor):
-            idx = [idx.cpu().detach().numpy()]
+            idx = [idx.cpu().detach().numpy().astype(int)]
+        else:
+            idx = [i.astype(int) for i in idx]
 
-        assert isinstance(coord, np.ndarray), \
-            TardisError('114',
-                        'tardis/dist/utils/segment_point_cloud.py',
-                        'Coord must be an array of all nodes! '
-                        f'Expected list of ndarrays but got {type(coord)}')
+        if not isinstance(coord, np.ndarray):
+            try:
+                coord = self._stitch_coord(coord, idx)
+            except:
+                TardisError('114',
+                            'tardis/dist/utils/segment_point_cloud.py',
+                            'Coord must be an array of all nodes! '
+                            f'Expected list of ndarrays but got {type(coord)}')
 
         """Build Adjacency list from graph representation"""
         adjacency_matrix = self._adjacency_matrix(graphs=graph,
@@ -423,7 +428,7 @@ class GraphInstanceV2:
                     adjacency_matrix[id][2], \
                     adjacency_matrix[id][3] = [], [], []
 
-            if sum([sum(i[2]) for i in adjacency_matrix]) == 0:
+            if sum([1 for i in adjacency_matrix if sum(i[2]) > 0]) == 0:
                 stop = True
 
         segments = np.vstack(coord_segment)

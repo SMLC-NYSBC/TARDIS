@@ -7,7 +7,7 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
-
+import random
 from typing import Optional, Tuple, Union
 
 import numpy as np
@@ -66,7 +66,7 @@ def preprocess_data(coord: str,
                 amira_import = ImportDataFromAmira(src_am=coord)
                 coord_label = amira_import.get_segmented_points()
 
-    if coord_label.shape[1] in [3, 4]:
+    if coord_label.shape[1] not in [3, 4]:
         TardisError('',
                     'tardis/dist_pytorch/dataset/augmentation.py',
                     f'Coord file {coord} is without labels.'
@@ -181,7 +181,7 @@ class BuildGraph:
         Graph representation builder.
 
         Args:
-            coord (np.ndarray): A coordinate array of the shape (Nx[2,3]).
+            coord (np.ndarray): A coordinate array of the shape (Nx[3, 4]).
             dist_th (float, None): Distance threshold for identifiers correct
                 connection. Especially useful for better resolving edges on the
                 corners of the objects.
@@ -202,31 +202,36 @@ class BuildGraph:
 
                 if coord_df.shape[0] > 4:
                     for j in points_in_contour:
-                        dist, match_coord = tree.query(coord[j].reshape(1, -1),
-                                                       k=4)
-                        match_coord = match_coord[0]  # 6 KNN
-                        dist = dist[0]
-
                         if dist_th is None:
+                            _, match_coord = tree.query(coord[j].reshape(1, -1),
+                                                        k=4)
+                            match_coord = match_coord[0]
+
                             # Select point in contour
                             knn = [x for id, x in enumerate(points_in_contour)
                                    if id in match_coord]
                         else:
+                            if coord_df.shape[0] > 8:
+                                dist, match_coord = tree.query(coord[j].reshape(1, -1),
+                                                               k=8)
+                            else:
+                                dist, match_coord = tree.query(coord[j].reshape(1, -1),
+                                                               k=coord_df.shape[0])
+                            match_coord = match_coord[0]
+                            dist = dist[0]
+
                             # Select point in contour
                             knn = [x for id, x in enumerate(points_in_contour)
                                    if id in match_coord]
                             knn = [x for x, y in zip(knn, dist) if y <= dist_th]
 
+                            if len(knn) > 4:
+                                knn = random.sample(knn, 4)
+
                         # Self connection
                         graph[j, j] = 1
 
-                        # Rectangular connection
-                        graph[j, knn] = 1
-                        graph[knn, j] = 1
-
-                        graph[j, knn] = 1
-                        graph[knn, j] = 1
-
+                        # Symmetric in-coming and out-coming connection
                         graph[j, knn] = 1
                         graph[knn, j] = 1
                 else:

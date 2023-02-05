@@ -19,9 +19,8 @@ from torch.utils.data import DataLoader, Dataset
 
 from tardis.dist_pytorch.datasets.augmentation import preprocess_data
 from tardis.dist_pytorch.datasets.patches import PatchDataSet
-from tardis.dist_pytorch.utils.utils import pc_median_dist
 from tardis.utils.errors import TardisError
-from tardis.utils.load_data import load_ply_partnet, load_ply_scannet
+from tardis.utils.load_data import load_ply_partnet, load_ply_scannet, load_s3dis_scene
 
 
 class BasicDataset(Dataset):
@@ -154,12 +153,10 @@ class FilamentDataset(BasicDataset):
         if self.patch_size[i, 0] == 0:
             # Pre-process coord and image data also, if exist remove duplicates
             coord, _ = preprocess_data(coord=coord_file)
+            px = float(str(idx).split('_')[0])
 
-            # Normalize point cloud
-            dist = pc_median_dist(coord[:, 1:])
-
-            if dist is not None:
-                coord[:, 1:] = coord[:, 1:] / dist  # Normalize point cloud to px unit
+            # Normalize point cloud to pixel size
+            coord[:, 1:] = coord[:, 1:] / px
 
             VD = PatchDataSet(max_number_of_points=self.max_point_in_patch,
                               tensor=False)
@@ -228,7 +225,7 @@ class PartnetDataset(BasicDataset):
         if self.patch_size[i, 0] == 0:
             # Pre-process coord and image data also, if exist remove duplicates
             coord = load_ply_partnet(coord_file,
-                                     downscaling=0.035)
+                                     downscaling=True)
 
             VD = PatchDataSet(drop_rate=0.01,
                               max_number_of_points=self.max_point_in_patch,
@@ -237,7 +234,7 @@ class PartnetDataset(BasicDataset):
             coords_idx, df_idx, graph_idx, \
                 output_idx, _ = VD.patched_dataset(coord=coord,
                                                    mesh=True,
-                                                   dist_th=0.07)
+                                                   dist_th=0.05)
             # save data for faster access later
             self.save_temp(i=i,
                            coords=coords_idx,
@@ -310,7 +307,7 @@ class ScannetDataset(BasicDataset):
             coords_idx, df_idx, graph_idx, \
                 output_idx, cls_idx = VD.patched_dataset(coord=coord,
                                                          mesh=True,
-                                                         dist_th=0.2)
+                                                         dist_th=0.15)
             # save data for faster access later
             self.save_temp(i=i,
                            coords=coords_idx,
@@ -364,9 +361,9 @@ class ScannetColorDataset(BasicDataset):
         super(ScannetColorDataset, self).__init__(**kwargs)
         self.color_dir = join(self.coord_dir, '../../', 'color')
 
-    def __getitem__(self, i):
+    def __getitem__(self, i) -> Tuple[list, list, list, list, list]:
         # Check if color folder exist
-        assert isdir(self.color_dir), \
+        if not isdir(self.color_dir):
             TardisError('12',
                         'tardis/dist_pytorch/datasets/dataloader.py',
                         f'Given dir: {self.color_dir} is not a directory!')
@@ -385,7 +382,7 @@ class ScannetColorDataset(BasicDataset):
         if self.patch_size[i, 0] == 0:
             # Pre-process coord and image data also, if exist remove duplicates
             coord, rgb = load_ply_scannet(coord_file,
-                                          downscaling=0.1,
+                                          downscaling=True,
                                           color=join(self.color_dir, f'{idx[:-11]}.ply'))
 
             classes = coord[:, 0]
@@ -398,7 +395,7 @@ class ScannetColorDataset(BasicDataset):
             coords_idx, rgb_idx, graph_idx, \
                 output_idx, cls_idx = VD.patched_dataset(coord=coord,
                                                          mesh=True,
-                                                         dist_th=0.2)
+                                                         dist_th=0.05)
 
             # save data for faster access later
             self.save_temp(i=i,
@@ -429,6 +426,99 @@ class ScannetColorDataset(BasicDataset):
 
         # Output edge_f,   node_f,  graph,     node_idx,   node_class
         return coords_idx, rgb_idx, graph_idx, output_idx, cls_idx
+
+
+class Stanford3DDataset(BasicDataset):
+    """
+    S3DIS TYPE DATASET CONSTRUCTION
+
+    Returns:
+        Tuple (list[np.ndarray]):
+        coords_idx: Numpy or Tensor list of coordinates (N, (2, 3)).
+
+        rgb_idx: Numpy or Tensor list of RGB values (N, 3).
+
+        graph_idx: Numpy or Tensor list of 2D GT graphs.
+
+        output_idx: Numpy or Tensor list (N, 1) of output index value.
+
+        df_idx: Normalize zero-out output for standardized dummy.
+    """
+
+    def __init__(self,
+                 **kwargs):
+        super(Stanford3DDataset, self).__init__(**kwargs)
+
+        # Modified self.ids to recognise folder for .txt
+        area_list = [d for d in listdir(self.coord_dir) if isdir(join(self.coord_dir, d))]
+        area_list = [f for f in area_list if not f.startswith('.')]
+
+        self.ids = []
+        for i in area_list:
+            area = join(self.coord_dir, i)
+            room_list = [d for d in listdir(area) if isdir(join(area, d))]
+            room_list = [join(i, f) for f in room_list if not f.startswith('.')]
+
+            self.ids.append(room_list)
+        self.ids = [item for sublist in self.ids if sublist for item in sublist]
+
+        # Save patch size value for speed-up
+        self.patch_size = np.zeros((len(self.ids), 1))
+
+    def __getitem__(self, i):
+        """ Get list of all coordinates and image patches"""
+        idx = self.ids[i]
+
+        if self.train:
+            self.temp = 'temp_train'
+        else:
+            self.temp = 'temp_test'
+
+        # Iterate throw every folder and generate S3DIS scene
+        coord_file = join(self.coord_dir, idx, 'Annotations')
+
+        if self.patch_size[i, 0] == 0:
+            # Pre-process coord and image data also, if exist remove duplicates
+            coord = load_s3dis_scene(dir=coord_file,
+                                     downscaling=0.1)
+
+            VD = PatchDataSet(drop_rate=0.01,
+                              max_number_of_points=self.max_point_in_patch,
+                              tensor=False)
+
+            coords_idx, df_idx, graph_idx, \
+                output_idx, cls_idx = VD.patched_dataset(coord=coord,
+                                                         mesh=True,
+                                                         dist_th=0.15)
+            # save data for faster access later
+            self.save_temp(i=i,
+                           coords=coords_idx,
+                           graph=graph_idx,
+                           out=output_idx,
+                           df=df_idx,
+                           cls=cls_idx)
+
+            # Store initial patch size for each data to speed up computation
+            self.patch_size[i, 0] = 1
+        else:
+            # Load pre-process data
+            coords_idx, graph_idx, output_idx, \
+                df_idx, cls_idx = self.load_temp(i,
+                                                 coords=True,
+                                                 graph=True,
+                                                 out=True,
+                                                 df=True,
+                                                 cls=True)
+
+        coords_idx, graph_idx, output_idx, \
+            df_idx, cls_idx = self.list_to_tensor(coord=coords_idx,
+                                                  graph=graph_idx,
+                                                  output=output_idx,
+                                                  df=df_idx,
+                                                  cls=cls_idx)
+
+        # Output edge_f,   node_f, graph,     node_idx,   node_class
+        return coords_idx, df_idx, graph_idx, output_idx, cls_idx
 
 
 def build_dataset(dataset_type: str,
@@ -486,6 +576,15 @@ def build_dataset(dataset_type: str,
                                       coord_format='.ply',
                                       patch_if=max_points_per_patch,
                                       train=False)
+    elif dataset_type == 'stanford':
+        dl_train = Stanford3DDataset(coord_dir=dirs[0],
+                                     coord_format='.txt',
+                                     patch_if=max_points_per_patch,
+                                     train=True)
+        dl_test = Stanford3DDataset(coord_dir=dirs[1],
+                                    coord_format='.txt',
+                                    patch_if=max_points_per_patch,
+                                    train=False)
     else:
         # TODO General dataloader
         # dl_train = GeneralDataset(coord_dir=dirs[1],

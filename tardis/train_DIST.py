@@ -36,13 +36,8 @@ from tardis.version import version
 @click.option('-dst', '--dataset_type',
               default='filament',
               type=click.Choice(['filament', 'scannet', 'scannet_color',
-                                 'partnet', 'general']),
+                                 'partnet', 'stanford', 'general']),
               help='Define training dataset type.',
-              show_default=True)
-@click.option('-ttr', '--train_test_ratio',
-              default=0.01,
-              type=float,
-              help='Percentage value of train dataset that will become test.',
               show_default=True)
 @click.option('-o', '--n_out',
               default=1,
@@ -138,7 +133,6 @@ from tardis.version import version
 @click.version_option(version=version)
 def main(dir: str,
          dataset_type: str,
-         train_test_ratio: float,
          n_out: int,
          node_dim: int,
          edge_dim: int,
@@ -166,9 +160,11 @@ def main(dir: str,
     TEST_IMAGE_DIR = join(dir, 'test', 'imgs')
     TEST_COORD_DIR = join(dir, 'test', 'masks')
 
-    COORD_FORMAT = ('.CorrelationLines.am', '.npy', '.csv', '.ply')
+    COORD_FORMAT = '.txt'
+    if dataset_type != 'stanford':
+        COORD_FORMAT = ('.CorrelationLines.am', '.npy', '.csv', '.ply')
 
-    """Check if dir has train/test folder and if folder have compatible data"""
+    """Check if dir has train/test folder and if f  older have compatible data"""
     DATASET_TEST = check_dir(dir=dir,
                              train_img=TRAIN_IMAGE_DIR,
                              train_mask=TRAIN_COORD_DIR,
@@ -181,12 +177,13 @@ def main(dir: str,
     """Optionally: Set-up environment if not existing"""
     if not DATASET_TEST:
         # Check and set-up environment
-        assert len([f for f in listdir(dir) if f.endswith(COORD_FORMAT)]) > 0, \
-            TardisError('12',
-                        'tardis/train_DIST.py',
-                        'Indicated folder for training do not have any compatible '
-                        'data or one of the following folders: '
-                        'test/imgs; test/masks; train/imgs; train/masks')
+        if not len([f for f in listdir(dir) if f.endswith(COORD_FORMAT)]) > 0:
+            if not dataset_type == 'stanford':
+                TardisError('12',
+                            'tardis/train_DIST.py',
+                            'Indicated folder for training do not have any compatible '
+                            'data or one of the following folders: '
+                            'test/imgs; test/masks; train/imgs; train/masks')
 
         if isdir(join(dir, 'train')):
             rmtree(join(dir, 'train'))
@@ -206,8 +203,10 @@ def main(dir: str,
                            with_img=False)
 
         no_dataset = int(len([f for f in listdir(dir) if f.endswith(COORD_FORMAT)]) / 2)
-        build_test_dataset(dataset_dir=dir,
-                           dataset_no=no_dataset)
+        if dataset_type == 'stanford':
+            build_test_dataset(dataset_dir=dir, dataset_no=no_dataset, stanford=True)
+        else:
+            build_test_dataset(dataset_dir=dir, dataset_no=no_dataset)
 
     """Pre-setting for building DataLoader"""
     # Check for general dataset

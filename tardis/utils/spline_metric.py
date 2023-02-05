@@ -578,7 +578,7 @@ def compare_splines_probability(spline_1: np.ndarray,
 
 
 def smooth_spline(points: np.ndarray,
-                  s=1000.0):
+                  s=500.0):
     """
     Spline smoothing given an 's' smoothness factor.
 

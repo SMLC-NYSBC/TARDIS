@@ -7,12 +7,14 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
-
-from typing import Optional
+import random
+from typing import Optional, Tuple, Union
 
 import numpy as np
 import torch
 from sklearn.neighbors import KDTree
+
+from tardis.utils.errors import TardisError
 
 
 def pc_median_dist(pc: np.ndarray,
@@ -124,6 +126,108 @@ def point_in_bb(points: np.ndarray,
         bb_filter = np.logical_and(bound_x, bound_y)
 
     return bb_filter
+
+
+class RandomDownSampling:
+    """
+    Wrapper for random sampling of the point cloud
+    """
+    def __init__(self,
+                 threshold):
+        self.threshold = threshold
+
+    def __call__(self,
+                 coord: Optional[np.ndarray] = list,
+                 rgb: Optional[Union[np.ndarray, list]] = None) -> Union[Tuple[np.ndarray,
+                                                                               np.ndarray],
+                                                                         np.ndarray]:
+        ds_pc = []
+        ds_rgb = []
+
+        if isinstance(coord, list):
+            if rgb is not None and not isinstance(rgb, list):
+                TardisError('130',
+                            'tardis/dist_pytorch/utils/utils.py',
+                            'List of coordinates require list of rbg but array was give!')
+
+            id = 0
+            for idx, i in enumerate(coord):
+                if rgb is not None:
+                    rgb_df = rgb[idx]
+                    ds_coord, ds_node_f = pc_rand_down_sample(coord=i,
+                                                              node_feature=rgb_df,
+                                                              threshold=self.threshold)
+                    ds_rgb.append(ds_node_f)
+                else:
+                    ds_coord = pc_rand_down_sample(coord=i,
+                                                   threshold=self.threshold)
+
+                ds_pc.append(np.hstack((np.expand_dims(np.repeat(id, len(ds_coord)), 1),
+                                        ds_coord)))
+                id += 1
+        elif coord.shape[1] == 3:
+            if rgb is not None:
+                return pc_rand_down_sample(coord=coord,
+                                           node_feature=rgb,
+                                           threshold=self.threshold)
+            else:
+                return pc_rand_down_sample(coord=coord, threshold=self.threshold)
+        else:
+            labels = np.unique(coord[:, 0])
+            for i in labels:
+                peak_id = np.where(coord[:, 0] == i)[0]
+                coord_df = coord[peak_id, 1:]
+
+                if rgb is not None:
+                    rgb_df = rgb[peak_id, :]
+                    ds_coord, ds_node_f = pc_rand_down_sample(coord=coord_df,
+                                                              node_feature=rgb_df,
+                                                              threshold=self.threshold)
+                    ds_rgb.append(ds_node_f)
+                else:
+                    ds_coord = pc_rand_down_sample(coord=coord_df,
+                                                   threshold=self.threshold)
+
+                ds_coord = np.hstack((np.expand_dims(np.repeat(i, len(ds_coord)), 1),
+                                      ds_coord))
+                ds_pc.append(ds_coord)
+
+        if rgb is not None:
+            return np.concatenate(ds_pc), np.concatenate(ds_rgb)
+        else:
+            return np.concatenate(ds_pc)
+
+
+def pc_rand_down_sample(coord: np.ndarray,
+                        threshold,
+                        node_feature: Optional[np.ndarray] = None) -> Union[Tuple[np.ndarray,
+                                                                                  np.ndarray],
+                                                                            np.ndarray]:
+    """
+    Random picked point to down sample point cloud
+
+    Args:
+        coord: Array of point to downs-sample
+        node_feature: Extra node feature like e.g RGB values do sample with coord.
+        threshold: Lambda function to calculate down-sampling rate or fixed float ratio.
+
+    Returns:
+        np.ndarray: Down-sample array of points.
+    """
+    if isinstance(threshold, int) or isinstance(threshold, float):
+        rand_keep = int(len(coord) * threshold)
+    else:
+        rand_keep = threshold(coord)
+
+    if rand_keep != len(coord):
+        rand_keep = random.sample(range(len(coord)), rand_keep)
+    else:
+        rand_keep = list(range(len(coord)))
+
+    if node_feature is None:
+        return coord[rand_keep][:, :3]
+    else:
+        return coord[rand_keep][:, :3], node_feature[rand_keep][:, :3]
 
 
 def check_model_dict(model_dict: dict) -> dict:

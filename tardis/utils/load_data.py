@@ -7,10 +7,10 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
-
 import struct
 from collections import namedtuple
-from os.path import isfile
+from os import listdir
+from os.path import isfile, join
 from typing import Optional, Tuple, Union
 
 import numpy as np
@@ -74,7 +74,8 @@ class ImportDataFromAmira:
         if 'AmiraMesh 3D ASCII' not in am and '# ASCII Spatial Graph' not in am:
             self.spatial_graph = None
         else:
-            self.spatial_graph = open(src_am, "r", encoding="iso-8859-1").read().split("\n")
+            self.spatial_graph = open(src_am, "r", encoding="iso-8859-1").read().split(
+                "\n")
             self.spatial_graph = [x for x in self.spatial_graph if x != '']
 
     def __get_segments(self) -> np.ndarray:
@@ -621,16 +622,14 @@ def load_mrc_file(mrc: str):
 
 def load_ply_scannet(ply: str,
                      downscaling=0,
-                     color: Optional[str] = None) -> Union[
-        Tuple[ndarray, ndarray], ndarray]:
+                     color: Optional[str] = None) -> Union[Tuple[ndarray, ndarray],
+                                                                 ndarray]:
     """
     Function to read .ply files.
-
     Args:
         ply (str): File directory.
         downscaling (float): Downscaling point cloud by fixing voxel size defaults to 0.1.
         color (str, optional): Optional color feature defaults to None.
-
     Returns:
         np.ndarray: Label point cloud coordinates and optionally RGB value for
             each point.
@@ -657,7 +656,7 @@ def load_ply_scannet(ply: str,
     }
 
     # Downscaling point cloud with labels
-    if downscaling > 0:
+    if downscaling != 0 and downscaling > 0:
         pcd = pcd.voxel_down_sample(voxel_size=downscaling)
         coord = np.asarray(pcd.points)
     else:
@@ -709,12 +708,9 @@ def load_ply_partnet(ply,
                      downscaling=0) -> np.ndarray:
     """
     Function to read .ply files.
-
     Args:
         ply (str): File directory.
-        downscaling (float): Downscaling point cloud by fixing voxel size
-            defaults to 0.035.
-
+        downscaling (float): Downscaling point cloud by fixing voxel size.
     Returns:
         np.ndarray: Labeled point cloud coordinates.
     """
@@ -724,7 +720,7 @@ def load_ply_partnet(ply,
     coord_org = np.asarray(pcd.points)
     label_org = np.asarray(pcd.colors)
 
-    if downscaling > 0:
+    if downscaling != 0 and downscaling > 0:
         pcd = pcd.voxel_down_sample(voxel_size=downscaling)
     coord = np.asarray(pcd.points)
 
@@ -737,6 +733,83 @@ def load_ply_partnet(ply,
         label_id.append(np.where(np.all(label_org[match_coord] == label_uniq, 1))[0][0])
 
     return np.hstack((np.asarray(label_id)[:, None], coord))
+
+
+def load_txt_s3dis(txt: str,
+                   downscaling=0,
+                   rgb=False) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
+    """
+    Function to read .txt Stanford 3D instance scene file.
+
+    Args:
+        txt (str): File directory.
+        downscaling (float): Downscaling point cloud by fixing voxel size.
+        rgb (bool):
+
+    Returns:
+        np.ndarray: Labeled point cloud coordinates.
+    """
+    coord = np.genfromtxt(txt,
+                          invalid_raise=False)
+
+    if rgb:
+        rgb = coord[:, 3:] / 255
+        rgb = rgb.astype(np.float32)
+    coord = coord[:, :3]
+
+    if downscaling != 0 and downscaling > 0:
+        pcd = o3d.geometry.PointCloud()
+
+        pcd.points = o3d.utility.Vector3dVector(coord)
+        if not isinstance(rgb, bool):
+            pcd.colors = o3d.utility.Vector3dVector(rgb)
+
+        pcd = pcd.voxel_down_sample(voxel_size=downscaling)
+
+        coord = np.asarray(pcd.points)
+        if not isinstance(rgb, bool):
+            rgb = np.asarray(pcd.colors)
+
+    if isinstance(rgb, bool):
+        return coord
+    return coord, rgb
+
+
+def load_s3dis_scene(dir: str,
+                     downscaling=0,
+                     rgb=False) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
+    """
+    Function to read .txt Stanford 3D instance scene files.
+
+    Args:
+        dir (str): Folder directory with all instances.
+        downscaling (float): Downscaling point cloud by fixing voxel size.
+        rgb (bool):
+
+    Returns:
+        np.ndarray: Labeled point cloud coordinates.
+    """
+    dir_list = [x for x in listdir(dir) if x not in ['.DS_Store', 'Icon']]
+
+    coord_scene = []
+    rgb_scene = []
+    id = 0
+    for i in dir_list:
+        coord_inst = load_txt_s3dis(join(dir, i),
+                                    downscaling=downscaling,
+                                    rgb=rgb)
+        if rgb:
+            rgb_scene.append(coord_inst[1])
+            coord_inst = coord_inst[0]
+
+        coord_scene.append(np.hstack((np.expand_dims(np.repeat(id, len(coord_inst)), 1),
+                                      coord_inst)))
+
+        id += 1
+
+    if rgb:
+        return np.concatenate(coord_scene), np.concatenate(rgb_scene)
+    return np.concatenate(coord_scene)
 
 
 def load_image(image: str,

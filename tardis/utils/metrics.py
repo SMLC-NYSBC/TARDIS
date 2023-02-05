@@ -14,6 +14,73 @@ import numpy as np
 import torch
 
 
+def eval_graph_f1(logits: Optional[np.ndarray] = torch.Tensor,
+                  targets: Optional[np.ndarray] = torch.Tensor):
+    """
+     Module used for calculating training metrics
+
+     Works with torch a numpy dataset.
+
+     Args:
+         logits (np.ndarray, torch.Tensor): Prediction output from the model.
+         targets (np.ndarray, torch.Tensor): Ground truth mask.
+     """
+    """Mask Diagonal as TN"""
+    tn_diagonal = np.eye(logits.shape[0], dtype=bool)
+    logits[np.eye(tn_diagonal, dtype=bool)] = 0
+    targets[np.eye(tn_diagonal, dtype=bool)] = 0
+    tn_diagonal = len(tn_diagonal)
+
+    """Find best f1 based on variation threshold"""
+    threshold = 0
+    f1 = []
+    acc = []
+    precision = []
+    recall = []
+
+    while threshold != 1:
+        input_df = torch.where(logits > threshold, 1, 0)
+
+        confusion_vector = input_df / targets
+
+        tp = torch.sum(confusion_vector == 1).item()
+        fp = torch.sum(confusion_vector == float('inf')).item()
+        tn = torch.sum(torch.isnan(confusion_vector)).item() - tn_diagonal
+        if tn < 0:
+            tn = 0
+        fn = torch.sum(confusion_vector == 0).item()
+
+        accuracy_score = (tp + tn) / (tp + tn + fp + fn + 1e-16)
+        prec = tp / (tp + fp + 1e-16)
+        rec = tp / (tp + fn + 1e-16)
+
+        acc.append(accuracy_score)
+        precision.append(prec)
+        recall.append(rec)
+        f1.append(2 * (prec * rec) / (prec + rec + 1e-16))
+
+        threshold = round(threshold + 0.01, 2)
+
+    threshold = np.where(f1 == np.max(f1))[0]
+    if threshold.shape[0] > 1:
+        th = 0
+
+        for i in threshold:
+            th = th + round(i * 0.01, 2)
+
+        threshold = round(th / len(threshold), 2)
+    else:
+        threshold = round(float(threshold) * 0.01, 2)
+
+    id = int(100 - int(threshold * 100)) - 1
+    accuracy_score = round(acc[id], 2)
+    precision_score = round(precision[id], 2)
+    recall_score = round(recall[id], 2)
+    F1_score = round(f1[id], 2)
+
+    return accuracy_score, precision_score, recall_score, F1_score, threshold
+
+
 def calculate_f1(logits: Optional[np.ndarray] = torch.Tensor,
                  targets: Optional[np.ndarray] = torch.Tensor,
                  best_f1=True):

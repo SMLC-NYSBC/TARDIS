@@ -11,7 +11,7 @@
 import numpy as np
 import torch
 
-from tardis.utils.metrics import calculate_f1
+from tardis.utils.metrics import eval_graph_f1
 from tardis.utils.trainer import BasicTrainer
 
 
@@ -86,8 +86,7 @@ class CNNTrainer(BasicTrainer):
                     img = torch.sigmoid(img)[0, 0, :]
                     mask = mask[0, 0, :]
 
-                acc, prec, recall, f1, th = calculate_f1(logits=img, targets=mask)
-
+                acc, prec, recall, f1, th = eval_graph_f1(logits=img, targets=mask)
                 # Avg. precision score
                 valid_losses.append(loss.item())
                 accuracy_mean.append(acc)

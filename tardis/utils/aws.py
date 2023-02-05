@@ -85,7 +85,10 @@ def get_weights_aws(network: str,
 
     print(f'Pre-Trained model download from S3 and saved/updated in {dir}')
 
-    return io.BytesIO(weight.content)
+    weight = weight.content
+    if 'AccessDenied' in str(weight[:100]):
+        return join(dir, 'model_weights.pth')
+    return io.BytesIO(weight)
 
 
 def aws_check_with_temp(model_name: list) -> bool:
@@ -145,7 +148,17 @@ def aws_check_with_temp(model_name: list) -> bool:
             print('Network cannot be checked! Connect to the internet next time!')
             return True  # Found saved weight but cannot connect to aws
 
-    if save['Last-Modified'] == aws['Last-Modified']:
+    try:
+        aws_data = aws['Last-Modified']
+    except KeyError:
+        aws_data = aws['Date']
+
+    try:
+        save_data = save['Last-Modified']
+    except KeyError:
+        save_data = save['Date']
+
+    if save_data == aws_data:
         return True  # Up-to data weight, load from local dir
     else:
         return False  # There is new version on aws, download from aws
