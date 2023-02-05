@@ -428,7 +428,7 @@ class GraphInstanceV2:
                     adjacency_matrix[id][2], \
                     adjacency_matrix[id][3] = [], [], []
 
-            if sum([sum(i[2]) for i in adjacency_matrix]) == 0:
+            if sum([1 for i in adjacency_matrix if sum(i[2]) > 0]) == 0:
                 stop = True
 
         segments = np.vstack(coord_segment)
