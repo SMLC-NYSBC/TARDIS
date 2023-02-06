@@ -94,8 +94,9 @@ class EdgeEmbedding(nn.Module):
         dist = torch.exp(-dist ** 2 / (self.sigma ** 2 * 2))
         isnan = torch.isnan(dist)
         dist = torch.where(isnan, torch.zeros_like(dist), dist)
+        eye = torch.eye(g_len, g_len, device=dist.get_device())
 
         # Overwrite diagonal with 1
-        dist[:, g_range, g_range] = torch.eye(g_len, g_len)[g_range, g_range]
+        dist[:, g_range, g_range] = eye[g_range, g_range]
 
         return self.linear(dist.unsqueeze(3))
