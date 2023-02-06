@@ -111,8 +111,8 @@ class BasicDIST(nn.Module):
 
     def forward(self,
                 coords: torch.Tensor,
-                node_features=None) -> Union[Tuple[torch.Tensor],
-                                               torch.Tensor]:
+                node_features=None) -> Union[Tuple[torch.Tensor, torch.Tensor],
+                                             torch.Tensor]:
         """
         Forward DIST model.
 

@@ -87,9 +87,15 @@ class EdgeEmbedding(nn.Module):
         Returns:
             torch.Tensor: Embedded features.
         """
+        g_len = input_coord.shape[1]
+        g_range = range(g_len)
+
         dist = torch.cdist(input_coord, input_coord)
         dist = torch.exp(-dist ** 2 / (self.sigma ** 2 * 2))
         isnan = torch.isnan(dist)
         dist = torch.where(isnan, torch.zeros_like(dist), dist)
+
+        # Overwrite diagonal with 1
+        dist[:, g_range, g_range] = torch.eye(g_len, g_len)[g_range, g_range]
 
         return self.linear(dist.unsqueeze(3))

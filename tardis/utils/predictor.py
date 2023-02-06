@@ -39,7 +39,8 @@ class Predictor:
                  network: Optional[str] = None,
                  subtype: Optional[str] = None,
                  img_size: Optional[int] = None,
-                 model_type: Optional[str] = None):
+                 model_type: Optional[str] = None,
+                 sigma: Optional[float] = None):
         self.device = device
         self.img_size = img_size
         assert checkpoint is not None or network is not None, \
@@ -58,6 +59,10 @@ class Predictor:
             print('Loading weight file...')
             weights = torch.load(checkpoint,
                                  map_location=device)
+
+        # Allow overwriting sigma
+        if sigma is not None:
+            weights['coord_embed_sigma'] = sigma
 
         self.model = self._build_model_from_checkpoint(
             structure=weights['model_struct_dict']

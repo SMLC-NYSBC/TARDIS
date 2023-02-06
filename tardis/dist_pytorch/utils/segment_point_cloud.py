@@ -8,7 +8,7 @@
 #  MIT License 2021 - 2023                                            #
 #######################################################################
 
-from typing import Optional, Tuple
+from typing import Optional
 
 import numpy as np
 import torch
@@ -132,67 +132,6 @@ class GraphInstanceV2:
 
         return cls_df
 
-    def adjacency_list(self,
-                       graph: np.ndarray) -> Tuple[list, list]:
-        """
-        # Stitch coord list and graph
-        # Get Point ID
-        # For each point find ID of 2 interactions with the highest prop
-            # For each possible interaction
-            # Check for example: if Point ID 0 - 1 and 1 - 0 are the highest prop.
-                for  each other:
-                # if yes add prop
-                # if not, check if there is other pair that has the highest prop.
-                    for each other:
-                    # If not remove
-                    # If yes add
-
-        Args:
-            graph (np.ndarray): Stitched graph from DIST.
-
-        Returns:
-             list, list: Adjacency list of node id's and corresponding edge probability.
-        """
-        adjacency_list_id = []
-        adjacency_list_prop = []
-
-        all_prop = []
-        for id, i in enumerate(graph):
-            prop = sorted(zip(i[np.where(i > self.threshold)[0]],
-                              np.where(i > self.threshold)[0]), reverse=True)
-
-            all_prop.append([i for i in prop if i[1] != id])
-
-        # Current ID edge for which interaction is search
-        for id, i in enumerate(all_prop):
-            edges = 0  # Number of edges found
-            prop_id = 0  # Id in order list, take 1st, 2nd etc highest value
-            prop_id_limit = 5
-
-            while edges != self.connection and prop_id != prop_id_limit:
-                if len(i) != 0:
-                    node_id = [id, i[prop_id][1]]
-                    node_prop = i[prop_id][0]
-
-                    """
-                    Search if the interaction has highest prop for each connected
-                    points
-                    """
-                    if np.any([True for p in all_prop[node_id[1]][:2] if p[1] == id]):
-                        if node_id[::-1] not in adjacency_list_id:
-                            adjacency_list_id.append(node_id)
-                            adjacency_list_prop.append(node_prop)
-
-                        edges += 1
-
-                    prop_id += 1
-                    if prop_id + 1 > len(i):
-                        prop_id = 5
-                else:
-                    break
-
-        return adjacency_list_id, adjacency_list_prop
-
     def _adjacency_matrix(self,
                           graphs: list,
                           coord: np.ndarray,
@@ -210,46 +149,38 @@ class GraphInstanceV2:
         Returns:
             list: Adjacency list of all bind graph connections.
         """
-        all_prop = [[id, list(i), [], []] for id, i in enumerate(coord)]
+        all_prop = [[idx, list(i), [], []] for idx, i in enumerate(coord)]
+        n = coord.shape[0]
 
         if output_idx is None:
             output_idx = np.arange(graphs[0].shape[0])
 
         for g, o in zip(graphs, output_idx):
-            df = np.where(g >= self.threshold)
+            interaction_id = np.transpose(np.where(g >= self.threshold))
+            interaction_id = interaction_id[interaction_id[:, 0] != interaction_id[:, 1]]
+            interaction_id = interaction_id[:, 0] * n + interaction_id[:, 1]
+            interaction_id = np.unique(interaction_id)
 
-            col = list(df[0])
-            row = list(df[1])
-            interaction_id = [[c, r] for c, r in zip(col, row) if c != r]
-            prop = [g[i[0], i[1]] for i in interaction_id]
-            interaction_id = [[o[i[0]], o[i[1]]] for i in interaction_id]
+            for i in interaction_id:
+                row = i // n
+                col = i % n
+                prop = g[row, col]
 
-            for i, p in zip(interaction_id, prop):
-                all_prop[i[0]][2].append(i[1])
-                all_prop[i[0]][3].append(p)
+                all_prop[o[row]][2].append(o[col])
+                all_prop[o[row]][3].append(prop)
 
-        # Take mean value of all repeated interactions
         for p_id, i in enumerate(all_prop):
             inter = i[2]
             prop = i[3]
-
             if len(inter) > 1:
                 all_prop[p_id][2] = list(np.unique(inter))
                 all_prop[p_id][3] = [np.median([x for idx, x in enumerate(prop)
-                                                if idx in [id for id, j
-                                                           in enumerate(inter)
-                                                           if j == k]])
+                                                if inter[idx] == k])
                                      for k in np.unique(inter)]
 
-        # Sort each interaction based on the probability
-        # The Highest value are first
         for id, a in enumerate(all_prop):
-            # Sort only, if there are more than 1 interaction
             if len(a[2]) > 1:
-                # Sort
                 prop, inter = zip(*sorted(zip(a[3], a[2]), reverse=True))
-
-                # Replace for sorted value
                 all_prop[id][2] = list(inter)
                 all_prop[id][3] = list(prop)
 
@@ -271,16 +202,18 @@ class GraphInstanceV2:
         x = 0
 
         # Find initial point
-        while len(idx_df) == 1:
+        while len(idx_df) == 1 and x < len(adj_matrix):
             idx_df = adj_matrix[x][2][:2]
             idx_df.append(x)
             x += 1
 
-            if x > len(adj_matrix):
-                break
+        # Skip if no suitable initial point found
+        if x > len(adj_matrix):
+            return []
 
         x -= 1
         new = new_df = adj_matrix[x][2][:self.connection]
+        visited = set(idx_df)
 
         # Pick all point associated with the initial point
         # Check 1: Check if node is not already on the list
@@ -293,17 +226,16 @@ class GraphInstanceV2:
                 # Pick secondary interaction for i
                 reverse_int = adj_matrix[i][2][:self.connection]
 
-                new_df = new_df + [j for j in reverse_int
-                                   if j not in idx_df and  # Check 1
-                                   i in adj_matrix[j][2][:self.connection]]  # Check 2
-                new_df = list(np.unique(new_df))
+                for j in reverse_int:
+                    if j not in visited and i in adj_matrix[j][2][:self.connection]:
+                        new_df.append(j)
+                        visited.add(j)
 
             new = new_df
-            idx_df = idx_df + new
 
-        idx_df = np.unique(idx_df)
+        idx_df = list(visited)
 
-        idx_df = [i for i in idx_df if adj_matrix[i][2] != []]  # Check 3
+        idx_df = [i for i in idx_df if adj_matrix[i][2] != []]
         return idx_df
 
     @staticmethod
@@ -332,10 +264,10 @@ class GraphInstanceV2:
 
     def patch_to_segment(self,
                          graph: list,
-                         coord: np.ndarray,
                          idx: list,
                          prune: int,
                          sort=True,
+                         coord: Optional[np.ndarray] = list,
                          visualize: Optional[str] = None) -> np.ndarray:
         """
         Point cloud instance segmentation from graph representation
