@@ -149,8 +149,10 @@ class BCELoss(nn.Module):
 
     def __init__(self,
                  reduction='mean',
-                 weight: Optional[float] = None):
+                 weight: Optional[float] = None,
+                 diagonal=False):
         super(BCELoss, self).__init__()
+        self.diagonal = diagonal
         self.loss = nn.BCEWithLogitsLoss(pos_weight=weight, reduction=reduction)
 
     def forward(self,
@@ -165,6 +167,16 @@ class BCELoss(nn.Module):
             targets (torch.Tensor): Target of a shape
                 [Batch x Channels x Length x Length].
         """
+        if self.diagonal:
+            g_len = logits.shape[2]
+            g_range = range(g_len)
+            device = logits.get_device()
+            if device == -1:
+                device = 'cpu'
+
+            eye = torch.eye(g_len, g_len, device=device)
+            logits[:, :, g_range, g_range] = eye[g_range, g_range]
+            targets[:, :, g_range, g_range] = eye[g_range, g_range]
 
         return self.loss(logits, targets)
 

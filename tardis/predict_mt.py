@@ -92,7 +92,7 @@ warnings.simplefilter("ignore", UserWarning)
               help='Prefix name for amira files.',
               show_default=True)
 @click.option('-fl', '--filter_by_length',
-              default=50,
+              default=500,
               type=int,
               help='Filter out splines with length shorter then given A value.',
               show_default=True)
@@ -241,6 +241,13 @@ def main(dir: str,
                             img_size=patch_size,
                             device=device)
 
+    # Build DIST network with loaded pre-trained weights
+    predict_dist = Predictor(checkpoint=checkpoints[1],
+                             network='dist',
+                             subtype='triang',
+                             model_type='microtubules',
+                             device=device)
+
     """Process each image with CNN and DIST"""
     for id, i in enumerate(sorted(predict_list)):
         """Pre-Processing"""
@@ -286,14 +293,6 @@ def main(dir: str,
                               'What is the correct value:',
                               default=px,
                               type=float)
-
-        # Build DIST network with loaded pre-trained weights
-        predict_dist = Predictor(checkpoint=checkpoints[1],
-                                 network='dist',
-                                 subtype='triang',
-                                 model_type='microtubules',
-                                 device=device,
-                                 sigma=px)
 
         # Check image structure and normalize histogram
         image = normalize(image)

@@ -117,7 +117,7 @@ def train_dist(train_dataloader,
     if loss_function == "dice":
         loss_fn = DiceLoss()
     elif loss_function == "bce":
-        loss_fn = BCELoss()
+        loss_fn = BCELoss(diagonal=True)
     elif loss_function == 'ce':
         loss_fn = CELoss()
 
