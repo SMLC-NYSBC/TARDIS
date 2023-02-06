@@ -175,8 +175,8 @@ class BCELoss(nn.Module):
                 device = 'cpu'
 
             eye = torch.eye(g_len, g_len, device=device)
-            logits[:, :, g_range, g_range] = eye[g_range, g_range]
-            targets[:, :, g_range, g_range] = eye[g_range, g_range]
+            logits[:, g_range, g_range] = eye[g_range, g_range]
+            targets[:, g_range, g_range] = eye[g_range, g_range]
 
         return self.loss(logits, targets)
 
