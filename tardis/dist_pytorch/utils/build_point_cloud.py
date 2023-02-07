@@ -9,11 +9,13 @@
 #######################################################################
 
 import gc
+from math import sqrt
 from typing import Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
 from numpy import ndarray
+from scipy.spatial.distance import cdist
 from skimage.morphology import skeletonize, skeletonize_3d
 
 from tardis.utils.errors import TardisError
@@ -82,6 +84,7 @@ class BuildPointCloud:
     def build_point_cloud(self,
                           image: Optional[str] = np.ndarray,
                           EDT=False,
+                          mask_size=1.5,
                           down_sampling: Optional[float] = None,
                           as_2d=False) -> Union[Tuple[ndarray, ndarray], np.ndarray]:
         """
@@ -90,6 +93,7 @@ class BuildPointCloud:
         Args:
             image (np.ndarray): Predicted semantic mask.
             EDT (bool): If True, compute EDT to extract line centers.
+            mask_size (float): Mask size to filter with EDT.
             down_sampling (float, None): If not None, down-sample point cloud with open3d.
             as_2d: Treat data as 2D not 3D.
 
@@ -105,48 +109,28 @@ class BuildPointCloud:
             """Calculate EDT and apply threshold based on predefine mask size"""
             if image.ndim == 2:
                 image_edt = edt.edt(image)
-                image_edt = np.where(image_edt > (image_edt.max() / 2), 1, 0)
+                image_edt = np.where(image_edt > mask_size, 1, 0)
             else:
                 image_edt = np.zeros(image.shape, dtype=np.uint8)
 
                 if as_2d:
                     for i in range(image_edt.shape[0]):
                         df_edt = edt.edt(image[i, :])
-                        edt_factor = df_edt.max()
 
-                        if edt_factor > 3:
-                            image_edt[i, :] = np.where(df_edt > (edt_factor / 3),
-                                                       df_edt, 0)
+                        image_edt[i, :] = np.where(df_edt > mask_size,
+                                                   df_edt, 0)
                 else:
                     image_edt = edt.edt(image)
-                    edt_factor = image_edt.max()
+                    image_edt = np.where(image_edt > mask_size,
+                                         image_edt, 0)
 
-                    if edt_factor > 3:
-                        image_edt = np.where(image_edt > (edt_factor / 3),
-                                             image_edt, 0)
-                    else:
-                        image_edt = image
                 image_edt = np.where(image_edt > 0, 1, 0)
 
             image_edt = image_edt.astype(np.uint8)
 
             """Skeletonization"""
-            if as_2d:
-                image_point = np.zeros(image_edt.shape, dtype=np.int8)
-                start = 0
-
-                if image.ndim == 2:
-                    image_point = skeletonize(image_edt)
-                elif as_2d:
-                    for i in range(image_edt.shape[0]):
-                        image_point[i, :] = skeletonize(image_edt[i, :])
-                else:
-                    for i in range(10, image_edt.shape[0], 10):
-                        if (image_edt.shape[0] - i) // 10 == 0:
-                            i = image_edt.shape[0]
-                        image_point[start:i, :] += skeletonize_3d(image_edt[start:i, :])
-                        start = i
-
+            if as_2d or image.ndim == 2:
+                image_point = skeletonize(image_edt)
                 image_point = np.where(image_point > 0)
             else:
                 image_point = np.where(skeletonize_3d(image_edt) > 0)
@@ -155,22 +139,8 @@ class BuildPointCloud:
             del image, image_edt
         else:
             """Skeletonization"""
-            if as_2d:
-                image_point = np.zeros(image.shape, dtype=np.int8)
-                start = 0
-
-                if image.ndim == 2:
-                    image_point = skeletonize(image)
-                elif as_2d:
-                    for i in range(image.shape[0]):
-                        image_point[i, :] = skeletonize(image[i, :])
-                else:
-                    for i in range(10, image.shape[0], 10):
-                        if (image.shape[0] - i) // 10 == 0:
-                            i = image.shape[0]
-
-                        image_point[start:i, :] += skeletonize_3d(image[start:i, :])
-                        start = i
+            if as_2d or image.ndim == 2:
+                image_point = skeletonize(image)
                 image_point = np.where(image_point > 0)
             else:
                 image_point = np.where(skeletonize_3d(image) > 0)
@@ -202,6 +172,12 @@ class BuildPointCloud:
             coordinates_LD = np.asarray(
                 pcd.voxel_down_sample(voxel_size=down_sampling).points
             )
+
+            dist = cdist(coordinates_LD, coordinates_LD).astype(np.float16)
+            # indices = np.where(dist <= 1.5)
+            dist = [id for id, x in enumerate(dist)
+                    if len(np.where(x <= sqrt(2 * down_sampling**2))[0]) > 2]
+            coordinates_LD = coordinates_LD[dist, :]
 
             return coordinates_HD, coordinates_LD
         return coordinates_HD

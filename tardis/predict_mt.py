@@ -389,10 +389,12 @@ def main(dir: str,
         image, _ = scale_image(image=image,
                                scale=org_shape)
 
-        if cnn_threshold == 0:
-            """Clean-up temp dir"""
+        if debug:  # Debugging checkpoint
             tif.imwrite(join(am_output, f'{i[:-in_format]}_CNN.tif'),
                         image)
+
+        if cnn_threshold == 0:
+            """Clean-up temp dir"""
             clean_up(dir=dir)
             continue
 
@@ -409,9 +411,6 @@ def main(dir: str,
         if image is None:
             continue
 
-        if debug:  # Debugging checkpoint
-            tif.imwrite(join(am_output, f'{i[:-in_format]}_CNN.tif'),
-                        image)
         if output == 'mrc':
             to_mrc(data=image,
                    file_dir=join(am_output, f'{i[:-in_format]}_CNN.mrc'))
