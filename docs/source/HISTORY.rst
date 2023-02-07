@@ -21,7 +21,7 @@ Pre-Release 0.1.0-RC1 (2023-01-21)
      * MT normalized by pixel size
      * All other by open3d downsampling value
     * *#BugFix*  in point cloud segmenter when feed with coord idx as float not int
-    * *#Optimize* F1 eval metric without diagonal
+    * *#Optimize* F1 eval metric and BCE loss without diagonal axis
     * *#New_Feature* spline filtering include geometric filtering and margin of spline
 
 * **General changes:**
