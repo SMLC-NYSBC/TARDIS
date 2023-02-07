@@ -7,8 +7,9 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
-
+import logging
 import platform
+import socket
 import sys
 from os import get_terminal_size, system
 
@@ -220,3 +221,11 @@ class TardisLogo:
                    f' | {self._build_text(WIDTH, "MIT License")}|\n' + \
                    f'  {self._build_text(WIDTH + 1, "=", True)}\n'
             print(logo)
+
+
+class ContextFilter(logging.Filter):
+    hostname = socket.gethostname()
+
+    def filter(self, record):
+        record.hostname = ContextFilter.hostname
+        return True

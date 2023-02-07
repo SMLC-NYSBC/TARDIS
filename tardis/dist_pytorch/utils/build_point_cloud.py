@@ -117,22 +117,6 @@ class BuildPointCloud:
                         if edt_factor > 3:
                             image_edt[i, :] = np.where(df_edt > (edt_factor / 3),
                                                        df_edt, 0)
-                elif image_edt.flatten().shape[0] > 1000000000:
-                    start = 0
-
-                    for i in range(10, image_edt.shape[0], 10):
-                        if (image_edt.shape[0] - i) // 10 == 0:
-                            i = image_edt.shape[0]
-
-                        df_edt = edt.edt(image[start:i, :])
-                        edt_factor = df_edt.max()
-
-                        if edt_factor > 3:
-                            image_edt[start:i, :] = np.where(df_edt > (edt_factor / 3),
-                                                             df_edt, 0)
-                        else:
-                            image_edt[start:i, :] = image[start:i, :]
-                        start = i
                 else:
                     image_edt = edt.edt(image)
                     edt_factor = image_edt.max()
@@ -147,7 +131,7 @@ class BuildPointCloud:
             image_edt = image_edt.astype(np.uint8)
 
             """Skeletonization"""
-            if image_edt.flatten().shape[0] > 1000000000 or as_2d:
+            if as_2d:
                 image_point = np.zeros(image_edt.shape, dtype=np.int8)
                 start = 0
 
@@ -171,7 +155,7 @@ class BuildPointCloud:
             del image, image_edt
         else:
             """Skeletonization"""
-            if image.flatten().shape[0] > 1000000000 or as_2d:
+            if as_2d:
                 image_point = np.zeros(image.shape, dtype=np.int8)
                 start = 0
 
