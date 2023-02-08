@@ -1,8 +1,8 @@
 History
 =======
 
-Pre-Release 0.1.0-RC1 (2023-01-21)
-----------------------------------
+0.1.0-RC1 (2023-02-08)
+----------------------
 * **Code restructure:**
     *#Optimize* + autonomization of tests for all python version
 
