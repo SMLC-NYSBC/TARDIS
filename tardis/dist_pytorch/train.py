@@ -92,10 +92,11 @@ def train_dist(train_dataloader,
         sys.exit()
 
     """Build TARDIS progress bar output"""
-    print_setting = [f"Training is started on {device}",
+    print_setting = [f"Training is started on {device} for DIST-"
+                     f"{model_structure['structure']}",
                      f"Local dir: {getcwd()}",
                      f"Training for {model_structure['dist_type']} with "
-                     f"No. of Layers: {model_structure['num_layers']} with "
+                     f"No. of Layers: {model_structure['num_layers']} and "
                      f"{model_structure['num_heads']} heads",
                      f"Layers are build of {model_structure['node_dim']} nodes, "
                      f"{model_structure['edge_dim']} edges, "

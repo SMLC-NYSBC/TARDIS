@@ -117,14 +117,10 @@ class BuildPointCloud:
                     for i in range(image_edt.shape[0]):
                         df_edt = edt.edt(image[i, :])
 
-                        image_edt[i, :] = np.where(df_edt > mask_size,
-                                                   df_edt, 0)
+                        image_edt[i, :] = np.where(df_edt > mask_size, 1, 0)
                 else:
                     image_edt = edt.edt(image)
-                    image_edt = np.where(image_edt > mask_size,
-                                         image_edt, 0)
-
-                image_edt = np.where(image_edt > 0, 1, 0)
+                    image_edt = np.where(image_edt > mask_size, 1, 0)
 
             image_edt = image_edt.astype(np.uint8)
 

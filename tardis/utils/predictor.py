@@ -62,11 +62,12 @@ class Predictor:
 
         # Allow overwriting sigma
         if sigma is not None:
-            weights['coord_embed_sigma'] = sigma
+            weights['model_struct_dict']['coord_embed_sigma'] = sigma
 
         self.model = self._build_model_from_checkpoint(
             structure=weights['model_struct_dict']
         )
+
         self.model.load_state_dict(weights['model_state_dict'])
 
         del weights  # Cleanup weight file from memory
@@ -120,10 +121,18 @@ class Predictor:
                 else:
                     out = self.model(coords=x.to(self.device),
                                      node_features=y.to(self.device))
+
+                out = out.cpu().detach().numpy()[0, 0, :]
+                g_len = out.shape[0]
+                g_range = range(g_len)
+
+                # Overwrite diagonal with 1
+                out[g_range, g_range] = np.eye(g_len, g_len)[g_range, g_range]
+                return out
             else:
                 out = self.model(x.to(self.device))
 
-        return out.cpu().detach().numpy()[0, 0, :]
+                return out.cpu().detach().numpy()[0, 0, :]
 
 
 class BasicPredictor:

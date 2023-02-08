@@ -138,7 +138,6 @@ class BasicTrainer:
                             text_2=self.print_setting[1],
                             text_3=self.print_setting[2],
                             text_4=self.print_setting[3],
-                            text_5=self.gpu_info,
                             text_7=self.epoch_desc,
                             text_8=print_progress_bar(self.id,
                                                       self.epochs),
@@ -189,22 +188,6 @@ class BasicTrainer:
             """Initialized training"""
             self.id = id
 
-            if self.device.type == 'cuda':
-                try:
-                    import nvidia_smi
-
-                    nvidia_smi.nvmlInit()
-                    handle = nvidia_smi.nvmlDeviceGetHandleByIndex(self.device.index)
-                    info = nvidia_smi.nvmlDeviceGetMemoryInfo(handle)
-                    self.gpu_info = "Device {}: {}, Memory : {:.2f}% free".format(self.device.index,
-                                                                                  nvidia_smi.nvmlDeviceGetName(handle),
-                                                                                  100 * info.free / info.total)
-                    nvidia_smi.nvmlShutdown()
-                except:
-                    self.gpu_info = " "
-            else:
-                self.gpu_info = " "
-
             # For each Epoch load be t model from previous run
             if self.id == 0:
                 self.epoch_desc = 'Epochs: stop counter 0; best F1: NaN'
@@ -218,7 +201,6 @@ class BasicTrainer:
                                 text_2=self.print_setting[1],
                                 text_3=self.print_setting[2],
                                 text_4=self.print_setting[3],
-                                text_5=self.gpu_info,
                                 text_7=self.epoch_desc,
                                 text_8=print_progress_bar(self.id, self.epochs))
 

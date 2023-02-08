@@ -33,43 +33,43 @@ from tardis.version import version
               help='Directory with train, test folder or folder with dataset '
                    'to be used for training.',
               show_default=True)
-@click.option('-dst', '--dataset_type',
+@click.option('-dt', '--dataset_type',
               default='filament',
               type=click.Choice(['filament', 'scannet', 'scannet_color',
                                  'partnet', 'stanford', 'general']),
               help='Define training dataset type.',
               show_default=True)
-@click.option('-o', '--n_out',
+@click.option('-no', '--n_out',
               default=1,
               type=int,
               help='Number of output channels in DIST.',
               show_default=True)
-@click.option('-n', '--node_dim',
+@click.option('-nd', '--node_dim',
               default=0,
               type=int,
               help='Number embedding channels for nodes.',
               show_default=True)
-@click.option('-e', '--edge_dim',
+@click.option('-ed', '--edge_dim',
               default=128,
               type=int,
               help='Number embedding channels for edges.',
               show_default=True)
-@click.option('-l', '--layers',
+@click.option('-ly', '--layers',
               default=6,
               type=int,
               help='Number of DIST layers',
               show_default=True)
-@click.option('-h', '--heads',
+@click.option('-hd', '--heads',
               default=8,
               type=int,
               help='Number of DIST heads in MHA',
               show_default=True)
-@click.option('-d', '--dropout',
+@click.option('-dp', '--dropout',
               default=0,
               type=float,
               help='If 0, dropout is turn-off. Else indicate dropout rate.',
               show_default=True)
-@click.option('-s', '--sigma',
+@click.option('-sg', '--sigma',
               default=2,
               type=float,
               help='Sigma value for distance embedding.',
@@ -81,12 +81,12 @@ from tardis.version import version
                                  'triang', 'dualtriang', 'quad']),
               help='Structure of the DIST layers.',
               show_default=True)
-@click.option('-t', '--dist_type',
+@click.option('-ds', '--dist_structure',
               default='instance',
               type=click.Choice(['instance', 'semantic']),
               help='Type of DIST model prediction.',
               show_default=True)
-@click.option('-pcs', '--pc_sampling',
+@click.option('-ps', '--pc_sampling',
               default=500,
               type=int,
               help='Max number of points per patch.',
@@ -101,7 +101,7 @@ from tardis.version import version
               type=float,
               help='Learning rate.',
               show_default=True)
-@click.option('-lrs', '--lr_rate_schedule',
+@click.option('-ls', '--lr_rate_schedule',
               default=False,
               type=bool,
               help='If True, use learning rate scheduler [StepLR].',
@@ -111,7 +111,7 @@ from tardis.version import version
               type=str,
               help='If not None, directory to checkpoint.',
               show_default=True)
-@click.option('-d', '--device',
+@click.option('-dv', '--device',
               default=0,
               type=str,
               help='Define which device use for training: '
@@ -119,12 +119,12 @@ from tardis.version import version
                    'cpu: Usa CPU '
                    '0-9 - specified gpu device id to use',
               show_default=True)
-@click.option('-e', '--epochs',
+@click.option('-ep', '--epochs',
               default=100,
               type=int,
               help='Number of epoches.',
               show_default=True)
-@click.option('-ers', '--early_stop',
+@click.option('-er', '--early_stop',
               default=10,
               type=int,
               help="Number or epoch's without improvement, "
@@ -141,7 +141,7 @@ def main(dir: str,
          dropout: float,
          sigma: int,
          structure: str,
-         dist_type: str,
+         dist_structure: str,
          pc_sampling: int,
          loss: str,
          loss_lr: float,
@@ -228,12 +228,12 @@ def main(dir: str,
     else:
         node_input = 0
 
-    if dist_type == 'instance':
+    if dist_structure == 'instance':
         num_cls = None
-    elif dist_type == 'semantic':
+    elif dist_structure == 'semantic':
         num_cls = 200
     else:
-        tardis_logo(text_1=f'ValueError: Wrong DIST type {dist_type}!')
+        tardis_logo(text_1=f'ValueError: Wrong DIST type {dist_structure}!')
         sys.exit()
 
     """Optionally: pre-load model structure from checkpoint"""
@@ -244,7 +244,7 @@ def main(dir: str,
             model_dict = save_train['model_struct_dict']
             globals().update(model_dict)
 
-    model_dict = {'dist_type': dist_type,
+    model_dict = {'dist_type': dist_structure,
                   'n_out': n_out,
                   'node_input': node_input,
                   'node_dim': node_dim,
