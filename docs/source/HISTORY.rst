@@ -4,7 +4,7 @@ History
 Pre-Release 0.1.0-RC1 (2023-01-21)
 ----------------------------------
 * **Code restructure:**
-    * Extra pytest + aromatization of tests for all python version
+    *#Optimize* + autonomization of tests for all python version
 
 * **SpindleTorch module changes:**
     * *#Optimize* Rebuild interpolation for images and mask
@@ -18,8 +18,8 @@ Pre-Release 0.1.0-RC1 (2023-01-21)
     * *#Optimize* Change how DIST distance embedding is computed for GT data.
     * *#New_Feature* DataLoader for stanford data
     * *#Optimize* Change normalization for point cloud
-     * MT normalized by pixel size
-     * All other by open3d downsampling value
+        - MT normalized by pixel size
+        - All other by open3d downsampling value optional random downsamling
     * *#BugFix*  in point cloud segmenter when feed with coord idx as float not int
     * *#Optimize* F1 eval metric and BCE loss without diagonal axis
     * *#New_Feature* spline filtering include geometric filtering and margin of spline
@@ -31,7 +31,6 @@ Pre-Release 0.1.0-RC1 (2023-01-21)
     * *#BugFix*  AWS weight import when aws don't allow read access
     * *#General* code *#Optimize* for speed
     * *#BugFix* and *#New_Feature* for amira export format (now build multi-label)
-    * *#Optimize* Full pytest and documentation
     * *#New_Feature* TardisError for all error handling
 
 0.1.0-beta2 (2022-09-14)

@@ -1,5 +1,5 @@
-Global Utils Functions
-===============================
+Global -> Trainer/Predictor
+===========================
 
 General NN trainer
 ------------------
@@ -8,3 +8,7 @@ General NN trainer
 General NN predictor
 --------------------
 .. automodule:: tardis.utils.predictor
+
+Training datasets
+-----------------
+.. automodule:: tardis.utils.dataset

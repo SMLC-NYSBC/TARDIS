@@ -28,9 +28,16 @@ ScanNet V2 with RGB values synthetic DataSet
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: tardis.dist_pytorch.datasets.dataloader.ScannetColorDataset
 
+Stanford S3DIS DataSet
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: tardis.dist_pytorch.datasets.dataloader.Stanford3DDataset
 
 Helper Functions
 ----------------
 Build dataloader
 ^^^^^^^^^^^^^^^^
 .. autofunction:: tardis.dist_pytorch.datasets.dataloader.build_dataset
+
+Augmentation
+^^^^^^^^^^^^
+.. automodule:: tardis.dist_pytorch.datasets.augmentation

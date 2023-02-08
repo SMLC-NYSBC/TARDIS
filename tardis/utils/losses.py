@@ -18,8 +18,7 @@ class SigmoidFocalLoss(nn.Module):
     """
     Sigmoid focal loss function
 
-    References:
-        10.1088/1742-6596/1229/1/012045
+    References: 10.1088/1742-6596/1229/1/012045
 
     Args:
         gamma (float): Gamma factor used in term1 of SFL.
@@ -170,13 +169,9 @@ class BCELoss(nn.Module):
         if self.diagonal:
             g_len = logits.shape[2]
             g_range = range(g_len)
-            device = logits.get_device()
-            if device == -1:
-                device = 'cpu'
 
-            eye = torch.eye(g_len, g_len, device=device)
-            logits[:, g_range, g_range] = eye[g_range, g_range]
-            targets[:, g_range, g_range] = eye[g_range, g_range]
+            logits[:, g_range, g_range] = 1
+            targets[:, g_range, g_range] = 1
 
         return self.loss(logits, targets)
 

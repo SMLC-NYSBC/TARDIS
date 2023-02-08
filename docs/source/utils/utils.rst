@@ -1,5 +1,5 @@
-Global Utils Functions
-===============================
+Global - > Utils
+================
 
 AWS
 ---
@@ -9,7 +9,6 @@ Device
 ------
 .. automodule:: tardis.utils.device
 
-
 TARDIS log
 ----------
 .. automodule:: tardis.utils.errors
@@ -17,14 +16,15 @@ TARDIS log
 
 Environment setting
 -------------------
-.. automodule:: tardis.utils.dataset
 .. automodule:: tardis.utils.setup_envir
 
 Loss functions
 --------------
 .. automodule:: tardis.utils.losses
 .. automodule:: tardis.utils.metrics
+.. automodule:: tardis.utils.spline_metric
 
 Utils
 -----
 .. automodule:: tardis.utils.utils
+.. automodule:: tardis.utils.normalization

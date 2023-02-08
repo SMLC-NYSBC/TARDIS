@@ -73,11 +73,14 @@ class BuildPointCloud:
 
         """Any other exertions"""
         if unique_val[1] != 1:
-            TardisError('115',
-                        'tardis/dist/utils',
-                        'Array or file directory loaded properly but image '
-                        'is not semantic mask... '
-                        f'Expected 0-1 value but got: {unique_val}')
+            if len(unique_val) == 2:
+                image = np.where(image > 0, 1, 0)
+            else:
+                TardisError('115',
+                            'tardis/dist/utils',
+                            'Array or file directory loaded properly but image '
+                            'is not semantic mask... '
+                            f'Expected 0-1 value but got: {unique_val}')
 
         return image
 

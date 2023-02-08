@@ -20,7 +20,7 @@ from torch.utils.data import Dataset
 from tardis.spindletorch.datasets.augmentation import preprocess
 from tardis.utils.errors import TardisError
 from tardis.utils.load_data import load_image
-from tardis.utils.nomalization import MinMaxNormalize
+from tardis.utils.normalization import MinMaxNormalize
 
 
 class CNNDataset(Dataset):

@@ -12,7 +12,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from tardis.utils.metrics import calculate_f1
+from tardis.utils.metrics import eval_graph_f1
 from tardis.utils.trainer import BasicTrainer
 
 
@@ -88,8 +88,8 @@ class DistTrainer(BasicTrainer):
                     loss = self.criterion(edge[0, :], graph)
                     edge = torch.sigmoid(edge[:, 0, :])
 
-                acc, prec, recall, f1, th = calculate_f1(logits=edge,
-                                                         targets=graph)
+                    acc, prec, recall, f1, th = eval_graph_f1(logits=edge,
+                                                              targets=graph)
 
                 # Avg. precision score
                 valid_losses.append(loss.item())
@@ -189,12 +189,12 @@ class CDistTrainer(BasicTrainer):
                     else:
                         edge, out_cls = self.model(coords=edge, node_features=None)
 
-                    loss = self.criterion(edge[0, :], graph) + self.criterion(out_cls,
-                                                                              cls)
+                    loss = self.criterion(edge[0, :], graph) + self.criterion_cls(out_cls,
+                                                                                  cls)
 
                     edge = torch.sigmoid(edge[:, 0, :])
-                    acc, prec, recall, f1, th = calculate_f1(logits=edge,
-                                                             targets=graph)
+                    acc, prec, recall, f1, th = eval_graph_f1(logits=edge,
+                                                              targets=graph)
 
                 # Avg. precision score
                 valid_losses.append(loss.item())

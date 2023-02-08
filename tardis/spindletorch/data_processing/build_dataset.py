@@ -19,7 +19,7 @@ from tardis.spindletorch.data_processing.trim import trim_with_stride
 from tardis.utils.errors import TardisError
 from tardis.utils.load_data import ImportDataFromAmira, load_image
 from tardis.utils.logo import print_progress_bar, TardisLogo
-from tardis.utils.nomalization import MinMaxNormalize, RescaleNormalize
+from tardis.utils.normalization import MinMaxNormalize, RescaleNormalize
 
 
 def build_train_dataset(dataset_dir: str,
@@ -33,8 +33,8 @@ def build_train_dataset(dataset_dir: str,
     This module building a train dataset from each file in the specified dir.
     Module working on the file as .tif/.mrc/.rec/.am and mask in image format
     of .csv and .am:
-        - If mask is .csv, module expect image file in format of .tif/.mrc/.rec/.am
-        - If mask is .am, module expect image file in format of .am
+    - If mask is .csv, module expect image file in format of .tif/.mrc/.rec/.am
+    - If mask is .am, module expect image file in format of .am
 
     For the given dir, module recognize file, and then for each file couple
     (e.g. image and mask) if needed (e.g. mask is not .tif) it's build mask from

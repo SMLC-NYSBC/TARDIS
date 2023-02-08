@@ -23,7 +23,7 @@ def move_train_dataset(dir: str,
                        with_img: bool,
                        img_format: Optional[tuple] = None):
     """
-    ! DEPRECIATED ! Standard builder for train datasets.
+    Detect and copy all date to new train directory.
 
     Train dataset builder. Detected files of specific format and moved to:
     - dir/train/masks

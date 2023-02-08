@@ -17,6 +17,7 @@ SpindleTorch
    SpindleTorch -> Encoder Blocks <spindletorch/encoder>
    SpindleTorch -> Decoder Blocks <spindletorch/decoder>
    SpindleTorch -> Weights initialization <spindletorch/w_init>
+   SpindleTorch -> Weights initialization <spindletorch/dataset>
 
 DIST
 ====
@@ -24,7 +25,6 @@ DIST
 
    DIST <dist_pytorch/dist_pytorch>
    DIST -> DIST modules <dist_pytorch/modules>
-   DIST -> Data augmentation <dist_pytorch/augmentation>
    DIST -> DataLoader <dist_pytorch/data_loader>
    DIST -> Patch point cloud <dist_pytorch/patches>
    DIST -> Visualizer <dist_pytorch/visualize>

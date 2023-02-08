@@ -25,11 +25,16 @@ def eval_graph_f1(logits: Optional[np.ndarray] = torch.Tensor,
          logits (np.ndarray, torch.Tensor): Prediction output from the model.
          targets (np.ndarray, torch.Tensor): Ground truth mask.
      """
-    """Mask Diagonal as TN"""
-    tn_diagonal = np.eye(logits.shape[0], dtype=bool)
-    logits[np.eye(tn_diagonal, dtype=bool)] = 0
-    targets[np.eye(tn_diagonal, dtype=bool)] = 0
-    tn_diagonal = len(tn_diagonal)
+    """Mask Diagonal as TP"""
+    g_len = logits.shape[1]
+    g_range = range(g_len)
+
+    if logits.ndim == 3:
+        logits[:, g_range, g_range] = 1
+        targets[:, g_range, g_range] = 1
+    else:
+        logits[g_range, g_range] = 1
+        targets[g_range, g_range] = 1
 
     """Find best f1 based on variation threshold"""
     threshold = 0
@@ -43,9 +48,9 @@ def eval_graph_f1(logits: Optional[np.ndarray] = torch.Tensor,
 
         confusion_vector = input_df / targets
 
-        tp = torch.sum(confusion_vector == 1).item()
+        tp = torch.sum(confusion_vector == 1).item() - g_len
         fp = torch.sum(confusion_vector == float('inf')).item()
-        tn = torch.sum(torch.isnan(confusion_vector)).item() - tn_diagonal
+        tn = torch.sum(torch.isnan(confusion_vector)).item()
         if tn < 0:
             tn = 0
         fn = torch.sum(confusion_vector == 0).item()

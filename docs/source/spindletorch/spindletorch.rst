@@ -1,4 +1,4 @@
-SpindleTorch modules
-====================
+SpindleTorch -> Modules
+=======================
 
 .. automodule:: tardis.spindletorch.spindletorch

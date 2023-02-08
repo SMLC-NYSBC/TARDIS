@@ -279,17 +279,6 @@ class GraphInstanceV2:
         node creates an edge with previous node within 2 highest probability.
         If not alg. search for new edge that fulfill the statement.
 
-        E.g.
-        0
-        |
-        151_
-        |   \
-        515_  0
-        |   \
-        600  151
-        |
-        ...
-
         Args:
             graph (list): Graph patch output from Dist.
             coord (np.ndarray): Coordinates for each unsorted point idx.

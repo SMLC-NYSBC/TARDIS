@@ -16,7 +16,7 @@ from sklearn.neighbors import KDTree
 
 from tardis.utils.errors import TardisError
 from tardis.utils.load_data import ImportDataFromAmira
-from tardis.utils.nomalization import RescaleNormalize, SimpleNormalize
+from tardis.utils.normalization import RescaleNormalize, SimpleNormalize
 
 
 def preprocess_data(coord: str,

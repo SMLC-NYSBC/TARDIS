@@ -1,5 +1,5 @@
-Visualize point clouds
-======================
+DIST -> Visualize Point Clouds
+==============================
 
 Visualize
 ---------

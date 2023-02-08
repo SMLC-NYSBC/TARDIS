@@ -89,18 +89,13 @@ class EdgeEmbedding(nn.Module):
         """
         g_len = input_coord.shape[1]
         g_range = range(g_len)
-        device = input_coord.get_device()
-        if device == -1:
-            device = 'cpu'
 
         dist = torch.cdist(input_coord, input_coord)
         dist = torch.exp(-dist ** 2 / (self.sigma ** 2 * 2))
         isnan = torch.isnan(dist)
         dist = torch.where(isnan, torch.zeros_like(dist), dist)
 
-        eye = torch.eye(g_len, g_len, device=device)
-
         # Overwrite diagonal with 1
-        dist[:, g_range, g_range] = eye[g_range, g_range]
+        dist[:, g_range, g_range] = 1
 
         return self.linear(dist.unsqueeze(3))

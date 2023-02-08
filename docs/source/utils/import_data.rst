@@ -1,5 +1,5 @@
-Global Utils Functions
-===============================
+Global -> Utils
+===============
 
 Import data formats
 -------------------

@@ -1,5 +1,5 @@
-DIST model
-==========
+DIST -> Modules
+===============
 
 DIST layer wrapper
 ------------------

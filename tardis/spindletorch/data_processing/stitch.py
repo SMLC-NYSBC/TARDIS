@@ -22,10 +22,10 @@ class StitchImages:
 
     Class object to stitch cut date into one big image. Object recognize images
     with naming 0_1_1_1_25_pf where:
-        0 indicate id of image
-        1 indicate xyz position
-        25 indicate stride value for overlap
-        _pf indicate optional prefix in file name
+    - 0 indicate id of image
+    - 1 indicate xyz position
+    - 25 indicate stride value for overlap
+    - pf indicate optional prefix in file name
     """
 
     def __init__(self):
