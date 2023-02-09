@@ -97,7 +97,7 @@ from tardis.version import version
               help='Max_pooling kernel.',
               show_default=True)
 @click.option('-l', '--cnn_loss',
-              default='bce',
+              default='BCELoss',
               type=str,
               help='Loss function use for training.',
               show_default=True)

@@ -3,7 +3,9 @@ History
 
 0.1.0-RC2 (2023-xx-xx)
 ----------------------
-
+* **General changes:**
+    * *#New_Feature* Added ClBCE and ClDice loss functions
+    * *#Optimize* Loss functions pytest and general cleanup
 
 0.1.0-RC1 (2023-02-08)
 ----------------------
