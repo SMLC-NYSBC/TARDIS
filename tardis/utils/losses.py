@@ -22,74 +22,24 @@ class AdaptiveDiceLoss(nn.Module):
     AdaptiveDice =  2∑[(1-p_i)^a * p_i] * g_i
                    --------------------------
                    ∑[(1-p_i)^a * p_i]  + ∑g_i^2
-
-    Args:
-        alpha (float):
-            Optional alpha scaling factor.
-                Defaults to 0.1.
     """
 
     def __init__(self,
                  alpha=0.1,
+                 smooth=1e-16,
                  diagonal=False):
-        super(AdaptiveDiceLoss, self).__init__()
-        self.alpha = alpha
-        self.diagonal = diagonal
-
-    def forward(self,
-                logits: torch.Tensor,
-                targets: torch.Tensor,
-                smooth=1e-16) -> torch.Tensor:
         """
-        Forward loos function
+        Loss initialization
 
         Args:
-            logits (torch.Tensor):
-                logits of a shape [Batch x Channels x Length x Length].
-            targets (torch.Tensor):
-                target of a shape [Batch x Channels x Length x Length].
-            smooth (float):
-                Smooth factor to ensure  no 0 division.
-                    Defaults to 1e-16.
+            alpha (float):  Optional alpha scaling factor.
+            smooth (float): Smooth factor to ensure  no 0 division.
+            diagonal (bool): If True, remove diagonal axis for graph prediction.
         """
-        logits = torch.sigmoid(logits)
-
-        if self.diagonal:
-            g_len = logits.shape[2]
-            g_range = range(g_len)
-
-            logits[:, g_range, g_range] = 1
-            targets[:, g_range, g_range] = 1
-
-        logits = logits.view(-1)
-        targets = targets.view(-1)
-
-        logits = ((1 - logits) ** self.alpha) * logits
-
-        intersection = (logits * targets).sum()
-        dice = (2. * intersection + smooth) / (logits.square().sum() +
-                                               targets.square().sum() +
-                                               smooth)
-
-        return 1 - dice
-
-
-class BCELoss(nn.Module):
-    """
-    STANDARD BINARY CROSS-ENTROPY LOSS FUNCTION
-
-    Args:
-        reduction (str, optional): BCE reduction over batch type.
-        weight (Optional[float], optional): Optional weigh factor for positive samples.
-    """
-
-    def __init__(self,
-                 reduction='mean',
-                 weight: Optional[float] = None,
-                 diagonal=False):
-        super(BCELoss, self).__init__()
+        super(AdaptiveDiceLoss, self).__init__()
+        self.alpha = alpha
+        self.smooth = smooth
         self.diagonal = diagonal
-        self.loss = nn.BCEWithLogitsLoss(pos_weight=weight, reduction=reduction)
 
     def forward(self,
                 logits: torch.Tensor,
@@ -98,10 +48,57 @@ class BCELoss(nn.Module):
         Forward loos function
 
         Args:
-            logits (torch.Tensor): Logits of a shape
-                [Batch x Channels x Length x Length].
-            targets (torch.Tensor): Target of a shape
-                [Batch x Channels x Length x Length].
+            logits (torch.Tensor): logits of a shape [Batch x Channels x Length x Length]
+            targets (torch.Tensor): target of a shape [Batch x Channels x Length x Length]
+        """
+        if self.diagonal:
+            g_len = logits.shape[2]
+            g_range = range(g_len)
+
+            logits[:, g_range, g_range] = 1
+            targets[:, g_range, g_range] = 1
+
+        logits = torch.sigmoid(logits)
+        logits = logits.view(-1)
+        targets = targets.view(-1)
+
+        logits = ((1 - logits) ** self.alpha) * logits
+
+        intersection = (logits * targets).sum()
+        dice = (2. * intersection + self.smooth) / (logits.square().sum() +
+                                                    targets.square().sum() + self.smooth)
+
+        return 1 - dice
+
+
+class BCELoss(nn.Module):
+    """
+    STANDARD BINARY CROSS-ENTROPY LOSS FUNCTION
+    """
+
+    def __init__(self,
+                 reduction='mean',
+                 diagonal=False):
+        """
+        Loss initialization
+
+        Args:
+            reduction (str, optional): BCE reduction over batch type.
+            diagonal (bool): If True, remove diagonal axis for graph prediction.
+        """
+        super(BCELoss, self).__init__()
+        self.diagonal = diagonal
+        self.loss = nn.BCEWithLogitsLoss(reduction=reduction)
+
+    def forward(self,
+                logits: torch.Tensor,
+                targets: torch.Tensor) -> torch.Tensor:
+        """
+        Forward loos function
+
+        Args:
+            logits (torch.Tensor): Logits of a shape [Batch x Channels x Length x Length]
+            targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length]
         """
         if self.diagonal:
             g_len = logits.shape[2]
@@ -120,6 +117,12 @@ class BCEDiceLoss(nn.Module):
 
     def __init__(self,
                  diagonal=False):
+        """
+        Loss initialization
+
+        Args:
+            diagonal (bool): If True, remove diagonal axis for graph prediction.
+        """
         super(BCEDiceLoss, self).__init__()
         self.bce = BCELoss(diagonal=diagonal)
         self.dice = DiceLoss(diagonal=diagonal)
@@ -132,10 +135,8 @@ class BCEDiceLoss(nn.Module):
         Forward loos function
 
         Args:
-            logits (torch.Tensor): Logits of a shape
-                [Batch x Channels x Length x Length].
-            targets (torch.Tensor): Target of a shape
-                [Batch x Channels x Length x Length].
+            logits (torch.Tensor): Logits of a shape [Batch x Channels x Length x Length]
+            targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length]
         """
         if self.diagonal:
             g_len = logits.shape[2]
@@ -145,7 +146,6 @@ class BCEDiceLoss(nn.Module):
             targets[:, g_range, g_range] = 1
 
         bce_loss = self.bce(logits, targets)
-
         dice_loss = self.dice(logits, targets)
 
         if dice_loss is None:
@@ -157,16 +157,18 @@ class BCEDiceLoss(nn.Module):
 class CELoss(nn.Module):
     """
     STANDARD CROSS-ENTROPY LOSS FUNCTION
-
-    Args:
-        reduction (str, optional):
-            BCE reduction over batch type.
-                Defaults to 'mean'.
     """
 
     def __init__(self,
                  reduction='mean',
                  diagonal=False):
+        """
+        Loss initialization
+
+        Args:
+            reduction (str): CE reduction over batch type.
+            diagonal (bool): If True, remove diagonal axis for graph prediction.
+        """
         super(CELoss, self).__init__()
         self.loss = nn.CrossEntropyLoss(reduction=reduction)
         self.diagonal = diagonal
@@ -178,10 +180,53 @@ class CELoss(nn.Module):
         Forward loos function
 
         Args:
-            logits (torch.Tensor):
-                logits of a shape [Batch x Channels x Length x Length]
-            targets (torch.Tensor):
-                target of a shape [Batch x Channels x Length x Length]
+            logits (torch.Tensor): logits of a shape [Batch x Channels x Length x Length]
+            targets (torch.Tensor): target of a shape [Batch x Channels x Length x Length]
+        """
+        if self.diagonal:
+            g_len = logits.shape[2]
+            g_range = range(g_len)
+
+            logits[:, :, g_range, g_range] = 1
+            targets[:, :, g_range, g_range] = 1
+
+        return self.loss(torch.sigmoid(logits), targets)
+
+
+class DiceLoss(nn.Module):
+    """
+    Dice coefficient loss function.
+
+    Dice=2(A∩B)(A)+(B);
+    where 'A∩B' represents the common elements between sets A and B
+    'A' ann 'B' represents the number of elements in set A ans set B
+
+    This loss effectively zero-out any pixels from our prediction which
+    are not "activated" in the target mask.
+    """
+    def __init__(self,
+                 smooth=1e-16,
+                 diagonal=False):
+        """
+        Loss initialization
+
+        Args:
+            diagonal (bool): If True, remove diagonal axis for graph prediction.
+            smooth (float): Smooth factor to ensure  no 0 division.
+        """
+        super(DiceLoss, self).__init__()
+        self.smooth = smooth
+        self.diagonal = diagonal
+
+    def forward(self,
+                logits: torch.Tensor,
+                targets: torch.Tensor) -> torch.Tensor:
+        """
+        Forward loos function
+
+        Args:
+            logits (torch.Tensor): Logits of a shape [Batch x Channels x Length x Length].
+            targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length].
         """
         if self.diagonal:
             g_len = logits.shape[2]
@@ -190,26 +235,44 @@ class CELoss(nn.Module):
             logits[:, g_range, g_range] = 1
             targets[:, g_range, g_range] = 1
 
-        return self.loss(logits, targets)
+        logits = torch.sigmoid(logits)
+
+        # Flatten label and prediction tensors
+        logits = logits.view(-1)
+        targets = targets.view(-1)
+
+        # Calculate dice loss
+        intersection = (logits * targets).sum()
+        dice = (2 * intersection + self.smooth) / (logits.square().sum() +
+                                                   targets.square().sum() + self.smooth)
+
+        return 1 - dice
 
 
-class ClDice(nn.Module):
+class SoftSkeletonization(nn.Module):
     """
-    Soft skeletonization with DICE loss function
+    General soft skeletonization with DICE loss function
     """
     def __init__(self,
                  _iter=3,
-                 smooth=1.0,
+                 smooth=1e-16,
                  alpha=0.5,
                  diagonal=False):
-        super(ClDice, self).__init__()
+        """
+        Loss initialization
+
+        Args:
+            _iter (int): Number of skeletonization iterations
+            smooth (float): Smoothness factor.
+            alpha (float): Alpha loss reduction.
+            diagonal (bool): If True, remove diagonal axis for graph prediction.
+        """
+        super(SoftSkeletonization, self).__init__()
 
         self.iter = _iter
         self.alpha = alpha
         self.smooth = smooth
         self.diagonal = diagonal
-
-        self.soft_dice = DiceLoss(diagonal=self.diagonal)
 
     @staticmethod
     def _soft_erode(binary_mask):
@@ -237,7 +300,17 @@ class ClDice(nn.Module):
 
     def soft_skel(self,
                   binary_mask: torch.Tensor,
-                  iter_: int):
+                  iter_: int) -> torch.Tensor:
+        """
+        Soft skeletonization
+
+        Args:
+            binary_mask: Binary target mask.
+            iter_: Number of iterations for erosion.
+
+        Returns:
+            torch.Tensor: Skeleton on-hot mask
+        """
         if not isinstance(iter_, int):
             iter_ = int(iter_)
 
@@ -255,6 +328,35 @@ class ClDice(nn.Module):
     def forward(self,
                 logits: torch.Tensor,
                 targets: torch.Tensor) -> torch.Tensor:
+        """
+        Forward loos function
+
+        Args:
+            logits (torch.Tensor): Logits of a shape [Batch x Channels x Length x Length].
+            targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length].
+        """
+        pass
+
+
+class ClDice(SoftSkeletonization):
+    """
+    Soft skeletonization with DICE loss function
+    """
+    def __init__(self,
+                 **kwargs):
+        super(ClDice, self).__init__(**kwargs)
+        self.soft_dice = DiceLoss(diagonal=self.diagonal)
+
+    def forward(self,
+                logits: torch.Tensor,
+                targets: torch.Tensor) -> torch.Tensor:
+        """
+        Forward loos function
+
+        Args:
+            logits (torch.Tensor): Logits of a shape [Batch x Channels x Length x Length].
+            targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length].
+        """
         if self.diagonal:
             g_len = logits.shape[2]
             g_range = range(g_len)
@@ -262,50 +364,45 @@ class ClDice(nn.Module):
             logits[:, g_range, g_range] = 1
             targets[:, g_range, g_range] = 1
 
+        # Dice loss with activation
         dice = self.soft_dice(logits, targets)
+
+        # Activation
+        logits = torch.sigmoid(logits)
+
+        # Soft skeletonization
         sk_logits = self.soft_skel(logits, self.iter)
         sk_targets = self.soft_skel(targets, self.iter)
 
-        t_prec = ((sk_logits * targets).sum() + self.smooth) / (
-                    sk_logits.sum() + self.smooth)
-        t_sens = ((sk_targets * logits).sum() + self.smooth) / (
-                    sk_targets.sum() + self.smooth)
+        t_prec = ((sk_logits * targets).sum() + self.smooth) / \
+                 (sk_logits.sum() + self.smooth)
+        t_sens = ((sk_targets * logits).sum() + self.smooth) / \
+                 (sk_targets.sum() + self.smooth)
 
+        # CLDice loss
         cl_dice = 2 * (t_prec * t_sens) / (t_prec + t_sens)
 
         return ((1 - self.alpha) * dice) + (self.alpha * (1 - cl_dice))
 
 
-class DiceLoss(nn.Module):
+class ClBCE(SoftSkeletonization):
     """
-    Dice coefficient loss function.
-
-    Dice=2(A∩B)(A)+(B);
-    where 'A∩B' represents the common elements between sets A and B
-    'A' ann 'B' represents the number of elements in set A ans set B
-
-    This loss effectively zero-out any pixels from our prediction which
-    are not "activated" in the target mask.
+    Soft skeletonization with BCE loss function
     """
-
     def __init__(self,
-                 diagonal=False):
-        super(DiceLoss, self).__init__()
-        self.diagonal = diagonal
+                 **kwargs):
+        super(ClBCE, self).__init__(**kwargs)
+        self.bce = BCELoss(**kwargs)
 
     def forward(self,
                 logits: torch.Tensor,
-                targets: torch.Tensor,
-                smooth=1e-16) -> torch.Tensor:
+                targets: torch.Tensor) -> torch.Tensor:
         """
         Forward loos function
 
         Args:
-            logits (torch.Tensor): Logits of a shape
-                [Batch x Channels x Length x Length].
-            targets (torch.Tensor): Target of a shape
-                [Batch x Channels x Length x Length].
-            smooth (float): Smooth factor to ensure  no 0 division.
+            logits (torch.Tensor): Logits of a shape [Batch x Channels x Length x Length].
+            targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length].
         """
         if self.diagonal:
             g_len = logits.shape[2]
@@ -314,19 +411,25 @@ class DiceLoss(nn.Module):
             logits[:, g_range, g_range] = 1
             targets[:, g_range, g_range] = 1
 
+        # BCE with activation
+        bce = self.bce(logits, targets)
+
+        # Activation
         logits = torch.sigmoid(logits)
 
-        # Flatten label and prediction tensors
-        logits = logits.view(-1)
-        targets = targets.view(-1)
+        # Soft skeletonization
+        sk_logits = self.soft_skel(logits, self.iter)
+        sk_targets = self.soft_skel(targets, self.iter)
 
-        # Calculate dice loss
-        intersection = (logits * targets).sum()
-        dice = (2 * intersection + smooth) / (logits.square().sum() +
-                                              targets.square().sum() +
-                                              smooth)
+        t_prec = ((sk_logits * targets).sum() + self.smooth) / \
+                 (sk_logits.sum() + self.smooth)
+        t_sens = ((sk_targets * logits).sum() + self.smooth) / \
+                 (sk_targets.sum() + self.smooth)
 
-        return 1 - dice
+        # ClBCE
+        cl_bce = 2 * (t_prec * t_sens) / (t_prec + t_sens)
+
+        return ((1 - self.alpha) * bce) + (self.alpha * (1 - cl_bce))
 
 
 class SigmoidFocalLoss(nn.Module):
@@ -344,6 +447,14 @@ class SigmoidFocalLoss(nn.Module):
                  gamma=0.25,
                  alpha: Optional[int] = None,
                  diagonal=False):
+        """
+        Loss initialization
+
+        Args:
+            gamma (float): Gamma factor used in term1 of SFL.
+            alpha (int, optional): Optional alpha factor used for normalizing SPF.
+            diagonal (bool): If True, remove diagonal axis for graph prediction.
+        """
         super(SigmoidFocalLoss, self).__init__()
         self.gamma = gamma
         self.alpha = alpha
@@ -356,10 +467,8 @@ class SigmoidFocalLoss(nn.Module):
         Forward loos function
 
         Args:
-            logits (torch.Tensor): Logits of a shape
-                [Batch x Channels x Length x Length].
-            targets (torch.Tensor): Target of a shape
-                [Batch x Channels x Length x Length].
+            logits (torch.Tensor): Logits of a shape [Batch x Channels x Length x Length].
+            targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length].
         """
         if self.diagonal:
             g_len = logits.shape[2]
