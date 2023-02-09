@@ -98,7 +98,7 @@ from tardis.version import version
               show_default=True)
 @click.option('-l', '--cnn_loss',
               default='bce',
-              type=click.Choice(['bce', 'dice', 'hybrid', 'adaptive_dice']),
+              type=str,
               help='Loss function use for training.',
               show_default=True)
 @click.option('-lr', '--loss_lr_rate',
@@ -241,7 +241,7 @@ def main(dir: str,
                          pin_memory=True)
 
     if cnn_out_channel > 1:
-        cnn_loss = 'ce'
+        cnn_loss = 'CELoss'
 
     """Get device"""
     device = get_device(device)

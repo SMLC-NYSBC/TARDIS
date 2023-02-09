@@ -10,7 +10,6 @@
 
 import sys
 from os import getcwd
-from typing import Optional
 
 import torch
 from torch import optim
@@ -21,7 +20,7 @@ from tardis.spindletorch.trainer import CNNTrainer
 from tardis.spindletorch.utils.utils import check_model_dict
 from tardis.utils.device import get_device
 from tardis.utils.errors import TardisError
-from tardis.utils.losses import BCELoss, CELoss, DiceLoss
+from tardis.utils.losses import *
 
 # Setting for stable release to turn off all debug APIs
 torch.backends.cudnn.benchmark = True
@@ -56,6 +55,18 @@ def train_cnn(train_dataloader,
         device (torch.device): Device on which model is trained.
         epochs (int): Max number of epoch's.
     """
+    """Losses"""
+    losses_f = {
+        'AdaptiveDiceLoss': AdaptiveDiceLoss(),
+        'BCELoss': BCELoss(),
+        'BCEDiceLoss': BCEDiceLoss(),
+        'CELoss': CELoss(),
+        'DiceLoss': DiceLoss(),
+        'ClDice': ClDice(),
+        'ClBCE': ClBCE(),
+        'SigmoidFocalLoss': SigmoidFocalLoss()
+    }
+
     """Check input variable"""
     model_structure = check_model_dict(model_structure)
 
@@ -100,13 +111,8 @@ def train_cnn(train_dataloader,
 
     """Define loss function for training"""
     loss_fn = BCELoss()
-    if loss_function == "dice":
-        loss_fn = DiceLoss()
-    elif loss_function == "bce":
-        if model_structure['out_channel'] > 1:
-            loss_fn = CELoss()
-        else:
-            loss_fn = BCELoss()
+    if loss_function in losses_f:
+        loss_fn = losses_f[loss_function]
 
     """Build training optimizer"""
     optimizer = optim.Adam(params=model.parameters(),
