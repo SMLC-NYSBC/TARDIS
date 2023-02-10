@@ -37,7 +37,7 @@ def _dataset_format(coord: np.ndarray,
         # Correct 2D to 3D
         if coord.shape[1] == 3:
             coord = np.vstack((coord[:, 0], coord[:, 1], coord[:, 2],
-                               np.zeros((coord.shape[0], )))).T
+                               np.zeros((coord.shape[0],)))).T
     else:
         if coord.shape[1] not in [2, 3]:
             check = False
@@ -45,8 +45,7 @@ def _dataset_format(coord: np.ndarray,
 
         # Correct 2D to 3D
         if coord.shape[1] == 2:
-            coord = np.vstack(
-                (coord[:, 0], coord[:, 1], np.zeros((coord.shape[0], )))).T
+            coord = np.vstack((coord[:, 0], coord[:, 1], np.zeros((coord.shape[0],)))).T
 
     return coord, check
 
@@ -178,8 +177,7 @@ def VisualizePointCloud(coord: np.ndarray,
         coord (np.ndarray): 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y].
         segmented (bool): If True expect (s) in a data format as segmented values.
     """
-    coord, check = _dataset_format(coord=coord,
-                                   segmented=segmented)
+    coord, check = _dataset_format(coord=coord, segmented=segmented)
 
     if check:
         pcd = o3d.geometry.PointCloud()
@@ -190,8 +188,7 @@ def VisualizePointCloud(coord: np.ndarray,
             pcd.points = o3d.utility.Vector3dVector(coord)
         pcd.colors = o3d.utility.Vector3dVector(_rgb(coord, segmented))
 
-        o3d.visualization.draw_geometries_with_animation_callback([pcd],
-                                                                  rotate_view)
+        o3d.visualization.draw_geometries_with_animation_callback([pcd], rotate_view)
 
 
 def rotate_view(vis):
@@ -214,8 +211,7 @@ def VisualizeFilaments(coord: np.ndarray):
     Args:
         coord (np.ndarray): 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y].
     """
-    coord, check = _dataset_format(coord=coord,
-                                   segmented=True)
+    coord, check = _dataset_format(coord=coord, segmented=True)
 
     if check:
         graph = segment_to_graph(coord=coord)
@@ -238,8 +234,7 @@ def VisualizeScanNet(coord: np.ndarray,
         coord (np.ndarray): 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y].
         segmented (bool): If True expect (s) in a data format as segmented values.
     """
-    coord, check = _dataset_format(coord=coord,
-                                   segmented=segmented)
+    coord, check = _dataset_format(coord=coord, segmented=segmented)
 
     if check:
         pcd = o3d.geometry.PointCloud()

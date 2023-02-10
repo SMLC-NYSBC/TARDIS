@@ -123,8 +123,7 @@ class PatchDataSet:
         else:
             min_z, max_z = 0, 0
 
-        return np.array([(min_x, min_y, min_z),
-                        (max_x, max_y, max_z)])
+        return np.array([(min_x, min_y, min_z), (max_x, max_y, max_z)])
 
     def _collect_patch_idx(self,
                            patches: np.ndarray) -> Tuple[list, list]:
@@ -246,8 +245,7 @@ class PatchDataSet:
         # Find Z position for patch
         if not self.PATCH_3D:  # Get 3D patches. Z position is center of bb
             for i in patch_positions_x:
-                patch.append(np.vstack(([i] * len(patch_positions_y),
-                                        patch_positions_y,
+                patch.append(np.vstack(([i] * len(patch_positions_y), patch_positions_y,
                                         [z_mean] * len(patch_positions_y))).T)
         else:  # Get 3D patches. Z position is computed as X and Y position
             patch_positions_z = []
@@ -382,7 +380,7 @@ class PatchDataSet:
         self._init_parameters()
 
         if self.GRAPH_OUTPUT:
-            assert coord.shape[1] in [3, 4], \
+            if coord.shape[1] not in [3, 4]:
                 TardisError('113',
                             'tardis/dist_pytorch/datasets/patches.py',
                             'If graph True, coord must by of shape'
@@ -392,7 +390,7 @@ class PatchDataSet:
 
             graph_builder = BuildGraph(mesh=mesh)
         else:
-            assert coord.shape[1] in [2, 3], \
+            if coord.shape[1] not in [2, 3]:
                 TardisError('113',
                             'tardis/dist_pytorch/datasets/patches.py',
                             'If graph False, coord must by of shape'
@@ -401,7 +399,7 @@ class PatchDataSet:
             self.coord = coord
 
         if mesh:
-            assert dist_th is not None, \
+            if dist_th is None:
                 TardisError('124',
                             'tardis/dist_pytorch/datasets/patches.py',
                             'If mesh, dist_th cannot be None!')
@@ -410,9 +408,8 @@ class PatchDataSet:
         if self.coord.shape[0] <= self.DOWNSAMPLING_TH:
             """ Transform 2D coord to 3D of shape [Z, Y, X] """
             if self.coord.shape[1] == 2:
-                coord_ds = np.vstack((self.coord[:, 0],
-                                      self.coord[:, 1],
-                                      np.zeros((self.coord.shape[0], )))).T
+                coord_ds = np.vstack((self.coord[:, 0], self.coord[:, 1],
+                                      np.zeros((self.coord.shape[0],)))).T
             else:
                 coord_ds = self.coord
             coord_ds = [True for _ in list(range(0, coord_ds.shape[0], 1))]
@@ -426,14 +423,10 @@ class PatchDataSet:
                 coord_label = self._normalize_idx(coord_label)
 
                 if mesh:
-                    graph_patch.append(
-                        self._output_format(graph_builder(coord=coord_label,
-                                                          dist_th=dist_th))
-                    )
+                    graph_patch.append(self._output_format(graph_builder(coord=coord_label,
+                                                                         dist_th=dist_th)))
                 else:
-                    graph_patch.append(
-                        self._output_format(graph_builder(coord=coord_label))
-                    )
+                    graph_patch.append(self._output_format(graph_builder(coord=coord_label)))
 
             """ Build output index for each patch """
             output_idx.append(np.where(coord_ds)[0])
@@ -492,8 +485,7 @@ class PatchDataSet:
 
                 # Transform 2D coord to 3D of shape [Z, Y, X]
                 if df_patch.shape[1] == 2:
-                    coord_ds = np.vstack((np.zeros((df_patch.shape[0], )),
-                                          df_patch[:, 1],
+                    coord_ds = np.vstack((np.zeros((df_patch.shape[0],)), df_patch[:, 1],
                                           df_patch[:, 0])).T
                 else:
                     coord_ds = df_patch
@@ -509,14 +501,10 @@ class PatchDataSet:
                     segment_patch = self._normalize_idx(segment_patch[coord_ds, :])
 
                     if mesh:
-                        graph_patch.append(
-                            self._output_format(graph_builder(coord=segment_patch,
-                                                              dist_th=dist_th))
-                        )
+                        graph_patch.append(self._output_format(graph_builder(coord=segment_patch,
+                                                                             dist_th=dist_th)))
                     else:
-                        graph_patch.append(
-                            self._output_format(graph_builder(coord=segment_patch))
-                        )
+                        graph_patch.append(self._output_format(graph_builder(coord=segment_patch)))
 
                 """ Build output index for each patch """
                 output_idx.append(output_df[coord_ds])

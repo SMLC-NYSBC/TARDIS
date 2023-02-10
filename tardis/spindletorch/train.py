@@ -110,13 +110,12 @@ def train_cnn(train_dataloader,
     model = model.to(device)
 
     """Define loss function for training"""
-    loss_fn = BCELoss()
+    loss_fn = losses_f['BCELoss']
     if loss_function in losses_f:
         loss_fn = losses_f[loss_function]
 
     """Build training optimizer"""
-    optimizer = optim.Adam(params=model.parameters(),
-                           lr=learning_rate)
+    optimizer = optim.Adam(params=model.parameters(), lr=learning_rate)
 
     """Optionally: Checkpoint model"""
     if checkpoint is not None:

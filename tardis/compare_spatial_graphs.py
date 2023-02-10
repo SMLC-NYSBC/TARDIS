@@ -146,8 +146,7 @@ def main(distance_threshold: int,
 
     for id, i in enumerate(amira_files):
         amira_file = join(dir, i)
-        tardis_file = join(dir,
-                           i[:(-3 - len(amira_prefix))] + tardis_prefix + '.am')
+        tardis_file = join(dir, i[:(-3 - len(amira_prefix))] + tardis_prefix + '.am')
         output_file = join(output, i[:(-3 - len(amira_prefix))] + '_match' + '.am')
 
         with open(join(output, 'log.txt'), 'a+') as f:

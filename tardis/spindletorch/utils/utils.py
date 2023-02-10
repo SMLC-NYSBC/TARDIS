@@ -18,7 +18,8 @@ import torch.nn.functional as F
 def scale_image(scale: tuple,
                 image: Optional[np.ndarray] = None,
                 mask: Optional[np.ndarray] = None) -> Union[Tuple[np.ndarray, np.ndarray, int],
-                                                            Tuple[np.ndarray, int]]:
+                                                            Tuple[np.ndarray, int],
+                                                            Tuple[None, int]]:
     """
     Scale image module using torch GPU interpolation
 
@@ -38,17 +39,13 @@ def scale_image(scale: tuple,
     if image is not None:
         if not np.all(scale == image.shape):
             if image.ndim == 3 and image.shape[2] != 3:  # 3D with Gray
-                image = area_scaling(img=image,
-                                     scale=scale,
-                                     dtype=type_i)
+                image = area_scaling(img=image, scale=scale, dtype=type_i)
             else:
                 image = trilinear_scaling(img=image, scale=scale, dtype=type_i)
 
     if mask is not None:
         if not np.all(scale == mask.shape):
-            mask = area_scaling(img=mask,
-                                scale=scale,
-                                dtype=type_m)
+            mask = area_scaling(img=mask, scale=scale, dtype=type_m)
 
     if image is not None and mask is not None:
         return image, mask, dim

@@ -150,15 +150,16 @@ def main(dir: str,
     if len(predict_list) == 0:
         tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
-                        text_5='Point Cloud: Nan', text_7='Current Task: NaN',
+                        text_5='Point Cloud: Nan',
+                        text_7='Current Task: NaN',
                         text_8='Tardis Error: Wrong directory:',
-                        text_9=f'Given {dir} is does not contain any recognizable file formats!', )
+                        text_9=f'Given {dir} is does not contain any recognizable file formats!')
         sys.exit()
     else:
         tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_5='Point Cloud: In processing...',
-                        text_7='Current Task: Set-up environment...', )
+                        text_7='Current Task: Set-up environment...')
 
     # Hard fix for dealing with tif file lack of pixel sizes...
     tif_px = None
@@ -173,10 +174,8 @@ def main(dir: str,
     image_stitcher = StitchImages()
     post_processes = BuildPointCloud()
     build_amira_file = NumpyToAmira()
-    patch_pc = PatchDataSet(max_number_of_points=points_in_patch,
-                            graph=False)
-    GraphToSegment = GraphInstanceV2(threshold=dist_threshold,
-                                     smooth=True)
+    patch_pc = PatchDataSet(max_number_of_points=points_in_patch, graph=False)
+    GraphToSegment = GraphInstanceV2(threshold=dist_threshold, smooth=True)
     filter_segments = FilterSpatialGraph(connect_seg_if_closer_then=filter_mt)
 
     # Build CNN from checkpoints
@@ -187,9 +186,10 @@ def main(dir: str,
     if not len(cnn_network) == 2:
         tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}',
                         text_1=f'Found {len(predict_list)} images to predict!',
-                        text_5='Point Cloud: Nan', text_7='Current Task: NaN',
+                        text_5='Point Cloud: Nan',
+                        text_7='Current Task: NaN',
                         text_8='Tardis Error: Given CNN type is wrong!:',
-                        text_9=f'Given {cnn_network} but should be e.g. `unet_32`', )
+                        text_9=f'Given {cnn_network} but should be e.g. `unet_32`')
         sys.exit()
 
     # Build CNN network with loaded pre-trained weights
@@ -228,7 +228,7 @@ def main(dir: str,
                         text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                         text_4='Pixel size: Nan A',
                         text_5='Point Cloud: In processing...',
-                        text_7='Current Task: Preprocessing for CNN...', )
+                        text_7='Current Task: Preprocessing for CNN...')
 
         # Build temp dir
         build_temp_dir(dir=dir)
@@ -244,29 +244,26 @@ def main(dir: str,
             px = tif_px
 
         if px == 0:
-            px = click.prompt(
-                f"Image file has pixel size {px}, that's obviously wrong... "
-                "What is the correct value:",
-                type=float)
+            px = click.prompt(f"Image file has pixel size {px}, that's obviously wrong... "
+                              "What is the correct value:", type=float)
         if px == 1:
-            px = click.prompt(
-                f"Image file has pixel size {px}, that's maybe wrong... "
-                'What is the correct value:',
-                default=px, type=float, )
+            px = click.prompt(f"Image file has pixel size {px}, that's maybe wrong... "
+                              'What is the correct value:', default=px, type=float)
 
         # Check image structure and normalize histogram
         if image.min() > 5 or image.max() < 250:  # Rescale image intensity
             image = normalize(image)
-        if not image.min() >= 0 or not image.max() <= 1:  # Normalized between 0 and 1
+        if not np.min(image) >= 0 or not np.max(image) <= 1:  # Normalized between 0 and 1
             image = minmax(image)
 
         if not image.dtype == np.float32:
             tardis_progress(title=f'Fully-automatic MT segmentation module {str_debug}',
                             text_1=f'Found {len(predict_list)} images to predict!',
                             text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
-                            text_5='Point Cloud: Nan A', text_7='Current Task: NaN',
+                            text_5='Point Cloud: Nan A',
+                            text_7='Current Task: NaN',
                             text_8=f'Tardis Error: Error while loading image {i}:',
-                            text_9=f'Image loaded correctly, but output format {image.dtype} is not float32!', )
+                            text_9=f'Image loaded correctly, but output format {image.dtype} is not float32!')
             sys.exit()
 
         # Calculate parameters for normalizing image pixel size
@@ -305,7 +302,8 @@ def main(dir: str,
                     title=f'Fully-automatic MT segmentation module  {str_debug}',
                     text_1=f'Found {len(predict_list)} images to predict!',
                     text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
-                    text_4=f'Pixel size: {px} A', text_5='Point Cloud: In processing...',
+                    text_4=f'Pixel size: {px} A',
+                    text_5='Point Cloud: In processing...',
                     text_7='Current Task: CNN prediction...',
                     text_8=print_progress_bar(j, len(patches_DL)), )
 
@@ -348,8 +346,7 @@ def main(dir: str,
                                                   : org_shape[2]]
 
         # Restored original image pixel size
-        image, _ = scale_image(image=image,
-                               scale=org_shape)
+        image, _ = scale_image(image=image, scale=org_shape)
 
         if cnn_threshold == 0:
             """Clean-up temp dir"""
@@ -382,7 +379,7 @@ def main(dir: str,
         if output == 'mrc':
             to_mrc(data=image, file_dir=join(am_output, f'{i[:-out_format]}_CNN.mrc'))
 
-        if not image.min() == 0 and not image.max() == 1:
+        if not np.min(image) == 0 and not np.max(image) == 1:
             continue
 
         # Tardis progress bar update
@@ -494,13 +491,11 @@ def main(dir: str,
             if device == 'cpu':
                 np.save(join(am_output, f'{i[:-out_format]}_coord_voxel.npy'),
                         point_cloud)
-                np.save(join(am_output, f'{i[:-out_format]}_idx_voxel.npy'),
-                        output_idx)
+                np.save(join(am_output, f'{i[:-out_format]}_idx_voxel.npy'), output_idx)
             else:
                 np.save(join(am_output, f'{i[:-out_format]}_coord_voxel.npy'),
                         point_cloud)
-                np.save(join(am_output, f'{i[:-out_format]}_idx_voxel.npy'),
-                        output_idx)
+                np.save(join(am_output, f'{i[:-out_format]}_idx_voxel.npy'), output_idx)
 
         if debug:
             np.save(join(am_output, f'{i[:-out_format]}_segments.npy'), segments)

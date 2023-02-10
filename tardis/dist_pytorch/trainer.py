@@ -88,8 +88,7 @@ class DistTrainer(BasicTrainer):
                     loss = self.criterion(edge[0, :], graph)
                     edge = torch.sigmoid(edge[:, 0, :])
 
-                    acc, prec, recall, f1, th = eval_graph_f1(logits=edge,
-                                                              targets=graph)
+                    acc, prec, recall, f1, th = eval_graph_f1(logits=edge, targets=graph)
 
                 # Avg. precision score
                 valid_losses.append(loss.item())
@@ -101,9 +100,7 @@ class DistTrainer(BasicTrainer):
                 valid = f'Validation: (loss {loss.item():.4f} Prec: {prec:.2f} Rec: {recall:.2f} F1: {f1:.2f})'
 
                 # Update progress bar
-                self._update_progress_bar(loss_desc=valid,
-                                          idx=idx,
-                                          train=False)
+                self._update_progress_bar(loss_desc=valid, idx=idx, train=False)
 
         # Reduce eval. metric with mean
         self.validation_loss.append(np.mean(valid_losses))
@@ -178,9 +175,7 @@ class CDistTrainer(BasicTrainer):
 
         for idx, (e, n, g, _, c) in enumerate(self.validation_DataLoader):
             for edge, node, cls, graph in zip(e, n, c, g):
-                edge, graph, cls = edge.to(self.device), \
-                    graph.to(self.device), \
-                    cls.to(self.device)
+                edge, graph, cls = edge.to(self.device), graph.to(self.device), cls.to(self.device)
 
                 with torch.no_grad():
                     if self.node_input:
@@ -193,8 +188,7 @@ class CDistTrainer(BasicTrainer):
                                                                                   cls)
 
                     edge = torch.sigmoid(edge[:, 0, :])
-                    acc, prec, recall, f1, th = eval_graph_f1(logits=edge,
-                                                              targets=graph)
+                    acc, prec, recall, f1, th = eval_graph_f1(logits=edge, targets=graph)
 
                 # Avg. precision score
                 valid_losses.append(loss.item())

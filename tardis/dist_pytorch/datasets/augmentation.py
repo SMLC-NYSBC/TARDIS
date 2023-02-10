@@ -59,8 +59,7 @@ def preprocess_data(coord: str,
             coord_label = amira_import.get_segmented_points()
         else:
             if image.endswith('.am'):
-                amira_import = ImportDataFromAmira(src_am=coord,
-                                                   src_img=image)
+                amira_import = ImportDataFromAmira(src_am=coord, src_img=image)
                 coord_label = amira_import.get_segmented_points()
             else:
                 amira_import = ImportDataFromAmira(src_am=coord)
@@ -87,7 +86,7 @@ def preprocess_data(coord: str,
     """ Collect Image Patches [Channels x Length] """
     # Normalize image between 0,1
     if image is not None:
-        assert normalization in ['simple', 'minmax', None], \
+        if normalization not in ['simple', 'minmax', None]:
             TardisError('124',
                         'tardis/dist_pytorch/dataset/augmentation.py',
                         f'Not implemented normalization. Given {normalization} '
@@ -203,13 +202,12 @@ class BuildGraph:
                 if coord_df.shape[0] > 4:
                     for j in points_in_contour:
                         if dist_th is None:
-                            _, match_coord = tree.query(coord[j].reshape(1, -1),
-                                                        k=4)
+                            _, match_coord = tree.query(coord[j].reshape(1, -1), k=4)
                             match_coord = match_coord[0]
 
                             # Select point in contour
-                            knn = [x for id, x in enumerate(points_in_contour)
-                                   if id in match_coord]
+                            knn = [x for id, x in enumerate(points_in_contour) if
+                                   id in match_coord]
                         else:
                             if coord_df.shape[0] > 8:
                                 dist, match_coord = tree.query(coord[j].reshape(1, -1),
@@ -221,8 +219,8 @@ class BuildGraph:
                             dist = dist[0]
 
                             # Select point in contour
-                            knn = [x for id, x in enumerate(points_in_contour)
-                                   if id in match_coord]
+                            knn = [x for id, x in enumerate(points_in_contour) if
+                                   id in match_coord]
                             knn = [x for x, y in zip(knn, dist) if y <= dist_th]
 
                             if len(knn) > 4:
@@ -339,12 +337,12 @@ class Crop2D3D:
         Returns:
             np.ndarray: Cropped image patch.
         """
-        assert len(center_point) in [2, 3], \
+        if len(center_point) not in [2, 3]:
             TardisError('113',
                         'tardis/dist_pytorch/dataset/augmentation.py',
                         'Given position for cropping is not 2D or 3D!. '
                         f'Given {center_point}. But expected shape in [2, 3]!')
-        assert len(center_point) == len(self.size), \
+        if len(center_point) != len(self.size):
             TardisError('124',
                         'tardis/dist_pytorch/dataset/augmentation.py',
                         f'Given cropping shape {len(self.size)} is not compatible '

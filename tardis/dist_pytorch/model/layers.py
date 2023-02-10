@@ -59,7 +59,8 @@ class DistStack(nn.Module):
         """
         return len(self.layers)
 
-    def __getitem__(self, i):
+    def __getitem__(self,
+                    i: int):
         """
         Get DIST layer item.
 
@@ -159,37 +160,32 @@ class DistLayer(nn.Module):
 
         # Edge triangular update
         if self.structure in ['full', 'full_af', 'triang']:
-            self.row_update = TriangularEdgeUpdate(input_dim=pairs_dim,
-                                                   channel_dim=32)
+            self.row_update = TriangularEdgeUpdate(input_dim=pairs_dim, channel_dim=32)
             self.col_update = TriangularEdgeUpdate(input_dim=pairs_dim,
                                                    channel_dim=32,
                                                    axis=0)
 
         # Edge Optional Quadratic
         if self.structure == 'quad':
-            self.row_update = QuadraticEdgeUpdate(input_dim=pairs_dim,
-                                                  channel_dim=32)
+            self.row_update = QuadraticEdgeUpdate(input_dim=pairs_dim, channel_dim=32)
             self.col_update = QuadraticEdgeUpdate(input_dim=pairs_dim,
                                                   channel_dim=32,
                                                   axis=0)
 
         # Edge Optional dual-triang update
         if self.structure == 'dualtriang':
-            self.row_update_1 = TriangularEdgeUpdate(input_dim=pairs_dim,
-                                                     channel_dim=32)
+            self.row_update_1 = TriangularEdgeUpdate(input_dim=pairs_dim, channel_dim=32)
             self.col_update_1 = TriangularEdgeUpdate(input_dim=pairs_dim,
                                                      channel_dim=32,
                                                      axis=0)
 
-            self.row_update_2 = TriangularEdgeUpdate(input_dim=pairs_dim,
-                                                     channel_dim=32)
+            self.row_update_2 = TriangularEdgeUpdate(input_dim=pairs_dim, channel_dim=32)
             self.col_update_2 = TriangularEdgeUpdate(input_dim=pairs_dim,
                                                      channel_dim=32,
                                                      axis=0)
 
         # Edge GeLu FFN normalization layer
-        self.pair_ffn = GeluFeedForward(input_dim=pairs_dim,
-                                        ff_dim=pairs_dim * ff_factor)
+        self.pair_ffn = GeluFeedForward(input_dim=pairs_dim, ff_dim=pairs_dim * ff_factor)
 
     def update_nodes(self,
                      h_pairs: torch.Tensor,
@@ -271,16 +267,16 @@ class DistLayer(nn.Module):
                       self.row_attention(x=h_pairs, padding_mask=mask) + \
                       self.col_attention(x=h_pairs, padding_mask=mask)
         elif self.structure in ['triang', 'quad']:
-            h_pairs = h_pairs + \
-                      self.row_update(z=h_pairs, mask=mask) + \
-                      self.col_update(z=h_pairs, mask=mask)
+            h_pairs = h_pairs + self.row_update(z=h_pairs,
+                                                mask=mask) + self.col_update(z=h_pairs,
+                                                                             mask=mask)
         elif self.structure == 'dualtriang':
-            h_pairs = h_pairs + \
-                      self.row_update_1(z=h_pairs, mask=mask) + \
-                      self.col_update_1(z=h_pairs, mask=mask)
-            h_pairs = h_pairs + \
-                      self.row_update_2(z=h_pairs, mask=mask) + \
-                      self.col_update_2(z=h_pairs, mask=mask)
+            h_pairs = h_pairs + self.row_update_1(z=h_pairs,
+                                                  mask=mask) + self.col_update_1(z=h_pairs,
+                                                                                 mask=mask)
+            h_pairs = h_pairs + self.row_update_2(z=h_pairs,
+                                                  mask=mask) + self.col_update_2(z=h_pairs,
+                                                                                 mask=mask)
 
         return h_pairs + self.pair_ffn(x=h_pairs)
 

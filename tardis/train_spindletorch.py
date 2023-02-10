@@ -190,7 +190,7 @@ def main(dir: str,
     """Optionally: Set-up environment if not existing"""
     if not DATASET_TEST:
         # Check and set-up environment
-        assert len([f for f in listdir(dir) if f.endswith(IMG_FORMAT)]) > 0, \
+        if not len([f for f in listdir(dir) if f.endswith(IMG_FORMAT)]) > 0:
             TardisError('100',
                         'tardis/train_spindletorch.py',
                         'Indicated folder for training do not have any compatible '
@@ -219,8 +219,7 @@ def main(dir: str,
                             trim_z=patch_size)
 
         no_dataset = int(len([f for f in listdir(dir) if f.endswith(IMG_FORMAT)]) / 2)
-        build_test_dataset(dataset_dir=dir,
-                           dataset_no=no_dataset)
+        build_test_dataset(dataset_dir=dir, dataset_no=no_dataset)
 
     """Build training and test dataset 2D/3D"""
     train_DL = DataLoader(dataset=CNNDataset(img_dir=TRAIN_IMAGE_DIR,

@@ -137,12 +137,9 @@ def aws_check_with_temp(model_name: list) -> bool:
         return False  # Error loading json, download from aws
     else:
         try:
-            weight = requests.get(
-                'https://tardis-weigths.s3.amazonaws.com/'
-                f'{model_name[0]}_{model_name[1]}/'
-                f'{model_name[2]}/model_weights.pth',
-                stream=True
-            )
+            weight = requests.get('https://tardis-weigths.s3.amazonaws.com/'
+                                  f'{model_name[0]}_{model_name[1]}/'
+                                  f'{model_name[2]}/model_weights.pth', stream=True)
             aws = dict(weight.headers)
         except:
             print('Network cannot be checked! Connect to the internet next time!')

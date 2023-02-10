@@ -28,7 +28,7 @@ class CenterCrop:
 
     def __init__(self,
                  size: tuple):
-        assert len(size) in [2, 3], \
+        if len(size) not in [2, 3]:
             TardisError('146',
                         'tardis/spindletorch/dataset/augmentation.py',
                         'Image crop supported only for 3D and 2D! '
@@ -51,12 +51,12 @@ class CenterCrop:
         Returns:
             np.ndarray: Cropped array.
         """
-        assert x.ndim in [2, 3], \
+        if x.ndim not in [2, 3]:
             TardisError('146',
                         'tardis/spindletorch/dataset/augmentation.py',
                         'Image crop supported only for 3D and 2D!')
         if y is not None:
-            assert y.ndim in [2, 3], \
+            if y.ndim not in [2, 3]:
                 TardisError('146',
                             'tardis/spindletorch/dataset/augmentation.py',
                             'Image crop supported only for 3D and 2D!')
@@ -223,7 +223,7 @@ class ComposeRandomTransformation:
 
 def preprocess(image: np.ndarray,
                transformation: bool,
-               size: Optional[tuple] = int,
+               size: Optional[Union[tuple, int]] = int,
                mask: Optional[np.ndarray] = None,
                output_dim_mask=1) -> Union[Tuple[ndarray, ndarray], ndarray]:
     """
@@ -241,7 +241,7 @@ def preprocess(image: np.ndarray,
         np.ndarray: Image and optionally label mask after transformation.
     """
     # Check if image is 2D or 3D
-    assert image.ndim in [2, 3], \
+    if image.ndim not in [2, 3]:
         TardisError('146',
                     'tardis/spindletorch/dataset/augmentation.py',
                     'Image crop supported only for 3D and 2D!')
@@ -272,8 +272,7 @@ def preprocess(image: np.ndarray,
 
     """Transform image randomly"""
     if transformation:
-        random_transform = ComposeRandomTransformation([RandomFlip(),
-                                                        RandomRotation()])
+        random_transform = ComposeRandomTransformation([RandomFlip(), RandomRotation()])
         if mask is None:
             image, _ = random_transform(image, image)
         else:

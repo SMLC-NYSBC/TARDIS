@@ -27,17 +27,11 @@ def weights_init_kaiming(m):
     elif class_name.find('Conv2d') != -1:
         init.kaiming_normal_(tensor=m.weight.data)
     elif class_name.find('BatchNorm') != -1:
-        init.normal_(tensor=m.weight.data,
-                     mean=1.0,
-                     std=0.02)
-        init.constant_(tensor=m.bias.data,
-                       val=0.0)
+        init.normal_(tensor=m.weight.data, mean=1.0, std=0.02)
+        init.constant_(tensor=m.bias.data, val=0.0)
     elif class_name.find('GroupNorm') != -1:
-        init.normal_(tensor=m.weight.data,
-                     mean=1.0,
-                     std=0.02)
-        init.constant_(tensor=m.bias.data,
-                       val=0.0)
+        init.normal_(tensor=m.weight.data, mean=1.0, std=0.02)
+        init.constant_(tensor=m.bias.data, val=0.0)
 
 
 def init_weights(net,

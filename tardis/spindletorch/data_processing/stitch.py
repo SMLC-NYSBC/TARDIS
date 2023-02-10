@@ -48,17 +48,17 @@ class StitchImages:
             Update global class values.
         """
         self.z = max(list(map(int,
-                              [str.split(f[:-4], "_")[1] for f in file_list
-                               if f.startswith(f'{idx}')]))) + 1
+                              [str.split(f[:-4], "_")[1] for f in file_list if
+                               f.startswith(f'{idx}')]))) + 1
         self.y = max(list(map(int,
-                              [str.split(f[:-4], "_")[2] for f in file_list
-                               if f.startswith(f'{idx}')]))) + 1
+                              [str.split(f[:-4], "_")[2] for f in file_list if
+                               f.startswith(f'{idx}')]))) + 1
         self.x = max(list(map(int,
-                              [str.split(f[:-4], "_")[3] for f in file_list
-                               if f.startswith(f'{idx}')]))) + 1
+                              [str.split(f[:-4], "_")[3] for f in file_list if
+                               f.startswith(f'{idx}')]))) + 1
         self.stride = max(list(map(int,
-                                   [str.split(f[:-4], "_")[4] for f in file_list
-                                    if f.startswith(f'{idx}')])))
+                                   [str.split(f[:-4], "_")[4] for f in file_list if
+                                    f.startswith(f'{idx}')])))
 
     def _calculate_dim(self,
                        image: np.ndarray):
@@ -152,15 +152,13 @@ class StitchImages:
                             assert img.shape == (self.nz, self.ny, self.nx)
 
                         if mask and self.nz == 0:
-                            stitched_image[y_start:y_stop,
-                                           x_start:x_stop] += img
+                            stitched_image[y_start:y_stop, x_start:x_stop] += img
                         elif mask and self.nz > 0:
                             stitched_image[z_start:z_stop,
                                            y_start:y_stop,
                                            x_start:x_stop] += img
                         elif not mask and self.nz == 0:
-                            stitched_image[y_start:y_stop,
-                                           x_start:x_stop] = img
+                            stitched_image[y_start:y_stop, x_start:x_stop] = img
                         else:
                             stitched_image[z_start:z_stop,
                                            y_start:y_stop,

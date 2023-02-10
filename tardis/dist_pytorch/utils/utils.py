@@ -68,9 +68,12 @@ def pc_median_dist(pc: np.ndarray,
             z = 0
 
         voxel = point_in_bb(pc,
-                            min_x=x - offset_x, max_x=x + offset_x,
-                            min_y=y - offset_y, max_y=y + offset_y,
-                            min_z=z - offset_z, max_z=z + offset_z)
+                            min_x=x - offset_x,
+                            max_x=x + offset_x,
+                            min_y=y - offset_y,
+                            max_y=y + offset_y,
+                            min_z=z - offset_z,
+                            max_z=z + offset_z)
         pc = pc[voxel]
 
         # Calculate KNN dist
@@ -88,7 +91,7 @@ def pc_median_dist(pc: np.ndarray,
         knn, _ = tree.query(pc[id].reshape(1, -1), k=4)
         knn_df.append(knn[0][1])
 
-    return np.mean(knn_df)
+    return float(np.mean(knn_df))
 
 
 def point_in_bb(points: np.ndarray,
@@ -116,8 +119,7 @@ def point_in_bb(points: np.ndarray,
 
     if points.shape[0] == 3:
         if min_z is not None or max_z is not None:
-            bound_z = np.logical_and(
-                points[:, 2] > min_z, points[:, 2] < max_z)
+            bound_z = np.logical_and(points[:, 2] > min_z, points[:, 2] < max_z)
         else:
             bound_z = np.asarray([True for _ in points[:, 2]])
 
@@ -132,6 +134,7 @@ class RandomDownSampling:
     """
     Wrapper for random sampling of the point cloud
     """
+
     def __init__(self,
                  threshold):
         self.threshold = threshold
@@ -159,8 +162,7 @@ class RandomDownSampling:
                                                               threshold=self.threshold)
                     ds_rgb.append(ds_node_f)
                 else:
-                    ds_coord = pc_rand_down_sample(coord=i,
-                                                   threshold=self.threshold)
+                    ds_coord = pc_rand_down_sample(coord=i, threshold=self.threshold)
 
                 ds_pc.append(np.hstack((np.expand_dims(np.repeat(id, len(ds_coord)), 1),
                                         ds_coord)))

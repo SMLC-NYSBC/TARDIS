@@ -10,7 +10,6 @@
 
 import sys
 from os import getcwd
-from typing import Optional
 
 import torch
 from torch import optim
@@ -21,7 +20,7 @@ from tardis.dist_pytorch.trainer import CDistTrainer, DistTrainer
 from tardis.dist_pytorch.utils.utils import check_model_dict
 from tardis.utils.device import get_device
 from tardis.utils.logo import TardisLogo
-from tardis.utils.losses import BCELoss, CELoss, DiceLoss
+from tardis.utils.losses import *
 
 # Setting for stable release to turn off all debug APIs
 torch.backends.cudnn.benchmark = True
@@ -56,6 +55,18 @@ def train_dist(train_dataloader,
         device (torch.device): Device on which model is trained.
         epochs (int): Max number of epoch's.
     """
+    """Losses"""
+    losses_f = {
+        'AdaptiveDiceLoss': AdaptiveDiceLoss(diagonal=True),
+        'BCELoss': BCELoss(diagonal=True),
+        'BCEDiceLoss': BCEDiceLoss(diagonal=True),
+        'CELoss': CELoss(diagonal=True),
+        'DiceLoss': DiceLoss(diagonal=True),
+        'ClDice': ClDice(diagonal=True),
+        'ClBCE': ClBCE(diagonal=True),
+        'SigmoidFocalLoss': SigmoidFocalLoss(diagonal=True)
+    }
+
     """Check input variable"""
     model_structure = check_model_dict(model_structure)
 
@@ -115,16 +126,12 @@ def train_dist(train_dataloader,
     model = model.to(device)
 
     """Define loss function for training"""
-    if loss_function == "dice":
-        loss_fn = DiceLoss()
-    elif loss_function == "bce":
-        loss_fn = BCELoss(diagonal=True)
-    elif loss_function == 'ce':
-        loss_fn = CELoss()
+    loss_fn = losses_f['BCELoss']
+    if loss_function in losses_f:
+        loss_fn = losses_f[loss_function]
 
     """Build training optimizer"""
-    optimizer = optim.Adam(params=model.parameters(),
-                           lr=learning_rate)
+    optimizer = optim.Adam(params=model.parameters(), lr=learning_rate)
 
     """Optionally: Checkpoint model"""
     if checkpoint is not None:

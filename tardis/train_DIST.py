@@ -198,9 +198,7 @@ def main(dir: str,
         mkdir(TEST_COORD_DIR)
 
         # Build train and test dataset
-        move_train_dataset(dir=dir,
-                           coord_format=COORD_FORMAT,
-                           with_img=False)
+        move_train_dataset(dir=dir, coord_format=COORD_FORMAT, with_img=False)
 
         no_dataset = int(len([f for f in listdir(dir) if f.endswith(COORD_FORMAT)]) / 2)
         if dataset_type == 'stanford':
@@ -216,8 +214,7 @@ def main(dir: str,
 
     """Build DataLoader for training/validation"""
     dl_train_graph, dl_test_graph = build_dataset(dataset_type=dataset_type,
-                                                  dirs=[TRAIN_COORD_DIR,
-                                                        TEST_COORD_DIR],
+                                                  dirs=[TRAIN_COORD_DIR, TEST_COORD_DIR],
                                                   max_points_per_patch=pc_sampling)
 
     """Setup training"""

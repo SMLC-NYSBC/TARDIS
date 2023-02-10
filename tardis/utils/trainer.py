@@ -139,11 +139,9 @@ class BasicTrainer:
                             text_3=self.print_setting[2],
                             text_4=self.print_setting[3],
                             text_7=self.epoch_desc,
-                            text_8=print_progress_bar(self.id,
-                                                      self.epochs),
+                            text_8=print_progress_bar(self.id, self.epochs),
                             text_9=loss_desc,
-                            text_10=print_progress_bar(idx,
-                                                       data_set_len))
+                            text_10=print_progress_bar(idx, data_set_len))
 
     def _mid_training_eval(self,
                            idx):
@@ -193,8 +191,7 @@ class BasicTrainer:
                 self.epoch_desc = 'Epochs: stop counter 0; best F1: NaN'
             else:
                 self.epoch_desc = self._update_desc(self.early_stopping.counter,
-                                                    [round(np.max(self.f1), 3),
-                                                     0.0])
+                                                    [round(np.max(self.f1), 3), 0.0])
 
             self.progress_epoch(title=f'{self.checkpoint_name} training module',
                                 text_1=self.print_setting[0],

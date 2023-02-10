@@ -18,10 +18,6 @@ import torch.nn.functional as F
 class AdaptiveDiceLoss(nn.Module):
     """
     ADAPTIVE DICE LOSS FUNCTION
-
-    AdaptiveDice =  2∑[(1-p_i)^a * p_i] * g_i
-                   --------------------------
-                   ∑[(1-p_i)^a * p_i]  + ∑g_i^2
     """
 
     def __init__(self,
@@ -204,6 +200,7 @@ class DiceLoss(nn.Module):
     This loss effectively zero-out any pixels from our prediction which
     are not "activated" in the target mask.
     """
+
     def __init__(self,
                  smooth=1e-16,
                  diagonal=False):
@@ -225,8 +222,8 @@ class DiceLoss(nn.Module):
         Forward loos function
 
         Args:
-            logits (torch.Tensor): Logits of a shape [Batch x Channels x Length x Length].
-            targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length].
+            logits (torch.Tensor): Logits of a shape [Batch x Channels x Length x Length]
+            targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length]
         """
         if self.diagonal:
             g_len = logits.shape[2]
@@ -253,6 +250,7 @@ class SoftSkeletonization(nn.Module):
     """
     General soft skeletonization with DICE loss function
     """
+
     def __init__(self,
                  _iter=3,
                  smooth=1e-16,
@@ -333,7 +331,7 @@ class SoftSkeletonization(nn.Module):
 
         Args:
             logits (torch.Tensor): Logits of a shape [Batch x Channels x Length x Length].
-            targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length].
+            targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length]
         """
         pass
 
@@ -342,6 +340,7 @@ class ClDice(SoftSkeletonization):
     """
     Soft skeletonization with DICE loss function
     """
+
     def __init__(self,
                  **kwargs):
         super(ClDice, self).__init__(**kwargs)
@@ -355,7 +354,7 @@ class ClDice(SoftSkeletonization):
 
         Args:
             logits (torch.Tensor): Logits of a shape [Batch x Channels x Length x Length].
-            targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length].
+            targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length]
         """
         if self.diagonal:
             g_len = logits.shape[2]
@@ -389,6 +388,7 @@ class ClBCE(SoftSkeletonization):
     """
     Soft skeletonization with BCE loss function
     """
+
     def __init__(self,
                  **kwargs):
         super(ClBCE, self).__init__(**kwargs)
@@ -401,8 +401,8 @@ class ClBCE(SoftSkeletonization):
         Forward loos function
 
         Args:
-            logits (torch.Tensor): Logits of a shape [Batch x Channels x Length x Length].
-            targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length].
+            logits (torch.Tensor): Logits of a shape [Batch x Channels x Length x Length]
+            targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length]
         """
         if self.diagonal:
             g_len = logits.shape[2]
@@ -467,8 +467,8 @@ class SigmoidFocalLoss(nn.Module):
         Forward loos function
 
         Args:
-            logits (torch.Tensor): Logits of a shape [Batch x Channels x Length x Length].
-            targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length].
+            logits (torch.Tensor): Logits of a shape [Batch x Channels x Length x Length]
+            targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length]
         """
         if self.diagonal:
             g_len = logits.shape[2]

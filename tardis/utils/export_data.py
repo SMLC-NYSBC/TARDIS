@@ -9,7 +9,7 @@
 #######################################################################
 import codecs
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import mrcfile
 import numpy as np
@@ -37,7 +37,7 @@ class NumpyToAmira:
             Union[np.ndarray, List[np.ndarray]]: The same or converted to 3D coordinates.
         """
         if isinstance(coord, np.ndarray):
-            assert coord.ndim == 2, \
+            if coord.ndim != 2:
                 TardisError('132',
                             'tardis/utils/export_data.py',
                             'Numpy array may not have IDs for each point.')
@@ -52,8 +52,8 @@ class NumpyToAmira:
                             'Expected list of np.ndarrays!')
 
             # Add dummy Z dimension
-            coord = [np.hstack((c, np.zeros((c.shape[0], 1))))
-                     if c.shape[1] == 3 else c for c in coord]
+            coord = [np.hstack((c, np.zeros((c.shape[0], 1)))) if
+                     c.shape[1] == 3 else c for c in coord]
 
             # Fixed ordering
             ordered_coord = []
@@ -85,7 +85,7 @@ class NumpyToAmira:
             return label
         elif isinstance(labels[0], np.ndarray):
             for i in range(len(labels) - 1):
-                label.append(f'LabelGroup{i+2}')
+                label.append(f'LabelGroup{i + 2}')
         elif isinstance(labels[0], str):
             label = labels
 
@@ -175,7 +175,7 @@ class NumpyToAmira:
             data (list): List of item's to save recursively.
             file_dir (str): Directory where the file should be saved.
         """
-        assert file_dir.endswith('.am'), \
+        if not file_dir.endswith('.am'):
             TardisError('133',
                         'tardis/utils/export_data.py',
                         f'{file_dir} must be and .am file!')
@@ -188,8 +188,8 @@ class NumpyToAmira:
 
     def export_amira(self,
                      file_dir: str,
-                     coords: Optional[list] = np.ndarray,
-                     labels: Optional[list] = None):
+                     coords: Optional[Union[tuple, list, np.ndarray]] = np.ndarray,
+                     labels: Optional[Union[tuple, list, None]] = None):
         """
         Save Amira file with all filaments without any labels
 

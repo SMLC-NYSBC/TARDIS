@@ -172,9 +172,9 @@ def main(dir: str,
 
         # Check image structure and normalize histogram
         image = normalize(image)  # Rescale image intensity
-        if not image.min() >= 0 or not image.max() <= 1:  # Normalized between 0 and 1
+        if not np.min(image) >= 0 or not np.max(image) <= 1:  # Normalized between 0 and 1
             image = minmax(image)
-        elif image.min() >= -1 and image.max() <= 1:
+        elif np.min(image) >= -1 and np.max(image) <= 1:
             image = minmax(image)
 
         if not image.dtype == np.float32:
@@ -248,8 +248,7 @@ def main(dir: str,
                 if cnn_threshold != 0:
                     input = np.where(input >= cnn_threshold, 1, 0).astype(np.uint8)
 
-            tif.imwrite(join(output, f'{name}.tif'),
-                        np.array(input, dtype=input.dtype))
+            tif.imwrite(join(output, f'{name}.tif'), np.array(input, dtype=input.dtype))
 
         """Post-Processing"""
         # Tardis progress bar update
@@ -282,11 +281,9 @@ def main(dir: str,
             sys.exit()
 
         if join(dir, i).endswith('.mrc'):
-            to_mrc(data=image,
-                   file_dir=join(am_output, f'{i[:-out_format]}_CNN.mrc'))
+            to_mrc(data=image, file_dir=join(am_output, f'{i[:-out_format]}_CNN.mrc'))
 
-        tif.imwrite(join(am_output, f'{i[:-out_format]}_CNN.tif'),
-                    image)
+        tif.imwrite(join(am_output, f'{i[:-out_format]}_CNN.tif'), image)
 
         """Clean-up temp dir"""
         clean_up(dir=dir)

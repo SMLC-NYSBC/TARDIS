@@ -63,8 +63,8 @@ class MinMaxNormalize:
         Returns:
             np.ndarray: Normalized array.
         """
-        MIN = x.min()
-        MAX = x.max()
+        MIN = np.min(x)
+        MAX = np.max(x)
 
         if MIN >= 0:
             if MAX <= 1:
@@ -113,6 +113,4 @@ class RescaleNormalize:
             if p2 <= 5:
                 p2 = 0
 
-        x = exposure.rescale_intensity(x, in_range=(p2, p98))
-
-        return x
+        return exposure.rescale_intensity(x, in_range=(p2, p98))

@@ -43,7 +43,7 @@ class Predictor:
                  sigma: Optional[float] = None):
         self.device = device
         self.img_size = img_size
-        assert checkpoint is not None or network is not None, \
+        if checkpoint is None or network is None:
             TardisError('139',
                         'tardis/utils/predictor.py',
                         'Missing network weights or network name!')
@@ -57,8 +57,7 @@ class Predictor:
                                  map_location=device)
         else:
             print('Loading weight file...')
-            weights = torch.load(checkpoint,
-                                 map_location=device)
+            weights = torch.load(checkpoint, map_location=device)
 
         # Allow overwriting sigma
         if sigma is not None:
@@ -116,8 +115,7 @@ class Predictor:
 
             if self.network == 'dist':
                 if y is None:
-                    out = self.model(coords=x.to(self.device),
-                                     node_features=None)
+                    out = self.model(coords=x.to(self.device), node_features=None)
                 else:
                     out = self.model(coords=x.to(self.device),
                                      node_features=y.to(self.device))
@@ -188,8 +186,7 @@ class BasicPredictor:
                                   text_2=self.print_setting[1],
                                   text_3=self.print_setting[2],
                                   text_4=self.print_setting[3],
-                                  text_8=print_progress_bar(self.id,
-                                                            self.predicting_idx))
+                                  text_8=print_progress_bar(self.id, self.predicting_idx))
 
     def run_predictor(self):
         """

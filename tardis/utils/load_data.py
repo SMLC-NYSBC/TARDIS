@@ -78,7 +78,7 @@ class ImportDataFromAmira:
                 "\n")
             self.spatial_graph = [x for x in self.spatial_graph if x != '']
 
-    def __get_segments(self) -> np.ndarray:
+    def __get_segments(self) -> Union[np.ndarray, None]:
         """
         Helper class function to read segment data from amira file.
 
@@ -121,7 +121,7 @@ class ImportDataFromAmira:
 
         return segment_list
 
-    def __find_points(self) -> np.ndarray:
+    def __find_points(self) -> Union[np.ndarray, None]:
         """
         Helper class function to search for points in Amira file.
 
@@ -165,7 +165,7 @@ class ImportDataFromAmira:
 
         return point_list
 
-    def get_points(self) -> np.ndarray:
+    def get_points(self) -> Union[np.ndarray, None]:
         """
         General class function to retrieve point cloud.
 
@@ -186,7 +186,7 @@ class ImportDataFromAmira:
 
         return points_coord / self.pixel_size
 
-    def get_segmented_points(self) -> np.ndarray:
+    def get_segmented_points(self) -> Union[np.ndarray, None]:
         """
         General class function to retrieve segmented point cloud.
 
@@ -210,7 +210,7 @@ class ImportDataFromAmira:
 
         return np.stack((segmentation, points[:, 0], points[:, 1], points[:, 2])).T
 
-    def get_labels(self) -> dict:
+    def get_labels(self) -> Union[dict, None]:
         """
         General class function to read all labels from amira file.
 
@@ -623,7 +623,7 @@ def load_mrc_file(mrc: str):
 def load_ply_scannet(ply: str,
                      downscaling=0,
                      color: Optional[str] = None) -> Union[Tuple[ndarray, ndarray],
-                                                                 ndarray]:
+                                                           ndarray]:
     """
     Function to read .ply files.
     Args:
@@ -668,7 +668,7 @@ def load_ply_scannet(ply: str,
         if downscaling > 0:
             rgb = rgb.voxel_down_sample(voxel_size=downscaling)
         rgb = np.asarray(rgb.colors)
-        assert coord.shape == rgb.shape, \
+        if coord.shape != rgb.shape:
             TardisError('131',
                         'tardis/utils/load_data.py',
                         'RGB shape must be the same as coord!'
@@ -749,8 +749,7 @@ def load_txt_s3dis(txt: str,
     Returns:
         np.ndarray: Labeled point cloud coordinates.
     """
-    coord = np.genfromtxt(txt,
-                          invalid_raise=False)
+    coord = np.genfromtxt(txt, invalid_raise=False)
 
     if rgb:
         rgb = coord[:, 3:] / 255
@@ -795,9 +794,7 @@ def load_s3dis_scene(dir: str,
     rgb_scene = []
     id = 0
     for i in dir_list:
-        coord_inst = load_txt_s3dis(join(dir, i),
-                                    downscaling=downscaling,
-                                    rgb=rgb)
+        coord_inst = load_txt_s3dis(join(dir, i), downscaling=downscaling, rgb=rgb)
         if rgb:
             rgb_scene.append(coord_inst[1])
             coord_inst = coord_inst[0]

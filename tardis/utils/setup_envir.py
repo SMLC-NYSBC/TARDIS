@@ -27,7 +27,7 @@ def build_new_dir(dir: str):
     """ Build temp files directory """
     output = join(dir, "output")
     image_list = glob.glob(dir + '/*.tif')
-    assert len(image_list) > 0, \
+    if not len(image_list) > 0:
         TardisError('12',
                     'tardis/utils/setup_envir.py',
                     'At least one .tif image has to be in the directory!')
@@ -135,8 +135,7 @@ def check_dir(dir: str,
                     dataset_test = False
         else:
             if isdir(train_img) and isdir(train_mask):
-                if len([f for f in listdir(train_mask)
-                        if f.endswith(mask_format)]) > 0:
+                if len([f for f in listdir(train_mask) if f.endswith(mask_format)]) > 0:
                     pass
                 else:
                     dataset_test = False

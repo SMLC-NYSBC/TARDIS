@@ -150,13 +150,10 @@ class BuildPointCloud:
         """Output point cloud [X x Y x Z]"""
         if len(image_point) == 2:
             """If 2D bring artificially Z dim == 0"""
-            coordinates_HD = np.stack((image_point[1],
-                                       image_point[0],
+            coordinates_HD = np.stack((image_point[1], image_point[0],
                                        np.zeros(image_point[0].shape))).T
         else:
-            coordinates_HD = np.stack((image_point[2],
-                                       image_point[1],
-                                       image_point[0])).T
+            coordinates_HD = np.stack((image_point[2], image_point[1], image_point[0])).T
 
         """CleanUp to avoid memory loss"""
         del image_point
@@ -168,14 +165,12 @@ class BuildPointCloud:
 
             pcd = o3d.geometry.PointCloud()
             pcd.points = o3d.utility.Vector3dVector(coordinates_HD)
-            coordinates_LD = np.asarray(
-                pcd.voxel_down_sample(voxel_size=down_sampling).points
-            )
+            coordinates_LD = np.asarray(pcd.voxel_down_sample(voxel_size=down_sampling).points)
 
             dist = cdist(coordinates_LD, coordinates_LD).astype(np.float16)
             # indices = np.where(dist <= 1.5)
-            dist = [id for id, x in enumerate(dist)
-                    if len(np.where(x <= sqrt(2 * down_sampling**2))[0]) > 2]
+            dist = [id for id, x in enumerate(dist) if
+                    len(np.where(x <= sqrt(2 * down_sampling ** 2))[0]) > 2]
             coordinates_LD = coordinates_LD[dist, :]
 
             return coordinates_HD, coordinates_LD

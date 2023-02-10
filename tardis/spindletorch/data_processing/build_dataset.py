@@ -149,7 +149,7 @@ def build_train_dataset(dataset_dir: str,
                 TardisError(id='115',
                             py='tardis/spindletorch/data_processing/build_training_dataset',
                             desc=f'Mask min: {mask.min()}; max: {mask.max()}'
-                            'but expected min: 0 and max: >1')
+                                 'but expected min: 0 and max: >1')
 
             # Convert to binary
             if mask.min() == 0 and mask.max() > 1:
@@ -175,7 +175,7 @@ def build_train_dataset(dataset_dir: str,
         if not image.min() >= -1 or not image.max() <= 1:  # Image between in 0 and 255
             image = minmax(image)
 
-        assert image.dtype == np.float32, \
+        if image.dtype != np.float32:
             TardisError('114',
                         'tardis/spindletorch/data_processing/build_training_dataset',
                         f'Image data of type {image.dtype} not float32')

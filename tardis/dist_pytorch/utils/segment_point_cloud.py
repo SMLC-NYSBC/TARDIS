@@ -54,8 +54,7 @@ class GraphInstanceV2:
         """
         # Build empty graph
         graph = max([max(f) for f in idx]) + 1
-        graph = np.zeros((graph, graph),
-                         dtype=np.float32)
+        graph = np.zeros((graph, graph), dtype=np.float32)
 
         for idx_patch, graph_patch in zip(idx, graph_pred):
             for k, _ in enumerate(idx_patch):
@@ -94,8 +93,7 @@ class GraphInstanceV2:
         # Build empty coord array
         dim = coord[0].shape[1]
         coord_df = max([max(f) for f in idx]) + 1
-        coord_df = np.zeros((coord_df, dim),
-                            dtype=np.float32)
+        coord_df = np.zeros((coord_df, dim), dtype=np.float32)
 
         for coord_patch, idx_patch in zip(coord, idx):
             for value, id in zip(coord_patch, idx_patch):
@@ -122,8 +120,7 @@ class GraphInstanceV2:
 
         # Build empty coord array
         cls_df = max([max(f) for f in idx]) + 1
-        cls_df = np.zeros(cls_df,
-                          dtype=np.float32)
+        cls_df = np.zeros(cls_df, dtype=np.float32)
 
         for cls_patch, idx_patch in zip(cls, idx):
             # cls_patch = [np.where(i == 1)[0][0] for i in cls_patch]
@@ -357,7 +354,7 @@ class GraphInstanceV2:
             segments = self._smooth_segments(segments)
 
         if visualize is not None:
-            assert visualize in ['f', 'p'], \
+            if visualize not in ['f', 'p']:
                 TardisError('124',
                             'tardis/dist/utils/segment_point_cloud.py',
                             'To visualize output use "f" for filament '

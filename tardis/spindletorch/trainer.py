@@ -29,8 +29,7 @@ class CNNTrainer(BasicTrainer):
         Run model training.
         """
         # Update progress bar
-        self._update_progress_bar(loss_desc='Training: (loss 1.000)',
-                                  idx=0)
+        self._update_progress_bar(loss_desc='Training: (loss 1.000)', idx=0)
 
         # Run training for CNN model
         for idx, (i, m) in enumerate(self.training_DataLoader):
@@ -97,9 +96,7 @@ class CNNTrainer(BasicTrainer):
                 valid = f'Validation: (loss {loss.item():.4f} Prec: {prec:.2f} Rec: {recall:.2f} F1: {f1:.2f})'
 
                 # Update progress bar
-                self._update_progress_bar(loss_desc=valid,
-                                          idx=idx,
-                                          train=False)
+                self._update_progress_bar(loss_desc=valid, idx=idx, train=False)
 
         # Reduce eval. metric with mean
         self.validation_loss.append(np.mean(valid_losses))

@@ -225,8 +225,7 @@ def main(dir: str,
 
             # Save threshold image
             assert out.min() == 0 and out.max() in [0, 1]
-            tif.imwrite(join(output, f'{name}.tif'),
-                        np.array(out, dtype=np.uint8))
+            tif.imwrite(join(output, f'{name}.tif'), np.array(out, dtype=np.uint8))
 
         """Post-Processing"""
         scale_factor = org_shape
@@ -251,7 +250,7 @@ def main(dir: str,
         image, _ = scale_image(image=image, scale=scale_factor)
 
         # Check if predicted image
-        assert image.shape == org_shape, \
+        if image.shape != org_shape:
             TardisError('145',
                         'tardis/predict_spindletorch.py',
                         f'Error while converting to {px} A pixel size. '

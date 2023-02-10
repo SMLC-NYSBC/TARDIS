@@ -45,6 +45,8 @@ setup(
             "tardis_mt = tardis.predict_mt:main",
             "tardis_mem = tardis.predict_mem:main",
             "tardis_compare_sg = tardis.compare_spatial_graphs:main",
+            "tardis_cnn_benchmark = tardis.benchmarks.cnn_benchmarks:main",
+            "tardis_dist_benchmark = tardis.benchmarks.dist_benchmarks:main",
         ],
     },
     license="MIT License",

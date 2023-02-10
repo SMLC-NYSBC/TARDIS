@@ -31,7 +31,7 @@ def draw_semantic(mask_size: tuple,
     Returns:
         np.ndarray: Binary mask with drawn all coordinates as lines.
     """
-    assert coordinate.ndim == 2 and coordinate.shape[1] in [3, 4], \
+    if coordinate.ndim != 2 and coordinate.shape[1] not in [3, 4]:
         TardisError('113',
                     'tardis/spindletorch/data_processing/semantic_mask.py',
                     'Coordinates are of not correct shape, expected: '
