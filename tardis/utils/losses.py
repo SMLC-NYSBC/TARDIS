@@ -252,9 +252,8 @@ class SoftSkeletonization(nn.Module):
     """
 
     def __init__(self,
-                 _iter=3,
+                 _iter=5,
                  smooth=1e-16,
-                 alpha=0.5,
                  diagonal=False):
         """
         Loss initialization
@@ -268,7 +267,6 @@ class SoftSkeletonization(nn.Module):
         super(SoftSkeletonization, self).__init__()
 
         self.iter = _iter
-        self.alpha = alpha
         self.smooth = smooth
         self.diagonal = diagonal
 
@@ -313,15 +311,16 @@ class SoftSkeletonization(nn.Module):
             iter_ = int(iter_)
 
         binary_mask_open = self._soft_open(binary_mask)
-        t_skeleton = F.relu(binary_mask - binary_mask_open)
+        s_skeleton = F.relu(binary_mask - binary_mask_open)
 
         for j in range(iter_):
             binary_mask = self._soft_erode(binary_mask)
             binary_mask_open = self._soft_open(binary_mask)
 
             delta = F.relu(binary_mask - binary_mask_open)
+            s_skeleton = s_skeleton + F.relu(delta - (s_skeleton * delta))
 
-        return t_skeleton + F.relu(delta - t_skeleton * delta)
+        return s_skeleton
 
     def forward(self,
                 logits: torch.Tensor,
@@ -334,6 +333,47 @@ class SoftSkeletonization(nn.Module):
             targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length]
         """
         pass
+
+
+class ClBCE(SoftSkeletonization):
+    """
+    Soft skeletonization with BCE loss function
+    """
+
+    def __init__(self,
+                 **kwargs):
+        super(ClBCE, self).__init__(**kwargs)
+        self.bce = BCELoss()
+
+    def forward(self,
+                logits: torch.Tensor,
+                targets: torch.Tensor) -> torch.Tensor:
+        """
+        Forward loos function
+
+        Args:
+            logits (torch.Tensor): Logits of a shape [Batch x Channels x Length x Length]
+            targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length]
+        """
+        # BCE with activation
+        bce = self.bce(logits, targets)
+
+        # Activation
+        logits = torch.sigmoid(logits)
+
+        # Soft skeletonization
+        sk_logits = self.soft_skel(logits, self.iter)
+        sk_targets = self.soft_skel(targets, self.iter)
+
+        t_prec = ((sk_logits * targets).sum() + self.smooth) / \
+                 (sk_logits.sum() + self.smooth)
+        t_sens = ((sk_targets * logits).sum() + self.smooth) / \
+                 (sk_targets.sum() + self.smooth)
+
+        # ClBCE
+        cl_bce = 2 * (t_prec * t_sens) / (t_prec + t_sens)
+
+        return bce + (1 - cl_bce)
 
 
 class ClDice(SoftSkeletonization):
@@ -381,55 +421,7 @@ class ClDice(SoftSkeletonization):
         # CLDice loss
         cl_dice = 2 * (t_prec * t_sens) / (t_prec + t_sens)
 
-        return ((1 - self.alpha) * dice) + (self.alpha * (1 - cl_dice))
-
-
-class ClBCE(SoftSkeletonization):
-    """
-    Soft skeletonization with BCE loss function
-    """
-
-    def __init__(self,
-                 **kwargs):
-        super(ClBCE, self).__init__(**kwargs)
-        self.bce = BCELoss(**kwargs)
-
-    def forward(self,
-                logits: torch.Tensor,
-                targets: torch.Tensor) -> torch.Tensor:
-        """
-        Forward loos function
-
-        Args:
-            logits (torch.Tensor): Logits of a shape [Batch x Channels x Length x Length]
-            targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length]
-        """
-        if self.diagonal:
-            g_len = logits.shape[2]
-            g_range = range(g_len)
-
-            logits[:, g_range, g_range] = 1
-            targets[:, g_range, g_range] = 1
-
-        # BCE with activation
-        bce = self.bce(logits, targets)
-
-        # Activation
-        logits = torch.sigmoid(logits)
-
-        # Soft skeletonization
-        sk_logits = self.soft_skel(logits, self.iter)
-        sk_targets = self.soft_skel(targets, self.iter)
-
-        t_prec = ((sk_logits * targets).sum() + self.smooth) / \
-                 (sk_logits.sum() + self.smooth)
-        t_sens = ((sk_targets * logits).sum() + self.smooth) / \
-                 (sk_targets.sum() + self.smooth)
-
-        # ClBCE
-        cl_bce = 2 * (t_prec * t_sens) / (t_prec + t_sens)
-
-        return ((1 - self.alpha) * bce) + (self.alpha * (1 - cl_bce))
+        return dice + (1 - cl_dice)
 
 
 class SigmoidFocalLoss(nn.Module):

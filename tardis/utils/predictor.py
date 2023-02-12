@@ -43,7 +43,7 @@ class Predictor:
                  sigma: Optional[float] = None):
         self.device = device
         self.img_size = img_size
-        if checkpoint is None or network is None:
+        if checkpoint is None and network is None:
             TardisError('139',
                         'tardis/utils/predictor.py',
                         'Missing network weights or network name!')
