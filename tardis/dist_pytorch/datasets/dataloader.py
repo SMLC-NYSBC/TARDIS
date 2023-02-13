@@ -20,7 +20,7 @@ from torch.utils.data import DataLoader, Dataset
 from tardis.dist_pytorch.datasets.augmentation import preprocess_data
 from tardis.dist_pytorch.datasets.patches import PatchDataSet
 from tardis.utils.errors import TardisError
-from tardis.utils.load_data import load_ply_partnet, load_ply_scannet, load_s3dis_scene
+from tardis.utils.load_data import (load_ply_partnet, load_ply_scannet, load_s3dis_scene)
 
 
 class BasicDataset(Dataset):

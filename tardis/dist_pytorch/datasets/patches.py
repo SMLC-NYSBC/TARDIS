@@ -57,6 +57,7 @@ class PatchDataSet:
                  max_number_of_points=500,
                  init_patch_size=0,
                  drop_rate=1,
+                 overlap=0.15,
                  graph=True,
                  tensor=True):
         # Global data setting
@@ -76,8 +77,8 @@ class PatchDataSet:
         self.INIT_PATCH_SIZE = init_patch_size
         self.expand = 0.025
         self.EXPAND = 0.025  # Expand boundary box by 2.5%
-        self.stride = 0.15
-        self.STRIDE = 0.15  # Create 15% overlaps between patches
+        self.stride = overlap
+        self.STRIDE = overlap  # Create 15% overlaps between patches
 
         if init_patch_size == 0:
             self.SIZE_EXPAND = self.EXPAND
