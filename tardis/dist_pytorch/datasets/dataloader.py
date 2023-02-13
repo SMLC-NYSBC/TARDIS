@@ -582,7 +582,7 @@ def build_dataset(dataset_type: str,
                                       coord_format='.ply',
                                       patch_if=max_points_per_patch,
                                       train=False)
-    elif dataset_type == ['stanford', 'S3DIS']:
+    elif dataset_type in ['stanford', 'S3DIS']:
         if not benchmark:
             dl_train = Stanford3DDataset(coord_dir=dirs[0],
                                          coord_format='.txt',
