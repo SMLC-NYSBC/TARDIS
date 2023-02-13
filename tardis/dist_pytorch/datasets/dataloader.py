@@ -523,7 +523,8 @@ class Stanford3DDataset(BasicDataset):
 
 def build_dataset(dataset_type: str,
                   dirs: list,
-                  max_points_per_patch: int):
+                  max_points_per_patch: int,
+                  benchmark=False):
     """
     Wrapper for DataLoader
 
@@ -534,64 +535,71 @@ def build_dataset(dataset_type: str,
         dataset_type (str):  Ask to recognize and process the dataset.
         dirs (list): Ask for a list with the directory given as [train, test].
         max_points_per_patch (int):  Max number of points per patch.
+        benchmark (bool): If True construct data for benchmark.
 
     Returns:
         Tuple[torch.DataLoader, torch.DataLoader]: Output DataLoader with
         the specified dataset for training and evaluation.
     """
 
-    if dataset_type == 'filament':
-        dl_train = FilamentDataset(coord_dir=dirs[0],
-                                   coord_format=('.CorrelationLines.am', '.csv'),
-                                   patch_if=max_points_per_patch,
-                                   train=True)
+    if dataset_type in ['filament', 'MT', 'Mem']:
+        if not benchmark:
+            dl_train = FilamentDataset(coord_dir=dirs[0],
+                                       coord_format=('.CorrelationLines.am', '.csv'),
+                                       patch_if=max_points_per_patch,
+                                       train=True)
         dl_test = FilamentDataset(coord_dir=dirs[1],
                                   coord_format=('.CorrelationLines.am', '.csv'),
                                   patch_if=max_points_per_patch,
                                   train=False)
-    elif dataset_type == 'partnet':
-        dl_train = PartnetDataset(coord_dir=dirs[0],
-                                  coord_format='.ply',
-                                  patch_if=max_points_per_patch,
-                                  train=True)
+    elif dataset_type in ['partnet', 'PartNet']:
+        if not benchmark:
+            dl_train = PartnetDataset(coord_dir=dirs[0],
+                                      coord_format='.ply',
+                                      patch_if=max_points_per_patch,
+                                      train=True)
         dl_test = PartnetDataset(coord_dir=dirs[1],
                                  coord_format='.ply',
                                  patch_if=max_points_per_patch,
                                  train=False)
-    elif dataset_type == 'scannet':
-        dl_train = ScannetDataset(coord_dir=dirs[0],
-                                  coord_format='.ply',
-                                  patch_if=max_points_per_patch,
-                                  train=True)
+    elif dataset_type in ['scannet', 'ScanNetV2']:
+        if not benchmark:
+            dl_train = ScannetDataset(coord_dir=dirs[0],
+                                      coord_format='.ply',
+                                      patch_if=max_points_per_patch,
+                                      train=True)
         dl_test = ScannetDataset(coord_dir=dirs[1],
                                  coord_format='.ply',
                                  patch_if=max_points_per_patch,
                                  train=False)
     elif dataset_type == 'scannet_color':
-        dl_train = ScannetColorDataset(coord_dir=dirs[0],
-                                       coord_format='.ply',
-                                       patch_if=max_points_per_patch,
-                                       train=True)
+        if not benchmark:
+            dl_train = ScannetColorDataset(coord_dir=dirs[0],
+                                           coord_format='.ply',
+                                           patch_if=max_points_per_patch,
+                                           train=True)
         dl_test = ScannetColorDataset(coord_dir=dirs[1],
                                       coord_format='.ply',
                                       patch_if=max_points_per_patch,
                                       train=False)
-    elif dataset_type == 'stanford':
-        dl_train = Stanford3DDataset(coord_dir=dirs[0],
-                                     coord_format='.txt',
-                                     patch_if=max_points_per_patch,
-                                     train=True)
+    elif dataset_type == ['stanford', 'S3DIS']:
+        if not benchmark:
+            dl_train = Stanford3DDataset(coord_dir=dirs[0],
+                                         coord_format='.txt',
+                                         patch_if=max_points_per_patch,
+                                         train=True)
         dl_test = Stanford3DDataset(coord_dir=dirs[1],
                                     coord_format='.txt',
                                     patch_if=max_points_per_patch,
                                     train=False)
     else:
         # TODO General dataloader
-        # dl_train = GeneralDataset(coord_dir=dirs[1],
-        #                           coord_format=('.ply'),
-        #                           downsampling_if=downsampling_if,
-        #                           downsampling_rate=downsampling_rate,
-        #                           train=True)
+        # if not benchmark:
+        #     dl_train = GeneralDataset(coord_dir=dirs[1],
+        #                               coord_format=('.ply'),
+        #                               downsampling_if=downsampling_if,
+        #                               downsampling_rate=downsampling_rate,
+        #                               train=True)
         # dl_test = GeneralDataset(coord_dir=dirs[1],
         #                          coord_format=('.ply'),
         #                          downsampling_if=downsampling_if,
@@ -599,6 +607,9 @@ def build_dataset(dataset_type: str,
         #                          train=False)
         pass
 
-    dl_train = DataLoader(dataset=dl_train, shuffle=True, pin_memory=True)
     dl_test = DataLoader(dataset=dl_test, shuffle=False, pin_memory=True)
-    return dl_train, dl_test
+    if not benchmark:
+        dl_train = DataLoader(dataset=dl_train, shuffle=True, pin_memory=True)
+        return dl_train, dl_test
+
+    return dl_test

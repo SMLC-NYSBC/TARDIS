@@ -26,7 +26,8 @@ def build_train_dataset(dataset_dir: str,
                         circle_size: int,
                         resize_pixel_size: float,
                         trim_xy: int,
-                        trim_z: int):
+                        trim_z: int,
+                        benchmark=False):
     """
     Module for building train datasets from compatible files.
 
@@ -55,15 +56,18 @@ def build_train_dataset(dataset_dir: str,
         resize_pixel_size (float): Pixel size for image resizing.
         trim_xy (int): Voxel size of output image in x and y dimension.
         trim_z (int): Voxel size of output image in z dimension.
+        benchmark (bool): If True construct data for benchmark.
     """
     """Setup"""
     # Activate Tardis progress bar
     tardis_progress = TardisLogo()
-    tardis_progress(title='Data pre-processing for CNN training')
+    tardis_progress(title='Data pre-processing for CNN')
 
     # Normalize histogram
     normalize = RescaleNormalize(clip_range=(1, 99))
     minmax = MinMaxNormalize()
+
+    clean_empty = not benchmark
 
     # All expected formats
     IMG_FORMATS = ('.am', '.mrc', '.rec')
@@ -194,6 +198,7 @@ def build_train_dataset(dataset_dir: str,
                          scale=scale_shape,
                          trim_size_xy=trim_xy,
                          trim_size_z=trim_z,
+                         clean_empty=clean_empty,
                          output=join(dataset_dir, 'train'),
                          image_counter=img_counter)
         img_counter += 1
