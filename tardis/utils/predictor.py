@@ -55,6 +55,8 @@ class Predictor:
                                                  subtype,
                                                  model_type),
                                  map_location=device)
+        elif isinstance(checkpoint, dict):
+            weights = checkpoint
         else:
             print('Loading weight file...')
             weights = torch.load(checkpoint, map_location=device)
