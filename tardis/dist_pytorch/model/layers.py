@@ -54,19 +54,10 @@ class DistStack(nn.Module):
             self.layers.append(layer)
 
     def __len__(self) -> int:
-        """
-        Length of nn.Module.
-        """
         return len(self.layers)
 
     def __getitem__(self,
                     i: int):
-        """
-        Get DIST layer item.
-
-        Args:
-            i (int): Layer index.
-        """
         return self.layers[i]
 
     def forward(self,
@@ -303,8 +294,6 @@ class DistLayer(nn.Module):
                                         h_nodes=h_nodes,
                                         src_mask=src_mask,
                                         src_key_padding_mask=src_key_padding_mask)
-        else:
-            h_nodes = None
 
         # Update edge features
         h_pairs = self.update_edges(h_pairs=h_pairs,

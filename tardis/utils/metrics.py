@@ -8,14 +8,15 @@
 #  MIT License 2021 - 2023                                            #
 #######################################################################
 
-from typing import Optional
+from typing import Optional, Union
 
 import numpy as np
 import torch
+from sklearn.metrics import auc, average_precision_score, roc_curve
 
 
-def eval_graph_f1(logits: Optional[np.ndarray] = torch.Tensor,
-                  targets: Optional[np.ndarray] = torch.Tensor):
+def eval_graph_f1(logits: Optional[Union[np.ndarray, torch.Tensor]],
+                  targets: Optional[Union[np.ndarray, torch.Tensor]]):
     """
      Module used for calculating training metrics
 
@@ -46,14 +47,9 @@ def eval_graph_f1(logits: Optional[np.ndarray] = torch.Tensor,
     while threshold != 1:
         input_df = torch.where(logits > threshold, 1, 0)
 
-        confusion_vector = input_df / targets
-
-        tp = torch.sum(confusion_vector == 1).item() - g_len
-        fp = torch.sum(confusion_vector == float('inf')).item()
-        tn = torch.sum(torch.isnan(confusion_vector)).item()
+        tp, fp, tn, fn = confusion_matrix(input_df, targets)
         if tn < 0:
             tn = 0
-        fn = torch.sum(confusion_vector == 0).item()
 
         accuracy_score = (tp + tn) / (tp + tn + fp + fn + 1e-16)
         prec = tp / (tp + fp + 1e-16)
@@ -86,8 +82,8 @@ def eval_graph_f1(logits: Optional[np.ndarray] = torch.Tensor,
     return accuracy_score, precision_score, recall_score, F1_score, threshold
 
 
-def calculate_f1(logits: Optional[np.ndarray] = torch.Tensor,
-                 targets: Optional[np.ndarray] = torch.Tensor,
+def calculate_f1(logits: Optional[Union[np.ndarray, torch.Tensor]],
+                 targets: Optional[Union[np.ndarray, torch.Tensor]],
                  best_f1=True):
     """
     Module used for calculating training metrics
@@ -111,12 +107,7 @@ def calculate_f1(logits: Optional[np.ndarray] = torch.Tensor,
         while threshold != 1:
             input_df = torch.where(logits > threshold, 1, 0)
 
-            confusion_vector = input_df / targets
-
-            tp = torch.sum(confusion_vector == 1).item()
-            fp = torch.sum(confusion_vector == float('inf')).item()
-            tn = torch.sum(torch.isnan(confusion_vector)).item()
-            fn = torch.sum(confusion_vector == 0).item()
+            tp, fp, tn, fn = confusion_matrix(input_df, targets)
 
             accuracy_score = (tp + tn) / (tp + tn + fp + fn + 1e-16)
             prec = tp / (tp + fp + 1e-16)
@@ -148,24 +139,7 @@ def calculate_f1(logits: Optional[np.ndarray] = torch.Tensor,
 
         return accuracy_score, precision_score, recall_score, F1_score, threshold
     else:
-        if torch.is_tensor(logits):
-            confusion_vector = logits / targets
-
-            tp = torch.sum(confusion_vector == 1).item()
-            fp = torch.sum(confusion_vector == float('inf')).item()
-            tn = torch.sum(torch.isnan(confusion_vector)).item()
-            fn = torch.sum(confusion_vector == 0).item()
-        else:
-            logits = normalize_image(logits)
-            targets = normalize_image(targets)
-
-            with np.errstate(divide='ignore', invalid='ignore'):
-                confusion_vector = logits / targets
-
-            tp = np.sum(confusion_vector == 1)
-            fp = np.sum(confusion_vector == float('inf'))
-            tn = np.sum(np.isnan(confusion_vector) is True)
-            fn = np.sum(confusion_vector == 0)
+        tp, fp, tn, fn = confusion_matrix(logits, targets)
 
         """Accuracy Score - (tp + tn) / (tp + tn + fp + fn)"""
         accuracy_score = (tp + tn) / (tp + tn + fp + fn + 1e-16)
@@ -182,6 +156,54 @@ def calculate_f1(logits: Optional[np.ndarray] = torch.Tensor,
                                                             1e-16))
 
         return accuracy_score, precision_score, recall_score, F1_score
+
+
+def AP(logits: np.ndarray,
+       targets: np.ndarray) -> float:
+    logits = logits.flatten()
+    targets = targets.flatten()
+
+    return average_precision_score(targets, logits)
+
+
+def AUC(logits: np.ndarray,
+        targets: np.ndarray) -> float:
+    logits = logits.flatten()
+    targets = targets.flatten()
+
+    fpr, tpr, thresholds = roc_curve(targets, logits)
+    return auc(fpr, tpr)
+
+
+def IoU(input: np.ndarray,
+        targets: np.ndarray):
+    tp, fp, tn, fn = confusion_matrix(input, targets)
+
+    return tp / (tp + fp + fn + 1e-16)
+
+
+def confusion_matrix(logits: Optional[Union[np.ndarray, torch.Tensor]],
+                     targets: Optional[Union[np.ndarray, torch.Tensor]]):
+    if torch.is_tensor(logits):
+        confusion_vector = logits / targets
+
+        tp = torch.sum(confusion_vector == 1).item()
+        fp = torch.sum(confusion_vector == float('inf')).item()
+        tn = torch.sum(torch.isnan(confusion_vector)).item()
+        fn = torch.sum(confusion_vector == 0).item()
+    else:
+        logits = normalize_image(logits)
+        targets = normalize_image(targets)
+
+        with np.errstate(divide='ignore', invalid='ignore'):
+            confusion_vector = logits / targets
+
+        tp = np.sum(confusion_vector == 1)
+        fp = np.sum(confusion_vector == float('inf'))
+        tn = np.sum(np.isnan(confusion_vector) is True)
+        fn = np.sum(confusion_vector == 0)
+
+    return tp, fp, tn, fn
 
 
 def normalize_image(image: np.ndarray):

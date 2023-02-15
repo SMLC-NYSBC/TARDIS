@@ -76,8 +76,6 @@ def build_train_dataset(dataset_dir: str,
     """Check what file are in the folder to build dataset"""
     img_list = [f for f in listdir(dataset_dir) if
                 f.endswith(IMG_FORMATS) and not f.endswith(MASK_FORMATS)]
-    # is_csv = [f for f in listdir(dataset_dir) if f.endswith('.csv')]
-    mask_list = [f for f in listdir(dataset_dir) if f.endswith(MASK_FORMATS)]
 
     """For each image find matching mask, pre-process, trim and save"""
     img_counter = 0

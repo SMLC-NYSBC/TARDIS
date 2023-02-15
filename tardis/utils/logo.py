@@ -29,12 +29,12 @@ def print_progress_bar(value: int,
         max_v (int): Maximum number of iterations.
     """
     if is_interactive():
-        n_bar = 75
+        n_bar = 50
     else:
         try:
             n_bar = get_terminal_size()[0] - 50
         except OSError:
-            n_bar = 55
+            n_bar = 50
 
     j = value / max_v
     bar = '█' * int(n_bar * j)
@@ -133,7 +133,7 @@ class TardisLogo:
             int: cell width.
         """
         if is_interactive():  # Jupyter
-            WIDTH = 150
+            WIDTH = 90
         else:
             try:  # Console
                 WIDTH = get_terminal_size()[0] - 5

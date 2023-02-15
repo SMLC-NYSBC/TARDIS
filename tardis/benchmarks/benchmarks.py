@@ -7,23 +7,18 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
-import time
 from os import listdir
 from os.path import expanduser, join
 from typing import Union
 
 import click
-import numpy as np
 import torch
 
-from tardis.dist_pytorch.datasets.dataloader import build_dataset
-from tardis.spindletorch.data_processing.build_dataset import build_train_dataset
-from tardis.spindletorch.datasets.dataloader import PredictionDataset
+from tardis.benchmarks.predictor import CnnBenchmark, DISTBenchmark
 from tardis.utils.aws import get_benchmark_aws, get_model_aws
 from tardis.utils.device import get_device
 from tardis.utils.errors import TardisError
-from tardis.utils.load_data import load_image
-from tardis.utils.logo import print_progress_bar, TardisLogo
+from tardis.utils.logo import TardisLogo
 from tardis.utils.predictor import Predictor
 from tardis.version import version
 
@@ -80,10 +75,9 @@ def main(data_set: str,
     - Identified standard location for test data and sanity_checks
     - Retrieve json with best CNN metric from S3 bucket
     - Build NN from checkpoint or accept model
-
-    ToDo: Run benchmark on standard data
-    ToDo: For each data calculate F1, AP-25, AP-50, AP-75
-    ToDo: Get mean value for each metric
+    - Run benchmark on standard data
+    - For each data calculate F1, AP-25, AP-50, AP-75
+    - Get mean value for each metric
 
     ToDo: Check if json have metric for tested dataset
     ToDo: Check if metrics are higher. If yes update json
@@ -129,90 +123,22 @@ def main(data_set: str,
 
     """Build DataLoader"""
     if network == 'cnn':
-        build_train_dataset(dataset_dir=DIR_EVAL,
-                            circle_size=150,
-                            resize_pixel_size=23.2,
-                            trim_xy=patch_size,
-                            trim_z=patch_size,
-                            benchmark=True)
-
-        eval_data = PredictionDataset(img_dir=join(DIR_EVAL, 'train', 'imgs'))
+        predictor_bch = CnnBenchmark(model=model,
+                                     dataset=data_set,
+                                     dir_=DIR_EVAL,
+                                     threshold=nn_threshold,
+                                     patch_size=patch_size)
     else:
-        eval_data = build_dataset(dataset_type=data_set,
-                                  dirs=[None, DIR_EVAL],
-                                  max_points_per_patch=points_in_patch,
-                                  benchmark=True)
-
-    """CNN Predict Dataset with Benchmark"""
-    iter_time = 1
-    if data_set == 'cnn':
-        for j in range(len(eval_data)):
-            if j % iter_time == 0:
-                # Tardis progress bar update
-                tardis_progress(title=title,
-                                text_1=f'Running image segmentation benchmark on {data_set}',
-                                text_4='Benchmark: In progress...',
-                                text_7='Current Task: NN prediction...',
-                                text_8=print_progress_bar(j, len(eval_data)))
-
-        # Pick image['s]
-        coords_idx, _, graph_idx, output_idx, _ = eval_data.__getitem__(j)
-        target = load_image(join(DIR_EVAL, 'train', 'masks', f'{name}_mask.tif'))
-
-        """Predict"""
-        if j == 0:
-            start = time.time()
-
-            # Predict
-            input = model.predict(input[None, :])
-
-            # Scale progress bar refresh to 10s
-            end = time.time()
-            iter_time = 10 // (end - start)
-            if iter_time < 1:
-                iter_time = 1
-        else:
-            # Predict
-            input = model.predict(input[None, :])
-
-        input = np.where(input >= nn_threshold, 1, 0).astype(np.uint8)
-        """Benchmark"""
-    else:
-        """DIST Predict Dataset with Benchmark"""
-        for j in range(len(eval_data)):
-            if j % iter_time == 0:
-                # Tardis progress bar update
-                tardis_progress(title=title,
-                                text_1=f'Running DIST benchmark on {data_set}',
-                                text_4='Benchmark: In progress...',
-                                text_7='Current Task: NN prediction...',
-                                text_8=print_progress_bar(j, len(eval_data)))
-
-        # Pick image['s]
-        input, name = eval_data.__getitem__(j)
-        target = load_image(join(DIR_EVAL, 'train', 'masks', f'{name}_mask.tif'))
-
-        """Predict"""
-        if j == 0:
-            start = time.time()
-
-            # Predict
-            input = model.predict(input[None, :])
-
-            # Scale progress bar refresh to 10s
-            end = time.time()
-            iter_time = 10 // (end - start)
-            if iter_time < 1:
-                iter_time = 1
-        else:
-            # Predict
-            input = model.predict(input[None, :])
-
-        input = np.where(input >= nn_threshold, 1, 0).astype(np.uint8)
-
-    """Benchmark"""
+        predictor_bch = DISTBenchmark(model=model,
+                                      dataset=data_set,
+                                      dir_=DIR_EVAL,
+                                      threshold=nn_threshold,
+                                      points_in_patch=points_in_patch)
 
     """Compared with best models"""
+    
+    """Benchmark Summary"""
+    benchmark_result = predictor_bch()
 
     """Sent updated json and model to S3"""
     pass

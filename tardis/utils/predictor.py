@@ -112,6 +112,11 @@ class Predictor:
         Returns:
             np.ndarray: Predicted features.
         """
+        if isinstance(x, np.ndarray):
+            x = torch.Tensor(x)
+        if y is not None and isinstance(y, np.ndarray):
+            y = torch.Tensor(y)
+
         with torch.no_grad():
             self.model.eval()
 
