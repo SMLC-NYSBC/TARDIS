@@ -314,7 +314,7 @@ class TriangularEdgeUpdate(nn.Module):
         # i,j -> i,k j,k
         if self.axis == 1:
             k = torch.einsum('biko,bjko->bijo', a, b)
-        elif self.axis == 0:
+        else:
             k = torch.einsum('bkio,bkjo->bijo', a, b)
 
         return torch.sigmoid(self.gate_o(z)) * self.linear_o(self.norm_o(k))
