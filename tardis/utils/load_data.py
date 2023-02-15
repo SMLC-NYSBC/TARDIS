@@ -7,6 +7,7 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
+import random
 import struct
 from collections import namedtuple
 from os import listdir
@@ -18,7 +19,6 @@ import open3d as o3d
 import tifffile.tifffile as tif
 from numpy import ndarray
 from sklearn.neighbors import KDTree
-
 from tardis.dist_pytorch.utils.visualize import _rgb
 from tardis.utils.errors import TardisError
 from tardis.utils.normalization import RescaleNormalize
@@ -763,13 +763,15 @@ def load_txt_s3dis(txt: str,
 
 
 def load_s3dis_scene(dir: str,
-                     downscaling=0) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
+                     downscaling=0,
+                     random_ds=None) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
     """
     Function to read .txt Stanford 3D instance scene files.
 
     Args:
         dir (str): Folder directory with all instances.
         downscaling (float): Downscaling point cloud by fixing voxel size.
+        random_ds (None, float): If not None, indicate ration of point to keep.
 
     Returns:
         np.ndarray: Labeled point cloud coordinates.
@@ -789,29 +791,34 @@ def load_s3dis_scene(dir: str,
     coord = np.concatenate(coord_scene)
 
     if downscaling > 0:
-        pcd = o3d.geometry.PointCloud()
-        pcd.points = o3d.utility.Vector3dVector(coord[:, 1:])
-        pcd.colors = o3d.utility.Vector3dVector(_rgb(coord, True))
+        if random_ds is not None:
+            pick = int(len(coord) * random_ds)
+            pick = random.sample(range(len(coord)), pick)
+            coord = coord[pick, :]
+        else:
+            pcd = o3d.geometry.PointCloud()
+            pcd.points = o3d.utility.Vector3dVector(coord[:, 1:])
+            pcd.colors = o3d.utility.Vector3dVector(_rgb(coord, True))
 
-        pcd = pcd.voxel_down_sample(voxel_size=downscaling)
-        coord_ds = np.asarray(pcd.points)
+            pcd = pcd.voxel_down_sample(voxel_size=downscaling)
+            coord_ds = np.asarray(pcd.points)
 
-        cls_id = []
-        tree = KDTree(coord[:, 1:], leaf_size=coord[:, 1:].shape[0])
-        for i in coord_ds:
-            _, match_coord = tree.query(i.reshape(1, -1))
-            match_coord = match_coord[0][0]
-            match_label = coord[match_coord, 0]
-            cls_id.append(match_label)
+            cls_id = []
+            tree = KDTree(coord[:, 1:], leaf_size=coord[:, 1:].shape[0])
+            for i in coord_ds:
+                _, match_coord = tree.query(i.reshape(1, -1))
+                match_coord = match_coord[0][0]
+                match_label = coord[match_coord, 0]
+                cls_id.append(match_label)
 
-        cls_id = np.asarray(cls_id)[:, None]
-        coord = np.hstack((cls_id, coord_ds))
+            cls_id = np.asarray(cls_id)[:, None]
+            coord = np.hstack((cls_id, coord_ds))
 
     return coord
 
 
 def load_image(image: str,
-               normalize=False):
+               normalize=False) -> Tuple[np.ndarray, float]:
     """
     Quick wrapper for loading image data based on detected file format.
 

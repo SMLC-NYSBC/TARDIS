@@ -15,12 +15,12 @@ from typing import List, Tuple
 
 import numpy as np
 import torch
-from torch.utils.data import DataLoader, Dataset
-
 from tardis.dist_pytorch.datasets.augmentation import preprocess_data
 from tardis.dist_pytorch.datasets.patches import PatchDataSet
+from tardis.dist_pytorch.utils.utils import pc_median_dist
 from tardis.utils.errors import TardisError
 from tardis.utils.load_data import (load_ply_partnet, load_ply_scannet, load_s3dis_scene)
+from torch.utils.data import DataLoader, Dataset
 
 
 class BasicDataset(Dataset):
@@ -38,12 +38,14 @@ class BasicDataset(Dataset):
                  coord_dir: str,
                  coord_format=".csv",
                  patch_if=500,
+                 benchmark=False,
                  train=True):
         # Coord setting
         self.coord_dir = coord_dir
         self.coord_format = coord_format
 
         self.train = train
+        self.benchmark = benchmark
 
         # Setup environment
         self.cwd = getcwd()
@@ -169,18 +171,20 @@ class FilamentDataset(BasicDataset):
             coord[:, 1:] = coord[:, 1:] / px
             coord[:, 1:] = coord[:, 1:] / 20  # in nm know distance between points
 
-            VD = PatchDataSet(max_number_of_points=self.max_point_in_patch, tensor=False)
+            VD = PatchDataSet(max_number_of_points=self.max_point_in_patch,
+                              tensor=False)
             coords_idx, df_idx, graph_idx, output_idx, _ = VD.patched_dataset(coord=coord)
 
             # save data for faster access later
-            self.save_temp(i=i,
-                           coords=coords_idx,
-                           graph=graph_idx,
-                           out=output_idx,
-                           df=df_idx)
+            if not self.benchmark:
+                self.save_temp(i=i,
+                               coords=coords_idx,
+                               graph=graph_idx,
+                               out=output_idx,
+                               df=df_idx)
 
-            # Store initial patch size for each data to speed up computation
-            self.patch_size[i, 0] = 1
+                # Store initial patch size for each data to speed up computation
+                self.patch_size[i, 0] = 1
         else:
             # Load pre-process data
             coords_idx, graph_idx, output_idx, df_idx = self.load_temp(i,
@@ -244,14 +248,15 @@ class PartnetDataset(BasicDataset):
                                                                               mesh=True,
                                                                               dist_th=0.05)
             # save data for faster access later
-            self.save_temp(i=i,
-                           coords=coords_idx,
-                           graph=graph_idx,
-                           out=output_idx,
-                           df=df_idx)
+            if not self.benchmark:
+                self.save_temp(i=i,
+                               coords=coords_idx,
+                               graph=graph_idx,
+                               out=output_idx,
+                               df=df_idx)
 
-            # Store initial patch size for each data to speed up computation
-            self.patch_size[i, 0] = 1
+                # Store initial patch size for each data to speed up computation
+                self.patch_size[i, 0] = 1
         else:
             # Load pre-process data
             coords_idx, graph_idx, output_idx, df_idx = self.load_temp(i=i,
@@ -315,16 +320,18 @@ class ScannetDataset(BasicDataset):
             coords_idx, df_idx, graph_idx, output_idx, cls_idx = VD.patched_dataset(coord=coord,
                                                                                     mesh=True,
                                                                                     dist_th=0.15)
-            # save data for faster access later
-            self.save_temp(i=i,
-                           coords=coords_idx,
-                           graph=graph_idx,
-                           out=output_idx,
-                           df=df_idx,
-                           cls=cls_idx)
 
-            # Store initial patch size for each data to speed up computation
-            self.patch_size[i, 0] = 1
+            if not self.benchmark:
+                # save data for faster access later
+                self.save_temp(i=i,
+                               coords=coords_idx,
+                               graph=graph_idx,
+                               out=output_idx,
+                               df=df_idx,
+                               cls=cls_idx)
+
+                # Store initial patch size for each data to speed up computation
+                self.patch_size[i, 0] = 1
         else:
             # Load pre-process data
             coords_idx, graph_idx, output_idx, df_idx, cls_idx = self.load_temp(i,
@@ -402,16 +409,17 @@ class ScannetColorDataset(BasicDataset):
                                                                                      mesh=True,
                                                                                      dist_th=0.05)
 
-            # save data for faster access later
-            self.save_temp(i=i,
-                           coords=coords_idx,
-                           graph=graph_idx,
-                           out=output_idx,
-                           rgb=rgb_idx,
-                           cls=cls_idx)
+            if not self.benchmark:
+                # save data for faster access later
+                self.save_temp(i=i,
+                               coords=coords_idx,
+                               graph=graph_idx,
+                               out=output_idx,
+                               rgb=rgb_idx,
+                               cls=cls_idx)
 
-            # Store initial patch size for each data to speed up computation
-            self.patch_size[i, 0] = 1
+                # Store initial patch size for each data to speed up computation
+                self.patch_size[i, 0] = 1
         else:
             # Load pre-process data
             coords_idx, graph_idx, output_idx, rgb_idx, cls_idx = self.load_temp(i,
@@ -484,6 +492,7 @@ class Stanford3DDataset(BasicDataset):
         if self.patch_size[i, 0] == 0:
             # Pre-process coord and image data also, if exist remove duplicates
             coord = load_s3dis_scene(dir=coord_file, downscaling=0.1)
+            coord[:, 1:] = coord[:, 1:] / pc_median_dist(coord[:, 1])
 
             VD = PatchDataSet(drop_rate=0.01,
                               max_number_of_points=self.max_point_in_patch,
@@ -535,7 +544,7 @@ def build_dataset(dataset_type: str,
         dataset_type (str):  Ask to recognize and process the dataset.
         dirs (list): Ask for a list with the directory given as [train, test].
         max_points_per_patch (int):  Max number of points per patch.
-        benchmark (bool): If True construct data for benchmark.
+        benchmark (bool): If True construct data for benchmark.er
 
     Returns:
         Tuple[torch.DataLoader, torch.DataLoader]: Output DataLoader with
@@ -551,6 +560,7 @@ def build_dataset(dataset_type: str,
         dl_test = FilamentDataset(coord_dir=dirs[1],
                                   coord_format=('.CorrelationLines.am', '.csv'),
                                   patch_if=max_points_per_patch,
+                                  benchmark=benchmark,
                                   train=False)
     elif dataset_type in ['partnet', 'PartNet']:
         if not benchmark:
@@ -561,6 +571,7 @@ def build_dataset(dataset_type: str,
         dl_test = PartnetDataset(coord_dir=dirs[1],
                                  coord_format='.ply',
                                  patch_if=max_points_per_patch,
+                                 benchmark=benchmark,
                                  train=False)
     elif dataset_type in ['scannet', 'ScanNetV2']:
         if not benchmark:
@@ -571,6 +582,7 @@ def build_dataset(dataset_type: str,
         dl_test = ScannetDataset(coord_dir=dirs[1],
                                  coord_format='.ply',
                                  patch_if=max_points_per_patch,
+                                 benchmark=benchmark,
                                  train=False)
     elif dataset_type == 'scannet_color':
         if not benchmark:
@@ -581,6 +593,7 @@ def build_dataset(dataset_type: str,
         dl_test = ScannetColorDataset(coord_dir=dirs[1],
                                       coord_format='.ply',
                                       patch_if=max_points_per_patch,
+                                      benchmark=benchmark,
                                       train=False)
     elif dataset_type in ['stanford', 'S3DIS']:
         if not benchmark:
@@ -591,6 +604,7 @@ def build_dataset(dataset_type: str,
         dl_test = Stanford3DDataset(coord_dir=dirs[1],
                                     coord_format='.txt',
                                     patch_if=max_points_per_patch,
+                                    benchmark=benchmark,
                                     train=False)
     else:
         # TODO General dataloader
@@ -607,9 +621,8 @@ def build_dataset(dataset_type: str,
         #                          train=False)
         pass
 
-    dl_test = DataLoader(dataset=dl_test, shuffle=False, pin_memory=True)
     if not benchmark:
         dl_train = DataLoader(dataset=dl_train, shuffle=True, pin_memory=True)
-        return dl_train, dl_test
+        return dl_train, DataLoader(dataset=dl_test, shuffle=False, pin_memory=True)
 
     return dl_test
