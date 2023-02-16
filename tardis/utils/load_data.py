@@ -18,7 +18,8 @@ import numpy as np
 import open3d as o3d
 import tifffile.tifffile as tif
 from numpy import ndarray
-from sklearn.neighbors import KDTree
+from sklearn.neighbors import KDTree, NearestNeighbors
+
 from tardis.dist_pytorch.utils.visualize import _rgb
 from tardis.utils.errors import TardisError
 from tardis.utils.normalization import RescaleNormalize
@@ -779,7 +780,6 @@ def load_s3dis_scene(dir: str,
     dir_list = [x for x in listdir(dir) if x not in ['.DS_Store', 'Icon']]
 
     coord_scene = []
-    rgb_scene = []
     id = 0
     for i in dir_list:
         coord_inst = load_txt_s3dis(join(dir, i))
@@ -803,15 +803,13 @@ def load_s3dis_scene(dir: str,
             pcd = pcd.voxel_down_sample(voxel_size=downscaling)
             coord_ds = np.asarray(pcd.points)
 
-            cls_id = []
-            tree = KDTree(coord[:, 1:], leaf_size=coord[:, 1:].shape[0])
-            for i in coord_ds:
-                _, match_coord = tree.query(i.reshape(1, -1))
-                match_coord = match_coord[0][0]
-                match_label = coord[match_coord, 0]
-                cls_id.append(match_label)
+            knn = NearestNeighbors(n_neighbors=1,
+                                   algorithm='kd_tree').fit(coord[:, 1:])
 
-            cls_id = np.asarray(cls_id)[:, None]
+            # Query the nearest neighbor for all points in coord_ds
+            _, indices = knn.kneighbors(coord_ds)
+            indices = np.concatenate(indices)
+            cls_id = np.expand_dims(coord[indices, 0], 1)
             coord = np.hstack((cls_id, coord_ds))
 
     return coord
