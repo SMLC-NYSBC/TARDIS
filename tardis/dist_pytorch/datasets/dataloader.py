@@ -495,13 +495,12 @@ class Stanford3DDataset(BasicDataset):
             coord = load_s3dis_scene(dir=coord_file, downscaling=0.1)
             coord[:, 1:] = coord[:, 1:] / pc_median_dist(coord[:, 1:])
 
-            VD = PatchDataSet(drop_rate=0.01,
-                              max_number_of_points=self.max_point_in_patch,
+            VD = PatchDataSet(max_number_of_points=self.max_point_in_patch,
                               tensor=False)
 
             coords_idx, df_idx, graph_idx, output_idx, cls_idx = VD.patched_dataset(coord=coord,
                                                                                     mesh=True,
-                                                                                    dist_th=0.15)
+                                                                                    dist_th=1.25)
             # save data for faster access later
             self.save_temp(i=i,
                            coords=coords_idx,

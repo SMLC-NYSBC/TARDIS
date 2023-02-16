@@ -154,24 +154,32 @@ class DistLayer(nn.Module):
 
         # Edge triangular update
         if self.structure in ['full', 'full_af', 'triang']:
-            self.row_update = TriangularEdgeUpdate(input_dim=pairs_dim, channel_dim=self.channel_dim)
-            self.col_update = TriangularEdgeUpdate(input_dim=pairs_dim, channel_dim=self.channel_dim,
+            self.row_update = TriangularEdgeUpdate(input_dim=pairs_dim,
+                                                   channel_dim=self.channel_dim)
+            self.col_update = TriangularEdgeUpdate(input_dim=pairs_dim,
+                                                   channel_dim=self.channel_dim,
                                                    axis=0)
 
         # Edge Optional Quadratic
         if self.structure == 'quad':
-            self.row_update = QuadraticEdgeUpdate(input_dim=pairs_dim, channel_dim=self.channel_dim)
-            self.col_update = QuadraticEdgeUpdate(input_dim=pairs_dim, channel_dim=self.channel_dim,
+            self.row_update = QuadraticEdgeUpdate(input_dim=pairs_dim,
+                                                  channel_dim=self.channel_dim)
+            self.col_update = QuadraticEdgeUpdate(input_dim=pairs_dim,
+                                                  channel_dim=self.channel_dim,
                                                   axis=0)
 
         # Edge Optional dual-triang update
         if self.structure == 'dualtriang':
-            self.row_update_1 = TriangularEdgeUpdate(input_dim=pairs_dim, channel_dim=self.channel_dim)
-            self.col_update_1 = TriangularEdgeUpdate(input_dim=pairs_dim, channel_dim=self.channel_dim,
+            self.row_update_1 = TriangularEdgeUpdate(input_dim=pairs_dim,
+                                                     channel_dim=self.channel_dim)
+            self.col_update_1 = TriangularEdgeUpdate(input_dim=pairs_dim,
+                                                     channel_dim=self.channel_dim,
                                                      axis=0)
 
-            self.row_update_2 = TriangularEdgeUpdate(input_dim=pairs_dim, channel_dim=self.channel_dim)
-            self.col_update_2 = TriangularEdgeUpdate(input_dim=pairs_dim, channel_dim=self.channel_dim,
+            self.row_update_2 = TriangularEdgeUpdate(input_dim=pairs_dim,
+                                                     channel_dim=self.channel_dim)
+            self.col_update_2 = TriangularEdgeUpdate(input_dim=pairs_dim,
+                                                     channel_dim=self.channel_dim,
                                                      axis=0)
 
         # Edge GeLu FFN normalization layer
