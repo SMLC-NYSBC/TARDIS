@@ -86,7 +86,7 @@ def main(data_set: str,
     """
     """Global setting"""
     tardis_progress = TardisLogo()
-    title = f'TARDIS - NN Benchmark'
+    title = 'TARDIS - NN Benchmark'
     tardis_progress(title=title)
 
     DIR_ = join(expanduser('~') + '/../../data/rkiewisz/Benchmarks')

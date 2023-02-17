@@ -45,8 +45,7 @@ class DistTrainer(BasicTrainer):
                 self.optimizer.zero_grad(set_to_none=True)
 
                 if self.node_input:
-                    node = node.to(self.device)
-                    edge = self.model(coords=edge, node_features=node)
+                    edge = self.model(coords=edge, node_features=node.to(self.device))
                 else:
                     edge = self.model(coords=edge, node_features=None)
 
@@ -86,9 +85,9 @@ class DistTrainer(BasicTrainer):
                         edge = self.model(coords=edge, node_features=None)
 
                     loss = self.criterion(edge[0, :], graph)
-                    edge = torch.sigmoid(edge[:, 0, :])
 
-                    acc, prec, recall, f1, th = eval_graph_f1(logits=edge, targets=graph)
+                    acc, prec, recall, f1, th = eval_graph_f1(logits=torch.sigmoid(edge[:, 0, :]),
+                                                              targets=graph)
 
                 # Avg. precision score
                 valid_losses.append(loss.item())

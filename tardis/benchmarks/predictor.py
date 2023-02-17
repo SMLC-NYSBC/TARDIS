@@ -35,7 +35,7 @@ class CnnBenchmark:
                  patch_size: int,
                  threshold: float):
         self.tardis_progress = TardisLogo()
-        self.title = f'TARDIS - CNN Benchmark'
+        self.title = 'TARDIS - CNN Benchmark'
         self.tardis_progress(title=self.title)
 
         self.model = model
@@ -171,7 +171,7 @@ class DISTBenchmark:
                  points_in_patch: int,
                  threshold: float):
         self.tardis_progress = TardisLogo()
-        self.title = f'TARDIS - DIST Benchmark'
+        self.title = 'TARDIS - DIST Benchmark'
         self.tardis_progress(title=self.title)
 
         self.model = model

@@ -103,7 +103,7 @@ class BCELoss(nn.Module):
             g_range = range(logits.shape[2])
 
             mask = torch.ones_like(targets)
-            mask[:, g_range, g_range] = 1
+            mask[:, g_range, g_range] = 0
 
             self.loss = nn.BCEWithLogitsLoss(reduction=self.reduction,
                                              weight=mask.float())

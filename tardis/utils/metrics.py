@@ -72,7 +72,7 @@ def eval_graph_f1(logits: Optional[Union[np.ndarray, torch.Tensor]],
     else:
         threshold = round(float(threshold) * 0.01, 2)
 
-    id = int(100 - int(threshold * 100)) - 1
+    id = int(threshold * 100)
     accuracy_score = round(acc[id], 2)
     precision_score = round(precision[id], 2)
     recall_score = round(recall[id], 2)
@@ -130,7 +130,7 @@ def calculate_f1(logits: Optional[Union[np.ndarray, torch.Tensor]],
         else:
             threshold = round(float(threshold) * 0.01, 2)
 
-        id = int(100 - int(threshold * 100)) - 1
+        id = int(threshold * 100)
         accuracy_score = round(acc[id], 2)
         precision_score = round(precision[id], 2)
         recall_score = round(recall[id], 2)
