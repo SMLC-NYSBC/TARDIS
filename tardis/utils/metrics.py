@@ -48,8 +48,7 @@ def eval_graph_f1(logits: Optional[Union[np.ndarray, torch.Tensor]],
         input_df = torch.where(logits > threshold, 1, 0)
 
         tp, fp, tn, fn = confusion_matrix(input_df, targets)
-        if tn < 0:
-            tn = 0
+        tp = tp - g_len  # remove diagonal from F1
 
         accuracy_score = (tp + tn) / (tp + tn + fp + fn + 1e-16)
         prec = tp / (tp + fp + 1e-16)

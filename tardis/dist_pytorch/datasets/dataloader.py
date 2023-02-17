@@ -19,7 +19,6 @@ from torch.utils.data import DataLoader, Dataset
 
 from tardis.dist_pytorch.datasets.augmentation import preprocess_data
 from tardis.dist_pytorch.datasets.patches import PatchDataSet
-from tardis.dist_pytorch.utils.utils import pc_median_dist
 from tardis.utils.errors import TardisError
 from tardis.utils.load_data import (load_ply_partnet, load_ply_scannet, load_s3dis_scene)
 
@@ -493,7 +492,6 @@ class Stanford3DDataset(BasicDataset):
         if self.patch_size[i, 0] == 0:
             # Pre-process coord and image data also, if exist remove duplicates
             coord = load_s3dis_scene(dir=coord_file, downscaling=0.1)
-            coord[:, 1:] = coord[:, 1:] / pc_median_dist(coord[:, 1:])
 
             VD = PatchDataSet(max_number_of_points=self.max_point_in_patch,
                               tensor=False)

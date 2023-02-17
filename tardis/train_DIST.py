@@ -92,8 +92,8 @@ from tardis.version import version
               help='Max number of points per patch.',
               show_default=True)
 @click.option('-lo', '--loss',
-              default='bce',
-              type=click.Choice(['bce', 'dice', 'sfl']),
+              default='BCELoss',
+              type=click.Choice(['BCELoss', 'DiceLoss', 'SigmoidFocalLoss']),
               help='Type of loss function use for training.',
               show_default=True)
 @click.option('-lr', '--loss_lr',

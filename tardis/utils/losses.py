@@ -47,6 +47,8 @@ class AdaptiveDiceLoss(nn.Module):
             logits (torch.Tensor): logits of a shape [Batch x Channels x Length x Length]
             targets (torch.Tensor): target of a shape [Batch x Channels x Length x Length]
         """
+        logits = torch.sigmoid(logits)
+
         if self.diagonal:
             g_len = logits.shape[2]
             g_range = range(g_len)
@@ -54,7 +56,6 @@ class AdaptiveDiceLoss(nn.Module):
             logits[:, g_range, g_range] = 1
             targets[:, g_range, g_range] = 1
 
-        logits = torch.sigmoid(logits)
         logits = logits.view(-1)
         targets = targets.view(-1)
 
@@ -84,6 +85,8 @@ class BCELoss(nn.Module):
         """
         super(BCELoss, self).__init__()
         self.diagonal = diagonal
+        self.reduction = reduction
+
         self.loss = nn.BCEWithLogitsLoss(reduction=reduction)
 
     def forward(self,
@@ -97,12 +100,13 @@ class BCELoss(nn.Module):
             targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length]
         """
         if self.diagonal:
-            g_len = logits.shape[2]
-            g_range = range(g_len)
+            g_range = range(logits.shape[2])
 
-            logits[:, g_range, g_range] = 1
-            targets[:, g_range, g_range] = 1
+            mask = torch.ones_like(targets)
+            mask[:, g_range, g_range] = 1
 
+            self.loss = nn.BCEWithLogitsLoss(reduction=self.reduction,
+                                             weight=mask.float())
         return self.loss(logits, targets)
 
 
@@ -135,8 +139,13 @@ class BCEDiceLoss(nn.Module):
             targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length]
         """
         if self.diagonal:
-            g_len = logits.shape[2]
-            g_range = range(g_len)
+            g_range = range(logits.shape[2])
+
+            mask = torch.ones_like(targets)
+            mask[:, g_range, g_range] = 1
+
+            self.bce = nn.BCEWithLogitsLoss(reduction=self.reduction,
+                                            weight=mask.float())
 
             logits[:, g_range, g_range] = 1
             targets[:, g_range, g_range] = 1
@@ -179,14 +188,18 @@ class CELoss(nn.Module):
             logits (torch.Tensor): logits of a shape [Batch x Channels x Length x Length]
             targets (torch.Tensor): target of a shape [Batch x Channels x Length x Length]
         """
+        logits = torch.sigmoid(logits)
+
         if self.diagonal:
-            g_len = logits.shape[2]
-            g_range = range(g_len)
+            g_range = range(logits.shape[2])
 
-            logits[:, :, g_range, g_range] = 1
-            targets[:, :, g_range, g_range] = 1
+            mask = torch.ones_like(targets)
+            mask[:, g_range, g_range] = 1
 
-        return self.loss(torch.sigmoid(logits), targets)
+            self.loss = nn.CrossEntropyLoss(reduction=self.reduction,
+                                            weight=mask.float())
+
+        return self.loss(logits, targets)
 
 
 class DiceLoss(nn.Module):
@@ -225,14 +238,14 @@ class DiceLoss(nn.Module):
             logits (torch.Tensor): Logits of a shape [Batch x Channels x Length x Length]
             targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length]
         """
+        logits = torch.sigmoid(logits)
+
         if self.diagonal:
             g_len = logits.shape[2]
             g_range = range(g_len)
 
             logits[:, g_range, g_range] = 1
             targets[:, g_range, g_range] = 1
-
-        logits = torch.sigmoid(logits)
 
         # Flatten label and prediction tensors
         logits = logits.view(-1)
@@ -462,6 +475,8 @@ class SigmoidFocalLoss(nn.Module):
             logits (torch.Tensor): Logits of a shape [Batch x Channels x Length x Length]
             targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length]
         """
+        p = torch.sigmoid(logits)
+
         if self.diagonal:
             g_len = logits.shape[2]
             g_range = range(g_len)
@@ -470,7 +485,6 @@ class SigmoidFocalLoss(nn.Module):
             targets[:, g_range, g_range] = 1
 
         y = targets.unsqueeze(1)
-        p = torch.sigmoid(logits)
         term1 = (1 - p) ** self.gamma * torch.log(p)
         term2 = p ** self.gamma * torch.log(1 - p)
 
