@@ -492,6 +492,7 @@ class Stanford3DDataset(BasicDataset):
         if self.patch_size[i, 0] == 0:
             # Pre-process coord and image data also, if exist remove duplicates
             coord = load_s3dis_scene(dir=coord_file, downscaling=0.1)
+            coord[:, 1:] = coord[:, 1:] / 0.1
 
             VD = PatchDataSet(max_number_of_points=self.max_point_in_patch,
                               overlap=0,
@@ -501,6 +502,8 @@ class Stanford3DDataset(BasicDataset):
             coords_idx, df_idx, graph_idx, output_idx, cls_idx = VD.patched_dataset(coord=coord,
                                                                                     mesh=True,
                                                                                     dist_th=0.125)
+            graph_idx = [np.where(g >= 2, 1, 0) for g in graph_idx]
+
             # save data for faster access later
             self.save_temp(i=i,
                            coords=coords_idx,

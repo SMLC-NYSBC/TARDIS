@@ -399,11 +399,11 @@ class PatchDataSet:
             self.segments_id = None
             self.coord = coord
 
-        if mesh:
-            if dist_th is None:
-                TardisError('124',
-                            'tardis/dist_pytorch/datasets/patches.py',
-                            'If mesh, dist_th cannot be None!')
+        # if mesh:
+        #     if dist_th is None:
+        #         TardisError('124',
+        #                     'tardis/dist_pytorch/datasets/patches.py',
+        #                     'If mesh, dist_th cannot be None!')
 
         # Check if point cloud is smaller than max allowed point
         if self.coord.shape[0] <= self.DOWNSAMPLING_TH:
@@ -481,7 +481,7 @@ class PatchDataSet:
                 """ Find points and optional images for each patch"""
                 df_patch_keep = i
 
-                df_patch = self.coord[df_patch_keep, :]
+                df_patch = self.segments_id[df_patch_keep, :]
                 output_df = np.where(df_patch_keep)[0]
 
                 # Transform 2D coord to 3D of shape [Z, Y, X]

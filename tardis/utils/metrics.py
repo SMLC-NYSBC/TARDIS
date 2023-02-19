@@ -16,69 +16,96 @@ from sklearn.metrics import auc, average_precision_score, roc_curve
 
 
 def eval_graph_f1(logits: Optional[Union[np.ndarray, torch.Tensor]],
-                  targets: Optional[Union[np.ndarray, torch.Tensor]]):
+                  targets: Optional[Union[np.ndarray, torch.Tensor]],
+                  soft=False):
     """
      Module used for calculating training metrics
 
      Works with torch a numpy dataset.
 
+    TODO redo for soft F1
+
      Args:
          logits (np.ndarray, torch.Tensor): Prediction output from the model.
          targets (np.ndarray, torch.Tensor): Ground truth mask.
+         soft:
      """
     """Mask Diagonal as TP"""
     g_len = logits.shape[1]
     g_range = range(g_len)
 
     if logits.ndim == 3:
-        logits[:, g_range, g_range] = 1
-        targets[:, g_range, g_range] = 1
+        logits[:, g_range, g_range] = 1.0
+        targets[:, g_range, g_range] = 1.0
     else:
-        logits[g_range, g_range] = 1
-        targets[g_range, g_range] = 1
+        logits[g_range, g_range] = 1.0
+        targets[g_range, g_range] = 1.0
 
-    """Find best f1 based on variation threshold"""
-    threshold = 0
-    f1 = []
-    acc = []
-    precision = []
-    recall = []
+    if soft:
+        logits = torch.flatten(logits)
+        targets = torch.flatten(targets)
 
-    while threshold != 1:
-        input_df = torch.where(logits > threshold, 1, 0)
+        tp = torch.sum(logits * targets)
+        fp = torch.sum(logits * (1 - targets))
+        fn = torch.sum((1 - logits) * targets)
+        tn = torch.sum((1 - logits) * (1 - targets))
 
-        tp, fp, tn, fn = confusion_matrix(input_df, targets)
-        tp = tp - g_len  # remove diagonal from F1
+        soft_prec1 = 1 - (tp / (tp + fp + 1e-16))
+        soft_prec0 = 1 - (tn / (tn + fp + 1e-16))
 
-        accuracy_score = (tp + tn) / (tp + tn + fp + fn + 1e-16)
-        prec = tp / (tp + fp + 1e-16)
-        rec = tp / (tp + fn + 1e-16)
+        soft_rec1 = 1 - (tp / (tp + fn + 1e-16))
+        soft_rec0 = 1 - (tn / (tn + fn + 1e-16))
 
-        acc.append(accuracy_score)
-        precision.append(prec)
-        recall.append(rec)
-        f1.append(2 * (prec * rec) / (prec + rec + 1e-16))
+        soft_f1_class1 = 1 - (2 * tp / (2 * tp + fn + fp + 1e-16))
+        soft_f1_class0 = 1 - (2 * tn / (2 * tn + fn + fp + 1e-16))
 
-        threshold = round(threshold + 0.01, 2)
-
-    threshold = np.where(f1 == np.max(f1))[0]
-    if threshold.shape[0] > 1:
-        th = 0
-
-        for i in threshold:
-            th = th + round(i * 0.01, 2)
-
-        threshold = round(th / len(threshold), 2)
+        prec_cost = torch.mean(0.5 * (soft_prec1 + soft_prec0))
+        rec_cost = torch.mean(0.5 * (soft_rec1 + soft_rec0))
+        f1_cost = torch.mean(0.5 * (soft_f1_class1 + soft_f1_class0))
+        return prec_cost, rec_cost, f1_cost
     else:
-        threshold = round(float(threshold) * 0.01, 2)
+        """Find best f1 based on variation threshold"""
+        threshold = 0
+        f1 = []
+        acc = []
+        precision = []
+        recall = []
 
-    id = int(threshold * 100)
-    accuracy_score = round(acc[id], 2)
-    precision_score = round(precision[id], 2)
-    recall_score = round(recall[id], 2)
-    F1_score = round(f1[id], 2)
+        while threshold != 1:
+            input_df = torch.where(logits > threshold, 1, 0)
 
-    return accuracy_score, precision_score, recall_score, F1_score, threshold
+            tp, fp, tn, fn = confusion_matrix(input_df, targets)
+            tp = tp - g_len  # remove diagonal from F1
+
+            accuracy_score = (tp + tn) / (tp + tn + fp + fn + 1e-16)
+            prec = tp / (tp + fp + 1e-16)
+            rec = tp / (tp + fn + 1e-16)
+
+            acc.append(accuracy_score)
+            precision.append(prec)
+            recall.append(rec)
+            f1.append(2 * (prec * rec) / (prec + rec + 1e-16))
+
+            threshold = round(threshold + 0.01, 2)
+
+        threshold = np.where(f1 == np.max(f1))[0]
+        if threshold.shape[0] > 1:
+            th = 0
+
+            for i in threshold:
+                th = th + round(i * 0.01, 2)
+
+            threshold = round(th / len(threshold), 2)
+        else:
+            threshold = round(float(threshold) * 0.01, 2)
+
+        id = int(threshold * 100)
+        accuracy_score = round(acc[id], 2)
+        precision_score = round(precision[id], 2)
+        recall_score = round(recall[id], 2)
+        F1_score = round(f1[id], 2)
+
+        return accuracy_score, precision_score, recall_score, F1_score, threshold
 
 
 def calculate_f1(logits: Optional[Union[np.ndarray, torch.Tensor]],
@@ -224,3 +251,8 @@ def normalize_image(image: np.ndarray):
         image = np.where(image < image_max, 1, 0)
 
     return image
+
+
+def mcov(logits: Optional[Union[np.ndarray, torch.Tensor]],
+         targets: Optional[Union[np.ndarray, torch.Tensor]]):
+    pass

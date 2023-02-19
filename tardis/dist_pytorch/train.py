@@ -141,7 +141,7 @@ def train_dist(train_dataloader,
 
     """Optionally: Build learning rate scheduler"""
     if learning_rate_scheduler:
-        learning_rate_scheduler = StepLR(optimizer, step_size=2, gamma=0.5)
+        learning_rate_scheduler = StepLR(optimizer, step_size=5, gamma=0.5)
     else:
         learning_rate_scheduler = None
 

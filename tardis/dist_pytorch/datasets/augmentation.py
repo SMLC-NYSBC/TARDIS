@@ -7,7 +7,6 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
-import random
 from typing import Optional, Tuple, Union
 
 import numpy as np
@@ -197,47 +196,29 @@ class BuildGraph:
 
             if self.mesh:
                 coord_df = coord[points_in_contour]
-                tree = KDTree(coord_df, leaf_size=coord_df.shape[0])
 
                 if coord_df.shape[0] > 4:
+                    tree = KDTree(coord_df, leaf_size=coord_df.shape[0])
+
                     for j in points_in_contour:
-                        if dist_th is None:
-                            _, match_coord = tree.query(coord[j].reshape(1, -1), k=4)
-                            match_coord = match_coord[0]
+                        dist, match_coord = tree.query(coord[j].reshape(1, -1), k=5)
+                        match_coord = match_coord[0][1:]
 
-                            # Select point in contour
-                            knn = [x for id, x in enumerate(points_in_contour) if
-                                   id in match_coord]
-                        else:
-                            if coord_df.shape[0] > 8:
-                                dist, match_coord = tree.query(coord[j].reshape(1, -1),
-                                                               k=8)
-                            else:
-                                dist, match_coord = tree.query(coord[j].reshape(1, -1),
-                                                               k=coord_df.shape[0])
-                            match_coord = match_coord[0]
-                            dist = dist[0]
-
-                            # Select point in contour
-                            knn = [x for id, x in enumerate(points_in_contour) if
-                                   id in match_coord]
-                            knn = [x for x, y in zip(knn, dist) if y <= dist_th]
-
-                            if len(knn) > 4:
-                                knn = random.sample(knn, 4)
-
-                        # Self connection
-                        graph[j, j] = 1
+                        # Select point in contour
+                        knn = [x for id, x in enumerate(points_in_contour) if
+                               id in match_coord]
 
                         # Symmetric in-coming and out-coming connection
-                        graph[j, knn] = 1
-                        graph[knn, j] = 1
+                        graph[j, j] = 2
+                        graph[j, knn] += 1
+                        graph[knn, j] += 1
                 else:
                     for j in points_in_contour:
-                        graph[j, j] = 1
+                        graph[j, j] = 2
 
-                        graph[j, points_in_contour] = 1
-                        graph[points_in_contour, j] = 1
+                        graph[j, points_in_contour] += 1
+                        graph[points_in_contour, j] += 1
+                # graph = np.where(graph >= 2, 1, 0)
             else:
                 for j in points_in_contour:
                     graph[j, j] = 1
