@@ -297,7 +297,7 @@ class DISTBenchmark:
                                         f'AUC: {round(np.mean(self.metric["AUC"]), 2)}; ' \
                                         f'AP50: {round(np.mean(self.metric["AP50"]), 2)}; ' \
                                         f'AP75: {round(np.mean(self.metric["AP75"]), 2)}; ' \
-                                        f'mCov: {round(np.mean(self.metric["mCon"]), 2)}',
+                                        f'mCov: {round(np.mean(self.metric["mCov"]), 2)}',
                                  text_7='Current Task: DIST prediction...',
                                  text_8=print_progress_bar(i, len(self.eval_data)))
 
@@ -312,7 +312,7 @@ class DISTBenchmark:
                                         f'AUC: {round(np.mean(self.metric["AUC"]), 2)}; ' \
                                         f'AP50: {round(np.mean(self.metric["AP50"]), 2)}; ' \
                                         f'AP75: {round(np.mean(self.metric["AP75"]), 2)}; ' \
-                                        f'mCov: {round(np.mean(self.metric["mCon"]), 2)}',
+                                        f'mCov: {round(np.mean(self.metric["mCov"]), 2)}',
                                  text_7='Current Task: DIST prediction...',
                                  text_8=print_progress_bar(i, len(self.eval_data)))
 
