@@ -11,7 +11,7 @@ import time
 from os import makedirs
 from os.path import isdir, join
 from shutil import rmtree
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 import torch
@@ -23,7 +23,7 @@ from tardis.spindletorch.datasets.dataloader import PredictionDataset
 from tardis.utils.errors import TardisError
 from tardis.utils.load_data import load_image
 from tardis.utils.logo import print_progress_bar, TardisLogo
-from tardis.utils.metrics import AP, AUC, calculate_f1, IoU
+from tardis.utils.metrics import AP, AP_instance, AUC, calculate_f1, IoU, mcov
 from tardis.utils.predictor import Predictor
 
 
@@ -74,7 +74,7 @@ class CnnBenchmark:
 
     def _benchmark(self,
                    logits: np.ndarray,
-                   target: np.ndarray) -> List[list]:
+                   target: np.ndarray):
         input = np.where(logits >= self.threshold, 1, 0).astype(np.uint8)
 
         # ACC, Prec, Recall, F1
@@ -98,6 +98,9 @@ class CnnBenchmark:
     def _predict(self,
                  input: torch.Tensor) -> np.ndarray:
         return self.model.predict(input[None, :])
+
+    def _output_metric(self):
+        return {k: np.mean(v) for k, v in self.metric.items()}
 
     def __call__(self) -> dict:
         """
@@ -160,7 +163,7 @@ class CnnBenchmark:
                                      text_8=print_progress_bar(i, len(self.eval_data)))
 
         rmtree(join(self.dir, 'train'))
-        return self.metric
+        return self._output_metric()
 
 
 class DISTBenchmark:
@@ -182,36 +185,88 @@ class DISTBenchmark:
         else:
             self.sort = False
 
+        self.threshold = threshold
+        self.metric = {
+            'IoU': [],  # Graph
+            'AUC': [],  # Graph
+            'AP50': [],  # Instance
+            'AP75': [],  # Instance
+            'mCov': []  # Instance
+        }
         self.eval_data = build_dataset(dataset_type=dataset,
                                        dirs=[None, self.dir],
                                        max_points_per_patch=points_in_patch,
                                        benchmark=True)
 
         if dataset in ['MT', 'Mem']:
-            max_connections = 2
+            self.max_connections = 2
         else:
-            max_connections = 6
-
-        self.GraphToSegment = GraphInstanceV2(threshold=threshold,
-                                              connection=max_connections)
+            self.max_connections = 6
 
     def _benchmark_graph(self,
-                         input: np.ndarray,
-                         target: np.ndarray) -> List[list]:
-        pass
+                         logits: np.ndarray,
+                         target: np.ndarray):
+        input = np.where(logits >= self.threshold, 1, 0).astype(np.uint8)
+
+        # IoU
+        self.metric['IoU'].append(IoU(input, target, True))
+
+        # AUC
+        self.metric['AUC'].append(AUC(input, target, True))
+
+    @staticmethod
+    def _segment(threshold: float,
+                 max_connections: int,
+                 logits: List[np.ndarray],
+                 targets: List[np.ndarray],
+                 coord: np.ndarray,
+                 output_idx: List[np.ndarray],
+                 sort: bool) -> Tuple[np.ndarray, np.ndarray]:
+        GraphToSegment = GraphInstanceV2(threshold=threshold,
+                                         connection=max_connections)
+        input_IS = GraphToSegment.patch_to_segment(graph=logits,
+                                                   coord=coord,
+                                                   idx=output_idx,
+                                                   prune=2,
+                                                   sort=sort)
+        target_IS = GraphToSegment.patch_to_segment(graph=targets,
+                                                    coord=coord,
+                                                    idx=output_idx,
+                                                    prune=2,
+                                                    sort=sort)
+        return input_IS, target_IS
 
     def _benchmark_IS(self,
-                      input: np.ndarray,
-                      target: np.ndarray) -> List[list]:
-        pass
+                      logits: List[np.ndarray],
+                      targets: List[np.ndarray],
+                      coords: np.ndarray,
+                      output_idx: List[np.ndarray]):
+        # AP50
+        input_IS, target_IS = self._segment(0.5, self.max_connections,
+                                            logits, targets,
+                                            coords, output_idx, self.sort)
+        self.metric['AP50'].append(AP_instance(input_IS, target_IS))
+
+        # AP75
+        input_IS, target_IS = self._segment(0.25, self.max_connections,
+                                            logits, targets,
+                                            coords, output_idx, self.sort)
+        self.metric['AP75'].append(AP_instance(input_IS, target_IS))
+
+        # mCov
+        input_IS, target_IS = self._segment(self.threshold, self.max_connections,
+                                            logits, targets,
+                                            coords, output_idx, self.sort)
+        self.metric['mCov'].append(mcov(input_IS, target_IS))
 
     def _predict(self,
                  input):
         return self.model.predict(input)
 
+    def _output_metric(self):
+        return {k: np.mean(v) for k, v in self.metric.items()}
+
     def __call__(self):
-        benchmark_graph = []
-        benchmark_IS = []
         for i in range(len(self.eval_data)):
             """Predict"""
             coords, _, target, output_idx, _ = self.eval_data.__getitem__(i)
@@ -230,17 +285,10 @@ class DISTBenchmark:
                 graphs.append(input)
 
                 """Benchmark Graph"""
-                benchmark_graph.append(self._benchmark_graph(input, graph))
+                self._benchmark_graph(input, graph)
 
             """Segment graphs"""
-            input_IS = self.GraphToSegment.patch_to_segment(graph=graphs,
-                                                            coord=coords,
-                                                            idx=output_idx,
-                                                            prune=2,
-                                                            sort=self.sort)
-            target_IS = self.GraphToSegment.patch_to_segment(graph=target,
-                                                             coord=coords,
-                                                             idx=output_idx,
-                                                             prune=2,
-                                                             sort=self.sort)
-            benchmark_IS.append(self._benchmark_IS(input_IS, target_IS))
+            self._benchmark_IS(graphs, target, coords, output_idx)
+
+        rmtree(join(self.dir, 'train'))
+        return self._output_metric()

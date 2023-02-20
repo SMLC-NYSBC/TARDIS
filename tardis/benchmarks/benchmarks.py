@@ -7,6 +7,7 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
+import time
 from os import listdir
 from os.path import expanduser, join
 from typing import Union
@@ -15,10 +16,11 @@ import click
 import torch
 
 from tardis.benchmarks.predictor import CnnBenchmark, DISTBenchmark
-from tardis.utils.aws import get_benchmark_aws, get_model_aws
+from tardis.utils.aws import get_benchmark_aws, put_benchmark_aws
 from tardis.utils.device import get_device
 from tardis.utils.errors import TardisError
 from tardis.utils.logo import TardisLogo
+from tardis.utils.metrics import compare_dict_metrics
 from tardis.utils.predictor import Predictor
 from tardis.version import version
 
@@ -30,7 +32,7 @@ from tardis.version import version
               show_default=True)
 @click.option('-ch', '--model_checkpoint',
               type=str,
-              help='Dir or https:/.. for NN with model weight and structure.',
+              help='Dir for NN with model weight and structure.',
               show_default=True)
 @click.option('-th', '--nn_threshold',
               default=0.5,
@@ -70,19 +72,34 @@ def main(data_set: str,
          device: str):
     """
     Standard benchmark for DIST on medical and standard point clouds
-
-    Benchmark to the following:
-    - Identified standard location for test data and sanity_checks
-    - Retrieve json with best CNN metric from S3 bucket
-    - Build NN from checkpoint or accept model
-    - Run benchmark on standard data
-    - For each data calculate F1, AP-25, AP-50, AP-75
-    - Get mean value for each metric
-
-    ToDo: Check if json have metric for tested dataset
-    ToDo: Check if metrics are higher. If yes update json
-
-    ToDo: If metric higher, sent json and save .pth with model structure at standard dir
+    Json example:
+    {
+        'fnet_32': {
+            'microtubules': [[time.asctime(),
+                             str,
+                             float,
+                            {
+                                'Acc': float,
+                                'Prec': float,
+                                'Recall': float,
+                                'F1': float,
+                                'AUC': float,
+                                'IoU': float,
+                                'AP': float,
+                            }
+                             ],
+                            ...],
+        'membrane': {...},
+    },
+    'unet_32': {
+        'microtubules': {},
+        'membrane': {}
+    },
+    'dist_instance_triang:': {
+        's3dis': {},
+        'scannetv2': {},
+    }
+}
     """
     """Global setting"""
     tardis_progress = TardisLogo()
@@ -92,9 +109,6 @@ def main(data_set: str,
     DIR_ = join(expanduser('~') + '/../../data/rkiewisz/Benchmarks')
 
     """Get model for benchmark"""
-    if model_checkpoint.startswith('http'):
-        model_checkpoint = get_model_aws(model_checkpoint).content
-
     model = torch.load(model_checkpoint,
                        map_location=device)
 
@@ -114,34 +128,88 @@ def main(data_set: str,
                     desc=f'Given data set {data_set} is not supporter! '
                     f'Expected one of {listdir(DIR_NN)}')
 
-    BEST_SCORE = get_benchmark_aws(network)
+    BEST_SCORE = get_benchmark_aws()
 
-    model = Predictor(checkpoint=model,
+    m_name = model['model_struct_dict']
+    predictor = Predictor(checkpoint=model,
                       img_size=patch_size,
                       sigma=sigma,
                       device=get_device(device))
 
     """Build DataLoader"""
     if network == 'cnn':
-        predictor_bch = CnnBenchmark(model=model,
+        m_name = f'Model: {m_name["cnn_type"]}_{m_name["conv_scaler"]}'
+
+        predictor_bch = CnnBenchmark(model=predictor,
                                      dataset=data_set,
                                      dir_=DIR_EVAL,
                                      threshold=nn_threshold,
                                      patch_size=patch_size)
     else:
-        predictor_bch = DISTBenchmark(model=model,
+        m_name = f'Model: dist_{m_name["dist_type"]}_{m_name["structure"]}'
+
+        predictor_bch = DISTBenchmark(model=predictor,
                                       dataset=data_set,
                                       dir_=DIR_EVAL,
                                       threshold=nn_threshold,
                                       points_in_patch=points_in_patch)
+    nbm = predictor_bch()
 
     """Compared with best models"""
-    
+    new_is_best = False
+    model_best_time = 'None'
+
+    # Pick last best model
+    try:
+        model_best = BEST_SCORE[m_name][data_set]
+        model_best = model_best[-1]  # Pick last/best model from the list
+        model_best_time = model_best[0]  # Pick benchmark time
+        cbm = model_best[3]  # Pick the best metric dictionary
+    except KeyError:
+        pass
+
     """Benchmark Summary"""
-    benchmark_result = predictor_bch()
+    metric_keys = ["IoU", "AUC", "AP50", "AP75", "mCov"] \
+        if network != 'cnn' else ["F1", "AUC", "IoU", "AP"]
+
+    if model_best_time != 'None':
+        # Take mean of all metrics and check which one performs better
+        new_is_best = compare_dict_metrics(last_best_dict=cbm,
+                                           new_dict=nbm)
+
+        best_metric = "; ".join([f"{key}: {cbm.get(key, '')}" for key in metric_keys])
+    else:
+        best_metric = 'There is no existing model to compare with.'
+
+    new_metric = "; ".join([f"{key}: {nbm.get(key, '')}" for key in metric_keys])
+
+    tardis_progress(title='TARDIS - NN Benchmark - Results',
+                    text_1=f'New model is better: {new_is_best}',
+                    text_3=f'Benchmark results for {m_name}: ',
+                    text_4=f'Model dataset benchmarked on: {data_set}',
+                    text_6=f'Last best model from [{model_best_time}]:',
+                    text_7=best_metric,
+                    text_9=f'Current benchmark model from [{time.asctime()}]:',
+                    text_10=new_metric)
 
     """Sent updated json and model to S3"""
-    pass
+    if new_is_best:
+        id_save = f'{m_name}_{data_set}_{len(model_best) + 1}'
+    else:
+        id_save = f'{m_name}_{data_set}_0'
+    link = 'https://tardis-weigths.s3.amazonaws.com/benchmark/models/'\
+           f'{id_save}'
+
+    BEST_SCORE[m_name][data_set].append([time.asctime(),
+                                         link,
+                                         round(sum(nbm.values()) / len(nbm), 2),
+                                         nbm])
+
+    """Upload model and json"""
+    if model_best_time == 'None':
+        put_benchmark_aws(data=BEST_SCORE, network=id_save, model=model_checkpoint)
+    elif new_is_best:
+        put_benchmark_aws(data=BEST_SCORE, network=id_save, model=model_checkpoint)
 
 
 if __name__ == '__main__':

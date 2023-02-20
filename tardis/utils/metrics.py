@@ -15,6 +15,28 @@ import torch
 from sklearn.metrics import auc, average_precision_score, roc_curve
 
 
+def compare_dict_metrics(last_best_dict: dict,
+                         new_dict: dict) -> bool:
+    """
+    Compares two metric dictionaries and returns the one with the highest
+    average metric values.
+
+    Args:
+        last_best_dict (dict): The previous best metric dictionary.
+        new_dict (dict): The new metric dictionary to compare.
+
+    Returns:
+        bool: True if the new dictionary has a higher average metric value.
+    """
+    compare_dict_metric = lambda metric_dict: sum(metric_dict.values()) / len(metric_dict)
+
+    last_best_dict = compare_dict_metric(last_best_dict)
+    new_dict = compare_dict_metric(new_dict)
+
+    # Compare the average metric values and return the result
+    return new_dict > last_best_dict
+
+
 def eval_graph_f1(logits: Optional[Union[np.ndarray, torch.Tensor]],
                   targets: Optional[Union[np.ndarray, torch.Tensor]],
                   soft=False):
@@ -31,15 +53,19 @@ def eval_graph_f1(logits: Optional[Union[np.ndarray, torch.Tensor]],
          soft:
      """
     """Mask Diagonal as TP"""
-    g_len = logits.shape[1]
-    g_range = range(g_len)
+    index = np.triu_indices(targets.shape[0], k=1)
+    targets = targets[index]
+    logits = logits[index]
 
-    if logits.ndim == 3:
-        logits[:, g_range, g_range] = 1.0
-        targets[:, g_range, g_range] = 1.0
-    else:
-        logits[g_range, g_range] = 1.0
-        targets[g_range, g_range] = 1.0
+    # g_len = logits.shape[1]
+    # g_range = range(g_len)
+    #
+    # if logits.ndim == 3:
+    #     logits[:, g_range, g_range] = 1.0
+    #     targets[:, g_range, g_range] = 1.0
+    # else:
+    #     logits[g_range, g_range] = 1.0
+    #     targets[g_range, g_range] = 1.0
 
     if soft:
         logits = torch.flatten(logits)
@@ -75,7 +101,7 @@ def eval_graph_f1(logits: Optional[Union[np.ndarray, torch.Tensor]],
             input_df = torch.where(logits > threshold, 1, 0)
 
             tp, fp, tn, fn = confusion_matrix(input_df, targets)
-            tp = tp - g_len  # remove diagonal from F1
+            tp = tp  # remove diagonal from F1
 
             accuracy_score = (tp + tn) / (tp + tn + fp + fn + 1e-16)
             prec = tp / (tp + fp + 1e-16)
@@ -185,27 +211,92 @@ def calculate_f1(logits: Optional[Union[np.ndarray, torch.Tensor]],
 
 
 def AP(logits: np.ndarray,
-       targets: np.ndarray) -> float:
+       targets: np.ndarray,
+       threshold=None) -> float:
     logits = logits.flatten()
     targets = targets.flatten()
 
+    if threshold is not None:
+        return np.sum(np.logical_and(targets, logits)) / np.sum(np.logical_or(targets, logits))
     return average_precision_score(targets, logits)
 
 
-def AUC(logits: np.ndarray,
-        targets: np.ndarray) -> float:
-    logits = logits.flatten()
-    targets = targets.flatten()
+def AP_instance(input: np.ndarray,
+                targets: np.ndarray) -> float:
+    prec = 0
+    detected_instances = 0
 
-    fpr, tpr, thresholds = roc_curve(targets, logits)
+    # Get GT instances, compute IoU for best mache between GT and input
+    for j in np.unique(targets[:, 0]):
+        true_c = targets[np.where(targets[:, 0] == j)[0], 1:]  # Pick GT instance
+        prec_df = []
+
+        # Select max Prec (best mach)
+        for i in np.unique(input[:, 0]):
+            pred = input[np.where(input[:, 0] == i)[0]]  # Pick input instance
+
+            # Prec is ratio of true positives to the total number of positive detections
+            prec_df.append(sum([True for i in true_c if i in pred[:, 1:]]) / len(true_c))
+        prec += np.max(prec_df)
+
+    return 1/np.unique(targets[:, 0]) * prec
+
+
+def AUC(logits: np.ndarray,
+        targets: np.ndarray,
+        diagonal=False) -> float:
+    if diagonal:
+        index = np.triu_indices(targets.shape[0], k=1)
+        targets = targets[index]
+        logits = logits[index]
+    else:
+        logits = logits.flatten()
+        targets = targets.flatten()
+
+    fpr, tpr, _ = roc_curve(targets, logits)
     return auc(fpr, tpr)
 
 
 def IoU(input: np.ndarray,
-        targets: np.ndarray):
+        targets: np.ndarray,
+        diagonal=False):
+    if diagonal:
+        index = np.triu_indices(targets.shape[0], k=1)
+        targets = targets[index]
+        input = input[index]
+    else:
+        input = input.flatten()
+        targets = targets.flatten()
+
     tp, fp, tn, fn = confusion_matrix(input, targets)
 
     return tp / (tp + fp + fn + 1e-16)
+
+
+def mcov(input: Optional[Union[np.ndarray, torch.Tensor]],
+         targets: Optional[Union[np.ndarray, torch.Tensor]]) -> float:
+    mCov = []
+
+    # Get GT instances, compute IoU for best mache between GT and input
+    for j in np.unique(targets[:, 0]):
+        true_c = targets[np.where(targets[:, 0] == j)[0], 1:]  # Pick GT instance
+        df = []
+
+        # Select max IoU (best mach)
+        for i in np.unique(input[:, 0]):
+            pred = input[np.where(input[:, 0] == i)[0]]  # Pick input instance
+
+            # Intersection of coordinates between GT and input instances
+            intersection = np.sum([True for i in true_c if i in pred[:, 1:]])
+
+            # Union of coordinates between GT and input instances
+            union = np.unique(np.vstack((true_c, pred[:, 1:])), axis=0).shape[0]
+
+            df.append(intersection / union)
+
+        mCov.append(np.max(df))  # Pick max IoU for GT instance
+
+    return sum(mCov) / len(mCov)
 
 
 def confusion_matrix(logits: Optional[Union[np.ndarray, torch.Tensor]],
@@ -251,8 +342,3 @@ def normalize_image(image: np.ndarray):
         image = np.where(image < image_max, 1, 0)
 
     return image
-
-
-def mcov(logits: Optional[Union[np.ndarray, torch.Tensor]],
-         targets: Optional[Union[np.ndarray, torch.Tensor]]):
-    pass
