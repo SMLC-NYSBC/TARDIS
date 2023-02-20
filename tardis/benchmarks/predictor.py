@@ -281,7 +281,7 @@ class DISTBenchmark:
 
             graphs = []
             for edge, graph in zip(coords, target):
-                input = self._predict(edge)
+                input = self._predict(edge[None, :])
                 graphs.append(input)
 
                 """Benchmark Graph"""
