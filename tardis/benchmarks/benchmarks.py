@@ -180,8 +180,10 @@ def main(data_set: str,
     """Upload model and json"""
     if model_best_time == 'None':
         put_benchmark_aws(data=BEST_SCORE, network=id_save, model=model_checkpoint)
+        torch.save(model_checkpoint, join(DIR_NN, id_save))
     elif new_is_best:
         put_benchmark_aws(data=BEST_SCORE, network=id_save, model=model_checkpoint)
+        torch.save(model_checkpoint, join(DIR_NN, id_save))
 
 
 if __name__ == '__main__':
