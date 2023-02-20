@@ -53,19 +53,15 @@ def eval_graph_f1(logits: Optional[Union[np.ndarray, torch.Tensor]],
          soft:
      """
     """Mask Diagonal as TP"""
-    index = np.triu_indices(targets.shape[0], k=1)
-    targets = targets[index]
-    logits = logits[index]
+    g_len = logits.shape[1]
+    g_range = range(g_len)
 
-    # g_len = logits.shape[1]
-    # g_range = range(g_len)
-    #
-    # if logits.ndim == 3:
-    #     logits[:, g_range, g_range] = 1.0
-    #     targets[:, g_range, g_range] = 1.0
-    # else:
-    #     logits[g_range, g_range] = 1.0
-    #     targets[g_range, g_range] = 1.0
+    if logits.ndim == 3:
+        logits[:, g_range, g_range] = 1.0
+        targets[:, g_range, g_range] = 1.0
+    else:
+        logits[g_range, g_range] = 1.0
+        targets[g_range, g_range] = 1.0
 
     if soft:
         logits = torch.flatten(logits)
@@ -224,7 +220,6 @@ def AP(logits: np.ndarray,
 def AP_instance(input: np.ndarray,
                 targets: np.ndarray) -> float:
     prec = 0
-    detected_instances = 0
 
     # Get GT instances, compute IoU for best mache between GT and input
     for j in np.unique(targets[:, 0]):
@@ -246,12 +241,18 @@ def AUC(logits: np.ndarray,
         targets: np.ndarray,
         diagonal=False) -> float:
     if diagonal:
-        index = np.triu_indices(targets.shape[0], k=1)
-        targets = targets[index]
-        logits = logits[index]
-    else:
-        logits = logits.flatten()
-        targets = targets.flatten()
+        g_len = logits.shape[1]
+        g_range = range(g_len)
+
+        if logits.ndim == 3:
+            logits[:, g_range, g_range] = 1.0
+            targets[:, g_range, g_range] = 1.0
+        else:
+            logits[g_range, g_range] = 1.0
+            targets[g_range, g_range] = 1.0
+
+    logits = logits.flatten()
+    targets = targets.flatten()
 
     fpr, tpr, _ = roc_curve(targets, logits)
     return auc(fpr, tpr)
@@ -261,9 +262,15 @@ def IoU(input: np.ndarray,
         targets: np.ndarray,
         diagonal=False):
     if diagonal:
-        index = np.triu_indices(targets.shape[0], k=1)
-        targets = targets[index]
-        input = input[index]
+        g_len = input.shape[1]
+        g_range = range(g_len)
+
+        if input.ndim == 3:
+            input[:, g_range, g_range] = 1.0
+            targets[:, g_range, g_range] = 1.0
+        else:
+            input[g_range, g_range] = 1.0
+            targets[g_range, g_range] = 1.0
     else:
         input = input.flatten()
         targets = targets.flatten()

@@ -505,15 +505,16 @@ class Stanford3DDataset(BasicDataset):
             graph_idx = [np.where(g >= 2, 1, 0) for g in graph_idx]
 
             # save data for faster access later
-            self.save_temp(i=i,
-                           coords=coords_idx,
-                           graph=graph_idx,
-                           out=output_idx,
-                           df=df_idx,
-                           cls=cls_idx)
+            if not self.benchmark:
+                self.save_temp(i=i,
+                               coords=coords_idx,
+                               graph=graph_idx,
+                               out=output_idx,
+                               df=df_idx,
+                               cls=cls_idx)
 
-            # Store initial patch size for each data to speed up computation
-            self.patch_size[i, 0] = 1
+                # Store initial patch size for each data to speed up computation
+                self.patch_size[i, 0] = 1
         else:
             # Load pre-process data
             coords_idx, graph_idx, output_idx, df_idx, cls_idx = self.load_temp(i,

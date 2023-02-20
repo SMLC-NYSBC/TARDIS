@@ -8,7 +8,7 @@
 #  MIT License 2021 - 2023                                            #
 #######################################################################
 
-from typing import Optional
+from typing import Optional, Union
 
 import numpy as np
 import torch
@@ -261,10 +261,10 @@ class GraphInstanceV2:
 
     def patch_to_segment(self,
                          graph: list,
+                         coord: Union[np.ndarray, list],
                          idx: list,
                          prune: int,
                          sort=True,
-                         coord: Optional[np.ndarray] = list,
                          visualize: Optional[str] = None) -> np.ndarray:
         """
         Point cloud instance segmentation from graph representation

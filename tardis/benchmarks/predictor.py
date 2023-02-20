@@ -212,14 +212,14 @@ class DISTBenchmark:
         self.metric['IoU'].append(IoU(input, target, True))
 
         # AUC
-        self.metric['AUC'].append(AUC(input, target, True))
+        self.metric['AUC'].append(AUC(logits, target, True))
 
     @staticmethod
     def _segment(threshold: float,
                  max_connections: int,
                  logits: List[np.ndarray],
                  targets: List[np.ndarray],
-                 coord: np.ndarray,
+                 coord:  List[np.ndarray],
                  output_idx: List[np.ndarray],
                  sort: bool) -> Tuple[np.ndarray, np.ndarray]:
         GraphToSegment = GraphInstanceV2(threshold=threshold,
@@ -239,7 +239,7 @@ class DISTBenchmark:
     def _benchmark_IS(self,
                       logits: List[np.ndarray],
                       targets: List[np.ndarray],
-                      coords: np.ndarray,
+                      coords: List[np.ndarray],
                       output_idx: List[np.ndarray]):
         # AP50
         input_IS, target_IS = self._segment(0.5, self.max_connections,
@@ -270,6 +270,8 @@ class DISTBenchmark:
         for i in range(len(self.eval_data)):
             """Predict"""
             coords, _, target, output_idx, _ = self.eval_data.__getitem__(i)
+            target = [t.cpu().detach().numpy() for t in target]
+            output_idx = [o.cpu().detach().numpy() for o in output_idx]
 
             # Tardis progress bar update
             self.tardis_progress(title=self.title,
@@ -285,9 +287,10 @@ class DISTBenchmark:
                 graphs.append(input)
 
                 """Benchmark Graph"""
-                self._benchmark_graph(input, graph)
+                self._benchmark_graph(input, graph.astype(np.uint8))
 
             """Segment graphs"""
+            coords = [c.cpu().detach().numpy() for c in coords]
             self._benchmark_IS(graphs, target, coords, output_idx)
 
         rmtree(join(self.dir, 'train'))
