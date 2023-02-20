@@ -72,34 +72,6 @@ def main(data_set: str,
          device: str):
     """
     Standard benchmark for DIST on medical and standard point clouds
-    Json example:
-    {
-        'fnet_32': {
-            'microtubules': [[time.asctime(),
-                             str,
-                             float,
-                            {
-                                'Acc': float,
-                                'Prec': float,
-                                'Recall': float,
-                                'F1': float,
-                                'AUC': float,
-                                'IoU': float,
-                                'AP': float,
-                            }
-                             ],
-                            ...],
-        'membrane': {...},
-    },
-    'unet_32': {
-        'microtubules': {},
-        'membrane': {}
-    },
-    'dist_instance_triang:': {
-        's3dis': {},
-        'scannetv2': {},
-    }
-}
     """
     """Global setting"""
     tardis_progress = TardisLogo()
@@ -110,7 +82,7 @@ def main(data_set: str,
 
     """Get model for benchmark"""
     model = torch.load(model_checkpoint,
-                       map_location=device)
+                       map_location=get_device(device))
 
     """Best model list from S3"""
     if [True for x in model['model_struct_dict'] if x.startswith('cnn')]:
@@ -132,9 +104,9 @@ def main(data_set: str,
 
     m_name = model['model_struct_dict']
     predictor = Predictor(checkpoint=model,
-                      img_size=patch_size,
-                      sigma=sigma,
-                      device=get_device(device))
+                          img_size=patch_size,
+                          sigma=sigma,
+                          device=get_device(device))
 
     """Build DataLoader"""
     if network == 'cnn':
