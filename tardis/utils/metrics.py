@@ -53,15 +53,19 @@ def eval_graph_f1(logits: Optional[Union[np.ndarray, torch.Tensor]],
          soft:
      """
     """Mask Diagonal as TP"""
-    g_len = logits.shape[1]
-    g_range = range(g_len)
+    index = np.triu_indices(targets.shape[0], k=1)
+    targets = targets[index]
+    logits = logits[index]
 
-    if logits.ndim == 3:
-        logits[:, g_range, g_range] = 1.0
-        targets[:, g_range, g_range] = 1.0
-    else:
-        logits[g_range, g_range] = 1.0
-        targets[g_range, g_range] = 1.0
+    # g_len = logits.shape[1]
+    # g_range = range(g_len)
+    #
+    # if logits.ndim == 3:
+    #     logits[:, g_range, g_range] = 1.0
+    #     targets[:, g_range, g_range] = 1.0
+    # else:
+    #     logits[g_range, g_range] = 1.0
+    #     targets[g_range, g_range] = 1.0
 
     if soft:
         logits = torch.flatten(logits)
@@ -220,6 +224,7 @@ def AP(logits: np.ndarray,
 def AP_instance(input: np.ndarray,
                 targets: np.ndarray) -> float:
     prec = 0
+    detected_instances = 0
 
     # Get GT instances, compute IoU for best mache between GT and input
     for j in np.unique(targets[:, 0]):
@@ -241,15 +246,9 @@ def AUC(logits: np.ndarray,
         targets: np.ndarray,
         diagonal=False) -> float:
     if diagonal:
-        g_len = logits.shape[1]
-        g_range = range(g_len)
-
-        if logits.ndim == 3:
-            logits[:, g_range, g_range] = 1.0
-            targets[:, g_range, g_range] = 1.0
-        else:
-            logits[g_range, g_range] = 1.0
-            targets[g_range, g_range] = 1.0
+        index = np.triu_indices(targets.shape[0], k=1)
+        targets = targets[index]
+        logits = logits[index]
 
     logits = logits.flatten()
     targets = targets.flatten()
@@ -262,18 +261,12 @@ def IoU(input: np.ndarray,
         targets: np.ndarray,
         diagonal=False):
     if diagonal:
-        g_len = input.shape[1]
-        g_range = range(g_len)
+        index = np.triu_indices(targets.shape[0], k=1)
+        targets = targets[index]
+        input = input[index]
 
-        if input.ndim == 3:
-            input[:, g_range, g_range] = 1.0
-            targets[:, g_range, g_range] = 1.0
-        else:
-            input[g_range, g_range] = 1.0
-            targets[g_range, g_range] = 1.0
-    else:
-        input = input.flatten()
-        targets = targets.flatten()
+    input = input.flatten()
+    targets = targets.flatten()
 
     tp, fp, tn, fn = confusion_matrix(input, targets)
 

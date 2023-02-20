@@ -222,6 +222,10 @@ class DISTBenchmark:
                  coord:  List[np.ndarray],
                  output_idx: List[np.ndarray],
                  sort: bool) -> Tuple[np.ndarray, np.ndarray]:
+        np.save('./logits.npy', logits)
+        np.save('./targets.npy', targets)
+        np.save('./cooord.npy', coord)
+        np.save('./out.npy', output_idx)
         GraphToSegment = GraphInstanceV2(threshold=threshold,
                                          connection=max_connections)
         input_IS = GraphToSegment.patch_to_segment(graph=logits,
@@ -288,6 +292,15 @@ class DISTBenchmark:
 
                 """Benchmark Graph"""
                 self._benchmark_graph(input, graph.astype(np.uint8))
+
+            self.tardis_progress(title=self.title,
+                                 text_1=f'Running image segmentation benchmark on '
+                                        f'{self.data_set}',
+                                 text_4='Benchmark: In progress...',
+                                 text_6=f'IoU: {round(np.mean(self.metric["IoU"]), 2)}; ' \
+                                        f'AUC: {round(np.mean(self.metric["AUC"]), 2)}',
+                                 text_7='Current Task: DIST prediction...',
+                                 text_8=print_progress_bar(i, len(self.eval_data)))
 
             """Segment graphs"""
             coords = [c.cpu().detach().numpy() for c in coords]

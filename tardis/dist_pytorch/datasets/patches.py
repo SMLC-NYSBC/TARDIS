@@ -481,7 +481,7 @@ class PatchDataSet:
                 """ Find points and optional images for each patch"""
                 df_patch_keep = i
 
-                df_patch = self.segments_id[df_patch_keep, :]
+                df_patch = self.coord[df_patch_keep, :]
                 output_df = np.where(df_patch_keep)[0]
 
                 # Transform 2D coord to 3D of shape [Z, Y, X]
