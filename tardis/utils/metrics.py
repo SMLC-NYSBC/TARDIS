@@ -239,7 +239,7 @@ def AP_instance(input: np.ndarray,
             prec_df.append(sum([True for i in true_c if i in pred[:, 1:]]) / len(true_c))
         prec += np.max(prec_df)
 
-    return 1/np.unique(targets[:, 0]) * prec
+    return 1 / (len(np.unique(targets[:, 0]) + 1e-16)) * prec
 
 
 def AUC(logits: np.ndarray,
