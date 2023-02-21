@@ -238,9 +238,15 @@ def AUC(logits: np.ndarray,
         targets: np.ndarray,
         diagonal=False) -> float:
     if diagonal:
-        index = np.triu_indices(targets.shape[0], k=1)
-        targets = targets[index]
-        logits = logits[index]
+        g_len = logits.shape[1]
+        g_range = range(g_len)
+
+        if logits.ndim == 3:
+            logits[:, g_range, g_range] = 1.0
+            targets[:, g_range, g_range] = 1.0
+        else:
+            logits[g_range, g_range] = 1.0
+            targets[g_range, g_range] = 1.0
 
     logits = logits.flatten()
     targets = targets.flatten()

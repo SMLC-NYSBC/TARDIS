@@ -267,19 +267,19 @@ class DISTBenchmark:
         return {k: np.mean(v) for k, v in self.metric.items()}
 
     def __call__(self):
+        # Tardis progress bar update
+        self.tardis_progress(title=self.title,
+                             text_1=f'Running image segmentation benchmark on '
+                                    f'{self.data_set}',
+                             text_4='Benchmark: In progress...',
+                             text_7='Current Task: DIST prediction...',
+                             text_8=print_progress_bar(0, len(self.eval_data)))
+
         for i in range(len(self.eval_data)):
             """Predict"""
             coords, _, target, output_idx, _ = self.eval_data.__getitem__(i)
             target = [t.cpu().detach().numpy() for t in target]
             output_idx = [o.cpu().detach().numpy() for o in output_idx]
-
-            # Tardis progress bar update
-            self.tardis_progress(title=self.title,
-                                 text_1=f'Running image segmentation benchmark on '
-                                        f'{self.data_set}',
-                                 text_4='Benchmark: In progress...',
-                                 text_7='Current Task: DIST prediction...',
-                                 text_8=print_progress_bar(i, len(self.eval_data)))
 
             graphs = []
             for edge, graph in zip(coords, target):
