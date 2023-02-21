@@ -38,11 +38,13 @@ class BasicDataset(Dataset):
                  coord_dir: str,
                  coord_format=".csv",
                  patch_if=500,
+                 rgb=False,
                  benchmark=False,
                  train=True):
         # Coord setting
         self.coord_dir = coord_dir
         self.coord_format = coord_format
+        self.rgb = rgb
 
         self.train = train
         self.benchmark = benchmark
@@ -457,11 +459,8 @@ class Stanford3DDataset(BasicDataset):
     """
 
     def __init__(self,
-                 rgb=False,
                  **kwargs):
         super(Stanford3DDataset, self).__init__(**kwargs)
-
-        self.rgb = rgb
 
         # Modified self.ids to recognise folder for .txt
         area_list = [d for d in listdir(self.coord_dir) if isdir(join(self.coord_dir, d))]
@@ -613,7 +612,7 @@ def build_dataset(dataset_type: str,
                                       patch_if=max_points_per_patch,
                                       benchmark=benchmark,
                                       train=False)
-    elif dataset_type in ['stanford', 'S3DIS', 's3dis']:
+    elif dataset_type == 'stanford':
         if not benchmark:
             dl_train = Stanford3DDataset(coord_dir=dirs[0],
                                          coord_format='.txt',
@@ -624,7 +623,7 @@ def build_dataset(dataset_type: str,
                                     patch_if=max_points_per_patch,
                                     benchmark=benchmark,
                                     train=False)
-    elif dataset_type in ['stanford_color', 'S3DIS_color', 's3dis']:
+    elif dataset_type == 'stanford_color':
         if not benchmark:
             dl_train = Stanford3DDataset(coord_dir=dirs[0],
                                          coord_format='.txt',

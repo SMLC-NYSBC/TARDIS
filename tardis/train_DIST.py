@@ -35,8 +35,7 @@ from tardis.version import version
               show_default=True)
 @click.option('-dt', '--dataset_type',
               default='filament',
-              type=click.Choice(['filament', 'scannet', 'scannet_color',
-                                 'partnet', 'stanford', 'general']),
+              type=str,
               help='Define training dataset type.',
               show_default=True)
 @click.option('-no', '--n_out',
@@ -161,7 +160,7 @@ def main(dir: str,
     TEST_COORD_DIR = join(dir, 'test', 'masks')
 
     COORD_FORMAT = '.txt'
-    if dataset_type != 'stanford':
+    if dataset_type not in ['stanford', 'stanford_color']:
         COORD_FORMAT = ('.CorrelationLines.am', '.npy', '.csv', '.ply')
 
     """Check if dir has train/test folder and if f  older have compatible data"""
@@ -201,7 +200,7 @@ def main(dir: str,
         move_train_dataset(dir=dir, coord_format=COORD_FORMAT, with_img=False)
 
         no_dataset = int(len([f for f in listdir(dir) if f.endswith(COORD_FORMAT)]) / 2)
-        if dataset_type == 'stanford':
+        if dataset_type in ['stanford', 'stanford_color']:
             build_test_dataset(dataset_dir=dir, dataset_no=no_dataset, stanford=True)
         else:
             build_test_dataset(dataset_dir=dir, dataset_no=no_dataset)
@@ -220,7 +219,7 @@ def main(dir: str,
     """Setup training"""
     device = get_device(device)
 
-    if dataset_type == 'scannet_color':
+    if node_dim > 0:
         node_input = 3
     else:
         node_input = 0
