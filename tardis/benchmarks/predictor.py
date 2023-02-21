@@ -229,6 +229,9 @@ class DISTBenchmark:
                                                    idx=output_idx,
                                                    prune=2,
                                                    sort=sort)
+
+        GraphToSegment = GraphInstanceV2(threshold=0.5,
+                                         connection=50000)
         target_IS = GraphToSegment.patch_to_segment(graph=targets,
                                                     coord=coord,
                                                     idx=output_idx,
@@ -282,26 +285,17 @@ class DISTBenchmark:
             output_idx = [o.cpu().detach().numpy() for o in output_idx]
 
             graphs = []
-            for edge, graph in zip(coords, target):
+            for edge, graph, out in zip(coords, target, output_idx):
                 input = self._predict(edge[None, :])
                 graphs.append(input)
 
                 """Benchmark Graph"""
                 self._benchmark_graph(input, graph.astype(np.uint8))
 
-            self.tardis_progress(title=self.title,
-                                 text_1=f'Running image segmentation benchmark on '
-                                        f'{self.data_set}',
-                                 text_4='Benchmark: In progress...',
-                                 text_6=f'IoU: {round(np.mean(self.metric["IoU"]), 2)}; ' \
-                                        f'AUC: {round(np.mean(self.metric["AUC"]), 2)}; ' \
-                                        f'mCov: {round(np.mean(self.metric["mCov"]), 2)}',
-                                 text_7='Current Task: DIST prediction...',
-                                 text_8=print_progress_bar(i, len(self.eval_data)))
+                """Segment graphs"""
+                coords = [c.cpu().detach().numpy() for c in coords]
+                self._benchmark_IS(input, graph, coords, out)
 
-            """Segment graphs"""
-            coords = [c.cpu().detach().numpy() for c in coords]
-            self._benchmark_IS(graphs, target, coords, output_idx)
             self.tardis_progress(title=self.title,
                                  text_1=f'Running image segmentation benchmark on '
                                         f'{self.data_set}',
