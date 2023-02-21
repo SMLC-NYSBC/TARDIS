@@ -293,8 +293,8 @@ class DISTBenchmark:
                 self._benchmark_graph(input, graph.astype(np.uint8))
 
                 """Segment graphs"""
-                coords = [c.cpu().detach().numpy() for c in coords]
-                self._benchmark_IS(input, graph, coords, out)
+                coords_df = [c.cpu().detach().numpy() for c in coords]
+                self._benchmark_IS(input, graph, coords_df, out)
 
             self.tardis_progress(title=self.title,
                                  text_1=f'Running image segmentation benchmark on '

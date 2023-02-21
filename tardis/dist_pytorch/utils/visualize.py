@@ -8,7 +8,7 @@
 #  MIT License 2021 - 2023                                            #
 #######################################################################
 
-from typing import Tuple
+from typing import Optional, Tuple
 
 import numpy as np
 import open3d as o3d
@@ -167,7 +167,8 @@ def segment_to_graph(coord: np.ndarray) -> list:
 
 
 def VisualizePointCloud(coord: np.ndarray,
-                        segmented: True):
+                        segmented: bool,
+                        rgb: Optional[np.ndarray] = None):
     """
     Visualized point cloud.
 
@@ -176,6 +177,7 @@ def VisualizePointCloud(coord: np.ndarray,
     Args:
         coord (np.ndarray): 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y].
         segmented (bool): If True expect (s) in a data format as segmented values.
+        rgb:
     """
     coord, check = _dataset_format(coord=coord, segmented=segmented)
 
@@ -186,7 +188,13 @@ def VisualizePointCloud(coord: np.ndarray,
             pcd.points = o3d.utility.Vector3dVector(coord[:, 1:])
         else:
             pcd.points = o3d.utility.Vector3dVector(coord)
-        pcd.colors = o3d.utility.Vector3dVector(_rgb(coord, segmented))
+
+        if rgb is not None:
+            if np.max(rgb) > 1:
+                rgb = rgb / 255
+            pcd.colors = o3d.utility.Vector3dVector(rgb)
+        else:
+            pcd.colors = o3d.utility.Vector3dVector(_rgb(coord, segmented))
 
         o3d.visualization.draw_geometries_with_animation_callback([pcd], rotate_view)
 

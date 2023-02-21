@@ -738,34 +738,49 @@ def load_ply_partnet(ply,
 
 
 def load_txt_s3dis(txt: str,
-                   downscaling=0) -> np.ndarray:
+                   rgb=False,
+                   downscaling=0) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
     """
     Function to read .txt Stanford 3D instance scene file.
 
     Args:
         txt (str): File directory.
+        rgb (bool):
         downscaling (float): Downscaling point cloud by fixing voxel size.
 
     Returns:
         np.ndarray: Labeled point cloud coordinates.
     """
     coord = np.genfromtxt(txt, invalid_raise=False)
+
+    rgb_values = coord[:, 3:]
     coord = coord[:, :3]
 
     if downscaling > 0:
         pcd = o3d.geometry.PointCloud()
 
         pcd.points = o3d.utility.Vector3dVector(coord)
+
+        if rgb:
+            pcd.colors = o3d.utility.Vector3dVector(rgb_values)
+
         pcd = pcd.voxel_down_sample(voxel_size=downscaling)
 
         coord = np.asarray(pcd.points)
 
+        if rgb:
+            rgb_values = np.asarray(pcd.colors)
+            return coord, rgb_values
+
+    if rgb:
+        return coord, rgb_values
     return coord
 
 
 def load_s3dis_scene(dir: str,
                      downscaling=0,
-                     random_ds=None) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
+                     random_ds=None,
+                     rgb=False) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
     """
     Function to read .txt Stanford 3D instance scene files.
 
@@ -780,28 +795,45 @@ def load_s3dis_scene(dir: str,
     dir_list = [x for x in listdir(dir) if x not in ['.DS_Store', 'Icon']]
 
     coord_scene = []
+    rgb_scene = []
     id = 0
     for i in dir_list:
-        coord_inst = load_txt_s3dis(join(dir, i))
+        if rgb:
+            coord_inst, rgb_v = load_txt_s3dis(join(dir, i), rgb=rgb)
+            rgb_scene.append(rgb_v)
+        else:
+            coord_inst = load_txt_s3dis(join(dir, i))
 
         coord_scene.append(np.hstack((np.expand_dims(np.repeat(id, len(coord_inst)), 1),
                                       coord_inst)))
 
         id += 1
     coord = np.concatenate(coord_scene)
+    if rgb:
+        rgb_v = np.concatenate(rgb_scene) / 255
 
     if downscaling > 0:
         if random_ds is not None:
             pick = int(len(coord) * random_ds)
             pick = random.sample(range(len(coord)), pick)
             coord = coord[pick, :]
+
+            if rgb:
+                rbg_v = rgb_v[pick, :]
         else:
             pcd = o3d.geometry.PointCloud()
             pcd.points = o3d.utility.Vector3dVector(coord[:, 1:])
-            pcd.colors = o3d.utility.Vector3dVector(_rgb(coord, True))
+
+            if rgb:
+                pcd.colors = o3d.utility.Vector3dVector(rgb_v)
+            else:
+                pcd.colors = o3d.utility.Vector3dVector(_rgb(coord, True))
 
             pcd = pcd.voxel_down_sample(voxel_size=downscaling)
             coord_ds = np.asarray(pcd.points)
+
+            if rgb:
+                rgb_v = np.asarray(pcd.colors)
 
             knn = NearestNeighbors(n_neighbors=1,
                                    algorithm='kd_tree').fit(coord[:, 1:])
@@ -812,6 +844,8 @@ def load_s3dis_scene(dir: str,
             cls_id = np.expand_dims(coord[indices, 0], 1)
             coord = np.hstack((cls_id, coord_ds))
 
+    if rgb:
+        return coord, rgb_v
     return coord
 
 

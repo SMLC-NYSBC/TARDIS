@@ -457,8 +457,11 @@ class Stanford3DDataset(BasicDataset):
     """
 
     def __init__(self,
+                 rgb=False,
                  **kwargs):
         super(Stanford3DDataset, self).__init__(**kwargs)
+
+        self.rgb = rgb
 
         # Modified self.ids to recognise folder for .txt
         area_list = [d for d in listdir(self.coord_dir) if isdir(join(self.coord_dir, d))]
@@ -491,13 +494,24 @@ class Stanford3DDataset(BasicDataset):
 
         if self.patch_size[i, 0] == 0:
             # Pre-process coord and image data also, if exist remove duplicates
-            coord = load_s3dis_scene(dir=coord_file, downscaling=0.1)
-            coord[:, 1:] = coord[:, 1:] / 0.1
+            if self.rgb:
+                coord, rgb_v = load_s3dis_scene(dir=coord_file, downscaling=0.05,
+                                                rgb=True)
+            else:
+                coord = load_s3dis_scene(dir=coord_file, downscaling=0.05)
+            coord[:, 1:] = coord[:, 1:] / 0.05
 
-            VD = PatchDataSet(max_number_of_points=self.max_point_in_patch,
-                              overlap=0,
-                              drop_rate=0.1,
-                              tensor=False)
+            if self.rgb:
+                VD = PatchDataSet(max_number_of_points=self.max_point_in_patch,
+                                  overlap=0,
+                                  rgb=rgb_v,
+                                  drop_rate=0.1,
+                                  tensor=False)
+            else:
+                VD = PatchDataSet(max_number_of_points=self.max_point_in_patch,
+                                  overlap=0,
+                                  drop_rate=0.1,
+                                  tensor=False)
 
             coords_idx, df_idx, graph_idx, output_idx, cls_idx = VD.patched_dataset(coord=coord,
                                                                                     mesh=True,
@@ -599,7 +613,7 @@ def build_dataset(dataset_type: str,
                                       patch_if=max_points_per_patch,
                                       benchmark=benchmark,
                                       train=False)
-    elif dataset_type in ['stanford', 'S3DIS']:
+    elif dataset_type in ['stanford', 'S3DIS', 's3dis']:
         if not benchmark:
             dl_train = Stanford3DDataset(coord_dir=dirs[0],
                                          coord_format='.txt',
@@ -607,6 +621,19 @@ def build_dataset(dataset_type: str,
                                          train=True)
         dl_test = Stanford3DDataset(coord_dir=dirs[1],
                                     coord_format='.txt',
+                                    patch_if=max_points_per_patch,
+                                    benchmark=benchmark,
+                                    train=False)
+    elif dataset_type in ['stanford_color', 'S3DIS_color', 's3dis']:
+        if not benchmark:
+            dl_train = Stanford3DDataset(coord_dir=dirs[0],
+                                         coord_format='.txt',
+                                         rgb=True,
+                                         patch_if=max_points_per_patch,
+                                         train=True)
+        dl_test = Stanford3DDataset(coord_dir=dirs[1],
+                                    coord_format='.txt',
+                                    rgb=True,
                                     patch_if=max_points_per_patch,
                                     benchmark=benchmark,
                                     train=False)

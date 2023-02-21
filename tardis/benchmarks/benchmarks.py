@@ -54,6 +54,11 @@ from tardis.version import version
               type=int,
               help='Number of point per voxel.',
               show_default=True)
+@click.option('-sv', '--save',
+              default=True,
+              type=bool,
+              help='If True, save to S3.',
+              show_default=True)
 @click.option('-d', '--device',
               default='0',
               type=str,
@@ -69,6 +74,7 @@ def main(data_set: str,
          patch_size: Union[None, int],
          sigma: Union[None, float],
          points_in_patch: Union[None, int],
+         save: bool,
          device: str):
     """
     Standard benchmark for DIST on medical and standard point clouds
@@ -172,18 +178,32 @@ def main(data_set: str,
     link = 'https://tardis-weigths.s3.amazonaws.com/benchmark/models/'\
            f'{id_save}'
 
-    BEST_SCORE[m_name][data_set].append([time.asctime(),
-                                         link,
-                                         round(sum(nbm.values()) / len(nbm), 2),
-                                         nbm])
+    if save:
+        if m_name in BEST_SCORE:
+            if data_set in BEST_SCORE[m_name]:
+                BEST_SCORE[m_name][data_set].append([time.asctime(),
+                                                     link,
+                                                     round(sum(nbm.values()) / len(nbm), 2),
+                                                     nbm])
+            else:
+                BEST_SCORE[m_name][data_set] = [[time.asctime(),
+                                                 link,
+                                                 round(sum(nbm.values()) / len(nbm), 2),
+                                                 nbm]]
+        else:
+            BEST_SCORE[m_name] = {}
+            BEST_SCORE[m_name][data_set] = [[time.asctime(),
+                                             link,
+                                             round(sum(nbm.values()) / len(nbm), 2),
+                                             nbm]]
 
-    """Upload model and json"""
-    if model_best_time == 'None':
-        put_benchmark_aws(data=BEST_SCORE, network=id_save, model=model_checkpoint)
-        torch.save(model_checkpoint, join(DIR_NN, id_save))
-    elif new_is_best:
-        put_benchmark_aws(data=BEST_SCORE, network=id_save, model=model_checkpoint)
-        torch.save(model_checkpoint, join(DIR_NN, id_save))
+        """Upload model and json"""
+        if model_best_time == 'None':
+            put_benchmark_aws(data=BEST_SCORE, network=id_save, model=model_checkpoint)
+            torch.save(model_checkpoint, join(DIR_NN, id_save))
+        elif new_is_best:
+            put_benchmark_aws(data=BEST_SCORE, network=id_save, model=model_checkpoint)
+            torch.save(model_checkpoint, join(DIR_NN, id_save))
 
 
 if __name__ == '__main__':
