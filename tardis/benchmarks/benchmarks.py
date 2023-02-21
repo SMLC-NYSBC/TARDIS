@@ -141,7 +141,7 @@ def main(data_set: str,
         pass
 
     """Benchmark Summary"""
-    metric_keys = ["IoU", "AUC", "AP50", "AP75", "mCov"] \
+    metric_keys = ["IoU", "AUC", "mCov"] \
         if network != 'cnn' else ["F1", "AUC", "IoU", "AP"]
 
     if model_best_time != 'None':

@@ -23,7 +23,7 @@ from tardis.spindletorch.datasets.dataloader import PredictionDataset
 from tardis.utils.errors import TardisError
 from tardis.utils.load_data import load_image
 from tardis.utils.logo import print_progress_bar, TardisLogo
-from tardis.utils.metrics import AP, AP_instance, AUC, calculate_f1, IoU, mcov
+from tardis.utils.metrics import AP, AUC, calculate_f1, IoU, mcov
 from tardis.utils.predictor import Predictor
 
 
@@ -189,8 +189,8 @@ class DISTBenchmark:
         self.metric = {
             'IoU': [],  # Graph
             'AUC': [],  # Graph
-            'AP50': [],  # Instance
-            'AP75': [],  # Instance
+            # 'AP50': [],  # Instance
+            # 'AP75': [],  # Instance
             'mCov': []  # Instance
         }
         self.eval_data = build_dataset(dataset_type=dataset,
@@ -241,17 +241,17 @@ class DISTBenchmark:
                       targets: List[np.ndarray],
                       coords: List[np.ndarray],
                       output_idx: List[np.ndarray]):
-        # AP50
-        input_IS, target_IS = self._segment(0.5, self.max_connections,
-                                            logits, targets,
-                                            coords, output_idx, self.sort)
-        self.metric['AP50'].append(AP_instance(input_IS, target_IS))
-
-        # AP75
-        input_IS, target_IS = self._segment(0.25, self.max_connections,
-                                            logits, targets,
-                                            coords, output_idx, self.sort)
-        self.metric['AP75'].append(AP_instance(input_IS, target_IS))
+        # # AP50
+        # input_IS, target_IS = self._segment(0.5, self.max_connections,
+        #                                     logits, targets,
+        #                                     coords, output_idx, self.sort)
+        # self.metric['AP50'].append(AP_instance(input_IS, target_IS))
+        #
+        # # AP75
+        # input_IS, target_IS = self._segment(0.25, self.max_connections,
+        #                                     logits, targets,
+        #                                     coords, output_idx, self.sort)
+        # self.metric['AP75'].append(AP_instance(input_IS, target_IS))
 
         # mCov
         input_IS, target_IS = self._segment(self.threshold, self.max_connections,
@@ -295,8 +295,6 @@ class DISTBenchmark:
                                  text_4='Benchmark: In progress...',
                                  text_6=f'IoU: {round(np.mean(self.metric["IoU"]), 2)}; ' \
                                         f'AUC: {round(np.mean(self.metric["AUC"]), 2)}; ' \
-                                        f'AP50: {round(np.mean(self.metric["AP50"]), 2)}; ' \
-                                        f'AP75: {round(np.mean(self.metric["AP75"]), 2)}; ' \
                                         f'mCov: {round(np.mean(self.metric["mCov"]), 2)}',
                                  text_7='Current Task: DIST prediction...',
                                  text_8=print_progress_bar(i, len(self.eval_data)))
@@ -310,11 +308,8 @@ class DISTBenchmark:
                                  text_4='Benchmark: In progress...',
                                  text_6=f'IoU: {round(np.mean(self.metric["IoU"]), 2)}; ' \
                                         f'AUC: {round(np.mean(self.metric["AUC"]), 2)}; ' \
-                                        f'AP50: {round(np.mean(self.metric["AP50"]), 2)}; ' \
-                                        f'AP75: {round(np.mean(self.metric["AP75"]), 2)}; ' \
                                         f'mCov: {round(np.mean(self.metric["mCov"]), 2)}',
                                  text_7='Current Task: DIST prediction...',
                                  text_8=print_progress_bar(i, len(self.eval_data)))
 
-        rmtree(join(self.dir, 'train'))
         return self._output_metric()

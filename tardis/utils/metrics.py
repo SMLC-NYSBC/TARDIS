@@ -207,13 +207,10 @@ def calculate_f1(logits: Optional[Union[np.ndarray, torch.Tensor]],
 
 
 def AP(logits: np.ndarray,
-       targets: np.ndarray,
-       threshold=None) -> float:
+       targets: np.ndarray) -> float:
     logits = logits.flatten()
     targets = targets.flatten()
 
-    if threshold is not None:
-        return np.sum(np.logical_and(targets, logits)) / np.sum(np.logical_or(targets, logits))
     return average_precision_score(targets, logits)
 
 
@@ -285,13 +282,13 @@ def mcov(input: Optional[Union[np.ndarray, torch.Tensor]],
 
         # Select max IoU (best mach)
         for i in np.unique(input[:, 0]):
-            pred = input[np.where(input[:, 0] == i)[0]]  # Pick input instance
+            pred = input[np.where(input[:, 0] == i)[0], 1:]  # Pick input instance
 
             # Intersection of coordinates between GT and input instances
-            intersection = np.sum([True for i in true_c if i in pred[:, 1:]])
+            intersection = np.sum([True for i in true_c if i in pred])
 
             # Union of coordinates between GT and input instances
-            union = np.unique(np.vstack((true_c, pred[:, 1:])), axis=0).shape[0]
+            union = len(np.unique(np.vstack((true_c, pred)), axis=0))
 
             df.append(intersection / union)
 
