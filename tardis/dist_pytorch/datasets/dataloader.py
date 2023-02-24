@@ -11,7 +11,7 @@
 from os import getcwd, listdir, mkdir
 from os.path import isdir, join
 from shutil import rmtree
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 import numpy as np
 import torch
@@ -122,7 +122,8 @@ class BasicDataset(Dataset):
                 for _, value in kwargs.items()]
 
     def __getitem__(self,
-                    i: int):
+                    i: int) -> Union[Tuple[list, list, list, list, list],
+                                     Tuple[np.ndarray, list, list, list, list, list]]:
         pass
 
 
@@ -148,7 +149,7 @@ class FilamentDataset(BasicDataset):
         super(FilamentDataset, self).__init__(**kwargs)
 
     def __getitem__(self,
-                    i: int) -> Tuple[list, list, list, list, list]:
+                    i: int):
         """ Get list of all coordinates and image patches """
         idx = self.ids[i]
 
@@ -200,8 +201,12 @@ class FilamentDataset(BasicDataset):
                                                                         output=output_idx,
                                                                         df=df_idx)
 
+        if self.benchmark:
+            #   raw_coord, Output edge_f,   node_f, graph,node_idx, node_class
+            return coord, coords_idx, df_idx, graph_idx, output_idx, cls_idx
+
         # Output edge_f,   node_f, graph,     node_idx,   node_class
-        return coords_idx, df_idx, graph_idx, output_idx, df_idx
+        return coords_idx, df_idx, graph_idx, output_idx, cls_idx
 
 
 class PartnetDataset(BasicDataset):
@@ -226,7 +231,7 @@ class PartnetDataset(BasicDataset):
         super(PartnetDataset, self).__init__(**kwargs)
 
     def __getitem__(self,
-                    i: int) -> Tuple[list, list, list, list, list]:
+                    i: int):
         """ Get list of all coordinates and image patches """
         idx = self.ids[i]
 
@@ -272,8 +277,12 @@ class PartnetDataset(BasicDataset):
                                                                         output=output_idx,
                                                                         df=df_idx)
 
+        if self.benchmark:
+            #   raw_coord, Output edge_f,   node_f, graph,node_idx, node_class
+            return coord, coords_idx, df_idx, graph_idx, output_idx, cls_idx
+
         # Output edge_f,   node_f, graph,     node_idx,   node_class
-        return coords_idx, df_idx, graph_idx, output_idx, df_idx
+        return coords_idx, df_idx, graph_idx, output_idx, cls_idx
 
 
 class ScannetDataset(BasicDataset):
@@ -298,7 +307,7 @@ class ScannetDataset(BasicDataset):
         super(ScannetDataset, self).__init__(**kwargs)
 
     def __getitem__(self,
-                    i: int) -> Tuple[list, list, list, list, list]:
+                    i: int):
         """ Get list of all coordinates and image patches """
         idx = self.ids[i]
 
@@ -348,6 +357,10 @@ class ScannetDataset(BasicDataset):
                                                                                  output=output_idx,
                                                                                  df=df_idx,
                                                                                  cls=cls_idx)
+
+        if self.benchmark:
+            #   raw_coord, Output edge_f,   node_f, graph,node_idx, node_class
+            return coord, coords_idx, df_idx, graph_idx, output_idx, cls_idx
 
         # Output edge_f,   node_f, graph,     node_idx,   node_class
         return coords_idx, df_idx, graph_idx, output_idx, cls_idx
@@ -437,7 +450,11 @@ class ScannetColorDataset(BasicDataset):
                                                                                   rgb=rgb_idx,
                                                                                   cls=cls_idx)
 
-        # Output edge_f,   node_f,  graph,     node_idx,   node_class
+        if self.benchmark:
+            #   raw_coord, Output edge_f,mnode_f, graph,node_idx, node_class
+            return coord, coords_idx, rgb_idx, graph_idx, output_idx, cls_idx
+
+        # Output edge_f,   node_f,   graph,     node_idx,   node_class
         return coords_idx, rgb_idx, graph_idx, output_idx, cls_idx
 
 
@@ -497,8 +514,8 @@ class Stanford3DDataset(BasicDataset):
                 coord, rgb_v = load_s3dis_scene(dir=coord_file, downscaling=0.05,
                                                 rgb=True)
             else:
-                coord = load_s3dis_scene(dir=coord_file, downscaling=0.05)
-            coord[:, 1:] = coord[:, 1:] / 0.05
+                coord = load_s3dis_scene(dir=coord_file, downscaling=0.1)
+            coord[:, 1:] = coord[:, 1:] / 0.1
 
             if self.rgb:
                 VD = PatchDataSet(max_number_of_points=self.max_point_in_patch,
@@ -542,6 +559,10 @@ class Stanford3DDataset(BasicDataset):
                                                                                  output=output_idx,
                                                                                  df=df_idx,
                                                                                  cls=cls_idx)
+
+        if self.benchmark:
+            #   raw_coord, Output edge_f,   node_f, graph,node_idx, node_class
+            return coord, coords_idx, df_idx, graph_idx, output_idx, cls_idx
 
         # Output edge_f,   node_f, graph,     node_idx,   node_class
         return coords_idx, df_idx, graph_idx, output_idx, cls_idx
