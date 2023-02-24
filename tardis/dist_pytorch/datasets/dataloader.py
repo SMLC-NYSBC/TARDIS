@@ -612,7 +612,7 @@ def build_dataset(dataset_type: str,
                                       patch_if=max_points_per_patch,
                                       benchmark=benchmark,
                                       train=False)
-    elif dataset_type == 'stanford':
+    elif dataset_type in ['stanford', 'S3DIS']:
         if not benchmark:
             dl_train = Stanford3DDataset(coord_dir=dirs[0],
                                          coord_format='.txt',
@@ -623,7 +623,7 @@ def build_dataset(dataset_type: str,
                                     patch_if=max_points_per_patch,
                                     benchmark=benchmark,
                                     train=False)
-    elif dataset_type == 'stanford_color':
+    elif dataset_type in ['stanford_color', 'S3DIS_rgb']:
         if not benchmark:
             dl_train = Stanford3DDataset(coord_dir=dirs[0],
                                          coord_format='.txt',
