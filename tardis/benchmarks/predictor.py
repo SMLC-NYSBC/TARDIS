@@ -23,7 +23,7 @@ from tardis.spindletorch.datasets.dataloader import PredictionDataset
 from tardis.utils.errors import TardisError
 from tardis.utils.load_data import load_image
 from tardis.utils.logo import print_progress_bar, TardisLogo
-from tardis.utils.metrics import AP, AUC, calculate_f1, IoU, mcov
+from tardis.utils.metrics import AP, AUC, calculate_f1, IoU, mcov, mwcov
 from tardis.utils.predictor import Predictor
 
 
@@ -191,7 +191,8 @@ class DISTBenchmark:
             'AUC': [],  # Graph
             # 'AP50': [],  # Instance
             # 'AP75': [],  # Instance
-            'mCov': []  # Instance
+            'mCov': [],  # Instance
+            'mWCov': [],  # Instance
         }
         self.eval_data = build_dataset(dataset_type=dataset,
                                        dirs=[None, self.dir],
@@ -262,6 +263,13 @@ class DISTBenchmark:
                                             coords, output_idx, self.sort)
         self.metric['mCov'].append(mcov(input_IS, target_IS))
 
+        # mWCov
+        input_IS, target_IS = self._segment(self.threshold, self.max_connections,
+                                            logits, targets,
+                                            coords, output_idx,
+                                            self.sort)
+        self.metric['mWCov'].append(mwcov(input_IS, target_IS))
+
     def _predict(self,
                  input):
         return self.model.predict(input)
@@ -302,7 +310,8 @@ class DISTBenchmark:
                                  text_4='Benchmark: In progress...',
                                  text_6=f'IoU: {round(np.mean(self.metric["IoU"]), 2)}; ' \
                                         f'AUC: {round(np.mean(self.metric["AUC"]), 2)}; ' \
-                                        f'mCov: {round(np.mean(self.metric["mCov"]), 2)}',
+                                        f'mCov: {round(np.mean(self.metric["mCov"]), 2)}; ' \
+                                        f'mWCov: {round(np.mean(self.metric["mWCov"]), 2)}',
                                  text_7='Current Task: DIST prediction...',
                                  text_8=print_progress_bar(i, len(self.eval_data)))
 

@@ -59,14 +59,12 @@ class GraphInstanceV2:
         for idx_patch, graph_patch in zip(idx, graph_pred):
             for k, _ in enumerate(idx_patch):
                 row = graph_patch[k, :]
-                row_v = [row[id] if graph[i, idx_patch[k]] == 0
-                         else np.mean((graph[i, idx_patch[k]], row[id]))
-                         for id, i in enumerate(idx_patch)]
+                row_v = [row[id] if graph[i, idx_patch[k]] == 0 else np.mean((graph[i,
+                idx_patch[k]], row[id])) for id, i in enumerate(idx_patch)]
 
                 column = graph_patch[:, k]
-                column_v = [row[id] if graph[i, idx_patch[k]] == 0
-                            else np.mean((graph[i, idx_patch[k]], column[id]))
-                            for id, i in enumerate(idx_patch)]
+                column_v = [row[id] if graph[i, idx_patch[k]] == 0 else np.mean((graph[i,
+                idx_patch[k]], column[id])) for id, i in enumerate(idx_patch)]
 
                 graph[list(idx_patch), idx_patch[k]] = row_v
                 graph[idx_patch[k], list(idx_patch)] = column_v
@@ -129,10 +127,11 @@ class GraphInstanceV2:
 
         return cls_df
 
-    def _adjacency_matrix(self,
-                          graphs: list,
-                          coord: np.ndarray,
-                          output_idx: Optional[list] = None) -> list:
+    def _adjacency_list(self,
+                        graphs: list,
+                        coord: np.ndarray,
+                        output_idx: Optional[list] = None,
+                        threshold=True) -> list:
         """
         Builder of adjacency matrix from stitched coord and graph voxels
         The output of the adjacency matrix is list containing:
@@ -147,39 +146,55 @@ class GraphInstanceV2:
             list: Adjacency list of all bind graph connections.
         """
         all_prop = [[idx, list(i), [], []] for idx, i in enumerate(coord)]
-        n = coord.shape[0]
-
-        if output_idx is None:
-            output_idx = np.arange(graphs[0].shape[0])
 
         for g, o in zip(graphs, output_idx):
-            interaction_id = np.transpose(np.where(g >= self.threshold))
-            interaction_id = interaction_id[interaction_id[:, 0] != interaction_id[:, 1]]
-            interaction_id = interaction_id[:, 0] * n + interaction_id[:, 1]
-            interaction_id = np.unique(interaction_id)
+            top_k_indices = np.argsort(g, axis=1)[:, :-10 - 1:-1]
+            top_k_probs = np.take_along_axis(g, top_k_indices, axis=1).tolist()
 
-            for i in interaction_id:
-                row = i // n
-                col = i % n
-                prop = g[row, col]
+            top_k_indices = o[top_k_indices].tolist()
 
-                all_prop[o[row]][2].append(o[col])
-                all_prop[o[row]][3].append(prop)
+            # Find the indices of the non-zero values
+            if threshold:
+                top_k_indices = [[x for x, y in zip(i, p) if y >= self.threshold]
+                                 for i, p in zip(top_k_indices, top_k_probs)]
+                top_k_probs = [[x for x in p if x >= self.threshold]
+                               for p in top_k_probs]
+            else:
+                top_k_indices = [[x for x, y in zip(i, p) if y != 0]
+                                 for i, p in zip(top_k_indices, top_k_probs)]
+                top_k_probs = [[x for x in p if x != 0]
+                               for p in top_k_probs]
 
+            adj = list(zip(o, top_k_indices, top_k_probs))
+
+            for i in adj:
+                indices = i[1]
+                probs = i[2]
+
+                # Remove self connection
+                self_connect = [id for id, x in enumerate(indices) if x == i[0]][0]
+                indices.pop(self_connect)
+                probs.pop(self_connect)
+
+                all_prop[i[0]][2].extend(indices)
+                all_prop[i[0]][3].extend(probs)
+
+        # Merge duplicates
         for p_id, i in enumerate(all_prop):
             inter = i[2]
             prop = i[3]
             if len(inter) > 1:
                 all_prop[p_id][2] = list(np.unique(inter))
-                all_prop[p_id][3] = [np.median([x for idx, x in enumerate(prop)
-                                                if inter[idx] == k])
-                                     for k in np.unique(inter)]
+                all_prop[p_id][3] = [
+                    np.median([x for idx, x in enumerate(prop) if inter[idx] == k]) for k
+                    in np.unique(inter)]
 
+        # Sort and remove self connection
         for id, a in enumerate(all_prop):
             if len(a[2]) > 1:
                 prop, inter = zip(*sorted(zip(a[3], a[2]), reverse=True))
-                all_prop[id][2] = list(inter)
-                all_prop[id][3] = list(prop)
+                all_prop[id][2] = list(inter)[:self.connection]
+                all_prop[id][3] = list(prop)[:self.connection]
 
         return all_prop
 
@@ -200,7 +215,7 @@ class GraphInstanceV2:
 
         # Find initial point
         while len(idx_df) == 1 and x < len(adj_matrix):
-            idx_df = adj_matrix[x][2][:2]
+            idx_df = adj_matrix[x][2][:self.connection]
             idx_df.append(x)
             x += 1
 
@@ -307,9 +322,7 @@ class GraphInstanceV2:
                             f'Expected list of ndarrays but got {type(coord)}')
 
         """Build Adjacency list from graph representation"""
-        adjacency_matrix = self._adjacency_matrix(graphs=graph,
-                                                  coord=coord,
-                                                  output_idx=idx)
+        adjacency_matrix = self._adjacency_list(graphs=graph, coord=coord, output_idx=idx)
 
         coord_segment = []
         stop = False
@@ -327,24 +340,21 @@ class GraphInstanceV2:
                     segment = coord[idx]
 
                 if segment.shape[1] == 3:
-                    coord_segment.append(np.stack((np.repeat(segment_id,
-                                                             segment.shape[0]),
-                                                   segment[:, 0],
-                                                   segment[:, 1],
-                                                   segment[:, 2])).T)
+                    coord_segment.append(np.stack((
+                                                  np.repeat(segment_id, segment.shape[0]),
+                                                  segment[:, 0], segment[:, 1],
+                                                  segment[:, 2])).T)
                 elif segment.shape[1] == 2:
-                    coord_segment.append(np.stack((np.repeat(segment_id,
-                                                             segment.shape[0]),
-                                                   segment[:, 0],
-                                                   segment[:, 1],
-                                                   np.zeros((segment.shape[0], )))).T)
+                    coord_segment.append(np.stack((
+                                                  np.repeat(segment_id, segment.shape[0]),
+                                                  segment[:, 0], segment[:, 1],
+                                                  np.zeros((segment.shape[0],)))).T)
                 segment_id += 1
 
             # Mask point assigned to the instance
             for id in idx:
-                adjacency_matrix[id][1],\
-                    adjacency_matrix[id][2], \
-                    adjacency_matrix[id][3] = [], [], []
+                adjacency_matrix[id][1], adjacency_matrix[id][2], adjacency_matrix[id][
+                    3] = [], [], []
 
             if sum([1 for i in adjacency_matrix if sum(i[2]) > 0]) == 0:
                 stop = True

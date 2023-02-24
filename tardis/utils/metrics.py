@@ -303,6 +303,33 @@ def mcov(input: Optional[Union[np.ndarray, torch.Tensor]],
     return sum(mCov) / len(mCov)
 
 
+def mwcov(input: Optional[Union[np.ndarray, torch.Tensor]],
+          targets: Optional[Union[np.ndarray, torch.Tensor]]) -> float:
+    mCov = []
+
+    # Get GT instances, compute IoU for best mache between GT and input
+    for j in np.unique(targets[:, 0]):
+        true_c = targets[np.where(targets[:, 0] == j)[0], 1:]  # Pick GT instance
+        weight = true_c.shape[0] / targets.shape[0]
+        df = []
+
+        # Select max IoU (best mach)
+        for i in np.unique(input[:, 0]):
+            pred = input[np.where(input[:, 0] == i)[0], 1:]  # Pick input instance
+
+            # Intersection of coordinates between GT and input instances
+            intersection = np.sum([True for i in true_c if i in pred])
+
+            # Union of coordinates between GT and input instances
+            union = len(np.unique(np.vstack((true_c, pred)), axis=0))
+
+            df.append(intersection / union)
+
+        mCov.append(weight * np.max(df))  # Pick max IoU for GT instance
+
+    return sum(mCov)
+
+
 def confusion_matrix(logits: Optional[Union[np.ndarray, torch.Tensor]],
                      targets: Optional[Union[np.ndarray, torch.Tensor]]):
     if torch.is_tensor(logits):

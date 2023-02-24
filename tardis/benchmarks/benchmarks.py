@@ -147,7 +147,7 @@ def main(data_set: str,
         pass
 
     """Benchmark Summary"""
-    metric_keys = ["IoU", "AUC", "mCov"] \
+    metric_keys = ["IoU", "AUC", "mCov", "mWCov"] \
         if network != 'cnn' else ["F1", "AUC", "IoU", "AP"]
 
     if model_best_time != 'None':
@@ -191,11 +191,11 @@ def main(data_set: str,
                                                  round(sum(nbm.values()) / len(nbm), 2),
                                                  nbm]]
         else:
-            BEST_SCORE[m_name] = {}
-            BEST_SCORE[m_name][data_set] = [[time.asctime(),
-                                             link,
-                                             round(sum(nbm.values()) / len(nbm), 2),
-                                             nbm]]
+            BEST_SCORE[m_name] = {'data_set': []}
+            BEST_SCORE[m_name][data_set].append([time.asctime(),
+                                                 link,
+                                                 round(sum(nbm.values()) / len(nbm), 2),
+                                                 nbm])
 
         """Upload model and json"""
         if model_best_time == 'None':
