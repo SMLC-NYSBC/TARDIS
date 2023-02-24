@@ -136,6 +136,8 @@ class NumpyToAmira:
                         '            Dimension -1 \n'
                         '        } \n')
             f.write('    } \n')
+            f.write('    SpatialGraphUnitsPoint { \n')
+            f.write('    } \n')
             f.write('    Units { \n'
                     u'        Coordinates "Å" \n'
                     '    } \n')
