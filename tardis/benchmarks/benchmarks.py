@@ -191,7 +191,7 @@ def main(data_set: str,
                                                  round(sum(nbm.values()) / len(nbm), 2),
                                                  nbm]]
         else:
-            BEST_SCORE[m_name] = {'data_set': []}
+            BEST_SCORE[m_name] = {f'{data_set}': []}
             BEST_SCORE[m_name][data_set].append([time.asctime(),
                                                  link,
                                                  round(sum(nbm.values()) / len(nbm), 2),

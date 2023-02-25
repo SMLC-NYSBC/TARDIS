@@ -11,7 +11,7 @@ import time
 from os import makedirs
 from os.path import isdir, join
 from shutil import rmtree
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 import torch
@@ -219,9 +219,10 @@ class DISTBenchmark:
     def _segment(threshold: float,
                  max_connections: int,
                  logits: List[np.ndarray],
+                 targets: List[np.ndarray],
                  coord:  List[np.ndarray],
                  output_idx: List[np.ndarray],
-                 sort: bool) -> np.ndarray:
+                 sort: bool) -> Tuple[np.ndarray, np.ndarray]:
         GraphToSegment = GraphInstanceV2(threshold=threshold,
                                          connection=max_connections)
         input_IS = GraphToSegment.patch_to_segment(graph=logits,
@@ -230,22 +231,28 @@ class DISTBenchmark:
                                                    prune=2,
                                                    sort=sort)
 
-        return input_IS
+        GraphToSegment = GraphInstanceV2(threshold=0.5,
+                                         connection=50000)
+        target_IS = GraphToSegment.patch_to_segment(graph=targets,
+                                                    coord=coord,
+                                                    idx=output_idx,
+                                                    prune=2,
+                                                    sort=sort)
+        return input_IS, target_IS
 
     def _benchmark_IS(self,
                       logits: List[np.ndarray],
-                      targets: np.ndarray,
+                      targets: List[np.ndarray],
+                      coords: List[np.ndarray],
                       output_idx: List[np.ndarray]):
         # mCov
-        input_IS = self._segment(self.threshold, self.max_connections,
-                                 self.sort)
-        self.metric['mCov'].append(mcov(input_IS, targets))
+        input_IS, target_IS = self._segment(self.threshold, self.max_connections,
+                                            logits, targets,
+                                            coords, output_idx, self.sort)
+        self.metric['mCov'].append(mcov(input_IS, target_IS))
 
         # mWCov
-        input_IS = self._segment(self.threshold, self.max_connections,
-                                 logits, targets[:, 1:], output_idx,
-                                 self.sort)
-        self.metric['mWCov'].append(mwcov(input_IS, targets))
+        self.metric['mWCov'].append(mwcov(input_IS, target_IS))
 
     def _predict(self,
                  input):
@@ -265,12 +272,12 @@ class DISTBenchmark:
 
         for i in range(len(self.eval_data)):
             """Predict"""
-            coord_gt, coords, _, target, output_idx, _ = self.eval_data.__getitem__(i)
+            coords, _, target, output_idx, _ = self.eval_data.__getitem__(i)
             target = [t.cpu().detach().numpy() for t in target]
             output_idx = [o.cpu().detach().numpy() for o in output_idx]
 
             graphs = []
-            for edge, graph in zip(coords, target):
+            for edge, graph, out in zip(coords, target, output_idx):
                 input = self._predict(edge[None, :])
                 graphs.append(input)
 
@@ -279,7 +286,7 @@ class DISTBenchmark:
 
             """Segment graphs"""
             coords_df = [c.cpu().detach().numpy() for c in coords]
-            self._benchmark_IS(graphs, coord_gt, output_idx)
+            self._benchmark_IS(graphs, target, coords_df, output_idx)
 
             self.tardis_progress(title=self.title,
                                  text_1=f'Running point cloud segmentation benchmark on '
