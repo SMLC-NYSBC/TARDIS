@@ -180,13 +180,13 @@ class DistTrainer(BasicTrainer):
                                                               idx=[out],
                                                               prune=0,
                                                               sort=False)
-                    input = torch.where(torch.sigmoid(edge[0, 0, :]) > 0.5, 1, 0)
+                    input = torch.where(torch.sigmoid(edge[0, 0, :]) > 0.5, 1, 0).cpu().detach().numpy()
                     input0_5 = self.Graph0_1.patch_to_segment(graph=[input],
                                                               coord=coord,
                                                               idx=[out],
                                                               prune=0,
                                                               sort=False)
-                    input = torch.where(torch.sigmoid(edge[0, 0, :]) > 0.9, 1, 0)
+                    input = torch.where(torch.sigmoid(edge[0, 0, :]) > 0.9, 1, 0).cpu().detach().numpy()
                     input0_9 = self.Graph0_1.patch_to_segment(graph=[input],
                                                               coord=coord,
                                                               idx=[out],
