@@ -168,13 +168,13 @@ class DistTrainer(BasicTrainer):
                     acc, prec, recall, f1, th = eval_graph_f1(logits=torch.sigmoid(edge[:, 0, :]),
                                                               targets=graph)
 
-                    target = self.Graph0_5.patch_to_segment(graph=[graph[0, :]],
+                    target = self.Graph0_5.patch_to_segment(graph=[graph[0, :].cpu().detach().numpy()],
                                                             coord=coord,
                                                             idx=[out],
                                                             prune=0,
                                                             sort=False)
 
-                    input = torch.where(torch.sigmoid(edge[0, 0, :]) > 0.1, 1, 0)
+                    input = torch.where(torch.sigmoid(edge[0, 0, :]) > 0.1, 1, 0).cpu().detach().numpy()
                     input0_1 = self.Graph0_1.patch_to_segment(graph=[input],
                                                               coord=coord,
                                                               idx=[out],
