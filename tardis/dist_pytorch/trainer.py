@@ -134,7 +134,7 @@ class DistTrainer(BasicTrainer):
 
                 # Update progress bar
                 self._update_progress_bar(loss_desc=f'Training: (loss {loss_value:.4f};'
-                                                    f' LR: {lr:. 5f})',
+                                                    f' LR: {lr:.5f})',
                                           idx=idx)
 
     def _validate(self):
