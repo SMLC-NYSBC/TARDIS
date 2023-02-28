@@ -115,7 +115,7 @@ class DistTrainer(BasicTrainer):
             """Training"""
             for edge, node, graph in zip(e, n, g):
                 edge, graph = edge.to(self.device), graph.to(self.device)
-                self.optimizer.zero_grad(set_to_none=True)
+                self.optimizer.zero_grad()
 
                 if self.node_input:
                     edge = self.model(coords=edge, node_features=node.to(self.device))
@@ -125,7 +125,7 @@ class DistTrainer(BasicTrainer):
                 # Back-propagate
                 loss = self.criterion(edge[:, 0, :], graph)  # Calc. loss
                 loss.backward()  # One backward pass
-                self.optimizer.step()  # Update the parameters
+                self.optimizer.step_and_update_lr()  # Update the parameters
 
                 # Store training loss metric
                 loss_value = loss.item()

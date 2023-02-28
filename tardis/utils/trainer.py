@@ -174,11 +174,8 @@ class BasicTrainer:
                                     f'{self.checkpoint_name}_checkpoint.pth'))
 
                 """Learning rate scheduler block"""
-                if self.lr_scheduler is not None:
-                    self.lr_scheduler.step()
-
-                    # Save current learning rate
-                    self.learning_rate.append(self.optimizer.param_groups[0]['lr'])
+                # Save current learning rate
+                self.learning_rate.append(self.optimizer.param_groups[0]['lr'])
 
     def run_trainer(self):
         """

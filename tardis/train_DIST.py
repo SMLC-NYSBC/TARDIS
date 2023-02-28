@@ -100,11 +100,6 @@ from tardis.version import version
               type=float,
               help='Learning rate.',
               show_default=True)
-@click.option('-ls', '--lr_rate_schedule',
-              default=False,
-              type=bool,
-              help='If True, use learning rate scheduler [StepLR].',
-              show_default=True)
 @click.option('-ch', '--checkpoint',
               default=None,
               type=str,
@@ -258,7 +253,6 @@ def main(dir: str,
                checkpoint=checkpoint,
                loss_function=loss,
                learning_rate=loss_lr,
-               learning_rate_scheduler=lr_rate_schedule,
                early_stop_rate=early_stop,
                device=device,
                epochs=epochs)

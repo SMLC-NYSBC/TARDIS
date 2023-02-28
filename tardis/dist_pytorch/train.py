@@ -12,8 +12,6 @@ import sys
 from os import getcwd
 
 import torch
-from fairseq.optim.lr_scheduler.inverse_square_root_schedule import (
-    InverseSquareRootLRScheduleConfig, InverseSquareRootSchedule)
 from torch import optim
 
 from tardis.dist_pytorch.dist import CDIST, DIST
@@ -132,7 +130,8 @@ def train_dist(train_dataloader,
         loss_fn = losses_f[loss_function]
 
     """Build training optimizer"""
-    optimizer = optim.Adam(params=model.parameters(), lr=learning_rate)
+    optimizer = optim.Adam(params=model.parameters(),
+                           betas=(0.9, 0.98), eps=1e-9)
 
     """Optionally: Checkpoint model"""
     if checkpoint is not None:
@@ -140,14 +139,8 @@ def train_dist(train_dataloader,
 
         del save_train
 
-    """Optionally: Build learning rate scheduler"""
-    if learning_rate_scheduler:
-        config = InverseSquareRootLRScheduleConfig(warmup_updates=4,
-                                                   warmup_init_lr=0.01,
-                                                   lr=[learning_rate])
-        learning_rate_scheduler = InverseSquareRootSchedule(config, optimizer)
-    else:
-        learning_rate_scheduler = None
+    """Build learning rate scheduler"""
+    optimizer = ISR_LR(optimizer, lr_mul=learning_rate, warmup_steps=5)
 
     """Build trainer"""
     if model_structure['dist_type'] == 'instance':
@@ -179,3 +172,37 @@ def train_dist(train_dataloader,
 
     """Train"""
     train.run_trainer()
+
+
+class ISR_LR:
+    def __init__(self,
+                 optimizer: optim.Adam,
+                 lr_mul,
+                 warmup_steps):
+        self._optimizer = optimizer
+        self.lr_mul = lr_mul
+        self.warmup_steps = warmup_steps
+        self.steps = 0
+
+    def step_and_update_lr(self):
+        """Step with the inner optimize"""
+        self._update_learning_rate()
+        self._optimizer.step()
+
+    def zero_grad(self):
+        """Zero out the gradients with the inner optimizer"""
+        self._optimizer.zero_grad(set_to_none=True)
+
+    def _get_lr_scale(self):
+        n_steps, n_warmup_steps = self.steps, self.warmup_steps
+        return (100 ** -0.5) * min(n_steps ** (-0.5),
+                                   n_steps * n_warmup_steps ** (-1.5))
+
+    def _update_learning_rate(self):
+        """Learning rate scheduling per step"""
+
+        self.steps += 1
+        lr = self.lr_mul * self._get_lr_scale()
+
+        for param_group in self._optimizer.param_groups:
+            param_group['lr'] = lr
