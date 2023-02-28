@@ -34,7 +34,6 @@ def train_dist(train_dataloader,
                checkpoint: Optional[str] = None,
                loss_function='bce',
                learning_rate=0.001,
-               learning_rate_scheduler=False,
                early_stop_rate=10,
                device='gpu',
                epochs=1000):
@@ -48,7 +47,6 @@ def train_dist(train_dataloader,
         checkpoint (None, optional): Optional, DIST model checkpoint.
         loss_function (str): Type of loss function.
         learning_rate (float): Learning rate.
-        learning_rate_scheduler (bool): If True, StepLR is used with training.
         early_stop_rate (int): Define max. number of epoch's without improvements
         after which training is stopped.
         device (torch.device): Device on which model is trained.
@@ -152,7 +150,6 @@ def train_dist(train_dataloader,
                             print_setting=print_setting,
                             training_DataLoader=train_dataloader,
                             validation_DataLoader=test_dataloader,
-                            lr_scheduler=learning_rate_scheduler,
                             epochs=epochs,
                             early_stop_rate=early_stop_rate,
                             checkpoint_name=model_structure['dist_type'])
@@ -165,7 +162,6 @@ def train_dist(train_dataloader,
                              print_setting=print_setting,
                              training_DataLoader=train_dataloader,
                              validation_DataLoader=test_dataloader,
-                             lr_scheduler=learning_rate_scheduler,
                              epochs=epochs,
                              early_stop_rate=early_stop_rate,
                              checkpoint_name=model_structure['dist_type'])
