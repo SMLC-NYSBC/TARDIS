@@ -138,7 +138,7 @@ def train_dist(train_dataloader,
         del save_train
 
     """Build learning rate scheduler"""
-    optimizer = ISR_LR(optimizer, lr_mul=learning_rate, warmup_steps=100)
+    optimizer = ISR_LR(optimizer, lr_mul=learning_rate, warmup_steps=1000)
 
     """Build trainer"""
     if model_structure['dist_type'] == 'instance':
