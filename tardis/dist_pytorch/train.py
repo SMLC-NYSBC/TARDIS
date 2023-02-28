@@ -140,7 +140,7 @@ def train_dist(train_dataloader,
         del save_train
 
     """Build learning rate scheduler"""
-    optimizer = ISR_LR(optimizer, lr_mul=learning_rate, warmup_steps=5)
+    optimizer = ISR_LR(optimizer, lr_mul=learning_rate, warmup_steps=100)
 
     """Build trainer"""
     if model_structure['dist_type'] == 'instance':
@@ -195,7 +195,7 @@ class ISR_LR:
 
     def _get_lr_scale(self):
         n_steps, n_warmup_steps = self.steps, self.warmup_steps
-        return (100 ** -0.5) * min(n_steps ** (-0.5),
+        return (1 ** -0.5) * min(n_steps ** (-0.5),
                                    n_steps * n_warmup_steps ** (-1.5))
 
     def _update_learning_rate(self):
