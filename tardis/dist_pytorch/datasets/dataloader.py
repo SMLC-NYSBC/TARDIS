@@ -494,12 +494,12 @@ class Stanford3DDataset(BasicDataset):
         if self.patch_size[i, 0] == 0:
             # Pre-process coord and image data also, if exist remove duplicates
             if self.rgb:
-                coord, rgb_v = load_s3dis_scene(dir=coord_file, downscaling=0.025,
+                coord, rgb_v = load_s3dis_scene(dir=coord_file, downscaling=0.05,
                                                 rgb=True)
-                # coord[:, 1:] = coord[:, 1:] / 0.025
+                # coord[:, 1:] = coord[:, 1:] / 0.05
             else:
-                coord = load_s3dis_scene(dir=coord_file, downscaling=0.025)
-            coord[:, 1:] = coord[:, 1:] / 0.025
+                coord = load_s3dis_scene(dir=coord_file, downscaling=0.05)
+            coord[:, 1:] = coord[:, 1:] / 0.05
 
             if self.rgb:
                 VD = PatchDataSet(max_number_of_points=self.max_point_in_patch,
