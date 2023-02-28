@@ -91,6 +91,11 @@ def main(data_set: str,
                        map_location=get_device(device))
 
     """Best model list from S3"""
+    rgb = False
+    if data_set.endswith('rgb'):
+        data_set = data_set[:-4]
+        rgb = True
+
     if [True for x in model['model_struct_dict'] if x.startswith('cnn')]:
         network = 'cnn'
         DIR_NN = join(DIR_, 'Best_model_CNN', data_set)
@@ -106,6 +111,9 @@ def main(data_set: str,
                     desc=f'Given data set {data_set} is not supporter! '
                     f'Expected one of {listdir(DIR_NN)}')
 
+    if rgb:
+        data_set = f'{data_set}_rgb'
+
     BEST_SCORE = get_benchmark_aws()
 
     m_name = model['model_struct_dict']
@@ -116,7 +124,7 @@ def main(data_set: str,
 
     """Build DataLoader"""
     if network == 'cnn':
-        m_name = f'Model: {m_name["cnn_type"]}_{m_name["conv_scaler"]}'
+        m_name = f'{m_name["cnn_type"]}_{m_name["conv_scaler"]}'
 
         predictor_bch = CnnBenchmark(model=predictor,
                                      dataset=data_set,
@@ -124,7 +132,7 @@ def main(data_set: str,
                                      threshold=nn_threshold,
                                      patch_size=patch_size)
     else:
-        m_name = f'Model: dist_{m_name["dist_type"]}_{m_name["structure"]}'
+        m_name = f'dist_{m_name["dist_type"]}_{m_name["structure"]}'
 
         predictor_bch = DISTBenchmark(model=predictor,
                                       dataset=data_set,
@@ -163,7 +171,7 @@ def main(data_set: str,
 
     tardis_progress(title='TARDIS - NN Benchmark - Results',
                     text_1=f'New model is better: {new_is_best}',
-                    text_3=f'Benchmark results for {m_name}: ',
+                    text_3=f'Benchmark results for model: {m_name}: ',
                     text_4=f'Model dataset benchmarked on: {data_set}',
                     text_6=f'Last best model from [{model_best_time}]:',
                     text_7=best_metric,

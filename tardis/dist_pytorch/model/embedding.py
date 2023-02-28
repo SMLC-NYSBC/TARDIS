@@ -12,6 +12,7 @@ from typing import Optional, Union
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 
 class NodeEmbedding(nn.Module):
@@ -28,16 +29,27 @@ class NodeEmbedding(nn.Module):
 
     def __init__(self,
                  n_in: int,
-                 n_out: int):
+                 n_out: int,
+                 sigma=0.01):
         super().__init__()
-        self.linear = nn.Linear(n_in, n_out, bias=False)
+        # self.linear = nn.Linear(n_in, n_out, bias=False)
         self.n_in = n_in
+        self.sigma = torch.tensor(sigma, dtype=torch.float32)
+
+        w = torch.randn(n_out, n_in)
+        b = torch.rand(n_out) * 2 * torch.pi
+
+        self.register_buffer('weight', w)
+        self.register_buffer('bias', b)
 
     def forward(self,
                 input_node: Optional[torch.Tensor] = None) -> Union[torch.Tensor,
                                                                     None]:
         """
         Forward node feature embedding.
+
+        Input: Batch x Length x Dim
+        Output: Batch x Length x Dim
 
         Args:
             input_node (torch.Tensor): Node features (RGB or image patches).
@@ -48,7 +60,10 @@ class NodeEmbedding(nn.Module):
         if input_node is None:
             return None
 
-        return self.linear(input_node)
+        # return self.linear(input_node)
+        return torch.cos(F.linear(input_node,
+                                  self.weight/self.sigma,
+                                  self.bias))
 
 
 class EdgeEmbedding(nn.Module):

@@ -101,7 +101,7 @@ class BasicTrainer:
 
     @staticmethod
     def _update_desc(stop_count: int,
-                     f1: list) -> str:
+                     metric: list) -> str:
         """
         Utility function to update progress bar description.
 
@@ -112,8 +112,18 @@ class BasicTrainer:
         Returns:
             str: Updated progress bar status.
         """
-        desc = f'Epochs: stop counter {stop_count}; best F1 {f1[0]:.2f}; last f1: {f1[1]:.2f}'
+        desc = f'Epochs: early_stop: {stop_count}; best F1 {metric[0]:.2f}; ' \
+               f'last f1: {metric[1]:.2f}'
         return desc
+
+    def _update_epoch_desc(self):
+        # For each Epoch load be t model from previous run
+        if self.id == 0:
+            self.epoch_desc = 'Epochs: early_stop: 0; best F1: NaN'
+        else:
+            self.epoch_desc = self._update_desc(self.early_stopping.counter,
+                                                [round(np.max(self.f1), 3),
+                                                 round(self.f1[:-1], 3)])
 
     def _update_progress_bar(self,
                              loss_desc: str,
@@ -163,6 +173,13 @@ class BasicTrainer:
                                     f'{self.checkpoint_name}_checkpoint',
                                     f'{self.checkpoint_name}_checkpoint.pth'))
 
+                """Learning rate scheduler block"""
+                if self.lr_scheduler is not None:
+                    self.lr_scheduler.step()
+
+                    # Save current learning rate
+                    self.learning_rate.append(self.optimizer.param_groups[0]['lr'])
+
     def run_trainer(self):
         """
         Main training loop.
@@ -186,13 +203,7 @@ class BasicTrainer:
             """Initialized training"""
             self.id = id
 
-            # For each Epoch load be t model from previous run
-            if self.id == 0:
-                self.epoch_desc = 'Epochs: stop counter 0; best F1: NaN'
-            else:
-                self.epoch_desc = self._update_desc(self.early_stopping.counter,
-                                                    [round(np.max(self.f1), 3), 0.0])
-
+            self._update_epoch_desc()
             self.progress_epoch(title=f'{self.checkpoint_name} training module',
                                 text_1=self.print_setting[0],
                                 text_2=self.print_setting[1],
@@ -217,49 +228,51 @@ class BasicTrainer:
                 # Save current learning rate
                 self.learning_rate.append(self.optimizer.param_groups[0]['lr'])
 
-            """ Save training metrics """
-            if len(self.training_loss) > 0:
-                np.savetxt(join(getcwd(),
-                                f'{self.checkpoint_name}_checkpoint',
-                                'training_losses.csv'),
-                           self.training_loss,
-                           delimiter=';')
-            if len(self.validation_loss) > 0:
-                np.savetxt(join(getcwd(),
-                                f'{self.checkpoint_name}_checkpoint',
-                                'validation_losses.csv'),
-                           self.validation_loss,
-                           delimiter=',')
-            if len(self.f1) > 0:
-                np.savetxt(join(getcwd(),
-                                f'{self.checkpoint_name}_checkpoint',
-                                'eval_metric.csv'),
-                           np.column_stack([self.accuracy,
-                                            self.precision,
-                                            self.recall,
-                                            self.threshold,
-                                            self.f1]),
-                           delimiter=',')
-
-            """ Save current model weights"""
-            # If mean evaluation loss is higher than save checkpoint
-            if all(self.f1[-1:][0] >= i for i in self.f1[:-1]):
-                torch.save({'model_struct_dict': self.structure,
-                            'model_state_dict': self.model.state_dict(),
-                            'optimizer_state_dict': self.optimizer.state_dict()},
-                           join(getcwd(),
-                                f'{self.checkpoint_name}_checkpoint',
-                                f'{self.checkpoint_name}_checkpoint.pth'))
-
-            torch.save({'model_struct_dict': self.structure,
-                        'model_state_dict': self.model.state_dict(),
-                        'optimizer_state_dict': self.optimizer.state_dict()},
-                       join(getcwd(),
-                            f'{self.checkpoint_name}_checkpoint',
-                            'model_weights.pth'))
-
-            if self.early_stopping.early_stop:
+            stop = self._save_metric()
+            if stop:
                 break
+
+    def _save_metric(self) -> bool:
+        """ Save training metrics """
+        if len(self.training_loss) > 0:
+            np.savetxt(join(getcwd(),
+                            f'{self.checkpoint_name}_checkpoint', 'training_losses.csv'),
+                       self.training_loss, delimiter=';')
+        if len(self.validation_loss) > 0:
+            np.savetxt(join(getcwd(),
+                            f'{self.checkpoint_name}_checkpoint', 'validation_losses.csv'),
+                       self.validation_loss, delimiter=',')
+        if len(self.f1) > 0:
+            np.savetxt(join(getcwd(),
+                            f'{self.checkpoint_name}_checkpoint', 'eval_metric.csv'),
+                       np.column_stack([self.accuracy, self.precision, self.recall,
+                                        self.threshold, self.f1]),
+                       delimiter=',')
+
+        """ Save current model weights"""
+        # If mean evaluation loss is higher than save checkpoint
+        if all(self.f1[-1:][0] >= i for i in self.f1[:-1]):
+            torch.save({
+                'model_struct_dict': self.structure,
+                'model_state_dict': self.model.state_dict(),
+                'optimizer_state_dict': self.optimizer.state_dict()
+            },
+                join(getcwd(),
+                     f'{self.checkpoint_name}_checkpoint',
+                     f'{self.checkpoint_name}_checkpoint.pth'))
+
+        torch.save({
+            'model_struct_dict': self.structure,
+            'model_state_dict': self.model.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict()
+        },
+            join(getcwd(),
+                 f'{self.checkpoint_name}_checkpoint',
+                 'model_weights.pth'))
+
+        if self.early_stopping.early_stop:
+            return True
+        return False
 
     def _train(self):
         pass

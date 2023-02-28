@@ -12,8 +12,9 @@ import sys
 from os import getcwd
 
 import torch
+from fairseq.optim.lr_scheduler.inverse_square_root_schedule import (
+    InverseSquareRootLRScheduleConfig, InverseSquareRootSchedule)
 from torch import optim
-from torch.optim.lr_scheduler import StepLR
 
 from tardis.dist_pytorch.dist import CDIST, DIST
 from tardis.dist_pytorch.trainer import CDistTrainer, DistTrainer
@@ -141,7 +142,10 @@ def train_dist(train_dataloader,
 
     """Optionally: Build learning rate scheduler"""
     if learning_rate_scheduler:
-        learning_rate_scheduler = StepLR(optimizer, step_size=5, gamma=0.5)
+        config = InverseSquareRootLRScheduleConfig(warmup_updates=4,
+                                                   warmup_init_lr=0.01,
+                                                   lr=[learning_rate])
+        learning_rate_scheduler = InverseSquareRootSchedule(config, optimizer)
     else:
         learning_rate_scheduler = None
 

@@ -494,11 +494,12 @@ class Stanford3DDataset(BasicDataset):
         if self.patch_size[i, 0] == 0:
             # Pre-process coord and image data also, if exist remove duplicates
             if self.rgb:
-                coord, rgb_v = load_s3dis_scene(dir=coord_file, downscaling=0.05,
+                coord, rgb_v = load_s3dis_scene(dir=coord_file, downscaling=0.025,
                                                 rgb=True)
+                # coord[:, 1:] = coord[:, 1:] / 0.025
             else:
-                coord = load_s3dis_scene(dir=coord_file, downscaling=0.1)
-            coord[:, 1:] = coord[:, 1:] / 0.1
+                coord = load_s3dis_scene(dir=coord_file, downscaling=0.025)
+            coord[:, 1:] = coord[:, 1:] / 0.025
 
             if self.rgb:
                 VD = PatchDataSet(max_number_of_points=self.max_point_in_patch,
@@ -601,7 +602,7 @@ def build_dataset(dataset_type: str,
                                  patch_if=max_points_per_patch,
                                  benchmark=benchmark,
                                  train=False)
-    elif dataset_type == 'scannet_color':
+    elif dataset_type == 'scannet_rgb':
         if not benchmark:
             dl_train = ScannetColorDataset(coord_dir=dirs[0],
                                            coord_format='.ply',
@@ -623,7 +624,7 @@ def build_dataset(dataset_type: str,
                                     patch_if=max_points_per_patch,
                                     benchmark=benchmark,
                                     train=False)
-    elif dataset_type in ['stanford_color', 'S3DIS_rgb']:
+    elif dataset_type in ['stanford_rgb', 'S3DIS_rgb']:
         if not benchmark:
             dl_train = Stanford3DDataset(coord_dir=dirs[0],
                                          coord_format='.txt',

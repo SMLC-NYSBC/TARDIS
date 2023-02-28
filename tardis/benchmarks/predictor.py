@@ -194,6 +194,11 @@ class DISTBenchmark:
             'mCov': [],  # Instance
             'mWCov': [],  # Instance
         }
+        if dataset.endswith('rgb'):
+            self.rgb = True
+        else:
+            self.rgb = False
+
         self.eval_data = build_dataset(dataset_type=dataset,
                                        dirs=[None, self.dir],
                                        max_points_per_patch=points_in_patch,
@@ -255,7 +260,10 @@ class DISTBenchmark:
         self.metric['mWCov'].append(mwcov(input_IS, target_IS))
 
     def _predict(self,
-                 input):
+                 input,
+                 node=None):
+        if node is not None:
+            return self.model.predict(input, node)
         return self.model.predict(input)
 
     def _output_metric(self):
@@ -272,13 +280,16 @@ class DISTBenchmark:
 
         for i in range(len(self.eval_data)):
             """Predict"""
-            coords, _, target, output_idx, _ = self.eval_data.__getitem__(i)
+            coords, nodes, target, output_idx, _ = self.eval_data.__getitem__(i)
             target = [t.cpu().detach().numpy() for t in target]
             output_idx = [o.cpu().detach().numpy() for o in output_idx]
 
             graphs = []
-            for edge, graph, out in zip(coords, target, output_idx):
-                input = self._predict(edge[None, :])
+            for edge, graph, node in zip(coords, target, nodes):
+                if self.rgb:
+                    input = self._predict(edge[None, :], node[None, :])
+                else:
+                    input = self._predict(edge[None, :])
                 graphs.append(input)
 
                 """Benchmark Graph"""
