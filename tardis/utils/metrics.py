@@ -298,9 +298,13 @@ def mcov(input: Optional[Union[np.ndarray, torch.Tensor]],
 
             df.append(intersection / union)
 
-        mCov.append(np.max(df))  # Pick max IoU for GT instance
+        df = np.max(df)
+        if df > 1.0:
+            mCov.append(1.0)
+        else:
+            mCov.append(df)  # Pick max IoU for GT instance
 
-    return sum(mCov) / len(mCov)
+    return np.mean(mCov)
 
 
 def mwcov(input: Optional[Union[np.ndarray, torch.Tensor]],

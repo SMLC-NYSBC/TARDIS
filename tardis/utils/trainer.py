@@ -160,10 +160,6 @@ class BasicTrainer:
             if idx != 0 or idx >= int(len(self.training_DataLoader) * 0.9):
                 self._validate()
 
-                self.epoch_desc = self._update_desc(self.early_stopping.counter,
-                                                    [round(np.max(self.f1), 3),
-                                                     self.f1[-1:][0]])
-
                 # Update checkpoint weights if validation loss dropped
                 if all(self.f1[-1:][0] >= i for i in self.f1[:-1]):
                     torch.save({'model_struct_dict': self.structure,
