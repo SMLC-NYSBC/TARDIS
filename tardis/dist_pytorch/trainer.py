@@ -130,9 +130,11 @@ class DistTrainer(BasicTrainer):
                 # Store training loss metric
                 loss_value = loss.item()
                 self.training_loss.append(loss_value)
+                lr = self.optimizer._get_lr_scale()
 
                 # Update progress bar
-                self._update_progress_bar(loss_desc=f'Training: (loss {loss_value:.4f})',
+                self._update_progress_bar(loss_desc=f'Training: (loss {loss_value:.4f};'
+                                                    f' LR: {lr:. 5f})',
                                           idx=idx)
 
     def _validate(self):
