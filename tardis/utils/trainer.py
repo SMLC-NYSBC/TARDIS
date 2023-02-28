@@ -48,6 +48,7 @@ class BasicTrainer:
                  print_setting: tuple,
                  training_DataLoader,
                  validation_DataLoader=None,
+                 lr_scheduler=None,
                  epochs=100,
                  early_stop_rate=10,
                  checkpoint_name="DIST",
