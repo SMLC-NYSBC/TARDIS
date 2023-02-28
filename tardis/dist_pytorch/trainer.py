@@ -53,9 +53,9 @@ class DistTrainer(BasicTrainer):
                                                 [round(np.max(self.f1), 3),
                                                  round(self.f1[-1:], 3),
                                                  round(np.max(self.mCov0_5), 3),
-                                                 round(self.mCov0_5[-1:], 3),
+                                                 round(self.mCov0_5[-1:][0], 3),
                                                  round(np.max(self.mCov0_9), 3),
-                                                 round(self.mCov0_9[-1:], 3)])
+                                                 round(self.mCov0_9[-1:][0], 3)])
 
     def _save_metric(self) -> bool:
         """ Save training metrics """
@@ -174,24 +174,38 @@ class DistTrainer(BasicTrainer):
                                                             prune=0,
                                                             sort=False)
 
-                    input = torch.where(torch.sigmoid(edge[0, 0, :]) > 0.1, 1, 0).cpu().detach().numpy()
-                    input0_1 = self.Graph0_1.patch_to_segment(graph=[input],
-                                                              coord=coord,
-                                                              idx=[out],
-                                                              prune=0,
-                                                              sort=False)
-                    input = torch.where(torch.sigmoid(edge[0, 0, :]) > 0.5, 1, 0).cpu().detach().numpy()
-                    input0_5 = self.Graph0_1.patch_to_segment(graph=[input],
-                                                              coord=coord,
-                                                              idx=[out],
-                                                              prune=0,
-                                                              sort=False)
-                    input = torch.where(torch.sigmoid(edge[0, 0, :]) > 0.9, 1, 0).cpu().detach().numpy()
-                    input0_9 = self.Graph0_1.patch_to_segment(graph=[input],
-                                                              coord=coord,
-                                                              idx=[out],
-                                                              prune=0,
-                                                              sort=False)
+                    try:
+                        input = torch.where(torch.sigmoid(edge[0, 0, :]) > 0.1, 1, 0).cpu().detach().numpy()
+                        input0_1 = self.Graph0_1.patch_to_segment(graph=[input],
+                                                                  coord=coord,
+                                                                  idx=[out],
+                                                                  prune=0,
+                                                                  sort=False)
+                        mcov0_1.append(mcov(input0_1, target))
+                    except IndexError:
+                        mcov0_1.append(0.0)
+
+                    try:
+                        input = torch.where(torch.sigmoid(edge[0, 0, :]) > 0.5, 1, 0).cpu().detach().numpy()
+                        input0_5 = self.Graph0_1.patch_to_segment(graph=[input],
+                                                                  coord=coord,
+                                                                  idx=[out],
+                                                                  prune=0,
+                                                                  sort=False)
+                        mcov0_5.append(mcov(input0_5, target))
+                    except IndexError:
+                        mcov0_5.append(0.0)
+
+                    try:
+                        input = torch.where(torch.sigmoid(edge[0, 0, :]) > 0.9, 1, 0).cpu().detach().numpy()
+                        input0_9 = self.Graph0_1.patch_to_segment(graph=[input],
+                                                                  coord=coord,
+                                                                  idx=[out],
+                                                                  prune=0,
+                                                                  sort=False)
+                        mcov0_9.append(mcov(input0_9, target))
+                    except IndexError:
+                        mcov0_9.append(0.0)
 
                 # Avg. precision score
                 valid_losses.append(loss.item())
@@ -200,12 +214,9 @@ class DistTrainer(BasicTrainer):
                 recall_mean.append(recall)
                 F1_mean.append(f1)
                 threshold_mean.append(th)
-                mcov0_1.append(mcov(input0_1, target))
-                mcov0_5.append(mcov(input0_5, target))
-                mcov0_9.append(mcov(input0_9, target))
 
                 valid = f'Validation: (loss: {loss.item():.4f}; F1: {f1:.2f}) ' \
-                        f'mCov[0.5]: {mcov0_5[:-1]}; mCov[0.9]: {mcov0_9[:-1]}'
+                        f'mCov[0.5]: {mcov0_5[-1:][0]:.2f}; mCov[0.9]: {mcov0_9[-1:][0]:.2f}'
 
                 # Update progress bar
                 self._update_progress_bar(loss_desc=valid, idx=idx, train=False)
