@@ -81,7 +81,7 @@ class DistTrainer(BasicTrainer):
             torch.save({
                 'model_struct_dict': self.structure,
                 'model_state_dict': self.model.state_dict(),
-                'optimizer_state_dict': self.optimizer.state_dict()
+                'optimizer_state_dict': self.optimizer._optimizer.state_dict()
             },
                 join(getcwd(),
                      f'{self.checkpoint_name}_checkpoint',
@@ -90,7 +90,7 @@ class DistTrainer(BasicTrainer):
         torch.save({
             'model_struct_dict': self.structure,
             'model_state_dict': self.model.state_dict(),
-            'optimizer_state_dict': self.optimizer.state_dict()
+            'optimizer_state_dict': self.optimizer._optimizer.state_dict()
         },
             join(getcwd(),
                  f'{self.checkpoint_name}_checkpoint',

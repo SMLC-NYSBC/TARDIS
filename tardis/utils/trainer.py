@@ -162,16 +162,32 @@ class BasicTrainer:
 
                 # Update checkpoint weights if validation loss dropped
                 if all(self.f1[-1:][0] >= i for i in self.f1[:-1]):
-                    torch.save({'model_struct_dict': self.structure,
-                                'model_state_dict': self.model.state_dict(),
-                                'optimizer_state_dict': self.optimizer.state_dict()},
-                               join(getcwd(),
-                                    f'{self.checkpoint_name}_checkpoint',
-                                    f'{self.checkpoint_name}_checkpoint.pth'))
+                    try:
+                        torch.save({
+                            'model_struct_dict': self.structure,
+                            'model_state_dict': self.model.state_dict(),
+                            'optimizer_state_dict': self.optimizer.state_dict()
+                        },
+                            join(getcwd(),
+                                 f'{self.checkpoint_name}_checkpoint',
+                                 f'{self.checkpoint_name}_checkpoint.pth'))
 
-                """Learning rate scheduler block"""
-                # Save current learning rate
-                self.learning_rate.append(self.optimizer.param_groups[0]['lr'])
+                        """Learning rate scheduler block"""
+                        # Save current learning rate
+                        self.learning_rate.append(self.optimizer.param_groups[0]['lr'])
+                    except AttributeError:
+                        torch.save({
+                            'model_struct_dict': self.structure,
+                            'model_state_dict': self.model.state_dict(),
+                            'optimizer_state_dict': self.optimizer._optimizer.state_dict()
+                        },
+                            join(getcwd(),
+                                 f'{self.checkpoint_name}_checkpoint',
+                                 f'{self.checkpoint_name}_checkpoint.pth'))
+
+                        """Learning rate scheduler block"""
+                        # Save current learning rate
+                        self.learning_rate.append(self.optimizer._get_lr_scale())
 
     def run_trainer(self):
         """
@@ -229,15 +245,16 @@ class BasicTrainer:
         """ Save training metrics """
         if len(self.training_loss) > 0:
             np.savetxt(join(getcwd(),
-                            f'{self.checkpoint_name}_checkpoint', 'training_losses.csv'),
-                       self.training_loss, delimiter=';')
+                            f'{self.checkpoint_name}_checkpoint',
+                            'training_losses.csv'), self.training_loss, delimiter=';')
         if len(self.validation_loss) > 0:
             np.savetxt(join(getcwd(),
-                            f'{self.checkpoint_name}_checkpoint', 'validation_losses.csv'),
-                       self.validation_loss, delimiter=',')
+                            f'{self.checkpoint_name}_checkpoint',
+                            'validation_losses.csv'), self.validation_loss, delimiter=',')
         if len(self.f1) > 0:
             np.savetxt(join(getcwd(),
-                            f'{self.checkpoint_name}_checkpoint', 'eval_metric.csv'),
+                            f'{self.checkpoint_name}_checkpoint',
+                            'eval_metric.csv'),
                        np.column_stack([self.accuracy, self.precision, self.recall,
                                         self.threshold, self.f1]),
                        delimiter=',')
@@ -248,8 +265,7 @@ class BasicTrainer:
             torch.save({
                 'model_struct_dict': self.structure,
                 'model_state_dict': self.model.state_dict(),
-                'optimizer_state_dict': self.optimizer.state_dict()
-            },
+                'optimizer_state_dict': self.optimizer.state_dict()},
                 join(getcwd(),
                      f'{self.checkpoint_name}_checkpoint',
                      f'{self.checkpoint_name}_checkpoint.pth'))
@@ -257,11 +273,8 @@ class BasicTrainer:
         torch.save({
             'model_struct_dict': self.structure,
             'model_state_dict': self.model.state_dict(),
-            'optimizer_state_dict': self.optimizer.state_dict()
-        },
-            join(getcwd(),
-                 f'{self.checkpoint_name}_checkpoint',
-                 'model_weights.pth'))
+            'optimizer_state_dict': self.optimizer.state_dict()},
+            join(getcwd(), f'{self.checkpoint_name}_checkpoint', 'model_weights.pth'))
 
         if self.early_stopping.early_stop:
             return True
