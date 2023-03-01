@@ -212,7 +212,7 @@ def main(dir: str,
         del image
 
         # Setup CNN dataloader
-        patches_dl = PredictionDataset(img_dir=join(dir, 'temp', 'Patches'))
+        patches_dl = PredictionDataset(img_dir=join(dir, 'temp', 'Patches', 'imgs'))
 
         """CNN prediction"""
         iter_time = 1
