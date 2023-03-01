@@ -261,9 +261,9 @@ def main(dir: str,
 
         # Stitch predicted image patches
         image = image_stitcher(image_dir=output, mask=True,
-                               dtype=input.dtype)[:org_shape[0],
-                                                  :org_shape[1],
-                                                  :org_shape[2]]
+                               dtype=input.dtype)[:scale_shape[0],
+                                                  :scale_shape[1],
+                                                  :scale_shape[2]]
 
         # Restored original image pixel size
         image, _ = scale_image(image=image, scale=org_shape)

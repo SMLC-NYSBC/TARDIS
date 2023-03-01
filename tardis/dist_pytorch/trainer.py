@@ -50,12 +50,12 @@ class DistTrainer(BasicTrainer):
             self.epoch_desc = 'Epochs: early_stop: 0; best F1: NaN'
         else:
             self.epoch_desc = self._update_desc(self.early_stopping.counter,
-                                                [round(np.max(self.f1), 3),
-                                                 round(self.f1[-1:], 3),
-                                                 round(np.max(self.mCov0_5), 3),
-                                                 round(self.mCov0_5[-1:][0], 3),
-                                                 round(np.max(self.mCov0_9), 3),
-                                                 round(self.mCov0_9[-1:][0], 3)])
+                                                [np.max(self.f1),
+                                                 self.f1[-1:][0],
+                                                 np.max(self.mCov0_5),
+                                                 self.mCov0_5[-1:][0],
+                                                 np.max(self.mCov0_9),
+                                                 self.mCov0_9[-1:][0]])
 
     def _save_metric(self) -> bool:
         """ Save training metrics """
