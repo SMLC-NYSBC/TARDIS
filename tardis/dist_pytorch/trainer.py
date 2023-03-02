@@ -40,8 +40,8 @@ class DistTrainer(BasicTrainer):
     def _update_desc(stop_count: int,
                      metric: list) -> str:
         desc = f'Epochs: early_stop: {stop_count}; F1: [{metric[0]:.2f}/; {metric[1]:.2f}]; ' \
-               f'mCov 0.5: [{metric[2]:.2f}/; {metric[3]:.2f}]; ' \
-               f'mCov 0.9: [{metric[4]:.2f}/; {metric[5]:.2f}]'
+               f'mCov 0.5: [{metric[2]:.2f}; {metric[3]:.2f}]; ' \
+               f'mCov 0.9: [{metric[4]:.2f}; {metric[5]:.2f}]'
         return desc
 
     def _update_epoch_desc(self):
@@ -111,6 +111,7 @@ class DistTrainer(BasicTrainer):
         for idx, (e, n, g, _, _) in enumerate(self.training_DataLoader):
             """Mid-training eval"""
             self._mid_training_eval(idx=idx)
+            self._update_epoch_desc()
 
             """Training"""
             for edge, node, graph in zip(e, n, g):

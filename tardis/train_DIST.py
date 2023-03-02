@@ -154,7 +154,7 @@ def main(dir: str,
     TEST_COORD_DIR = join(dir, 'test', 'masks')
 
     COORD_FORMAT = '.txt'
-    if dataset_type not in ['stanford', 'stanford_color']:
+    if dataset_type not in ['stanford', 'stanford_rgb']:
         COORD_FORMAT = ('.CorrelationLines.am', '.npy', '.csv', '.ply')
 
     """Check if dir has train/test folder and if f  older have compatible data"""
@@ -171,7 +171,7 @@ def main(dir: str,
     if not DATASET_TEST:
         # Check and set-up environment
         if not len([f for f in listdir(dir) if f.endswith(COORD_FORMAT)]) > 0:
-            if not dataset_type == 'stanford':
+            if not dataset_type in ['stanford', 'stanford_rgb']:
                 TardisError('12',
                             'tardis/train_DIST.py',
                             'Indicated folder for training do not have any compatible '
@@ -194,7 +194,7 @@ def main(dir: str,
         move_train_dataset(dir=dir, coord_format=COORD_FORMAT, with_img=False)
 
         no_dataset = int(len([f for f in listdir(dir) if f.endswith(COORD_FORMAT)]) / 2)
-        if dataset_type in ['stanford', 'stanford_color']:
+        if dataset_type in ['stanford', 'stanford_rgb']:
             build_test_dataset(dataset_dir=dir, dataset_no=no_dataset, stanford=True)
         else:
             build_test_dataset(dataset_dir=dir, dataset_no=no_dataset)

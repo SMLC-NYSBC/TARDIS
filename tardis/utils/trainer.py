@@ -159,8 +159,7 @@ class BasicTrainer:
             # Do not validate at first idx and last 10%
             if idx != 0 or idx >= int(len(self.training_DataLoader) * 0.9):
                 self._validate()
-                self._update_epoch_desc()
-                
+
                 # Update checkpoint weights if validation loss dropped
                 if all(self.f1[-1:][0] >= i for i in self.f1[:-1]):
                     try:
