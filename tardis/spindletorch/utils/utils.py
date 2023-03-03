@@ -45,7 +45,7 @@ def scale_image(scale: tuple,
 
     if mask is not None:
         if not np.all(scale == mask.shape):
-            mask = area_scaling(img=mask, scale=scale, dtype=type_m)
+            mask = trilinear_scaling(img=mask, scale=scale, dtype=type_m)
 
     if image is not None and mask is not None:
         return image, mask, dim

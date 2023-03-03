@@ -27,7 +27,7 @@ def build_train_dataset(dataset_dir: str,
                         resize_pixel_size: float,
                         trim_xy: int,
                         trim_z: int,
-                        benchmark=False):
+                        benchmark: object = False):
     """
     Module for building train datasets from compatible files.
 
@@ -71,7 +71,8 @@ def build_train_dataset(dataset_dir: str,
 
     # All expected formats
     IMG_FORMATS = ('.am', '.mrc', '.rec')
-    MASK_FORMATS = ('.CorrelationLines.am', '_mask.am', '_mask.mrc', '_mask.rec', '.csv')
+    MASK_FORMATS = ('.CorrelationLines.am', '_mask.am', '_mask.mrc', '_mask.rec', '.csv',
+                    '_mask.tif')
 
     """Check what file are in the folder to build dataset"""
     img_list = [f for f in listdir(dataset_dir) if
@@ -82,6 +83,15 @@ def build_train_dataset(dataset_dir: str,
     log_file = np.zeros((len(img_list), 4), dtype='|S50')
 
     for id, i in enumerate(img_list):
+        """Update progress bar"""
+        tardis_progress(title='Data pre-processing for CNN training',
+                        text_1='Building Training dataset:',
+                        text_2=f'Files: {i}',
+                        text_3='px: NaN',
+                        text_4='Scale: NaN',
+                        text_6='Image dtype: NaN',
+                        text_7=print_progress_bar(id, len(img_list)))
+
         log_file[id, 0] = id
         np.savetxt(join(dataset_dir, 'log.txt'), log_file, fmt='%s', delimiter=',')
 
@@ -147,15 +157,15 @@ def build_train_dataset(dataset_dir: str,
                                  pixel_size=resize_pixel_size,
                                  circle_size=circle_size)
         else:  # Detect mask array
-            if mask.min() == 0:
-                TardisError(id='115',
-                            py='tardis/spindletorch/data_processing/build_training_dataset',
-                            desc=f'Mask min: {mask.min()}; max: {mask.max()}'
-                                 'but expected min: 0 and max: >1')
-
             # Convert to binary
             if mask.min() == 0 and mask.max() > 1:
                 mask = np.where(mask > 0, 1, 0).astype(np.uint8)
+
+            if mask.min() != 0 and mask.max() != 1:
+                TardisError(id='115',
+                            py='tardis/spindletorch/data_processing/build_training_dataset',
+                            desc=f'Mask min: {mask.min()}; max: {mask.max()} '
+                                 'but expected min: 0 and max: >1')
 
             # Flip mask if MRC/REC
             if mask_dir.endswith(('_mask.mrc', '_mask.rec')):
@@ -255,6 +265,9 @@ def load_img_mask_data(image: str,
         coord[:, 1:] = coord[:, 1:] // mask_px
     elif mask.endswith('_mask.csv'):  # Mask is csv (coord)
         coord = np.genfromtxt(mask, delimiter=',')  # [ID x X x Y x (Z)]
+        mask_px = img_px
+    elif mask.endswith('_mask.tif'):
+        mask, mask_px = load_image(mask)
         mask_px = img_px
 
     if not img_px == mask_px:

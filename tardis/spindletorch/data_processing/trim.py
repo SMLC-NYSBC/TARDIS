@@ -90,7 +90,7 @@ def trim_with_stride(image: np.ndarray,
         nc = None  # 2D
         nz = 0  # Gray
         min_px_count = trim_size_xy * trim_size_xy
-    min_px_count = min_px_count * 0.005  # 0.002% of pixels must be occupied
+    min_px_count = min_px_count * 0.01  # 0.0075% of pixels must be occupied
 
     if trim_size_xy is not None or trim_size_z is not None:
         if not nx >= trim_size_xy:
