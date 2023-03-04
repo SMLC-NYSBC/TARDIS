@@ -120,6 +120,11 @@ from tardis.version import version
                    'mps: Apple silicon'
                    '0-9 - specified gpu device id to use',
               show_default=True)
+@click.option('-w', '--warmup',
+              default=1000,
+              type=int,
+              help='Number of warmup steps.',
+              show_default=True)
 @click.option('-e', '--epochs',
               default=100,
               type=int,
@@ -158,6 +163,7 @@ def main(dir: str,
          loss_lr_rate: float,
          lr_rate_schedule: bool,
          device: str,
+         warmup: int,
          epochs: int,
          early_stop: int,
          cnn_checkpoint: Optional[str] = None,
@@ -271,6 +277,7 @@ def main(dir: str,
               learning_rate_scheduler=lr_rate_schedule,
               early_stop_rate=early_stop,
               device=device,
+              warmup=warmup,
               epochs=epochs)
 
 
