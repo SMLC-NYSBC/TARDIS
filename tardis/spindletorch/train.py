@@ -126,7 +126,8 @@ def train_cnn(train_dataloader,
         del save_train
 
     """Build learning rate scheduler"""
-    optimizer = ISR_LR(optimizer, lr_mul=learning_rate, warmup_steps=warmup)
+    if learning_rate_scheduler:
+        optimizer = ISR_LR(optimizer, lr_mul=learning_rate, warmup_steps=warmup)
 
     """Build trainer"""
     train = CNNTrainer(model=model,
