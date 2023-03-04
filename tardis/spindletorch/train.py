@@ -13,7 +13,6 @@ from os import getcwd
 
 import torch
 from torch import optim
-from torch.optim.lr_scheduler import StepLR
 
 from tardis.spindletorch.spindletorch import build_cnn_network
 from tardis.spindletorch.trainer import CNNTrainer
@@ -21,6 +20,7 @@ from tardis.spindletorch.utils.utils import check_model_dict
 from tardis.utils.device import get_device
 from tardis.utils.errors import TardisError
 from tardis.utils.losses import *
+from tardis.utils.trainer import ISR_LR
 
 # Setting for stable release to turn off all debug APIs
 torch.backends.cudnn.benchmark = True
@@ -38,6 +38,7 @@ def train_cnn(train_dataloader,
               learning_rate_scheduler=False,
               early_stop_rate=10,
               device='gpu',
+              warmup=100,
               epochs=1000):
     """
     Wrapper for CNN models.
@@ -53,6 +54,7 @@ def train_cnn(train_dataloader,
         early_stop_rate (int): Define max. number of epoch's without improvements
         after which training is stopped.
         device (torch.device): Device on which model is trained.
+        warmup (int): Number of warm-up steps.
         epochs (int): Max number of epoch's.
     """
     """Losses"""
@@ -115,18 +117,16 @@ def train_cnn(train_dataloader,
         loss_fn = losses_f[loss_function]
 
     """Build training optimizer"""
-    optimizer = optim.Adam(params=model.parameters(), lr=learning_rate)
+    optimizer = optim.Adam(params=model.parameters(),
+                           betas=(0.9, 0.98), eps=1e-9)
 
     """Optionally: Checkpoint model"""
     if checkpoint is not None:
         optimizer.load_state_dict(save_train['optimizer_state_dict'])
         del save_train
 
-    """Optionally: Build learning rate scheduler"""
-    if learning_rate_scheduler:
-        learning_rate_scheduler = StepLR(optimizer, step_size=2, gamma=0.5)
-    else:
-        learning_rate_scheduler = None
+    """Build learning rate scheduler"""
+    optimizer = ISR_LR(optimizer, lr_mul=learning_rate, warmup_steps=warmup)
 
     """Build trainer"""
     train = CNNTrainer(model=model,

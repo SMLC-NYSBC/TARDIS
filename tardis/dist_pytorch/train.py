@@ -20,6 +20,7 @@ from tardis.dist_pytorch.utils.utils import check_model_dict
 from tardis.utils.device import get_device
 from tardis.utils.logo import TardisLogo
 from tardis.utils.losses import *
+from tardis.utils.trainer import ISR_LR
 
 # Setting for stable release to turn off all debug APIs
 torch.backends.cudnn.benchmark = True
@@ -100,8 +101,7 @@ def train_dist(train_dataloader,
         sys.exit()
 
     """Build TARDIS progress bar output"""
-    print_setting = [f"Training is started on {device} for DIST-"
-                     f"{model_structure['structure']}",
+    print_setting = [f"Training is started on {device} for DIST-{model_structure['structure']}",
                      f"Local dir: {getcwd()}",
                      f"Training for {model_structure['dist_type']} with "
                      f"No. of Layers: {model_structure['num_layers']} and "
@@ -134,7 +134,6 @@ def train_dist(train_dataloader,
     """Optionally: Checkpoint model"""
     if checkpoint is not None:
         optimizer.load_state_dict(save_train['optimizer_state_dict'])
-
         del save_train
 
     """Build learning rate scheduler"""
@@ -168,37 +167,3 @@ def train_dist(train_dataloader,
 
     """Train"""
     train.run_trainer()
-
-
-class ISR_LR:
-    def __init__(self,
-                 optimizer: optim.Adam,
-                 lr_mul,
-                 warmup_steps):
-        self._optimizer = optimizer
-        self.lr_mul = lr_mul
-        self.warmup_steps = warmup_steps
-        self.steps = 0
-
-    def step_and_update_lr(self):
-        """Step with the inner optimize"""
-        self._update_learning_rate()
-        self._optimizer.step()
-
-    def zero_grad(self):
-        """Zero out the gradients with the inner optimizer"""
-        self._optimizer.zero_grad(set_to_none=True)
-
-    def _get_lr_scale(self):
-        n_steps, n_warmup_steps = self.steps, self.warmup_steps
-        return (1 ** -0.5) * min(n_steps ** (-0.5),
-                                   n_steps * n_warmup_steps ** (-1.5))
-
-    def _update_learning_rate(self):
-        """Learning rate scheduling per step"""
-
-        self.steps += 1
-        lr = self.lr_mul * self._get_lr_scale()
-
-        for param_group in self._optimizer.param_groups:
-            param_group['lr'] = lr

@@ -38,7 +38,7 @@ class CNNTrainer(BasicTrainer):
 
             """Training"""
             i, m = i.to(self.device), m.to(self.device)
-            self.optimizer.zero_grad(set_to_none=True)
+            self.optimizer.zero_grad()
 
             if self.classification:
                 i, _ = self.model(i)  # one forward pass
@@ -54,8 +54,14 @@ class CNNTrainer(BasicTrainer):
             loss_value = loss.item()
             self.training_loss.append(loss_value)
 
+            # Store and update learning rate
+            if self.lr_scheduler:
+                self.lr = self.optimizer.get_lr_scale()
+            self.learning_rate.append(self.lr)
+
             # Update progress bar
-            self._update_progress_bar(loss_desc=f'Training: (loss {loss_value:.4f})',
+            self._update_progress_bar(loss_desc=f'Training: (loss {loss_value:.4f};'
+                                                f' LR: {self.lr:.5f})',
                                       idx=idx)
 
     def _validate(self):
@@ -93,7 +99,8 @@ class CNNTrainer(BasicTrainer):
                 recall_mean.append(recall)
                 F1_mean.append(f1)
                 threshold_mean.append(th)
-                valid = f'Validation: (loss {loss.item():.4f} Prec: {prec:.2f} Rec: {recall:.2f} F1: {f1:.2f})'
+                valid = f'Validation: (loss {loss.item():.4f} ' \
+                        f'Prec: {prec:.2f} Rec: {recall:.2f} F1: {f1:.2f})'
 
                 # Update progress bar
                 self._update_progress_bar(loss_desc=valid, idx=idx, train=False)

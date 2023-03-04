@@ -11,9 +11,11 @@
 from os import getcwd, mkdir
 from os.path import isdir, join
 from shutil import rmtree
+from typing import Union
 
 import numpy as np
 import torch
+from torch import optim
 
 from tardis.utils.logo import print_progress_bar, TardisLogo
 from tardis.utils.utils import EarlyStopping
@@ -28,11 +30,11 @@ class BasicTrainer:
         structure (dict): Model structure as dictionary.
         device (torch.device): Device for training.
         criterion (nn.loss): Loss function type.
-        optimizer (torch.optim): Optimizer type.
+        optimizer (optim.Adam, ISR_LR): Optimizer type.
         training_DataLoader (torch.DataLoader): DataLoader with training dataset.
         validation_DataLoader (torch.DataLoader, optional): DataLoader with test dataset.
         print_setting (tuple): Model property to display in TARDIS progress bar.
-        lr_scheduler (torch.StepLR, optional): Optional Learning rate schedular.
+        lr_scheduler (bool): Optional Learning rate schedular.
         epochs (int): Max number of epoch's.
         early_stop_rate (int): Number of epoch's without improvement after which
             Trainer stop training.
@@ -44,11 +46,11 @@ class BasicTrainer:
                  structure: dict,
                  device: torch.device,
                  criterion,
-                 optimizer,
+                 optimizer: Union[ISR_LR, optim.Adam],
                  print_setting: tuple,
                  training_DataLoader,
                  validation_DataLoader=None,
-                 lr_scheduler=None,
+                 lr_scheduler=False,
                  epochs=100,
                  early_stop_rate=10,
                  checkpoint_name="DIST",
@@ -61,6 +63,10 @@ class BasicTrainer:
         self.criterion = criterion
         self.optimizer = optimizer
         self.lr_scheduler = lr_scheduler
+        if lr_scheduler:
+            self.lr = 0.0
+        else:
+            self.lr = self.optimizer.param_groups[0]['lr']
         self.epochs = epochs
         self.early_stop_rate = early_stop_rate
         self.checkpoint_name = checkpoint_name
@@ -107,13 +113,13 @@ class BasicTrainer:
 
         Args:
             stop_count (int): Early stop count.
-            f1 (list): Best f1 score.
+            metric (list): Best f1 score.
 
         Returns:
             str: Updated progress bar status.
         """
-        desc = f'Epochs: early_stop: {stop_count}; best F1 {metric[0]:.2f}; ' \
-               f'last f1: {metric[1]:.2f}'
+        desc = f'Epochs: early_stop: {stop_count}; ' \
+               f'F1: [{metric[0]:.2f}; {metric[1]:.2f}]'
         return desc
 
     def _update_epoch_desc(self):
@@ -122,8 +128,8 @@ class BasicTrainer:
             self.epoch_desc = 'Epochs: early_stop: 0; best F1: NaN'
         else:
             self.epoch_desc = self._update_desc(self.early_stopping.counter,
-                                                [round(np.max(self.f1), 3),
-                                                 round(self.f1[:-1], 3)])
+                                                [np.max(self.f1),
+                                                 self.f1[-1:][0]])
 
     def _update_progress_bar(self,
                              loss_desc: str,
@@ -153,41 +159,78 @@ class BasicTrainer:
                             text_9=loss_desc,
                             text_10=print_progress_bar(idx, data_set_len))
 
+    def _save_metric(self) -> bool:
+        """ Save training metrics """
+        if len(self.training_loss) > 0:
+            np.savetxt(join(getcwd(),
+                            f'{self.checkpoint_name}_checkpoint',
+                            'training_losses.csv'),
+                       self.training_loss, delimiter=',')
+
+        if len(self.validation_loss) > 0:
+            np.savetxt(join(getcwd(),
+                            f'{self.checkpoint_name}_checkpoint',
+                            'validation_losses.csv'),
+                       self.validation_loss, delimiter=',')
+
+        if len(self.f1) > 0:
+            np.savetxt(join(getcwd(),
+                            f'{self.checkpoint_name}_checkpoint',
+                            'eval_metric.csv'),
+                       np.column_stack([self.accuracy, self.precision, self.recall,
+                                        self.threshold, self.f1]),
+                       delimiter=',')
+
+        if len(self.learning_rate) > 0:
+            np.savetxt(join(getcwd(),
+                            f'{self.checkpoint_name}_checkpoint',
+                            'learning_rate.csv'),
+                       self.learning_rate,
+                       delimiter=',')
+
+        """ Save current model weights"""
+        # If mean evaluation loss is higher than save checkpoint
+        if all(self.f1[-1:][0] >= i for i in self.f1[:-1]):
+            torch.save({
+                'model_struct_dict': self.structure,
+                'model_state_dict': self.model.state_dict(),
+                'optimizer_state_dict': self.optimizer.state_dict()
+            },
+                join(getcwd(),
+                     f'{self.checkpoint_name}_checkpoint',
+                     f'{self.checkpoint_name}_checkpoint.pth'))
+
+        torch.save({
+            'model_struct_dict': self.structure,
+            'model_state_dict': self.model.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict()
+        },
+            join(getcwd(),
+                 f'{self.checkpoint_name}_checkpoint',
+                 'model_weights.pth'))
+
+        if self.early_stopping.early_stop:
+            return True
+        return False
+
     def _mid_training_eval(self,
                            idx):
         if idx % (len(self.training_DataLoader) // 4) == 0:
             # Do not validate at first idx and last 10%
             if idx != 0 or idx >= int(len(self.training_DataLoader) * 0.9):
                 self._validate()
+                self._update_epoch_desc()
 
                 # Update checkpoint weights if validation loss dropped
                 if all(self.f1[-1:][0] >= i for i in self.f1[:-1]):
-                    try:
-                        torch.save({
-                            'model_struct_dict': self.structure,
-                            'model_state_dict': self.model.state_dict(),
-                            'optimizer_state_dict': self.optimizer.state_dict()
-                        },
-                            join(getcwd(),
-                                 f'{self.checkpoint_name}_checkpoint',
-                                 f'{self.checkpoint_name}_checkpoint.pth'))
-
-                        """Learning rate scheduler block"""
-                        # Save current learning rate
-                        self.learning_rate.append(self.optimizer.param_groups[0]['lr'])
-                    except AttributeError:
-                        torch.save({
-                            'model_struct_dict': self.structure,
-                            'model_state_dict': self.model.state_dict(),
-                            'optimizer_state_dict': self.optimizer._optimizer.state_dict()
-                        },
-                            join(getcwd(),
-                                 f'{self.checkpoint_name}_checkpoint',
-                                 f'{self.checkpoint_name}_checkpoint.pth'))
-
-                        """Learning rate scheduler block"""
-                        # Save current learning rate
-                        self.learning_rate.append(self.optimizer._get_lr_scale())
+                    torch.save({
+                        'model_struct_dict': self.structure,
+                        'model_state_dict': self.model.state_dict(),
+                        'optimizer_state_dict': self.optimizer.state_dict()
+                    },
+                        join(getcwd(),
+                             f'{self.checkpoint_name}_checkpoint',
+                             f'{self.checkpoint_name}_checkpoint.pth'))
 
     def run_trainer(self):
         """
@@ -230,58 +273,49 @@ class BasicTrainer:
                 self.model.eval()
                 self._validate()
 
-            """Learning rate scheduler block"""
-            if self.lr_scheduler is not None:
-                self.lr_scheduler.step()
-
-                # Save current learning rate
-                self.learning_rate.append(self.optimizer.param_groups[0]['lr'])
-
             stop = self._save_metric()
             if stop:
                 break
-
-    def _save_metric(self) -> bool:
-        """ Save training metrics """
-        if len(self.training_loss) > 0:
-            np.savetxt(join(getcwd(),
-                            f'{self.checkpoint_name}_checkpoint',
-                            'training_losses.csv'), self.training_loss, delimiter=';')
-        if len(self.validation_loss) > 0:
-            np.savetxt(join(getcwd(),
-                            f'{self.checkpoint_name}_checkpoint',
-                            'validation_losses.csv'), self.validation_loss, delimiter=',')
-        if len(self.f1) > 0:
-            np.savetxt(join(getcwd(),
-                            f'{self.checkpoint_name}_checkpoint',
-                            'eval_metric.csv'),
-                       np.column_stack([self.accuracy, self.precision, self.recall,
-                                        self.threshold, self.f1]),
-                       delimiter=',')
-
-        """ Save current model weights"""
-        # If mean evaluation loss is higher than save checkpoint
-        if all(self.f1[-1:][0] >= i for i in self.f1[:-1]):
-            torch.save({
-                'model_struct_dict': self.structure,
-                'model_state_dict': self.model.state_dict(),
-                'optimizer_state_dict': self.optimizer.state_dict()},
-                join(getcwd(),
-                     f'{self.checkpoint_name}_checkpoint',
-                     f'{self.checkpoint_name}_checkpoint.pth'))
-
-        torch.save({
-            'model_struct_dict': self.structure,
-            'model_state_dict': self.model.state_dict(),
-            'optimizer_state_dict': self.optimizer.state_dict()},
-            join(getcwd(), f'{self.checkpoint_name}_checkpoint', 'model_weights.pth'))
-
-        if self.early_stopping.early_stop:
-            return True
-        return False
 
     def _train(self):
         pass
 
     def _validate(self):
         pass
+
+
+class ISR_LR:
+    def __init__(self,
+                 optimizer: optim.Adam,
+                 lr_mul,
+                 warmup_steps):
+        self._optimizer = optimizer
+        self.lr_mul = lr_mul
+        self.warmup_steps = warmup_steps
+        self.steps = 0
+
+    def state_dict(self):
+        return self._optimizer.state_dict()
+
+    def step(self):
+        """Step with the inner optimize"""
+        self._update_learning_rate()
+        self._optimizer.step()
+
+    def zero_grad(self):
+        """Zero out the gradients with the inner optimizer"""
+        self._optimizer.zero_grad(set_to_none=True)
+
+    def get_lr_scale(self):
+        n_steps, n_warmup_steps = self.steps, self.warmup_steps
+        return (1 ** -0.5) * min(n_steps ** (-0.5),
+                                 n_steps * n_warmup_steps ** (-1.5))
+
+    def _update_learning_rate(self):
+        """Learning rate scheduling per step"""
+
+        self.steps += 1
+        lr = self.lr_mul * self.get_lr_scale()
+
+        for param_group in self._optimizer.param_groups:
+            param_group['lr'] = lr

@@ -39,7 +39,17 @@ class DistTrainer(BasicTrainer):
     @staticmethod
     def _update_desc(stop_count: int,
                      metric: list) -> str:
-        desc = f'Epochs: early_stop: {stop_count}; F1: [{metric[0]:.2f}/; {metric[1]:.2f}]; ' \
+        """
+        Utility function to update progress bar description.
+
+        Args:
+            stop_count (int): Early stop count.
+            metric (list): Best f1 and mCov score.
+
+        Returns:
+            str: Updated progress bar status.
+        """
+        desc = f'Epochs: early_stop: {stop_count}; F1: [{metric[0]:.2f}; {metric[1]:.2f}]; ' \
                f'mCov 0.5: [{metric[2]:.2f}; {metric[3]:.2f}]; ' \
                f'mCov 0.9: [{metric[4]:.2f}; {metric[5]:.2f}]'
         return desc
@@ -61,18 +71,27 @@ class DistTrainer(BasicTrainer):
         """ Save training metrics """
         if len(self.training_loss) > 0:
             np.savetxt(join(getcwd(),
-                            f'{self.checkpoint_name}_checkpoint', 'training_losses.csv'),
-                       self.training_loss, delimiter=';')
+                            f'{self.checkpoint_name}_checkpoint',
+                            'training_losses.csv'),
+                       self.training_loss, delimiter=',')
         if len(self.validation_loss) > 0:
             np.savetxt(join(getcwd(),
-                            f'{self.checkpoint_name}_checkpoint', 'validation_losses.csv'),
+                            f'{self.checkpoint_name}_checkpoint',
+                            'validation_losses.csv'),
                        self.validation_loss, delimiter=',')
         if len(self.f1) > 0:
             np.savetxt(join(getcwd(),
-                            f'{self.checkpoint_name}_checkpoint', 'eval_metric.csv'),
+                            f'{self.checkpoint_name}_checkpoint',
+                            'eval_metric.csv'),
                        np.column_stack([self.accuracy, self.precision, self.recall,
                                         self.threshold, self.f1,
                                         self.mCov0_1, self.mCov0_5, self.mCov0_9]),
+                       delimiter=',')
+        if len(self.learning_rate) > 0:
+            np.savetxt(join(getcwd(),
+                            f'{self.checkpoint_name}_checkpoint',
+                            'learning_rate.csv'),
+                       self.learning_rate,
                        delimiter=',')
 
         """ Save current model weights"""
@@ -81,7 +100,7 @@ class DistTrainer(BasicTrainer):
             torch.save({
                 'model_struct_dict': self.structure,
                 'model_state_dict': self.model.state_dict(),
-                'optimizer_state_dict': self.optimizer._optimizer.state_dict()
+                'optimizer_state_dict': self.optimizer.state_dict()
             },
                 join(getcwd(),
                      f'{self.checkpoint_name}_checkpoint',
@@ -90,7 +109,7 @@ class DistTrainer(BasicTrainer):
         torch.save({
             'model_struct_dict': self.structure,
             'model_state_dict': self.model.state_dict(),
-            'optimizer_state_dict': self.optimizer._optimizer.state_dict()
+            'optimizer_state_dict': self.optimizer.state_dict()
         },
             join(getcwd(),
                  f'{self.checkpoint_name}_checkpoint',
@@ -111,7 +130,6 @@ class DistTrainer(BasicTrainer):
         for idx, (e, n, g, _, _) in enumerate(self.training_DataLoader):
             """Mid-training eval"""
             self._mid_training_eval(idx=idx)
-            self._update_epoch_desc()
 
             """Training"""
             for edge, node, graph in zip(e, n, g):
@@ -119,23 +137,29 @@ class DistTrainer(BasicTrainer):
                 self.optimizer.zero_grad()
 
                 if self.node_input:
-                    edge = self.model(coords=edge, node_features=node.to(self.device))
+                    edge = self.model(coords=edge,
+                                      node_features=node.to(self.device))
                 else:
-                    edge = self.model(coords=edge, node_features=None)
+                    edge = self.model(coords=edge,
+                                      node_features=None)
 
                 # Back-propagate
                 loss = self.criterion(edge[:, 0, :], graph)  # Calc. loss
                 loss.backward()  # One backward pass
-                self.optimizer.step_and_update_lr()  # Update the parameters
+                self.optimizer.step()  # Update the parameters
 
                 # Store training loss metric
                 loss_value = loss.item()
                 self.training_loss.append(loss_value)
-                lr = self.optimizer._get_lr_scale()
+
+                # Store and update learning rate
+                if self.lr_scheduler:
+                    self.lr = self.optimizer.get_lr_scale()
+                self.learning_rate.append(self.lr)
 
                 # Update progress bar
                 self._update_progress_bar(loss_desc=f'Training: (loss {loss_value:.4f};'
-                                                    f' LR: {lr:.5f})',
+                                                    f' LR: {self.lr:.5f})',
                                           idx=idx)
 
     def _validate(self):
@@ -160,9 +184,11 @@ class DistTrainer(BasicTrainer):
                 with torch.no_grad():
                     if self.node_input:
                         node = node.to(self.device)
-                        edge = self.model(coords=edge, node_features=node)
+                        edge = self.model(coords=edge,
+                                          node_features=node)
                     else:
-                        edge = self.model(coords=edge, node_features=None)
+                        edge = self.model(coords=edge,
+                                          node_features=None)
 
                     loss = self.criterion(edge[0, :], graph)
 
@@ -217,7 +243,8 @@ class DistTrainer(BasicTrainer):
                 threshold_mean.append(th)
 
                 valid = f'Validation: (loss: {loss.item():.4f}; F1: {f1:.2f}) ' \
-                        f'mCov[0.5]: {mcov0_5[-1:][0]:.2f}; mCov[0.9]: {mcov0_9[-1:][0]:.2f}'
+                        f'mCov[0.5]: {mcov0_5[-1:][0]:.2f}; ' \
+                        f'mCov[0.9]: {mcov0_9[-1:][0]:.2f}'
 
                 # Update progress bar
                 self._update_progress_bar(loss_desc=valid, idx=idx, train=False)

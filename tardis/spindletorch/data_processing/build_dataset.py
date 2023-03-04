@@ -129,7 +129,7 @@ def build_train_dataset(dataset_dir: str,
 
         """Load files"""
         image, mask, pixel_size = load_img_mask_data(img_dir, mask_dir)
-        log_file[id, 1] = i
+        log_file[id, 1] = i + '||' + mask_dir
         np.savetxt(join(dataset_dir, 'log.txt'), log_file, fmt='%s', delimiter=',')
 
         if pixel_size is None:
