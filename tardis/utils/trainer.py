@@ -7,7 +7,6 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
-
 from os import getcwd, mkdir
 from os.path import isdir, join
 from shutil import rmtree
@@ -20,6 +19,42 @@ from torch import optim
 from tardis.utils.logo import print_progress_bar, TardisLogo
 from tardis.utils.utils import EarlyStopping
 
+
+class ISR_LR:
+    def __init__(self,
+                 optimizer: optim.Adam,
+                 lr_mul,
+                 warmup_steps):
+        self._optimizer = optimizer
+        self.lr_mul = lr_mul
+        self.warmup_steps = warmup_steps
+        self.steps = 0
+
+    def state_dict(self):
+        return self._optimizer.state_dict()
+
+    def step(self):
+        """Step with the inner optimize"""
+        self._update_learning_rate()
+        self._optimizer.step()
+
+    def zero_grad(self):
+        """Zero out the gradients with the inner optimizer"""
+        self._optimizer.zero_grad(set_to_none=True)
+
+    def get_lr_scale(self):
+        n_steps, n_warmup_steps = self.steps, self.warmup_steps
+        return (1 ** -0.5) * min(n_steps ** (-0.5),
+                                 n_steps * n_warmup_steps ** (-1.5))
+
+    def _update_learning_rate(self):
+        """Learning rate scheduling per step"""
+
+        self.steps += 1
+        lr = self.lr_mul * self.get_lr_scale()
+
+        for param_group in self._optimizer.param_groups:
+            param_group['lr'] = lr
 
 class BasicTrainer:
     """
@@ -282,40 +317,3 @@ class BasicTrainer:
 
     def _validate(self):
         pass
-
-
-class ISR_LR:
-    def __init__(self,
-                 optimizer: optim.Adam,
-                 lr_mul,
-                 warmup_steps):
-        self._optimizer = optimizer
-        self.lr_mul = lr_mul
-        self.warmup_steps = warmup_steps
-        self.steps = 0
-
-    def state_dict(self):
-        return self._optimizer.state_dict()
-
-    def step(self):
-        """Step with the inner optimize"""
-        self._update_learning_rate()
-        self._optimizer.step()
-
-    def zero_grad(self):
-        """Zero out the gradients with the inner optimizer"""
-        self._optimizer.zero_grad(set_to_none=True)
-
-    def get_lr_scale(self):
-        n_steps, n_warmup_steps = self.steps, self.warmup_steps
-        return (1 ** -0.5) * min(n_steps ** (-0.5),
-                                 n_steps * n_warmup_steps ** (-1.5))
-
-    def _update_learning_rate(self):
-        """Learning rate scheduling per step"""
-
-        self.steps += 1
-        lr = self.lr_mul * self.get_lr_scale()
-
-        for param_group in self._optimizer.param_groups:
-            param_group['lr'] = lr
