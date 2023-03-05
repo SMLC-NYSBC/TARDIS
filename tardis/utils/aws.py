@@ -30,7 +30,7 @@ def get_benchmark_aws() -> dict:
         dict: Dictionary with keys[network name] and values[list of scores]
     """
     network_benchmark = requests.get('https://tardis-weigths.s3.amazonaws.com/'
-                                     f'benchmark/best_scores.json')
+                                     'benchmark/best_scores.json')
 
     if network_benchmark.status_code == 200:
         network_benchmark = json.loads(network_benchmark.content.decode('utf-8'))
@@ -53,7 +53,7 @@ def put_benchmark_aws(data: dict,
         bool: True if save correctly
     """
     r = requests.put('https://tardis-weigths.s3.amazonaws.com/'
-                     f'benchmark/best_scores.json',
+                     'benchmark/best_scores.json',
                      json.dumps(data, indent=2, default=str))
 
     if model is not None and r.status_code == 200:

@@ -188,7 +188,7 @@ def main(dir: str,
             sys.exit()
 
         # Calculate parameters for normalizing image pixel size
-        scale_factor = px / 16.56
+        scale_factor = px / 15
         org_shape = image.shape
         scale_shape = tuple(np.multiply(org_shape, scale_factor).astype(np.int16))
 

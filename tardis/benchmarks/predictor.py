@@ -225,7 +225,7 @@ class DISTBenchmark:
                  max_connections: int,
                  logits: List[np.ndarray],
                  targets: List[np.ndarray],
-                 coord:  List[np.ndarray],
+                 coord: List[np.ndarray],
                  output_idx: List[np.ndarray],
                  sort: bool) -> Tuple[np.ndarray, np.ndarray]:
         GraphToSegment = GraphInstanceV2(threshold=threshold,
@@ -303,9 +303,9 @@ class DISTBenchmark:
                                  text_1=f'Running point cloud segmentation benchmark on '
                                         f'{self.data_set}',
                                  text_4='Benchmark: In progress...',
-                                 text_6=f'IoU: {round(np.mean(self.metric["IoU"]), 2)}; ' \
-                                        f'AUC: {round(np.mean(self.metric["AUC"]), 2)}; ' \
-                                        f'mCov: {round(np.mean(self.metric["mCov"]), 2)}; ' \
+                                 text_6=f'IoU: {round(np.mean(self.metric["IoU"]), 2)}; '
+                                        f'AUC: {round(np.mean(self.metric["AUC"]), 2)}; '
+                                        f'mCov: {round(np.mean(self.metric["mCov"]), 2)}; '
                                         f'mWCov: {round(np.mean(self.metric["mWCov"]), 2)}',
                                  text_7='Current Task: DIST prediction...',
                                  text_8=print_progress_bar(i, len(self.eval_data)))

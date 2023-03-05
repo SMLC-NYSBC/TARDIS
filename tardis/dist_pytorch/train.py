@@ -35,6 +35,7 @@ def train_dist(train_dataloader,
                checkpoint: Optional[str] = None,
                loss_function='bce',
                learning_rate=0.001,
+               lr_scheduler=False,
                early_stop_rate=10,
                device='gpu',
                epochs=1000):
@@ -128,8 +129,13 @@ def train_dist(train_dataloader,
         loss_fn = losses_f[loss_function]
 
     """Build training optimizer"""
-    optimizer = optim.Adam(params=model.parameters(),
-                           betas=(0.9, 0.98), eps=1e-9)
+    if lr_scheduler:
+        optimizer = optim.Adam(params=model.parameters(),
+                               betas=(0.9, 0.98), eps=1e-9)
+    else:
+        optimizer = optim.Adam(params=model.parameters(),
+                               lr=learning_rate,
+                               betas=(0.9, 0.98), eps=1e-9)
 
     """Optionally: Checkpoint model"""
     if checkpoint is not None:
@@ -137,7 +143,8 @@ def train_dist(train_dataloader,
         del save_train
 
     """Build learning rate scheduler"""
-    optimizer = ISR_LR(optimizer, lr_mul=learning_rate, warmup_steps=1000)
+    if lr_scheduler:
+        optimizer = ISR_LR(optimizer, lr_mul=learning_rate, warmup_steps=1000)
 
     """Build trainer"""
     if model_structure['dist_type'] == 'instance':

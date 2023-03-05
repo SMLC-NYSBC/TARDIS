@@ -87,7 +87,7 @@ class BCELoss(nn.Module):
         self.diagonal = diagonal
         self.reduction = reduction
 
-        self.loss = nn.BCEWithLogitsLoss(reduction=reduction)
+        self.loss = nn.BCEWithLogitsLoss(reduction=self.reduction)
 
     def forward(self,
                 logits: torch.Tensor,
@@ -142,13 +142,9 @@ class BCEDiceLoss(nn.Module):
             g_range = range(logits.shape[2])
 
             mask = torch.ones_like(targets)
-            mask[:, g_range, g_range] = 1
+            mask[:, g_range, g_range] = 0
 
-            self.bce = nn.BCEWithLogitsLoss(reduction=self.reduction,
-                                            weight=mask.float())
-
-            logits[:, g_range, g_range] = 1
-            targets[:, g_range, g_range] = 1
+            self.bce = nn.BCEWithLogitsLoss(weight=mask.float())
 
         bce_loss = self.bce(logits, targets)
         dice_loss = self.dice(logits, targets)
@@ -175,6 +171,8 @@ class CELoss(nn.Module):
             diagonal (bool): If True, remove diagonal axis for graph prediction.
         """
         super(CELoss, self).__init__()
+
+        self.reduction = reduction
         self.loss = nn.CrossEntropyLoss(reduction=reduction)
         self.diagonal = diagonal
 
@@ -189,15 +187,6 @@ class CELoss(nn.Module):
             targets (torch.Tensor): target of a shape [Batch x Channels x Length x Length]
         """
         logits = torch.sigmoid(logits)
-
-        if self.diagonal:
-            g_range = range(logits.shape[2])
-
-            mask = torch.ones_like(targets)
-            mask[:, g_range, g_range] = 1
-
-            self.loss = nn.CrossEntropyLoss(reduction=self.reduction,
-                                            weight=mask.float())
 
         return self.loss(logits, targets)
 

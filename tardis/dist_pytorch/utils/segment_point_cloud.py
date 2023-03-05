@@ -59,12 +59,14 @@ class GraphInstanceV2:
         for idx_patch, graph_patch in zip(idx, graph_pred):
             for k, _ in enumerate(idx_patch):
                 row = graph_patch[k, :]
-                row_v = [row[id] if graph[i, idx_patch[k]] == 0 else np.mean((graph[i,
-                idx_patch[k]], row[id])) for id, i in enumerate(idx_patch)]
+                row_v = [row[id] if graph[i, idx_patch[k]] == 0
+                         else np.mean((graph[i, idx_patch[k]], row[id]))
+                         for id, i in enumerate(idx_patch)]
 
                 column = graph_patch[:, k]
-                column_v = [row[id] if graph[i, idx_patch[k]] == 0 else np.mean((graph[i,
-                idx_patch[k]], column[id])) for id, i in enumerate(idx_patch)]
+                column_v = [row[id] if graph[i, idx_patch[k]] == 0
+                            else np.mean((graph[i, idx_patch[k]], column[id]))
+                            for id, i in enumerate(idx_patch)]
 
                 graph[list(idx_patch), idx_patch[k]] = row_v
                 graph[idx_patch[k], list(idx_patch)] = column_v

@@ -100,6 +100,11 @@ from tardis.version import version
               type=float,
               help='Learning rate.',
               show_default=True)
+@click.option('-lrs', '--lr_rate_schedule',
+              default=False,
+              type=bool,
+              help='If True learning rate scheduler is used.',
+              show_default=True)
 @click.option('-ch', '--checkpoint',
               default=None,
               type=str,
@@ -139,6 +144,7 @@ def main(dir: str,
          pc_sampling: int,
          loss: str,
          loss_lr: float,
+         lr_rate_schedule: bool,
          checkpoint,
          device: str,
          epochs: int,
@@ -171,7 +177,7 @@ def main(dir: str,
     if not DATASET_TEST:
         # Check and set-up environment
         if not len([f for f in listdir(dir) if f.endswith(COORD_FORMAT)]) > 0:
-            if not dataset_type in ['stanford', 'stanford_rgb']:
+            if dataset_type not in ['stanford', 'stanford_rgb']:
                 TardisError('12',
                             'tardis/train_DIST.py',
                             'Indicated folder for training do not have any compatible '
@@ -252,6 +258,7 @@ def main(dir: str,
                checkpoint=checkpoint,
                loss_function=loss,
                learning_rate=loss_lr,
+               lr_scheduler=lr_rate_schedule,
                early_stop_rate=early_stop,
                device=device,
                epochs=epochs)

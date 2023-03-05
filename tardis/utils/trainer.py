@@ -56,6 +56,7 @@ class ISR_LR:
         for param_group in self._optimizer.param_groups:
             param_group['lr'] = lr
 
+
 class BasicTrainer:
     """
     BASIC MODEL TRAINER FOR DIST AND CNN

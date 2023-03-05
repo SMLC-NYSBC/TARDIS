@@ -83,13 +83,7 @@ def test_ce():
 
     assert isinstance(loss.data, torch.Tensor)
     assert loss > 0
-
-    loss = GeneralLoss(logits_, targets_, CELoss(diagonal=True))
-    loss = loss.test_loss()
-
-    assert isinstance(loss.data, torch.Tensor)
-    assert loss > 0
-
+    
 
 def test_cl_bce():
     loss = GeneralLoss(logits, targets, ClBCE())

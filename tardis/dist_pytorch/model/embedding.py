@@ -62,7 +62,7 @@ class NodeEmbedding(nn.Module):
 
         # return self.linear(input_node)
         return torch.cos(F.linear(input_node,
-                                  self.weight/self.sigma,
+                                  self.weight / self.sigma,
                                   self.bias))
 
 

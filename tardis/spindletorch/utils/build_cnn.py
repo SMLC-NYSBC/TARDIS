@@ -103,6 +103,8 @@ class BasicCNN(nn.Module):
         self.decoder = build_decoder(conv_layers=num_conv_layer,
                                      conv_layer_scaler=conv_layer_scaler,
                                      components=layer_components,
+                                     conv_kernel=conv_kernel,
+                                     padding=padding,
                                      sizes=patch_sizes,
                                      num_group=num_group,
                                      deconv_module=model)
@@ -285,6 +287,8 @@ class UNet3Plus(nn.Module):
         self.decoder = build_decoder(conv_layers=num_conv_layer,
                                      conv_layer_scaler=conv_layer_scaler,
                                      components=layer_components,
+                                     conv_kernel=conv_kernel,
+                                     padding=padding,
                                      sizes=patch_sizes,
                                      num_group=num_group,
                                      deconv_module='unet3plus')
@@ -444,11 +448,15 @@ class FNet(nn.Module):
         self.decoder_unet = build_decoder(conv_layers=num_conv_layer,
                                           conv_layer_scaler=conv_layer_scaler,
                                           components=layer_components,
+                                          conv_kernel=conv_kernel,
+                                          padding=padding,
                                           sizes=patch_sizes,
                                           num_group=num_group)
         self.decoder_3plus = build_decoder(conv_layers=num_conv_layer,
                                            conv_layer_scaler=conv_layer_scaler,
                                            components=layer_components,
+                                           conv_kernel=conv_kernel,
+                                           padding=padding,
                                            sizes=patch_sizes,
                                            num_group=num_group,
                                            deconv_module='unet3plus')

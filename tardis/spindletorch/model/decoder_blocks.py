@@ -39,6 +39,8 @@ class DecoderBlockCNN(nn.Module):
     def __init__(self,
                  in_ch: int,
                  out_ch: int,
+                 conv_kernel: int,
+                 padding: int,
                  size: int,
                  dropout: Optional[float] = None,
                  components="3gcr",
@@ -56,8 +58,8 @@ class DecoderBlockCNN(nn.Module):
         self.deconv_module = DoubleConvolution(in_ch=in_ch,
                                                out_ch=out_ch,
                                                block_type="decoder",
-                                               kernel=3,
-                                               padding=1,
+                                               kernel=conv_kernel,
+                                               padding=padding,
                                                components=components,
                                                num_group=num_group)
 
@@ -119,6 +121,8 @@ class DecoderBlockRCNN(nn.Module):
     def __init__(self,
                  in_ch: int,
                  out_ch: int,
+                 conv_kernel: int,
+                 padding: int,
                  size: int,
                  dropout: Optional[float] = None,
                  components="3gcr",
@@ -136,16 +140,16 @@ class DecoderBlockRCNN(nn.Module):
         self.deconv_module = DoubleConvolution(in_ch=in_ch,
                                                out_ch=out_ch,
                                                block_type="decoder",
-                                               kernel=3,
-                                               padding=1,
+                                               kernel=conv_kernel,
+                                               padding=padding,
                                                components=components,
                                                num_group=num_group)
 
         self.deconv_res_module = RecurrentDoubleConvolution(in_ch=out_ch,
                                                             out_ch=out_ch,
                                                             block_type="decoder",
-                                                            kernel=3,
-                                                            padding=1,
+                                                            kernel=conv_kernel,
+                                                            padding=padding,
                                                             components=components,
                                                             num_group=num_group)
 
@@ -213,6 +217,8 @@ class DecoderBlockUnet3Plus(nn.Module):
     def __init__(self,
                  in_ch: int,
                  out_ch: int,
+                 conv_kernel: int,
+                 padding: int,
                  size: int,
                  components: str,
                  num_group: int,
@@ -232,8 +238,8 @@ class DecoderBlockUnet3Plus(nn.Module):
         self.deconv = DoubleConvolution(in_ch=in_ch,
                                         out_ch=out_ch,
                                         block_type='decoder',
-                                        kernel=3,
-                                        padding=1,
+                                        kernel=conv_kernel,
+                                        padding=padding,
                                         components=components,
                                         num_group=num_group)
 
@@ -261,8 +267,8 @@ class DecoderBlockUnet3Plus(nn.Module):
             conv = DoubleConvolution(in_ch=en_in_channel,
                                      out_ch=out_ch,
                                      block_type="decoder",
-                                     kernel=3,
-                                     padding=1,
+                                     kernel=conv_kernel,
+                                     padding=padding,
                                      components=components,
                                      num_group=num_group)
 
@@ -281,8 +287,8 @@ class DecoderBlockUnet3Plus(nn.Module):
             deconv_module = DoubleConvolution(in_ch=de_in_channel,
                                               out_ch=out_ch,
                                               block_type="decoder",
-                                              kernel=3,
-                                              padding=1,
+                                              kernel=conv_kernel,
+                                              padding=padding,
                                               components=components,
                                               num_group=num_group)
             self.decoder_feature_upscale.append(upscale)
@@ -369,6 +375,8 @@ def build_decoder(conv_layers: int,
                   conv_layer_scaler: int,
                   components: str,
                   num_group: int,
+                  conv_kernel: int,
+                  padding: int,
                   sizes: list,
                   dropout: Optional[float] = None,
                   deconv_module='CNN'):
@@ -383,6 +391,8 @@ def build_decoder(conv_layers: int,
         conv_layers (int): Number of deconvolution layers.
         conv_layer_scaler (int): Number of channel by which each CNN block is scaled up.
         components (str): Components that are used for deconvolution block.
+        conv_kernel (int): Convolution kernel size.
+        padding (int): Padding size for the convolution.
         sizes (list): List of tensor sizes for upscale.
         num_group (int): Num. of groups for the nn.GroupNorm.
             None -> if nn.GroupNorm is not used.
@@ -407,6 +417,8 @@ def build_decoder(conv_layers: int,
 
             decoder = DecoderBlockCNN(in_ch=in_ch,
                                       out_ch=out_ch,
+                                      conv_kernel=conv_kernel,
+                                      padding=padding,
                                       size=size,
                                       dropout=dropout,
                                       components=components,
@@ -421,6 +433,8 @@ def build_decoder(conv_layers: int,
 
             decoder = DecoderBlockRCNN(in_ch=in_ch,
                                        out_ch=out_ch,
+                                       conv_kernel=conv_kernel,
+                                       padding=padding,
                                        size=size,
                                        dropout=dropout,
                                        components=components,
@@ -448,6 +462,8 @@ def build_decoder(conv_layers: int,
 
             decoder = DecoderBlockUnet3Plus(in_ch=in_ch,
                                             out_ch=out_ch,
+                                            conv_kernel=conv_kernel,
+                                            padding=padding,
                                             size=size,
                                             components=components,
                                             num_group=num_group,
