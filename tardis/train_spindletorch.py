@@ -44,6 +44,11 @@ from tardis.version import version
               type=float,
               help='Pixel size to which all images are resize.',
               show_default=True)
+@click.option('-ms', '--mask_size',
+              default=150,
+              type=int,
+              help='Size of drawn mask in A.',
+              show_default=True)
 @click.option('-cnn', '--cnn_type',
               default='unet',
               type=click.Choice(['unet', 'resunet', 'unet3plus', 'big_unet', 'fnet']),
@@ -150,6 +155,7 @@ from tardis.version import version
 def main(dir: str,
          patch_size: int,
          pixel_size: float,
+         mask_size: int,
          cnn_type: str,
          cnn_out_channel: int,
          training_batch_size: int,
@@ -219,7 +225,7 @@ def main(dir: str,
 
         # Build train and test dataset
         build_train_dataset(dataset_dir=dir,
-                            circle_size=150,
+                            circle_size=mask_size,
                             resize_pixel_size=pixel_size,
                             trim_xy=patch_size,
                             trim_z=patch_size)
