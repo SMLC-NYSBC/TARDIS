@@ -73,11 +73,11 @@ class ImportDataFromAmira:
 
         # Read spatial graph
         am = open(src_am, 'r', encoding="iso-8859-1").read(500)
-        if 'AmiraMesh 3D ASCII' not in am and '# ASCII Spatial Graph' not in am:
+        if any([True for i in ['AmiraMesh 3D ASCII',
+                               '# ASCII Spatial Graph'] if i not in am]):
             self.spatial_graph = None
         else:
-            self.spatial_graph = open(src_am, "r", encoding="iso-8859-1").read().split(
-                "\n")
+            self.spatial_graph = open(src_am, "r", encoding="iso-8859-1").read().split("\n")
             self.spatial_graph = [x for x in self.spatial_graph if x != '']
 
     def __get_segments(self) -> Union[np.ndarray, None]:
