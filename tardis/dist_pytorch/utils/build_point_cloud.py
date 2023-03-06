@@ -85,7 +85,7 @@ class BuildPointCloud:
         return image
 
     def build_point_cloud(self,
-                          image: Optional[str] = np.ndarray,
+                          image: Union[str, np.ndarray],
                           EDT=False,
                           mask_size=1.5,
                           down_sampling: Optional[float] = None,
@@ -128,21 +128,31 @@ class BuildPointCloud:
             image_edt = image_edt.astype(np.uint8)
 
             """Skeletonization"""
-            if as_2d or image.ndim == 2:
+            if image.ndim == 2:
                 image_point = skeletonize(image_edt)
-                image_point = np.where(image_point > 0)
+            elif as_2d:
+                image_point = np.zeros(image_edt.shape, dtype=np.uint8)
+
+                for i in range(image_point.shape[0]):
+                    image_point[i, :] = np.where(skeletonize(image_edt[i, :]), 1, 0)
             else:
-                image_point = np.where(skeletonize_3d(image_edt) > 0)
+                image_point = skeletonize_3d(image_edt)
+            image_point = np.where(image_point > 0)
 
             """CleanUp to avoid memory loss"""
             del image, image_edt
         else:
             """Skeletonization"""
-            if as_2d or image.ndim == 2:
+            if image.ndim == 2:
                 image_point = skeletonize(image)
-                image_point = np.where(image_point > 0)
+            elif as_2d:
+                image_point = np.zeros(image.shape, dtype=np.uint8)
+
+                for i in range(image_point.shape[0]):
+                    image_point[i, :] = np.where(skeletonize(image[i, :]), 1, 0)
             else:
-                image_point = np.where(skeletonize_3d(image) > 0)
+                image_point = skeletonize_3d(image)
+            image_point = np.where(image_point > 0)
 
             """CleanUp to avoid memory loss"""
             del image

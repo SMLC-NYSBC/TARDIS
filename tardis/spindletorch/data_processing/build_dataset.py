@@ -14,6 +14,7 @@ from typing import Tuple
 
 import numpy as np
 
+from tardis.dist_pytorch.utils.build_point_cloud import BuildPointCloud
 from tardis.spindletorch.data_processing.semantic_mask import draw_semantic
 from tardis.spindletorch.data_processing.trim import trim_with_stride
 from tardis.utils.errors import TardisError
@@ -66,6 +67,9 @@ def build_train_dataset(dataset_dir: str,
     # Normalize histogram
     normalize = RescaleNormalize(clip_range=(1, 99))
     minmax = MinMaxNormalize()
+
+    # Builder for point cloud
+    b_pc = BuildPointCloud()
 
     clean_empty = not benchmark
 
@@ -146,8 +150,18 @@ def build_train_dataset(dataset_dir: str,
         log_file[id, 3] = str(scale_factor)
         np.savetxt(join(dataset_dir, 'log.txt'), log_file, fmt='%s', delimiter=',')
 
+        """Update progress bar"""
+        tardis_progress(title='Data pre-processing for CNN training',
+                        text_1='Building Training dataset:',
+                        text_2=f'Files: {i} {mask_name}',
+                        text_3=f'px: {pixel_size}',
+                        text_4=f'Scale: {round(scale_factor, 2)}',
+                        text_6=f'Image dtype: {image.dtype} min: {image.min()} max: {image.max()}',
+                        text_7=print_progress_bar(id, len(img_list)))
+
         """Draw mask for coord or process mask if needed"""
-        if mask.ndim == 2 and mask.shape[1] in [3, 4]:  # Detect coordinate array
+        # Detect coordinate array
+        if mask.ndim == 2 and mask.shape[1] in [3, 4]:
             # Scale mask to correct pixel size
             mask[:, 1:] = mask[:, 1:] * scale_factor
 
@@ -170,6 +184,37 @@ def build_train_dataset(dataset_dir: str,
             # Flip mask if MRC/REC
             if mask_dir.endswith(('_mask.mrc', '_mask.rec')):
                 mask = np.flip(mask, 1)
+
+            if scale_factor != 1.0:
+                pc = b_pc.build_point_cloud(image=mask,
+                                            as_2d=True)
+                pc = pc * scale_factor
+                pc = pc.astype(np.uint32)
+
+                # Remove gaps from conversion to int
+                gaps = [i for i in list(range(min(pc[:, 2]), max(pc[:, 2]) + 1))
+                        if i not in np.unique(pc[:, 2])]
+
+                gaps_pc = []
+                for j in gaps:
+                    pick_coord = pc[np.where(pc[:, 2] == j + 1)[0], :]
+                    if len(pick_coord) == 0:
+                        pick_coord = pc[np.where(pc[:, 2] == j - 1)[0], :]
+
+                    if len(pick_coord) > 0:
+                        pick_coord[:, 2] = j
+                        gaps_pc.append(pick_coord)
+                if len(gaps_pc) > 0:
+                    gaps_pc = np.concatenate(gaps_pc)
+                    pc = np.concatenate((pc, gaps_pc))
+
+                # Draw mask from coordinates
+                mask = draw_semantic(mask_size=scale_shape,
+                                     coordinate=pc,
+                                     label=False,
+                                     pixel_size=resize_pixel_size,
+                                     circle_size=circle_size)
+
 
         """Update progress bar"""
         tardis_progress(title='Data pre-processing for CNN training',
