@@ -116,6 +116,7 @@ def main(dir: str,
     minmax = MinMaxNormalize()
 
     image_stitcher = StitchImages()
+    sigmoid = torch.nn.Sigmoid()
 
     device = get_device(device)
     cnn_network = cnn_network.split('_')
@@ -268,7 +269,7 @@ def main(dir: str,
                                dtype=input.dtype)[:scale_shape[0],
                                                   :scale_shape[1],
                                                   :scale_shape[2]]
-        image = torch.sigmoid(torch.Tensor(image)).detach().numpy()
+        image = sigmoid(torch.Tensor(image)).detach().numpy()
         image = np.where(image >= cnn_threshold, 1, 0).astype(np.uint8)
 
         # Restored original image pixel size
