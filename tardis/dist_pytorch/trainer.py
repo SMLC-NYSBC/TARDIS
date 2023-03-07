@@ -202,7 +202,7 @@ class DistTrainer(BasicTrainer):
                                                             sort=False)
 
                     try:
-                        input = torch.where(torch.sigmoid(edge[0, 0, :]) > 0.1, 1, 0).cpu().detach().numpy()
+                        input = torch.where(torch.sigmoid(edge[0, 0, :]) > 0.25, 1, 0).cpu().detach().numpy()
                         input0_1 = self.Graph0_1.patch_to_segment(graph=[input],
                                                                   coord=coord,
                                                                   idx=[out],

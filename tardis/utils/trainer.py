@@ -23,12 +23,16 @@ from tardis.utils.utils import EarlyStopping
 class ISR_LR:
     def __init__(self,
                  optimizer: optim.Adam,
-                 lr_mul,
-                 warmup_steps):
+                 lr_mul=1,
+                 warmup_steps=1000):
         self._optimizer = optimizer
         self.lr_mul = lr_mul
         self.warmup_steps = warmup_steps
         self.steps = 0
+
+    def load_state_dict(self,
+                        checkpoint: dict):
+        self._optimizer.load_state_dict(checkpoint)
 
     def state_dict(self):
         return self._optimizer.state_dict()
@@ -44,7 +48,7 @@ class ISR_LR:
 
     def get_lr_scale(self):
         n_steps, n_warmup_steps = self.steps, self.warmup_steps
-        return (1 ** -0.5) * min(n_steps ** (-0.5),
+        return (100 ** -0.5) * min(n_steps ** (-0.5),
                                  n_steps * n_warmup_steps ** (-1.5))
 
     def _update_learning_rate(self):

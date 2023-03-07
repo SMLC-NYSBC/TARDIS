@@ -34,7 +34,7 @@ def train_cnn(train_dataloader,
               model_structure: dict,
               checkpoint: Optional[str] = None,
               loss_function='bce',
-              learning_rate=0.001,
+              learning_rate=1,
               learning_rate_scheduler=False,
               early_stop_rate=10,
               device='gpu',
@@ -50,7 +50,7 @@ def train_cnn(train_dataloader,
         checkpoint (None, optional): Optional, CNN model checkpoint.
         loss_function (str): Type of loss function.
         learning_rate (float): Learning rate.
-        learning_rate_scheduler (bool): If True, StepLR is used with training.
+        learning_rate_scheduler (bool): If True, LR_scheduler is used with training.
         early_stop_rate (int): Define max. number of epoch's without improvements
         after which training is stopped.
         device (torch.device): Device on which model is trained.
@@ -117,17 +117,22 @@ def train_cnn(train_dataloader,
         loss_fn = losses_f[loss_function]
 
     """Build training optimizer"""
-    optimizer = optim.Adam(params=model.parameters(),
-                           betas=(0.9, 0.98), eps=1e-9)
+    if learning_rate_scheduler:
+        optimizer = optim.Adam(params=model.parameters(),
+                               betas=(0.9, 0.98), eps=1e-9)
+    else:
+        optimizer = optim.Adam(params=model.parameters(),
+                               lr=learning_rate,
+                               betas=(0.9, 0.98), eps=1e-9)
+
+    """Optionally: Build learning rate scheduler"""
+    if learning_rate_scheduler:
+        optimizer = ISR_LR(optimizer, lr_mul=learning_rate, warmup_steps=warmup)
 
     """Optionally: Checkpoint model"""
     if checkpoint is not None:
         optimizer.load_state_dict(save_train['optimizer_state_dict'])
         del save_train
-
-    """Build learning rate scheduler"""
-    if learning_rate_scheduler:
-        optimizer = ISR_LR(optimizer, lr_mul=learning_rate, warmup_steps=warmup)
 
     """Build trainer"""
     train = CNNTrainer(model=model,

@@ -201,6 +201,7 @@ def main(dir: str,
                         text_7=f'Current Task: Sub-dividing images for {patch_size} size')
 
         # Cut image for fix patch size and normalizing image pixel size
+        stride = round(patch_size * 0.2)
         trim_with_stride(image=image.astype(np.float32),
                          scale=scale_shape,
                          trim_size_xy=patch_size,
@@ -208,7 +209,7 @@ def main(dir: str,
                          output=join(dir, 'temp', 'Patches'),
                          image_counter=0,
                          clean_empty=False,
-                         stride=10)
+                         stride=stride)
         del image
 
         # Setup CNN dataloader
@@ -260,7 +261,8 @@ def main(dir: str,
                         text_7='Current Task: Stitching...')
 
         # Stitch predicted image patches
-        image = image_stitcher(image_dir=output, mask=True,
+        image = image_stitcher(image_dir=output,
+                               mask=True,
                                dtype=input.dtype)[:scale_shape[0],
                                                   :scale_shape[1],
                                                   :scale_shape[2]]

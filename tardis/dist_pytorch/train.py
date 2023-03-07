@@ -49,6 +49,7 @@ def train_dist(train_dataloader,
         checkpoint (None, optional): Optional, DIST model checkpoint.
         loss_function (str): Type of loss function.
         learning_rate (float): Learning rate.
+        lr_scheduler (bool): If True, LR_scheduler is used with training.
         early_stop_rate (int): Define max. number of epoch's without improvements
         after which training is stopped.
         device (torch.device): Device on which model is trained.
@@ -137,14 +138,14 @@ def train_dist(train_dataloader,
                                lr=learning_rate,
                                betas=(0.9, 0.98), eps=1e-9)
 
+    """Optionally: Build learning rate scheduler"""
+    if lr_scheduler:
+        optimizer = ISR_LR(optimizer, lr_mul=learning_rate)
+
     """Optionally: Checkpoint model"""
     if checkpoint is not None:
         optimizer.load_state_dict(save_train['optimizer_state_dict'])
         del save_train
-
-    """Build learning rate scheduler"""
-    if lr_scheduler:
-        optimizer = ISR_LR(optimizer, lr_mul=learning_rate, warmup_steps=1000)
 
     """Build trainer"""
     if model_structure['dist_type'] == 'instance':

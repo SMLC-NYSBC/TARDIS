@@ -35,6 +35,8 @@ def trim_with_stride(image: np.ndarray,
     Output images are saved as tiff with naming shame 1_1_1_25. Where
     number indicate grid position in xyz. Last number indicate stride.
 
+    ToDo: no padding strid only
+
     Args:
         image (np.ndarray): Corresponding image for the labels.
         trim_size_xy (int): Size of trimming in xy dimension.

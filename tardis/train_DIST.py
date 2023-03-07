@@ -96,7 +96,7 @@ from tardis.version import version
               help='Type of loss function use for training.',
               show_default=True)
 @click.option('-lr', '--loss_lr',
-              default=0.001,
+              default=1.0,
               type=float,
               help='Learning rate.',
               show_default=True)
@@ -219,6 +219,13 @@ def main(dir: str,
     """Setup training"""
     device = get_device(device)
 
+    if dataset_type.endswith('rgb'):
+        if node_dim == 0:
+            TardisError('161',
+                        'tardis/train_DIST.py',
+                        'Model initiated with node feasters as RGB but '
+                        f'node_dim is {node_dim}.')
+            sys.exit()
     if node_dim > 0:
         node_input = 3
     else:
@@ -232,6 +239,9 @@ def main(dir: str,
         tardis_logo(text_1=f'ValueError: Wrong DIST type {dist_structure}!')
         sys.exit()
 
+    if loss_lr == 1.0:
+        lr_rate_schedule = True
+
     """Optionally: pre-load model structure from checkpoint"""
     if checkpoint is not None:
         save_train = torch.load(join(checkpoint), map_location=device)
@@ -239,18 +249,18 @@ def main(dir: str,
         if 'model_struct_dict' in save_train.keys():
             model_dict = save_train['model_struct_dict']
             globals().update(model_dict)
-
-    model_dict = {'dist_type': dist_structure,
-                  'n_out': n_out,
-                  'node_input': node_input,
-                  'node_dim': node_dim,
-                  'edge_dim': edge_dim,
-                  'num_cls': num_cls,
-                  'num_layers': layers,
-                  'num_heads': heads,
-                  'coord_embed_sigma': sigma,
-                  'dropout_rate': dropout,
-                  'structure': structure}
+    else:
+        model_dict = {'dist_type': dist_structure,
+                      'n_out': n_out,
+                      'node_input': node_input,
+                      'node_dim': node_dim,
+                      'edge_dim': edge_dim,
+                      'num_cls': num_cls,
+                      'num_layers': layers,
+                      'num_heads': heads,
+                      'coord_embed_sigma': sigma,
+                      'dropout_rate': dropout,
+                      'structure': structure}
 
     train_dist(train_dataloader=dl_train_graph,
                test_dataloader=dl_test_graph,

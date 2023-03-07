@@ -45,8 +45,6 @@ def eval_graph_f1(logits: Optional[Union[np.ndarray, torch.Tensor]],
 
      Works with torch a numpy dataset.
 
-    TODO redo for soft F1
-
      Args:
          logits (np.ndarray, torch.Tensor): Prediction output from the model.
          targets (np.ndarray, torch.Tensor): Ground truth mask.
