@@ -215,7 +215,6 @@ def build_train_dataset(dataset_dir: str,
                                      pixel_size=resize_pixel_size,
                                      circle_size=circle_size)
 
-
         """Update progress bar"""
         tardis_progress(title='Data pre-processing for CNN training',
                         text_1='Building Training dataset:',

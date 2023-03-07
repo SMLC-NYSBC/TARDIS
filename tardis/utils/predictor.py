@@ -31,6 +31,7 @@ class Predictor:
          subtype (str, Optional): Optional model subtype name.
          model_type (str, Optional): Optional model type name.
          img_size (int, Optional): Optional image patch size.
+         sigmoid (bool): Predict output with sigmoid.
      """
 
     def __init__(self,
@@ -40,7 +41,8 @@ class Predictor:
                  subtype: Optional[str] = None,
                  img_size: Optional[int] = None,
                  model_type: Optional[str] = None,
-                 sigma: Optional[float] = None):
+                 sigma: Optional[float] = None,
+                 sigmoid=True):
         self.device = device
         self.img_size = img_size
         if checkpoint is None and network is None:
@@ -66,7 +68,8 @@ class Predictor:
             weights['model_struct_dict']['coord_embed_sigma'] = sigma
 
         self.model = self._build_model_from_checkpoint(
-            structure=weights['model_struct_dict']
+            structure=weights['model_struct_dict'],
+            sigmoid=sigmoid
         )
 
         self.model.load_state_dict(weights['model_state_dict'])
@@ -75,12 +78,14 @@ class Predictor:
         self.network = network
 
     def _build_model_from_checkpoint(self,
-                                     structure: dict):
+                                     structure: dict,
+                                     sigmoid=True):
         """
         Use checkpoint metadata to build compatible network
 
         Args:
             structure (dict): Metadata dictionary with network setting.
+            sigmoid (bool): Predict output with sigmoid.
 
         Returns:
             pytorch model: NN pytorch model.
@@ -88,12 +93,12 @@ class Predictor:
         if 'dist_type' in structure:
             model = build_dist_network(network_type=structure['dist_type'],
                                        structure=structure,
-                                       prediction=True)
+                                       prediction=sigmoid)
         elif 'cnn_type' in structure:
             model = build_cnn_network(network_type=structure['cnn_type'],
                                       structure=structure,
                                       img_size=self.img_size,
-                                      prediction=True)
+                                      prediction=sigmoid)
         else:
             model = None
 

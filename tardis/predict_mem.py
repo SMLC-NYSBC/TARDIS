@@ -18,6 +18,7 @@ from typing import Optional
 import click
 import numpy as np
 import tifffile.tifffile as tif
+import torch
 
 from tardis.spindletorch.data_processing.stitch import StitchImages
 from tardis.spindletorch.data_processing.trim import scale_image, trim_with_stride
@@ -46,7 +47,7 @@ warnings.simplefilter("ignore", UserWarning)
               help='Size of image size used for prediction.',
               show_default=True)
 @click.option('-cnn', '--cnn_network',
-              default='fnet_32',
+              default='fnet_64',
               type=str,
               help='CNN network name.',
               show_default=True)
@@ -56,7 +57,7 @@ warnings.simplefilter("ignore", UserWarning)
               help='If not None, str checkpoints for CNN',
               show_default=True)
 @click.option('-ct', '--cnn_threshold',
-              default=0.1,
+              default=0.75,
               type=float,
               help='Threshold use for model prediction.',
               show_default=True)
@@ -133,7 +134,8 @@ def main(dir: str,
                             subtype=cnn_network[1],
                             model_type='cryo_mem',
                             img_size=patch_size,
-                            device=device)
+                            device=device,
+                            sigmoid=False)
 
     """Process each image with CNN and DIST"""
     tardis_progress = TardisLogo()
@@ -236,8 +238,8 @@ def main(dir: str,
 
                 # Predict & Threshold
                 input = predict_cnn.predict(input[None, :])
-                if cnn_threshold != 0:
-                    input = np.where(input >= cnn_threshold, 1, 0).astype(np.uint8)
+                # if cnn_threshold != 0:
+                #     input = np.where(input >= cnn_threshold, 1, 0).astype(np.uint8)
 
                 end = time.time()
                 iter_time = 10 // (end - start)  # Scale progress bar refresh to 10s
@@ -246,8 +248,8 @@ def main(dir: str,
             else:
                 # Predict & Threshold
                 input = predict_cnn.predict(input[None, :])
-                if cnn_threshold != 0:
-                    input = np.where(input >= cnn_threshold, 1, 0).astype(np.uint8)
+                # if cnn_threshold != 0:
+                #     input = np.where(input >= cnn_threshold, 1, 0).astype(np.uint8)
 
             tif.imwrite(join(output, f'{name}.tif'), np.array(input, dtype=input.dtype))
 
@@ -262,10 +264,12 @@ def main(dir: str,
 
         # Stitch predicted image patches
         image = image_stitcher(image_dir=output,
-                               mask=True,
+                               mask=False,
                                dtype=input.dtype)[:scale_shape[0],
                                                   :scale_shape[1],
                                                   :scale_shape[2]]
+        image = torch.sigmoid(torch.Tensor(image)).detach().numpy()
+        image = np.where(image >= cnn_threshold, 1, 0).astype(np.uint8)
 
         # Restored original image pixel size
         image, _ = scale_image(image=image, scale=org_shape)
