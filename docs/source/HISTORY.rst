@@ -5,8 +5,15 @@ History
 ----------------------
 * **General changes:**
     * *#New_Feature* Added ClBCE and ClDice loss functions
+    * *#New_Feature* Added binary Amira image file export.
     * *#Optimize* Loss functions pytest and general cleanup
     * *#Optimize* Formatting and missing TardisErrors
+    * *#Optimize* 20x Speed up for Tardis logo for Linux/OS X
+
+* **SpindleTorch module changes:**
+
+* **DIST module changes:**
+
 
 0.1.0-RC1 (2023-02-08)
 ----------------------

@@ -9,6 +9,7 @@
 #######################################################################
 import codecs
 from datetime import datetime
+from io import BytesIO
 from typing import List, Optional, Union
 
 import mrcfile
@@ -302,17 +303,65 @@ class NumpyToAmira:
 
 
 def to_mrc(data: np.ndarray,
+           pixel_size: float,
            file_dir: str):
     """
     Save MRC image file
 
     Args:
         data (np.ndarray): Image file.
+        pixel_size (float): Image original pixel size.
         file_dir (str): Directory where the file should be saved.
     """
     try:
         with mrcfile.new(file_dir) as mrc:
             mrc.set_data(data)
+            mrc.voxel_size(pixel_size)
     except ValueError:
         with mrcfile.new(file_dir, overwrite=True) as mrc:
             mrc.set_data(data)
+
+
+def to_am(data: np.ndarray,
+          pixel_size: float,
+          file_dir: str):
+    """
+    Save image to binary Amira image file.
+
+    Args:
+        data (np.ndarray): Image file.
+        pixel_size (float): Image original pixel size.
+        file_dir (str): Directory where the file should be saved.
+    """
+    nz, ny, nx = data.shape
+    xLen, yLen, zLen = nx * pixel_size, ny * pixel_size, nz * pixel_size
+
+    am = ['# AmiraMesh BINARY-LITTLE-ENDIAN 3.0',
+          '# TARDIS - Transformer And Rapid Dimensionless Instance Segmentation (R)',
+          f'# tardis-pytorch v{version}',
+          f'# MIT License * 2021-{datetime.now().year} * Robert Kiewisz & Tristan Bepler',
+          '',
+          '',
+          f'define Lattice {nx} {ny} {nz}',
+          '',
+          'Parameters {',
+          '    Units {',
+          u'       Coordinates "Å"',
+          '    }',
+          '    DataWindow "0.000000 255.000000",',
+          f'    Content "{nx}x{ny}x{nz} byte, uniform coordinates",',
+          f'    BoundingBox 0 {xLen} 0 {yLen} 0 {zLen},',
+          '    CoordType "uniform"',
+          '}',
+          '',
+          'Lattice { byte Data } @1',
+          '',
+          '# Data section follows',
+          '@1']
+
+    with codecs.open(file_dir, mode='w', encoding="utf-8") as f:
+        for i in am:
+            f.write(f'{i} \n')
+    with codecs.open(file_dir, mode='ab+') as f:
+        bytes_data = data.flatten().tobytes()
+        f.write(BytesIO(bytes_data).getbuffer())

@@ -24,7 +24,7 @@ from tardis.spindletorch.data_processing.stitch import StitchImages
 from tardis.spindletorch.data_processing.trim import scale_image, trim_with_stride
 from tardis.spindletorch.datasets.dataloader import PredictionDataset
 from tardis.utils.device import get_device
-from tardis.utils.export_data import to_mrc
+from tardis.utils.export_data import to_am, to_mrc
 from tardis.utils.load_data import import_am, load_image
 from tardis.utils.logo import print_progress_bar, TardisLogo
 from tardis.utils.normalization import MinMaxNormalize, RescaleNormalize
@@ -40,6 +40,11 @@ warnings.simplefilter("ignore", UserWarning)
               default=getcwd(),
               type=str,
               help='Directory with images for prediction with CNN model.',
+              show_default=True)
+@click.option('-o', '--output',
+              default='tif',
+              type=click.Choice(['tif', 'mrc', 'am']),
+              help='Type of output.',
               show_default=True)
 @click.option('-ps', '--patch_size',
               default=128,
@@ -57,7 +62,7 @@ warnings.simplefilter("ignore", UserWarning)
               help='If not None, str checkpoints for CNN',
               show_default=True)
 @click.option('-ct', '--cnn_threshold',
-              default=0.75,
+              default=0.65,
               type=float,
               help='Threshold use for model prediction.',
               show_default=True)
@@ -71,6 +76,7 @@ warnings.simplefilter("ignore", UserWarning)
               show_default=True)
 @click.version_option(version=version)
 def main(dir: str,
+         output: str,
          patch_size: int,
          cnn_network: str,
          cnn_threshold: float,
@@ -287,10 +293,17 @@ def main(dir: str,
                             text_9=f'Org. shape {org_shape} is not the same as converted shape {image.shape}')
             sys.exit()
 
-        if join(dir, i).endswith('.mrc'):
-            to_mrc(data=image, file_dir=join(am_output, f'{i[:-out_format]}_CNN.mrc'))
-
-        tif.imwrite(join(am_output, f'{i[:-out_format]}_CNN.tif'), image)
+        if output == 'mrc':
+            to_mrc(data=image.astype(np.uint8),
+                   file_dir=join(am_output, f'{i[:-out_format]}_CNN.mrc'),
+                   pixel_size=px)
+        elif output == 'tif':
+            tif.imwrite(join(am_output, f'{i[:-out_format]}_CNN.tif'),
+                        image.astype(np.uint8))
+        elif output == 'am':
+            to_am(data=image.astype(np.uint8),
+                  file_dir=join(am_output, f'{i[:-out_format]}_CNN.am'),
+                  pixel_size=px)
 
         """Clean-up temp dir"""
         clean_up(dir=dir)
