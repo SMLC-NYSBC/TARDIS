@@ -105,7 +105,7 @@ def train_dist(train_dataloader,
         sys.exit()
 
     """Build TARDIS progress bar output"""
-    if model_structure['node_dim'] > 0:
+    if model_structure['node_dim'] == 0:
         node_sigma = ''
     elif model_structure['rgb_embed_sigma'] == 0:
         node_sigma = f"[Linear] node_sigma"
