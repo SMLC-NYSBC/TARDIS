@@ -41,7 +41,7 @@ warnings.simplefilter("ignore", UserWarning)
               type=str,
               help='Directory with images for prediction with CNN model.',
               show_default=True)
-@click.option('-o', '--output',
+@click.option('-o', '--output_format',
               default='tif',
               type=click.Choice(['tif', 'mrc', 'am']),
               help='Type of output.',
@@ -76,7 +76,7 @@ warnings.simplefilter("ignore", UserWarning)
               show_default=True)
 @click.version_option(version=version)
 def main(dir: str,
-         output: str,
+         output_format: str,
          patch_size: int,
          cnn_network: str,
          cnn_threshold: float,
@@ -293,14 +293,14 @@ def main(dir: str,
                             text_9=f'Org. shape {org_shape} is not the same as converted shape {image.shape}')
             sys.exit()
 
-        if output == 'mrc':
+        if output_format == 'mrc':
             to_mrc(data=image.astype(np.uint8),
                    file_dir=join(am_output, f'{i[:-out_format]}_CNN.mrc'),
                    pixel_size=px)
-        elif output == 'tif':
+        elif output_format == 'tif':
             tif.imwrite(join(am_output, f'{i[:-out_format]}_CNN.tif'),
                         image.astype(np.uint8))
-        elif output == 'am':
+        elif output_format == 'am':
             to_am(data=image.astype(np.uint8),
                   file_dir=join(am_output, f'{i[:-out_format]}_CNN.am'),
                   pixel_size=px)
