@@ -73,11 +73,13 @@ class TardisLogo:
     ....)
     """
 
-    def __init__(self):
+    def __init__(self,
+                 logo=True):
         self.CLEAR = None
+        self.WIDTH = None
 
         if platform.system() in ['Darwin', 'Linux']:
-            self.CLEAR = lambda: system('clear')
+            self.CLEAR = lambda: print("\x1b[2J\x1b[H")
         else:
             self.CLEAR = lambda: system('cls')
 
@@ -86,6 +88,8 @@ class TardisLogo:
 
         self.FN = "TARDIS-pytorch Copyright Information:"
         self.C = "Copyright (c) 2021 Robert Kiewisz, Tristan Bepler"
+
+        self.logo = logo
 
     @staticmethod
     def _build_text(max=80,
@@ -124,27 +128,21 @@ class TardisLogo:
             print('\033[2K\r', end='')
             sys.stderr.flush()
 
-    @staticmethod
-    def cell_width() -> int:
+    def cell_width(self):
         """
         Ask for current shell window width
-
-        Returns:
-            int: cell width.
         """
         if is_interactive():  # Jupyter
-            WIDTH = 90
+            self.WIDTH = 90
         else:
             try:  # Console
-                WIDTH = get_terminal_size()[0] - 5
+                self.WIDTH = get_terminal_size()[0] - 5
             except OSError:  # Any other
-                WIDTH = 100
-        return WIDTH
+                self.WIDTH = 100
 
     def __call__(self,
                  title='', text_1='', text_2='', text_3='', text_4='',
-                 text_5='', text_6='', text_7='', text_8='', text_9='', text_10='',
-                 logo=True):
+                 text_5='', text_6='', text_7='', text_8='', text_9='', text_10=''):
         """
         Builder call function to output nice looking progress bar.
 
@@ -160,66 +158,65 @@ class TardisLogo:
             text_8 (str, optional): Any text string.
             text_9 (str, optional): Any text string.
             text_10 (str, optional): Any text string.
-            logo (bool, optional): Any text string.
 
         Returns:
             print: Print progress bar with all text options into cmd commend line
                 window or jupyter notebook.
         """
         # Check and update window size
-        WIDTH = self.cell_width()
+        if self.WIDTH is None:
+            self.cell_width()
 
         self.CLEAR()
-        if logo:
-            logo = f'  {self._build_text(WIDTH + 1, "=", True)}\n' + \
-                   f' | {self._build_text(WIDTH, "TARDIS  " + version + "  " + title)}|\n' + \
-                   f' | {self._build_text(WIDTH, " ", True)}|\n' + \
-                   f' | {self._build_text(WIDTH, "New York Structural Biology Center")}|\n' + \
-                   f' | {self._build_text(WIDTH - 13, "Simons Machine Learning Center")} ___         |\n' + \
-                   f' | {self._build_text(WIDTH - 21, " ", True)} _______(_@_)_______ |\n' + \
-                   f' | {self._build_text(WIDTH - 21, " ", True)} |  TARDIS-pytorch | |\n' + \
-                   f' | {self._build_text(WIDTH - 21, text_1)} |_________________| |\n' + \
-                   f' | {self._build_text(WIDTH - 21, text_2)}  | _____ | _____ |  |\n' + \
-                   f' | {self._build_text(WIDTH - 21, text_3)}  | |###| | |###| |  |\n' + \
-                   f' | {self._build_text(WIDTH - 21, text_4)}  | |###| | |###| |  |\n' + \
-                   f' | {self._build_text(WIDTH - 21, text_5)}  | _____ | _____ |  |\n' + \
-                   f' | {self._build_text(WIDTH - 21, text_6)}  | || || | || || |  |\n' + \
-                   f' | {self._build_text(WIDTH - 21, text_7)}  | ||_|| | ||_|| |  |\n' + \
-                   f' | {self._build_text(WIDTH - 21, text_8)}  | _____ |$_____ |  |\n' + \
-                   f' | {self._build_text(WIDTH - 21, text_9)}  | || || | || || |  |\n' + \
-                   f' | {self._build_text(WIDTH - 21, text_10)}  | ||_|| | ||_|| |  |\n' + \
-                   f' | {self._build_text(WIDTH - 21, " ", True)}  | _____ | _____ |  |\n' + \
-                   f' | {self._build_text(WIDTH - 21, " ", True)}  | || || | || || |  |\n' + \
-                   f' | {self._build_text(WIDTH - 21, self.FN)}  | ||_|| | ||_|| |  |\n' + \
-                   f' | {self._build_text(WIDTH - 21, self.C)}  |       |       |  |\n' + \
-                   f' | {self._build_text(WIDTH - 21, "MIT License")}  *****************  |\n' + \
-                   f'  {self._build_text(WIDTH + 1, "=", True)}\n'
-
-            print(logo)
+        if self.logo:
+            logo = f'  {self._build_text(self.WIDTH + 1, "=", True)}\n' + \
+                   f' | {self._build_text(self.WIDTH, "TARDIS  " + version + "  " + title)}|\n' + \
+                   f' | {self._build_text(self.WIDTH, " ", True)}|\n' + \
+                   f' | {self._build_text(self.WIDTH, "New York Structural Biology Center")}|\n' + \
+                   f' | {self._build_text(self.WIDTH - 13, "Simons Machine Learning Center")} ___         |\n' + \
+                   f' | {self._build_text(self.WIDTH - 21, " ", True)} _______(_@_)_______ |\n' + \
+                   f' | {self._build_text(self.WIDTH - 21, " ", True)} |  TARDIS-pytorch | |\n' + \
+                   f' | {self._build_text(self.WIDTH - 21, text_1)} |_________________| |\n' + \
+                   f' | {self._build_text(self.WIDTH - 21, text_2)}  | _____ | _____ |  |\n' + \
+                   f' | {self._build_text(self.WIDTH - 21, text_3)}  | |###| | |###| |  |\n' + \
+                   f' | {self._build_text(self.WIDTH - 21, text_4)}  | |###| | |###| |  |\n' + \
+                   f' | {self._build_text(self.WIDTH - 21, text_5)}  | _____ | _____ |  |\n' + \
+                   f' | {self._build_text(self.WIDTH - 21, text_6)}  | || || | || || |  |\n' + \
+                   f' | {self._build_text(self.WIDTH - 21, text_7)}  | ||_|| | ||_|| |  |\n' + \
+                   f' | {self._build_text(self.WIDTH - 21, text_8)}  | _____ |$_____ |  |\n' + \
+                   f' | {self._build_text(self.WIDTH - 21, text_9)}  | || || | || || |  |\n' + \
+                   f' | {self._build_text(self.WIDTH - 21, text_10)}  | ||_|| | ||_|| |  |\n' + \
+                   f' | {self._build_text(self.WIDTH - 21, " ", True)}  | _____ | _____ |  |\n' + \
+                   f' | {self._build_text(self.WIDTH - 21, " ", True)}  | || || | || || |  |\n' + \
+                   f' | {self._build_text(self.WIDTH - 21, self.FN)}  | ||_|| | ||_|| |  |\n' + \
+                   f' | {self._build_text(self.WIDTH - 21, self.C)}  |       |       |  |\n' + \
+                   f' | {self._build_text(self.WIDTH - 21, "MIT License")}  *****************  |\n' + \
+                   f'  {self._build_text(self.WIDTH + 1, "=", True)}\n'
+            print(logo, flush=True)
         else:
-            logo = f'  {self._build_text(WIDTH + 1, "=", True)}\n' + \
-                   f' | {self._build_text(WIDTH, "TARDIS  " + version + "  " + title)}|\n' + \
-                   f' | {self._build_text(WIDTH, " ", True)}|\n' + \
-                   f' | {self._build_text(WIDTH, "New York Structural Biology Center")}|\n' + \
-                   f' | {self._build_text(WIDTH, "Simons Machine Learning Center")}|\n' + \
-                   f' | {self._build_text(WIDTH, " ", True)}|\n' + \
-                   f' | {self._build_text(WIDTH, " ", True)}|\n' + \
-                   f' | {self._build_text(WIDTH, text_1)}|\n' + \
-                   f' | {self._build_text(WIDTH, text_2)}|\n' + \
-                   f' | {self._build_text(WIDTH, text_3)}|\n' + \
-                   f' | {self._build_text(WIDTH, text_4)}|\n' + \
-                   f' | {self._build_text(WIDTH, text_5)}|\n' + \
-                   f' | {self._build_text(WIDTH, text_6)}|\n' + \
-                   f' | {self._build_text(WIDTH, text_7)}|\n' + \
-                   f' | {self._build_text(WIDTH, text_8)}|\n' + \
-                   f' | {self._build_text(WIDTH, text_9)}|\n' + \
-                   f' | {self._build_text(WIDTH, text_10)}|\n' + \
-                   f' | {self._build_text(WIDTH, " ", True)}|\n' + \
-                   f' | {self._build_text(WIDTH, " ", True)}|\n' + \
-                   f' | {self._build_text(WIDTH, self.FN)}|\n' + \
-                   f' | {self._build_text(WIDTH, self.C)}|\n' + \
-                   f' | {self._build_text(WIDTH, "MIT License")}|\n' + \
-                   f'  {self._build_text(WIDTH + 1, "=", True)}\n'
+            logo = f'  {self._build_text(self.WIDTH + 1, "=", True)}\n' + \
+                   f' | {self._build_text(self.WIDTH, "TARDIS  " + version + "  " + title)}|\n' + \
+                   f' | {self._build_text(self.WIDTH, " ", True)}|\n' + \
+                   f' | {self._build_text(self.WIDTH, "New York Structural Biology Center")}|\n' + \
+                   f' | {self._build_text(self.WIDTH, "Simons Machine Learning Center")}|\n' + \
+                   f' | {self._build_text(self.WIDTH, " ", True)}|\n' + \
+                   f' | {self._build_text(self.WIDTH, " ", True)}|\n' + \
+                   f' | {self._build_text(self.WIDTH, text_1)}|\n' + \
+                   f' | {self._build_text(self.WIDTH, text_2)}|\n' + \
+                   f' | {self._build_text(self.WIDTH, text_3)}|\n' + \
+                   f' | {self._build_text(self.WIDTH, text_4)}|\n' + \
+                   f' | {self._build_text(self.WIDTH, text_5)}|\n' + \
+                   f' | {self._build_text(self.WIDTH, text_6)}|\n' + \
+                   f' | {self._build_text(self.WIDTH, text_7)}|\n' + \
+                   f' | {self._build_text(self.WIDTH, text_8)}|\n' + \
+                   f' | {self._build_text(self.WIDTH, text_9)}|\n' + \
+                   f' | {self._build_text(self.WIDTH, text_10)}|\n' + \
+                   f' | {self._build_text(self.WIDTH, " ", True)}|\n' + \
+                   f' | {self._build_text(self.WIDTH, " ", True)}|\n' + \
+                   f' | {self._build_text(self.WIDTH, self.FN)}|\n' + \
+                   f' | {self._build_text(self.WIDTH, self.C)}|\n' + \
+                   f' | {self._build_text(self.WIDTH, "MIT License")}|\n' + \
+                   f'  {self._build_text(self.WIDTH + 1, "=", True)}\n'
             print(logo)
 
 
