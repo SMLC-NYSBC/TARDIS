@@ -32,9 +32,16 @@ class ISR_LR:
 
     def load_state_dict(self,
                         checkpoint: dict):
+        """
+        Wrapper for loading Optimizer state dictionary
+
+        Args:
+            checkpoint (dict): Dictionary with optimizer state.
+        """
         self._optimizer.load_state_dict(checkpoint)
 
     def state_dict(self):
+        """Wrapper for retrieving Optimizer state dictionary"""
         return self._optimizer.state_dict()
 
     def step(self):
@@ -47,6 +54,7 @@ class ISR_LR:
         self._optimizer.zero_grad(set_to_none=True)
 
     def get_lr_scale(self):
+        """Compute scaler for LR"""
         n_steps, n_warmup_steps = self.steps, self.warmup_steps
         return (100 ** -0.5) * min(n_steps ** (-0.5),
                                  n_steps * n_warmup_steps ** (-1.5))

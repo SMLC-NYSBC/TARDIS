@@ -47,6 +47,7 @@ class BasicDIST(nn.Module):
                  num_layers=6,
                  num_heads=8,
                  num_cls=None,
+                 rgb_embed_sigma=1.0,
                  coord_embed_sigma=1.0,
                  dropout_rate=0,
                  structure='full',
@@ -60,16 +61,20 @@ class BasicDIST(nn.Module):
         self.num_layers = num_layers
         self.num_heads = num_heads
         self.num_cls = num_cls
-        self.sigma = coord_embed_sigma
+        self.node_sigma = rgb_embed_sigma
+        self.edge_sigma = coord_embed_sigma
         self.dropout_rate = dropout_rate
         self.structure = structure
         self.predict = predict
 
         if self.node_dim is not None:
             if self.node_input > 0:
-                self.node_embed = NodeEmbedding(n_in=self.node_input, n_out=self.node_dim)
+                self.node_embed = NodeEmbedding(n_in=self.node_input,
+                                                n_out=self.node_dim,
+                                                sigma=self.node_sigma)
 
-        self.coord_embed = EdgeEmbedding(n_out=self.edge_dim, sigma=self.sigma)
+        self.coord_embed = EdgeEmbedding(n_out=self.edge_dim,
+                                         sigma=self.edge_sigma)
 
         self.layers = DistStack(node_dim=self.node_dim,
                                 pairs_dim=self.edge_dim,
