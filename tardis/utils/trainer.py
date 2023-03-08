@@ -29,6 +29,7 @@ class ISR_LR:
         self.lr_mul = lr_mul
         self.warmup_steps = warmup_steps
         self.steps = 0
+        self.param_groups = self._optimizer.param_groups
 
     def load_state_dict(self,
                         checkpoint: dict):
@@ -112,7 +113,7 @@ class BasicTrainer:
         self.optimizer = optimizer
         self.lr_scheduler = lr_scheduler
         if lr_scheduler:
-            self.lr = 0.0
+            self.lr = 1.0
         else:
             self.lr = self.optimizer.param_groups[0]['lr']
         self.epochs = epochs

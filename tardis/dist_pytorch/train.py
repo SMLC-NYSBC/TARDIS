@@ -160,6 +160,7 @@ def train_dist(train_dataloader,
                             training_DataLoader=train_dataloader,
                             validation_DataLoader=test_dataloader,
                             epochs=epochs,
+                            lr_scheduler=lr_scheduler,
                             early_stop_rate=early_stop_rate,
                             checkpoint_name=model_structure['dist_type'])
     elif model_structure['dist_type'] == 'semantic':
@@ -172,6 +173,7 @@ def train_dist(train_dataloader,
                              training_DataLoader=train_dataloader,
                              validation_DataLoader=test_dataloader,
                              epochs=epochs,
+                             lr_scheduler=lr_scheduler,
                              early_stop_rate=early_stop_rate,
                              checkpoint_name=model_structure['dist_type'])
 
