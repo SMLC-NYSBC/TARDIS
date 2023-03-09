@@ -209,7 +209,7 @@ class DistTrainer(BasicTrainer):
                                                                   prune=0,
                                                                   sort=False)
                         mcov0_1.append(mcov(input0_1, target))
-                    except IndexError:
+                    except:
                         mcov0_1.append(0.0)
 
                     try:
@@ -220,7 +220,7 @@ class DistTrainer(BasicTrainer):
                                                                   prune=0,
                                                                   sort=False)
                         mcov0_5.append(mcov(input0_5, target))
-                    except IndexError:
+                    except:
                         mcov0_5.append(0.0)
 
                     try:
@@ -231,7 +231,7 @@ class DistTrainer(BasicTrainer):
                                                                   prune=0,
                                                                   sort=False)
                         mcov0_9.append(mcov(input0_9, target))
-                    except IndexError:
+                    except:
                         mcov0_9.append(0.0)
 
                 # Avg. precision score

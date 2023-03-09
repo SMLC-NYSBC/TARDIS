@@ -108,9 +108,9 @@ def train_dist(train_dataloader,
     if model_structure['node_dim'] == 0:
         node_sigma = ''
     elif model_structure['rgb_embed_sigma'] == 0:
-        node_sigma = f"[Linear] node_sigma"
+        node_sigma = f", [Linear] node_sigma"
     else:
-        node_sigma = f"{model_structure['rgb_embed_sigma']} node_sigma"
+        node_sigma = f", {model_structure['rgb_embed_sigma']} node_sigma"
 
     print_setting = [f"Training is started on {device} for DIST-{model_structure['structure']}",
                      f"Local dir: {getcwd()}",
@@ -119,7 +119,7 @@ def train_dist(train_dataloader,
                      f"{model_structure['num_heads']} heads",
                      f"Layers are build of {model_structure['node_dim']} nodes, "
                      f"{model_structure['edge_dim']} edges, "
-                     f"{model_structure['coord_embed_sigma']} edge_sigma, {node_sigma}"]
+                     f"{model_structure['coord_embed_sigma']} edge_sigma{node_sigma}"]
 
     """Optionally: Load checkpoint for retraining"""
     if checkpoint is not None:

@@ -100,7 +100,6 @@ def main(dir: str,
     if len(predict_list) == 0:
         tardis_progress(title='Fully-automatic Membrane segmentation module',
                         text_1=f'Found {len(predict_list)} images to predict!',
-                        text_5='Point Cloud: Nan',
                         text_7='Current Task: NaN',
                         text_8='Tardis Error: Wrong directory:',
                         text_9=f'Given {dir} is does not contain any recognizable file formats!')
@@ -108,7 +107,6 @@ def main(dir: str,
     else:
         tardis_progress(title='Fully-automatic Membrane segmentation module',
                         text_1=f'Found {len(predict_list)} images to predict!',
-                        text_5='Point Cloud: In processing...',
                         text_7='Current Task: Set-up environment...')
 
     # Hard fix for dealing with tif file lack of pixel sizes...
@@ -129,7 +127,6 @@ def main(dir: str,
     if not len(cnn_network) == 2:
         tardis_progress(title='Fully-automatic Membrane segmentation module',
                         text_1=f'Found {len(predict_list)} images to predict!',
-                        text_5='Point Cloud: Nan',
                         text_7='Current Task: NaN',
                         text_8='Tardis Error: Given CNN type is wrong!:',
                         text_9=f'Given {cnn_network} but should be e.g. `unet_32`')
@@ -164,7 +161,6 @@ def main(dir: str,
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                         text_4='Pixel size: Nan A',
-                        text_5='Point Cloud: In processing...',
                         text_7='Current Task: Preprocessing for CNN...')
 
         # Build temp dir
@@ -190,7 +186,6 @@ def main(dir: str,
             tardis_progress(title='Fully-automatic Membrane segmentation module',
                             text_1=f'Found {len(predict_list)} images to predict!',
                             text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
-                            text_5='Point Cloud: Nan A',
                             text_7='Current Task: NaN',
                             text_8=f'Tardis Error: Error while loading image {i}:',
                             text_9=f'Image loaded correctly, but output format {image.dtype} is not float32!')
@@ -206,7 +201,6 @@ def main(dir: str,
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                         text_4=f'Pixel size: {px} A',
-                        text_5='Point Cloud: In processing...',
                         text_7=f'Current Task: Sub-dividing images for {patch_size} size')
 
         # Cut image for fix patch size and normalizing image pixel size
@@ -233,7 +227,6 @@ def main(dir: str,
                                 text_1=f'Found {len(predict_list)} images to predict!',
                                 text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                                 text_4=f'Pixel size: {px} A',
-                                text_5='Point Cloud: In processing...',
                                 text_7='Current Task: CNN prediction...',
                                 text_8=print_progress_bar(j, len(patches_dl)))
 
@@ -266,7 +259,6 @@ def main(dir: str,
                         text_1=f'Found {len(predict_list)} images to predict!',
                         text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                         text_4=f'Original pixel size: {px} A',
-                        text_5='Point Cloud: In processing...',
                         text_7='Current Task: Stitching...')
 
         # Stitch predicted image patches
@@ -287,7 +279,6 @@ def main(dir: str,
                             text_1=f'Found {len(predict_list)} images to predict!',
                             text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                             text_4=f'Original pixel size: {px} A',
-                            text_5='Point Cloud: NaN.',
                             text_7='Last Task: Stitching/Scaling/Make correction...',
                             text_8=f'Tardis Error: Error while converting to {px} A pixel size.',
                             text_9=f'Org. shape {org_shape} is not the same as converted shape {image.shape}')
