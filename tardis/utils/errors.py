@@ -94,6 +94,8 @@ class TardisError(Exception):
                  py='NA',
                  desc='Unknown exertion occurred!'):
         super().__init__()
+
+        self.WIDTH = None
         id_desc = standard_error_id(id)
         if id_desc == 'UNKNOWN_ERROR':
             id = 42  # Swap error for unknown error code
@@ -137,15 +139,15 @@ class TardisError(Exception):
         Returns:
             list[str]: list of cut string
         """
-        WIDTH = self.tardis_error_rise.cell_width() - 21
-        if len(desc) <= WIDTH:
+        self.WIDTH = self.tardis_error_rise.cell_width() - 21
+        if len(desc) <= self.WIDTH:
             text_3 = desc
             text_4, text_5, text_6, \
                 text_7, text_8, text_9, text_10 = '', '', '', '', '', '', ''
         else:
             text_3, text_4, text_5, text_6, \
                 text_7, text_8, text_9, text_10 = self._truncate_str(desc,
-                                                                     WIDTH)
+                                                                     self.WIDTH)
 
         return text_3, text_4, text_5, text_6, text_7, text_8, text_9, text_10
 

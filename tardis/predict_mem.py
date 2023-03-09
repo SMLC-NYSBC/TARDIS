@@ -43,7 +43,7 @@ warnings.simplefilter("ignore", UserWarning)
               show_default=True)
 @click.option('-o', '--output_format',
               default='tif',
-              type=click.Choice(['tif', 'mrc', 'am']),
+              type=click.Choice(['all', 'tif', 'mrc', 'am']),
               help='Type of output.',
               show_default=True)
 @click.option('-ps', '--patch_size',
@@ -268,7 +268,11 @@ def main(dir: str,
                                                   :scale_shape[1],
                                                   :scale_shape[2]]
         image = sigmoid(torch.Tensor(image)).detach().numpy()
-        image = np.where(image >= cnn_threshold, 1, 0).astype(np.uint8)
+        if cnn_threshold != 0:
+            image = np.where(image >= cnn_threshold, 1, 0).astype(np.uint8)
+        else:
+            tif.imwrite(join(am_output, f'{i[:-out_format]}_CNN.tif'), image)
+            continue
 
         # Restored original image pixel size
         image, _ = scale_image(image=image, scale=org_shape)
@@ -284,15 +288,15 @@ def main(dir: str,
                             text_9=f'Org. shape {org_shape} is not the same as converted shape {image.shape}')
             sys.exit()
 
-        if output_format == 'mrc':
-            to_mrc(data=image.astype(np.uint8),
+        if output_format in ['all', 'mrc']:
+            to_mrc(data=image,
                    file_dir=join(am_output, f'{i[:-out_format]}_CNN.mrc'),
                    pixel_size=px)
-        elif output_format == 'tif':
+        elif output_format == ['all', 'tif']:
             tif.imwrite(join(am_output, f'{i[:-out_format]}_CNN.tif'),
-                        image.astype(np.uint8))
-        elif output_format == 'am':
-            to_am(data=image.astype(np.uint8),
+                        image)
+        elif output_format == ['all', 'am']:
+            to_am(data=image,
                   file_dir=join(am_output, f'{i[:-out_format]}_CNN.am'),
                   pixel_size=px)
 
