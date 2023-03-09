@@ -192,7 +192,7 @@ class TardisLogo:
                    f' | {self._build_text(self.WIDTH - 21, self.C)}  |       |       |  |\n' + \
                    f' | {self._build_text(self.WIDTH - 21, "MIT License")}  *****************  |\n' + \
                    f'  {self._build_text(self.WIDTH + 1, "=", True)}\n'
-            print(logo, flush=True)
+            print(logo)
         else:
             logo = f'  {self._build_text(self.WIDTH + 1, "=", True)}\n' + \
                    f' | {self._build_text(self.WIDTH, "TARDIS  " + version + "  " + title)}|\n' + \

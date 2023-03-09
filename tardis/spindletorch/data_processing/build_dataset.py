@@ -13,6 +13,7 @@ from os.path import isfile, join
 from typing import Tuple
 
 import numpy as np
+import tifffile
 
 from tardis.dist_pytorch.utils.build_point_cloud import BuildPointCloud
 from tardis.spindletorch.data_processing.semantic_mask import draw_semantic
@@ -20,7 +21,7 @@ from tardis.spindletorch.data_processing.trim import trim_with_stride
 from tardis.utils.errors import TardisError
 from tardis.utils.load_data import ImportDataFromAmira, load_image
 from tardis.utils.logo import print_progress_bar, TardisLogo
-from tardis.utils.normalization import MinMaxNormalize, RescaleNormalize
+from tardis.utils.normalization import MeanStdNormalize, RescaleNormalize
 
 
 def build_train_dataset(dataset_dir: str,
@@ -66,7 +67,7 @@ def build_train_dataset(dataset_dir: str,
 
     # Normalize histogram
     normalize = RescaleNormalize(clip_range=(1, 99))
-    minmax = MinMaxNormalize()
+    meanstd = MeanStdNormalize()
 
     # Builder for point cloud
     b_pc = BuildPointCloud()
@@ -160,7 +161,7 @@ def build_train_dataset(dataset_dir: str,
                         text_7=print_progress_bar(id, len(img_list)))
 
         """Draw mask for coord or process mask if needed"""
-        # Detect coordinate array
+        # Detect coordinate mask array
         if mask.ndim == 2 and mask.shape[1] in [3, 4]:
             # Scale mask to correct pixel size
             mask[:, 1:] = mask[:, 1:] * scale_factor
@@ -170,7 +171,7 @@ def build_train_dataset(dataset_dir: str,
                                  coordinate=mask,
                                  pixel_size=resize_pixel_size,
                                  circle_size=circle_size)
-        else:  # Detect mask array
+        else:  # Detect image mask array
             # Convert to binary
             if mask.min() == 0 and mask.max() > 1:
                 mask = np.where(mask > 0, 1, 0).astype(np.uint8)
@@ -224,17 +225,16 @@ def build_train_dataset(dataset_dir: str,
                         text_6=f'Image dtype: {image.dtype} min: {image.min()} max: {image.max()}',
                         text_7=print_progress_bar(id, len(img_list)))
 
-        """Normalize histogram"""
+        """Normalize image histogram"""
         # Rescale image intensity
-        image = normalize(image)
+        image = normalize(meanstd(image)).astype(np.float32)
 
-        if not image.min() >= -1 or not image.max() <= 1:  # Image between in 0 and 255
-            image = minmax(image)
-
-        if image.dtype != np.float32:
-            TardisError('114',
-                        'tardis/spindletorch/data_processing/build_training_dataset',
-                        f'Image data of type {image.dtype} not float32')
+        if not image.min() >= -1 or not image.max() <= 1:  # Image not between in -1 and 1
+            if image.min() >= 0 and image.max() <= 1:
+                image = (image - 0.5) * 2
+            elif image.min() >= 0 and image.max() <= 255:
+                image = image / 255  # move to 0 - 1
+                image = (image - 0.5) * 2
 
         tardis_progress(title='Data pre-processing for CNN training',
                         text_1='Building Training dataset:',
@@ -245,6 +245,8 @@ def build_train_dataset(dataset_dir: str,
                         text_7=print_progress_bar(id, len(img_list)))
 
         """Voxelize Image and Mask"""
+        tifffile.imwrite(f'img_{i}.tif', image)
+        tifffile.imwrite(f'mask_{i}.tif', mask)
         trim_with_stride(image=image,
                          mask=mask,
                          scale=scale_shape,
@@ -265,10 +267,12 @@ def load_img_mask_data(image: str,
         - Amira (image) + Amira (coord)
         - Amira (image) + csv (coord)
         - Amira (image) + Amira (mask) or MRC/REC (mask)
+        - Amira (image) + tif (mask)
 
         - MRC/REC(image) + Amira (coord) ! Need check if coordinate is not transformed !
         - MRC/REC(image) + csv (coord)
         - MRC/REC(image) + Amira (mask) or MRC/REC (mask)
+        - MRC/REC (image) + tif (mask)
 
     Args:
         image (str): Directory address to the image file
@@ -311,7 +315,7 @@ def load_img_mask_data(image: str,
         coord = np.genfromtxt(mask, delimiter=',')  # [ID x X x Y x (Z)]
         mask_px = img_px
     elif mask.endswith('_mask.tif'):
-        mask, mask_px = load_image(mask)
+        mask, _ = load_image(mask)
         mask_px = img_px
 
     if not img_px == mask_px:
@@ -326,7 +330,7 @@ def load_img_mask_data(image: str,
 def error_log_build_data(dir: str,
                          log_file: np.ndarray,
                          id: int,
-                         i: str) -> list:
+                         i: str) -> np.ndarray:
     """
     Update log file with error for data that could not be loaded
 

@@ -58,7 +58,7 @@ class MinMaxNormalize:
         Call for normalization.
 
         Args:
-            x (np.ndarray): Image or label mask.
+            x (np.ndarray): Image data.
 
         Returns:
             np.ndarray: Normalized array.
@@ -78,6 +78,29 @@ class MinMaxNormalize:
         elif 0 > MIN >= -1 and MAX <= 1:
             x = (x + 1) / 2
 
+        return x.astype(np.float32)
+
+
+class MeanStdNormalize:
+    """
+    IMAGE NORMALIZATION BASED ON MEAN AND STD
+    """
+
+    def __call__(self,
+                 x: np.ndarray) -> np.ndarray:
+        """
+        Call for standardization.
+
+        Args:
+            x (np.ndarray): Image data.
+
+        Returns:
+            np.ndarray: Standardized array.
+        """
+        MEAN = x.mean()
+        STD = x.std()
+
+        x = (x - MEAN) / STD
         return x.astype(np.float32)
 
 
