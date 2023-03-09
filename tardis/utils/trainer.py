@@ -266,7 +266,8 @@ class BasicTrainer:
                            idx):
         if idx % (len(self.training_DataLoader) // 4) == 0:
             # Do not validate at first idx and last 10%
-            if idx != 0 or idx >= int(len(self.training_DataLoader) * 0.9):
+            if idx != 0 or idx >= int(len(self.training_DataLoader) * 0.75):
+                self.model.eval()  # Enter Validation
                 self._validate()
                 self._update_epoch_desc()
 
@@ -280,6 +281,7 @@ class BasicTrainer:
                         join(getcwd(),
                              f'{self.checkpoint_name}_checkpoint',
                              f'{self.checkpoint_name}_checkpoint.pth'))
+                self.model.train()  # Move back to training
 
     def run_trainer(self):
         """

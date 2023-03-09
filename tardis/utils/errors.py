@@ -141,15 +141,15 @@ class TardisError(Exception):
         """
         self.tardis_error_rise.cell_width()
 
-        self.WIDTH = self.WIDTH - 21
-        if len(desc) <= self.WIDTH:
+        WIDTH = self.tardis_error_rise.WIDTH - 21
+        if len(desc) <= WIDTH:
             text_3 = desc
             text_4, text_5, text_6, \
                 text_7, text_8, text_9, text_10 = '', '', '', '', '', '', ''
         else:
             text_3, text_4, text_5, text_6, \
                 text_7, text_8, text_9, text_10 = self._truncate_str(desc,
-                                                                     self.WIDTH)
+                                                                     WIDTH)
 
         return text_3, text_4, text_5, text_6, text_7, text_8, text_9, text_10
 

@@ -189,8 +189,6 @@ class DISTBenchmark:
         self.metric = {
             'IoU': [],  # Graph
             'AUC': [],  # Graph
-            # 'AP50': [],  # Instance
-            # 'AP75': [],  # Instance
             'mCov': [],  # Instance
             'mWCov': [],  # Instance
         }
