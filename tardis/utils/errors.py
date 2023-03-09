@@ -126,7 +126,7 @@ class TardisError(Exception):
                                text_7=desc_7,
                                text_8=desc_8,
                                text_9=desc_9,
-                               text_10=desc_10, )
+                               text_10=desc_10)
 
     def cut_desc(self,
                  desc: str) -> Tuple[str, str, str, str, str, str, str, str]:
@@ -139,7 +139,9 @@ class TardisError(Exception):
         Returns:
             list[str]: list of cut string
         """
-        self.WIDTH = self.tardis_error_rise.cell_width() - 21
+        self.tardis_error_rise.cell_width()
+
+        self.WIDTH = self.WIDTH - 21
         if len(desc) <= self.WIDTH:
             text_3 = desc
             text_4, text_5, text_6, \
