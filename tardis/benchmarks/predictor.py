@@ -316,15 +316,6 @@ class DISTBenchmark:
                                  text_8='Current Task: DIST prediction...',
                                  text_9=print_progress_bar(i, len(self.eval_data)))
 
-            np.save('edges.npy', np.asarray([c.cpu().detach().numpy() for c in coords],
-                                            dtype=object))
-            np.save('nodes.npy', np.asarray([n.cpu().detach().numpy() for n in nodes],
-                                            dtype=object))
-            np.save('pred_graphs.npy', np.asarray(graphs, dtype=object))
-            np.save('target.npy', np.asarray(target, dtype=object))
-            import sys
-            sys.exit()
-
             """Segment graphs"""
             coords_df = [c.cpu().detach().numpy() for c in coords]
             self._benchmark_IS(graphs, target, coords_df, output_idx)
