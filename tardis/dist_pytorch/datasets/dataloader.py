@@ -502,14 +502,12 @@ class Stanford3DDataset(BasicDataset):
             coord[:, 1:] = coord[:, 1:] / 0.05
 
             if self.rgb:
-                VD = PatchDataSet(max_number_of_points=self.max_point_in_patch,
-                                  overlap=0,
+                VD = PatchDataSet(drop_rate=0.1,
+                                  max_number_of_points=self.max_point_in_patch,
                                   rgb=rgb_v,
-                                  drop_rate=0.1,
                                   tensor=False)
             else:
                 VD = PatchDataSet(max_number_of_points=self.max_point_in_patch,
-                                  overlap=0,
                                   drop_rate=0.1,
                                   tensor=False)
 
@@ -544,6 +542,9 @@ class Stanford3DDataset(BasicDataset):
                                                                                  df=df_idx,
                                                                                  cls=cls_idx)
 
+        if self.benchmark:
+            # Output file_name, edge_f, node_f, graph, node_idx, node_class
+            return idx, coords_idx, df_idx, graph_idx, output_idx, cls_idx
         # Output edge_f,   node_f, graph,     node_idx,   node_class
         return coords_idx, df_idx, graph_idx, output_idx, cls_idx
 

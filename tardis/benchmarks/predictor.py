@@ -11,7 +11,7 @@ import time
 from os import makedirs
 from os.path import isdir, join
 from shutil import rmtree
-from typing import List, Tuple
+from typing import List
 
 import numpy as np
 import torch
@@ -218,40 +218,28 @@ class DISTBenchmark:
         # AUC
         self.metric['AUC'].append(AUC(logits, target, True))
 
-    @staticmethod
-    def _segment(threshold: float,
-                 max_connections: int,
-                 logits: List[np.ndarray],
-                 targets: List[np.ndarray],
-                 coord: List[np.ndarray],
-                 output_idx: List[np.ndarray],
-                 sort: bool) -> Tuple[np.ndarray, np.ndarray]:
-        GraphToSegment = GraphInstanceV2(threshold=threshold,
-                                         connection=max_connections)
-        input_IS = GraphToSegment.patch_to_segment(graph=logits,
-                                                   coord=coord,
-                                                   idx=output_idx,
-                                                   prune=2,
-                                                   sort=sort)
-
-        GraphToSegment = GraphInstanceV2(threshold=0.5,
-                                         connection=50000)
-        target_IS = GraphToSegment.patch_to_segment(graph=targets,
-                                                    coord=coord,
-                                                    idx=output_idx,
-                                                    prune=2,
-                                                    sort=sort)
-        return input_IS, target_IS
-
     def _benchmark_IS(self,
                       logits: List[np.ndarray],
                       targets: List[np.ndarray],
                       coords: List[np.ndarray],
                       output_idx: List[np.ndarray]):
+        # Graph cut
+        GraphToSegment = GraphInstanceV2(threshold=self.threshold,
+                                         connection=self.max_connections)
+        input_IS = GraphToSegment.patch_to_segment(graph=logits,
+                                                   coord=coords,
+                                                   idx=output_idx,
+                                                   prune=2,
+                                                   sort=self.sort)
+
+        GraphToSegment = GraphInstanceV2(threshold=0.5, connection=50000)
+        target_IS = GraphToSegment.patch_to_segment(graph=targets,
+                                                    coord=coords,
+                                                    idx=output_idx,
+                                                    prune=2,
+                                                    sort=self.sort)
+
         # mCov
-        input_IS, target_IS = self._segment(self.threshold, self.max_connections,
-                                            logits, targets,
-                                            coords, output_idx, self.sort)
         self.metric['mCov'].append(mcov(input_IS, target_IS))
 
         # mWCov
@@ -267,20 +255,46 @@ class DISTBenchmark:
     def _output_metric(self):
         return {k: np.mean(v) for k, v in self.metric.items()}
 
+    def _update_metric_pg(self):
+        def __mean_or_nan(values):
+            if len(values) == 0:
+                return 'Nan'
+            return round(np.mean(values), 2)
+
+        iou = __mean_or_nan(self.metric["IoU"])
+        auc = __mean_or_nan(self.metric["AUC"])
+        mcov = __mean_or_nan(self.metric["mCov"])
+        mwcov = __mean_or_nan(self.metric["mWCov"])
+
+        pg = f'IoU: {iou}; '\
+             f'AUC: {auc}; '\
+             f'mCov: {mcov}; '\
+             f'mWCov: {mwcov}'
+        return pg
+
     def __call__(self):
         # Tardis progress bar update
         self.tardis_progress(title=self.title,
                              text_1=f'Running point cloud segmentation benchmark on '
                                     f'{self.data_set}',
                              text_4='Benchmark: In progress...',
+                             text_5='File: Nan',
                              text_7='Current Task: DIST prediction...',
                              text_8=print_progress_bar(0, len(self.eval_data)))
 
         for i in range(len(self.eval_data)):
             """Predict"""
-            coords, nodes, target, output_idx, _ = self.eval_data.__getitem__(i)
+            idx, coords, nodes, target, output_idx, _ = self.eval_data.__getitem__(i)
             target = [t.cpu().detach().numpy() for t in target]
             output_idx = [o.cpu().detach().numpy() for o in output_idx]
+
+            self.tardis_progress(title=self.title,
+                                 text_1=f'Running point cloud segmentation benchmark on '
+                                        f'{self.data_set}',
+                                 text_4='Benchmark: In progress...',
+                                 text_5=f'File: {idx}',
+                                 text_7='Current Task: DIST prediction...',
+                                 text_8=print_progress_bar(0, len(self.eval_data)))
 
             graphs = []
             for edge, graph, node in zip(coords, target, nodes):
@@ -293,6 +307,24 @@ class DISTBenchmark:
                 """Benchmark Graph"""
                 self._benchmark_graph(input, graph.astype(np.uint8))
 
+            self.tardis_progress(title=self.title,
+                                 text_1=f'Running point cloud segmentation benchmark on '
+                                        f'{self.data_set}',
+                                 text_4='Benchmark: In progress...',
+                                 text_5=f'File: {idx}',
+                                 text_7=self._update_metric_pg(),
+                                 text_8='Current Task: DIST prediction...',
+                                 text_9=print_progress_bar(i, len(self.eval_data)))
+
+            np.save('edges.npy', np.asarray([c.cpu().detach().numpy() for c in coords],
+                                            dtype=object))
+            np.save('nodes.npy', np.asarray([n.cpu().detach().numpy() for n in nodes],
+                                            dtype=object))
+            np.save('pred_graphs.npy', np.asarray(graphs, dtype=object))
+            np.save('target.npy', np.asarray(target, dtype=object))
+            import sys
+            sys.exit()
+
             """Segment graphs"""
             coords_df = [c.cpu().detach().numpy() for c in coords]
             self._benchmark_IS(graphs, target, coords_df, output_idx)
@@ -301,11 +333,9 @@ class DISTBenchmark:
                                  text_1=f'Running point cloud segmentation benchmark on '
                                         f'{self.data_set}',
                                  text_4='Benchmark: In progress...',
-                                 text_6=f'IoU: {round(np.mean(self.metric["IoU"]), 2)}; '
-                                        f'AUC: {round(np.mean(self.metric["AUC"]), 2)}; '
-                                        f'mCov: {round(np.mean(self.metric["mCov"]), 2)}; '
-                                        f'mWCov: {round(np.mean(self.metric["mWCov"]), 2)}',
-                                 text_7='Current Task: DIST prediction...',
-                                 text_8=print_progress_bar(i, len(self.eval_data)))
+                                 text_5=f'File: {idx}',
+                                 text_7=self._update_metric_pg(),
+                                 text_8='Current Task: DIST prediction...',
+                                 text_9=print_progress_bar(i, len(self.eval_data)))
 
         return self._output_metric()

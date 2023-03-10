@@ -69,6 +69,14 @@ class Predictor:
             weights['model_struct_dict']['coord_embed_sigma'] = sigma
         model_structure = check_model_dict(weights['model_struct_dict'])
 
+        if network is not None:
+            self.network = network
+        else:
+            if 'dist_type' in model_structure:
+                self.network = 'dist'
+            else:
+                self.network = 'cnn'
+
         self.model = self._build_model_from_checkpoint(
             structure=model_structure,
             sigmoid=sigmoid
@@ -77,7 +85,6 @@ class Predictor:
         self.model.load_state_dict(weights['model_state_dict'])
 
         del weights  # Cleanup weight file from memory
-        self.network = network
 
     def _build_model_from_checkpoint(self,
                                      structure: dict,

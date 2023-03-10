@@ -13,7 +13,6 @@ from os.path import isfile, join
 from typing import Tuple
 
 import numpy as np
-import tifffile
 
 from tardis.dist_pytorch.utils.build_point_cloud import BuildPointCloud
 from tardis.spindletorch.data_processing.semantic_mask import draw_semantic
@@ -245,8 +244,6 @@ def build_train_dataset(dataset_dir: str,
                         text_7=print_progress_bar(id, len(img_list)))
 
         """Voxelize Image and Mask"""
-        tifffile.imwrite(f'img_{i}.tif', image)
-        tifffile.imwrite(f'mask_{i}.tif', mask)
         trim_with_stride(image=image,
                          mask=mask,
                          scale=scale_shape,

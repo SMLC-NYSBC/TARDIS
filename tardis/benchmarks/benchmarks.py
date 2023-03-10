@@ -105,11 +105,11 @@ def main(data_set: str,
         DIR_NN = join(DIR_, 'Best_model_DIST', data_set)
         DIR_EVAL = join(DIR_, 'Eval_DIST', data_set)
 
-    if data_set not in listdir(DIR_NN):
+    if data_set not in listdir(DIR_EVAL):
         TardisError(id='',
                     py='tardis/benchmarks/benchmarks.py',
                     desc=f'Given data set {data_set} is not supporter! '
-                    f'Expected one of {listdir(DIR_NN)}')
+                    f'Expected one of {listdir(DIR_EVAL)}')
 
     if rgb:
         data_set = f'{data_set}_rgb'
@@ -117,6 +117,7 @@ def main(data_set: str,
     BEST_SCORE = get_benchmark_aws()
 
     m_name = model['model_struct_dict']
+
     predictor = Predictor(checkpoint=model,
                           img_size=patch_size,
                           sigma=sigma,
