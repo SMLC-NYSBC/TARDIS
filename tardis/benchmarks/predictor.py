@@ -285,8 +285,9 @@ class DISTBenchmark:
                                         f'{self.data_set}',
                                  text_4='Benchmark: In progress...',
                                  text_5=f'File: {idx}',
-                                 text_7='Current Task: DIST prediction...',
-                                 text_8=print_progress_bar(0, len(self.eval_data)))
+                                 text_7=self._update_metric_pg(),
+                                 text_8='Current Task: DIST prediction...',
+                                 text_9=print_progress_bar(i, len(self.eval_data)))
 
             graphs = []
             for edge, graph, node in zip(coords, target, nodes):

@@ -14,7 +14,6 @@ import numpy as np
 import torch
 
 from tardis.dist_pytorch.dist import build_dist_network
-from tardis.dist_pytorch.utils.utils import check_model_dict
 from tardis.spindletorch.spindletorch import build_cnn_network
 from tardis.utils.aws import get_weights_aws
 from tardis.utils.errors import TardisError
@@ -37,8 +36,8 @@ class Predictor:
 
     def __init__(self,
                  device: torch.device,
+                 network: str,
                  checkpoint: Optional[str] = None,
-                 network: Optional[str] = None,
                  subtype: Optional[str] = None,
                  img_size: Optional[int] = None,
                  model_type: Optional[str] = None,
@@ -67,6 +66,11 @@ class Predictor:
         # Allow overwriting sigma
         if sigma is not None:
             weights['model_struct_dict']['coord_embed_sigma'] = sigma
+
+        if network.startswith('dist'):
+            from tardis.dist_pytorch.utils.utils import check_model_dict
+        else:
+            from tardis.spindletorch.utils.utils import check_model_dict
         model_structure = check_model_dict(weights['model_struct_dict'])
 
         if network is not None:
