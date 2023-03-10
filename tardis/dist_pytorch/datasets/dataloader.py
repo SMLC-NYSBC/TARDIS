@@ -543,8 +543,8 @@ class Stanford3DDataset(BasicDataset):
                                                                                  cls=cls_idx)
 
         if self.benchmark:
-            # Output file_name, edge_f, node_f, graph, node_idx, node_class
-            return idx, coords_idx, df_idx, graph_idx, output_idx, cls_idx
+            # Output file_name, raw_coord, edge_f, node_f, graph, node_idx, node_class
+            return idx, coord, coords_idx, df_idx, graph_idx, output_idx, cls_idx
         # Output edge_f,   node_f, graph,     node_idx,   node_class
         return coords_idx, df_idx, graph_idx, output_idx, cls_idx
 

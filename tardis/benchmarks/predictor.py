@@ -220,30 +220,22 @@ class DISTBenchmark:
 
     def _benchmark_IS(self,
                       logits: List[np.ndarray],
-                      targets: List[np.ndarray],
-                      coords: List[np.ndarray],
+                      coords: np.ndarray,
                       output_idx: List[np.ndarray]):
         # Graph cut
         GraphToSegment = GraphInstanceV2(threshold=self.threshold,
                                          connection=self.max_connections)
         input_IS = GraphToSegment.patch_to_segment(graph=logits,
-                                                   coord=coords,
+                                                   coord=coords[:, 1:],
                                                    idx=output_idx,
                                                    prune=2,
                                                    sort=self.sort)
 
-        GraphToSegment = GraphInstanceV2(threshold=0.5, connection=50000)
-        target_IS = GraphToSegment.patch_to_segment(graph=targets,
-                                                    coord=coords,
-                                                    idx=output_idx,
-                                                    prune=2,
-                                                    sort=self.sort)
-
         # mCov
-        self.metric['mCov'].append(mcov(input_IS, target_IS))
+        self.metric['mCov'].append(mcov(input_IS, coords))
 
         # mWCov
-        self.metric['mWCov'].append(mwcov(input_IS, target_IS))
+        self.metric['mWCov'].append(mwcov(input_IS, coords))
 
     def _predict(self,
                  input,
@@ -284,7 +276,7 @@ class DISTBenchmark:
 
         for i in range(len(self.eval_data)):
             """Predict"""
-            idx, coords, nodes, target, output_idx, _ = self.eval_data.__getitem__(i)
+            idx, coord_org, coords, nodes, target, output_idx, _ = self.eval_data.__getitem__(i)
             target = [t.cpu().detach().numpy() for t in target]
             output_idx = [o.cpu().detach().numpy() for o in output_idx]
 
@@ -317,8 +309,7 @@ class DISTBenchmark:
                                  text_9=print_progress_bar(i, len(self.eval_data)))
 
             """Segment graphs"""
-            coords_df = [c.cpu().detach().numpy() for c in coords]
-            self._benchmark_IS(graphs, target, coords_df, output_idx)
+            self._benchmark_IS(graphs, coord_org, output_idx)
 
             self.tardis_progress(title=self.title,
                                  text_1=f'Running point cloud segmentation benchmark on '

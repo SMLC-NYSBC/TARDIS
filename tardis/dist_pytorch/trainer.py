@@ -262,7 +262,7 @@ class DistTrainer(BasicTrainer):
         self.mCov0_9.append(np.mean(mcov0_9))
 
         # Check if average evaluation loss dropped
-        self.early_stopping(np.mean(F1_mean))
+        self.early_stopping(f1_score=self.f1[-1:][0])
 
 
 class CDistTrainer(BasicTrainer):
