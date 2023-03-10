@@ -127,7 +127,7 @@ from tardis.version import version
                    '0-9 - specified gpu device id to use',
               show_default=True)
 @click.option('-w', '--warmup',
-              default=1000,
+              default=100,
               type=int,
               help='Number of warmup steps.',
               show_default=True)

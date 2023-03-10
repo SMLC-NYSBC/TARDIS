@@ -24,12 +24,19 @@ class ISR_LR:
     def __init__(self,
                  optimizer: optim.Adam,
                  lr_mul=1,
-                 warmup_steps=1000):
+                 warmup_steps=1000,
+                 scale=100):
         self._optimizer = optimizer
         self.lr_mul = lr_mul
         self.warmup_steps = warmup_steps
         self.steps = 0
+        self.scale = scale
         self.param_groups = self._optimizer.param_groups
+
+        if lr_mul > 1:
+            self._optimizer.param_groups[0]['lr'] = 1.0
+        else:
+            self._optimizer.param_groups[0]['lr'] = lr_mul
 
     def load_state_dict(self,
                         checkpoint: dict):
@@ -57,8 +64,8 @@ class ISR_LR:
     def get_lr_scale(self):
         """Compute scaler for LR"""
         n_steps, n_warmup_steps = self.steps, self.warmup_steps
-        return (100 ** -0.5) * min(n_steps ** (-0.5),
-                                 n_steps * n_warmup_steps ** (-1.5))
+        return (self.scale ** -0.5) * min(n_steps ** (-0.5),
+                                          n_steps * n_warmup_steps ** (-1.5))
 
     def _update_learning_rate(self):
         """Learning rate scheduling per step"""
@@ -66,8 +73,7 @@ class ISR_LR:
         self.steps += 1
         lr = self.lr_mul * self.get_lr_scale()
 
-        for param_group in self._optimizer.param_groups:
-            param_group['lr'] = lr
+        self._optimizer.param_groups[0]['lr'] = lr
 
 
 class BasicTrainer:
