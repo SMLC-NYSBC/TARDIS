@@ -292,10 +292,10 @@ def main(dir: str,
             to_mrc(data=image,
                    file_dir=join(am_output, f'{i[:-out_format]}_CNN.mrc'),
                    pixel_size=px)
-        elif output_format == ['all', 'tif']:
+        elif output_format in ['all', 'tif']:
             tif.imwrite(join(am_output, f'{i[:-out_format]}_CNN.tif'),
                         image)
-        elif output_format == ['all', 'am']:
+        elif output_format in ['all', 'am']:
             to_am(data=image,
                   file_dir=join(am_output, f'{i[:-out_format]}_CNN.am'),
                   pixel_size=px)
