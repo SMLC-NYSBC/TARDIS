@@ -152,7 +152,8 @@ def main(dir: str,
 
     # Build handler's for DIST input and output
     patch_pc = PatchDataSet(max_number_of_points=points_in_patch, graph=False)
-    GraphToSegment = GraphInstanceV2(threshold=dist_threshold)
+    GraphToSegment = GraphInstanceV2(threshold=dist_threshold,
+                                     connection=4)
 
     device = get_device(device)
     cnn_network = cnn_network.split('_')
@@ -333,14 +334,14 @@ def main(dir: str,
         """Save predicted mask"""
         if output_format in ['all', 'mrc', 'mrc_coord']:
             to_mrc(data=image,
-                   file_dir=join(am_output, f'{i[:-out_format]}_CNN.mrc'),
+                   file_dir=join(am_output, f'{i[:-out_format]}_semantic.mrc'),
                    pixel_size=px)
         elif output_format in ['all', 'tif', 'tif_coord']:
-            tif.imwrite(join(am_output, f'{i[:-out_format]}_CNN.tif'),
+            tif.imwrite(join(am_output, f'{i[:-out_format]}_semantic.tif'),
                         image)
         elif output_format in ['all', 'am', 'am_coord']:
             to_am(data=image,
-                  file_dir=join(am_output, f'{i[:-out_format]}_CNN.am'),
+                  file_dir=join(am_output, f'{i[:-out_format]}_semantic.am'),
                   pixel_size=px)
 
         """Extract coordinates"""
@@ -396,32 +397,35 @@ def main(dir: str,
                             text_5=f'Point Cloud: {pc_ld.shape[0]}; Nodes; NaN Segments',
                             text_7='Current Task: Membrane segmentation...')
 
-            segments = GraphToSegment.patch_to_segment(graph=graphs,
-                                                       coord=pc_ld,
-                                                       idx=output_idx,
-                                                       sort=False,
-                                                       prune=0)
-            np.savetxt(join(am_output, f'{i[:-out_format]}_coord.csv'),
-                       segments,
-                       delimiter=",")
+            try:
+                segments = GraphToSegment.patch_to_segment(graph=graphs,
+                                                           coord=pc_ld,
+                                                           idx=output_idx,
+                                                           sort=False,
+                                                           prune=0)
+                np.savetxt(join(am_output, f'{i[:-out_format]}_coord.csv'),
+                           segments,
+                           delimiter=",")
 
-            mask_semantic = draw_semantic_membrane(mask_size=image.shape,
-                                                   coordinate=segments,
-                                                   pixel_size=px,
-                                                   spline_size=50)
+                mask_semantic = draw_semantic_membrane(mask_size=image.shape,
+                                                       coordinate=segments,
+                                                       pixel_size=px,
+                                                       spline_size=50)
 
-            """Save segmented predicted mask"""
-            if output_format in ['all', 'mrc', 'mrc_coord']:
-                to_mrc(data=mask_semantic,
-                       file_dir=join(am_output, f'{i[:-out_format]}_CNN.mrc'),
-                       pixel_size=px)
-            elif output_format in ['all', 'tif', 'tif_coord']:
-                tif.imwrite(join(am_output, f'{i[:-out_format]}_CNN.tif'),
-                            mask_semantic)
-            elif output_format in ['all', 'am', 'am_coord']:
-                to_am(data=mask_semantic,
-                      file_dir=join(am_output, f'{i[:-out_format]}_CNN.am'),
-                      pixel_size=px)
+                """Save segmented predicted mask"""
+                if output_format in ['all', 'mrc', 'mrc_coord']:
+                    to_mrc(data=mask_semantic,
+                           file_dir=join(am_output, f'{i[:-out_format]}_instance.mrc'),
+                           pixel_size=px)
+                elif output_format in ['all', 'tif', 'tif_coord']:
+                    tif.imwrite(join(am_output, f'{i[:-out_format]}_instance.tif'),
+                                mask_semantic)
+                elif output_format in ['all', 'am', 'am_coord']:
+                    to_am(data=mask_semantic,
+                          file_dir=join(am_output, f'{i[:-out_format]}_instance.am'),
+                          pixel_size=px)
+            except:
+                pass
 
         """Clean-up temp dir"""
         clean_up(dir=dir)
