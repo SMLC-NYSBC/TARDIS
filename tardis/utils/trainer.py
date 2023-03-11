@@ -34,9 +34,12 @@ class ISR_LR:
         self.param_groups = self._optimizer.param_groups
 
         if lr_mul > 1:
-            self._optimizer.param_groups[0]['lr'] = 1.0
+            lr = 1.0
         else:
-            self._optimizer.param_groups[0]['lr'] = lr_mul
+            lr = lr_mul
+
+        for g in self._optimizer.param_groups:
+            g['lr'] = lr
 
     def load_state_dict(self,
                         checkpoint: dict):
@@ -73,7 +76,8 @@ class ISR_LR:
         self.steps += 1
         lr = self.lr_mul * self.get_lr_scale()
 
-        self._optimizer.param_groups[0]['lr'] = lr
+        for g in self._optimizer.param_groups:
+            g['lr'] = lr
 
 
 class BasicTrainer:
@@ -272,7 +276,7 @@ class BasicTrainer:
                            idx):
         if idx % (len(self.training_DataLoader) // 4) == 0:
             # Do not validate at first idx and last 10%
-            if idx != 0 or idx >= int(len(self.training_DataLoader) * 0.75):
+            if idx != 0 or idx <= int(len(self.training_DataLoader) * 0.75):
                 self.model.eval()  # Enter Validation
                 self._validate()
                 self._update_epoch_desc()

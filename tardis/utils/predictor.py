@@ -36,7 +36,7 @@ class Predictor:
 
     def __init__(self,
                  device: torch.device,
-                 network: str,
+                 network: Optional[str] = None,
                  checkpoint: Optional[str] = None,
                  subtype: Optional[str] = None,
                  img_size: Optional[int] = None,
@@ -67,7 +67,7 @@ class Predictor:
         if sigma is not None:
             weights['model_struct_dict']['coord_embed_sigma'] = sigma
 
-        if network.startswith('dist'):
+        if 'dist_type' in weights['model_struct_dict']:
             from tardis.dist_pytorch.utils.utils import check_model_dict
         else:
             from tardis.spindletorch.utils.utils import check_model_dict

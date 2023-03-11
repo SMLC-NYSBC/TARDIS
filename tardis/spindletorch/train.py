@@ -128,7 +128,7 @@ def train_cnn(train_dataloader,
     """Optionally: Build learning rate scheduler"""
     if learning_rate_scheduler:
         optimizer = ISR_LR(optimizer, lr_mul=learning_rate, warmup_steps=warmup,
-                           scale=10)
+                           scale=1)
 
     """Optionally: Checkpoint model"""
     if checkpoint is not None:
