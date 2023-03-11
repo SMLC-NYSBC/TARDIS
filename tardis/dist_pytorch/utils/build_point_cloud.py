@@ -177,11 +177,13 @@ class BuildPointCloud:
             pcd.points = o3d.utility.Vector3dVector(coordinates_HD)
             coordinates_LD = np.asarray(pcd.voxel_down_sample(voxel_size=down_sampling).points)
 
-            dist = cdist(coordinates_LD, coordinates_LD).astype(np.float16)
-            # indices = np.where(dist <= 1.5)
-            dist = [id for id, x in enumerate(dist) if
-                    len(np.where(x <= sqrt(2 * down_sampling ** 2))[0]) > 2]
-            coordinates_LD = coordinates_LD[dist, :]
+            # Pick the closest matching coordinates
+            if not as_2d:
+                dist = cdist(coordinates_LD, coordinates_LD).astype(np.float16)
+                # indices = np.where(dist <= 1.5)
+                dist = [id for id, x in enumerate(dist) if
+                        len(np.where(x <= sqrt(2 * down_sampling ** 2))[0]) > 2]
+                coordinates_LD = coordinates_LD[dist, :]
 
             return coordinates_HD, coordinates_LD
         return coordinates_HD

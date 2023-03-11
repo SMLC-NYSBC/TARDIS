@@ -15,7 +15,7 @@ from typing import Tuple
 import numpy as np
 
 from tardis.dist_pytorch.utils.build_point_cloud import BuildPointCloud
-from tardis.spindletorch.data_processing.semantic_mask import draw_semantic
+from tardis.spindletorch.data_processing.semantic_mask import draw_instances
 from tardis.spindletorch.data_processing.trim import trim_with_stride
 from tardis.utils.errors import TardisError
 from tardis.utils.load_data import ImportDataFromAmira, load_image
@@ -166,10 +166,10 @@ def build_train_dataset(dataset_dir: str,
             mask[:, 1:] = mask[:, 1:] * scale_factor
 
             # Draw mask from coordinates
-            mask = draw_semantic(mask_size=scale_shape,
-                                 coordinate=mask,
-                                 pixel_size=resize_pixel_size,
-                                 circle_size=circle_size)
+            mask = draw_instances(mask_size=scale_shape,
+                                  coordinate=mask,
+                                  pixel_size=resize_pixel_size,
+                                  circle_size=circle_size)
         else:  # Detect image mask array
             # Convert to binary
             if mask.min() == 0 and mask.max() > 1:
@@ -209,11 +209,11 @@ def build_train_dataset(dataset_dir: str,
                     pc = np.concatenate((pc, gaps_pc))
 
                 # Draw mask from coordinates
-                mask = draw_semantic(mask_size=scale_shape,
-                                     coordinate=pc,
-                                     label=False,
-                                     pixel_size=resize_pixel_size,
-                                     circle_size=circle_size)
+                mask = draw_instances(mask_size=scale_shape,
+                                      coordinate=pc,
+                                      label=False,
+                                      pixel_size=resize_pixel_size,
+                                      circle_size=circle_size)
 
         """Update progress bar"""
         tardis_progress(title='Data pre-processing for CNN training',

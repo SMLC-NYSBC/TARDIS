@@ -15,11 +15,11 @@ from tardis.spindletorch.data_processing.interpolation import interpolation
 from tardis.utils.errors import TardisError
 
 
-def draw_semantic(mask_size: tuple,
-                  coordinate: np.ndarray,
-                  pixel_size: float,
-                  circle_size=250,
-                  label=True) -> np.ndarray:
+def draw_instances(mask_size: tuple,
+                   coordinate: np.ndarray,
+                   pixel_size: float,
+                   circle_size=250,
+                   label=True) -> np.ndarray:
     """
     Module to build semantic mask from corresponding coordinates
 
@@ -112,3 +112,45 @@ def draw_semantic(mask_size: tuple,
         label_mask[all_cz, all_cy, all_cx] = 1
 
     return np.where(label_mask == 1, 1, 0).astype(np.uint8)
+
+
+def draw_semantic_membrane(mask_size: tuple,
+                           coordinate: np.ndarray,
+                           pixel_size: float,
+                           spline_size=70) -> np.ndarray:
+    """
+    Draw semantic membrane
+
+    For each Z pick individual instance and draw a fitted spline of given thickness.
+
+    Args:
+        mask_size (tuple): Size of array that will hold created mask.
+        coordinate (np.ndarray): Segmented coordinates of a shape [Label x X x Y x (Z)].
+        pixel_size (float): Pixel size in Angstrom.
+        spline_size (int): Size of a circle the label mask in Angstrom.
+
+    Returns:
+        np.ndarray: Binary mask with drawn all coordinates as lines.
+    """
+    # Ensure ints
+    coordinate = coordinate.astype(np.int32)
+
+    # Initiate mask size
+    r = round((spline_size / 2) / pixel_size)
+
+    # Initiate mask
+    label_mask = np.zeros(mask_size, dtype=np.int16)
+
+    """Iterate throw each coord"""
+    for i in coordinate:
+        c = i[1:]
+        id = i[0]
+
+        cz, cy, cx = draw_mask(r=r,
+                               c=c,
+                               label_mask=label_mask,
+                               segment_shape='s')
+
+        label_mask[cz, cy, cx] = id
+
+    return label_mask

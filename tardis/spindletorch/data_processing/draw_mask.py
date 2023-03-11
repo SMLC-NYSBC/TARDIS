@@ -68,7 +68,7 @@ def draw_circle(r: int,
                 shape: tuple) -> Union[Tuple[np.ndarray, np.ndarray],
                                        Tuple[np.ndarray, np.ndarray, np.ndarray]]:
     """
-    Draw a circle and shit coordinate to c position.
+    Draw a circle and shift coordinate to c position.
 
     Args:
         r (int): radius of a circle in Angstrom.
@@ -118,7 +118,7 @@ def draw_sphere(r: int,
                 c: tuple,
                 shape: tuple) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
-    Draw a sphere and shit coordinate to c position.
+    Draw a sphere and shift coordinate to c position.
 
     Args:
         r (int): radius of a sphere in Angstrom.
