@@ -276,7 +276,7 @@ class BasicTrainer:
                            idx):
         if idx % (len(self.training_DataLoader) // 4) == 0:
             # Do not validate at first idx and last 10%
-            if idx != 0 or idx <= int(len(self.training_DataLoader) * 0.75):
+            if idx != 0 and idx <= int(len(self.training_DataLoader) * 0.75):
                 self.model.eval()  # Enter Validation
                 self._validate()
                 self._update_epoch_desc()
