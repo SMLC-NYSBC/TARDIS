@@ -77,12 +77,12 @@ warnings.simplefilter("ignore", UserWarning)
               help='If not None, str checkpoints for DIST',
               show_default=True)
 @click.option('-ct', '--cnn_threshold',
-              default=0.65,
+              default=0.15,
               type=float,
               help='Threshold use for model prediction.',
               show_default=True)
 @click.option('-dt', '--dist_threshold',
-              default=0.9,
+              default=0.95,
               type=float,
               help='Threshold use for graph segmentation.',
               show_default=True)
@@ -366,7 +366,7 @@ def main(dir: str,
                             text_1=f'Found {len(predict_list)} images to predict!',
                             text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                             text_4=f'Original pixel size: {px} A',
-                            text_5=f'Point Cloud: {pc_ld.shape[0]}; Nodes; NaN Segments',
+                            text_5=f'Point Cloud: {pc_ld.shape[0]}; NaN membranes',
                             text_7='Current Task: DIST prediction...',
                             text_8=print_progress_bar(0, len(coords_df)))
 
@@ -374,6 +374,8 @@ def main(dir: str,
             iter_time = int(round(len(coords_df) / 10))
             if iter_time == 0:
                 iter_time = 1
+            if iter_time >= len(coords_df):
+                iter_time = 10
 
             graphs = []
             for id_dist, coord in enumerate(coords_df):
@@ -382,7 +384,7 @@ def main(dir: str,
                                     text_1=f'Found {len(predict_list)} images to predict!',
                                     text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                                     text_4=f'Original pixel size: {px} A',
-                                    text_5=f'Point Cloud: {pc_ld.shape[0]}; Nodes; NaN Segments',
+                                    text_5=f'Point Cloud: {pc_ld.shape[0]}; NaN membranes',
                                     text_7='Current Task: DIST prediction...',
                                     text_8=print_progress_bar(id, len(coords_df)))
 
@@ -394,7 +396,7 @@ def main(dir: str,
                             text_1=f'Found {len(predict_list)} images to predict!',
                             text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
                             text_4=f'Original pixel size: {px} A',
-                            text_5=f'Point Cloud: {pc_ld.shape[0]}; Nodes; NaN Segments',
+                            text_5=f'Point Cloud: {pc_ld.shape[0]}; NaN membranes',
                             text_7='Current Task: Membrane segmentation...')
 
             try:
@@ -403,6 +405,16 @@ def main(dir: str,
                                                            idx=output_idx,
                                                            sort=False,
                                                            prune=0)
+
+                # Tardis progress bar update
+                tardis_progress(title='Fully-automatic Membrane segmentation module',
+                                text_1=f'Found {len(predict_list)} images to predict!',
+                                text_3=f'Image {id + 1}/{len(predict_list)}: {i}',
+                                text_4=f'Original pixel size: {px} A',
+                                text_5=f'Point Cloud: {pc_ld.shape[0]}; '
+                                       f'{np.max(segments[:, 0])} membranes',
+                                text_7='Current Task: Membrane segmentation...')
+
                 np.savetxt(join(am_output, f'{i[:-out_format]}_coord.csv'),
                            segments,
                            delimiter=",")

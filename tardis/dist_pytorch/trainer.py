@@ -30,11 +30,11 @@ class DistTrainer(BasicTrainer):
 
         self.node_input = self.structure['node_input']
 
-        self.Graph0_1 = GraphInstanceV2(threshold=0.1, connection=4)
+        self.Graph0_25 = GraphInstanceV2(threshold=0.25, connection=4)
         self.Graph0_5 = GraphInstanceV2(threshold=0.5, connection=4)
         self.Graph0_9 = GraphInstanceV2(threshold=0.9, connection=4)
 
-        self.mCov0_1, self.mCov0_5, self.mCov0_9 = [], [], []
+        self.mCov0_25, self.mCov0_5, self.mCov0_9 = [], [], []
 
     @staticmethod
     def _update_desc(stop_count: int,
@@ -85,7 +85,7 @@ class DistTrainer(BasicTrainer):
                             'eval_metric.csv'),
                        np.column_stack([self.accuracy, self.precision, self.recall,
                                         self.threshold, self.f1,
-                                        self.mCov0_1, self.mCov0_5, self.mCov0_9]),
+                                        self.mCov0_25, self.mCov0_5, self.mCov0_9]),
                        delimiter=',')
         if len(self.learning_rate) > 0:
             np.savetxt(join(getcwd(),
@@ -95,7 +95,7 @@ class DistTrainer(BasicTrainer):
                        delimiter=',')
 
         """ Save current model weights"""
-        # If mean evaluation loss is higher than save checkpoint
+        # If mean evaluation f1 score is higher than save checkpoint
         if all(self.f1[-1:][0] >= i for i in self.f1[:-1]):
             torch.save({
                 'model_struct_dict': self.structure,
@@ -104,7 +104,21 @@ class DistTrainer(BasicTrainer):
             },
                 join(getcwd(),
                      f'{self.checkpoint_name}_checkpoint',
-                     f'{self.checkpoint_name}_checkpoint.pth'))
+                     f'{self.checkpoint_name}_checkpoint_f1.pth'))
+
+        # If mean evaluation mcov score is higher than save checkpoint
+        all_mcovs = self.mCov0_9[:-1] + self.mCov0_5[:-1] + self.mCov0_25[:-1]
+        if all(self.mCov0_9[-1:][0] >= i for i in all_mcovs) or \
+                all(self.mCov0_5[-1:][0] >= i for i in all_mcovs) or \
+                all(self.mCov0_25[-1:][0] >= i for i in all_mcovs):
+            torch.save({
+                'model_struct_dict': self.structure,
+                'model_state_dict': self.model.state_dict(),
+                'optimizer_state_dict': self.optimizer.state_dict()
+            },
+                join(getcwd(),
+                     f'{self.checkpoint_name}_checkpoint',
+                     f'{self.checkpoint_name}_checkpoint_mcov.pth'))
 
         torch.save({
             'model_struct_dict': self.structure,
@@ -172,7 +186,7 @@ class DistTrainer(BasicTrainer):
         recall_mean = []
         F1_mean = []
         threshold_mean = []
-        mcov0_1, mcov0_5, mcov0_9 = [], [], []
+        mcov0_25, mcov0_5, mcov0_9 = [], [], []
 
         for idx, (e, n, g, o, _) in enumerate(self.validation_DataLoader):
             coord = [x.cpu().detach().numpy()[0, :] for x in e]
@@ -182,6 +196,7 @@ class DistTrainer(BasicTrainer):
                 out = out.cpu().detach().numpy()[0, :]
 
                 with torch.no_grad():
+                    # Predict graph
                     if self.node_input:
                         node = node.to(self.device)
                         edge = self.model(coords=edge,
@@ -190,31 +205,37 @@ class DistTrainer(BasicTrainer):
                         edge = self.model(coords=edge,
                                           node_features=None)
 
+                    # Calculate validation loss
                     loss = self.criterion(edge[0, :], graph)
 
+                    # Calculate F1 metric
                     acc, prec, recall, f1, th = eval_graph_f1(logits=torch.sigmoid(edge[:, 0, :]),
                                                               targets=graph)
 
+                    # Build GT instance point cloud
                     target = self.Graph0_5.patch_to_segment(graph=[graph[0, :].cpu().detach().numpy()],
                                                             coord=coord,
                                                             idx=[out],
                                                             prune=0,
                                                             sort=False)
 
-                    try:
-                        input = torch.where(torch.sigmoid(edge[0, 0, :]) > 0.25, 1, 0).cpu().detach().numpy()
-                        input0_1 = self.Graph0_1.patch_to_segment(graph=[input],
-                                                                  coord=coord,
-                                                                  idx=[out],
-                                                                  prune=0,
-                                                                  sort=False)
-                        mcov0_1.append(mcov(input0_1, target))
-                    except:
-                        mcov0_1.append(0.0)
+                    # Get Graph prediction
+                    input = torch.sigmoid(edge[0, 0, :]).cpu().detach().numpy()
 
+                    # Threshold 0.25
                     try:
-                        input = torch.where(torch.sigmoid(edge[0, 0, :]) > 0.5, 1, 0).cpu().detach().numpy()
-                        input0_5 = self.Graph0_1.patch_to_segment(graph=[input],
+                        input0_1 = self.Graph0_25.patch_to_segment(graph=[input],
+                                                                   coord=coord,
+                                                                   idx=[out],
+                                                                   prune=0,
+                                                                   sort=False)
+                        mcov0_25.append(mcov(input0_1, target))
+                    except:
+                        mcov0_25.append(0.0)
+
+                    # Threshold 0.5
+                    try:
+                        input0_5 = self.Graph0_5.patch_to_segment(graph=[input],
                                                                   coord=coord,
                                                                   idx=[out],
                                                                   prune=0,
@@ -223,9 +244,9 @@ class DistTrainer(BasicTrainer):
                     except:
                         mcov0_5.append(0.0)
 
+                    # Threshold 0.9
                     try:
-                        input = torch.where(torch.sigmoid(edge[0, 0, :]) > 0.9, 1, 0).cpu().detach().numpy()
-                        input0_9 = self.Graph0_1.patch_to_segment(graph=[input],
+                        input0_9 = self.Graph0_9.patch_to_segment(graph=[input],
                                                                   coord=coord,
                                                                   idx=[out],
                                                                   prune=0,
@@ -257,7 +278,7 @@ class DistTrainer(BasicTrainer):
         self.threshold.append(np.mean(threshold_mean))
         self.f1.append(np.mean(F1_mean))
 
-        self.mCov0_1.append(np.mean(mcov0_1))
+        self.mCov0_25.append(np.mean(mcov0_25))
         self.mCov0_5.append(np.mean(mcov0_5))
         self.mCov0_9.append(np.mean(mcov0_9))
 
