@@ -30,6 +30,7 @@ class DistTrainer(BasicTrainer):
 
         self.node_input = self.structure['node_input']
 
+        self.Graph_gt = GraphInstanceV2(threshold=0.5, connection=1000)
         self.Graph0_25 = GraphInstanceV2(threshold=0.25, connection=4)
         self.Graph0_5 = GraphInstanceV2(threshold=0.5, connection=4)
         self.Graph0_9 = GraphInstanceV2(threshold=0.9, connection=4)
@@ -210,7 +211,7 @@ class DistTrainer(BasicTrainer):
                                                               targets=graph)
 
                     # Build GT instance point cloud
-                    target = self.Graph0_5.patch_to_segment(graph=[graph[0, :].cpu().detach().numpy()],
+                    target = self.Graph_gt.patch_to_segment(graph=[graph[0, :].cpu().detach().numpy()],
                                                             coord=coord,
                                                             idx=[out],
                                                             prune=0,
@@ -232,7 +233,7 @@ class DistTrainer(BasicTrainer):
 
                     # Threshold 0.5
                     try:
-                        input0_5 = self.Graph0_5.patch_to_segment(graph=[input],
+                        input0_5 = self.Graph0_5.patch_to_segment(graph=[edge],
                                                                   coord=coord,
                                                                   idx=[out],
                                                                   prune=0,
@@ -243,7 +244,7 @@ class DistTrainer(BasicTrainer):
 
                     # Threshold 0.9
                     try:
-                        input0_9 = self.Graph0_9.patch_to_segment(graph=[input],
+                        input0_9 = self.Graph0_9.patch_to_segment(graph=[edge],
                                                                   coord=coord,
                                                                   idx=[out],
                                                                   prune=0,
