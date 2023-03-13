@@ -316,14 +316,14 @@ class BasicTrainer:
                                 text_7=self.epoch_desc,
                                 text_8=print_progress_bar(self.id, self.epochs))
 
-            """Training block"""
-            self.model.train()
-            self._train()
-
             """Validation block"""
             if self.validation_DataLoader is not None:
                 self.model.eval()
                 self._validate()
+
+            """Training block"""
+            self.model.train()
+            self._train()
 
             stop = self._save_metric()
             if stop:

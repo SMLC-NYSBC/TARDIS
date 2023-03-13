@@ -248,15 +248,15 @@ class DISTBenchmark:
         return {k: np.mean(v) for k, v in self.metric.items()}
 
     def _update_metric_pg(self):
-        def __mean_or_nan(values):
+        def _mean_or_nan(values):
             if len(values) == 0:
                 return 'Nan'
             return round(np.mean(values), 2)
 
-        iou = __mean_or_nan(self.metric["IoU"])
-        auc = __mean_or_nan(self.metric["AUC"])
-        mcov = __mean_or_nan(self.metric["mCov"])
-        mwcov = __mean_or_nan(self.metric["mWCov"])
+        iou = _mean_or_nan(self.metric["IoU"])
+        auc = _mean_or_nan(self.metric["AUC"])
+        mcov = _mean_or_nan(self.metric["mCov"])
+        mwcov = _mean_or_nan(self.metric["mWCov"])
 
         pg = f'IoU: {iou}; '\
              f'AUC: {auc}; '\

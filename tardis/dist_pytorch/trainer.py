@@ -206,7 +206,7 @@ class DistTrainer(BasicTrainer):
                     loss = self.criterion(edge[0, :], graph)
 
                     # Calculate F1 metric
-                    acc, prec, recall, f1, th = eval_graph_f1(logits=torch.sigmoid(edge[:, 0, :]),
+                    acc, prec, recall, f1, th = eval_graph_f1(logits=torch.sigmoid(edge)[0, :],
                                                               targets=graph)
 
                     # Build GT instance point cloud
@@ -217,11 +217,11 @@ class DistTrainer(BasicTrainer):
                                                             sort=False)
 
                     # Get Graph prediction
-                    input = torch.sigmoid(edge[0, 0, :]).cpu().detach().numpy()
+                    edge = torch.sigmoid(edge)[0, 0, :].cpu().detach().numpy()
 
                     # Threshold 0.25
                     try:
-                        input0_1 = self.Graph0_25.patch_to_segment(graph=[input],
+                        input0_1 = self.Graph0_25.patch_to_segment(graph=[edge],
                                                                    coord=coord,
                                                                    idx=[out],
                                                                    prune=0,
