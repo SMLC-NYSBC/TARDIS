@@ -292,6 +292,7 @@ class BasicTrainer:
                              f'{self.checkpoint_name}_checkpoint',
                              f'{self.checkpoint_name}_checkpoint.pth'))
                 self.model.train()  # Move back to training
+        self._save_metric()
 
     def run_trainer(self):
         """

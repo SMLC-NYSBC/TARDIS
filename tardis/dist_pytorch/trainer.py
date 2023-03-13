@@ -107,10 +107,7 @@ class DistTrainer(BasicTrainer):
                      f'{self.checkpoint_name}_checkpoint_f1.pth'))
 
         # If mean evaluation mcov score is higher than save checkpoint
-        all_mcovs = self.mCov0_9[:-1] + self.mCov0_5[:-1] + self.mCov0_25[:-1]
-        if all(self.mCov0_9[-1:][0] >= i for i in all_mcovs) or \
-                all(self.mCov0_5[-1:][0] >= i for i in all_mcovs) or \
-                all(self.mCov0_25[-1:][0] >= i for i in all_mcovs):
+        if all(self.mCov0_9[-1:][0] >= i for i in self.mCov0_9[:-1]):
             torch.save({
                 'model_struct_dict': self.structure,
                 'model_state_dict': self.model.state_dict(),
