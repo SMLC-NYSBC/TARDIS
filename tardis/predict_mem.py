@@ -407,7 +407,7 @@ def main(dir: str,
                                                            coord=pc_ld,
                                                            idx=output_idx,
                                                            sort=False,
-                                                           prune=0)
+                                                           prune=5)
 
                 # Tardis progress bar update
                 tardis_progress(title='Fully-automatic Membrane segmentation module',
@@ -424,7 +424,8 @@ def main(dir: str,
 
                 mask_semantic = draw_semantic_membrane(mask_size=image.shape,
                                                        coordinate=segments,
-                                                       pixel_size=px)
+                                                       pixel_size=px,
+                                                       spline_size=60)
 
                 """Save segmented predicted mask"""
                 if output_format in ['all', 'mrc', 'mrc_coord']:
