@@ -281,18 +281,8 @@ class BasicTrainer:
                 self._validate()
                 self._update_epoch_desc()
 
-                # Update checkpoint weights if validation loss dropped
-                if all(self.f1[-1:][0] >= i for i in self.f1[:-1]):
-                    torch.save({
-                        'model_struct_dict': self.structure,
-                        'model_state_dict': self.model.state_dict(),
-                        'optimizer_state_dict': self.optimizer.state_dict()
-                    },
-                        join(getcwd(),
-                             f'{self.checkpoint_name}_checkpoint',
-                             f'{self.checkpoint_name}_checkpoint.pth'))
                 self.model.train()  # Move back to training
-        self._save_metric()
+                self._save_metric()
 
     def run_trainer(self):
         """

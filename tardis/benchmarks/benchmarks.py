@@ -149,6 +149,7 @@ def main(data_set: str,
     # Pick last best model
     try:
         model_best = BEST_SCORE[m_name][data_set]
+        model_id = len(model_best)
         model_best = model_best[-1]  # Pick last/best model from the list
         model_best_time = model_best[0]  # Pick benchmark time
         cbm = model_best[3]  # Pick the best metric dictionary
@@ -181,7 +182,7 @@ def main(data_set: str,
 
     """Sent updated json and model to S3"""
     if new_is_best:
-        id_save = f'{m_name}_{data_set}_{len(model_best) + 1}'
+        id_save = f'{m_name}_{data_set}_{model_id}'
     else:
         id_save = f'{m_name}_{data_set}_0'
     link = 'https://tardis-weigths.s3.amazonaws.com/benchmark/models/'\
