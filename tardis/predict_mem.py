@@ -424,8 +424,7 @@ def main(dir: str,
 
                 mask_semantic = draw_semantic_membrane(mask_size=image.shape,
                                                        coordinate=segments,
-                                                       pixel_size=px,
-                                                       spline_size=50)
+                                                       pixel_size=px)
 
                 """Save segmented predicted mask"""
                 if output_format in ['all', 'mrc', 'mrc_coord']:
