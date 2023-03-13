@@ -31,7 +31,7 @@ from tardis.utils.device import get_device
 from tardis.utils.export_data import to_am, to_mrc
 from tardis.utils.load_data import import_am, load_image
 from tardis.utils.logo import print_progress_bar, TardisLogo
-from tardis.utils.normalization import MinMaxNormalize, RescaleNormalize
+from tardis.utils.normalization import MeanStdNormalize, RescaleNormalize
 from tardis.utils.predictor import Predictor
 from tardis.utils.setup_envir import build_temp_dir, clean_up
 from tardis.version import version
@@ -141,7 +141,7 @@ def main(dir: str,
     """Build handler's"""
     # Build handler's for reading data to correct format
     normalize = RescaleNormalize(clip_range=(1, 99))  # Normalize histogram
-    minmax = MinMaxNormalize()
+    meanstd = MeanStdNormalize()  # Standardize with mean and std
 
     # Sigmoid whole predicted image
     sigmoid = torch.nn.Sigmoid()
@@ -219,11 +219,14 @@ def main(dir: str,
             px = tif_px
 
         # Check image structure and normalize histogram
-        image = normalize(image)  # Rescale image intensity
-        if not np.min(image) >= 0 or not np.max(image) <= 1:  # Normalized between 0 and 1
-            image = minmax(image)
-        elif np.min(image) >= -1 and np.max(image) <= 1:
-            image = minmax(image)
+        image = normalize(meanstd(image)).astype(np.float32)
+
+        if not image.min() >= -1 or not image.max() <= 1:  # Image not between in -1 and 1
+            if image.min() >= 0 and image.max() <= 1:
+                image = (image - 0.5) * 2
+            elif image.min() >= 0 and image.max() <= 255:
+                image = image / 255  # move to 0 - 1
+                image = (image - 0.5) * 2
 
         if not image.dtype == np.float32:
             tardis_progress(title='Fully-automatic Membrane segmentation module',

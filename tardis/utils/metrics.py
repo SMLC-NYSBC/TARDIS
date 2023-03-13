@@ -37,8 +37,8 @@ def compare_dict_metrics(last_best_dict: dict,
     return new_dict > last_best_dict
 
 
-def eval_graph_f1(logits: Optional[Union[np.ndarray, torch.Tensor]],
-                  targets: Optional[Union[np.ndarray, torch.Tensor]],
+def eval_graph_f1(logits: torch.Tensor,
+                  targets: torch.Tensor,
                   soft=False):
     """
      Module used for calculating training metrics

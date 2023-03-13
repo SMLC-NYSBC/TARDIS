@@ -41,14 +41,7 @@ class CnnBenchmark:
         self.model = model
         self.threshold = threshold
         self.metric = {
-            'Acc': [],
-            'Prec': [],
-            'Recall': [],
-            'F1': [],
-            'AUC': [],
-            'IoU': [],
-            'AP': []
-        }
+            'Acc': [], 'Prec': [], 'Recall': [], 'F1': [], 'AUC': [], 'IoU': [], 'AP': []}
 
         self.data_set = dataset
         self.dir = dir_
@@ -248,19 +241,16 @@ class DISTBenchmark:
         return {k: np.mean(v) for k, v in self.metric.items()}
 
     def _update_metric_pg(self):
-        def _mean_or_nan(values):
-            if len(values) == 0:
-                return 'Nan'
-            return round(np.mean(values), 2)
+        mean_or_nan = lambda x: round(np.mean(x), 2) if len(x) != 0 else 'nan'
 
-        iou = _mean_or_nan(self.metric["IoU"])
-        auc = _mean_or_nan(self.metric["AUC"])
-        mcov = _mean_or_nan(self.metric["mCov"])
-        mwcov = _mean_or_nan(self.metric["mWCov"])
+        iou = mean_or_nan(self.metric["IoU"])
+        auc = mean_or_nan(self.metric["AUC"])
+        mcov = mean_or_nan(self.metric["mCov"])
+        mwcov = mean_or_nan(self.metric["mWCov"])
 
-        pg = f'IoU: {iou}; '\
-             f'AUC: {auc}; '\
-             f'mCov: {mcov}; '\
+        pg = f'IoU: {iou}; ' \
+             f'AUC: {auc}; ' \
+             f'mCov: {mcov}; ' \
              f'mWCov: {mwcov}'
         return pg
 
@@ -276,7 +266,8 @@ class DISTBenchmark:
 
         for i in range(len(self.eval_data)):
             """Predict"""
-            idx, coord_org, coords, nodes, target, output_idx, _ = self.eval_data.__getitem__(i)
+            idx, coord_org, coords, nodes, target, output_idx, _ = self.eval_data.__getitem__(
+                i)
             target = [t.cpu().detach().numpy() for t in target]
             output_idx = [o.cpu().detach().numpy() for o in output_idx]
 
