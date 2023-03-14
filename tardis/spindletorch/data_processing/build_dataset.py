@@ -151,7 +151,7 @@ def build_train_dataset(dataset_dir: str,
         np.savetxt(join(dataset_dir, 'log.txt'), log_file, fmt='%s', delimiter=',')
 
         """Update progress bar"""
-        tardis_progress(title='Data pre-processing for CNN training',
+        tardis_progress(title='Data pre-processing for CNN training', 
                         text_1='Building Training dataset:',
                         text_2=f'Files: {i} {mask_name}',
                         text_3=f'px: {pixel_size}',

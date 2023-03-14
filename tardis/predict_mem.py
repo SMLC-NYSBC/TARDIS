@@ -109,6 +109,7 @@ def main(dir: str,
     MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
     """
     """Initial Setup"""
+    # Initiate log output
     tardis_progress = TardisLogo()
     tardis_progress(title='Fully-automatic Membrane segmentation module')
 
@@ -117,6 +118,7 @@ def main(dir: str,
     output = join(dir, 'temp', 'Predictions')
     am_output = join(dir, 'Predictions')
 
+    # Pickup files for the prediction
     predict_list = [f for f in listdir(dir) if f.endswith(available_format)]
 
     # Tardis progress bar update
@@ -135,7 +137,8 @@ def main(dir: str,
     # Hard fix for dealing with tif file lack of pixel sizes...
     tif_px = None
     if np.any([True for x in predict_list if x.endswith(('.tif', '.tiff'))]):
-        tif_px = click.prompt('Detected .tif files, please provide pixel size:',
+        tif_px = click.prompt('Detected .tif files, please provide pixel size (It will '
+                              'be used for all .tif images):',
                               type=float)
 
     """Build handler's"""
@@ -191,8 +194,9 @@ def main(dir: str,
         if i.endswith('CorrelationLines.am'):
             continue
 
+        # Find file format
         out_format = 0
-        if i.endswith(('.tif', '.mrc', '.rec', '.map')):
+        if i.endswith(('.tif', '.mrc', '.rec')):
             out_format = 4
         elif i.endswith('.tiff'):
             out_format = 5
@@ -209,7 +213,7 @@ def main(dir: str,
         # Build temp dir
         build_temp_dir(dir=dir)
 
-        # Cut image for smaller image
+        # Load image file
         if i.endswith('.am'):
             image, px, _, _ = import_am(am_file=join(dir, i))
         else:

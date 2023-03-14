@@ -73,8 +73,8 @@ class ImportDataFromAmira:
 
         # Read spatial graph
         am = open(src_am, 'r', encoding="iso-8859-1").read(500)
-        if any([True for i in ['AmiraMesh 3D ASCII',
-                               '# ASCII Spatial Graph'] if i not in am]):
+        if not any([True for i in ['AmiraMesh 3D ASCII',
+                                   '# ASCII Spatial Graph'] if i not in am]):
             self.spatial_graph = None
         else:
             self.spatial_graph = open(src_am, "r", encoding="iso-8859-1").read().split("\n")

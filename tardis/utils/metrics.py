@@ -39,6 +39,7 @@ def compare_dict_metrics(last_best_dict: dict,
 
 def eval_graph_f1(logits: torch.Tensor,
                   targets: torch.Tensor,
+                  threshold: float,
                   soft=False):
     """
      Module used for calculating training metrics
@@ -48,6 +49,7 @@ def eval_graph_f1(logits: torch.Tensor,
      Args:
          logits (np.ndarray, torch.Tensor): Prediction output from the model.
          targets (np.ndarray, torch.Tensor): Ground truth mask.
+         threshold (float):
          soft:
      """
     """Mask Diagonal as TP"""
@@ -85,45 +87,57 @@ def eval_graph_f1(logits: torch.Tensor,
         return prec_cost, rec_cost, f1_cost
     else:
         """Find best f1 based on variation threshold"""
-        threshold = 0
         f1 = []
         acc = []
         precision = []
         recall = []
 
-        while threshold != 1:
+        if threshold == 0.0:
+            while threshold != 1:
+                input_df = torch.where(logits > threshold, 1, 0)
+
+                tp, fp, tn, fn = confusion_matrix(input_df, targets)
+                tp = tp - len(input_df)  # remove diagonal from F1
+
+                accuracy_score = (tp + tn) / (tp + tn + fp + fn + 1e-16)
+                prec = tp / (tp + fp + 1e-16)
+                rec = tp / (tp + fn + 1e-16)
+
+                acc.append(accuracy_score)
+                precision.append(prec)
+                recall.append(rec)
+                f1.append(2 * (prec * rec) / (prec + rec + 1e-16))
+
+                threshold = round(threshold + 0.01, 2)
+
+            threshold = np.where(f1 == np.max(f1))[0]
+
+            if threshold.shape[0] > 1:
+                th = 0
+
+                for i in threshold:
+                    th = th + round(i * 0.01, 2)
+
+                threshold = round(th / len(threshold), 2)
+            else:
+                threshold = round(float(threshold) * 0.01, 2)
+
+            id = int(threshold * 100)
+            accuracy_score = round(acc[id], 2)
+            precision_score = round(precision[id], 2)
+            recall_score = round(recall[id], 2)
+            F1_score = round(f1[id], 2)
+        else:
             input_df = torch.where(logits > threshold, 1, 0)
 
             tp, fp, tn, fn = confusion_matrix(input_df, targets)
-            tp = tp  # remove diagonal from F1
+            tp = tp - len(input_df)  # remove diagonal from F1
 
             accuracy_score = (tp + tn) / (tp + tn + fp + fn + 1e-16)
-            prec = tp / (tp + fp + 1e-16)
-            rec = tp / (tp + fn + 1e-16)
-
-            acc.append(accuracy_score)
-            precision.append(prec)
-            recall.append(rec)
-            f1.append(2 * (prec * rec) / (prec + rec + 1e-16))
-
-            threshold = round(threshold + 0.01, 2)
-
-        threshold = np.where(f1 == np.max(f1))[0]
-        if threshold.shape[0] > 1:
-            th = 0
-
-            for i in threshold:
-                th = th + round(i * 0.01, 2)
-
-            threshold = round(th / len(threshold), 2)
-        else:
-            threshold = round(float(threshold) * 0.01, 2)
-
-        id = int(threshold * 100)
-        accuracy_score = round(acc[id], 2)
-        precision_score = round(precision[id], 2)
-        recall_score = round(recall[id], 2)
-        F1_score = round(f1[id], 2)
+            precision_score = tp / (tp + fp + 1e-16)
+            recall_score = tp / (tp + fn + 1e-16)
+            F1_score = 2 * (precision_score * recall_score) / \
+                           (precision_score + recall_score + 1e-16)
 
         return accuracy_score, precision_score, recall_score, F1_score, threshold
 

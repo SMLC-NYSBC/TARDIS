@@ -164,8 +164,7 @@ class TardisLogo:
                 window or jupyter notebook.
         """
         # Check and update window size
-        if self.WIDTH is None:
-            self.cell_width()
+        self.cell_width()
 
         self.CLEAR()
         if self.logo:

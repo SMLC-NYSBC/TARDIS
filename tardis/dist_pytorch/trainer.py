@@ -208,7 +208,8 @@ class DistTrainer(BasicTrainer):
 
                     # Calculate F1 metric
                     acc, prec, recall, f1, th = eval_graph_f1(logits=torch.sigmoid(edge)[0, :],
-                                                              targets=graph)
+                                                              targets=graph,
+                                                              threshold=0.5)
 
                     # Build GT instance point cloud
                     target = self.Graph_gt.patch_to_segment(graph=[graph[0, :].cpu().detach().numpy()],

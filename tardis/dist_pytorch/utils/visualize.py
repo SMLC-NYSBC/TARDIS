@@ -120,6 +120,7 @@ def _rgb(coord: np.ndarray,
             rgb_list = [np.array((np.random.rand(), np.random.rand(), np.random.rand()))
                         for _ in unique_ids]
             id_to_rgb = {idx: color for idx, color in zip(unique_ids, rgb_list)}
+
             for id, i in enumerate(coord[:, 0]):
                 df = id_to_rgb[i]
                 rgb[id, :] = df
@@ -160,7 +161,6 @@ def segment_to_graph(coord: np.ndarray) -> list:
             if j != (stop - 1):
                 graph_list.append([start + (x + 1), start + (x + 2)])
             x += 1
-
         graph_list.append([start + (x + 1), start + x])
 
     return graph_list
@@ -168,7 +168,8 @@ def segment_to_graph(coord: np.ndarray) -> list:
 
 def VisualizePointCloud(coord: np.ndarray,
                         segmented: bool,
-                        rgb: Optional[np.ndarray] = None):
+                        rgb: Optional[np.ndarray] = None,
+                        animate=True):
     """
     Visualized point cloud.
 
@@ -177,7 +178,8 @@ def VisualizePointCloud(coord: np.ndarray,
     Args:
         coord (np.ndarray): 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y].
         segmented (bool): If True expect (s) in a data format as segmented values.
-        rgb:
+        rgb (np.ndarray): Optional, indicate rgb values.
+        animate (bool): Optional trigger to turn off animated rotation.
     """
     coord, check = _dataset_format(coord=coord, segmented=segmented)
 
@@ -196,7 +198,10 @@ def VisualizePointCloud(coord: np.ndarray,
         else:
             pcd.colors = o3d.utility.Vector3dVector(_rgb(coord, segmented))
 
-        o3d.visualization.draw_geometries_with_animation_callback([pcd], rotate_view)
+        if animate:
+            o3d.visualization.draw_geometries_with_animation_callback([pcd], rotate_view)
+        else:
+            o3d.visualization.draw_geometries([pcd])
 
 
 def rotate_view(vis):
@@ -222,7 +227,7 @@ def VisualizeFilaments(coord: np.ndarray):
     coord, check = _dataset_format(coord=coord, segmented=True)
 
     if check:
-        graph = segment_to_graph(coord=coord)
+        graph, _ = segment_to_graph(coord=coord)
         line_set = o3d.geometry.LineSet()
 
         line_set.points = o3d.utility.Vector3dVector(coord[:, 1:])
