@@ -91,8 +91,10 @@ class CNNTrainer(BasicTrainer):
                     img = torch.sigmoid(img)[0, 0, :]
                     mask = mask[0, 0, :]
 
-                img = np.where(img >= 0.5, 1, 0)
-                acc, prec, recall, f1 = calculate_f1(logits=img, targets=mask,
+                img = np.where(img.cpu().detach().numpy() >= 0.5, 1, 0)
+                mask = mask.cpu().detach().numpy()
+                acc, prec, recall, f1 = calculate_f1(logits=img,
+                                                     targets=mask,
                                                      best_f1=False)
 
                 # Avg. precision score
