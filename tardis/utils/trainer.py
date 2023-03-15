@@ -21,6 +21,9 @@ from tardis.utils.utils import EarlyStopping
 
 
 class ISR_LR:
+    """
+    Costume Inverse Square Root Learning Rate Schedular
+    """
     def __init__(self,
                  optimizer: optim.Adam,
                  lr_mul=1,
@@ -279,6 +282,7 @@ class BasicTrainer:
             if idx != 0 and idx <= int(len(self.training_DataLoader) * 0.75):
                 self.model.eval()  # Enter Validation
                 self._validate()
+
                 self._update_epoch_desc()
 
                 self.model.train()  # Move back to training

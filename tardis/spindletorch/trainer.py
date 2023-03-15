@@ -91,14 +91,17 @@ class CNNTrainer(BasicTrainer):
                     img = torch.sigmoid(img)[0, 0, :]
                     mask = mask[0, 0, :]
 
-                acc, prec, recall, f1, th = calculate_f1(logits=img, targets=mask)
+                img = np.where(img >= 0.5, 1, 0)
+                acc, prec, recall, f1 = calculate_f1(logits=img, targets=mask,
+                                                     best_f1=False)
+
                 # Avg. precision score
                 valid_losses.append(loss.item())
                 accuracy_mean.append(acc)
                 precision_mean.append(prec)
                 recall_mean.append(recall)
                 F1_mean.append(f1)
-                threshold_mean.append(th)
+                threshold_mean.append(0.5)
                 valid = f'Validation: (loss {loss.item():.4f} ' \
                         f'Prec: {prec:.2f} Rec: {recall:.2f} F1: {f1:.2f})'
 
