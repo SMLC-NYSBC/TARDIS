@@ -22,7 +22,7 @@ import torch
 
 from tardis.dist_pytorch.datasets.patches import PatchDataSet
 from tardis.dist_pytorch.utils.build_point_cloud import BuildPointCloud
-from tardis.dist_pytorch.utils.segment_point_cloud import GraphInstanceV2
+from tardis.dist_pytorch.utils.segment_point_cloud import PropGreedyGraphCut
 from tardis.spindletorch.data_processing.semantic_mask import draw_semantic_membrane
 from tardis.spindletorch.data_processing.stitch import StitchImages
 from tardis.spindletorch.data_processing.trim import scale_image, trim_with_stride
@@ -155,8 +155,8 @@ def main(dir: str,
 
     # Build handler's for DIST input and output
     patch_pc = PatchDataSet(max_number_of_points=points_in_patch, graph=False)
-    GraphToSegment = GraphInstanceV2(threshold=dist_threshold,
-                                     connection=4)
+    GraphToSegment = PropGreedyGraphCut(threshold=dist_threshold,
+                                        connection=4)
 
     device = get_device(device)
     cnn_network = cnn_network.split('_')
@@ -227,10 +227,10 @@ def main(dir: str,
 
         if not image.min() >= -1 or not image.max() <= 1:  # Image not between in -1 and 1
             if image.min() >= 0 and image.max() <= 1:
-                image = (image - 0.5) * 2
+                image = (image - 0.5) * 2 # shift to -1 - 1
             elif image.min() >= 0 and image.max() <= 255:
                 image = image / 255  # move to 0 - 1
-                image = (image - 0.5) * 2
+                image = (image - 0.5) * 2  # shift to -1 - 1
 
         if not image.dtype == np.float32:
             tardis_progress(title='Fully-automatic Membrane segmentation module',

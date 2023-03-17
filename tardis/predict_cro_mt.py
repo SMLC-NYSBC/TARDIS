@@ -21,7 +21,7 @@ import tifffile.tifffile as tif
 
 from tardis.dist_pytorch.datasets.patches import PatchDataSet
 from tardis.dist_pytorch.utils.build_point_cloud import BuildPointCloud
-from tardis.dist_pytorch.utils.segment_point_cloud import GraphInstanceV2
+from tardis.dist_pytorch.utils.segment_point_cloud import PropGreedyGraphCut
 from tardis.dist_pytorch.utils.utils import pc_median_dist
 from tardis.spindletorch.data_processing.stitch import StitchImages
 from tardis.spindletorch.data_processing.trim import scale_image, trim_with_stride
@@ -175,7 +175,7 @@ def main(dir: str,
     post_processes = BuildPointCloud()
     build_amira_file = NumpyToAmira()
     patch_pc = PatchDataSet(max_number_of_points=points_in_patch, graph=False)
-    GraphToSegment = GraphInstanceV2(threshold=dist_threshold, smooth=True)
+    GraphToSegment = PropGreedyGraphCut(threshold=dist_threshold, smooth=True)
     filter_segments = FilterSpatialGraph(connect_seg_if_closer_then=filter_mt)
 
     # Build CNN from checkpoints

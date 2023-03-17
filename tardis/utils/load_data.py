@@ -819,7 +819,7 @@ def load_s3dis_scene(dir: str,
             coord = coord[pick, :]
 
             if rgb:
-                rbg_v = rgb_v[pick, :]
+                rgb_v = rgb_v[pick, :]
         else:
             pcd = o3d.geometry.PointCloud()
             pcd.points = o3d.utility.Vector3dVector(coord[:, 1:])

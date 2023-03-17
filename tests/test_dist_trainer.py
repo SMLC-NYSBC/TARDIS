@@ -105,7 +105,7 @@ def test_dist_trainer():
     assert len(os.listdir('./temp_train')) == 4
     shutil.rmtree('./temp_train')
 
-    assert len(os.listdir('./instance_checkpoint')) == 6
+    assert len(os.listdir('./instance_checkpoint')) == 7
     shutil.rmtree('./instance_checkpoint')
 
 

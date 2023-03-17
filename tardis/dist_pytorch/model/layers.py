@@ -265,16 +265,13 @@ class DistLayer(nn.Module):
                       self.row_attention(x=h_pairs, padding_mask=mask) + \
                       self.col_attention(x=h_pairs, padding_mask=mask)
         elif self.structure in ['triang', 'quad']:
-            h_pairs = h_pairs + self.row_update(z=h_pairs,
-                                                mask=mask) + self.col_update(z=h_pairs,
-                                                                             mask=mask)
+            h_pairs = h_pairs + self.row_update(z=h_pairs, mask=mask) + \
+                      self.col_update(z=h_pairs, mask=mask)
         elif self.structure == 'dualtriang':
-            h_pairs = h_pairs + self.row_update_1(z=h_pairs,
-                                                  mask=mask) + self.col_update_1(z=h_pairs,
-                                                                                 mask=mask)
-            h_pairs = h_pairs + self.row_update_2(z=h_pairs,
-                                                  mask=mask) + self.col_update_2(z=h_pairs,
-                                                                                 mask=mask)
+            h_pairs = h_pairs + self.row_update_1(z=h_pairs, mask=mask) + \
+                      self.col_update_1(z=h_pairs, mask=mask)
+            h_pairs = h_pairs + self.row_update_2(z=h_pairs, mask=mask) + \
+                      self.col_update_2(z=h_pairs, mask=mask)
 
         return h_pairs + self.pair_ffn(x=h_pairs)
 

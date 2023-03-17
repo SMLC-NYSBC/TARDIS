@@ -8,7 +8,7 @@
 #  MIT License 2021 - 2023                                            #
 #######################################################################
 
-from typing import Optional, Union
+from typing import Optional
 
 import torch
 import torch.nn as nn
@@ -21,8 +21,6 @@ class NodeEmbedding(nn.Module):
 
     Input: Batch x Length x Dim or Batch x Length
     Output: Batch x Length x Dim
-
-    TODO: Range of Sigma
 
     Args:
         n_in (int): Number of input features.
@@ -49,8 +47,7 @@ class NodeEmbedding(nn.Module):
             self.register_buffer('bias', b)
 
     def forward(self,
-                input_node: Optional[torch.Tensor] = None) -> Union[torch.Tensor,
-                                                                    None]:
+                input_node: Optional[torch.Tensor] = None) -> Optional[torch.Tensor]:
         """
         Forward node feature embedding.
 

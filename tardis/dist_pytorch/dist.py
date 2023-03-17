@@ -26,16 +26,14 @@ class BasicDIST(nn.Module):
     Args:
         n_out (int): Number of channels in the output layer.
         node_input (int): Length of the flattened image file.
-        node_dim (int, optional): In features of image for linear transformation.
+        node_dim (int, None): In features of image for linear transformation.
         edge_dim (int): In feature of coord for linear transformation.
         num_layers (int): Number of DIST layers to initialize.
         num_heads (int): Number of heads for MHA.
-        num_cls (int): Number of predicted classes.
-        coord_embed_sigma (float): Sigma value used to embed coordinate distance
-            features.
+        num_cls (int, None): Number of predicted classes.
+        coord_embed_sigma (float): Sigma value used to embed coordinate distance features.
         dropout_rate (float): Dropout factor used in MHA dropout layer.
-        structure (str): DIST network structure.
-                Options: (full, triang, dualtriang, quad, attn)
+        structure (str): DIST network structure. (full, triang, dualtriang, quad, attn)
         predict (bool): If True sigmoid output.
     """
 

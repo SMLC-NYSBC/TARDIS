@@ -18,9 +18,9 @@ from tardis.utils.errors import TardisError
 from tardis.utils.spline_metric import smooth_spline, sort_segment
 
 
-class GraphInstanceV2:
+class PropGreedyGraphCut:
     """
-    GRAPH CUT
+    PROBABILITY DRIVEN GREEDY GRAPH CUT
 
     Perform graph cut on predicted point cloud graph representation using in-coming
     and out-coming edges probability.
@@ -133,7 +133,7 @@ class GraphInstanceV2:
                         graphs: list,
                         coord: np.ndarray,
                         output_idx: Optional[list] = None,
-                        threshold=True) -> list:
+                        threshold=True) -> Optional[list]:
         """
         Builder of adjacency matrix from stitched coord and graph voxels
         The output of the adjacency matrix is list containing:
@@ -148,6 +148,12 @@ class GraphInstanceV2:
             list: Adjacency list of all bind graph connections.
         """
         all_prop = [[idx, list(i), [], []] for idx, i in enumerate(coord)]
+
+        if output_idx is None:
+            if len(graphs) == 1:
+                output_idx = list(range(len(graphs[0])))
+            else:
+                return None
 
         for g, o in zip(graphs, output_idx):
             top_k_indices = np.argsort(g, axis=1)[:, :-10 - 1:-1]

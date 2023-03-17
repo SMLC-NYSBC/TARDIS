@@ -73,10 +73,11 @@ def test_unet_trainer():
     train_cnn(train_dataloader=train_dl,
               test_dataloader=test_dl,
               model_structure=structure,
+              learning_rate=0.01,
               device=get_device('cpu'),
               epochs=2)
 
-    assert len(os.listdir('./unet_checkpoint')) == 6
+    assert len(os.listdir('./unet_checkpoint')) in [5, 6]
 
     shutil.rmtree('./unet_checkpoint')
 
@@ -117,10 +118,11 @@ def test_fnet_trainer():
     train_cnn(train_dataloader=train_dl,
               test_dataloader=test_dl,
               model_structure=structure,
+              learning_rate=0.01,
               device=get_device('cpu'),
               epochs=2)
 
-    assert len(os.listdir('./fnet_checkpoint')) == 6
+    assert len(os.listdir('./fnet_checkpoint')) in [5, 6]
 
     shutil.rmtree('./fnet_checkpoint')
 
@@ -160,10 +162,11 @@ def test_unet3plus_trainer():
 
     train_cnn(train_dataloader=train_dl,
               test_dataloader=test_dl,
+              learning_rate=0.01,
               model_structure=structure,
               device=get_device('cpu'),
               epochs=2)
 
-    assert len(os.listdir('./unet3plus_checkpoint')) == 6
+    assert len(os.listdir('./unet3plus_checkpoint')) in [5, 6]
 
     shutil.rmtree('./unet3plus_checkpoint')

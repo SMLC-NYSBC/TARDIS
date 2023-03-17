@@ -174,7 +174,7 @@ class BuildGraph:
 
     def __call__(self,
                  coord: np.ndarray,
-                 dist_th=None) -> np.ndarray:
+                 dist_th: Optional[float] = None) -> np.ndarray:
         """
         Graph representation builder.
 

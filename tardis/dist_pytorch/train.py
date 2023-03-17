@@ -10,6 +10,7 @@
 
 import sys
 from os import getcwd
+from typing import Optional
 
 import torch
 from torch import optim
@@ -19,7 +20,8 @@ from tardis.dist_pytorch.trainer import CDistTrainer, DistTrainer
 from tardis.dist_pytorch.utils.utils import check_model_dict
 from tardis.utils.device import get_device
 from tardis.utils.logo import TardisLogo
-from tardis.utils.losses import *
+from tardis.utils.losses import (AdaptiveDiceLoss, BCEDiceLoss, BCELoss, CELoss, ClBCE,
+                                 ClDice, DiceLoss, SigmoidFocalLoss)
 from tardis.utils.trainer import ISR_LR
 
 # Setting for stable release to turn off all debug APIs
@@ -108,7 +110,7 @@ def train_dist(train_dataloader,
     if model_structure['node_dim'] == 0:
         node_sigma = ''
     elif model_structure['rgb_embed_sigma'] == 0:
-        node_sigma = f", [Linear] node_sigma"
+        node_sigma = ", [Linear] node_sigma"
     else:
         node_sigma = f", {model_structure['rgb_embed_sigma']} node_sigma"
 

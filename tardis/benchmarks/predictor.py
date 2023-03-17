@@ -17,7 +17,7 @@ import numpy as np
 import torch
 
 from tardis.dist_pytorch.datasets.dataloader import build_dataset
-from tardis.dist_pytorch.utils.segment_point_cloud import GraphInstanceV2
+from tardis.dist_pytorch.utils.segment_point_cloud import PropGreedyGraphCut
 from tardis.spindletorch.data_processing.build_dataset import build_train_dataset
 from tardis.spindletorch.datasets.dataloader import PredictionDataset
 from tardis.utils.errors import TardisError
@@ -28,6 +28,17 @@ from tardis.utils.predictor import Predictor
 
 
 class CnnBenchmark:
+    """
+    Wrapper for CNN benchmark dataset
+
+    Args:
+        model (Predictor): Predictor class with evaluated model.
+        dataset (str): Dataset name to evaluate model on.
+        dir_ (str): Dataset directory.
+        patch_size (int): Image patch size for CNN model.
+        threshold (float): Threshold value used for prediction..
+    """
+
     def __init__(self,
                  model: Predictor,
                  dataset: str,
@@ -101,9 +112,6 @@ class CnnBenchmark:
 
         It takes model, predict given image and run benchmark on it to return
         standard metrics for CNN.
-
-        Args:
-
         """
         iter_ = 1
         self.tardis_progress(title=self.title,
@@ -160,6 +168,17 @@ class CnnBenchmark:
 
 
 class DISTBenchmark:
+    """
+    Wrapper for DIST benchmark dataset
+
+    Args:
+        model (Predictor): Predictor class with evaluated model.
+        dataset (str): Dataset name to evaluate model on.
+        dir_ (str): Dataset directory.
+        points_in_patch (int): Max. number of points in sub-graphs.
+        threshold (float): Threshold value used for prediction..
+    """
+
     def __init__(self,
                  model: Predictor,
                  dataset: str,
@@ -216,8 +235,8 @@ class DISTBenchmark:
                       coords: np.ndarray,
                       output_idx: List[np.ndarray]):
         # Graph cut
-        GraphToSegment = GraphInstanceV2(threshold=self.threshold,
-                                         connection=self.max_connections)
+        GraphToSegment = PropGreedyGraphCut(threshold=self.threshold,
+                                            connection=self.max_connections)
         input_IS = GraphToSegment.patch_to_segment(graph=logits,
                                                    coord=coords[:, 1:],
                                                    idx=output_idx,
@@ -245,13 +264,13 @@ class DISTBenchmark:
 
         iou = mean_or_nan(self.metric["IoU"])
         auc = mean_or_nan(self.metric["AUC"])
-        mcov = mean_or_nan(self.metric["mCov"])
-        mwcov = mean_or_nan(self.metric["mWCov"])
+        m_mcov = mean_or_nan(self.metric["mCov"])
+        m_mwcov = mean_or_nan(self.metric["mWCov"])
 
         pg = f'IoU: {iou}; ' \
              f'AUC: {auc}; ' \
-             f'mCov: {mcov}; ' \
-             f'mWCov: {mwcov}'
+             f'mCov: {m_mcov}; ' \
+             f'mWCov: {m_mwcov}'
         return pg
 
     def __call__(self):
@@ -266,8 +285,7 @@ class DISTBenchmark:
 
         for i in range(len(self.eval_data)):
             """Predict"""
-            idx, coord_org, coords, nodes, target, output_idx, _ = self.eval_data.__getitem__(
-                i)
+            idx, coord_org, coords, nodes, target, output_idx, _ = self.eval_data.__getitem__(i)
             target = [t.cpu().detach().numpy() for t in target]
             output_idx = [o.cpu().detach().numpy() for o in output_idx]
 

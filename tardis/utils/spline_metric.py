@@ -99,7 +99,6 @@ class FilterConnectedNearSegments:
         Returns:
             bool: If true, given splines facing the same direction
         """
-        splines_in_same_direction = False
         # Check 01 - 01 & Check 01 - 10
         ax = [(np.array(spline2[1]), np.array(spline2[0])),
               (np.array(spline2[1]), np.array(spline2[0]))]
@@ -555,9 +554,6 @@ def compare_splines_probability(spline_1: np.ndarray,
 
     # Calculating distance matrix between points of 2 splines
     dist_matrix = cdist(spline_1, spline_2)
-
-    # Calculating the matching point on spline1
-    matching_points = np.min(dist_matrix, axis=0)
 
     # Check how many points on spline1 match spline2
     m_s1 = [1 if x < threshold else 0 for x in np.min(dist_matrix, axis=1)]

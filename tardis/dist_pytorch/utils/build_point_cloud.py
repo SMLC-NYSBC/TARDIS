@@ -10,7 +10,7 @@
 
 import gc
 from math import sqrt
-from typing import Optional, Tuple, Union
+from typing import Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -35,7 +35,7 @@ class BuildPointCloud:
     """
 
     @staticmethod
-    def check_data(image: Optional[str] = np.ndarray) -> np.ndarray:
+    def check_data(image: Union[str, np.ndarray]) -> np.ndarray:
         """
         Check image data and correct it if needed to uint8 type.
 
@@ -88,7 +88,7 @@ class BuildPointCloud:
                           image: Union[str, np.ndarray],
                           EDT=False,
                           mask_size=1.5,
-                          down_sampling: Optional[float] = None,
+                          down_sampling: Union[float, None] = None,
                           as_2d=False) -> Union[Tuple[ndarray, ndarray], np.ndarray]:
         """
         Build point cloud data from semantic mask.

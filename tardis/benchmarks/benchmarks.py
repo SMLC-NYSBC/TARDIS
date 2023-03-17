@@ -10,7 +10,7 @@
 import time
 from os import listdir
 from os.path import expanduser, join
-from typing import Union
+from typing import Optional
 
 import click
 import torch
@@ -26,13 +26,18 @@ from tardis.version import version
 
 
 @click.command()
+@click.option('-dir', '--local_directory',
+              default=None,
+              type=str,
+              help='Specified benchmark directory.',
+              show_default=False)
 @click.option('-ds', '--data_set',
               type=str,
               help='Data set name used for testing.',
               show_default=True)
 @click.option('-ch', '--model_checkpoint',
               type=str,
-              help='Dir for NN with model weight and structure.',
+              help='Directory for model pre-trained weight and structure.',
               show_default=True)
 @click.option('-th', '--nn_threshold',
               default=0.5,
@@ -42,38 +47,39 @@ from tardis.version import version
 @click.option('-ps', '--patch_size',
               default=None,
               type=int,
-              help='Size of image size used for prediction.',
+              help='Optional: Size of image size used for prediction.',
               show_default=True)
 @click.option('-sg', '--sigma',
               default=None,
               type=float,
-              help='Sigma value for distance embedding.',
+              help='Optional: Sigma value for distance embedding.',
               show_default=True)
 @click.option('-pv', '--points_in_patch',
               default=1000,
               type=int,
-              help='Number of point per voxel.',
+              help='Optional: Number of point per voxel.',
               show_default=True)
 @click.option('-sv', '--save',
               default=True,
               type=bool,
-              help='If True, save to S3.',
+              help='Flag to switch of saving model weights and metric on S3.',
               show_default=True)
 @click.option('-d', '--device',
               default='0',
               type=str,
               help='Define which device use for training: '
-                   'gpu: Use ID 0 GPUs '
-                   'cpu: Usa CPU '
-                   '0-9 - specified GPU device id to use',
+                   '0-9: Use positive numeric value to use specific GPU ID '
+                   '-1: Usa to use CPU '
+                   'mps: Use to use Apple Silicon',
               show_default=True)
 @click.version_option(version=version)
-def main(data_set: str,
+def main(local_directory: Optional[str],
+         data_set: str,
          model_checkpoint: str,
          nn_threshold: float,
-         patch_size: Union[None, int],
-         sigma: Union[None, float],
-         points_in_patch: Union[None, int],
+         patch_size: Optional[int],
+         sigma: Optional[float],
+         points_in_patch: Optional[int],
          save: bool,
          device: str):
     """
@@ -84,7 +90,11 @@ def main(data_set: str,
     title = 'TARDIS - NN Benchmark'
     tardis_progress(title=title)
 
-    DIR_ = join(expanduser('~') + '/../../data/rkiewisz/Benchmarks')
+    # Specified local directory for benchmark dataset
+    if local_directory is None:  # Default NYSBC-SMLC internal server
+        DIR_ = join(expanduser('~') + '/../../data/rkiewisz/Benchmarks')
+    else:
+        DIR_ = local_directory
 
     """Get model for benchmark"""
     model = torch.load(model_checkpoint,
@@ -145,6 +155,8 @@ def main(data_set: str,
     """Compared with best models"""
     new_is_best = False
     model_best_time = 'None'
+    cbm = None
+    model_id = 0
 
     # Pick last best model
     try:

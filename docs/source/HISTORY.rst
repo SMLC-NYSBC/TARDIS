@@ -4,6 +4,8 @@ History
 0.1.0-RC2 (2023-xx-xx)
 ----------------------
 * **General changes:**
+    * *#New_Feature* Ensure support for PyTorch 2.0
+    * *#New_Feature* Added benchmark entry
     * *#New_Feature* Added ClBCE and ClDice loss functions
     * *#New_Feature* Added binary Amira image file export.
     * *#Optimize* Loss functions pytest and general cleanup
@@ -13,7 +15,8 @@ History
 * **SpindleTorch module changes:**
 
 * **DIST module changes:**
-
+    * *#Optimize* Point cloud visualization can be now with or without animation
+    * *#New_Feature* Node embedding with
 
 0.1.0-RC1 (2023-02-08)
 ----------------------

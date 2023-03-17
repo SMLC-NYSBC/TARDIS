@@ -1,4 +1,4 @@
-#######################################################################
+# #####################################################################
 #  TARDIS - Transformer And Rapid Dimensionless Instance Segmentation #
 #                                                                     #
 #  New York Structural Biology Center                                 #
@@ -6,7 +6,9 @@
 #                                                                     #
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
-#######################################################################
+# #####################################################################
+
+import os
 import subprocess
 import subprocess as subp
 import sys
@@ -44,6 +46,8 @@ def py(python: str):
     Returns:
         list: Output log from pytest.
     """
+    os.chdir('../../')  # move to root dir
+
     if env_exists('PythonEnvTest'):
         # Remove test environment
         subp.run("conda remove -n PythonEnvTest --all -y", shell=True)
@@ -82,7 +86,7 @@ if __name__ == "__main__":
     tardis_progress(title=f'Development - TARDIS {version} - pytest')
 
     """ Run Pytest on python 3.7 - 3.11"""
-    if sys.platform != "darwin":  # Python 3.7 on Macos is only available throw x64
+    if sys.platform != "darwin":  # Python 3.7 on macOS is only available throw x64
         out = py(python='37')
         if not out.retuncode == 0:
             TardisError('20',

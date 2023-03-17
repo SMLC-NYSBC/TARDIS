@@ -26,7 +26,7 @@ class ISR_LR:
     """
     def __init__(self,
                  optimizer: optim.Adam,
-                 lr_mul=1,
+                 lr_mul: float,
                  warmup_steps=1000,
                  scale=100):
         self._optimizer = optimizer
@@ -35,14 +35,6 @@ class ISR_LR:
         self.steps = 0
         self.scale = scale
         self.param_groups = self._optimizer.param_groups
-
-        if lr_mul > 1:
-            lr = 1.0
-        else:
-            lr = lr_mul
-
-        for g in self._optimizer.param_groups:
-            g['lr'] = lr
 
     def load_state_dict(self,
                         checkpoint: dict):

@@ -19,7 +19,7 @@ import tifffile.tifffile as tif
 
 from tardis.dist_pytorch.datasets.patches import PatchDataSet
 from tardis.dist_pytorch.utils.build_point_cloud import BuildPointCloud
-from tardis.dist_pytorch.utils.segment_point_cloud import GraphInstanceV2
+from tardis.dist_pytorch.utils.segment_point_cloud import PropGreedyGraphCut
 from tardis.spindletorch.data_processing.stitch import StitchImages
 from tardis.spindletorch.data_processing.trim import scale_image, trim_with_stride
 from tardis.spindletorch.datasets.dataloader import PredictionDataset
@@ -28,7 +28,7 @@ from tardis.utils.errors import TardisError
 from tardis.utils.export_data import NumpyToAmira, to_mrc
 from tardis.utils.load_data import import_am, ImportDataFromAmira, load_image
 from tardis.utils.logo import print_progress_bar, TardisLogo
-from tardis.utils.normalization import MinMaxNormalize, RescaleNormalize
+from tardis.utils.normalization import MeanStdNormalize, RescaleNormalize
 from tardis.utils.predictor import Predictor
 from tardis.utils.setup_envir import build_temp_dir, clean_up
 from tardis.utils.spline_metric import FilterSpatialGraph, SpatialGraphCompare
@@ -202,7 +202,7 @@ def main(dir: str,
     """Build handler's"""
     # Build handler's for reading data to correct format
     normalize = RescaleNormalize(clip_range=(1, 99))  # Normalize histogram
-    minmax = MinMaxNormalize()
+    meanstd = MeanStdNormalize()  # Standardize with mean and std
 
     # Build handler's for transforming data
     image_stitcher = StitchImages()
@@ -210,7 +210,7 @@ def main(dir: str,
 
     # Build handler's for DIST input and output
     patch_pc = PatchDataSet(max_number_of_points=points_in_patch, graph=False)
-    GraphToSegment = GraphInstanceV2(threshold=dist_threshold, smooth=True)
+    GraphToSegment = PropGreedyGraphCut(threshold=dist_threshold, smooth=True)
 
     filter_splines = FilterSpatialGraph(connect_seg_if_closer_then=connect_splines,
                                         cylinder_radius=connect_cylinder,
@@ -290,10 +290,14 @@ def main(dir: str,
                               'What is the correct value:', default=px, type=float)
 
         # Check image structure and normalize histogram
-        image = normalize(image)
-        if not np.min(image) >= -1 or not np.max(image) <= 1:  # Normalized between 0
-            # and 1
-            image = minmax(image)
+        image = normalize(meanstd(image)).astype(np.float32)
+
+        if not image.min() >= -1 or not image.max() <= 1:  # Image not between in -1 and 1
+            if image.min() >= 0 and image.max() <= 1:
+                image = (image - 0.5) * 2 # shift to -1 - 1
+            elif image.min() >= 0 and image.max() <= 255:
+                image = image / 255  # move to 0 - 1
+                image = (image - 0.5) * 2  # shift to -1 - 1
 
         if not image.dtype == np.float32:
             TardisError(id='11',

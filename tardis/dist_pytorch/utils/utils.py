@@ -21,6 +21,8 @@ def pc_median_dist(pc: np.ndarray,
                    avg_over=False,
                    box_size=0.15) -> float:
     """
+    !DEPRECIATED! - Remove in RC3
+
     Calculate the median distance between KNN points in the point cloud.
 
     Args:
@@ -102,6 +104,8 @@ def point_in_bb(points: np.ndarray,
                 min_z: Optional[np.float32] = None,
                 max_z: Optional[np.float32] = None) -> np.ndarray:
     """
+    !DEPRECIATED! - Remove in RC3
+
     Compute a bounding_box filter on the given points
 
     Args:
@@ -142,15 +146,15 @@ class RandomDownSampling:
     @staticmethod
     def pc_rand_down_sample(coord: np.ndarray,
                             threshold,
-                            node_feature: Optional[np.ndarray] = None) -> Union[Tuple[np.ndarray,
-                                                                                      np.ndarray],
-                                                                                np.ndarray]:
+                            rgb: Optional[np.ndarray] = None) -> Union[Tuple[np.ndarray,
+                                                                             np.ndarray],
+                                                                       np.ndarray]:
         """
         Random picked point to down sample point cloud
 
         Args:
             coord: Array of point to downs-sample
-            node_feature: Extra node feature like e.g RGB values do sample with coord.
+            rgb: Extra node feature like e.g. RGB values do sample with coord.
             threshold: Lambda function to calculate down-sampling rate or fixed float ratio.
 
         Returns:
@@ -166,10 +170,10 @@ class RandomDownSampling:
         else:
             rand_keep = list(range(len(coord)))
 
-        if node_feature is None:
+        if rgb is None:
             return coord[rand_keep][:, :3]
         else:
-            return coord[rand_keep][:, :3], node_feature[rand_keep][:, :3]
+            return coord[rand_keep][:, :3], rgb[rand_keep][:, :3]
 
     def __call__(self,
                  coord: Optional[np.ndarray] = list,
@@ -190,7 +194,7 @@ class RandomDownSampling:
                 if rgb is not None:
                     rgb_df = rgb[idx]
                     ds_coord, ds_node_f = self.pc_rand_down_sample(coord=i,
-                                                                   node_feature=rgb_df,
+                                                                   rgb=rgb_df,
                                                                    threshold=self.threshold)
                     ds_rgb.append(ds_node_f)
                 else:
@@ -202,7 +206,7 @@ class RandomDownSampling:
         elif coord.shape[1] == 3:
             if rgb is not None:
                 return self.pc_rand_down_sample(coord=coord,
-                                                node_feature=rgb,
+                                                rgb=rgb,
                                                 threshold=self.threshold)
             else:
                 return self.pc_rand_down_sample(coord=coord, threshold=self.threshold)
@@ -215,7 +219,7 @@ class RandomDownSampling:
                 if rgb is not None:
                     rgb_df = rgb[peak_id, :]
                     ds_coord, ds_node_f = self.pc_rand_down_sample(coord=coord_df,
-                                                                   node_feature=rgb_df,
+                                                                   rgb=rgb_df,
                                                                    threshold=self.threshold)
                     ds_rgb.append(ds_node_f)
                 else:

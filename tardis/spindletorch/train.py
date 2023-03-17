@@ -10,6 +10,7 @@
 
 import sys
 from os import getcwd
+from typing import Optional
 
 import torch
 from torch import optim
@@ -19,7 +20,8 @@ from tardis.spindletorch.trainer import CNNTrainer
 from tardis.spindletorch.utils.utils import check_model_dict
 from tardis.utils.device import get_device
 from tardis.utils.errors import TardisError
-from tardis.utils.losses import *
+from tardis.utils.losses import (AdaptiveDiceLoss, BCEDiceLoss, BCELoss, CELoss, ClBCE,
+                                 ClDice, DiceLoss, SigmoidFocalLoss)
 from tardis.utils.trainer import ISR_LR
 
 # Setting for stable release to turn off all debug APIs
@@ -119,7 +121,9 @@ def train_cnn(train_dataloader,
     """Build training optimizer"""
     if learning_rate_scheduler:
         optimizer = optim.Adam(params=model.parameters(),
-                               betas=(0.9, 0.98), eps=1e-9)
+                               betas=(0.9, 0.98),
+                               lr=learning_rate,
+                               eps=1e-9)
     else:
         optimizer = optim.Adam(params=model.parameters(),
                                lr=learning_rate,
@@ -127,8 +131,8 @@ def train_cnn(train_dataloader,
 
     """Optionally: Build learning rate scheduler"""
     if learning_rate_scheduler:
-        optimizer = ISR_LR(optimizer, lr_mul=learning_rate, warmup_steps=warmup,
-                           scale=1)
+        optimizer = ISR_LR(optimizer, lr_mul=learning_rate,
+                           warmup_steps=warmup, scale=1)
 
     """Optionally: Checkpoint model"""
     if checkpoint is not None:

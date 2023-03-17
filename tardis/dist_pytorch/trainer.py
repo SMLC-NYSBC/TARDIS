@@ -14,7 +14,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from tardis.dist_pytorch.utils.segment_point_cloud import GraphInstanceV2
+from tardis.dist_pytorch.utils.segment_point_cloud import PropGreedyGraphCut
 from tardis.utils.metrics import eval_graph_f1, mcov
 from tardis.utils.trainer import BasicTrainer
 
@@ -30,10 +30,10 @@ class DistTrainer(BasicTrainer):
 
         self.node_input = self.structure['node_input']
 
-        self.Graph_gt = GraphInstanceV2(threshold=0.5, connection=1000)
-        self.Graph0_25 = GraphInstanceV2(threshold=0.25, connection=4)
-        self.Graph0_5 = GraphInstanceV2(threshold=0.5, connection=4)
-        self.Graph0_9 = GraphInstanceV2(threshold=0.9, connection=4)
+        self.Graph_gt = PropGreedyGraphCut(threshold=0.5, connection=1000)
+        self.Graph0_25 = PropGreedyGraphCut(threshold=0.25, connection=4)
+        self.Graph0_5 = PropGreedyGraphCut(threshold=0.5, connection=4)
+        self.Graph0_9 = PropGreedyGraphCut(threshold=0.9, connection=4)
 
         self.mCov0_25, self.mCov0_5, self.mCov0_9 = [], [], []
 
@@ -50,7 +50,8 @@ class DistTrainer(BasicTrainer):
         Returns:
             str: Updated progress bar status.
         """
-        desc = f'Epochs: early_stop: {stop_count}; F1: [{metric[0]:.2f}; {metric[1]:.2f}]; ' \
+        desc = f'Epochs: early_stop: {stop_count}; ' \
+               f'F1: [{metric[0]:.2f}; {metric[1]:.2f}]; ' \
                f'mCov 0.5: [{metric[2]:.2f}; {metric[3]:.2f}]; ' \
                f'mCov 0.9: [{metric[4]:.2f}; {metric[5]:.2f}]'
         return desc
@@ -207,19 +208,21 @@ class DistTrainer(BasicTrainer):
                     loss = self.criterion(edge[0, :], graph)
 
                     # Calculate F1 metric
-                    acc, prec, recall, f1, th = eval_graph_f1(logits=torch.sigmoid(edge)[0, :],
+                    edge = torch.sigmoid(edge)[0, :]
+                    acc, prec, recall, f1, th = eval_graph_f1(logits=edge,
                                                               targets=graph,
                                                               threshold=0.5)
 
                     # Build GT instance point cloud
-                    target = self.Graph_gt.patch_to_segment(graph=[graph[0, :].cpu().detach().numpy()],
+                    graph = graph[0, :].cpu().detach().numpy()
+                    target = self.Graph_gt.patch_to_segment(graph=[graph],
                                                             coord=coord,
                                                             idx=[out],
                                                             prune=0,
                                                             sort=False)
 
                     # Get Graph prediction
-                    edge = torch.sigmoid(edge)[0, 0, :].cpu().detach().numpy()
+                    edge = edge[0, :].cpu().detach().numpy()
 
                     # Threshold 0.25
                     try:
@@ -346,7 +349,8 @@ class CDistTrainer(BasicTrainer):
 
         for idx, (e, n, g, _, c) in enumerate(self.validation_DataLoader):
             for edge, node, cls, graph in zip(e, n, c, g):
-                edge, graph, cls = edge.to(self.device), graph.to(self.device), cls.to(self.device)
+                edge, graph = edge.to(self.device), graph.to(self.device)
+                cls = cls.to(self.device)
 
                 with torch.no_grad():
                     if self.node_input:
@@ -359,7 +363,8 @@ class CDistTrainer(BasicTrainer):
                                                                                   cls)
 
                     edge = torch.sigmoid(edge[:, 0, :])
-                    acc, prec, recall, f1, th = eval_graph_f1(logits=edge, targets=graph)
+                    acc, prec, recall, f1, th = eval_graph_f1(logits=edge, targets=graph,
+                                                              threshold=0.5)
 
                 # Avg. precision score
                 valid_losses.append(loss.item())
