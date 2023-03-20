@@ -119,13 +119,15 @@ class Predictor:
 
     def predict(self,
                 x: torch.Tensor,
-                y: Optional[torch.Tensor] = None) -> np.ndarray:
+                y: Optional[torch.Tensor] = None,
+                rotate=False) -> np.ndarray:
         """
         General predictor.
 
         Args:
             x (torch.Tensor): Main feature used for prediction.
             y (torch.Tensor, None): Optional feature used for prediction.
+            rotate (bool): Optional flag for CNN to output avg. from 4x 90* rotation
 
         Returns:
             np.ndarray: Predicted features.
@@ -138,11 +140,13 @@ class Predictor:
         with torch.no_grad():
             self.model.eval()
 
+            dim_ = x.shape[-1]
+            x = x.to(self.device)
             if self.network == 'dist':
                 if y is None:
-                    out = self.model(coords=x.to(self.device), node_features=None)
+                    out = self.model(coords=x, node_features=None)
                 else:
-                    out = self.model(coords=x.to(self.device),
+                    out = self.model(coords=x,
                                      node_features=y.to(self.device))
 
                 out = out.cpu().detach().numpy()[0, 0, :]
@@ -153,9 +157,20 @@ class Predictor:
                 out[g_range, g_range] = np.eye(g_len, g_len)[g_range, g_range]
                 return out
             else:
-                out = self.model(x.to(self.device))
+                if rotate:
+                    out = np.zeros((dim_, dim_, dim_), dtype=np.float32)
 
-                return out.cpu().detach().numpy()[0, 0, :]
+                    for k in range(4):
+                        x_ = torch.rot90(x, k=k, dims=(3, 4))
+                        x_ = self.model(x.to(self.device)) / 4
+                        x_ = x_.cpu().detach().numpy()[0, 0, :]
+
+                        out += np.rot90(x_, k=-k, axes=(1, 2))
+
+                    return out
+                else:
+                    out = self.model(x.to(self.device))
+                    return out.cpu().detach().numpy()[0, 0, :]
 
 
 class BasicPredictor:
