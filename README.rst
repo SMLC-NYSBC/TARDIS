@@ -24,6 +24,42 @@ Features
 * Training of DIST ML model for instance segmentation of 2D and 3D point clouds
 * Point cloud instance segmentation by point cloud graph representation
 
+New
+---
+<details><summary>TARDIS v0.1.0 release candidate 2 (RC2) - (2023-03-21)</summary>
+
+        * General improvement form MT prediction
+        * Added support for Cry-mem prediction
+        * Added support for node (RGB) features in DIST
+        * Full support for Pytorch 2.0
+</details>
+
+<details><summary>TARDIS v0.1.0 release candidate 1 (RC1) - (2023-02-08)</summary>
+
+    * Overall clean-up for final release
+    * Added full code documentation
+    * Added full stable suport for MT prediction
+    * Added support for ScanNetV2 dataset prediction with DIST
+    * Added costume TARDIS error and console logo outputs
+    * TARDIS error handling
+</details>
+
+<details><summary>TARDIS v0.1.0 beta 2 - (2022-09-14)</summary>
+
+    * Cryo-Membrane 2D support
+    * Stable training and prediction entries for spindletorch and DIST
+    * Restructure and standardized naming iand versioning in TARDIS
+    * Combined all side-code into TARDIS
+    * Full support for Amira formats, MRC/REC, TIF
+</details>
+
+<details><summary>TARDIS v0.1.0 beta 1</summary>
+
+    * Cryo-Membrane 2D support
+    * Stable training and prediction entries for spindletorch and DIST
+    * Restructure and standardized naming iand versioning in TARDIS
+</details>
+
 Requirements
 ------------
 .. code-block::
