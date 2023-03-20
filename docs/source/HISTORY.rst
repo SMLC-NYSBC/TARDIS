@@ -1,7 +1,7 @@
 History
 =======
 
-0.1.0-RC2 (2023-xx-xx)
+0.1.0-RC2 (2023-03-xx)
 ----------------------
 * **General changes:**
     * *#New_Feature* Ensure support for PyTorch 2.0
@@ -11,12 +11,21 @@ History
     * *#Optimize* Loss functions pytest and general cleanup
     * *#Optimize* Formatting and missing TardisErrors
     * *#Optimize* 20x Speed up for Tardis logo for Linux/OS X
+    * *#New_Feature* Full membrane support (training and prediction of cryo-mem)
+    * *#BugFix* Fixed small bugs in metrics calculation
+    * *#New_Feature* Added costume LR schedular (ISR - invert square root)
 
 * **SpindleTorch module changes:**
+    * *#New_Feature* Added and tested clDice and clBCE loss function
+    * *#Optimize* Support for membrane training dataset
+    * *#General* Globally change normalization (0-1) to image standardization (-1-1)
+    with mean and standard deviation
 
 * **DIST module changes:**
     * *#Optimize* Point cloud visualization can be now with or without animation
-    * *#New_Feature* Node embedding with
+    * *#New_Feature* Node embedding with furier random
+    * *#New_Feature* Added calculation of mcov metric during training and save
+    checkpoint based on it
 
 0.1.0-RC1 (2023-02-08)
 ----------------------
@@ -51,7 +60,7 @@ History
     * *#New_Feature* TardisError for all error handling
 
 0.1.0-beta2 (2022-09-14)
-----------------------------
+------------------------
 * **Code restructure:**
     * Finished documentation with Sphinx
     * Build testes for the whole tardis-pytorch
