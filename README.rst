@@ -24,41 +24,53 @@ Features
 * Training of DIST ML model for instance segmentation of 2D and 3D point clouds
 * Point cloud instance segmentation by point cloud graph representation
 
-New
----
-<details><summary>TARDIS v0.1.0 release candidate 2 (RC2) - (2023-03-21)</summary>
 
-        * General improvement form MT prediction
-        * Added support for Cry-mem prediction
-        * Added support for node (RGB) features in DIST
-        * Full support for Pytorch 2.0
-</details>
+News
+----
+.. raw:: html
 
-<details><summary>TARDIS v0.1.0 release candidate 1 (RC1) - (2023-02-08)</summary>
+    <details>
+    <summary><b>TARDIS v0.1.0 release candidate 2 (RC2) - (2023-03-21)</b></summary>
 
-    * Overall clean-up for final release
-    * Added full code documentation
-    * Added full stable suport for MT prediction
-    * Added support for ScanNetV2 dataset prediction with DIST
-    * Added costume TARDIS error and console logo outputs
-    * TARDIS error handling
-</details>
+    <ul>
+    <li> General improvement form MT prediction </li>
+    <li> Added support for Cry-mem prediction </li>
+    <li> Added support for node (RGB) features in DIST </li>
+    <li> Full support for Pytorch 2.0 </li>
+    </ul>
+    </details>
 
-<details><summary>TARDIS v0.1.0 beta 2 - (2022-09-14)</summary>
+    <details>
+    <summary><b>TARDIS v0.1.0 release candidate 1 (RC1) - (2023-02-08)</b></summary>
 
-    * Cryo-Membrane 2D support
-    * Stable training and prediction entries for spindletorch and DIST
-    * Restructure and standardized naming iand versioning in TARDIS
-    * Combined all side-code into TARDIS
-    * Full support for Amira formats, MRC/REC, TIF
-</details>
+    <ul>
+    <li> Overall clean-up for final release </li>
+    <li> Added full code documentation </li>
+    <li> Added full stable suport for MT prediction </li>
+    <li> Added support for ScanNetV2 dataset prediction with DIST </li>
+    <li> Added costume TARDIS error and console logo outputs </li>
+    <li> TARDIS error handling </li>
+    </ul>
+    </details>
 
-<details><summary>TARDIS v0.1.0 beta 1</summary>
+    <details>
+    <summary><b>TARDIS v0.1.0 beta 2 - (2022-09-14)</b></summary>
 
-    * Cryo-Membrane 2D support
-    * Stable training and prediction entries for spindletorch and DIST
-    * Restructure and standardized naming iand versioning in TARDIS
-</details>
+    <ul>
+    <li> Cryo-Membrane 2D support </li>
+    <li> Stable training and prediction entries for spindletorch and DIST </li>
+    <li> Restructure and standardized naming iand versioning in TARDIS </li>
+    <li> Combined all side-code into TARDIS </li>
+    <li> Full support for Amira formats, MRC/REC, TIF </li>
+    </ul>
+    </details>
+
+    <details><summary><b>TARDIS v0.1.0 beta 1</b></summary>
+    <ul>
+    <li> Cryo-Membrane 2D support </li>
+    <li> Stable training and prediction entries for spindletorch and DIST </li>
+    <li> Restructure and standardized naming iand versioning in TARDIS </li>
+    </details>
 
 Requirements
 ------------
