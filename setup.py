@@ -11,7 +11,7 @@ from setuptools import find_packages, setup
 
 from tardis.version import version
 
-with open("docs/source/README.rst") as readme_file:
+with open("docs/source/README.md") as readme_file:
     readme = readme_file.read()
 
 with open("requirements.txt") as r:

@@ -4,6 +4,7 @@ History
 0.1.0-RC2 (2023-03-xx)
 ----------------------
 * **General changes:**
+    * *General* Normalized all documentation to *.md
     * *#New_Feature* Ensure support for PyTorch 2.0
     * *#New_Feature* Added benchmark entry
     * *#New_Feature* Added ClBCE and ClDice loss functions
