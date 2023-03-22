@@ -115,11 +115,11 @@ def main(local_directory: Optional[str],
         DIR_NN = join(DIR_, 'Best_model_DIST', data_set)
         DIR_EVAL = join(DIR_, 'Eval_DIST', data_set)
 
-    if data_set not in listdir(DIR_EVAL):
+    if data_set not in listdir(join(DIR_, 'Eval_DIST')):
         TardisError(id='',
                     py='tardis/benchmarks/benchmarks.py',
                     desc=f'Given data set {data_set} is not supporter! '
-                    f'Expected one of {listdir(DIR_EVAL)}')
+                    f'Expected one of {listdir(join(DIR_, "Eval_DIST"))}')
 
     if rgb:
         data_set = f'{data_set}_rgb'
