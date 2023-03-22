@@ -103,7 +103,7 @@ class DataSetPredictor:
         self.rotate = predict_with_rotation
 
         # Global flags
-        self.device = get_device(device)
+        self.device = get_device(str(device))
         self.debug = debug
 
         """Initial Setup"""
@@ -223,8 +223,8 @@ class DataSetPredictor:
                                          subtype='64',
                                          model_type='cryo_mem',
                                          img_size=self.patch_size,
-                                         device=self.device,
-                                         sigmoid=False)
+                                         sigmoid=False,
+                                         device=self.device)
 
             # Build DIST network with loaded pre-trained weights
             self.predict_dist = Predictor(network='dist',
@@ -532,7 +532,7 @@ class DataSetPredictor:
                                  text_3=f'Image {id + 1}/{len(self.predict_list)}: {i}',
                                  text_4=f'Original pixel size: {self.px} A',
                                  text_5=f'Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments',
-                                 text_7='Current Task: Preparing for MT segmentation...')
+                                 text_7='Current Task: Preparing for instance segmentation...')
 
             # Build patches dataset
             self.coords_df, _, self.output_idx, _ = self.patch_pc.patched_dataset(coord=self.pc_ld)
@@ -558,7 +558,7 @@ class DataSetPredictor:
                                      text_3=f'Image {id + 1}/{len(self.predict_list)}: {i}',
                                      text_4=f'Original pixel size: {self.px} A',
                                      text_5=f'Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments',
-                                     text_7='Current Task: MT Segmentation...',
+                                     text_7='Current Task: Instance Segmentation...',
                                      text_8='MTs segmentation is fitted to:',
                                      text_9=f'pixel size: {self.px}; transformation: {self.transformation}')
 
@@ -578,7 +578,7 @@ class DataSetPredictor:
                                      text_3=f'Image {id + 1}/{len(self.predict_list)}: {i}',
                                      text_4=f'Original pixel size: {self.px} A',
                                      text_5=f'Point Cloud: {self.pc_ld.shape[0]}; NaN Segments',
-                                     text_7='Current Task: Membrane segmentation...')
+                                     text_7='Current Task: Instance segmentation...')
 
                 try:
                     self.segments = self.GraphToSegment.patch_to_segment(graph=self.graphs,
