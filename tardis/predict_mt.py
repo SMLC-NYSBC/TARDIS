@@ -117,7 +117,7 @@ def main(dir: str,
          amira_prefix: str,
          amira_compare_distance: int,
          amira_inter_probability: float,
-         instance: bool,
+         instances: bool,
          device: str,
          debug: bool):
     """
@@ -137,7 +137,7 @@ def main(dir: str,
                                  connect_cylinder=connect_cylinder,
                                  amira_compare_distance=amira_compare_distance,
                                  amira_inter_probability=amira_inter_probability,
-                                 instances=instance,
+                                 instances=instances,
                                  device=device,
                                  debug=debug)
 
