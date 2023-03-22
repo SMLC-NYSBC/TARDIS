@@ -147,7 +147,7 @@ Linux:
 
 ### Usage:
 ```
-recomanded usage: tardis_mt [-dir path/to/folder/with/input/tomogram]
+recommended usage: tardis_mt [-dir path/to/folder/with/input/tomogram]
 advance usage: tardis_mt [-dir str] [-out str] [-ps int] [-ct float] [-dt float]
                          [-pv int] [-ap str] ...
 ```
@@ -191,7 +191,7 @@ optional arguments:
                         Default: 1000
 
   -ap, --amira_prefix [str]
-                        If dir/amira foldr exist, TARDIS will serach for files with
+                        If dir/amira folder exist, TARDIS will search for files with
                         given prefix (e.g. file_name.CorrelationLines.am). If the correct
                         file is found, TARDIS will use its instance segmentation with
                         ZiB Amira prediction, and output additional file called
@@ -241,7 +241,7 @@ optional arguments:
  -dv, --device [str]
                         Define which device to use for training:
                         * gpu: Use ID 0 GPU
-                        * cpu: Usa only CPU
+                        * cpu: Use only CPU
                         * mps: Apple silicon (experimental)
                         * 0-9 - specified GPU device id to use    
 
@@ -263,7 +263,7 @@ optional arguments:
 
 ### Usage:
 ```
-recomanded usage: tardis_mem [-dir path/to/folder/with/input/tomogram]
+recommended usage: tardis_mem [-dir path/to/folder/with/input/tomogram]
 advance usage: tardis_mem [-dir str] [-out str] [-ps int] ...
 ```
 ```
@@ -308,7 +308,7 @@ optional arguments:
  -dv, --device [str]
                         Define which device to use for training:
                         * gpu: Use ID 0 GPU
-                        * cpu: Usa only CPU
+                        * cpu: Use only CPU
                         * mps: Apple silicon (experimental)
                         * 0-9 - specified GPU device id to use    
 
@@ -329,7 +329,7 @@ TARDIS from v0.1.0-RC2 allows for instance membrane segmentation. Results may va
 
 ### Usage:
 ```
-recomanded usage: tardis_mem [-dir path/to/folder/with/input/tomogram] [-out mrc_mrcM]
+recommended usage: tardis_mem [-dir path/to/folder/with/input/tomogram] [-out mrc_mrcM]
 advance usage: tardis_mem [-dir str] [-out str] [-ps int] ...
 ```
 ```
@@ -354,7 +354,7 @@ optional arguments:
                         Size of image patch used for prediction. This will break 
                         the tomogram volumes into 3D patches where each patch will be
                         separately predicted and then stitched back together 
-                        with 25% overla
+                        with 25% overlap.
                         Default: 128
                         
   -ct, --cnn_threshold [float]
@@ -374,7 +374,7 @@ optional arguments:
  -dv, --device [str]
                         Define which device to use for training:
                         * gpu: Use ID 0 GPU
-                        * cpu: Usa only CPU
+                        * cpu: Use only CPU
                         * mps: Apple silicon (experimental)
                         * 0-9 - specified GPU device id to use    
 
