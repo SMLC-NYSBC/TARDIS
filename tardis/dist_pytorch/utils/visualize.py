@@ -227,7 +227,7 @@ def VisualizeFilaments(coord: np.ndarray):
     coord, check = _dataset_format(coord=coord, segmented=True)
 
     if check:
-        graph, _ = segment_to_graph(coord=coord)
+        graph = segment_to_graph(coord=coord)
         line_set = o3d.geometry.LineSet()
 
         line_set.points = o3d.utility.Vector3dVector(coord[:, 1:])
