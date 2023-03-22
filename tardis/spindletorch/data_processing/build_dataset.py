@@ -306,7 +306,7 @@ def load_img_mask_data(image: str,
     elif mask.endswith('.CorrelationLines.am') and coord is None:  # Mask is Amira (coord)
         importer = ImportDataFromAmira(src_am=mask)
         coord = importer.get_segmented_points()  # [ID x X x Y x Z]
-        mask_px = importer.get_pixel_size()
+        mask_px = img_px
         coord[:, 1:] = coord[:, 1:] // mask_px
     elif mask.endswith('_mask.csv'):  # Mask is csv (coord)
         coord = np.genfromtxt(mask, delimiter=',')  # [ID x X x Y x (Z)]
