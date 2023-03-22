@@ -10,6 +10,7 @@
 import codecs
 from datetime import datetime
 from io import BytesIO
+
 from typing import List, Optional, Union
 
 import mrcfile
