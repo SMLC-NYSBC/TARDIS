@@ -45,23 +45,25 @@ class DataSetPredictor:
     MAIN WRAPPER FOR PREDICTION MT/MEM WITH TARDIS-PYTORCH
 
     Args:
-        predict (str):
-        dir (str):
-        output_format (str):
-        patch_size (int):
-        cnn_threshold (float):
-        dist_threshold (float):
-        points_in_patch (int):
-        predict_with_rotation (bool):
-        amira_prefix (Optional[str]):
-        filter_by_length (Optional[float]):
-        connect_splines (Optional[int]):
-        connect_cylinder (Optional[int]):
-        amira_compare_distance (Optional[int]):
-        amira_inter_probability (Optional[float]):
-        instances (bool):
-        device (str):
-        debug (bool):
+        predict (str): Dataset type name.
+        dir (str): Dataset directory.
+        output_format (str): Two output format for semantic and instance prediction.
+        patch_size (int): Image 3D crop size.
+        cnn_threshold (float): Threshold for CNN model.
+        dist_threshold (float): Threshold for DIST model.
+        points_in_patch (int): Maximum number of points per patched point cloud.
+        predict_with_rotation (bool): If True, CNN predict with 4 90* rotations.
+        amira_prefix (str): Optional, Amira file prefix used for spatial graph comparison.
+        filter_by_length (float): Optional, filter setting for filtering short splines.
+        connect_splines (int): Optional, filter setting for connecting near splines.
+        connect_cylinder (int): Optional, filter setting for connecting splines withing cylinder radius.
+        amira_compare_distance (int): Optional, compare setting, max distance between two splines
+        to consider them as the same.
+        amira_inter_probability (float): Optional, compare setting, portability threshold
+        to define comparison class.
+        instances (bool): If True, run instance segmentation after semantic.
+        device (str): Define computation device.
+        debug (bool): If True, run in debugging mode.
     """
     def __init__(self,
                  predict: str,
@@ -223,8 +225,8 @@ class DataSetPredictor:
                                          subtype='64',
                                          model_type='cryo_mem',
                                          img_size=self.patch_size,
-                                         device=self.device,
-                                         sigmoid=False)
+                                         sigmoid=False,
+                                         device=self.device)
 
             # Build DIST network with loaded pre-trained weights
             self.predict_dist = Predictor(network='dist',
@@ -532,7 +534,7 @@ class DataSetPredictor:
                                  text_3=f'Image {id + 1}/{len(self.predict_list)}: {i}',
                                  text_4=f'Original pixel size: {self.px} A',
                                  text_5=f'Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments',
-                                 text_7='Current Task: Preparing for MT segmentation...')
+                                 text_7='Current Task: Preparing for instance segmentation...')
 
             # Build patches dataset
             self.coords_df, _, self.output_idx, _ = self.patch_pc.patched_dataset(coord=self.pc_ld)
@@ -558,7 +560,7 @@ class DataSetPredictor:
                                      text_3=f'Image {id + 1}/{len(self.predict_list)}: {i}',
                                      text_4=f'Original pixel size: {self.px} A',
                                      text_5=f'Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments',
-                                     text_7='Current Task: MT Segmentation...',
+                                     text_7='Current Task: Instance Segmentation...',
                                      text_8='MTs segmentation is fitted to:',
                                      text_9=f'pixel size: {self.px}; transformation: {self.transformation}')
 
@@ -578,7 +580,7 @@ class DataSetPredictor:
                                      text_3=f'Image {id + 1}/{len(self.predict_list)}: {i}',
                                      text_4=f'Original pixel size: {self.px} A',
                                      text_5=f'Point Cloud: {self.pc_ld.shape[0]}; NaN Segments',
-                                     text_7='Current Task: Membrane segmentation...')
+                                     text_7='Current Task: Instance segmentation...')
 
                 try:
                     self.segments = self.GraphToSegment.patch_to_segment(graph=self.graphs,
