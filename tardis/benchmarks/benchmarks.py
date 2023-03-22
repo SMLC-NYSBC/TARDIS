@@ -30,7 +30,7 @@ from tardis.version import version
               default=None,
               type=str,
               help='Specified benchmark directory.',
-              show_default=False)
+              show_default=True)
 @click.option('-ds', '--data_set',
               type=str,
               help='Data set name used for testing.',

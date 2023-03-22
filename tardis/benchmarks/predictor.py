@@ -65,7 +65,7 @@ class CnnBenchmark:
         if self.data_set in ['MT', 'Mem']:
             build_train_dataset(dataset_dir=self.dir,
                                 circle_size=150,
-                                resize_pixel_size=23.2,
+                                resize_pixel_size=25,
                                 trim_xy=patch_size,
                                 trim_z=patch_size,
                                 benchmark=True)
