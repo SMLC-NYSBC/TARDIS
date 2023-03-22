@@ -115,22 +115,24 @@ def main(dir: str,
     """
     MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
     """
-    DataSetPredictor(predict='Microtubule',
-                     dir=dir,
-                     output_format=output_format,
-                     patch_size=patch_size,
-                     cnn_threshold=cnn_threshold,
-                     dist_threshold=dist_threshold,
-                     points_in_patch=points_in_patch,
-                     predict_with_rotation=False,
-                     amira_prefix=amira_prefix,
-                     filter_by_length=filter_by_length,
-                     connect_splines=connect_splines,
-                     connect_cylinder=connect_cylinder,
-                     amira_compare_distance=amira_compare_distance,
-                     amira_inter_probability=amira_inter_probability,
-                     device=device,
-                     debug=debug)
+    predictor = DataSetPredictor(predict='Microtubule',
+                                 dir=dir,
+                                 output_format=output_format,
+                                 patch_size=patch_size,
+                                 cnn_threshold=cnn_threshold,
+                                 dist_threshold=dist_threshold,
+                                 points_in_patch=points_in_patch,
+                                 predict_with_rotation=False,
+                                 amira_prefix=amira_prefix,
+                                 filter_by_length=filter_by_length,
+                                 connect_splines=connect_splines,
+                                 connect_cylinder=connect_cylinder,
+                                 amira_compare_distance=amira_compare_distance,
+                                 amira_inter_probability=amira_inter_probability,
+                                 device=device,
+                                 debug=debug)
+
+    predictor()
 
 
 if __name__ == '__main__':

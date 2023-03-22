@@ -78,16 +78,17 @@ def main(dir: str,
     """
     MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
     """
-    DataSetPredictor(predict='Microtubule',
-                     dir=dir,
-                     output_format=output_format,
-                     patch_size=patch_size,
-                     cnn_threshold=cnn_threshold,
-                     dist_threshold=dist_threshold,
-                     points_in_patch=points_in_patch,
-                     predict_with_rotation=False,
-                     device=device,
-                     debug=debug)
+    predictor = DataSetPredictor(predict='Microtubule',
+                                 dir=dir,
+                                 output_format=output_format,
+                                 patch_size=patch_size,
+                                 cnn_threshold=cnn_threshold,
+                                 dist_threshold=dist_threshold,
+                                 points_in_patch=points_in_patch,
+                                 predict_with_rotation=False,
+                                 device=device,
+                                 debug=debug)
+    predictor()
 
 
 if __name__ == '__main__':
