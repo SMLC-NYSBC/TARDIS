@@ -35,8 +35,7 @@ from tardis.version import version
               show_default=True)
 @click.option('-dt', '--dataset_type',
               default='filament',
-              type=click.Choice(['filament', 'scannet', 'scannet_color',
-                                 'partnet', 'stanford', 'general']),
+              type=str,
               help='Define training dataset type.',
               show_default=True)
 @click.option('-no', '--n_out',
@@ -69,10 +68,15 @@ from tardis.version import version
               type=float,
               help='If 0, dropout is turn-off. Else indicate dropout rate.',
               show_default=True)
-@click.option('-sg', '--sigma',
-              default=2,
+@click.option('-nsg', '--node_sigma',
+              default=1.0,
               type=float,
-              help='Sigma value for distance embedding.',
+              help='Sigma value for RGB node embedding.',
+              show_default=True)
+@click.option('-esg', '--edge_sigma',
+              default=2.0,
+              type=float,
+              help='Sigma value for distance edges embedding.',
               show_default=True)
 @click.option('-st', '--structure',
               default='triang',
@@ -92,19 +96,19 @@ from tardis.version import version
               help='Max number of points per patch.',
               show_default=True)
 @click.option('-lo', '--loss',
-              default='bce',
-              type=click.Choice(['bce', 'dice', 'sfl']),
+              default='BCELoss',
+              type=click.Choice(['BCELoss', 'DiceLoss', 'SigmoidFocalLoss']),
               help='Type of loss function use for training.',
               show_default=True)
 @click.option('-lr', '--loss_lr',
-              default=0.001,
+              default=1.0,
               type=float,
               help='Learning rate.',
               show_default=True)
-@click.option('-ls', '--lr_rate_schedule',
+@click.option('-lrs', '--lr_rate_schedule',
               default=False,
               type=bool,
-              help='If True, use learning rate scheduler [StepLR].',
+              help='If True learning rate scheduler is used.',
               show_default=True)
 @click.option('-ch', '--checkpoint',
               default=None,
@@ -139,7 +143,8 @@ def main(dir: str,
          layers: int,
          heads: int,
          dropout: float,
-         sigma: int,
+         node_sigma: float,
+         edge_sigma: float,
          structure: str,
          dist_structure: str,
          pc_sampling: int,
@@ -161,7 +166,7 @@ def main(dir: str,
     TEST_COORD_DIR = join(dir, 'test', 'masks')
 
     COORD_FORMAT = '.txt'
-    if dataset_type != 'stanford':
+    if dataset_type not in ['stanford', 'stanford_rgb']:
         COORD_FORMAT = ('.CorrelationLines.am', '.npy', '.csv', '.ply')
 
     """Check if dir has train/test folder and if f  older have compatible data"""
@@ -178,7 +183,7 @@ def main(dir: str,
     if not DATASET_TEST:
         # Check and set-up environment
         if not len([f for f in listdir(dir) if f.endswith(COORD_FORMAT)]) > 0:
-            if not dataset_type == 'stanford':
+            if dataset_type not in ['stanford', 'stanford_rgb']:
                 TardisError('12',
                             'tardis/train_DIST.py',
                             'Indicated folder for training do not have any compatible '
@@ -198,12 +203,10 @@ def main(dir: str,
         mkdir(TEST_COORD_DIR)
 
         # Build train and test dataset
-        move_train_dataset(dir=dir,
-                           coord_format=COORD_FORMAT,
-                           with_img=False)
+        move_train_dataset(dir=dir, coord_format=COORD_FORMAT, with_img=False)
 
         no_dataset = int(len([f for f in listdir(dir) if f.endswith(COORD_FORMAT)]) / 2)
-        if dataset_type == 'stanford':
+        if dataset_type in ['stanford', 'stanford_rgb']:
             build_test_dataset(dataset_dir=dir, dataset_no=no_dataset, stanford=True)
         else:
             build_test_dataset(dataset_dir=dir, dataset_no=no_dataset)
@@ -216,14 +219,20 @@ def main(dir: str,
 
     """Build DataLoader for training/validation"""
     dl_train_graph, dl_test_graph = build_dataset(dataset_type=dataset_type,
-                                                  dirs=[TRAIN_COORD_DIR,
-                                                        TEST_COORD_DIR],
+                                                  dirs=[TRAIN_COORD_DIR, TEST_COORD_DIR],
                                                   max_points_per_patch=pc_sampling)
 
     """Setup training"""
     device = get_device(device)
 
-    if dataset_type == 'scannet_color':
+    if dataset_type.endswith('rgb'):
+        if node_dim == 0:
+            TardisError('161',
+                        'tardis/train_DIST.py',
+                        'Model initiated with node feasters as RGB but '
+                        f'node_dim is {node_dim}.')
+            sys.exit()
+    if node_dim > 0:
         node_input = 3
     else:
         node_input = 0
@@ -236,6 +245,9 @@ def main(dir: str,
         tardis_logo(text_1=f'ValueError: Wrong DIST type {dist_structure}!')
         sys.exit()
 
+    if loss_lr == 1.0:
+        lr_rate_schedule = True
+
     """Optionally: pre-load model structure from checkpoint"""
     if checkpoint is not None:
         save_train = torch.load(join(checkpoint), map_location=device)
@@ -243,18 +255,19 @@ def main(dir: str,
         if 'model_struct_dict' in save_train.keys():
             model_dict = save_train['model_struct_dict']
             globals().update(model_dict)
-
-    model_dict = {'dist_type': dist_structure,
-                  'n_out': n_out,
-                  'node_input': node_input,
-                  'node_dim': node_dim,
-                  'edge_dim': edge_dim,
-                  'num_cls': num_cls,
-                  'num_layers': layers,
-                  'num_heads': heads,
-                  'coord_embed_sigma': sigma,
-                  'dropout_rate': dropout,
-                  'structure': structure}
+    else:
+        model_dict = {'dist_type': dist_structure,
+                      'n_out': n_out,
+                      'node_input': node_input,
+                      'node_dim': node_dim,
+                      'edge_dim': edge_dim,
+                      'num_cls': num_cls,
+                      'num_layers': layers,
+                      'num_heads': heads,
+                      'rgb_embed_sigma': node_sigma,
+                      'coord_embed_sigma': edge_sigma,
+                      'dropout_rate': dropout,
+                      'structure': structure}
 
     train_dist(train_dataloader=dl_train_graph,
                test_dataloader=dl_test_graph,
@@ -262,7 +275,7 @@ def main(dir: str,
                checkpoint=checkpoint,
                loss_function=loss,
                learning_rate=loss_lr,
-               learning_rate_scheduler=lr_rate_schedule,
+               lr_scheduler=lr_rate_schedule,
                early_stop_rate=early_stop,
                device=device,
                epochs=epochs)

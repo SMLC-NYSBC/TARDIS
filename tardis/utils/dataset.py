@@ -88,7 +88,7 @@ def build_test_dataset(dataset_dir: str,
                     f'Could not find train or test folder in directory {dataset_dir}')
 
     if stanford:
-        mkdir(join(dataset_dir, 'test', 'masks', 'Area_1', ''))
+        mkdir(join(dataset_dir, 'test', 'masks', 'Area_1'))
         mkdir(join(dataset_dir, 'test', 'masks', 'Area_3'))
         mkdir(join(dataset_dir, 'test', 'masks', 'Area_5'))
 

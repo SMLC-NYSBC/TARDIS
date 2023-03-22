@@ -14,14 +14,15 @@ from typing import Optional
 
 import torch
 from torch import optim
-from torch.optim.lr_scheduler import StepLR
 
 from tardis.spindletorch.spindletorch import build_cnn_network
 from tardis.spindletorch.trainer import CNNTrainer
 from tardis.spindletorch.utils.utils import check_model_dict
 from tardis.utils.device import get_device
 from tardis.utils.errors import TardisError
-from tardis.utils.losses import BCELoss, CELoss, DiceLoss
+from tardis.utils.losses import (AdaptiveDiceLoss, BCEDiceLoss, BCELoss, CELoss, ClBCE,
+                                 ClDice, DiceLoss, SigmoidFocalLoss)
+from tardis.utils.trainer import ISR_LR
 
 # Setting for stable release to turn off all debug APIs
 torch.backends.cudnn.benchmark = True
@@ -35,10 +36,11 @@ def train_cnn(train_dataloader,
               model_structure: dict,
               checkpoint: Optional[str] = None,
               loss_function='bce',
-              learning_rate=0.001,
+              learning_rate=1,
               learning_rate_scheduler=False,
               early_stop_rate=10,
               device='gpu',
+              warmup=100,
               epochs=1000):
     """
     Wrapper for CNN models.
@@ -50,12 +52,25 @@ def train_cnn(train_dataloader,
         checkpoint (None, optional): Optional, CNN model checkpoint.
         loss_function (str): Type of loss function.
         learning_rate (float): Learning rate.
-        learning_rate_scheduler (bool): If True, StepLR is used with training.
+        learning_rate_scheduler (bool): If True, LR_scheduler is used with training.
         early_stop_rate (int): Define max. number of epoch's without improvements
         after which training is stopped.
         device (torch.device): Device on which model is trained.
+        warmup (int): Number of warm-up steps.
         epochs (int): Max number of epoch's.
     """
+    """Losses"""
+    losses_f = {
+        'AdaptiveDiceLoss': AdaptiveDiceLoss(),
+        'BCELoss': BCELoss(),
+        'BCEDiceLoss': BCEDiceLoss(),
+        'CELoss': CELoss(),
+        'DiceLoss': DiceLoss(),
+        'ClDice': ClDice(),
+        'ClBCE': ClBCE(),
+        'SigmoidFocalLoss': SigmoidFocalLoss()
+    }
+
     """Check input variable"""
     model_structure = check_model_dict(model_structure)
 
@@ -99,29 +114,30 @@ def train_cnn(train_dataloader,
     model = model.to(device)
 
     """Define loss function for training"""
-    loss_fn = BCELoss()
-    if loss_function == "dice":
-        loss_fn = DiceLoss()
-    elif loss_function == "bce":
-        if model_structure['out_channel'] > 1:
-            loss_fn = CELoss()
-        else:
-            loss_fn = BCELoss()
+    loss_fn = losses_f['BCELoss']
+    if loss_function in losses_f:
+        loss_fn = losses_f[loss_function]
 
     """Build training optimizer"""
-    optimizer = optim.Adam(params=model.parameters(),
-                           lr=learning_rate)
+    if learning_rate_scheduler:
+        optimizer = optim.Adam(params=model.parameters(),
+                               betas=(0.9, 0.98),
+                               lr=learning_rate,
+                               eps=1e-9)
+    else:
+        optimizer = optim.Adam(params=model.parameters(),
+                               lr=learning_rate,
+                               betas=(0.9, 0.98), eps=1e-9)
+
+    """Optionally: Build learning rate scheduler"""
+    if learning_rate_scheduler:
+        optimizer = ISR_LR(optimizer, lr_mul=learning_rate,
+                           warmup_steps=warmup, scale=1)
 
     """Optionally: Checkpoint model"""
     if checkpoint is not None:
         optimizer.load_state_dict(save_train['optimizer_state_dict'])
         del save_train
-
-    """Optionally: Build learning rate scheduler"""
-    if learning_rate_scheduler:
-        learning_rate_scheduler = StepLR(optimizer, step_size=2, gamma=0.5)
-    else:
-        learning_rate_scheduler = None
 
     """Build trainer"""
     train = CNNTrainer(model=model,

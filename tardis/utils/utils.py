@@ -8,7 +8,7 @@
 #  MIT License 2021 - 2023                                            #
 #######################################################################
 
-from typing import Optional
+from typing import Union
 
 import numpy as np
 
@@ -37,9 +37,9 @@ class EarlyStopping:
         self.early_stop = False
 
     def __call__(self,
-                 val_loss: Optional[float] = None,
-                 f1_score: Optional[float] = None):
-        assert val_loss is not None or f1_score is not None, \
+                 val_loss: Union[float, None] = None,
+                 f1_score: Union[float, None] = None):
+        if val_loss is None and f1_score is None:
             TardisError('124',
                         'tardis/utils/utils',
                         'Validation loss or F1 score is missing in early stop!')

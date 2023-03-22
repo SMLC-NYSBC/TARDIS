@@ -19,6 +19,56 @@ import requests
 from tardis.utils.errors import TardisError
 
 
+def get_benchmark_aws() -> dict:
+    """
+    Retrieve best benchmarking score for given NN type
+
+    Args:
+        network (str): Benchmarking network type [dist or cnn]
+
+    Returns:
+        dict: Dictionary with keys[network name] and values[list of scores]
+    """
+    network_benchmark = requests.get('https://tardis-weigths.s3.amazonaws.com/'
+                                     'benchmark/best_scores.json')
+
+    if network_benchmark.status_code == 200:
+        network_benchmark = json.loads(network_benchmark.content.decode('utf-8'))
+
+    return network_benchmark
+
+
+def put_benchmark_aws(data: dict,
+                      network: Optional[str] = '',
+                      model=None) -> bool:
+    """
+    Upload new or update dictionary stored on S3
+
+    Args:
+        data (dict): Dictionary with network the best metrics
+        network (Optional, str): Benchmarking network name [e.g. fnet_32_microtubules_id].
+        model (Optional, str): Optional dictionary to model.
+
+    Returns:
+        bool: True if save correctly
+    """
+    r = requests.put('https://tardis-weigths.s3.amazonaws.com/'
+                     'benchmark/best_scores.json',
+                     json.dumps(data, indent=2, default=str))
+
+    if model is not None and r.status_code == 200:
+        with open(model, 'rb') as data:
+            r_m = requests.put('https://tardis-weigths.s3.amazonaws.com/'
+                               f'benchmark/models/{network}.pth', data=data)
+
+        return r_m.status_code == 200
+    return r.status_code == 200
+
+
+def get_model_aws(https: str):
+    return requests.get(https)
+
+
 def get_weights_aws(network: str,
                     subtype: str,
                     model: Optional[str] = None):
@@ -65,9 +115,9 @@ def get_weights_aws(network: str,
                         'tardis/utils/aws.py',
                         'No weights found')
     else:
-        weight = requests.get('https://tardis-weigths.s3.amazonaws.com/'
-                              f'{network}_{subtype}/'
-                              f'{model}/model_weights.pth')
+        weight = get_model_aws('https://tardis-weigths.s3.amazonaws.com/'
+                               f'{network}_{subtype}/'
+                               f'{model}/model_weights.pth')
 
     """Save temp weights"""
     if not isdir(join(expanduser('~'), '.tardis_pytorch')):
@@ -137,12 +187,9 @@ def aws_check_with_temp(model_name: list) -> bool:
         return False  # Error loading json, download from aws
     else:
         try:
-            weight = requests.get(
-                'https://tardis-weigths.s3.amazonaws.com/'
-                f'{model_name[0]}_{model_name[1]}/'
-                f'{model_name[2]}/model_weights.pth',
-                stream=True
-            )
+            weight = requests.get('https://tardis-weigths.s3.amazonaws.com/'
+                                  f'{model_name[0]}_{model_name[1]}/'
+                                  f'{model_name[2]}/model_weights.pth', stream=True)
             aws = dict(weight.headers)
         except:
             print('Network cannot be checked! Connect to the internet next time!')

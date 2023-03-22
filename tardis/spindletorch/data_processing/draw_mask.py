@@ -34,7 +34,7 @@ def draw_mask(r: int,
     Returns:
         np.ndarray: Binary mask.
     """
-    assert label_mask.ndim == 3, \
+    if label_mask.ndim != 3:
         TardisError('113',
                     'tardis/spindletorch/data_processing/draw_mask.py'
                     f'Unsupported dimensions given {label_mask.ndim} expected 2!')
@@ -46,26 +46,20 @@ def draw_mask(r: int,
     else:
         z = None
 
-    assert segment_shape in ['s', 'c'], \
+    if segment_shape not in ['s', 'c']:
         TardisError('123',
                     'tardis/spindletorch/data_processing/draw_mask.py'
                     f'Unsupported shape type to draw given {segment_shape} but '
                     'expected "c" - circle or "s" - sphere')
     if segment_shape == 's':
-        cz, cy, cx = draw_sphere(r=r,
-                                 c=(z, y, x),
-                                 shape=label_mask.shape)
+        cz, cy, cx = draw_sphere(r=r, c=(z, y, x), shape=label_mask.shape)
         return cz, cy, cx
     else:
         if z is not None:
-            cz, cy, cx = draw_circle(r=r,
-                                     c=(z, y, x),
-                                     shape=label_mask.shape)
+            cz, cy, cx = draw_circle(r=r, c=(z, y, x), shape=label_mask.shape)
             return cz, cy, cx
         else:
-            cy, cx = draw_circle(r=r,
-                                 c=(z, y, x),
-                                 shape=label_mask.shape)
+            cy, cx = draw_circle(r=r, c=(z, y, x), shape=label_mask.shape)
             return cy, cx
 
 
@@ -74,7 +68,7 @@ def draw_circle(r: int,
                 shape: tuple) -> Union[Tuple[np.ndarray, np.ndarray],
                                        Tuple[np.ndarray, np.ndarray, np.ndarray]]:
     """
-    Draw a circle and shit coordinate to c position.
+    Draw a circle and shift coordinate to c position.
 
     Args:
         r (int): radius of a circle in Angstrom.
@@ -124,7 +118,7 @@ def draw_sphere(r: int,
                 c: tuple,
                 shape: tuple) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
-    Draw a sphere and shit coordinate to c position.
+    Draw a sphere and shift coordinate to c position.
 
     Args:
         r (int): radius of a sphere in Angstrom.

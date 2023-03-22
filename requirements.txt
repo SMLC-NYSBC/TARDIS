@@ -1,18 +1,27 @@
-click>=8.0.4
+# ML library
+torch>=1.13.1
 numpy>=1.21.6
+pandas>=1.3.5
+
+# Image loading library
 tifffile>=2021.11.2
+imagecodecs>=2021.11.20
+mrcfile >= 1.4.3
+
+# Image processign library
 scikit-learn>=1.0.2
 scikit-image>=0.19.2
-requests>=2.28.2
-ipython>=7.34.0
 opencv-python>=4.6.0.66
-pandas>=1.3.5
 scipy>=1.7.3
-imagecodecs>=2021.11.20
 edt>=2.3.0
-mrcfile>=1.4.3
+
+# Point cloud processing library
 open3d==0.9.0; sys_platform == "linux" and python_version < "3.8"
 open3d>=0.9.0; sys_platform == "linux" and python_version >= "3.8"
 open3d>=0.16.0; sys_platform != "linux"
+
+# Other
+requests>=2.28.2
+ipython>=7.34.0
+click>=8.0.4
 nvidia-smi>=0.1.3; sys_platform != 'darwin'
-torch>=1.13.1

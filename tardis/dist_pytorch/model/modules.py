@@ -117,15 +117,11 @@ class PairBiasSelfAttention(nn.Module):
         v = self.v_proj(query)
 
         q *= self.scaling
-        q = (q.contiguous().view(tgt_len,
-                                 bsz * self.num_heads,
-                                 self.head_dim).transpose(0, 1))
-        k = (k.contiguous().view(-1,
-                                 bsz * self.num_heads,
-                                 self.head_dim).transpose(0, 1))
-        v = (v.contiguous().view(-1,
-                                 bsz * self.num_heads,
-                                 self.head_dim).transpose(0, 1))
+        q = (
+            q.contiguous().view(tgt_len, bsz * self.num_heads, self.head_dim).transpose(0,
+                                                                                        1))
+        k = (k.contiguous().view(-1, bsz * self.num_heads, self.head_dim).transpose(0, 1))
+        v = (v.contiguous().view(-1, bsz * self.num_heads, self.head_dim).transpose(0, 1))
         src_len = k.size(1)
         """
         This is part of a workaround to get around fork/join parallelism
@@ -139,9 +135,7 @@ class PairBiasSelfAttention(nn.Module):
             assert key_padding_mask.size(1) == src_len
 
         attn_weights = torch.bmm(q, k.transpose(1, 2))
-        assert list(attn_weights.size()) == [bsz * self.num_heads,
-                                             tgt_len,
-                                             src_len]
+        assert list(attn_weights.size()) == [bsz * self.num_heads, tgt_len, src_len]
 
         pairs = self.norm_pairs(pairs)
         pair_weights = self.pairs_proj(pairs)
@@ -150,10 +144,9 @@ class PairBiasSelfAttention(nn.Module):
         pair_weights = pair_weights.permute(0, 3, 1, 2)
         attn_weights = attn_weights.view(bsz,
                                          self.num_heads,
-                                         tgt_len, src_len) + pair_weights
-        attn_weights = attn_weights.view(bsz * self.num_heads,
                                          tgt_len,
-                                         src_len)
+                                         src_len) + pair_weights
+        attn_weights = attn_weights.view(bsz * self.num_heads, tgt_len, src_len)
 
         if attn_mask is not None:
             attn_mask = attn_mask.unsqueeze(0)
@@ -161,18 +154,12 @@ class PairBiasSelfAttention(nn.Module):
 
         if key_padding_mask is not None:
             # don't attend to padding symbols
-            attn_weights = attn_weights.view(bsz,
-                                             self.num_heads,
-                                             tgt_len,
-                                             src_len)
+            attn_weights = attn_weights.view(bsz, self.num_heads, tgt_len, src_len)
 
             key_padding_mask = key_padding_mask.unsqueeze(1).unsqueeze(2).to(torch.bool)
-            attn_weights = attn_weights.masked_fill(key_padding_mask,
-                                                    float("-inf"))
+            attn_weights = attn_weights.masked_fill(key_padding_mask, float("-inf"))
 
-            attn_weights = attn_weights.view(bsz * self.num_heads,
-                                             tgt_len,
-                                             src_len)
+            attn_weights = attn_weights.view(bsz * self.num_heads, tgt_len, src_len)
 
         attn_weights_float = F.softmax(attn_weights, dim=-1)
         attn_weights = attn_weights_float.type_as(attn_weights)
@@ -180,17 +167,12 @@ class PairBiasSelfAttention(nn.Module):
 
         assert v is not None
         attn = torch.bmm(attn_probs, v)
-        assert list(attn.size()) == [bsz * self.num_heads,
-                                     tgt_len,
-                                     self.head_dim]
+        assert list(attn.size()) == [bsz * self.num_heads, tgt_len, self.head_dim]
         attn = attn.transpose(0, 1).contiguous().view(tgt_len, bsz, embed_dim)
         attn = self.out_proj(attn)
 
         if need_weights:
-            attn_weights = attn_weights_float.view(bsz,
-                                                   self.num_heads,
-                                                   tgt_len,
-                                                   src_len)
+            attn_weights = attn_weights_float.view(bsz, self.num_heads, tgt_len, src_len)
             if not need_head_weights:
                 # average attention weights over heads
                 attn_weights = attn_weights.mean(dim=1)
@@ -294,12 +276,10 @@ class TriangularEdgeUpdate(nn.Module):
         """
         Initial parameter and bias scaling.
         """
-        nn.init.xavier_uniform_(self.linear_a.weight,
-                                gain=self.init_scaling)
+        nn.init.xavier_uniform_(self.linear_a.weight, gain=self.init_scaling)
         nn.init.constant_(self.linear_a.bias, 0.0)
 
-        nn.init.xavier_uniform_(self.linear_b.weight,
-                                gain=self.init_scaling)
+        nn.init.xavier_uniform_(self.linear_b.weight, gain=self.init_scaling)
         nn.init.constant_(self.linear_b.bias, 0.0)
 
         nn.init.constant_(self.linear_o.weight, 0.0)
@@ -334,7 +314,7 @@ class TriangularEdgeUpdate(nn.Module):
         # i,j -> i,k j,k
         if self.axis == 1:
             k = torch.einsum('biko,bjko->bijo', a, b)
-        elif self.axis == 0:
+        else:
             k = torch.einsum('bkio,bkjo->bijo', a, b)
 
         return torch.sigmoid(self.gate_o(z)) * self.linear_o(self.norm_o(k))
@@ -387,20 +367,16 @@ class QuadraticEdgeUpdate(nn.Module):
         """
         Initial parameter and bias scaling.
         """
-        nn.init.xavier_uniform_(self.linear_a.weight,
-                                gain=self.init_scaling)
+        nn.init.xavier_uniform_(self.linear_a.weight, gain=self.init_scaling)
         nn.init.constant_(self.linear_a.bias, 0.0)
 
-        nn.init.xavier_uniform_(self.linear_b.weight,
-                                gain=self.init_scaling)
+        nn.init.xavier_uniform_(self.linear_b.weight, gain=self.init_scaling)
         nn.init.constant_(self.linear_b.bias, 0.0)
 
-        nn.init.xavier_uniform_(self.linear_c.weight,
-                                gain=self.init_scaling)
+        nn.init.xavier_uniform_(self.linear_c.weight, gain=self.init_scaling)
         nn.init.constant_(self.linear_c.bias, 0.0)
 
-        nn.init.xavier_uniform_(self.linear_d.weight,
-                                gain=self.init_scaling)
+        nn.init.xavier_uniform_(self.linear_d.weight, gain=self.init_scaling)
         nn.init.constant_(self.linear_d.bias, 0.0)
 
         nn.init.constant_(self.linear_o.weight, 0.0)
@@ -465,6 +441,7 @@ class MultiHeadAttention(nn.Module):
             encode/decoder is used.
         init_scaling (float): The initial scaling factor used for reset parameters.
     """
+
     def __init__(self,
                  embed_dim: int,
                  num_heads: int,
@@ -593,10 +570,8 @@ class MultiHeadAttention(nn.Module):
             k = torch.cat([k, self.bias_k.repeat(1, bsz, 1)])
             v = torch.cat([v, self.bias_v.repeat(1, bsz, 1)])
             if attn_mask is not None:
-                attn_mask = torch.cat(
-                    [attn_mask, attn_mask.new_zeros(attn_mask.size(0), 1)],
-                    dim=1
-                )
+                attn_mask = torch.cat([attn_mask,
+                                       attn_mask.new_zeros(attn_mask.size(0), 1)], dim=1)
             if key_padding_mask is not None:
                 key_padding_mask = torch.cat(
                     [key_padding_mask,
@@ -608,13 +583,11 @@ class MultiHeadAttention(nn.Module):
                                  bsz * self.num_heads,
                                  self.head_dim).transpose(0, 1))
         if k is not None:
-            k = (k.contiguous().view(-1,
-                                     bsz * self.num_heads,
-                                     self.head_dim).transpose(0, 1))
+            k = (k.contiguous().view(-1, bsz * self.num_heads, self.head_dim).transpose(0,
+                                                                                        1))
         if v is not None:
-            v = (v.contiguous().view(-1,
-                                     bsz * self.num_heads,
-                                     self.head_dim).transpose(0, 1))
+            v = (v.contiguous().view(-1, bsz * self.num_heads, self.head_dim).transpose(0,
+                                                                                        1))
 
         assert k is not None
         src_len = k.size(1)
@@ -633,14 +606,11 @@ class MultiHeadAttention(nn.Module):
         if self.add_zero_attn:
             assert v is not None
             src_len += 1
-            k = torch.cat([k, k.new_zeros((k.size(0), 1) + k.size()[2:])],
-                          dim=1)
-            v = torch.cat([v, v.new_zeros((v.size(0), 1) + v.size()[2:])],
-                          dim=1)
+            k = torch.cat([k, k.new_zeros((k.size(0), 1) + k.size()[2:])], dim=1)
+            v = torch.cat([v, v.new_zeros((v.size(0), 1) + v.size()[2:])], dim=1)
             if attn_mask is not None:
                 attn_mask = torch.cat([attn_mask,
-                                       attn_mask.new_zeros(attn_mask.size(0), 1)],
-                                      dim=1)
+                                       attn_mask.new_zeros(attn_mask.size(0), 1)], dim=1)
             if key_padding_mask is not None:
                 key_padding_mask = torch.cat([key_padding_mask,
                                              torch.zeros(key_padding_mask.size(0),
@@ -649,9 +619,7 @@ class MultiHeadAttention(nn.Module):
 
         attn_weights = torch.bmm(q, k.transpose(1, 2))
 
-        assert list(attn_weights.size()) == [bsz * self.num_heads,
-                                             tgt_len,
-                                             src_len]
+        assert list(attn_weights.size()) == [bsz * self.num_heads, tgt_len, src_len]
 
         if attn_mask is not None:
             attn_mask = attn_mask.unsqueeze(0)
@@ -661,10 +629,7 @@ class MultiHeadAttention(nn.Module):
 
         if key_padding_mask is not None:
             """don't attend to padding symbols"""
-            attn_weights = attn_weights.view(bsz,
-                                             self.num_heads,
-                                             tgt_len,
-                                             src_len)
+            attn_weights = attn_weights.view(bsz, self.num_heads, tgt_len, src_len)
             if not self.tpu:
                 attn_weights = attn_weights.masked_fill(
                     key_padding_mask.unsqueeze(1).unsqueeze(2).to(torch.bool),
@@ -672,12 +637,9 @@ class MultiHeadAttention(nn.Module):
                 )
             else:
                 attn_weights = attn_weights.transpose(0, 2)
-                attn_weights = attn_weights.masked_fill(key_padding_mask,
-                                                        float("-inf"))
+                attn_weights = attn_weights.masked_fill(key_padding_mask, float("-inf"))
                 attn_weights = attn_weights.transpose(0, 2)
-            attn_weights = attn_weights.view(bsz * self.num_heads,
-                                             tgt_len,
-                                             src_len)
+            attn_weights = attn_weights.view(bsz * self.num_heads, tgt_len, src_len)
 
         if before_softmax:
             return attn_weights, v
@@ -689,9 +651,7 @@ class MultiHeadAttention(nn.Module):
 
         assert v is not None
         attn = torch.bmm(attn_probs, v)
-        assert list(attn.size()) == [bsz * self.num_heads,
-                                     tgt_len,
-                                     self.head_dim]
+        assert list(attn.size()) == [bsz * self.num_heads, tgt_len, self.head_dim]
         if self.onnx_trace and attn.size(1) == 1:
             """
             When ONNX tracing a single decoder step (sequence length == 1)
@@ -699,16 +659,11 @@ class MultiHeadAttention(nn.Module):
             """
             attn = attn.contiguous().view(tgt_len, bsz, embed_dim)
         else:
-            attn = attn.transpose(0, 1).contiguous().view(tgt_len,
-                                                          bsz,
-                                                          embed_dim)
+            attn = attn.transpose(0, 1).contiguous().view(tgt_len, bsz, embed_dim)
         attn = self.out_proj(attn)
 
         if need_weights:
-            attn_weights = attn_weights_float.view(bsz,
-                                                   self.num_heads,
-                                                   tgt_len,
-                                                   src_len)
+            attn_weights = attn_weights_float.view(bsz, self.num_heads, tgt_len, src_len)
             if not need_head_weights:
                 """average attention weights over heads"""
                 attn_weights = attn_weights.mean(dim=1)
@@ -803,14 +758,10 @@ class SelfAttention2D(MultiHeadAttention):
                 mask = None
                 if padding_mask is not None:
                     mask = padding_mask[i:i + batch_size]
-                h.append(super(SelfAttention2D,
-                               self).forward(xi,
-                                             key_padding_mask=mask))
+                h.append(super(SelfAttention2D, self).forward(xi, key_padding_mask=mask))
             h = torch.cat(h, 1)
         else:
-            h = super(SelfAttention2D,
-                      self).forward(x,
-                                    key_padding_mask=padding_mask)
+            h = super(SelfAttention2D, self).forward(x, key_padding_mask=padding_mask)
 
         """transpose h back to input shape"""
         if axis is None:

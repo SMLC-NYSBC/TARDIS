@@ -15,7 +15,7 @@ DIST_checkpoint/
 cnn_checkpoint/
 data/
 env/
-build/
+docs/build
 develop-eggs/
 dist/
 downloads/
@@ -30,7 +30,6 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-docs/_build/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -69,9 +68,6 @@ instance/
 
 # Scrapy stuff:
 .scrapy
-
-# Sphinx documentation
-docs/_build/
 
 # PyBuilder
 target/

@@ -103,6 +103,8 @@ class BasicCNN(nn.Module):
         self.decoder = build_decoder(conv_layers=num_conv_layer,
                                      conv_layer_scaler=conv_layer_scaler,
                                      components=layer_components,
+                                     conv_kernel=conv_kernel,
+                                     padding=padding,
                                      sizes=patch_sizes,
                                      num_group=num_group,
                                      deconv_module=model)
@@ -248,8 +250,7 @@ class UNet3Plus(nn.Module):
             patch_sizes.append(img_patch_size)
         patch_sizes = list(reversed(patch_sizes))[2:]
 
-        feature_map = number_of_features_per_level(conv_layer_scaler,
-                                                   num_conv_layer)
+        feature_map = number_of_features_per_level(conv_layer_scaler, num_conv_layer)
 
         """ Encoder """
         self.encoder = build_encoder(in_ch=in_channels,
@@ -286,6 +287,8 @@ class UNet3Plus(nn.Module):
         self.decoder = build_decoder(conv_layers=num_conv_layer,
                                      conv_layer_scaler=conv_layer_scaler,
                                      components=layer_components,
+                                     conv_kernel=conv_kernel,
+                                     padding=padding,
                                      sizes=patch_sizes,
                                      num_group=num_group,
                                      deconv_module='unet3plus')
@@ -445,11 +448,15 @@ class FNet(nn.Module):
         self.decoder_unet = build_decoder(conv_layers=num_conv_layer,
                                           conv_layer_scaler=conv_layer_scaler,
                                           components=layer_components,
+                                          conv_kernel=conv_kernel,
+                                          padding=padding,
                                           sizes=patch_sizes,
                                           num_group=num_group)
         self.decoder_3plus = build_decoder(conv_layers=num_conv_layer,
                                            conv_layer_scaler=conv_layer_scaler,
                                            components=layer_components,
+                                           conv_kernel=conv_kernel,
+                                           padding=padding,
                                            sizes=patch_sizes,
                                            num_group=num_group,
                                            deconv_module='unet3plus')

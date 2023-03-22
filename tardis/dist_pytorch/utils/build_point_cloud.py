@@ -10,7 +10,7 @@
 
 import gc
 from math import sqrt
-from typing import Optional, Tuple, Union
+from typing import Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -35,7 +35,7 @@ class BuildPointCloud:
     """
 
     @staticmethod
-    def check_data(image: Optional[str] = np.ndarray) -> np.ndarray:
+    def check_data(image: Union[str, np.ndarray]) -> np.ndarray:
         """
         Check image data and correct it if needed to uint8 type.
 
@@ -85,10 +85,10 @@ class BuildPointCloud:
         return image
 
     def build_point_cloud(self,
-                          image: Optional[str] = np.ndarray,
+                          image: Union[str, np.ndarray],
                           EDT=False,
                           mask_size=1.5,
-                          down_sampling: Optional[float] = None,
+                          down_sampling: Union[float, None] = None,
                           as_2d=False) -> Union[Tuple[ndarray, ndarray], np.ndarray]:
         """
         Build point cloud data from semantic mask.
@@ -128,21 +128,31 @@ class BuildPointCloud:
             image_edt = image_edt.astype(np.uint8)
 
             """Skeletonization"""
-            if as_2d or image.ndim == 2:
+            if image.ndim == 2:
                 image_point = skeletonize(image_edt)
-                image_point = np.where(image_point > 0)
+            elif as_2d:
+                image_point = np.zeros(image_edt.shape, dtype=np.uint8)
+
+                for i in range(image_point.shape[0]):
+                    image_point[i, :] = np.where(skeletonize(image_edt[i, :]), 1, 0)
             else:
-                image_point = np.where(skeletonize_3d(image_edt) > 0)
+                image_point = skeletonize_3d(image_edt)
+            image_point = np.where(image_point > 0)
 
             """CleanUp to avoid memory loss"""
             del image, image_edt
         else:
             """Skeletonization"""
-            if as_2d or image.ndim == 2:
+            if image.ndim == 2:
                 image_point = skeletonize(image)
-                image_point = np.where(image_point > 0)
+            elif as_2d:
+                image_point = np.zeros(image.shape, dtype=np.uint8)
+
+                for i in range(image_point.shape[0]):
+                    image_point[i, :] = np.where(skeletonize(image[i, :]), 1, 0)
             else:
-                image_point = np.where(skeletonize_3d(image) > 0)
+                image_point = skeletonize_3d(image)
+            image_point = np.where(image_point > 0)
 
             """CleanUp to avoid memory loss"""
             del image
@@ -150,13 +160,10 @@ class BuildPointCloud:
         """Output point cloud [X x Y x Z]"""
         if len(image_point) == 2:
             """If 2D bring artificially Z dim == 0"""
-            coordinates_HD = np.stack((image_point[1],
-                                       image_point[0],
+            coordinates_HD = np.stack((image_point[1], image_point[0],
                                        np.zeros(image_point[0].shape))).T
         else:
-            coordinates_HD = np.stack((image_point[2],
-                                       image_point[1],
-                                       image_point[0])).T
+            coordinates_HD = np.stack((image_point[2], image_point[1], image_point[0])).T
 
         """CleanUp to avoid memory loss"""
         del image_point
@@ -168,15 +175,15 @@ class BuildPointCloud:
 
             pcd = o3d.geometry.PointCloud()
             pcd.points = o3d.utility.Vector3dVector(coordinates_HD)
-            coordinates_LD = np.asarray(
-                pcd.voxel_down_sample(voxel_size=down_sampling).points
-            )
+            coordinates_LD = np.asarray(pcd.voxel_down_sample(voxel_size=down_sampling).points)
 
-            dist = cdist(coordinates_LD, coordinates_LD).astype(np.float16)
-            # indices = np.where(dist <= 1.5)
-            dist = [id for id, x in enumerate(dist)
-                    if len(np.where(x <= sqrt(2 * down_sampling**2))[0]) > 2]
-            coordinates_LD = coordinates_LD[dist, :]
+            # Pick the closest matching coordinates
+            if not as_2d:
+                dist = cdist(coordinates_LD, coordinates_LD).astype(np.float16)
+                # indices = np.where(dist <= 1.5)
+                dist = [id for id, x in enumerate(dist) if
+                        len(np.where(x <= sqrt(2 * down_sampling ** 2))[0]) > 2]
+                coordinates_LD = coordinates_LD[dist, :]
 
             return coordinates_HD, coordinates_LD
         return coordinates_HD

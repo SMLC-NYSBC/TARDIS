@@ -26,7 +26,7 @@ def interpolate_generator(points: np.ndarray) -> Iterable:
         Iterable: Iterable object to generate 3D list of points between given 2
         points as [X x Y x (Z)]
     """
-    assert points.shape == (2, 3), \
+    if points.shape != (2, 3):
         TardisError('134',
                     'tardis/spindletorch/data_processing/interpolation.py',
                     'Interpolation supports only 3D for 2 points at a time; '

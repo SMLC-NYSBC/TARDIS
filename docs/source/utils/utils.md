@@ -1,30 +1,34 @@
-Global - > Utils
-================
-
-AWS
----
+# Global - > Utils
+## AWS
+```{eval-rst}
 .. automodule:: tardis.utils.aws
+```
 
-Device
-------
+## Device
+```{eval-rst}
 .. automodule:: tardis.utils.device
+```
 
-TARDIS log
-----------
+## TARDIS log
+```{eval-rst}
 .. automodule:: tardis.utils.errors
 .. automodule:: tardis.utils.logo
+```
 
-Environment setting
--------------------
+## Environment setting
+```{eval-rst}
 .. automodule:: tardis.utils.setup_envir
+```
 
-Loss functions
---------------
+## Loss functions
+```{eval-rst}
 .. automodule:: tardis.utils.losses
 .. automodule:: tardis.utils.metrics
 .. automodule:: tardis.utils.spline_metric
+```
 
-Utils
------
+## Utils
+```{eval-rst}
 .. automodule:: tardis.utils.utils
 .. automodule:: tardis.utils.normalization
+```

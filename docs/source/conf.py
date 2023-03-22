@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- General configuration ---------------------------------------------------
 
 extensions = [
+    'myst_parser',
     'sphinx.ext.autodoc',
     'sphinx.ext.todo',
     'sphinx.ext.mathjax',

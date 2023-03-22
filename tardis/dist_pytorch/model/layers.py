@@ -54,18 +54,10 @@ class DistStack(nn.Module):
             self.layers.append(layer)
 
     def __len__(self) -> int:
-        """
-        Length of nn.Module.
-        """
         return len(self.layers)
 
-    def __getitem__(self, i):
-        """
-        Get DIST layer item.
-
-        Args:
-            i (int): Layer index.
-        """
+    def __getitem__(self,
+                    i: int):
         return self.layers[i]
 
     def forward(self,
@@ -128,6 +120,9 @@ class DistLayer(nn.Module):
                  structure='full'):
         super().__init__()
         self.pairs_dim = pairs_dim
+        self.channel_dim = int(pairs_dim / 4)
+        if self.channel_dim <= 0:
+            self.channel_dim = 1
         self.node_dim = node_dim
         self.structure = structure
         assert self.structure in ['full', 'full_af',
@@ -160,36 +155,35 @@ class DistLayer(nn.Module):
         # Edge triangular update
         if self.structure in ['full', 'full_af', 'triang']:
             self.row_update = TriangularEdgeUpdate(input_dim=pairs_dim,
-                                                   channel_dim=32)
+                                                   channel_dim=self.channel_dim)
             self.col_update = TriangularEdgeUpdate(input_dim=pairs_dim,
-                                                   channel_dim=32,
+                                                   channel_dim=self.channel_dim,
                                                    axis=0)
 
         # Edge Optional Quadratic
         if self.structure == 'quad':
             self.row_update = QuadraticEdgeUpdate(input_dim=pairs_dim,
-                                                  channel_dim=32)
+                                                  channel_dim=self.channel_dim)
             self.col_update = QuadraticEdgeUpdate(input_dim=pairs_dim,
-                                                  channel_dim=32,
+                                                  channel_dim=self.channel_dim,
                                                   axis=0)
 
         # Edge Optional dual-triang update
         if self.structure == 'dualtriang':
             self.row_update_1 = TriangularEdgeUpdate(input_dim=pairs_dim,
-                                                     channel_dim=32)
+                                                     channel_dim=self.channel_dim)
             self.col_update_1 = TriangularEdgeUpdate(input_dim=pairs_dim,
-                                                     channel_dim=32,
+                                                     channel_dim=self.channel_dim,
                                                      axis=0)
 
             self.row_update_2 = TriangularEdgeUpdate(input_dim=pairs_dim,
-                                                     channel_dim=32)
+                                                     channel_dim=self.channel_dim)
             self.col_update_2 = TriangularEdgeUpdate(input_dim=pairs_dim,
-                                                     channel_dim=32,
+                                                     channel_dim=self.channel_dim,
                                                      axis=0)
 
         # Edge GeLu FFN normalization layer
-        self.pair_ffn = GeluFeedForward(input_dim=pairs_dim,
-                                        ff_dim=pairs_dim * ff_factor)
+        self.pair_ffn = GeluFeedForward(input_dim=pairs_dim, ff_dim=pairs_dim * ff_factor)
 
     def update_nodes(self,
                      h_pairs: torch.Tensor,
@@ -271,15 +265,12 @@ class DistLayer(nn.Module):
                       self.row_attention(x=h_pairs, padding_mask=mask) + \
                       self.col_attention(x=h_pairs, padding_mask=mask)
         elif self.structure in ['triang', 'quad']:
-            h_pairs = h_pairs + \
-                      self.row_update(z=h_pairs, mask=mask) + \
+            h_pairs = h_pairs + self.row_update(z=h_pairs, mask=mask) + \
                       self.col_update(z=h_pairs, mask=mask)
         elif self.structure == 'dualtriang':
-            h_pairs = h_pairs + \
-                      self.row_update_1(z=h_pairs, mask=mask) + \
+            h_pairs = h_pairs + self.row_update_1(z=h_pairs, mask=mask) + \
                       self.col_update_1(z=h_pairs, mask=mask)
-            h_pairs = h_pairs + \
-                      self.row_update_2(z=h_pairs, mask=mask) + \
+            h_pairs = h_pairs + self.row_update_2(z=h_pairs, mask=mask) + \
                       self.col_update_2(z=h_pairs, mask=mask)
 
         return h_pairs + self.pair_ffn(x=h_pairs)
@@ -307,8 +298,6 @@ class DistLayer(nn.Module):
                                         h_nodes=h_nodes,
                                         src_mask=src_mask,
                                         src_key_padding_mask=src_key_padding_mask)
-        else:
-            h_nodes = None
 
         # Update edge features
         h_pairs = self.update_edges(h_pairs=h_pairs,

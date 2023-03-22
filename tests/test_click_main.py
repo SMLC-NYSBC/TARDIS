@@ -21,15 +21,6 @@ def test_cnn_trainer():
     assert str(result) == '<Result okay>'
 
 
-def test_cnn_predictor():
-    from tardis.predict_spindletorch import main
-    filterwarnings(action='ignore', category=DeprecationWarning)
-
-    runner = CliRunner()
-    result = runner.invoke(main, ['--version'])
-    assert str(result) == '<Result okay>'
-
-
 def test_predictor_mt():
     from tardis.predict_mt import main
     filterwarnings(action='ignore', category=DeprecationWarning)

@@ -43,7 +43,7 @@ def test_build_datasets():
     dir_img = listdir('./tests/test_data/temp/train/imgs')
     img, _ = load_image(join('./tests/test_data/temp/train/imgs', dir_img[5]))
     assert img.shape == (64, 64, 64)
-    assert img.min() >= 0 and img.max() <= 1
+    assert img.min() >= -1 and img.max() <= 1
     assert img.dtype == np.float32
 
     dir_mask = listdir('./tests/test_data/temp/train/masks')

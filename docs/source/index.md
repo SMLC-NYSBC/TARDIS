@@ -1,15 +1,16 @@
-Welcome to TARDIS-pytorch's documentation!
-==========================================
+# Welcome to TARDIS-pytorch's documentation!
 
-Main
-====
+# Main
+```{eval-rst}
 .. toctree::
-
+   
    Intro <README>
    History <HISTORY>
+```
 
-SpindleTorch
-============
+
+# SpindleTorch
+```{eval-rst}
 .. toctree::
 
    SpindleTorch <spindletorch/spindletorch>
@@ -18,9 +19,10 @@ SpindleTorch
    SpindleTorch -> Decoder Blocks <spindletorch/decoder>
    SpindleTorch -> Weights initialization <spindletorch/w_init>
    SpindleTorch -> Weights initialization <spindletorch/dataset>
+```
 
-DIST
-====
+# DIST
+```{eval-rst}
 .. toctree::
 
    DIST <dist_pytorch/dist_pytorch>
@@ -29,18 +31,23 @@ DIST
    DIST -> Patch point cloud <dist_pytorch/patches>
    DIST -> Visualizer <dist_pytorch/visualize>
    DIST -> Utils <dist_pytorch/utils>
+```
 
-Global
-======
+
+# Global
+```{eval-rst}
 .. toctree::
 
    Global -> Trainer<utils/trainer>
    Global -> Import data <utils/import_data>
    Global -> Utils <utils/utils>
+```
 
-Indices and tables
-==================
 
+# Indices and tables
+```{eval-rst}
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+```
+

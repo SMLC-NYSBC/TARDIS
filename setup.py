@@ -11,7 +11,7 @@ from setuptools import find_packages, setup
 
 from tardis.version import version
 
-with open("docs/source/README.rst") as readme_file:
+with open("docs/source/README.md") as readme_file:
     readme = readme_file.read()
 
 with open("requirements.txt") as r:
@@ -20,7 +20,9 @@ with open("requirements.txt") as r:
 setup(
     author="Robert Kiewisz, Tristan Bepler",
     author_email="rkiewisz@nysbc.com",
-    python_requires=">=3.7, !=3.11",  # 3.11 support soon
+    
+    python_requires=">=3.7, <3.11",  # 3.11 support soon
+
     install_requires=required,
     dependency_links=["https://download.pytorch.org/whl/cu117"],
     classifiers=[
@@ -45,6 +47,7 @@ setup(
             "tardis_mt = tardis.predict_mt:main",
             "tardis_mem = tardis.predict_mem:main",
             "tardis_compare_sg = tardis.compare_spatial_graphs:main",
+            "tardis_benchmark = tardis.benchmarks.benchmarks:main",
         ],
     },
     license="MIT License",

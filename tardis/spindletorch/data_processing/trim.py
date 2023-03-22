@@ -35,6 +35,8 @@ def trim_with_stride(image: np.ndarray,
     Output images are saved as tiff with naming shame 1_1_1_25. Where
     number indicate grid position in xyz. Last number indicate stride.
 
+    ToDo: no padding strid only
+
     Args:
         image (np.ndarray): Corresponding image for the labels.
         trim_size_xy (int): Size of trimming in xy dimension.
@@ -55,21 +57,18 @@ def trim_with_stride(image: np.ndarray,
 
     if mask is not None:
         mask_dtype = np.uint8
-        image, mask, dim = scale_image(image=image,
-                                       mask=mask,
-                                       scale=scale)
+        image, mask, dim = scale_image(image=image, mask=mask, scale=scale)
 
         mask = mask.astype(np.uint8)
 
-        assert image.shape == mask.shape, \
+        if image.shape != mask.shape:
             TardisError('111',
                         'tardis/spindletorch/data_processing/trim.py',
                         f'Image {image.shape} has different shape from mask {mask.shape}')
     else:
-        image, dim = scale_image(image=image,
-                                 scale=scale)
+        image, dim = scale_image(image=image, scale=scale)
 
-    assert img_dtype == image.dtype, \
+    if img_dtype != image.dtype:
         TardisError('111',
                     'tardis/spindletorch/data_processing/trim.py',
                     f'Image {img_dtype} has different dtype after interpolation {image.dtype}')
@@ -93,19 +92,19 @@ def trim_with_stride(image: np.ndarray,
         nc = None  # 2D
         nz = 0  # Gray
         min_px_count = trim_size_xy * trim_size_xy
-    min_px_count = min_px_count * 0.005  # 0.002% of pixels must be occupied
+    min_px_count = min_px_count * 0.01  # 0.0075% of pixels must be occupied
 
     if trim_size_xy is not None or trim_size_z is not None:
-        assert nx >= trim_size_xy, \
+        if not nx >= trim_size_xy:
             TardisError('112',
                         'tardis/spindletorch/data_processing',
                         "trim_size_xy should be equal or greater then X dimension!")
-        assert ny >= trim_size_xy, \
+        if not ny >= trim_size_xy:
             TardisError('112',
                         'tardis/spindletorch/data_processing',
                         "trim_size_xy should be equal or greater then Y dimension!")
     else:
-        assert stride is not None, \
+        if stride is None:
             TardisError('112',
                         'tardis/spindletorch/data_processing',
                         "Trim sizes or stride has to be indicated!")
@@ -186,8 +185,7 @@ def trim_with_stride(image: np.ndarray,
                 x_start = x_start + trim_size_xy - stride
                 x_stop = x_start + trim_size_xy
 
-                img_name = str(
-                    f'{image_counter}_{i}_{j}_{k}_{stride}.tif')
+                img_name = str(f'{image_counter}_{i}_{j}_{k}_{stride}.tif')
 
                 if nc is None:
                     if nz > 0:
@@ -199,11 +197,9 @@ def trim_with_stride(image: np.ndarray,
                                                     y_start:y_stop,
                                                     x_start:x_stop]
                     else:
-                        trim_img = image_padded[y_start:y_stop,
-                                                x_start:x_stop]
+                        trim_img = image_padded[y_start:y_stop, x_start:x_stop]
                         if mask is not None:
-                            trim_mask = mask_padded[y_start:y_stop,
-                                                    x_start:x_stop]
+                            trim_mask = mask_padded[y_start:y_stop, x_start:x_stop]
                 else:
                     if nz > 0:
                         trim_img = image_padded[z_start:z_stop,
@@ -215,9 +211,7 @@ def trim_with_stride(image: np.ndarray,
                                                     y_start:y_stop,
                                                     x_start:x_stop]
                     else:
-                        trim_img = image_padded[y_start:y_stop,
-                                                x_start:x_stop,
-                                                :]
+                        trim_img = image_padded[y_start:y_stop, x_start:x_stop, :]
                         if mask is not None:
                             trim_mask = mask_padded[z_start:z_stop,
                                                     y_start:y_stop,

@@ -21,6 +21,8 @@ def pc_median_dist(pc: np.ndarray,
                    avg_over=False,
                    box_size=0.15) -> float:
     """
+    !DEPRECIATED! - Remove in RC3
+
     Calculate the median distance between KNN points in the point cloud.
 
     Args:
@@ -68,9 +70,12 @@ def pc_median_dist(pc: np.ndarray,
             z = 0
 
         voxel = point_in_bb(pc,
-                            min_x=x - offset_x, max_x=x + offset_x,
-                            min_y=y - offset_y, max_y=y + offset_y,
-                            min_z=z - offset_z, max_z=z + offset_z)
+                            min_x=x - offset_x,
+                            max_x=x + offset_x,
+                            min_y=y - offset_y,
+                            max_y=y + offset_y,
+                            min_z=z - offset_z,
+                            max_z=z + offset_z)
         pc = pc[voxel]
 
         # Calculate KNN dist
@@ -88,7 +93,7 @@ def pc_median_dist(pc: np.ndarray,
         knn, _ = tree.query(pc[id].reshape(1, -1), k=4)
         knn_df.append(knn[0][1])
 
-    return np.mean(knn_df)
+    return float(np.mean(knn_df))
 
 
 def point_in_bb(points: np.ndarray,
@@ -99,6 +104,8 @@ def point_in_bb(points: np.ndarray,
                 min_z: Optional[np.float32] = None,
                 max_z: Optional[np.float32] = None) -> np.ndarray:
     """
+    !DEPRECIATED! - Remove in RC3
+
     Compute a bounding_box filter on the given points
 
     Args:
@@ -116,8 +123,7 @@ def point_in_bb(points: np.ndarray,
 
     if points.shape[0] == 3:
         if min_z is not None or max_z is not None:
-            bound_z = np.logical_and(
-                points[:, 2] > min_z, points[:, 2] < max_z)
+            bound_z = np.logical_and(points[:, 2] > min_z, points[:, 2] < max_z)
         else:
             bound_z = np.asarray([True for _ in points[:, 2]])
 
@@ -132,9 +138,42 @@ class RandomDownSampling:
     """
     Wrapper for random sampling of the point cloud
     """
+
     def __init__(self,
                  threshold):
         self.threshold = threshold
+
+    @staticmethod
+    def pc_rand_down_sample(coord: np.ndarray,
+                            threshold,
+                            rgb: Optional[np.ndarray] = None) -> Union[Tuple[np.ndarray,
+                                                                             np.ndarray],
+                                                                       np.ndarray]:
+        """
+        Random picked point to down sample point cloud
+
+        Args:
+            coord: Array of point to downs-sample
+            rgb: Extra node feature like e.g. RGB values do sample with coord.
+            threshold: Lambda function to calculate down-sampling rate or fixed float ratio.
+
+        Returns:
+            np.ndarray: Down-sample array of points.
+        """
+        if isinstance(threshold, int) or isinstance(threshold, float):
+            rand_keep = int(len(coord) * threshold)
+        else:
+            rand_keep = threshold(coord)
+
+        if rand_keep != len(coord):
+            rand_keep = random.sample(range(len(coord)), rand_keep)
+        else:
+            rand_keep = list(range(len(coord)))
+
+        if rgb is None:
+            return coord[rand_keep][:, :3]
+        else:
+            return coord[rand_keep][:, :3], rgb[rand_keep][:, :3]
 
     def __call__(self,
                  coord: Optional[np.ndarray] = list,
@@ -154,24 +193,23 @@ class RandomDownSampling:
             for idx, i in enumerate(coord):
                 if rgb is not None:
                     rgb_df = rgb[idx]
-                    ds_coord, ds_node_f = pc_rand_down_sample(coord=i,
-                                                              node_feature=rgb_df,
-                                                              threshold=self.threshold)
+                    ds_coord, ds_node_f = self.pc_rand_down_sample(coord=i,
+                                                                   rgb=rgb_df,
+                                                                   threshold=self.threshold)
                     ds_rgb.append(ds_node_f)
                 else:
-                    ds_coord = pc_rand_down_sample(coord=i,
-                                                   threshold=self.threshold)
+                    ds_coord = self.pc_rand_down_sample(coord=i, threshold=self.threshold)
 
                 ds_pc.append(np.hstack((np.expand_dims(np.repeat(id, len(ds_coord)), 1),
                                         ds_coord)))
                 id += 1
         elif coord.shape[1] == 3:
             if rgb is not None:
-                return pc_rand_down_sample(coord=coord,
-                                           node_feature=rgb,
-                                           threshold=self.threshold)
+                return self.pc_rand_down_sample(coord=coord,
+                                                rgb=rgb,
+                                                threshold=self.threshold)
             else:
-                return pc_rand_down_sample(coord=coord, threshold=self.threshold)
+                return self.pc_rand_down_sample(coord=coord, threshold=self.threshold)
         else:
             labels = np.unique(coord[:, 0])
             for i in labels:
@@ -180,13 +218,13 @@ class RandomDownSampling:
 
                 if rgb is not None:
                     rgb_df = rgb[peak_id, :]
-                    ds_coord, ds_node_f = pc_rand_down_sample(coord=coord_df,
-                                                              node_feature=rgb_df,
-                                                              threshold=self.threshold)
+                    ds_coord, ds_node_f = self.pc_rand_down_sample(coord=coord_df,
+                                                                   rgb=rgb_df,
+                                                                   threshold=self.threshold)
                     ds_rgb.append(ds_node_f)
                 else:
-                    ds_coord = pc_rand_down_sample(coord=coord_df,
-                                                   threshold=self.threshold)
+                    ds_coord = self.pc_rand_down_sample(coord=coord_df,
+                                                        threshold=self.threshold)
 
                 ds_coord = np.hstack((np.expand_dims(np.repeat(i, len(ds_coord)), 1),
                                       ds_coord))
@@ -196,38 +234,6 @@ class RandomDownSampling:
             return np.concatenate(ds_pc), np.concatenate(ds_rgb)
         else:
             return np.concatenate(ds_pc)
-
-
-def pc_rand_down_sample(coord: np.ndarray,
-                        threshold,
-                        node_feature: Optional[np.ndarray] = None) -> Union[Tuple[np.ndarray,
-                                                                                  np.ndarray],
-                                                                            np.ndarray]:
-    """
-    Random picked point to down sample point cloud
-
-    Args:
-        coord: Array of point to downs-sample
-        node_feature: Extra node feature like e.g RGB values do sample with coord.
-        threshold: Lambda function to calculate down-sampling rate or fixed float ratio.
-
-    Returns:
-        np.ndarray: Down-sample array of points.
-    """
-    if isinstance(threshold, int) or isinstance(threshold, float):
-        rand_keep = int(len(coord) * threshold)
-    else:
-        rand_keep = threshold(coord)
-
-    if rand_keep != len(coord):
-        rand_keep = random.sample(range(len(coord)), rand_keep)
-    else:
-        rand_keep = list(range(len(coord)))
-
-    if node_feature is None:
-        return coord[rand_keep][:, :3]
-    else:
-        return coord[rand_keep][:, :3], node_feature[rand_keep][:, :3]
 
 
 def check_model_dict(model_dict: dict) -> dict:
@@ -260,7 +266,10 @@ def check_model_dict(model_dict: dict) -> dict:
         if key.endswith('cls'):
             new_dict['num_cls'] = value
         if key.endswith('sigma'):
-            new_dict['coord_embed_sigma'] = value
+            if key.startswith('coord'):
+                new_dict['coord_embed_sigma'] = value
+            if key.startswith('rgb'):
+                new_dict['rgb_embed_sigma'] = value
         if key.endswith('dropout') or key.startswith('dropout'):
             new_dict['dropout_rate'] = value
         if key.endswith('structure'):
@@ -268,5 +277,8 @@ def check_model_dict(model_dict: dict) -> dict:
 
     if 'num_cls' not in new_dict:
         new_dict['num_cls'] = None
+
+    if 'rgb_embed_sigma' not in new_dict:
+        new_dict['rgb_embed_sigma'] = 1.0
 
     return new_dict

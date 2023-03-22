@@ -14,6 +14,7 @@ from shutil import rmtree
 from typing import Optional
 
 import click
+import torch
 from torch.utils.data import DataLoader
 
 from tardis.spindletorch.data_processing.build_dataset import build_train_dataset
@@ -43,6 +44,11 @@ from tardis.version import version
               default=23.2,
               type=float,
               help='Pixel size to which all images are resize.',
+              show_default=True)
+@click.option('-ms', '--mask_size',
+              default=150,
+              type=int,
+              help='Size of drawn mask in A.',
               show_default=True)
 @click.option('-cnn', '--cnn_type',
               default='unet',
@@ -97,12 +103,12 @@ from tardis.version import version
               help='Max_pooling kernel.',
               show_default=True)
 @click.option('-l', '--cnn_loss',
-              default='bce',
-              type=click.Choice(['bce', 'dice', 'hybrid', 'adaptive_dice']),
+              default='BCELoss',
+              type=str,
               help='Loss function use for training.',
               show_default=True)
 @click.option('-lr', '--loss_lr_rate',
-              default=0.001,
+              default=1.0,
               type=float,
               help='Learning rate for NN.',
               show_default=True)
@@ -119,6 +125,11 @@ from tardis.version import version
                    'cpu: Usa CPU'
                    'mps: Apple silicon'
                    '0-9 - specified gpu device id to use',
+              show_default=True)
+@click.option('-w', '--warmup',
+              default=100,
+              type=int,
+              help='Number of warmup steps.',
               show_default=True)
 @click.option('-e', '--epochs',
               default=100,
@@ -145,6 +156,7 @@ from tardis.version import version
 def main(dir: str,
          patch_size: int,
          pixel_size: float,
+         mask_size: int,
          cnn_type: str,
          cnn_out_channel: int,
          training_batch_size: int,
@@ -158,6 +170,7 @@ def main(dir: str,
          loss_lr_rate: float,
          lr_rate_schedule: bool,
          device: str,
+         warmup: int,
          epochs: int,
          early_stop: int,
          cnn_checkpoint: Optional[str] = None,
@@ -190,7 +203,7 @@ def main(dir: str,
     """Optionally: Set-up environment if not existing"""
     if not DATASET_TEST:
         # Check and set-up environment
-        assert len([f for f in listdir(dir) if f.endswith(IMG_FORMAT)]) > 0, \
+        if not len([f for f in listdir(dir) if f.endswith(IMG_FORMAT)]) > 0:
             TardisError('100',
                         'tardis/train_spindletorch.py',
                         'Indicated folder for training do not have any compatible '
@@ -213,14 +226,13 @@ def main(dir: str,
 
         # Build train and test dataset
         build_train_dataset(dataset_dir=dir,
-                            circle_size=150,
+                            circle_size=mask_size,
                             resize_pixel_size=pixel_size,
                             trim_xy=patch_size,
                             trim_z=patch_size)
 
         no_dataset = int(len([f for f in listdir(dir) if f.endswith(IMG_FORMAT)]) / 2)
-        build_test_dataset(dataset_dir=dir,
-                           dataset_no=no_dataset)
+        build_test_dataset(dataset_dir=dir, dataset_no=no_dataset)
 
     """Build training and test dataset 2D/3D"""
     train_DL = DataLoader(dataset=CNNDataset(img_dir=TRAIN_IMAGE_DIR,
@@ -241,26 +253,37 @@ def main(dir: str,
                          pin_memory=True)
 
     if cnn_out_channel > 1:
-        cnn_loss = 'ce'
+        cnn_loss = 'CELoss'
+
+    if loss_lr_rate == 1.0:
+        lr_rate_schedule = True
 
     """Get device"""
     device = get_device(device)
 
     """Model structure dictionary"""
-    model_dict = {'cnn_type': cnn_type,
-                  'classification': False,
-                  'in_channel': 1,
-                  'out_channel': cnn_out_channel,
-                  'img_size': patch_size,
-                  'dropout': dropout_rate,
-                  'num_conv_layers': cnn_layers,
-                  'conv_scaler': cnn_scaler,
-                  'conv_kernel': conv_kernel,
-                  'conv_padding': conv_padding,
-                  'maxpool_kernel': pool_kernel,
-                  'layer_components': cnn_structure,
-                  'num_group': 8,
-                  'prediction': False}
+    """Optionally: pre-load model structure from checkpoint"""
+    if cnn_checkpoint is not None:
+        save_train = torch.load(join(cnn_checkpoint), map_location=device)
+
+        if 'model_struct_dict' in save_train.keys():
+            model_dict = save_train['model_struct_dict']
+            globals().update(model_dict)
+    else:
+        model_dict = {'cnn_type': cnn_type,
+                      'classification': False,
+                      'in_channel': 1,
+                      'out_channel': cnn_out_channel,
+                      'img_size': patch_size,
+                      'dropout': dropout_rate,
+                      'num_conv_layers': cnn_layers,
+                      'conv_scaler': cnn_scaler,
+                      'conv_kernel': conv_kernel,
+                      'conv_padding': conv_padding,
+                      'maxpool_kernel': pool_kernel,
+                      'layer_components': cnn_structure,
+                      'num_group': 8,
+                      'prediction': False}
 
     """Run Training loop"""
     train_cnn(train_dataloader=train_DL,
@@ -272,6 +295,7 @@ def main(dir: str,
               learning_rate_scheduler=lr_rate_schedule,
               early_stop_rate=early_stop,
               device=device,
+              warmup=warmup,
               epochs=epochs)
 
 

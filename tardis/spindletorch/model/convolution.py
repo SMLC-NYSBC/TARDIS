@@ -110,7 +110,7 @@ def convolution(in_ch: int,
                                                         padding=padding)))
         "Add GroupNorm"
         if "g" == letter:
-            assert num_group is not None, \
+            if num_group is None:
                 TardisError('142',
                             'tardis/spindletorch/model/convolution.py',
                             'Number of group is required if nn.GroupNorm is used.')
@@ -118,11 +118,11 @@ def convolution(in_ch: int,
             if num_group > in_ch:
                 num_group = 1
             if conv:
-                modules.append(("GroupNorm1", nn.GroupNorm(num_groups=num_group,
-                                                           num_channels=out_ch)))
+                modules.append(("GroupNorm1",
+                                nn.GroupNorm(num_groups=num_group, num_channels=out_ch)))
             else:
-                modules.append(("GroupNorm2", nn.GroupNorm(num_groups=num_group,
-                                                           num_channels=in_ch)))
+                modules.append(("GroupNorm2",
+                                nn.GroupNorm(num_groups=num_group, num_channels=in_ch)))
         """Add BatchNorm"""
         if "b" == letter:
             if '3' in components:
@@ -227,7 +227,7 @@ class DoubleConvolution(nn.Sequential):
         super(DoubleConvolution, self).__init__()
 
         # Define in and out channels for 1st and 2nd convolutions
-        assert block_type in ["encoder", "decoder"], \
+        if block_type not in ["encoder", "decoder"]:
             TardisError('143',
                         'tardis/spindletorch/model/convolution.py',
                         'Only "encoder", decoder block type is supported.')
@@ -287,7 +287,7 @@ class RecurrentDoubleConvolution(nn.Module):
         super(RecurrentDoubleConvolution, self).__init__()
 
         # Define in and out channels for 1st and 2nd convolutions
-        assert block_type in ["encoder", "decoder"], \
+        if block_type not in ["encoder", "decoder"]:
             TardisError('143',
                         'tardis/spindletorch/model/convolution.py',
                         'Only "encoder", decoder block type is supported.')

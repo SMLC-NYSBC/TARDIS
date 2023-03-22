@@ -14,19 +14,21 @@ from typing import Tuple
 
 import numpy as np
 
-from tardis.spindletorch.data_processing.semantic_mask import draw_semantic
+from tardis.dist_pytorch.utils.build_point_cloud import BuildPointCloud
+from tardis.spindletorch.data_processing.semantic_mask import draw_instances
 from tardis.spindletorch.data_processing.trim import trim_with_stride
 from tardis.utils.errors import TardisError
 from tardis.utils.load_data import ImportDataFromAmira, load_image
 from tardis.utils.logo import print_progress_bar, TardisLogo
-from tardis.utils.normalization import MinMaxNormalize, RescaleNormalize
+from tardis.utils.normalization import MeanStdNormalize, RescaleNormalize
 
 
 def build_train_dataset(dataset_dir: str,
                         circle_size: int,
                         resize_pixel_size: float,
                         trim_xy: int,
-                        trim_z: int):
+                        trim_z: int,
+                        benchmark: object = False):
     """
     Module for building train datasets from compatible files.
 
@@ -55,31 +57,45 @@ def build_train_dataset(dataset_dir: str,
         resize_pixel_size (float): Pixel size for image resizing.
         trim_xy (int): Voxel size of output image in x and y dimension.
         trim_z (int): Voxel size of output image in z dimension.
+        benchmark (bool): If True construct data for benchmark.
     """
     """Setup"""
     # Activate Tardis progress bar
     tardis_progress = TardisLogo()
-    tardis_progress(title='Data pre-processing for CNN training')
+    tardis_progress(title='Data pre-processing for CNN')
 
     # Normalize histogram
     normalize = RescaleNormalize(clip_range=(1, 99))
-    minmax = MinMaxNormalize()
+    meanstd = MeanStdNormalize()
+
+    # Builder for point cloud
+    b_pc = BuildPointCloud()
+
+    clean_empty = not benchmark
 
     # All expected formats
     IMG_FORMATS = ('.am', '.mrc', '.rec')
-    MASK_FORMATS = ('.CorrelationLines.am', '_mask.am', '_mask.mrc', '_mask.rec', '.csv')
+    MASK_FORMATS = ('.CorrelationLines.am', '_mask.am', '_mask.mrc', '_mask.rec', '.csv',
+                    '_mask.tif')
 
     """Check what file are in the folder to build dataset"""
     img_list = [f for f in listdir(dataset_dir) if
                 f.endswith(IMG_FORMATS) and not f.endswith(MASK_FORMATS)]
-    # is_csv = [f for f in listdir(dataset_dir) if f.endswith('.csv')]
-    mask_list = [f for f in listdir(dataset_dir) if f.endswith(MASK_FORMATS)]
 
     """For each image find matching mask, pre-process, trim and save"""
     img_counter = 0
     log_file = np.zeros((len(img_list), 4), dtype='|S50')
 
     for id, i in enumerate(img_list):
+        """Update progress bar"""
+        tardis_progress(title='Data pre-processing for CNN training',
+                        text_1='Building Training dataset:',
+                        text_2=f'Files: {i}',
+                        text_3='px: NaN',
+                        text_4='Scale: NaN',
+                        text_6='Image dtype: NaN',
+                        text_7=print_progress_bar(id, len(img_list)))
+
         log_file[id, 0] = id
         np.savetxt(join(dataset_dir, 'log.txt'), log_file, fmt='%s', delimiter=',')
 
@@ -117,7 +133,7 @@ def build_train_dataset(dataset_dir: str,
 
         """Load files"""
         image, mask, pixel_size = load_img_mask_data(img_dir, mask_dir)
-        log_file[id, 1] = i
+        log_file[id, 1] = i + '||' + mask_dir
         np.savetxt(join(dataset_dir, 'log.txt'), log_file, fmt='%s', delimiter=',')
 
         if pixel_size is None:
@@ -134,30 +150,70 @@ def build_train_dataset(dataset_dir: str,
         log_file[id, 3] = str(scale_factor)
         np.savetxt(join(dataset_dir, 'log.txt'), log_file, fmt='%s', delimiter=',')
 
+        """Update progress bar"""
+        tardis_progress(title='Data pre-processing for CNN training',
+                        text_1='Building Training dataset:',
+                        text_2=f'Files: {i} {mask_name}',
+                        text_3=f'px: {pixel_size}',
+                        text_4=f'Scale: {round(scale_factor, 2)}',
+                        text_6=f'Image dtype: {image.dtype} min: {image.min()} max: {image.max()}',
+                        text_7=print_progress_bar(id, len(img_list)))
+
         """Draw mask for coord or process mask if needed"""
-        if mask.ndim == 2 and mask.shape[1] in [3, 4]:  # Detect coordinate array
+        # Detect coordinate mask array
+        if mask.ndim == 2 and mask.shape[1] in [3, 4]:
             # Scale mask to correct pixel size
             mask[:, 1:] = mask[:, 1:] * scale_factor
 
             # Draw mask from coordinates
-            mask = draw_semantic(mask_size=scale_shape,
-                                 coordinate=mask,
-                                 pixel_size=resize_pixel_size,
-                                 circle_size=circle_size)
-        else:  # Detect mask array
-            if mask.min() == 0:
-                TardisError(id='115',
-                            py='tardis/spindletorch/data_processing/build_training_dataset',
-                            desc=f'Mask min: {mask.min()}; max: {mask.max()}'
-                            'but expected min: 0 and max: >1')
-
+            mask = draw_instances(mask_size=scale_shape,
+                                  coordinate=mask,
+                                  pixel_size=resize_pixel_size,
+                                  circle_size=circle_size)
+        else:  # Detect image mask array
             # Convert to binary
             if mask.min() == 0 and mask.max() > 1:
                 mask = np.where(mask > 0, 1, 0).astype(np.uint8)
 
+            if mask.min() != 0 and mask.max() != 1:
+                TardisError(id='115',
+                            py='tardis/spindletorch/data_processing/build_training_dataset',
+                            desc=f'Mask min: {mask.min()}; max: {mask.max()} '
+                                 'but expected min: 0 and max: >1')
+
             # Flip mask if MRC/REC
             if mask_dir.endswith(('_mask.mrc', '_mask.rec')):
                 mask = np.flip(mask, 1)
+
+            if scale_factor != 1.0:
+                pc = b_pc.build_point_cloud(image=mask,
+                                            as_2d=True)
+                pc = pc * scale_factor
+                pc = pc.astype(np.uint32)
+
+                # Remove gaps from conversion to int
+                gaps = [i for i in list(range(min(pc[:, 2]), max(pc[:, 2]) + 1))
+                        if i not in np.unique(pc[:, 2])]
+
+                gaps_pc = []
+                for j in gaps:
+                    pick_coord = pc[np.where(pc[:, 2] == j + 1)[0], :]
+                    if len(pick_coord) == 0:
+                        pick_coord = pc[np.where(pc[:, 2] == j - 1)[0], :]
+
+                    if len(pick_coord) > 0:
+                        pick_coord[:, 2] = j
+                        gaps_pc.append(pick_coord)
+                if len(gaps_pc) > 0:
+                    gaps_pc = np.concatenate(gaps_pc)
+                    pc = np.concatenate((pc, gaps_pc))
+
+                # Draw mask from coordinates
+                mask = draw_instances(mask_size=scale_shape,
+                                      coordinate=pc,
+                                      label=False,
+                                      pixel_size=resize_pixel_size,
+                                      circle_size=circle_size)
 
         """Update progress bar"""
         tardis_progress(title='Data pre-processing for CNN training',
@@ -168,17 +224,16 @@ def build_train_dataset(dataset_dir: str,
                         text_6=f'Image dtype: {image.dtype} min: {image.min()} max: {image.max()}',
                         text_7=print_progress_bar(id, len(img_list)))
 
-        """Normalize histogram"""
+        """Normalize image histogram"""
         # Rescale image intensity
-        image = normalize(image)
+        image = normalize(meanstd(image)).astype(np.float32)
 
-        if not image.min() >= -1 or not image.max() <= 1:  # Image between in 0 and 255
-            image = minmax(image)
-
-        assert image.dtype == np.float32, \
-            TardisError('114',
-                        'tardis/spindletorch/data_processing/build_training_dataset',
-                        f'Image data of type {image.dtype} not float32')
+        if not image.min() >= -1 or not image.max() <= 1:  # Image not between in -1 and 1
+            if image.min() >= 0 and image.max() <= 1:
+                image = (image - 0.5) * 2
+            elif image.min() >= 0 and image.max() <= 255:
+                image = image / 255  # move to 0 - 1
+                image = (image - 0.5) * 2
 
         tardis_progress(title='Data pre-processing for CNN training',
                         text_1='Building Training dataset:',
@@ -194,6 +249,7 @@ def build_train_dataset(dataset_dir: str,
                          scale=scale_shape,
                          trim_size_xy=trim_xy,
                          trim_size_z=trim_z,
+                         clean_empty=clean_empty,
                          output=join(dataset_dir, 'train'),
                          image_counter=img_counter)
         img_counter += 1
@@ -208,10 +264,12 @@ def load_img_mask_data(image: str,
         - Amira (image) + Amira (coord)
         - Amira (image) + csv (coord)
         - Amira (image) + Amira (mask) or MRC/REC (mask)
+        - Amira (image) + tif (mask)
 
         - MRC/REC(image) + Amira (coord) ! Need check if coordinate is not transformed !
         - MRC/REC(image) + csv (coord)
         - MRC/REC(image) + Amira (mask) or MRC/REC (mask)
+        - MRC/REC (image) + tif (mask)
 
     Args:
         image (str): Directory address to the image file
@@ -253,6 +311,9 @@ def load_img_mask_data(image: str,
     elif mask.endswith('_mask.csv'):  # Mask is csv (coord)
         coord = np.genfromtxt(mask, delimiter=',')  # [ID x X x Y x (Z)]
         mask_px = img_px
+    elif mask.endswith('_mask.tif'):
+        mask, _ = load_image(mask)
+        mask_px = img_px
 
     if not img_px == mask_px:
         img_px = None
@@ -266,7 +327,7 @@ def load_img_mask_data(image: str,
 def error_log_build_data(dir: str,
                          log_file: np.ndarray,
                          id: int,
-                         i: str) -> list:
+                         i: str) -> np.ndarray:
     """
     Update log file with error for data that could not be loaded
 

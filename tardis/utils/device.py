@@ -13,7 +13,7 @@ from typing import Optional
 import torch
 
 
-def get_device(device: Optional[str] = 0):
+def get_device(device: Optional[str] = 0) -> torch.device:
     """
     Return device that can be used for training or predictions
 
@@ -21,7 +21,7 @@ def get_device(device: Optional[str] = 0):
         device (str, int): Device name or ID.
 
     Returns:
-        str or torch.device: Device type.
+        torch.device: Device type.
     """
     if device == "gpu":  # Load GPU ID 0
         if torch.cuda.is_available():

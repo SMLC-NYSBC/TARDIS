@@ -18,12 +18,12 @@ id_dict = {
     '0': 'NO_ERROR',  # All good
     '01': 'FEATURE_NOT_SUPPORTED_ASK_DEVELOPER',
 
-    '1': 'UNKNOWN_DATA_COMPATIBILITY_ERROR',  # Data compatibility
-    '10': 'DATA_COMPATIBILITY_BUILDING_DATASET',
+    '1':   'UNKNOWN_DATA_COMPATIBILITY_ERROR',  # Data compatibility
+    '10':  'DATA_COMPATIBILITY_BUILDING_DATASET',
     '100': 'DATA_COMPATIBILITY | NO_DATA_FOUND',
     '101': 'MISSING_IMAGES_OR_MASK_FILES',
 
-    '11': 'DATA_COMPATIBILITY',  # Data set compatibility and processing.
+    '11':  'DATA_COMPATIBILITY',  # Data set compatibility and processing.
     '111': 'WRONG_IMAGE_OR_MASK_AFTER_PREPROCESSING',
     '112': 'TRIM_SIZE_INCOMPATIBLE_WITH_ARRAY_SIZE',
     '113': 'INCORRECT_SHAPE',
@@ -32,7 +32,7 @@ id_dict = {
     '116': 'INCOMPATIBLE_ARRAY_AFTER_PROCESSING',
     '117': 'NOT_MATCHING_LENGTH_OF_LIST',
 
-    '12': 'EMPTY_DIRECTORY',  # General
+    '12':  'EMPTY_DIRECTORY',  # General
     '121': 'FILE_NOT_FOUND',
     '122': 'DIRECTORY_NOT_FOUND',
     '124': 'MISSING_OR_WRONG_PARAMETER',
@@ -44,8 +44,7 @@ id_dict = {
     '134': 'VALUE_ERROR_WHILE_DRAWING_MASK',
     '139': 'MISSING_VALUES_IN_PREDICTOR',
 
-
-    '14': 'FATAL_ERROR_BUILDING_CNN',  # SpindleTorch model
+    '14':  'FATAL_ERROR_BUILDING_CNN',  # SpindleTorch model
     '140': 'INITIALIZATION_ERROR',
     '141': 'UNSUPPORTED_NETWORK_NAME',
     '142': 'CONVOLUTION_GROUP_NORM_ERROR',
@@ -55,6 +54,8 @@ id_dict = {
     '147': 'DATA_DTYPE_ERROR',
 
     '151': 'INCORRECT_PARAMETER_IN_MAIN',  # Main entry's
+
+    '161':  'MISSING_ARGUMENT',  # DIST model
 
     '19': 'AWS_INCORRECT_VALUE',  # AWS
     '20': 'PYTEST_ERROR'
@@ -93,6 +94,8 @@ class TardisError(Exception):
                  py='NA',
                  desc='Unknown exertion occurred!'):
         super().__init__()
+
+        self.WIDTH = None
         id_desc = standard_error_id(id)
         if id_desc == 'UNKNOWN_ERROR':
             id = 42  # Swap error for unknown error code
@@ -123,7 +126,7 @@ class TardisError(Exception):
                                text_7=desc_7,
                                text_8=desc_8,
                                text_9=desc_9,
-                               text_10=desc_10, )
+                               text_10=desc_10)
 
     def cut_desc(self,
                  desc: str) -> Tuple[str, str, str, str, str, str, str, str]:
@@ -136,7 +139,9 @@ class TardisError(Exception):
         Returns:
             list[str]: list of cut string
         """
-        WIDTH = self.tardis_error_rise.cell_width() - 21
+        self.tardis_error_rise.cell_width()
+
+        WIDTH = self.tardis_error_rise.WIDTH - 21
         if len(desc) <= WIDTH:
             text_3 = desc
             text_4, text_5, text_6, \

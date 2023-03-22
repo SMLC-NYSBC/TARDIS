@@ -51,8 +51,8 @@ class CNNDataset(Dataset):
         self.out_channels = out_channels
         self.minmax = MinMaxNormalize()
 
-        self.ids = [splitext(file)[0] for file in listdir(img_dir)
-                    if not file.startswith('.')]
+        self.ids = [splitext(file)[0] for file in listdir(img_dir) if
+                    not file.startswith('.')]
 
     def __len__(self):
         return len(self.ids)
@@ -78,7 +78,7 @@ class CNNDataset(Dataset):
         img = self.minmax(img.astype(np.float32))
 
         mask, _ = load_image(mask_file)
-        assert mask.dtype == np.uint8, \
+        if mask.dtype != np.uint8:
             TardisError('147',
                         'tardis/spindletorch/dataset/dataloader.py',
                         f'Mask should be of np.uint8 dtype but is {mask.dtype}!')
@@ -90,11 +90,11 @@ class CNNDataset(Dataset):
                                transformation=self.transform,
                                output_dim_mask=self.out_channels)
 
-        assert img.dtype == np.float32 and mask.dtype == np.uint8, \
+        if img.dtype != np.float32 and mask.dtype != np.uint8:
             TardisError('147',
                         'tardis/spindletorch/dataset/dataloader.py',
                         f'Mask {mask.dtype} and image  {img.dtype} has wrong dtype!')
-        assert img.min() >= 0 and img.max() <= 1, \
+        if not img.min() >= 0 and not img.max() <= 1:
             TardisError('147',
                         'tardis/spindletorch/dataset/dataloader.py',
                         'Image file is not binary!')
@@ -122,8 +122,8 @@ class PredictionDataset(Dataset):
 
         self.minmax = MinMaxNormalize()
 
-        self.ids = [splitext(file)[0] for file in listdir(img_dir)
-                    if not file.startswith('.')]
+        self.ids = [splitext(file)[0] for file in listdir(img_dir) if
+                    not file.startswith('.')]
 
     def __len__(self):
         return len(self.ids)

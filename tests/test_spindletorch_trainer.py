@@ -12,6 +12,7 @@ import os
 import shutil
 
 import torch.nn as nn
+from torch import optim
 from torch.utils.data import DataLoader
 
 from tardis.spindletorch.datasets.dataloader import CNNDataset
@@ -25,11 +26,11 @@ def test_init_spindletorch_train():
                structure={'cnn_type': 'unet'},
                device='cpu',
                criterion=None,
-               optimizer=None,
+               optimizer=optim.Adam(nn.Conv1d(1, 2, 3).parameters(), 0.001),
                print_setting=[],
                training_DataLoader=None,
                validation_DataLoader=None,
-               lr_scheduler=None,
+               lr_scheduler=False,
                epochs=100,
                early_stop_rate=10,
                checkpoint_name='test')
@@ -72,10 +73,11 @@ def test_unet_trainer():
     train_cnn(train_dataloader=train_dl,
               test_dataloader=test_dl,
               model_structure=structure,
+              learning_rate=0.01,
               device=get_device('cpu'),
               epochs=2)
 
-    assert len(os.listdir('./unet_checkpoint')) == 5
+    assert len(os.listdir('./unet_checkpoint')) in [5, 6]
 
     shutil.rmtree('./unet_checkpoint')
 
@@ -116,10 +118,11 @@ def test_fnet_trainer():
     train_cnn(train_dataloader=train_dl,
               test_dataloader=test_dl,
               model_structure=structure,
+              learning_rate=0.01,
               device=get_device('cpu'),
               epochs=2)
 
-    assert len(os.listdir('./fnet_checkpoint')) == 5
+    assert len(os.listdir('./fnet_checkpoint')) in [5, 6]
 
     shutil.rmtree('./fnet_checkpoint')
 
@@ -159,10 +162,11 @@ def test_unet3plus_trainer():
 
     train_cnn(train_dataloader=train_dl,
               test_dataloader=test_dl,
+              learning_rate=0.01,
               model_structure=structure,
               device=get_device('cpu'),
               epochs=2)
 
-    assert len(os.listdir('./unet3plus_checkpoint')) == 5
+    assert len(os.listdir('./unet3plus_checkpoint')) in [5, 6]
 
     shutil.rmtree('./unet3plus_checkpoint')

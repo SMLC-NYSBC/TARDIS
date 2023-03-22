@@ -26,16 +26,14 @@ class BasicDIST(nn.Module):
     Args:
         n_out (int): Number of channels in the output layer.
         node_input (int): Length of the flattened image file.
-        node_dim (int, optional): In features of image for linear transformation.
+        node_dim (int, None): In features of image for linear transformation.
         edge_dim (int): In feature of coord for linear transformation.
         num_layers (int): Number of DIST layers to initialize.
         num_heads (int): Number of heads for MHA.
-        num_cls (int): Number of predicted classes.
-        coord_embed_sigma (float): Sigma value used to embed coordinate distance
-            features.
+        num_cls (int, None): Number of predicted classes.
+        coord_embed_sigma (float): Sigma value used to embed coordinate distance features.
         dropout_rate (float): Dropout factor used in MHA dropout layer.
-        structure (str): DIST network structure.
-                Options: (full, triang, dualtriang, quad, attn)
+        structure (str): DIST network structure. (full, triang, dualtriang, quad, attn)
         predict (bool): If True sigmoid output.
     """
 
@@ -47,6 +45,7 @@ class BasicDIST(nn.Module):
                  num_layers=6,
                  num_heads=8,
                  num_cls=None,
+                 rgb_embed_sigma=1.0,
                  coord_embed_sigma=1.0,
                  dropout_rate=0,
                  structure='full',
@@ -60,7 +59,8 @@ class BasicDIST(nn.Module):
         self.num_layers = num_layers
         self.num_heads = num_heads
         self.num_cls = num_cls
-        self.sigma = coord_embed_sigma
+        self.node_sigma = rgb_embed_sigma
+        self.edge_sigma = coord_embed_sigma
         self.dropout_rate = dropout_rate
         self.structure = structure
         self.predict = predict
@@ -68,10 +68,11 @@ class BasicDIST(nn.Module):
         if self.node_dim is not None:
             if self.node_input > 0:
                 self.node_embed = NodeEmbedding(n_in=self.node_input,
-                                                n_out=self.node_dim)
+                                                n_out=self.node_dim,
+                                                sigma=self.node_sigma)
 
         self.coord_embed = EdgeEmbedding(n_out=self.edge_dim,
-                                         sigma=self.sigma)
+                                         sigma=self.edge_sigma)
 
         self.layers = DistStack(node_dim=self.node_dim,
                                 pairs_dim=self.edge_dim,
@@ -80,8 +81,7 @@ class BasicDIST(nn.Module):
                                 num_heads=self.num_heads,
                                 structure=self.structure)
 
-        self.decoder = nn.Linear(in_features=self.edge_dim,
-                                 out_features=self.n_out)
+        self.decoder = nn.Linear(in_features=self.edge_dim, out_features=self.n_out)
 
         if self.predict:
             self.logits_sigmoid = nn.Sigmoid()
@@ -122,8 +122,7 @@ class BasicDIST(nn.Module):
             node_features (torch.Tensor, None): Image patch input of a shape
                 [Batch x Length x Dimensions].
         """
-        node, edge = self.embed_input(coords=coords,
-                                      node_features=node_features)
+        node, edge = self.embed_input(coords=coords, node_features=node_features)
 
         if node is not None:
             """ Length x Batch x Embedded_Dim """
@@ -196,13 +195,12 @@ class CDIST(BasicDIST):
     def __init__(self,
                  **kwargs):
         super(CDIST, self).__init__(**kwargs)
-        assert self.num_cls is not None, \
+        if self.num_cls is None:
             TardisError('build_cdist_network',
                         'tardis/dist',
                         'Undefined num_cls parameter!')
 
-        self.decoder_cls = nn.Linear(in_features=self.edge_dim,
-                                     out_features=self.num_cls)
+        self.decoder_cls = nn.Linear(in_features=self.edge_dim, out_features=self.num_cls)
 
         if self.predict:
             self.logits_sigmoid = nn.Sigmoid()
@@ -226,7 +224,7 @@ def build_dist_network(network_type: str,
     Returns:
         DIST: DIST network structure.
     """
-    assert network_type in ['instance', 'semantic'], \
+    if network_type not in ['instance', 'semantic']:
         TardisError('build_dist_network',
                     'tardis/dist',
                     f'Wrong DIST network name {network_type}')
@@ -238,6 +236,7 @@ def build_dist_network(network_type: str,
                     edge_dim=structure['edge_dim'],
                     num_layers=structure['num_layers'],
                     num_heads=structure['num_heads'],
+                    rgb_embed_sigma=structure['rgb_embed_sigma'],
                     coord_embed_sigma=structure['coord_embed_sigma'],
                     dropout_rate=structure['dropout_rate'],
                     structure=structure['structure'],

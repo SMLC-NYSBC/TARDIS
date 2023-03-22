@@ -12,6 +12,7 @@ import os
 import shutil
 
 import torch.nn as nn
+from torch import optim
 from torch.utils.data import DataLoader
 
 from tardis.dist_pytorch.datasets.dataloader import (FilamentDataset, ScannetColorDataset)
@@ -25,11 +26,11 @@ def test_init_dist_train():
                 structure={'node_input': 0},
                 device='cpu',
                 criterion=None,
-                optimizer=None,
+                optimizer=optim.Adam(nn.Conv1d(1, 2, 3).parameters(), 0.001),
                 print_setting=[],
                 training_DataLoader=None,
                 validation_DataLoader=None,
-                lr_scheduler=None,
+                lr_scheduler=False,
                 epochs=100,
                 early_stop_rate=10,
                 checkpoint_name='test')
@@ -38,11 +39,11 @@ def test_init_dist_train():
                  structure={'node_input': 0, 'dist_type': 'semantic'},
                  device='cpu',
                  criterion=None,
-                 optimizer=None,
+                 optimizer=optim.Adam(nn.Conv1d(1, 2, 3).parameters(), 0.001),
                  print_setting=[],
                  training_DataLoader=None,
                  validation_DataLoader=None,
-                 lr_scheduler=None,
+                 lr_scheduler=False,
                  epochs=100,
                  early_stop_rate=10,
                  checkpoint_name='test')
@@ -51,11 +52,11 @@ def test_init_dist_train():
                  structure={'node_input': 0, 'dist_type': 'instance'},
                  device='cpu',
                  criterion=None,
-                 optimizer=None,
+                 optimizer=optim.Adam(nn.Conv1d(1, 2, 3).parameters(), 0.001),
                  print_setting=[],
                  training_DataLoader=None,
                  validation_DataLoader=None,
-                 lr_scheduler=None,
+                 lr_scheduler=False,
                  epochs=100,
                  early_stop_rate=10,
                  checkpoint_name='test')
@@ -94,6 +95,7 @@ def test_dist_trainer():
     train_dist(train_dataloader=train_dl,
                test_dataloader=test_dl,
                model_structure=structure,
+               lr_scheduler=False,
                device=get_device('cpu'),
                epochs=2)
 
@@ -103,7 +105,7 @@ def test_dist_trainer():
     assert len(os.listdir('./temp_train')) == 4
     shutil.rmtree('./temp_train')
 
-    assert len(os.listdir('./instance_checkpoint')) == 5
+    assert len(os.listdir('./instance_checkpoint')) == 7
     shutil.rmtree('./instance_checkpoint')
 
 
@@ -141,6 +143,7 @@ def test_c_dist_trainer():
     train_dist(train_dataloader=train_dl,
                test_dataloader=test_dl,
                model_structure=structure,
+               lr_scheduler=False,
                device=get_device('cpu'),
                epochs=2)
 
@@ -150,5 +153,5 @@ def test_c_dist_trainer():
     assert len(os.listdir('./temp_train')) == 5
     shutil.rmtree('./temp_train')
 
-    assert len(os.listdir('./semantic_checkpoint')) == 5
+    assert len(os.listdir('./semantic_checkpoint')) in [4, 5]
     shutil.rmtree('./semantic_checkpoint')

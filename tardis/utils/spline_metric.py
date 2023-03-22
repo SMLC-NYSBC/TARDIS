@@ -99,7 +99,6 @@ class FilterConnectedNearSegments:
         Returns:
             bool: If true, given splines facing the same direction
         """
-        splines_in_same_direction = False
         # Check 01 - 01 & Check 01 - 10
         ax = [(np.array(spline2[1]), np.array(spline2[0])),
               (np.array(spline2[1]), np.array(spline2[0]))]
@@ -271,8 +270,7 @@ class FilterConnectedNearSegments:
             # Check if any ends fit criteria for connection
             if len(splines_to_merge) == 1:  # Merge
                 # Check if selected spline facing the same direction
-                same_direction = self.splines_direction(value,
-                                                        splines_to_merge[0][1])
+                same_direction = self.splines_direction(value, splines_to_merge[0][1])
 
                 # Connect splines
                 if same_direction:
@@ -283,8 +281,7 @@ class FilterConnectedNearSegments:
             elif len(splines_to_merge) > 1:  # If more than one find best
                 if len(np.unique([x[0] for x in splines_to_merge])) == 1:
                     # Check if selected spline facing the same direction
-                    same_direction = self.splines_direction(value,
-                                                            splines_to_merge[0][1])
+                    same_direction = self.splines_direction(value, splines_to_merge[0][1])
 
                     # Connect splines
                     if same_direction:
@@ -294,8 +291,8 @@ class FilterConnectedNearSegments:
                         del splines_list[splines_to_merge[0][0]]
                 else:
                     end_lists = {}
-                    for d in np.concatenate([end01_list01, end01_list10,
-                                             end10_list01, end10_list10]):
+                    for d in np.concatenate([end01_list01, end01_list10, end10_list01,
+                                             end10_list10]):
                         end_lists.update(d)
 
                     # Check which splines facing the same direction
@@ -371,10 +368,8 @@ class FilterSpatialGraph:
         self.connect_seg_if_closer_then = connect_seg_if_closer_then
         self.filter_short_segments = filter_short_segments
 
-        self.marge_splines = FilterConnectedNearSegments(
-            distance_th=connect_seg_if_closer_then,
-            cylinder_radius=cylinder_radius
-        )
+        self.marge_splines = FilterConnectedNearSegments(distance_th=connect_seg_if_closer_then,
+                                                         cylinder_radius=cylinder_radius)
 
     def __call__(self,
                  segments: np.ndarray) -> np.ndarray:
@@ -393,8 +388,7 @@ class FilterSpatialGraph:
         border = (border[1] - border[0]) / 50
 
         if self.connect_seg_if_closer_then > 0:
-            segments = self.marge_splines(point_cloud=segments,
-                                          omit_border=border)
+            segments = self.marge_splines(point_cloud=segments, omit_border=border)
 
         """Remove too short splines"""
         if self.filter_short_segments > 0:
@@ -560,9 +554,6 @@ def compare_splines_probability(spline_1: np.ndarray,
 
     # Calculating distance matrix between points of 2 splines
     dist_matrix = cdist(spline_1, spline_2)
-
-    # Calculating the matching point on spline1
-    matching_points = np.min(dist_matrix, axis=0)
 
     # Check how many points on spline1 match spline2
     m_s1 = [1 if x < threshold else 0 for x in np.min(dist_matrix, axis=1)]

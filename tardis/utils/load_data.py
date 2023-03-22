@@ -7,6 +7,7 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
+import random
 import struct
 from collections import namedtuple
 from os import listdir
@@ -17,8 +18,9 @@ import numpy as np
 import open3d as o3d
 import tifffile.tifffile as tif
 from numpy import ndarray
-from sklearn.neighbors import KDTree
+from sklearn.neighbors import KDTree, NearestNeighbors
 
+from tardis.dist_pytorch.utils.visualize import _rgb
 from tardis.utils.errors import TardisError
 from tardis.utils.normalization import RescaleNormalize
 
@@ -71,14 +73,14 @@ class ImportDataFromAmira:
 
         # Read spatial graph
         am = open(src_am, 'r', encoding="iso-8859-1").read(500)
-        if 'AmiraMesh 3D ASCII' not in am and '# ASCII Spatial Graph' not in am:
+        if not any([True for i in ['AmiraMesh 3D ASCII',
+                                   '# ASCII Spatial Graph'] if i not in am]):
             self.spatial_graph = None
         else:
-            self.spatial_graph = open(src_am, "r", encoding="iso-8859-1").read().split(
-                "\n")
+            self.spatial_graph = open(src_am, "r", encoding="iso-8859-1").read().split("\n")
             self.spatial_graph = [x for x in self.spatial_graph if x != '']
 
-    def __get_segments(self) -> np.ndarray:
+    def __get_segments(self) -> Union[np.ndarray, None]:
         """
         Helper class function to read segment data from amira file.
 
@@ -121,7 +123,7 @@ class ImportDataFromAmira:
 
         return segment_list
 
-    def __find_points(self) -> np.ndarray:
+    def __find_points(self) -> Union[np.ndarray, None]:
         """
         Helper class function to search for points in Amira file.
 
@@ -165,7 +167,7 @@ class ImportDataFromAmira:
 
         return point_list
 
-    def get_points(self) -> np.ndarray:
+    def get_points(self) -> Union[np.ndarray, None]:
         """
         General class function to retrieve point cloud.
 
@@ -186,7 +188,7 @@ class ImportDataFromAmira:
 
         return points_coord / self.pixel_size
 
-    def get_segmented_points(self) -> np.ndarray:
+    def get_segmented_points(self) -> Union[np.ndarray, None]:
         """
         General class function to retrieve segmented point cloud.
 
@@ -210,7 +212,7 @@ class ImportDataFromAmira:
 
         return np.stack((segmentation, points[:, 0], points[:, 1], points[:, 2])).T
 
-    def get_labels(self) -> dict:
+    def get_labels(self) -> Union[dict, None]:
         """
         General class function to read all labels from amira file.
 
@@ -623,7 +625,7 @@ def load_mrc_file(mrc: str):
 def load_ply_scannet(ply: str,
                      downscaling=0,
                      color: Optional[str] = None) -> Union[Tuple[ndarray, ndarray],
-                                                                 ndarray]:
+                                                           ndarray]:
     """
     Function to read .ply files.
     Args:
@@ -668,7 +670,7 @@ def load_ply_scannet(ply: str,
         if downscaling > 0:
             rgb = rgb.voxel_down_sample(voxel_size=downscaling)
         rgb = np.asarray(rgb.colors)
-        assert coord.shape == rgb.shape, \
+        if coord.shape != rgb.shape:
             TardisError('131',
                         'tardis/utils/load_data.py',
                         'RGB shape must be the same as coord!'
@@ -736,47 +738,48 @@ def load_ply_partnet(ply,
 
 
 def load_txt_s3dis(txt: str,
-                   downscaling=0,
-                   rgb=False) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
+                   rgb=False,
+                   downscaling=0) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
     """
     Function to read .txt Stanford 3D instance scene file.
 
     Args:
         txt (str): File directory.
-        downscaling (float): Downscaling point cloud by fixing voxel size.
         rgb (bool):
+        downscaling (float): Downscaling point cloud by fixing voxel size.
 
     Returns:
         np.ndarray: Labeled point cloud coordinates.
     """
-    coord = np.genfromtxt(txt,
-                          invalid_raise=False)
+    coord = np.genfromtxt(txt, invalid_raise=False)
 
-    if rgb:
-        rgb = coord[:, 3:] / 255
-        rgb = rgb.astype(np.float32)
+    rgb_values = coord[:, 3:]
     coord = coord[:, :3]
 
-    if downscaling != 0 and downscaling > 0:
+    if downscaling > 0:
         pcd = o3d.geometry.PointCloud()
 
         pcd.points = o3d.utility.Vector3dVector(coord)
-        if not isinstance(rgb, bool):
-            pcd.colors = o3d.utility.Vector3dVector(rgb)
+
+        if rgb:
+            pcd.colors = o3d.utility.Vector3dVector(rgb_values)
 
         pcd = pcd.voxel_down_sample(voxel_size=downscaling)
 
         coord = np.asarray(pcd.points)
-        if not isinstance(rgb, bool):
-            rgb = np.asarray(pcd.colors)
 
-    if isinstance(rgb, bool):
-        return coord
-    return coord, rgb
+        if rgb:
+            rgb_values = np.asarray(pcd.colors)
+            return coord, rgb_values
+
+    if rgb:
+        return coord, rgb_values
+    return coord
 
 
 def load_s3dis_scene(dir: str,
                      downscaling=0,
+                     random_ds=None,
                      rgb=False) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
     """
     Function to read .txt Stanford 3D instance scene files.
@@ -784,7 +787,7 @@ def load_s3dis_scene(dir: str,
     Args:
         dir (str): Folder directory with all instances.
         downscaling (float): Downscaling point cloud by fixing voxel size.
-        rgb (bool):
+        random_ds (None, float): If not None, indicate ration of point to keep.
 
     Returns:
         np.ndarray: Labeled point cloud coordinates.
@@ -795,25 +798,59 @@ def load_s3dis_scene(dir: str,
     rgb_scene = []
     id = 0
     for i in dir_list:
-        coord_inst = load_txt_s3dis(join(dir, i),
-                                    downscaling=downscaling,
-                                    rgb=rgb)
         if rgb:
-            rgb_scene.append(coord_inst[1])
-            coord_inst = coord_inst[0]
+            coord_inst, rgb_v = load_txt_s3dis(join(dir, i), rgb=rgb)
+            rgb_scene.append(rgb_v)
+        else:
+            coord_inst = load_txt_s3dis(join(dir, i))
 
         coord_scene.append(np.hstack((np.expand_dims(np.repeat(id, len(coord_inst)), 1),
                                       coord_inst)))
 
         id += 1
+    coord = np.concatenate(coord_scene)
+    if rgb:
+        rgb_v = np.concatenate(rgb_scene) / 255
+
+    if downscaling > 0:
+        if random_ds is not None:
+            pick = int(len(coord) * random_ds)
+            pick = random.sample(range(len(coord)), pick)
+            coord = coord[pick, :]
+
+            if rgb:
+                rgb_v = rgb_v[pick, :]
+        else:
+            pcd = o3d.geometry.PointCloud()
+            pcd.points = o3d.utility.Vector3dVector(coord[:, 1:])
+
+            if rgb:
+                pcd.colors = o3d.utility.Vector3dVector(rgb_v)
+            else:
+                pcd.colors = o3d.utility.Vector3dVector(_rgb(coord, True))
+
+            pcd = pcd.voxel_down_sample(voxel_size=downscaling)
+            coord_ds = np.asarray(pcd.points)
+
+            if rgb:
+                rgb_v = np.asarray(pcd.colors)
+
+            knn = NearestNeighbors(n_neighbors=1,
+                                   algorithm='kd_tree').fit(coord[:, 1:])
+
+            # Query the nearest neighbor for all points in coord_ds
+            _, indices = knn.kneighbors(coord_ds)
+            indices = np.concatenate(indices)
+            cls_id = np.expand_dims(coord[indices, 0], 1)
+            coord = np.hstack((cls_id, coord_ds))
 
     if rgb:
-        return np.concatenate(coord_scene), np.concatenate(rgb_scene)
-    return np.concatenate(coord_scene)
+        return coord, rgb_v
+    return coord
 
 
 def load_image(image: str,
-               normalize=False):
+               normalize=False) -> Tuple[np.ndarray, float]:
     """
     Quick wrapper for loading image data based on detected file format.
 

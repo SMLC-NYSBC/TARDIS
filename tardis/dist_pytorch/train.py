@@ -14,14 +14,15 @@ from typing import Optional
 
 import torch
 from torch import optim
-from torch.optim.lr_scheduler import StepLR
 
 from tardis.dist_pytorch.dist import CDIST, DIST
 from tardis.dist_pytorch.trainer import CDistTrainer, DistTrainer
 from tardis.dist_pytorch.utils.utils import check_model_dict
 from tardis.utils.device import get_device
 from tardis.utils.logo import TardisLogo
-from tardis.utils.losses import BCELoss, CELoss, DiceLoss
+from tardis.utils.losses import (AdaptiveDiceLoss, BCEDiceLoss, BCELoss, CELoss, ClBCE,
+                                 ClDice, DiceLoss, SigmoidFocalLoss)
+from tardis.utils.trainer import ISR_LR
 
 # Setting for stable release to turn off all debug APIs
 torch.backends.cudnn.benchmark = True
@@ -36,7 +37,7 @@ def train_dist(train_dataloader,
                checkpoint: Optional[str] = None,
                loss_function='bce',
                learning_rate=0.001,
-               learning_rate_scheduler=False,
+               lr_scheduler=False,
                early_stop_rate=10,
                device='gpu',
                epochs=1000):
@@ -50,12 +51,24 @@ def train_dist(train_dataloader,
         checkpoint (None, optional): Optional, DIST model checkpoint.
         loss_function (str): Type of loss function.
         learning_rate (float): Learning rate.
-        learning_rate_scheduler (bool): If True, StepLR is used with training.
+        lr_scheduler (bool): If True, LR_scheduler is used with training.
         early_stop_rate (int): Define max. number of epoch's without improvements
         after which training is stopped.
         device (torch.device): Device on which model is trained.
         epochs (int): Max number of epoch's.
     """
+    """Losses"""
+    losses_f = {
+        'AdaptiveDiceLoss': AdaptiveDiceLoss(diagonal=True),
+        'BCELoss': BCELoss(diagonal=True),
+        'BCEDiceLoss': BCEDiceLoss(diagonal=True),
+        'CELoss': CELoss(diagonal=True),
+        'DiceLoss': DiceLoss(diagonal=True),
+        'ClDice': ClDice(diagonal=True),
+        'ClBCE': ClBCE(diagonal=True),
+        'SigmoidFocalLoss': SigmoidFocalLoss(diagonal=True)
+    }
+
     """Check input variable"""
     model_structure = check_model_dict(model_structure)
 
@@ -70,6 +83,7 @@ def train_dist(train_dataloader,
                      edge_dim=model_structure['edge_dim'],
                      num_layers=model_structure['num_layers'],
                      num_heads=model_structure['num_heads'],
+                     rgb_embed_sigma=model_structure['rgb_embed_sigma'],
                      coord_embed_sigma=model_structure['coord_embed_sigma'],
                      dropout_rate=model_structure['dropout_rate'],
                      structure=model_structure['structure'],
@@ -82,6 +96,7 @@ def train_dist(train_dataloader,
                       num_layers=model_structure['num_layers'],
                       num_heads=model_structure['num_heads'],
                       num_cls=model_structure['num_cls'],
+                      rgb_embed_sigma=model_structure['rgb_embed_sigma'],
                       coord_embed_sigma=model_structure['coord_embed_sigma'],
                       dropout_rate=model_structure['dropout_rate'],
                       structure=model_structure['structure'],
@@ -92,15 +107,21 @@ def train_dist(train_dataloader,
         sys.exit()
 
     """Build TARDIS progress bar output"""
-    print_setting = [f"Training is started on {device} for DIST-"
-                     f"{model_structure['structure']}",
+    if model_structure['node_dim'] == 0:
+        node_sigma = ''
+    elif model_structure['rgb_embed_sigma'] == 0:
+        node_sigma = ", [Linear] node_sigma"
+    else:
+        node_sigma = f", {model_structure['rgb_embed_sigma']} node_sigma"
+
+    print_setting = [f"Training is started on {device} for DIST-{model_structure['structure']}",
                      f"Local dir: {getcwd()}",
                      f"Training for {model_structure['dist_type']} with "
                      f"No. of Layers: {model_structure['num_layers']} and "
                      f"{model_structure['num_heads']} heads",
                      f"Layers are build of {model_structure['node_dim']} nodes, "
                      f"{model_structure['edge_dim']} edges, "
-                     f"{model_structure['coord_embed_sigma']} sigma"]
+                     f"{model_structure['coord_embed_sigma']} edge_sigma{node_sigma}"]
 
     """Optionally: Load checkpoint for retraining"""
     if checkpoint is not None:
@@ -115,28 +136,27 @@ def train_dist(train_dataloader,
     model = model.to(device)
 
     """Define loss function for training"""
-    if loss_function == "dice":
-        loss_fn = DiceLoss()
-    elif loss_function == "bce":
-        loss_fn = BCELoss(diagonal=True)
-    elif loss_function == 'ce':
-        loss_fn = CELoss()
+    loss_fn = losses_f['BCELoss']
+    if loss_function in losses_f:
+        loss_fn = losses_f[loss_function]
 
     """Build training optimizer"""
-    optimizer = optim.Adam(params=model.parameters(),
-                           lr=learning_rate)
+    if lr_scheduler:
+        optimizer = optim.Adam(params=model.parameters(),
+                               betas=(0.9, 0.98), eps=1e-9)
+    else:
+        optimizer = optim.Adam(params=model.parameters(),
+                               lr=learning_rate,
+                               betas=(0.9, 0.98), eps=1e-9)
+
+    """Optionally: Build learning rate scheduler"""
+    if lr_scheduler:
+        optimizer = ISR_LR(optimizer, lr_mul=learning_rate)
 
     """Optionally: Checkpoint model"""
     if checkpoint is not None:
         optimizer.load_state_dict(save_train['optimizer_state_dict'])
-
         del save_train
-
-    """Optionally: Build learning rate scheduler"""
-    if learning_rate_scheduler:
-        learning_rate_scheduler = StepLR(optimizer, step_size=2, gamma=0.5)
-    else:
-        learning_rate_scheduler = None
 
     """Build trainer"""
     if model_structure['dist_type'] == 'instance':
@@ -148,8 +168,8 @@ def train_dist(train_dataloader,
                             print_setting=print_setting,
                             training_DataLoader=train_dataloader,
                             validation_DataLoader=test_dataloader,
-                            lr_scheduler=learning_rate_scheduler,
                             epochs=epochs,
+                            lr_scheduler=lr_scheduler,
                             early_stop_rate=early_stop_rate,
                             checkpoint_name=model_structure['dist_type'])
     elif model_structure['dist_type'] == 'semantic':
@@ -161,8 +181,8 @@ def train_dist(train_dataloader,
                              print_setting=print_setting,
                              training_DataLoader=train_dataloader,
                              validation_DataLoader=test_dataloader,
-                             lr_scheduler=learning_rate_scheduler,
                              epochs=epochs,
+                             lr_scheduler=lr_scheduler,
                              early_stop_rate=early_stop_rate,
                              checkpoint_name=model_structure['dist_type'])
 
