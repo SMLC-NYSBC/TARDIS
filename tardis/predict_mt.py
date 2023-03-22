@@ -28,6 +28,7 @@ warnings.simplefilter("ignore", UserWarning)
               default='None_amSG',
               type=click.Choice(['None_amSG', 'am_amSG', 'mrc_amSG', 'tif_amSG',
                                  'None_mrcM', 'am_mrcM', 'mrc_mrcM', 'tif_mrcM',
+                                 'None_tifM', 'am_tifM', 'mrc_tifM', 'tif_tifM',
                                  'None_mrcM', 'am_csv', 'mrc_csv', 'tif_csv']),
               help='Type of output.',
               show_default=True)
