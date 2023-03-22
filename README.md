@@ -22,6 +22,7 @@ is used for instance segmentation of 2D/3D images.
     * General improvement form MT prediction
     * Added support for Cry-mem prediction
     * Added support for node (RGB) features in DIST
+    * Pre-trained network for Cryo-mem, General-MT, S3DIS dataset
     * Full support for Pytorch 2.0
 </details>
 
@@ -100,7 +101,7 @@ You can either clone the public repository:
     $ pip install -r requirements.txt
     $ pip install -r requirements-dev.txt
 
-Or install from pre-build python package:
+Or install directly from pre-build python package:
 
 Install:
 * Python 3.7, 3.8, 3.9, 3.10
@@ -131,33 +132,255 @@ Linux:
 
 <details><summary><i>Semantic microtubule prediction:</i></summary>
 
-![Prediction example1]()
+### Example:
+![Prediction example1](resources/tardis_semantic_mt.jpg)
+
+### Usage:
 
 </details>
 
 <details><summary><i>Instance microtubule prediction:</i></summary>
 
-![Prediction example2]()
-</details>
+### Example: 
+![Prediction example2](resources/tardis_instance_mt.jpg)
+
+### Usage:
+```
+recomanded usage: tardis_mt [-dir path/to/folder/with/input/tomogram]
+advance usage: tardis_mt [-dir str] [-out str] [-ps int] [-ct float] [-dt float]
+                         [-pv int] [-ap str] ...
+```
+```
+optional arguments:
+  -h, --help            show this help message and exit
+  -v, --version         show current TARDIS version
+  
+  
+  -dir, --dir [str]     
+                        Directory with images for prediction with CNN model.
+                        Default: getcwd()
+                        
+  -out, --output_format [str]
+                        Type of output files. The First optional output file is the binary mask 
+                        which can be of type None [no output], am [Amira], mrc or tif. 
+                        Second output is instance segmentation of objects, which can be 
+                        output as amSG [Amira], mrcM [mrc mask], tifM [tif mask],
+                        csv coordinate file [ID, X, Y, Z] or None [no instance prediction].
+                        Default: None_amSG
+  
+  -ps, --patch_size [int]
+                        Size of image patch used for prediction. This will break 
+                        the tomogram volumes into 3D patches where each patch will be
+                        separately predicted and then stitched back together 
+                        with 25% overlap.
+                        Default: 128
+                        
+  -ct, --cnn_threshold [float]
+                        Threshold used for CNN prediction.
+                        Default: 0.5
+
+  -dt, --dist_threshold [float]
+                        Threshold used for instance prediction.
+                        Default: 0.75
+
+  -pv, --points_in_patch [int]
+                        Size of the cropped point cloud, given as a max. number of points
+                        per crop. This will break generated from the binary mask
+                        point cloud into smaller patches with overlap. 
+                        Default: 1000
+
+  -ap, --amira_prefix [str]
+                        If dir/amira foldr exist, TARDIS will serach for files with
+                        given prefix (e.g. file_name.CorrelationLines.am). If the correct
+                        file is found, TARDIS will use its instance segmentation with
+                        ZiB Amira prediction, and output additional file called
+                        file_name_AmiraCompare.am.
+                        Default: .CorrelationLines                       
+ 
+  -fl, --filter_by_length [int]
+                        Filtering parameters for microtubules, defining maximum microtubule 
+                        length in angstrom. All filaments shorter then this length 
+                        will be deleted.
+                        Default: 500
+                        
+  -cs, --connect_splines [int]
+                        Filtering parameter for microtubules. Some microtubules may be 
+                        predicted incorrectly as two separate filaments. To overcome this
+                        during filtering for each spline, we determine the vector in which 
+                        filament end is facing and we connect all filament that faces 
+                        the same direction and are within the given connection 
+                        distance in angstrom.
+                        Default: 2500
+
+  -cr, --connect_cylinder [int]
+                        Filtering parameter for microtubules. To reduce false positive 
+                        from connecting filaments, we reduce the searching are to cylinder 
+                        radius given in angstrom. For each spline we determine vector 
+                        in which filament end is facing and we search for a filament 
+                        that faces the same direction and their end can be found 
+                        within a cylinder.
+                        Default: 250
+  
+  -acd, --amira_compare_distance [int]
+                        If dir/amira/file_amira_prefix.am is recognized, TARDIS runs
+                        a comparison between its instance segmentation and ZiB Amira prediction.
+                        The comparison is done by evaluating the distance of two filaments from
+                        each other. This parameter defines the maximum distance used to 
+                        evaluate the similarity between two splines based on their 
+                        coordinates [A].
+                        Default: 175
+
+  -aip, --amira_inter_probability [flaot]
+                        If dir/amira/file_amira_prefix.am is recognized, TARDIS runs
+                        a comparison between its instance segmentation and ZiB Amira prediction.
+                        This parameter defines the interaction threshold used to identify splines 
+                        that are similar overlaps between TARDIS and ZiB Amira.
+                        Default: 0.25
+                        
+ -dv, --device [str]
+                        Define which device to use for training:
+                        * gpu: Use ID 0 GPU
+                        * cpu: Usa only CPU
+                        * mps: Apple silicon (experimental)
+                        * 0-9 - specified GPU device id to use    
+
+  -db, --debug [bool]
+                        If True, save the output from each step for debugging.
+                        Default: False                          
+```
 
 </details>
 
+</details>
 
 <details><summary><b>Membrane Prediction</b></summary>
 
 <details><summary><i>Semantic membrane prediction:</i></summary>
 
-![Prediction example3]()
+### Example: 
+![Prediction example3](resources/tardis_semantic_mem.jpg)
+
+### Usage:
+```
+recomanded usage: tardis_mem [-dir path/to/folder/with/input/tomogram]
+advance usage: tardis_mem [-dir str] [-out str] [-ps int] ...
+```
+```
+optional arguments:
+  -h, --help            show this help message and exit
+  -v, --version         show current TARDIS version
+  
+  
+  -dir, --dir [str]     
+                        Directory with images for prediction with CNN model.
+                        Default: getcwd()
+                        
+  -out, --output_format [str]
+                        Type of output files. The First optional output file is the binary mask 
+                        which can be of type None [no output], am [Amira], mrc or tif. 
+                        Second output is instance segmentation of objects, which can be 
+                        output as amSG [Amira], mrcM [mrc mask], tifM [tif mask],
+                        csv coordinate file [ID, X, Y, Z] or None [no instance prediction].
+                        Default: mrc_None
+  
+  -ps, --patch_size [int]
+                        Size of image patch used for prediction. This will break 
+                        the tomogram volumes into 3D patches where each patch will be
+                        separately predicted and then stitched back together 
+                        with 25% overlap.
+                        Default: 128
+                        
+  -ct, --cnn_threshold [float]
+                        Threshold used for CNN prediction.
+                        Default: 0.15
+
+  -dt, --dist_threshold [float]
+                        Threshold used for instance prediction.
+                        Default: 0.95
+
+  -pv, --points_in_patch [int]
+                        Size of the cropped point cloud, given as a max. number of points
+                        per crop. This will break generated from the binary mask
+                        point cloud into smaller patches with overlap. 
+                        Default: 1000
+                        
+ -dv, --device [str]
+                        Define which device to use for training:
+                        * gpu: Use ID 0 GPU
+                        * cpu: Usa only CPU
+                        * mps: Apple silicon (experimental)
+                        * 0-9 - specified GPU device id to use    
+
+  -db, --debug [bool]
+                        If True, save the output from each step for debugging.
+                        Default: False  
+```
 
 </details>
 
 <details><summary><i>Instance membrane prediction*:</i></summary>
 
-![Prediction example4]()
+### Example: 
+![Prediction example4](resources/tardis_instance_mem.jpg)
 
 *Stable support for membrane instance segmentation is expected in TARDIS-0.1.0-RC3.
 TARDIS from v0.1.0-RC2 allows for instance membrane segmentation. Results may vary.
 
+### Usage:
+```
+recomanded usage: tardis_mem [-dir path/to/folder/with/input/tomogram] [-out mrc_mrcM]
+advance usage: tardis_mem [-dir str] [-out str] [-ps int] ...
+```
+```
+optional arguments:
+  -h, --help            show this help message and exit
+  -v, --version         show current TARDIS version
+  
+  
+  -dir, --dir [str]     
+                        Directory with images for prediction with CNN model.
+                        Default: getcwd()
+                        
+  -out, --output_format [str]
+                        Type of output files. The First optional output file is the binary mask 
+                        which can be of type None [no output], am [Amira], mrc or tif. 
+                        Second output is instance segmentation of objects, which can be 
+                        output as amSG [Amira], mrcM [mrc mask], tifM [tif mask],
+                        csv coordinate file [ID, X, Y, Z] or None [no instance prediction].
+                        Default: mrc_None
+  
+  -ps, --patch_size [int]
+                        Size of image patch used for prediction. This will break 
+                        the tomogram volumes into 3D patches where each patch will be
+                        separately predicted and then stitched back together 
+                        with 25% overla
+                        Default: 128
+                        
+  -ct, --cnn_threshold [float]
+                        Threshold used for CNN prediction.
+                        Default: 0.5
+
+  -dt, --dist_threshold [float]
+                        Threshold used for instance prediction.
+                        Default: 0.5
+
+  -pv, --points_in_patch [int]
+                        Size of the cropped point cloud, given as a max. number of points
+                        per crop. This will break generated from the binary mask
+                        point cloud into smaller patches with overlap. 
+                        Default: 1000
+                        
+ -dv, --device [str]
+                        Define which device to use for training:
+                        * gpu: Use ID 0 GPU
+                        * cpu: Usa only CPU
+                        * mps: Apple silicon (experimental)
+                        * 0-9 - specified GPU device id to use    
+
+  -db, --debug [bool]
+                        If True, save the output from each step for debugging.
+                        Default: False  
+```
 </details>
 
 </details>
