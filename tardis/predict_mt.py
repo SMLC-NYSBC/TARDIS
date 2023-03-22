@@ -85,6 +85,11 @@ warnings.simplefilter("ignore", UserWarning)
               help='Interaction threshold used to evaluate reject splines that are'
                    'similar below that threshold.',
               show_default=True)
+@click.option('-in', '--instances',
+              default=True,
+              type=bool,
+              help='If True, try predict instances from semantic binary labels.',
+              show_default=True)
 @click.option('-dv', '--device',
               default=0,
               type=str,
@@ -112,6 +117,7 @@ def main(dir: str,
          amira_prefix: str,
          amira_compare_distance: int,
          amira_inter_probability: float,
+         instance: bool,
          device: str,
          debug: bool):
     """
@@ -131,7 +137,7 @@ def main(dir: str,
                                  connect_cylinder=connect_cylinder,
                                  amira_compare_distance=amira_compare_distance,
                                  amira_inter_probability=amira_inter_probability,
-                                 instances=True,
+                                 instances=instance,
                                  device=device,
                                  debug=debug)
 
