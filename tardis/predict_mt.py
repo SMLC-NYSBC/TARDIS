@@ -25,9 +25,9 @@ warnings.simplefilter("ignore", UserWarning)
               help='Directory with images for prediction with CNN model.',
               show_default=True)
 @click.option('-out', '--output_format',
-              default='am_coord',
-              type=click.Choice(['all', 'tif', 'mrc', 'am',
-                                 'tif_coord', 'mrc_coord', 'am_coord']),
+              default='None_amSG',
+              type=click.Choice(['None_amSG', 'am_amSG', 'tif_amSG', 'mrc_amSG',
+                                 'None_csv', 'am_csv', 'tif_csv', 'mrc_csv']),
               help='Type of output.',
               show_default=True)
 @click.option('-ps', '--patch_size',

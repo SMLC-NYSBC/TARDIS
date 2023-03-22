@@ -27,8 +27,9 @@ warnings.simplefilter("ignore", UserWarning)
               show_default=True)
 @click.option('-out', '--output_format',
               default='tif',
-              type=click.Choice(['all', 'tif', 'mrc', 'am',
-                                 'tif_coord', 'mrc_coord', 'am_coord']),
+              type=click.Choice(['None_amSG', 'am_amSG', 'tif_amSG', 'mrc_amSG',
+                                 'None_csv', 'am_csv', 'tif_csv', 'mrc_csv',
+                                 'None_mrcM', 'mrc_mrcM', 'mrc_mrcM', 'mrc_mrcM']),
               help='Type of output.',
               show_default=True)
 @click.option('-ps', '--patch_size',
