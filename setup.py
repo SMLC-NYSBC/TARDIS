@@ -20,7 +20,7 @@ with open("requirements.txt") as r:
 setup(
     author="Robert Kiewisz, Tristan Bepler",
     author_email="rkiewisz@nysbc.com",
-    
+
     python_requires=">=3.7, <3.11",  # 3.11 support soon
 
     install_requires=required,
