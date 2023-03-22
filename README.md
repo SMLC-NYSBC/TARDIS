@@ -1,6 +1,7 @@
 # TARDIS
 
 ![Version](https://img.shields.io/badge/release-0.1.0_RC2-success)
+[![Python PyTest](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_package.yml/badge.svg?branch=main)](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_package.yml)
 ![Documentation](https://readthedocs.org/projects/tardis-pytorch/badge/?version=latest)
 
 Python based software for generalized object instance segmentation from (cryo-)electron microscopy
