@@ -461,7 +461,7 @@ class DataSetPredictor:
                              output=join(self.dir, 'temp', 'Patches'),
                              image_counter=0,
                              clean_empty=False,
-                             stride=round(self.patch_size * 0.5))
+                             stride=round(self.patch_size * 0.25))
             self.image = None
 
             """CNN prediction"""
