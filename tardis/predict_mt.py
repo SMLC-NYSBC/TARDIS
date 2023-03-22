@@ -129,6 +129,7 @@ def main(dir: str,
                                  connect_cylinder=connect_cylinder,
                                  amira_compare_distance=amira_compare_distance,
                                  amira_inter_probability=amira_inter_probability,
+                                 instances=True,
                                  device=device,
                                  debug=debug)
 

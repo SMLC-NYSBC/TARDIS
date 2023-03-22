@@ -1,64 +1,81 @@
 History
 =======
 
-0.1.0-RC2 (2023-03-xx)
+0.1.0-RC2 (2023-03-22)
 ----------------------
 * **General changes:**
-    * *General* Normalized all documentation to *.md
-    * *#New_Feature* Ensure support for PyTorch 2.0
-    * *#New_Feature* Added benchmark entry
-    * *#New_Feature* Added ClBCE and ClDice loss functions
-    * *#New_Feature* Added binary Amira image file export.
-    * *#Optimize* Loss functions pytest and general cleanup
-    * *#Optimize* Formatting and missing TardisErrors
-    * *#Optimize* 20x Speed up for Tardis logo for Linux/OS X
-    * *#New_Feature* Full membrane support (training and prediction of cryo-mem)
-    * *#BugFix* Fixed small bugs in metrics calculation
-    * *#New_Feature* Added costume LR schedular (ISR - invert square root)
+    * *#General*: 
+      * Normalized all documentation to *.md
+    * *#New_Feature*: 
+      * Ensure support for PyTorch 2.0 
+      * Added benchmark entry
+      * Added ClBCE and ClDice loss functions
+      * Added binary Amira image file export
+      * Full membrane support (training and prediction of cryo-mem)
+      * Added costume LR schedular (ISR - invert square root)
+    * *#Optimize*: 
+      * Loss functions pytest and general cleanup
+      * Formatting and missing TardisErrors
+      * 20x Speed up for Tardis logo for Linux/OS X
+    * *#BugFix*:
+      * Fixed small bugs in metrics calculation
 
 * **SpindleTorch module changes:**
-    * *#New_Feature* Added and tested clDice and clBCE loss function
-    * *#Optimize* Support for membrane training dataset
-    * *#General* Globally change normalization (0-1) to image standardization (-1-1)
-    with mean and standard deviation
+    * *#New_Feature* 
+      * Added and tested clDice and clBCE loss function
+    * *#Optimize* 
+      * Support for membrane training dataset
+    * *#General* 
+      * Globally change normalization (0-1) to image standardization (-1-1)
+      with mean and standard deviation
 
 * **DIST module changes:**
-    * *#Optimize* Point cloud visualization can be now with or without animation
-    * *#New_Feature* Node embedding with furier random
-    * *#New_Feature* Added calculation of mcov metric during training and save
-    checkpoint based on it
+  * *#New_Feature* 
+        * Node embedding with furier random
+        * Added calculation of mcov metric during training and save checkpoint based on it
+  * *#Optimize* 
+    * Point cloud visualization can be now with or without animation
 
 0.1.0-RC1 (2023-02-08)
 ----------------------
 * **Code restructure:**
-    *#Optimize* + autonomization of tests for all python version
+    * *#Optimize*:
+        * autonomization of tests for all python version
 
 * **SpindleTorch module changes:**
-    * *#Optimize* Rebuild interpolation for images and mask
-    * *#Optimize* Simplified building training/testing of datasets
-    * *#BugFix* image normalization for few very specific cases
-    * *#Optimize* Redo mask building from coordinates
-    * *#Optimize* Build_Point_Cloud
-    * *#Optimize* New model train with optimize image normalization
+    * *#Optimize*:
+      * Rebuild interpolation for images and mask
+      * Simplified building training/testing of datasets
+      * Redo mask building from coordinates
+      * Build_Point_Cloud
+      * New model train with optimize image normalization
+    * *#BugFix*:
+      * image normalization for few very specific cases
 
 * **DIST module changes:**
-    * *#Optimize* Change how DIST distance embedding is computed for GT data.
-    * *#New_Feature* DataLoader for stanford data
-    * *#Optimize* Change normalization for point cloud
+    * *#Optimize*:
+      * Change how DIST distance embedding is computed for GT data.
+      * Change normalization for point cloud
         - MT normalized by pixel size
         - All other by open3d downsampling value optional random downsamling
-    * *#BugFix*  in point cloud segmenter when feed with coord idx as float not int
-    * *#Optimize* F1 eval metric and BCE loss without diagonal axis
-    * *#New_Feature* spline filtering include geometric filtering and margin of spline
+      * F1 eval metric and BCE loss without diagonal axis
+    * *#New_Feature*:
+      * DataLoader for stanford data
+      * spline filtering include geometric filtering and margin of spline
+    * *#BugFix*:
+      * in point cloud segmenter when feed with coord idx as float not int
 
 * **General changes:**
-    * *#General* Added data competition with Amira mesh output
-    * *#General* Added license footnote
-    * *#BugFix* and *#Optimize* for post-processing of spatial-graphs
-    * *#BugFix*  AWS weight import when aws don't allow read access
+    * *#General*:
+      * Added data competition with Amira mesh output
+      * Added license footnote
     * *#General* code *#Optimize* for speed
+    * *#BugFix* and *#Optimize* for post-processing of spatial-graphs
     * *#BugFix* and *#New_Feature* for amira export format (now build multi-label)
-    * *#New_Feature* TardisError for all error handling
+    * *#BugFix*:
+      * AWS weight import when aws don't allow read access
+    * *#New_Feature*:
+      * TardisError for all error handling
 
 0.1.0-beta2 (2022-09-14)
 ------------------------

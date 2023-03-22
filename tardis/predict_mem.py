@@ -52,6 +52,11 @@ warnings.simplefilter("ignore", UserWarning)
               type=int,
               help='Number of point per voxel.',
               show_default=True)
+@click.option('-in', '--instances',
+              default=False,
+              type=bool,
+              help='If True, try predict instances from semantic binary labels.',
+              show_default=True)
 @click.option('-dv', '--device',
               default=0,
               type=str,
@@ -73,6 +78,7 @@ def main(dir: str,
          cnn_threshold: float,
          dist_threshold: float,
          points_in_patch: int,
+         instances: bool,
          device: str,
          debug: bool):
     """
@@ -86,6 +92,13 @@ def main(dir: str,
                                  dist_threshold=dist_threshold,
                                  points_in_patch=points_in_patch,
                                  predict_with_rotation=False,
+                                 amira_prefix=None,
+                                 filter_by_length=None,
+                                 connect_splines=None,
+                                 connect_cylinder=None,
+                                 amira_compare_distance=None,
+                                 amira_inter_probability=None,
+                                 instances=instances,
                                  device=device,
                                  debug=debug)
     predictor()

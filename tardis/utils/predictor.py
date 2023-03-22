@@ -59,6 +59,7 @@ class DataSetPredictor:
         connect_cylinder (Optional[int]):
         amira_compare_distance (Optional[int]):
         amira_inter_probability (Optional[float]):
+        instances (bool):
         device (str):
         debug (bool):
     """
@@ -77,6 +78,7 @@ class DataSetPredictor:
                  connect_cylinder: Optional[int],
                  amira_compare_distance: Optional[int],
                  amira_inter_probability: Optional[float],
+                 instances: bool,
                  device: str,
                  debug: bool):
         if predict not in ['Membrane', 'Microtubule']:
@@ -110,7 +112,7 @@ class DataSetPredictor:
         else:
             str_debug = ''
 
-        if output_format.endswith('coord'):
+        if instances:
             self.predict_instance = True
         else:
             self.predict_instance = False
