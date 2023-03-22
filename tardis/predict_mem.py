@@ -85,7 +85,7 @@ def main(dir: str,
     """
     MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
     """
-    predictor = DataSetPredictor(predict='Microtubule',
+    predictor = DataSetPredictor(predict='Membrane',
                                  dir=dir,
                                  output_format=output_format,
                                  patch_size=patch_size,
