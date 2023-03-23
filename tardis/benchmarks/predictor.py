@@ -67,8 +67,7 @@ class CnnBenchmark:
                                 circle_size=150,
                                 resize_pixel_size=25,
                                 trim_xy=patch_size,
-                                trim_z=patch_size,
-                                benchmark=True)
+                                trim_z=patch_size)
         else:
             TardisError(id='',
                         py='tardis/benchmarks/benchmarks.py',
