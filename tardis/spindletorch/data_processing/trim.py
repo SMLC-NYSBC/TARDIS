@@ -27,6 +27,7 @@ def trim_with_stride(image: np.ndarray,
                      image_counter: int,
                      scale: tuple,
                      clean_empty=True,
+                     keep_if=0.01,
                      stride=25,
                      mask: Optional[np.ndarray] = None):
     """
@@ -45,6 +46,7 @@ def trim_with_stride(image: np.ndarray,
         image_counter (int): Number id of image.
         scale (tuple): Up- DownScale image and mask to the given shape or factor.
         clean_empty (bool): Remove empty patches.
+        keep_if (float):
         stride (int): Trimming step size.
         mask (np.ndarray, None): Label mask.
     """
@@ -92,7 +94,7 @@ def trim_with_stride(image: np.ndarray,
         nc = None  # 2D
         nz = 0  # Gray
         min_px_count = trim_size_xy * trim_size_xy
-    min_px_count = min_px_count * 0.01  # 0.0075% of pixels must be occupied
+    min_px_count = min_px_count * keep_if  # 0.01% of pixels must be occupied
 
     if trim_size_xy is not None or trim_size_z is not None:
         if not nx >= trim_size_xy:

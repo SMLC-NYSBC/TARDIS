@@ -28,6 +28,7 @@ def build_train_dataset(dataset_dir: str,
                         resize_pixel_size: float,
                         trim_xy: int,
                         trim_z: int,
+                        keep_if=0.01,
                         benchmark: object = False):
     """
     Module for building train datasets from compatible files.
@@ -57,6 +58,7 @@ def build_train_dataset(dataset_dir: str,
         resize_pixel_size (float): Pixel size for image resizing.
         trim_xy (int): Voxel size of output image in x and y dimension.
         trim_z (int): Voxel size of output image in z dimension.
+        keep_if (float):
         benchmark (bool): If True construct data for benchmark.
     """
     """Setup"""
@@ -253,6 +255,7 @@ def build_train_dataset(dataset_dir: str,
                          trim_size_xy=trim_xy,
                          trim_size_z=trim_z,
                          clean_empty=clean_empty,
+                         keep_if=keep_if,
                          output=join(dataset_dir, 'train'),
                          image_counter=img_counter)
         img_counter += 1
