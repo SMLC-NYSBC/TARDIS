@@ -411,14 +411,14 @@ class DataSetPredictor:
             elif debug_id == 'segment':
                 if self.device == 'cpu':
                     np.save(join(self.am_output, f'{id_name[:-self.in_format]}_coord_voxel.npy'),
-                            self.pc_ld)
+                            self.coords_df)
                     np.save(join(self.am_output, f'{id_name[:-self.in_format]}_idx_voxel.npy'),
                             self.output_idx)
                 else:
                     np.save(join(self.am_output, f'{id_name[:-self.in_format]}_coord_voxel.npy'),
-                            self.coords_df)
+                            self.coords_df.cpu().detach().numpy())
                     np.save(join(self.am_output, f'{id_name[:-self.in_format]}_idx_voxel.npy'),
-                            self.output_idx)
+                            self.output_idx.cpu().detach().numpy())
                 np.save(join(self.am_output, f'{id_name[:-self.in_format]}_segments.npy'),
                         self.segments)
             elif debug_id == 'instance_mask':
@@ -654,18 +654,17 @@ class DataSetPredictor:
                                                             coordinate=self.segments,
                                                             pixel_size=self.px,
                                                             spline_size=60)
-
                 self._debug(id_name=i, debug_id='instance_mask')
 
-                if self.output_format == 'mrcM':
-                    to_mrc(data=mask_semantic,
+                if self.output_format.endswith == 'mrcM':
+                    to_mrc(data=self.mask_semantic,
                            file_dir=join(self.am_output, f'{i[:-self.in_format]}_instance.mrc'),
                            pixel_size=self.px)
-                elif self.output_format == 'tifM':
+                elif self.output_format.endswith == 'tifM':
                     tif.imwrite(join(self.am_output, f'{i[:-self.in_format]}_instance.tif'),
-                                mask_semantic)
-                elif self.output_format == 'amM':
-                    to_am(data=mask_semantic,
+                                self.mask_semantic)
+                elif self.output_format.endswith == 'amM':
+                    to_am(data=self.mask_semantic,
                           file_dir=join(self.am_output, f'{i[:-self.in_format]}_instance.am'),
                           pixel_size=self.px)
 

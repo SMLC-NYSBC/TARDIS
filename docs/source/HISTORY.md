@@ -1,4 +1,12 @@
 # History
+## 0.1.0-RC2-HotFix (2023-03-23)
+* **General changes:**
+  * Fixed loading for corrupted mrc files
+  * Fixed for loading and saving mrc/rec files (fix for reading headers size)
+  * Fix for loading new Amira SG with coordinates in 'nm' not 'Angstrom'
+  * Small fixed in general prediction loops
+
+
 ## 0.1.0-RC2 (2023-03-22)
 * **General changes:**
     * *#General*: 
