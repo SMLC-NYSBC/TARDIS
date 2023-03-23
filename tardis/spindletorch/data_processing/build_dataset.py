@@ -113,7 +113,7 @@ def build_train_dataset(dataset_dir: str,
         mask_prefix = 0
         mask_name = ''
         mask_dir = ''
-        while not isfile(dataset_dir):
+        while not isfile(join(dataset_dir, mask_name)):
             mask_name = i[:-3] + MASK_FORMATS[mask_prefix] \
                 if i.endswith('.am') else i[:-4] + MASK_FORMATS[mask_prefix]
 

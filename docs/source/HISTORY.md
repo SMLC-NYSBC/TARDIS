@@ -5,7 +5,7 @@
   * Fixed for loading and saving mrc/rec files (fix for reading headers size)
   * Fix for loading new Amira SG with coordinates in 'nm' not 'Angstrom'
   * Small fixed in general prediction loops
-
+  * Fixed missing membrane instance prediction output
 
 ## 0.1.0-RC2 (2023-03-22)
 * **General changes:**
