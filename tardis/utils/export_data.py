@@ -12,10 +12,10 @@ from datetime import datetime
 from io import BytesIO
 from typing import List, Optional, Union
 
-import mrcfile
 import numpy as np
 
 from tardis.utils.errors import TardisError
+from tardis.utils.load_data import mrc_write_header
 from tardis.utils.spline_metric import reorder_segments_id
 from tardis.version import version
 
@@ -313,14 +313,32 @@ def to_mrc(data: np.ndarray,
         pixel_size (float): Image original pixel size.
         file_dir (str): Directory where the file should be saved.
     """
-    data = np.flip(data, axis=1)
-    try:
-        with mrcfile.new(file_dir) as mrc:
-            mrc.set_data(data)
-            mrc.voxel_size((pixel_size, pixel_size, pixel_size))
-    except ValueError:
-        with mrcfile.new(file_dir, overwrite=True) as mrc:
-            mrc.set_data(data)
+    header = mrc_write_header(data.shape[2], data.shape[1], data.shape[0],  # nx, ny, nz
+                              1,  # mode = 32-bit signed real
+                              0, 0, 0,  # nxstart, nystart, nzstart
+                              1, 1, 1,  # mx, my, mz
+                              1, 1, 1,  # cella
+                              0, 0, 0,  # cellb
+                              1, 2, 3,  # mapc, mapr, maps
+                              data.min(), data.max(), data.mean(),  # dmin, dmax, dmean
+                              0,  # ispg, space group 0 means images or stack of images
+                              0,
+                              0,  # creatid
+                              0, 0,  # nint, nreal
+                              0, 0, 0, 0, 0, 0, 0, 0,
+                              0, 0, 0, 0, 0, 0,
+                              0, 0, 0,  # xorg, yorg, zorg
+                              b'\x00'*4, b'\x00'*4,  #cmap, stamp
+                              data.std(),  # rms
+                              0,  # nlabl
+                              b'\x00'*800)  # labels
+
+    with open(file_dir, 'wb') as f:
+        # write the header
+        f.write(header)
+
+        # write data
+        f.write(data.tobytes())
 
 
 def to_am(data: np.ndarray,

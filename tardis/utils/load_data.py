@@ -318,7 +318,109 @@ def import_tiff(tiff: str):
     return np.array(tif.imread(tiff)), 1.0
 
 
-def mrc_file_header(mrc: str):
+# int nx
+# int ny
+# int nz
+fstr = '3i'
+names = 'nx ny nz'
+
+# int mode
+fstr += 'i'
+names += ' mode'
+
+# int nxstart
+# int nystart
+# int nzstart
+fstr += '3i'
+names += ' nxstart nystart nzstart'
+
+# int mx
+# int my
+# int mz
+fstr += '3i'
+names += ' mx my mz'
+
+# float xlen
+# float ylen
+# float zlen
+fstr += '3f'
+names += ' xlen ylen zlen'
+
+# float alpha
+# float beta
+# float gamma
+fstr += '3f'
+names += ' alpha beta gamma'
+
+# int mapc
+# int mapr
+# int maps
+fstr += '3i'
+names += ' mapc mapr maps'
+
+# float amin
+# float amax
+# float amean
+fstr += '3f'
+names += ' amin amax amean'
+
+# int ispg
+# int next
+# short creatid
+fstr += '2ih'
+names += ' ispg next creatid'
+
+# pad 30 (extra data)
+# [98:128]
+fstr += '30x'
+
+# short nint
+# short nreal
+fstr += '2h'
+names += ' nint nreal'
+
+# pad 20 (extra data)
+# [132:152]
+fstr += '20x'
+
+# int imodStamp
+# int imodFlags
+fstr += '2i'
+names += ' imodStamp imodFlags'
+
+# short idtype
+# short lens
+# short nd1
+# short nd2
+# short vd1
+# short vd2
+fstr += '6h'
+names += ' idtype lens nd1 nd2 vd1 vd2'
+
+# float[6] tiltangles
+fstr += '6f'
+names += ' tilt_ox tilt_oy tilt_oz tilt_cx tilt_cy tilt_cz'
+
+# NEW-STYLE MRC image2000 HEADER - IMOD 2.6.20 and above
+# float xorg
+# float yorg
+# float zorg
+# char[4] cmap
+# char[4] stamp
+# float rms
+fstr += '3f4s4sf'
+names += ' xorg yorg zorg cmap stamp rms'
+
+# int nlabl
+# char[10][80] labels
+fstr += 'i800s'
+names += ' nlabl labels'
+
+header_struct = struct.Struct(fstr)
+MRCHeader = namedtuple('MRCHeader', names)
+
+
+def mrc_read_header(mrc: Optional[Union[str, bytes]] = None):
     """
     Helper function to read MRC header.
 
@@ -328,111 +430,18 @@ def mrc_file_header(mrc: str):
     Returns:
         class: MRC header.
     """
-    # int nx
-    # int ny
-    # int nz
-    fstr = '3i'
-    names = 'nx ny nz'
-
-    # int mode
-    fstr += 'i'
-    names += ' mode'
-
-    # int nxstart
-    # int nystart
-    # int nzstart
-    fstr += '3i'
-    names += ' nxstart nystart nzstart'
-
-    # int mx
-    # int my
-    # int mz
-    fstr += '3i'
-    names += ' mx my mz'
-
-    # float xlen
-    # float ylen
-    # float zlen
-    fstr += '3f'
-    names += ' xlen ylen zlen'
-
-    # float alpha
-    # float beta
-    # float gamma
-    fstr += '3f'
-    names += ' alpha beta gamma'
-
-    # int mapc
-    # int mapr
-    # int maps
-    fstr += '3i'
-    names += ' mapc mapr maps'
-
-    # float amin
-    # float amax
-    # float amean
-    fstr += '3f'
-    names += ' amin amax amean'
-
-    # int ispg
-    # int next
-    # short creatid
-    fstr += '2ih'
-    names += ' ispg next creatid'
-
-    # pad 30 (extra data)
-    # [98:128]
-    fstr += '30x'
-
-    # short nint
-    # short nreal
-    fstr += '2h'
-    names += ' nint nreal'
-
-    # pad 20 (extra data)
-    # [132:152]
-    fstr += '20x'
-
-    # int imodStamp
-    # int imodFlags
-    fstr += '2i'
-    names += ' imodStamp imodFlags'
-
-    # short idtype
-    # short lens
-    # short nd1
-    # short nd2
-    # short vd1
-    # short vd2
-    fstr += '6h'
-    names += ' idtype lens nd1 nd2 vd1 vd2'
-
-    # float[6] tiltangles
-    fstr += '6f'
-    names += ' tilt_ox tilt_oy tilt_oz tilt_cx tilt_cy tilt_cz'
-
-    # NEW-STYLE MRC image2000 HEADER - IMOD 2.6.20 and above
-    # float xorg
-    # float yorg
-    # float zorg
-    # char[4] cmap
-    # char[4] stamp
-    # float rms
-    fstr += '3f4s4sf'
-    names += ' xorg yorg zorg cmap stamp rms'
-
-    # int nlabl
-    # char[10][80] labels
-    fstr += 'i800s'
-    names += ' nlabl labels'
-
-    header_struct = struct.Struct(fstr)
-    MRCHeader = namedtuple('MRCHeader', names)
-
-    with open(mrc, 'rb') as f:
-        header = f.read(1024)
+    if isinstance(mrc, str):
+        with open(mrc, 'rb') as f:
+            header = f.read(1024)
+    else:
+        header = mrc
 
     return MRCHeader._make(header_struct.unpack(header))
+
+
+def mrc_write_header(*args) -> bytes:
+    header = MRCHeader(*args)
+    return header_struct.pack(*list(header))
 
 
 def mrc_mode(mode: int,
@@ -612,27 +621,30 @@ def load_mrc_file(mrc: str) -> Union[Tuple[np.ndarray, float],
                     'tardis/utils/load_data.py',
                     f"Indicated .mrc {mrc} file does not exist...")
 
-    header = mrc_file_header(mrc)
+    header = mrc_read_header(mrc)
+    extended_header = header.next
 
     pixel_size = round(header.xlen / header.nx, 3)
     dtype = mrc_mode(header.mode, header.amin)
     nz, ny, nx = header.nz, header.ny, header.nx
+    bit_len = nz * ny * nx
 
-    image = None
-    nz_drop = nz
-    while image is None:
-        if nz_drop == 0:
-            break
+    # Check for corrupted files
+    try:
+        image = np.fromfile(mrc, dtype=dtype)[-bit_len:].reshape((nz, ny, nx))
+    except ValueError:  # File is corrupted
+        if mrc.endswith('.rec'):
+            header_len = 512
+        else:
+            header_len = 1024 + extended_header
+        image = np.fromfile(mrc, dtype=dtype)[header_len:]
 
-        bit_len = nz_drop * ny * nx  # Calculate file size
-        try:
-            if nz == 1:
-                image = np.fromfile(mrc, dtype=dtype)[-bit_len:].reshape((ny, nx))
-            else:
-                image = np.fromfile(mrc, dtype=dtype)[-bit_len:].reshape((nz_drop, ny, nx))
-        except ValueError:
-            pass
-        nz_drop = nz_drop - 1
+        while bit_len >= len(image):
+            nz = nz - 1
+            bit_len = nz * ny * nx
+
+        image = image[:bit_len]
+        image = image.reshape((nz, ny, nx))
 
     if image is None:
         return None, 1.0
