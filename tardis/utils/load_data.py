@@ -631,20 +631,26 @@ def load_mrc_file(mrc: str) -> Union[Tuple[np.ndarray, float],
 
     # Check for corrupted files
     try:
-        image = np.fromfile(mrc, dtype=dtype)[-bit_len:].reshape((nz, ny, nx))
-    except ValueError:  # File is corrupted
-        if mrc.endswith('.rec'):
-            header_len = 512
+        if nz == 1:
+            image = np.fromfile(mrc, dtype=dtype)[-bit_len:].reshape((ny, nx))
         else:
-            header_len = 1024 + extended_header
-        image = np.fromfile(mrc, dtype=dtype)[header_len:]
+            image = np.fromfile(mrc, dtype=dtype)[-bit_len:].reshape((nz, ny, nx))
+    except ValueError:  # File is corrupted
+        if nz > 1:
+            if mrc.endswith('.rec'):
+                header_len = 512
+            else:
+                header_len = 1024 + extended_header
+            image = np.fromfile(mrc, dtype=dtype)[header_len:]
 
-        while bit_len >= len(image):
-            nz = nz - 1
-            bit_len = nz * ny * nx
+            while bit_len >= len(image):
+                nz = nz - 1
+                bit_len = nz * ny * nx
 
-        image = image[:bit_len]
-        image = image.reshape((nz, ny, nx))
+            image = image[:bit_len]
+            image = image.reshape((nz, ny, nx))
+        else:
+            image = None
 
     if image is None:
         return None, 1.0

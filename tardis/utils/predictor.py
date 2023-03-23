@@ -656,14 +656,14 @@ class DataSetPredictor:
                                                             spline_size=60)
                 self._debug(id_name=i, debug_id='instance_mask')
 
-                if self.output_format.endswith == 'mrcM':
+                if self.output_format.endswith('mrcM'):
                     to_mrc(data=self.mask_semantic,
                            file_dir=join(self.am_output, f'{i[:-self.in_format]}_instance.mrc'),
                            pixel_size=self.px)
-                elif self.output_format.endswith == 'tifM':
+                elif self.output_format.endswith('tifM'):
                     tif.imwrite(join(self.am_output, f'{i[:-self.in_format]}_instance.tif'),
                                 self.mask_semantic)
-                elif self.output_format.endswith == 'amM':
+                elif self.output_format.endswith('amM'):
                     to_am(data=self.mask_semantic,
                           file_dir=join(self.am_output, f'{i[:-self.in_format]}_instance.am'),
                           pixel_size=self.px)
