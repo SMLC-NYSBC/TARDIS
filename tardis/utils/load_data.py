@@ -90,10 +90,6 @@ class ImportDataFromAmira:
             self.spatial_graph = open(src_am, "r", encoding="iso-8859-1").read().split("\n")
             self.spatial_graph = [x for x in self.spatial_graph if x != '']
 
-        self.nm = False
-        if 'Coordinates "nm"' in am:
-            self.nm = True
-
     def __get_segments(self) -> Union[np.ndarray, None]:
         """
         Helper class function to read segment data from amira file.
@@ -213,9 +209,6 @@ class ImportDataFromAmira:
             return None
 
         points = self.get_points()
-        if self.nm:
-            points = points * 10
-
         segments = self.__get_segments()
 
         segmentation = np.zeros((points.shape[0],))
