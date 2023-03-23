@@ -421,6 +421,9 @@ class DataSetPredictor:
                             self.output_idx)
                 np.save(join(self.am_output, f'{id_name[:-self.in_format]}_segments.npy'),
                         self.segments)
+            elif debug_id == 'instance_mask':
+                np.save(join(self.am_output, f'{id_name[:-self.in_format]}_instance_mask.npy'),
+                        self.mask_semantic)
 
     def __call__(self, *args, **kwargs):
         """Process each image with CNN and DIST"""
@@ -590,7 +593,7 @@ class DataSetPredictor:
                                                                          coord=self.pc_ld,
                                                                          idx=self.output_idx,
                                                                          sort=False,
-                                                                         prune=5)
+                                                                         prune=10)
                 except:
                     pass
 
@@ -647,10 +650,13 @@ class DataSetPredictor:
                                self.filter_splines(segments=self.segments),
                                delimiter=",")
             elif self.output_format.endswith(('mrcM', 'tifM', 'amM')) and self.predict == 'Membrane':
-                mask_semantic = draw_semantic_membrane(mask_size=self.org_shape,
-                                                       coordinate=self.segments,
-                                                       pixel_size=self.px,
-                                                       spline_size=60)
+                self.mask_semantic = draw_semantic_membrane(mask_size=self.org_shape,
+                                                            coordinate=self.segments,
+                                                            pixel_size=self.px,
+                                                            spline_size=60)
+
+                self._debug(id_name=i, debug_id='instance_mask')
+
                 if self.output_format == 'mrcM':
                     to_mrc(data=mask_semantic,
                            file_dir=join(self.am_output, f'{i[:-self.in_format]}_instance.mrc'),
