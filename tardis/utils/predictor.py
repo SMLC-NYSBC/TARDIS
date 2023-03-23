@@ -377,7 +377,7 @@ class DataSetPredictor:
                                      text_4=f'Original pixel size: {self.px} A',
                                      text_5=f'Point Cloud: {pc[0]} Nodes; NaN Segments',
                                      text_7='Current Task: DIST prediction...',
-                                     text_8=print_progress_bar(id, len(coord)))
+                                     text_8=print_progress_bar(id_dist, len(self.coords_df)))
 
             graph = self.predict_dist.predict(x=coord[None, :])
             graphs.append(graph)
@@ -537,7 +537,10 @@ class DataSetPredictor:
                                  text_7='Current Task: Preparing for instance segmentation...')
 
             # Build patches dataset
-            self.coords_df, _, self.output_idx, _ = self.patch_pc.patched_dataset(coord=self.pc_ld)
+            if self.predict == 'Microtubule':
+                self.coords_df, _, self.output_idx, _ = self.patch_pc.patched_dataset(coord=self.pc_ld)
+            else:
+                self.coords_df, _, self.output_idx, _ = self.patch_pc.patched_dataset(coord=self.pc_ld / 5)
 
             # Predict point cloud
             self.tardis_progress(title=self.title,
