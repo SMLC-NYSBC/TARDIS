@@ -72,13 +72,27 @@ class ImportDataFromAmira:
             self.pixel_size = 1
 
         # Read spatial graph
-        am = open(src_am, 'r', encoding="iso-8859-1").read(500)
+        am = ''
+        frame = 500
+        while '# Data section follows' not in am:
+            am = open(src_am,
+                      'r',
+                      encoding="iso-8859-1").read(frame)
+            frame += 100
+
+            if frame == 10000:
+                break
+
         if not any([True for i in ['AmiraMesh 3D ASCII',
                                    '# ASCII Spatial Graph'] if i not in am]):
             self.spatial_graph = None
         else:
             self.spatial_graph = open(src_am, "r", encoding="iso-8859-1").read().split("\n")
             self.spatial_graph = [x for x in self.spatial_graph if x != '']
+
+        self.nm = False
+        if 'Coordinates "nm"' in am:
+            self.nm = True
 
     def __get_segments(self) -> Union[np.ndarray, None]:
         """
@@ -199,6 +213,9 @@ class ImportDataFromAmira:
             return None
 
         points = self.get_points()
+        if self.nm:
+            points = points * 10
+
         segments = self.__get_segments()
 
         segmentation = np.zeros((points.shape[0],))

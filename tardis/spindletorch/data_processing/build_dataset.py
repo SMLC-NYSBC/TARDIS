@@ -294,7 +294,6 @@ def load_img_mask_data(image: str,
             image, img_px = importer.get_image()
 
             coord = importer.get_segmented_points()  # [ID x X x Y x Z]
-            coord[:, 1:] = coord[:, 1:]
 
             mask_px = img_px
         else:  # Image is Amira (image)
