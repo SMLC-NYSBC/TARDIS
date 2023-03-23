@@ -10,7 +10,6 @@
 import codecs
 from datetime import datetime
 from io import BytesIO
-
 from typing import List, Optional, Union
 
 import mrcfile
@@ -317,7 +316,7 @@ def to_mrc(data: np.ndarray,
     try:
         with mrcfile.new(file_dir) as mrc:
             mrc.set_data(data)
-            mrc.voxel_size(pixel_size)
+            mrc.voxel_size((pixel_size, pixel_size, pixel_size))
     except ValueError:
         with mrcfile.new(file_dir, overwrite=True) as mrc:
             mrc.set_data(data)
