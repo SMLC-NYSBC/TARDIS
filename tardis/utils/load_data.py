@@ -579,7 +579,8 @@ def import_am(am_file: str):
     return img, pixel_size, physical_size, transformation
 
 
-def load_mrc_file(mrc: str):
+def load_mrc_file(mrc: str) -> Union[Tuple[np.ndarray, float],
+                                     Tuple[None, float]]:
     """
     Function to load MRC 2014 file format.
 
@@ -600,11 +601,24 @@ def load_mrc_file(mrc: str):
     dtype = mrc_mode(header.mode, header.amin)
     nz, ny, nx = header.nz, header.ny, header.nx
 
-    bit_len = nz * ny * nx  # Calculate file size
-    if nz == 1:
-        image = np.fromfile(mrc, dtype=dtype)[-bit_len:].reshape((ny, nx))
-    else:
-        image = np.fromfile(mrc, dtype=dtype)[-bit_len:].reshape((nz, ny, nx))
+    image = None
+    nz_drop = nz
+    while image is None:
+        if nz_drop == 0:
+            break
+
+        bit_len = nz_drop * ny * nx  # Calculate file size
+        try:
+            if nz == 1:
+                image = np.fromfile(mrc, dtype=dtype)[-bit_len:].reshape((ny, nx))
+            else:
+                image = np.fromfile(mrc, dtype=dtype)[-bit_len:].reshape((nz_drop, ny, nx))
+        except ValueError:
+            pass
+        nz_drop = nz_drop - 1
+
+    if image is None:
+        return None, 1.0
 
     if image.min() < 0 and image.dtype == np.int8:
         image = image + 128

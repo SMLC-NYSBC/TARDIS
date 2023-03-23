@@ -112,8 +112,8 @@ def build_train_dataset(dataset_dir: str,
         """Get matching mask file and check if maks is a file"""
         mask_prefix = 0
         mask_name = ''
-        mask_dir = join(dataset_dir, mask_name)
-        while not isfile(mask_dir):
+        mask_dir = ''
+        while not isfile(dataset_dir):
             mask_name = i[:-3] + MASK_FORMATS[mask_prefix] \
                 if i.endswith('.am') else i[:-4] + MASK_FORMATS[mask_prefix]
 
@@ -133,8 +133,11 @@ def build_train_dataset(dataset_dir: str,
 
         """Load files"""
         image, mask, pixel_size = load_img_mask_data(img_dir, mask_dir)
-        log_file[id, 1] = i + '||' + mask_dir
+        log_file[id, 1] = i + '||' + mask_name
         np.savetxt(join(dataset_dir, 'log.txt'), log_file, fmt='%s', delimiter=',')
+
+        if image is None:
+            continue
 
         if pixel_size is None:
             log_file = error_log_build_data(dir=join(dataset_dir, 'log.txt'),
