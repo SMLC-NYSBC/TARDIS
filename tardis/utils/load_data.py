@@ -637,6 +637,7 @@ def load_mrc_file(mrc: str) -> Union[Tuple[np.ndarray, float],
     if image is None:
         return None, 1.0
 
+    image = np.flip(image, axis=1)
     if image.min() < 0 and image.dtype == np.int8:
         image = image + 128
         image = image.astype(np.uint8)

@@ -313,6 +313,7 @@ def to_mrc(data: np.ndarray,
         pixel_size (float): Image original pixel size.
         file_dir (str): Directory where the file should be saved.
     """
+    data = np.flip(data, axis=1)
     try:
         with mrcfile.new(file_dir) as mrc:
             mrc.set_data(data)

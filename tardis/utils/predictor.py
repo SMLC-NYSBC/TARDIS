@@ -644,7 +644,7 @@ class DataSetPredictor:
                                self.filter_splines(segments=self.segments),
                                delimiter=",")
             elif self.output_format.endswith(('mrcM', 'tifM', 'amM')) and self.predict == 'Membrane':
-                mask_semantic = draw_semantic_membrane(mask_size=self.image.shape,
+                mask_semantic = draw_semantic_membrane(mask_size=self.org_shape,
                                                        coordinate=self.segments,
                                                        pixel_size=self.px,
                                                        spline_size=60)
