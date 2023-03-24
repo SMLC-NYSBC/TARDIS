@@ -62,7 +62,7 @@ class DataSetPredictor:
         amira_inter_probability (float): Optional, compare setting, portability threshold
         to define comparison class.
         instances (bool): If True, run instance segmentation after semantic.
-        device_ (str): Define computation device.
+        device (str): Define computation device.
         debug (bool): If True, run in debugging mode.
     """
     def __init__(self,
@@ -81,7 +81,7 @@ class DataSetPredictor:
                  amira_compare_distance: Optional[int],
                  amira_inter_probability: Optional[float],
                  instances: bool,
-                 device_: str,
+                 device: str,
                  debug: bool):
         if predict not in ['Membrane', 'Microtubule']:
             TardisError(id='01',
@@ -105,7 +105,7 @@ class DataSetPredictor:
         self.rotate = predict_with_rotation
 
         # Global flags
-        self.device = get_device(device_)
+        self.device = get_device(device)
         self.debug = debug
 
         """Initial Setup"""

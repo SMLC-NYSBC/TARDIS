@@ -169,7 +169,7 @@ def main(dir: str,
                                  amira_compare_distance=amira_compare_distance,
                                  amira_inter_probability=amira_inter_probability,
                                  instances=instances,
-                                 device_=device,
+                                 device=device,
                                  debug=debug)
 
     predictor()
