@@ -62,7 +62,7 @@ class DataSetPredictor:
         amira_inter_probability (float): Optional, compare setting, portability threshold
         to define comparison class.
         instances (bool): If True, run instance segmentation after semantic.
-        device (str): Define computation device.
+        device_ (str): Define computation device.
         debug (bool): If True, run in debugging mode.
     """
     def __init__(self,
@@ -81,7 +81,7 @@ class DataSetPredictor:
                  amira_compare_distance: Optional[int],
                  amira_inter_probability: Optional[float],
                  instances: bool,
-                 device: str,
+                 device_: str,
                  debug: bool):
         if predict not in ['Membrane', 'Microtubule']:
             TardisError(id='01',
@@ -105,7 +105,7 @@ class DataSetPredictor:
         self.rotate = predict_with_rotation
 
         # Global flags
-        self.device = get_device(device)
+        self.device = get_device(device_)
         self.debug = debug
 
         """Initial Setup"""
@@ -206,7 +206,7 @@ class DataSetPredictor:
 
             # Build CNN network with loaded pre-trained weights
             self.predict_cnn = Predictor(network='fnet',
-                                         subtype='32',
+                                         subtype='64',
                                          model_type='microtubules',
                                          img_size=self.patch_size,
                                          sigmoid=False,
@@ -353,7 +353,8 @@ class DataSetPredictor:
                     iter_time = 1
             else:
                 # Predict
-                input = self.predict_cnn.predict(input[None, :])
+                input = self.predict_cnn.predict(input[None, :],
+                                                 rotate=True)
 
             tif.imwrite(join(self.output, f'{name}.tif'),
                         np.array(input, dtype=input.dtype))

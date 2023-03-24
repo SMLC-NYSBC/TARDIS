@@ -120,8 +120,6 @@ class PredictionDataset(Dataset):
         self.img_dir = img_dir
         self.out_channels = out_channels
 
-        self.minmax = MinMaxNormalize()
-
         self.ids = [splitext(file)[0] for file in listdir(img_dir) if
                     not file.startswith('.')]
 
@@ -144,7 +142,7 @@ class PredictionDataset(Dataset):
 
         # Load image
         img, _ = load_image(img_file)
-        img = self.minmax(img.astype(np.float32))
+        img = img.astype(np.float32)
 
         # Process image and mask
         img = preprocess(image=img,

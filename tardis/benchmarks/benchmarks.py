@@ -29,15 +29,17 @@ from tardis.version import version
 @click.option('-dir', '--local_directory',
               default=None,
               type=str,
-              help='Specified benchmark directory.',
+              help='Optionally, specified benchmark directory if different then'
+                   'SMLC local server.',
               show_default=True)
 @click.option('-ds', '--data_set',
               type=str,
-              help='Data set name used for testing.',
+              help='Data set name used for testing, should be the same as dataset'
+                   'storage folder name for given dataset.',
               show_default=True)
 @click.option('-ch', '--model_checkpoint',
               type=str,
-              help='Directory for model pre-trained weight and structure.',
+              help='Directory for model pre-trained weight and structure dictionary.',
               show_default=True)
 @click.option('-th', '--nn_threshold',
               default=0.5,
