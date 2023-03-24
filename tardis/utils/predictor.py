@@ -136,7 +136,8 @@ class DataSetPredictor:
             self.title = f'Fully-automatic Instance {self.predict} segmentation module' \
                          f'with Amira comparison {str_debug}'
 
-        self.tardis_progress(title=self.title)
+        self.tardis_progress(title=self.title,
+                             text_2=f'Device: {self.device}')
 
         # Searching for available images for prediction
         available_format = ('.tif', '.mrc', '.rec', '.am')
@@ -155,6 +156,7 @@ class DataSetPredictor:
         else:
             self.tardis_progress(title=self.title,
                                  text_1=f'Found {len(self.predict_list)} images to predict!',
+                                 text_2=f'Device: {self.device}',
                                  text_7='Current Task: Setting-up environment...')
 
         # Hard fix for dealing with tif file lack of pixel sizes...
@@ -374,6 +376,7 @@ class DataSetPredictor:
             if id_dist % iter_time == 0:
                 self.tardis_progress(title=self.title,
                                      text_1=f'Found {len(self.predict_list)} images to predict!',
+                                     text_2=f'Device: {self.device}',
                                      text_3=f'Image {id + 1}/{len(self.predict_list)}: {id_name}',
                                      text_4=f'Original pixel size: {self.px} A',
                                      text_5=f'Point Cloud: {pc[0]} Nodes; NaN Segments',
@@ -386,6 +389,7 @@ class DataSetPredictor:
         # Tardis progress bar update
         self.tardis_progress(title=self.title,
                              text_1=f'Found {len(self.predict_list)} images to predict!',
+                             text_2=f'Device: {self.device}',
                              text_3=f'Image {id + 1}/{len(self.predict_list)}: {id_name}',
                              text_4=f'Original pixel size: {self.px} A',
                              text_5=f'Point Cloud: {pc[0]}; NaN Segments',
@@ -445,6 +449,7 @@ class DataSetPredictor:
             # Tardis progress bar update
             self.tardis_progress(title=self.title,
                                  text_1=f'Found {len(self.predict_list)} images to predict!',
+                                 text_2=f'Device: {self.device}',
                                  text_3=f'Image {id + 1}/{len(self.predict_list)}: {i}',
                                  text_4='Original Pixel size: Nan A',
                                  text_7='Current Task: Preprocessing for CNN...')
@@ -455,6 +460,7 @@ class DataSetPredictor:
             # Tardis progress bar update
             self.tardis_progress(title=self.title,
                                  text_1=f'Found {len(self.predict_list)} images to predict!',
+                                 text_2=f'Device: {self.device}',
                                  text_3=f'Image {id + 1}/{len(self.predict_list)}: {i}',
                                  text_4=f'Original Pixel size: {self.px} A',
                                  text_7=f'Current Task: Sub-dividing images for {self.patch_size} size')
@@ -478,6 +484,7 @@ class DataSetPredictor:
             # Tardis progress bar update
             self.tardis_progress(title=self.title,
                                  text_1=f'Found {len(self.predict_list)} images to predict!',
+                                 text_2=f'Device: {self.device}',
                                  text_3=f'Image {id + 1}/{len(self.predict_list)}: {i}',
                                  text_4=f'Original pixel size: {self.px} A',
                                  text_7='Current Task: Stitching...')
@@ -525,6 +532,7 @@ class DataSetPredictor:
             # Tardis progress bar update
             self.tardis_progress(title=self.title,
                                  text_1=f'Found {len(self.predict_list)} images to predict!',
+                                 text_2=f'Device: {self.device}',
                                  text_3=f'Image {id + 1}/{len(self.predict_list)}: {i}',
                                  text_4=f'Original pixel size: {self.px} A',
                                  text_5='Point Cloud: In processing...',
@@ -535,6 +543,7 @@ class DataSetPredictor:
             # Tardis progress bar update
             self.tardis_progress(title=self.title,
                                  text_1=f'Found {len(self.predict_list)} images to predict!',
+                                 text_2=f'Device: {self.device}',
                                  text_3=f'Image {id + 1}/{len(self.predict_list)}: {i}',
                                  text_4=f'Original pixel size: {self.px} A',
                                  text_5=f'Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments',
@@ -549,6 +558,7 @@ class DataSetPredictor:
             # Predict point cloud
             self.tardis_progress(title=self.title,
                                  text_1=f'Found {len(self.predict_list)} images to predict!',
+                                 text_2=f'Device: {self.device}',
                                  text_3=f'Image {id + 1}/{len(self.predict_list)}: {i}',
                                  text_4=f'Original pixel size: {self.px} A',
                                  text_5=f'Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments',
@@ -564,6 +574,7 @@ class DataSetPredictor:
             if self.predict == 'Microtubule':
                 self.tardis_progress(title=self.title,
                                      text_1=f'Found {len(self.predict_list)} images to predict!',
+                                     text_2=f'Device: {self.device}',
                                      text_3=f'Image {id + 1}/{len(self.predict_list)}: {i}',
                                      text_4=f'Original pixel size: {self.px} A',
                                      text_5=f'Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments',
@@ -584,6 +595,7 @@ class DataSetPredictor:
             else:
                 self.tardis_progress(title=self.title,
                                      text_1=f'Found {len(self.predict_list)} images to predict!',
+                                     text_2=f'Device: {self.device}',
                                      text_3=f'Image {id + 1}/{len(self.predict_list)}: {i}',
                                      text_4=f'Original pixel size: {self.px} A',
                                      text_5=f'Point Cloud: {self.pc_ld.shape[0]}; NaN Segments',
@@ -606,6 +618,7 @@ class DataSetPredictor:
 
             self.tardis_progress(title=self.title,
                                  text_1=f'Found {len(self.predict_list)} images to predict!',
+                                 text_2=f'Device: {self.device}',
                                  text_3=f'Image {id + 1}/{len(self.predict_list)}: {i}',
                                  text_4=f'Original pixel size: {self.px} A',
                                  text_5=f'Point Cloud: {self.pc_ld.shape[0]} Nodes;'
