@@ -208,7 +208,7 @@ class DataSetPredictor:
 
             # Build CNN network with loaded pre-trained weights
             self.predict_cnn = Predictor(network='fnet',
-                                         subtype='64',
+                                         subtype='32',
                                          model_type='microtubules',
                                          img_size=self.patch_size,
                                          sigmoid=False,
@@ -723,6 +723,7 @@ class Predictor:
                                                  subtype,
                                                  model_type),
                                  map_location=device)
+
         elif isinstance(checkpoint, dict):
             weights = checkpoint
         else:

@@ -75,9 +75,8 @@ class CNNDataset(Dataset):
 
         # Load image and corresponding label mask
         img, _ = load_image(img_file)
-        img = self.minmax(img.astype(np.float32))
-
         mask, _ = load_image(mask_file)
+
         if mask.dtype != np.uint8:
             TardisError('147',
                         'tardis/spindletorch/dataset/dataloader.py',
@@ -94,7 +93,7 @@ class CNNDataset(Dataset):
             TardisError('147',
                         'tardis/spindletorch/dataset/dataloader.py',
                         f'Mask {mask.dtype} and image  {img.dtype} has wrong dtype!')
-        if not img.min() >= 0 and not img.max() <= 1:
+        if not img.min() >= -1 and not img.max() <= 1:
             TardisError('147',
                         'tardis/spindletorch/dataset/dataloader.py',
                         'Image file is not binary!')
