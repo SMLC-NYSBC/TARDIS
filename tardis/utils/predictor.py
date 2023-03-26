@@ -39,6 +39,9 @@ from tardis.utils.setup_envir import build_temp_dir, clean_up
 from tardis.utils.spline_metric import FilterSpatialGraph, SpatialGraphCompare
 from tardis.version import version
 
+# Pytorch CUDA optimization
+torch.backends.cudnn.benchmark = True
+
 
 class DataSetPredictor:
     """
@@ -133,7 +136,7 @@ class DataSetPredictor:
         if isdir(join(self.dir, 'amira')):
             self.amira_check = True
             self.dir_amira = join(dir, 'amira')
-            self.title = f'Fully-automatic Instance {self.predict} segmentation module' \
+            self.title = f'Fully-automatic Instance {self.predict} segmentation module ' \
                          f'with Amira comparison {str_debug}'
 
         self.tardis_progress(title=self.title,

@@ -45,6 +45,13 @@ warnings.simplefilter("ignore", UserWarning)
                    'separately predicted and then stitched back together '
                    'with 25% overlap.',
               show_default=True)
+@click.option('-rt', '--rotate',
+              default=False,
+              type=bool,
+              help='If True, during CNN prediction image is rotate 4x by 90 degrees.'
+                   'This will increase prediction time 4x. However may lead to more cleaner'
+                   'output.',
+              show_default=True)
 @click.option('-ct', '--cnn_threshold',
               default=0.5,
               type=float,
@@ -134,6 +141,7 @@ warnings.simplefilter("ignore", UserWarning)
 def main(dir: str,
          output_format: str,
          patch_size: int,
+         rotate: bool,
          cnn_threshold: float,
          dist_threshold: float,
          points_in_patch: int,
@@ -161,7 +169,7 @@ def main(dir: str,
                                  cnn_threshold=cnn_threshold,
                                  dist_threshold=dist_threshold,
                                  points_in_patch=points_in_patch,
-                                 predict_with_rotation=False,
+                                 predict_with_rotation=rotate,
                                  amira_prefix=amira_prefix,
                                  filter_by_length=filter_by_length,
                                  connect_splines=connect_splines,
