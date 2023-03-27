@@ -76,7 +76,7 @@ from tardis.version import version
               show_default=True)
 @click.option('-esg', '--edge_sigma',
               default=2.0,
-              type=list,
+              type=str,
               help='Sigma value for distance edges embedding.',
               show_default=True)
 @click.option('-st', '--structure',
@@ -237,6 +237,9 @@ def main(dir: str,
         node_input = 3
     else:
         node_input = 0
+    if isinstance(edge_sigma, str):
+        edge_sigma = edge_sigma.split('_')
+        edge_sigma = [float(x) for x in edge_sigma]
 
     if dist_structure == 'instance':
         num_cls = None
