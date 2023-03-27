@@ -12,6 +12,7 @@ import sys
 from os import getcwd, listdir, mkdir
 from os.path import isdir, join
 from shutil import rmtree
+from typing import Union
 
 import click
 import torch
@@ -75,7 +76,7 @@ from tardis.version import version
               show_default=True)
 @click.option('-esg', '--edge_sigma',
               default=2.0,
-              type=float,
+              type=list,
               help='Sigma value for distance edges embedding.',
               show_default=True)
 @click.option('-st', '--structure',
@@ -144,7 +145,7 @@ def main(dir: str,
          heads: int,
          dropout: float,
          node_sigma: float,
-         edge_sigma: float,
+         edge_sigma: Union[float, list],
          structure: str,
          dist_structure: str,
          pc_sampling: int,

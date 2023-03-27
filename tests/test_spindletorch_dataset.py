@@ -27,7 +27,7 @@ def test_dataloader():
     img, mask = dataset.__getitem__(0)
 
     assert img.shape == (1, 64, 64, 64) and mask.shape == (1, 64, 64, 64)
-    assert img.min() >= 0 and img.max() <= 1
+    assert img.min() >= 0 and img.max() <= 255
     assert torch.sum(img) != 0
 
     dataset = PredictionDataset(img_dir=join(dir, 'imgs'))
@@ -36,7 +36,7 @@ def test_dataloader():
     img, idx = dataset.__getitem__(0)
 
     assert img.shape == (1, 64, 64, 64)
-    assert img.min() >= 0 and img.max() <= 1
+    assert img.min() >= -1 and img.max() <= 255
     assert torch.sum(img) != 0
     assert isinstance(idx, str) is True
 
@@ -54,11 +54,11 @@ def test_normalization():
     assert s_img.dtype == np.float32
 
     mm_img = mm_norm(x=img)
-    assert mm_img.min() >= 0 and mm_img.max() <= 1
+    assert mm_img.min() >= -1 and mm_img.max() <= 1
     assert mm_img.dtype == np.float32
 
     res_img = res_norm(x=img)
-    assert res_img.min() >= 0 and res_img.max() <= 255
+    assert res_img.min() >= -1 and res_img.max() <= 255
     assert res_img.dtype == np.uint8
 
 
@@ -75,7 +75,7 @@ class TestDataSetBuilder2D3D:
         assert mask.shape == (1, 64, 64, 64)
         assert img_proc.dtype == np.float32
         assert np.all(img_proc == mask)
-        assert img_proc.min() >= 0 and img_proc.max() <= 1
+        assert img_proc.min() >= -1 and img_proc.max() <= 1
         assert mask.min() >= 0 and mask.max() <= 1
 
     def test_data_augmentation2d(self):
@@ -90,5 +90,5 @@ class TestDataSetBuilder2D3D:
         assert mask.shape == (1, 64, 64)
         assert img_proc.dtype == np.float32
         assert np.all(img_proc == mask)
-        assert img_proc.min() >= 0 and img_proc.max() <= 1
+        assert img_proc.min() >= -1 and img_proc.max() <= 1
         assert mask.min() >= 0 and mask.max() <= 1

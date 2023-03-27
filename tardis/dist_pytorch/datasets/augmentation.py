@@ -201,22 +201,30 @@ class BuildGraph:
                     tree = KDTree(coord_df, leaf_size=coord_df.shape[0])
 
                     for j in points_in_contour:
-                        dist, match_coord = tree.query(coord[j].reshape(1, -1), k=5)
-                        match_coord = match_coord[0][1:]
+                        if coord_df.shape[0] > 8:
+                            dist, match_coord = tree.query(coord[j].reshape(1, -1), k=9)
+                        else:
+                            dist, match_coord = tree.query(coord[j].reshape(1, -1),
+                                                           k=coord_df.shape[0] - 1)
 
+                        match_coord = match_coord[0][1:]
+                        dist = dist[0][1:]
+                        dist = (dist - dist.mean()) / dist.std()
+
+                        match_coord = match_coord[np.where(dist <= 0)[0]]
                         # Select point in contour
                         knn = [x for id, x in enumerate(points_in_contour) if
                                id in match_coord]
 
                         # Symmetric in-coming and out-coming connection
-                        graph[j, j] = 2
-                        graph[j, knn] += 1
-                        graph[knn, j] += 1
+                        graph[j, j] = 1
+                        # graph[j, knn] += 1
+                        graph[knn, j] = 1
                 else:
                     for j in points_in_contour:
                         graph[j, j] = 2
 
-                        graph[j, points_in_contour] += 1
+                        # graph[j, points_in_contour] += 1
                         graph[points_in_contour, j] += 1
                 # graph = np.where(graph >= 2, 1, 0)
             else:

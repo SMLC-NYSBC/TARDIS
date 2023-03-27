@@ -90,22 +90,35 @@ def get_weights_aws(network: str,
         subtype (str): Sub-name of the network or sub-parameter for the network.
         model (str): Additional dataset name used for the DIST.
     """
+    ALL_MODELS = ['unet', 'unet3plus', 'fnet', 'dist']
+    ALL_SUBTYPE = ['16', '32', '64', '96', '128', 'triang', 'full']
+    CNN = ['unet', 'unet3plus', 'fnet']
+    CNN_DATASET = ['microtubules', 'cryo_mem']
+    DIST_DATASET = ['microtubules', 's3dis']
+
     """Get weights for CNN"""
     dir = join(expanduser('~'), '.tardis_pytorch', f'{network}_{subtype}', f'{model}')
 
-    if network not in ['unet', 'unet3plus', 'fnet', 'dist']:
+    if network not in ALL_MODELS:
         TardisError('19',
                     'tardis/utils/aws.py',
                     f'Incorrect CNN network selected {network}_{subtype}')
-    if subtype not in ['16', '32', '64', '96', '128', 'triang', 'full']:
+    if subtype not in ALL_SUBTYPE:
         TardisError('19',
                     'tardis/utils/aws.py',
                     f'Incorrect CNN subtype selected {network}_{subtype}')
 
-    if model not in ['microtubules', 'cryo_mem']:
-        TardisError('19',
-                    'tardis/utils/aws.py',
-                    f'Incorrect CNN model selected {model}')
+    if network in CNN:
+        if model not in CNN_DATASET:
+            TardisError('19',
+                        'tardis/utils/aws.py',
+                        f'Incorrect CNN model selected {model} but expected {CNN_DATASET}')
+
+    if network == 'dist':
+        if model not in DIST_DATASET:
+            TardisError('19',
+                        'tardis/utils/aws.py',
+                        f'Incorrect DIST model selected {model} but expected {DIST_DATASET}')
 
     if aws_check_with_temp(model_name=[network, subtype, model]):
         if isfile(join(dir, 'model_weights.pth')):

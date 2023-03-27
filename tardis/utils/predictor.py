@@ -828,19 +828,27 @@ class Predictor:
                 return out
             else:
                 if rotate:
-                    out = np.zeros((dim_, dim_, dim_), dtype=np.float32)
+                    if self.model.prediction:
+                        out = np.zeros((dim_, dim_, dim_), dtype=np.float32)
 
-                    for k in range(4):
-                        x_ = torch.rot90(x, k=k, dims=(3, 4))
-                        x_ = self.model(x_.to(self.device)) / 4
-                        x_ = x_.cpu().detach().numpy()[0, 0, :]
+                        for k in range(4):
+                            x_ = torch.rot90(x, k=k, dims=(3, 4))
+                            x_ = self.model(x_.to(self.device)) / 4
+                            x_ = x_.cpu().detach().numpy()[0, 0, :]
 
-                        out += np.rot90(x_, k=-k, axes=(1, 2))
+                            out += np.rot90(x_, k=-k, axes=(1, 2))
+                    else:
+                        out = torch.zeros((dim_, dim_, dim_), dtype=torch.float32)
 
-                    return out
+                        for k in range(4):
+                            x_ = torch.rot90(x, k=k, dims=(3, 4))
+                            x_ = self.model(x_.to(self.device)) / 4
+
+                            out += torch.rot90(x_[0, 0, :], k=-k, dims=(1, 2))
                 else:
                     out = self.model(x.to(self.device))
-                    return out.cpu().detach().numpy()[0, 0, :]
+
+                return out.cpu().detach().numpy()[0, 0, :]
 
 
 class BasicPredictor:

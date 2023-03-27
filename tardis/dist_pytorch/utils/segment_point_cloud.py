@@ -13,9 +13,9 @@ from typing import Optional, Union
 import numpy as np
 import torch
 
-from tardis.dist_pytorch.utils.visualize import VisualizeFilaments, VisualizePointCloud
 from tardis.utils.errors import TardisError
 from tardis.utils.spline_metric import smooth_spline, sort_segment
+from tardis.utils.visualize_pc import VisualizeFilaments, VisualizePointCloud
 
 
 class PropGreedyGraphCut:

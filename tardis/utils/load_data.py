@@ -20,9 +20,9 @@ import tifffile.tifffile as tif
 from numpy import ndarray
 from sklearn.neighbors import KDTree, NearestNeighbors
 
-from tardis.dist_pytorch.utils.visualize import _rgb
 from tardis.utils.errors import TardisError
 from tardis.utils.normalization import RescaleNormalize
+from tardis.utils.visualize_pc import _rgb
 
 
 class ImportDataFromAmira:
@@ -852,8 +852,6 @@ def load_s3dis_scene(dir: str,
 
         id += 1
     coord = np.concatenate(coord_scene)
-    if rgb:
-        rgb_v = np.concatenate(rgb_scene) / 255
 
     if downscaling > 0:
         if random_ds is not None:
@@ -862,12 +860,15 @@ def load_s3dis_scene(dir: str,
             coord = coord[pick, :]
 
             if rgb:
+                rgb_v = np.concatenate(rgb_scene) / 255
                 rgb_v = rgb_v[pick, :]
         else:
             pcd = o3d.geometry.PointCloud()
             pcd.points = o3d.utility.Vector3dVector(coord[:, 1:])
 
             if rgb:
+                rgb_v = np.concatenate(rgb_scene) / 255
+
                 pcd.colors = o3d.utility.Vector3dVector(rgb_v)
             else:
                 pcd.colors = o3d.utility.Vector3dVector(_rgb(coord, True))
@@ -878,6 +879,7 @@ def load_s3dis_scene(dir: str,
             if rgb:
                 rgb_v = np.asarray(pcd.colors)
 
+            # Associate labels
             knn = NearestNeighbors(n_neighbors=1,
                                    algorithm='kd_tree').fit(coord[:, 1:])
 

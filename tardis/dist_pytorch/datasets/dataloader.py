@@ -514,7 +514,7 @@ class Stanford3DDataset(BasicDataset):
             coords_idx, df_idx, graph_idx, output_idx, cls_idx = VD.patched_dataset(coord=coord,
                                                                                     mesh=True,
                                                                                     dist_th=0.125)
-            graph_idx = [np.where(g >= 2, 1, 0) for g in graph_idx]
+            # graph_idx = [np.where(g >= 2, 1, 0) for g in graph_idx]
 
             # save data for faster access later
             if not self.benchmark:

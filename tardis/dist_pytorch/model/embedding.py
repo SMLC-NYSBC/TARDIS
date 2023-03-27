@@ -8,7 +8,7 @@
 #  MIT License 2021 - 2023                                            #
 #######################################################################
 
-from typing import Optional
+from typing import Optional, Union
 
 import torch
 import torch.nn as nn
@@ -88,9 +88,12 @@ class EdgeEmbedding(nn.Module):
 
     def __init__(self,
                  n_out: int,
-                 sigma: float):
+                 sigma: Union[int, float, list]):
         super().__init__()
-        self.linear = nn.Linear(1, n_out, bias=False)
+        if isinstance(sigma, list):
+            self.linear = nn.Linear(len(sigma), n_out, bias=False)
+        else:
+            self.linear = nn.Linear(1, n_out, bias=False)
         self.n_out = n_out
         self.sigma = sigma
 
@@ -110,11 +113,21 @@ class EdgeEmbedding(nn.Module):
         g_range = range(g_len)
 
         dist = torch.cdist(input_coord, input_coord)
-        dist = torch.exp(-dist ** 2 / (self.sigma ** 2 * 2))
-        isnan = torch.isnan(dist)
-        dist = torch.where(isnan, torch.zeros_like(dist), dist)
+        if isinstance(self.sigma, (int, float)):
+            dist = torch.exp(-dist ** 2 / (self.sigma ** 2 * 2))
+            isnan = torch.isnan(dist)
+            dist = torch.where(isnan, torch.zeros_like(dist), dist)
 
-        # Overwrite diagonal with 1
-        dist[:, g_range, g_range] = 1
+            # Overwrite diagonal with 1
+            dist[:, g_range, g_range] = 1
+            return self.linear(dist.unsqueeze(3))
+        else:
+            dist_range = torch.zeros((1, g_len, g_len, len(self.sigma)))
+            for id, i in enumerate(self.sigma):
+                dist_range[:, :, :, id] = torch.exp(-dist ** 2 / (i ** 2 * 2))
 
-        return self.linear(dist.unsqueeze(3))
+            isnan = torch.isnan(dist_range)
+            dist_range = torch.where(isnan, torch.zeros_like(dist_range), dist_range)
+            dist_range[:, g_range, g_range, :] = 1
+
+            return self.linear(dist_range)
