@@ -834,29 +834,15 @@ class Predictor:
                 return out
             else:
                 if rotate:
-                    if self.model.prediction:
-                        print('rot + sigmoid')
-                        out = np.zeros((1, 1, dim_, dim_, dim_), dtype=np.float32)
+                    out = np.zeros((dim_, dim_, dim_), dtype=np.float32)
 
-                        for k in range(4):
-                            x_ = torch.rot90(x, k=k, dims=(3, 4))
-                            x_ = self.model(x_.to(self.device)) / 4
-                            x_ = x_.cpu().detach().numpy()
+                    for k in range(4):
+                        x_ = torch.rot90(x, k=k, dims=(3, 4))
+                        x_ = self.model(x_.to(self.device)) / 4
+                        x_ = x_.cpu().detach().numpy()[0, 0, :]
 
-                            out += np.rot90(x_, k=-k, axes=(1, 2))
-                    else:
-                        print('rot')
-                        out = torch.zeros((1, 1, dim_, dim_, dim_),
-                                          dtype=torch.float32,
-                                          device=x.device)
-
-                        for k in range(4):
-                            x_ = torch.rot90(x, k=k, dims=(3, 4))
-                            x_ = self.model(x_.to(self.device)) / 4
-
-                            out += torch.rot90(x_, k=-k, dims=(1, 2))
+                        out += np.rot90(x_, k=-k, axes=(1, 2))
                 else:
-                    print('no rot')
                     out = self.model(x.to(self.device))
 
                 return out.cpu().detach().numpy()[0, 0, :]
