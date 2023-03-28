@@ -1,4 +1,9 @@
 # History
+## 0.1.0-RC2-HotFix (2023-03-28)
+* **General changes:**
+  * Fixed saving int8 semantic output as mrc
+  * Added rotation for CNN prediction
+
 ## 0.1.0-RC2-HotFix (2023-03-23)
 * **General changes:**
   * Fixed loading for corrupted mrc files
