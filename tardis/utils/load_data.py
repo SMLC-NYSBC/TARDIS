@@ -448,41 +448,44 @@ def mrc_mode(mode: int,
     Returns:
         np.dtype: Mode as np.dtype.
     """
-    dtype = None
+    dtype_ = {
+        0: np.uint8,
+        1: np.int16,  # Signed 16-bit integer
+        2: np.float32,  # Signed 32-bit real
+        3: '2h',  # Complex 16-bit integers
+        4: np.complex64,  # Complex 32-bit reals
+        6: np.uint16,  # Unassigned int16
+        12: np.float16,  # Signed 16-bit half-precision real
+        16: '3B'  # RGB values
+    }
 
-    if mode == 0:
-        if amin >= 0:
-            dtype = np.uint8  # Unassigned 8-bit integer (0 - 254)
-        elif amin < 0:
-            dtype = np.int8  # Signed 8-bit integer (-128 to 128)
-    elif mode == 1:
-        dtype = np.int16  # Signed 16-bit integer
-    elif mode == 2:
-        dtype = np.float32  # Signed 32-bit real
-    elif mode == 3:
-        dtype = '2h'  # Complex 16-bit integers
-    elif mode == 4:
-        dtype = np.complex64  # Complex 32-bit reals
-    elif mode == 6:
-        dtype = np.uint16  # Unassigned int16
-    elif mode == 12:
-        dtype = np.float16  # Signed 16-bit half-precision real
-    elif mode == 16:
-        dtype = '3B'  # RGB values
-    elif mode == 101:
+    if mode == 101:
         TardisError('130',
                     'tardis/utils/load_data.py',
                     '4 bit .mrc file are not supported. Ask Dev if you need it!')
-    elif mode == 1024:
+    if mode == 1024:
         TardisError('130',
                     'tardis/utils/load_data.py',
                     'Are your trying to load tiff file as mrc?')
-    else:
-        TardisError('130',
-                    'tardis/utils/load_data.py',
-                    'Unknown dtype mode:' + str(mode) + str(amin))
 
-    return dtype
+    if isinstance(mode, int):
+        if mode == 0 and amin >= 0:
+            return dtype_[mode]
+        elif mode == 0 and amin < 0:
+            return np.int8
+
+        if mode in dtype_:
+            return dtype_[mode]
+        else:
+            TardisError('130',
+                        'tardis/utils/load_data.py',
+                        f'Unknown dtype mode: {str(mode)} and {str(amin)}')
+    else:
+        if mode in [np.int8, np.uint8]:
+            return 0
+        for name in dtype_:
+            if mode == dtype_[name]:
+                return name
 
 
 def import_am(am_file: str):

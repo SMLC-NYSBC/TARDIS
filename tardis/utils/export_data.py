@@ -15,7 +15,7 @@ from typing import List, Optional, Union
 import numpy as np
 
 from tardis.utils.errors import TardisError
-from tardis.utils.load_data import mrc_write_header
+from tardis.utils.load_data import mrc_mode, mrc_write_header
 from tardis.utils.spline_metric import reorder_segments_id
 from tardis.version import version
 
@@ -314,22 +314,25 @@ def to_mrc(data: np.ndarray,
         file_dir (str): Directory where the file should be saved.
     """
     data = np.flip(data, axis=2)
-    header = mrc_write_header(data.shape[2], data.shape[1], data.shape[0],  # nx, ny, nz
-                              1,  # mode = 32-bit signed real
-                              0, 0, 0,  # nxstart, nystart, nzstart
-                              1, 1, 1,  # mx, my, mz
-                              1, 1, 1,  # cella
-                              0, 0, 0,  # cellb
-                              1, 2, 3,  # mapc, mapr, maps
-                              data.min(), data.max(), data.mean(),  # dmin, dmax, dmean
+    mode = mrc_mode(mode=data.dtype, amin=data.min())
+    xlen, ylen, zlen = np.multiply(data.shape, pixel_size)
+
+    header = mrc_write_header(data.shape[2], data.shape[1], data.shape[0],  # nx ny nz
+                              mode,  # mrc dtype mode
+                              0, 0, 0,  # nxstart nystart nzstart
+                              1, 1, 1,  # mx my mz
+                              xlen, ylen, zlen,  # xlen ylen zlen
+                              0, 0, 0,  # alpha beta gamma
+                              1, 2, 3,  # mapc mapr maps
+                              data.min(), data.max(), data.mean(),  # amin amax amean
                               0,  # ispg, space group 0 means images or stack of images
-                              0,
+                              0,  # next
                               0,  # creatid
-                              0, 0,  # nint, nreal
-                              0, 0, 0, 0, 0, 0, 0, 0,
-                              0, 0, 0, 0, 0, 0,
-                              0, 0, 0,  # xorg, yorg, zorg
-                              b'\x00' * 4, b'\x00' * 4,  # cmap, stamp
+                              0, 0,  # nint nreal
+                              0, 0, 0, 0, 0, 0, 0, 0,  # imodStamp imodFlags idtype lens nd1 nd2 vd1 vd2
+                              0, 0, 0, 0, 0, 0,  # tilt_ox tilt_oy tilt_oz tilt_cx tilt_cy tilt_cz
+                              0, 0, 0,  # xorg yorg zorg
+                              b'\x00' * 4, b'\x00' * 4,  # cmap stamp
                               data.std(),  # rms
                               0,  # nlabl
                               b'\x00' * 800)  # labels
