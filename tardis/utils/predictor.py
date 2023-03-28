@@ -842,11 +842,10 @@ class Predictor:
                         x_ = x_.cpu().detach().numpy()[0, 0, :]
 
                         out += np.rot90(x_, k=-k, axes=(1, 2))
-                    return out
                 else:
-                    out = self.model(x)
+                    out = self.model(x).cpu().detach().numpy()[0, 0, :]
 
-                return out.cpu().detach().numpy()[0, 0, :]
+                return out
 
 
 class BasicPredictor:
