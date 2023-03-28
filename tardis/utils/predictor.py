@@ -838,7 +838,8 @@ class Predictor:
 
                             out += np.rot90(x_, k=-k, axes=(1, 2))
                     else:
-                        out = torch.zeros((dim_, dim_, dim_), dtype=torch.float32)
+                        out = torch.zeros((dim_, dim_, dim_), dtype=torch.float32,
+                                          device=x.device)
 
                         for k in range(4):
                             x_ = torch.rot90(x, k=k, dims=(3, 4))
