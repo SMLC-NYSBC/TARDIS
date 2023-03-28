@@ -331,6 +331,11 @@ class DataSetPredictor:
                       id_name: str,
                       dataloader):
         iter_time = 1
+        if self.rotate:
+            pred_title = 'CNN prediction with 90 degree rotation.'
+        else:
+            pred_title = ''
+
         for j in range(len(dataloader)):
             if j % iter_time == 0:
                 # Tardis progress bar update
@@ -338,6 +343,7 @@ class DataSetPredictor:
                                      text_1=f'Found {len(self.predict_list)} images to predict!',
                                      text_3=f'Image {id + 1}/{len(self.predict_list)}: {id_name}',
                                      text_4=f'Original Pixel size: {self.px} A',
+                                     text_5=pred_title,
                                      text_7='Current Task: CNN prediction...',
                                      text_8=print_progress_bar(j, len(dataloader)))
 
