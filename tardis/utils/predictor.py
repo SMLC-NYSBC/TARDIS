@@ -354,6 +354,7 @@ class DataSetPredictor:
                 start = time.time()
 
                 # Predict
+                print(f'wrapper r:{self.rotate}')
                 input = self.predict_cnn.predict(input[None, :],
                                                  rotate=self.rotate)
 
@@ -808,6 +809,7 @@ class Predictor:
         Returns:
             np.ndarray: Predicted features.
         """
+        print(f'prediction r:{rotate}')
         if isinstance(x, np.ndarray):
             x = torch.Tensor(x)
         if y is not None and isinstance(y, np.ndarray):
@@ -834,7 +836,6 @@ class Predictor:
                 return out
             else:
                 if rotate:
-                    print('rot')
                     out = np.zeros((dim_, dim_, dim_), dtype=np.float32)
 
                     for k in range(4):

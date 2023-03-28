@@ -103,6 +103,7 @@ def main(dir: str,
     else:
         instances = True
 
+    print(f'click r:{rotate}')
     predictor = DataSetPredictor(predict='Membrane',
                                  dir=dir,
                                  output_format=output_format,
