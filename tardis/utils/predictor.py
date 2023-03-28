@@ -838,12 +838,12 @@ class Predictor:
 
                     for k in range(4):
                         x_ = torch.rot90(x, k=k, dims=(3, 4))
-                        x_ = self.model(x_.to(self.device)) / 4
+                        x_ = self.model(x_) / 4
                         x_ = x_.cpu().detach().numpy()[0, 0, :]
 
                         out += np.rot90(x_, k=-k, axes=(1, 2))
                 else:
-                    out = self.model(x.to(self.device))
+                    out = self.model(x)
 
                 return out.cpu().detach().numpy()[0, 0, :]
 
