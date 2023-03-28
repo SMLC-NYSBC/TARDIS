@@ -7,7 +7,7 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
-
+import sys
 from os import listdir
 from os.path import isfile, join
 from typing import Optional
@@ -149,15 +149,19 @@ class StitchImages:
                         img = tif.imread(img_name)
 
                         if self.nz == 0:
-                            TardisError(id='',
-                                        py='tardis/spindletorch/data_processing/stitch.py',
-                                        desc=f'Stitch image size does not match. {img.shape} '
-                                             f'doesnt match ({self.ny}, {self.nx})')
+                            if img.shape != (self.ny, self.nx):
+                                TardisError(id='',
+                                            py='tardis/spindletorch/data_processing/stitch.py',
+                                            desc=f'Stitch image size does not match. {img.shape} '
+                                                 f'doesnt match ({self.ny}, {self.nx})')
+                                sys.exit()
                         else:
-                            TardisError(id='',
-                                        py='tardis/spindletorch/data_processing/stitch.py',
-                                        desc=f'Stitch image size does not match. {img.shape} '
-                                             f'doesnt match ({self.nz}, {self.ny}, {self.nx})')
+                            if img.shape != (self.nz, self.ny, self.nx):
+                                TardisError(id='',
+                                            py='tardis/spindletorch/data_processing/stitch.py',
+                                            desc=f'Stitch image size does not match. {img.shape} '
+                                                 f'doesnt match ({self.nz}, {self.ny}, {self.nx})')
+                                sys.exit()
 
                         if mask and self.nz == 0:
                             stitched_image[y_start:y_stop, x_start:x_stop] += img
