@@ -354,7 +354,6 @@ class DataSetPredictor:
                 start = time.time()
 
                 # Predict
-                print(f'wrapper r:{self.rotate}')
                 input = self.predict_cnn.predict(input[None, :],
                                                  rotate=self.rotate)
 
@@ -366,7 +365,7 @@ class DataSetPredictor:
             else:
                 # Predict
                 input = self.predict_cnn.predict(input[None, :],
-                                                 rotate=True)
+                                                 rotate=self.rotate)
 
             tif.imwrite(join(self.output, f'{name}.tif'),
                         np.array(input, dtype=input.dtype))
@@ -809,7 +808,6 @@ class Predictor:
         Returns:
             np.ndarray: Predicted features.
         """
-        print(f'prediction r:{rotate}')
         if isinstance(x, np.ndarray):
             x = torch.Tensor(x)
         if y is not None and isinstance(y, np.ndarray):
