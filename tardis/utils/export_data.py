@@ -315,7 +315,7 @@ def to_mrc(data: np.ndarray,
     """
     data = np.flip(data, axis=2)
     mode = mrc_mode(mode=data.dtype, amin=data.min())
-    xlen, ylen, zlen = np.multiply(data.shape, pixel_size)
+    zlen, ylen, xlen = np.multiply(data.shape, pixel_size)
 
     header = mrc_write_header(data.shape[2], data.shape[1], data.shape[0],  # nx ny nz
                               mode,  # mrc dtype mode

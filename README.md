@@ -175,7 +175,10 @@ optional arguments:
                         separately predicted and then stitched back together 
                         with 25% overlap.
                         Default: 128
-                        
+  -rt, --rotate [bool]
+                        If True, during CNN prediction image is rotate 4x by 90 degrees.
+                        This will increase prediction time 4x. However may lead to more 
+                        cleaner output.
   -ct, --cnn_threshold [float]
                         Threshold used for CNN prediction.
                         Default: 0.5
@@ -189,10 +192,6 @@ optional arguments:
                         per crop. This will break generated from the binary mask
                         point cloud into smaller patches with overlap. 
                         Default: 1000
-  -rt, --rotate [bool]
-                        If True, during CNN prediction image is rotate 4x by 90 degrees.
-                        This will increase prediction time 4x. However may lead to more 
-                        cleaner output.
   -ap, --amira_prefix [str]
                         If dir/amira folder exist, TARDIS will search for files with
                         given prefix (e.g. file_name.CorrelationLines.am). If the correct
@@ -293,7 +292,10 @@ optional arguments:
                         separately predicted and then stitched back together 
                         with 25% overlap.
                         Default: 128
-                        
+-rt, --rotate [bool]
+                        If True, during CNN prediction image is rotate 4x by 90 degrees.
+                        This will increase prediction time 4x. However may lead to more 
+                        cleaner output.  
   -ct, --cnn_threshold [float]
                         Threshold used for CNN prediction.
                         Default: 0.15
@@ -307,10 +309,6 @@ optional arguments:
                         per crop. This will break generated from the binary mask
                         point cloud into smaller patches with overlap. 
                         Default: 1000
-  -rt, --rotate [bool]
-                        If True, during CNN prediction image is rotate 4x by 90 degrees.
-                        This will increase prediction time 4x. However may lead to more 
-                        cleaner output.  
   -dv, --device [str]
                         Define which device to use for training:
                         * gpu: Use ID 0 GPU
@@ -362,7 +360,10 @@ optional arguments:
                         separately predicted and then stitched back together 
                         with 25% overlap.
                         Default: 128
-                        
+  -rt, --rotate [bool]
+                        If True, during CNN prediction image is rotate 4x by 90 degrees.
+                        This will increase prediction time 4x. However may lead to more 
+                        cleaner output.   
   -ct, --cnn_threshold [float]
                         Threshold used for CNN prediction.
                         Default: 0.5
@@ -376,10 +377,6 @@ optional arguments:
                         per crop. This will break generated from the binary mask
                         point cloud into smaller patches with overlap. 
                         Default: 1000
-  -rt, --rotate [bool]
-                        If True, during CNN prediction image is rotate 4x by 90 degrees.
-                        This will increase prediction time 4x. However may lead to more 
-                        cleaner output.   
   -dv, --device [str]
                         Define which device to use for training:
                         * gpu: Use ID 0 GPU
