@@ -15,6 +15,8 @@ from typing import Optional
 import numpy as np
 import tifffile.tifffile as tif
 
+from tardis.utils.errors import TardisError
+
 
 class StitchImages:
     """
@@ -147,9 +149,15 @@ class StitchImages:
                         img = tif.imread(img_name)
 
                         if self.nz == 0:
-                            assert img.shape == (self.ny, self.nx)
+                            TardisError(id='',
+                                        py='tardis/spindletorch/data_processing/stitch.py',
+                                        desc=f'Stitch image size does not match. {img.shape} '
+                                             f'doesnt match ({self.ny}, {self.nx})')
                         else:
-                            assert img.shape == (self.nz, self.ny, self.nx)
+                            TardisError(id='',
+                                        py='tardis/spindletorch/data_processing/stitch.py',
+                                        desc=f'Stitch image size does not match. {img.shape} '
+                                             f'doesnt match ({self.nz}, {self.ny}, {self.nx})')
 
                         if mask and self.nz == 0:
                             stitched_image[y_start:y_stop, x_start:x_stop] += img
