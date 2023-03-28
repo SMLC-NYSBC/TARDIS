@@ -313,7 +313,6 @@ def to_mrc(data: np.ndarray,
         pixel_size (float): Image original pixel size.
         file_dir (str): Directory where the file should be saved.
     """
-    data = np.flip(data, axis=2)
     mode = mrc_mode(mode=data.dtype, amin=data.min())
     zlen, ylen, xlen = np.multiply(data.shape, pixel_size)
 
