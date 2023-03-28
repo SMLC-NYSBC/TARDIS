@@ -834,6 +834,7 @@ class Predictor:
                 return out
             else:
                 if rotate:
+                    print('rot')
                     out = np.zeros((dim_, dim_, dim_), dtype=np.float32)
 
                     for k in range(4):
@@ -842,6 +843,7 @@ class Predictor:
                         x_ = x_.cpu().detach().numpy()[0, 0, :]
 
                         out += np.rot90(x_, k=-k, axes=(1, 2))
+                    return out
                 else:
                     out = self.model(x)
 
