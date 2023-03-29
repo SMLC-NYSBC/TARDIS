@@ -2,7 +2,23 @@
   "**/*.py": "#  MIT License 2021 - 2023                                            #",
   
   "ignore": [
-    "**/__init__.py",
+    "tardis/__init__.py",
+
+    "tardis/utils/__init__.py",
+
+    "tardis/spindletorch/__init__.py",
+    "tardis/spindletorch/data_processing/__init__.py",
+    "tardis/spindletorch/datasets/__init__.py",
+    "tardis/spindletorch/model/__init__.py",
+    "tardis/spindletorch/utils/__init__.py",
+
+    "tardis/dist_pytorch/__init__.py",
+    "tardis/dist_pytorch/datasets/__init__.py",
+    "tardis/dist_pytorch/model/__init__.py",
+    "tardis/dist_pytorch/utils/__init__.py",
+
+    "tardis/benchmarks/__init__.py",
+
     "docs/"
   ]
 }

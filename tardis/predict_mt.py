@@ -46,7 +46,7 @@ warnings.simplefilter("ignore", UserWarning)
                    'with 25% overlap.',
               show_default=True)
 @click.option('-rt', '--rotate',
-              default=False,
+              default=True,
               type=bool,
               help='If True, during CNN prediction image is rotate 4x by 90 degrees.'
                    'This will increase prediction time 4x. However may lead to more cleaner'
