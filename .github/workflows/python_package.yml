@@ -8,12 +8,10 @@ on:
 
 jobs:
   test_build:
-    strategy:
-      max-parallel: 4
+    strategy:]
       matrix:
         python-version: ["3.7", "3.8", "3.9"]
         os: [ubuntu-latest, macOS-latest]
-      fail-fast: false
     runs-on: ${{ matrix.os }}
 
     steps:    
