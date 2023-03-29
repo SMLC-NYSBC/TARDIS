@@ -14,12 +14,11 @@ jobs:
         os: [ubuntu-latest, macOS-latest]
     runs-on: ${{ matrix.os }}
 
-    steps:    
-      - name: Checkout
+    steps:
       - uses: actions/checkout@v3
       
       - name: Set up Python${{ matrix.python-version }}
-      - uses: actions/setup-python@v4
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
