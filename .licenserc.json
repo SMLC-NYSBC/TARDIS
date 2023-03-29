@@ -2,7 +2,7 @@
   "**/*.py": "#  MIT License 2021 - 2023                                            #",
   
   "ignore": [
-    "**/__init__.py,
-    "docs/"
+    "**/__init__.py",
+    "docs/",
     ]
 }
