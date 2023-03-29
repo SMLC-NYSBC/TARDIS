@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - 'release/**'
+      - 'releases/**'
 
 jobs:
-  build:
+  test_build:
     strategy:
       max-parallel: 4
       matrix:
