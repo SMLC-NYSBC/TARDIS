@@ -15,7 +15,7 @@ import torch
 from torch import nn
 
 from tardis.dist_pytorch.utils.segment_point_cloud import PropGreedyGraphCut
-from tardis.utils.metrics import eval_graph_f1
+from tardis.utils.metrics import eval_graph_f1, mcov
 from tardis.utils.trainer import BasicTrainer
 
 
@@ -225,37 +225,37 @@ class DistTrainer(BasicTrainer):
                     edge = edge[0, :].cpu().detach().numpy()
 
                     # Threshold 0.25
-                    # try:
-                    #     input0_1 = self.Graph0_25.patch_to_segment(graph=[edge],
-                    #                                                coord=coord,
-                    #                                                idx=[out],
-                    #                                                prune=0,
-                    #                                                sort=False)
-                    #     mcov0_25.append(mcov(input0_1, target))
-                    # except:
-                    mcov0_25.append(0.0)
+                    try:
+                        input0_1 = self.Graph0_25.patch_to_segment(graph=[edge],
+                                                                   coord=coord,
+                                                                   idx=[out],
+                                                                   prune=0,
+                                                                   sort=False)
+                        mcov0_25.append(mcov(input0_1, target))
+                    except:
+                        mcov0_25.append(0.0)
 
                     # Threshold 0.5
-                    # try:
-                    #     input0_5 = self.Graph0_5.patch_to_segment(graph=[edge],
-                    #                                               coord=coord,
-                    #                                               idx=[out],
-                    #                                               prune=0,
-                    #                                               sort=False)
-                    #     mcov0_5.append(mcov(input0_5, target))
-                    # except:
-                    mcov0_5.append(0.0)
+                    try:
+                        input0_5 = self.Graph0_5.patch_to_segment(graph=[edge],
+                                                                  coord=coord,
+                                                                  idx=[out],
+                                                                  prune=0,
+                                                                  sort=False)
+                        mcov0_5.append(mcov(input0_5, target))
+                    except:
+                        mcov0_5.append(0.0)
 
                     # Threshold 0.9
-                    # try:
-                    #     input0_9 = self.Graph0_9.patch_to_segment(graph=[edge],
-                    #                                               coord=coord,
-                    #                                               idx=[out],
-                    #                                               prune=0,
-                    #                                               sort=False)
-                    #     mcov0_9.append(mcov(input0_9, target))
-                    # except:
-                    mcov0_9.append(0.0)
+                    try:
+                        input0_9 = self.Graph0_9.patch_to_segment(graph=[edge],
+                                                                  coord=coord,
+                                                                  idx=[out],
+                                                                  prune=0,
+                                                                  sort=False)
+                        mcov0_9.append(mcov(input0_9, target))
+                    except:
+                        mcov0_9.append(0.0)
 
                 # Avg. precision score
                 valid_losses.append(loss.item())
