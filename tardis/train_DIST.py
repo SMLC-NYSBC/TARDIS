@@ -145,7 +145,7 @@ def main(dir: str,
          heads: int,
          dropout: float,
          node_sigma: float,
-         edge_sigma: Union[float, list],
+         edge_sigma: Union[float, str],
          structure: str,
          dist_structure: str,
          pc_sampling: int,
@@ -240,6 +240,9 @@ def main(dir: str,
     if isinstance(edge_sigma, str):
         edge_sigma = edge_sigma.split('_')
         edge_sigma = [float(x) for x in edge_sigma]
+
+        if len(edge_sigma) == 1:
+            edge_sigma = edge_sigma[0]
 
     if dist_structure == 'instance':
         num_cls = None
