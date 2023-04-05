@@ -25,9 +25,20 @@ class NumpyToAmira:
     Builder of Amira file from numpy array.
     Support for 3D only! If 2D data, Z dim build with Z=0
     """
+    def __init__(self,
+                 as_point_cloud=False):
+        self.as_point_cloud = as_point_cloud
 
-    @staticmethod
-    def check_3d(coord: Optional[np.ndarray] = List) -> List[np.ndarray]:
+        self.tardis_header = ['# ASCII Spatial Graph \n',
+                              '# TARDIS - Transformer And Rapid Dimensionless '
+                              'Instance Segmentation (R) \n',
+                              f'# tardis-pytorch v{version} \r\n',
+                              f'# MIT License * 2021-{datetime.now().year} * '
+                              'Robert Kiewisz & Tristan Bepler \n']
+
+    def check_3d(self,
+                 coord: Optional[np.ndarray] = List) -> Union[List[np.ndarray],
+                                                              np.ndarray]:
         """
         Check and correct if needed to 3D
 
@@ -38,14 +49,22 @@ class NumpyToAmira:
             Union[np.ndarray, List[np.ndarray]]: The same or converted to 3D coordinates.
         """
         if isinstance(coord, np.ndarray):
-            if coord.ndim != 2:
+            if coord.shape[1] == 3 and not self.as_point_cloud:
                 TardisError('132',
                             'tardis/utils/export_data.py',
-                            'Numpy array may not have IDs for each point.')
+                            'Numpy 3D array may not have IDs for each point.')
 
-            # Add dummy Z dimension
-            if coord.shape[1] == 3:
-                coord = np.hstack((coord, np.zeros((coord.shape[0], 1))))
+            if coord.shape[1] == 2:
+                if self.as_point_cloud:
+                    z = np.expand_dims(np.repeat(0, len(coord)), 1)
+                    coord = np.hstack((coord, z))
+                else:
+                    TardisError('132',
+                                'tardis/utils/export_data.py',
+                                'Numpy 2D array may not have IDs for each point.')
+
+            if coord.shape[1] == 4 and self.as_point_cloud:
+                coord = coord[:, 1:]
         else:
             if not isinstance(coord, list) and not isinstance(coord, tuple):
                 TardisError('130',
@@ -67,6 +86,9 @@ class NumpyToAmira:
                 last_id = max_id
 
             return ordered_coord
+
+        if self.as_point_cloud:
+            return coord
         return [reorder_segments_id(coord)]
 
     @staticmethod
@@ -92,10 +114,10 @@ class NumpyToAmira:
 
         return label
 
-    @staticmethod
-    def _build_header(coord: np.ndarray,
+    def _build_header(self,
+                      coord: np.ndarray,
                       file_dir: str,
-                      label: list):
+                      label: Optional[list] = None):
         """
         Standard Amira header builder
 
@@ -105,52 +127,54 @@ class NumpyToAmira:
             label (int): If not 0, indicate number of labels.
         """
         # Store common data for the header
-        vertex = int(np.max(coord[:, 0]) + 1) * 2
-        edge = int(vertex / 2)
-        point = int(coord.shape[0])
+        if self.as_point_cloud:
+            vertex = int(coord.shape[0])
+            edge = 0
+            point = 0
+        else:
+            vertex = int(np.max(coord[:, 0]) + 1) * 2
+            edge = int(vertex / 2)
+            point = int(coord.shape[0])
 
         # Save header
         with codecs.open(file_dir, mode='w', encoding="utf-8") as f:
-            f.write('# ASCII Spatial Graph \n')
-            f.write('# TARDIS - Transformer And Rapid Dimensionless '
-                    'Instance Segmentation (R) \n')
-            f.write(f'# tardis-pytorch v{version} \r\n')
-            f.write(f'# MIT License * 2021-{datetime.now().year} * '
-                    'Robert Kiewisz & Tristan Bepler \n')
+            for i in self.tardis_header:
+                f.write(i)
             f.write('\n')
             f.write(f'define VERTEX {vertex} \n'
                     f'define EDGE {edge} \n'
                     f'define POINT {point} \n')
             f.write('\n')
-            f.write('Parameters { \n'
-                    '    SpatialGraphUnitsVertex { \n')
-            for i in label:
-                f.write(f'        {i}' + ' { \n'
-                        '            Unit -1, \n'
-                        '            Dimension -1 \n'
-                        '        } \n')
-            f.write('    } \n')
-            f.write('    SpatialGraphUnitsEdge { \n')
-            for i in label:
-                f.write(f'        {i}' + ' { \n'
-                        '            Unit -1, \n'
-                        '            Dimension -1 \n'
-                        '        } \n')
-            f.write('    } \n')
-            f.write('    SpatialGraphUnitsPoint { \n')
-            f.write('    } \n')
-            f.write('    Units { \n'
-                    u'        Coordinates "Å" \n'
-                    '    } \n')
-            for id, i in enumerate(label):
-                f.write(f'    {i}' + ' { \n'
-                        '		Label0' + ' { \n'
-                        '			Color 1 0.5 0.5, \n'
-                        f'          Id {id + 1} \n'
-                        '     } \n'
-                        '        Id 0, \n'
-                        '        Color 1 0 0 \n'
+            f.write('Parameters { \n')
+            if not self.as_point_cloud:
+                f.write('    SpatialGraphUnitsVertex { \n')
+                for i in label:
+                    f.write(f'        {i}' + ' { \n'
+                            '            Unit -1, \n'
+                            '            Dimension -1 \n'
+                            '        } \n')
+                f.write('    } \n')
+                f.write('    SpatialGraphUnitsEdge { \n')
+                for i in label:
+                    f.write(f'        {i}' + ' { \n'
+                            '            Unit -1, \n'
+                            '            Dimension -1 \n'
+                            '        } \n')
+                f.write('    } \n')
+                f.write('    SpatialGraphUnitsPoint { \n')
+                f.write('    } \n')
+                f.write('    Units { \n'
+                        u'        Coordinates "Å" \n'
                         '    } \n')
+                for id, i in enumerate(label):
+                    f.write(f'    {i}' + ' { \n'
+                            '		Label0' + ' { \n'
+                            '			Color 1 0.5 0.5, \n'
+                            f'          Id {id + 1} \n'
+                            '     } \n'
+                            '        Id 0, \n'
+                            '        Color 1 0 0 \n'
+                            '    } \n')
             f.write('	ContentType "HxSpatialGraph" \n'
                     '} \n')
             f.write('\n')
@@ -159,11 +183,12 @@ class NumpyToAmira:
                     'EDGE { int NumEdgePoints } @3 \n'
                     'POINT { float[3] EdgePointCoordinates } @4 \n')
 
-            label_id = 5
-            for i in label:
-                f.write('VERTEX { int ' + f'{i}' + '} ' + f'@{label_id} \n')
-                f.write('EDGE { int ' + f'{i}' + '} ' + f'@{label_id + 1} \n')
-                label_id += 2
+            if not self.as_point_cloud:
+                label_id = 5
+                for i in label:
+                    f.write('VERTEX { int ' + f'{i}' + '} ' + f'@{label_id} \n')
+                    f.write('EDGE { int ' + f'{i}' + '} ' + f'@{label_id + 1} \n')
+                    label_id += 2
 
             f.write('\n')
             f.write('# Data section follows')
@@ -202,7 +227,9 @@ class NumpyToAmira:
             labels: Labels names.
         """
         coord_list = self.check_3d(coord=coords)
-        coords = np.concatenate(coord_list)
+
+        if not self.as_point_cloud:
+            coords = np.concatenate(coord_list)
 
         if labels is not None:
             if isinstance(labels, str):
@@ -218,88 +245,97 @@ class NumpyToAmira:
                            file_dir=file_dir,
                            label=self._build_labels(labels))
 
-        segments_idx = len(np.unique(coords[:, 0]))
-        vertex_id_1 = -2
-        vertex_id_2 = -1
+        # Save only as a point cloud
+        if self.as_point_cloud:
+            vertex_coord = ['@1']
+            for c in coords[:, 1:]:
+                vertex_coord.append(f'{c[0]:.15e} '
+                                    f'{c[1]:.15e} '
+                                    f'{c[2]:.15e}')
+            self._write_to_amira(data=vertex_coord, file_dir=file_dir)
+        else:
+            segments_idx = len(np.unique(coords[:, 0]))
+            vertex_id_1 = -2
+            vertex_id_2 = -1
 
-        vertex_coord = ['@1']
-        vertex_id = ['@2']
-        point_no = ['@3']
-        point_coord = ['@4']
-        for i in range(segments_idx):
-            # Collect segment coord and idx
-            segment = coords[np.where(coords[:, 0] == i)[0]][:, 1:]
+            vertex_coord = ['@1']
+            vertex_id = ['@2']
+            point_no = ['@3']
+            point_coord = ['@4']
+            for i in range(segments_idx):
+                # Collect segment coord and idx
+                segment = coords[np.where(coords[:, 0] == i)[0]][:, 1:]
 
-            # Get Coord for vertex #1 and vertex #2
-            vertex = np.array((segment[0], segment[-1:][0]), dtype=object)
+                # Get Coord for vertex #1 and vertex #2
+                vertex = np.array((segment[0], segment[-1:][0]), dtype=object)
 
-            # Append vertex #1 (aka Node #1)
-            vertex_coord.append(f'{vertex[0][0]:.15e} '
-                                f'{vertex[0][1]:.15e} '
-                                f'{vertex[0][2]:.15e}')
-            # Append vertex #2 (aka Node #2)
-            vertex_coord.append(f'{vertex[1][0]:.15e} '
-                                f'{vertex[1][1]:.15e} '
-                                f'{vertex[1][2]:.15e}')
+                # Append vertex #1 (aka Node #1)
+                vertex_coord.append(f'{vertex[0][0]:.15e} '
+                                    f'{vertex[0][1]:.15e} '
+                                    f'{vertex[0][2]:.15e}')
+                # Append vertex #2 (aka Node #2)
+                vertex_coord.append(f'{vertex[1][0]:.15e} '
+                                    f'{vertex[1][1]:.15e} '
+                                    f'{vertex[1][2]:.15e}')
 
-            # Get Update id number of vertex #1 and #2
-            vertex_id_1 += 2
-            vertex_id_2 += 2
-            vertex_id.append(f'{vertex_id_1} {vertex_id_2}')
+                # Get Update id number of vertex #1 and #2
+                vertex_id_1 += 2
+                vertex_id_2 += 2
+                vertex_id.append(f'{vertex_id_1} {vertex_id_2}')
 
-            # Get no. of point in edge
-            point_no.append(f'{len(segment)}')
+                # Get no. of point in edge
+                point_no.append(f'{len(segment)}')
 
-            # Get coord of points in edge
-            for j in segment:
-                # Append 3D XYZ coord for point
-                point_coord.append(f'{j[0]:.15e} {j[1]:.15e} {j[2]:.15e}')
+                # Get coord of points in edge
+                for j in segment:
+                    # Append 3D XYZ coord for point
+                    point_coord.append(f'{j[0]:.15e} {j[1]:.15e} {j[2]:.15e}')
 
-        self._write_to_amira(data=vertex_coord, file_dir=file_dir)
-        self._write_to_amira(data=vertex_id, file_dir=file_dir)
-        self._write_to_amira(data=point_no, file_dir=file_dir)
-        self._write_to_amira(data=point_coord, file_dir=file_dir)
+            self._write_to_amira(data=vertex_coord, file_dir=file_dir)
+            self._write_to_amira(data=vertex_id, file_dir=file_dir)
+            self._write_to_amira(data=point_no, file_dir=file_dir)
+            self._write_to_amira(data=point_coord, file_dir=file_dir)
 
-        # Write down all labels
-        label_id = 5
-        vertex_id = 1
-        edge_id = 1
+            # Write down all labels
+            label_id = 5
+            vertex_id = 1
+            edge_id = 1
 
-        start = 0
-        total_vertex = len(np.unique(coords[:, 0])) * 2
-        total_edge = len(np.unique(coords[:, 0]))
-        for i in coord_list:
-            vertex_label = [f'@{label_id}']
-            edge_label = [f'@{label_id + 1}']
+            start = 0
+            total_vertex = len(np.unique(coords[:, 0])) * 2
+            total_edge = len(np.unique(coords[:, 0]))
+            for i in coord_list:
+                vertex_label = [f'@{label_id}']
+                edge_label = [f'@{label_id + 1}']
 
-            edge = len(np.unique(i[:, 0]))
-            vertex = edge * 2
-            if start == 0:  # 1 1 1 1 0 0 0 0 0
-                vertex_label.extend(list(np.repeat(vertex_id, vertex)))
-                vertex_label.extend(list(np.repeat(0, total_vertex - vertex)))
+                edge = len(np.unique(i[:, 0]))
+                vertex = edge * 2
+                if start == 0:  # 1 1 1 1 0 0 0 0 0
+                    vertex_label.extend(list(np.repeat(vertex_id, vertex)))
+                    vertex_label.extend(list(np.repeat(0, total_vertex - vertex)))
 
-                edge_label.extend(list(np.repeat(edge_id, edge)))
-                edge_label.extend(list(np.repeat(0, total_edge - edge)))
-            else:  # 0 0 0 0 1 1 1 1 1 1 0 0 0
-                vertex_label.extend(list(np.repeat(0, start * 2)))
-                vertex_label.extend(list(np.repeat(vertex_id, vertex)))
-                fill_up = total_vertex - start * 2 - vertex
-                if fill_up > 0:
-                    vertex_label.extend(list(np.repeat(0, fill_up)))
+                    edge_label.extend(list(np.repeat(edge_id, edge)))
+                    edge_label.extend(list(np.repeat(0, total_edge - edge)))
+                else:  # 0 0 0 0 1 1 1 1 1 1 0 0 0
+                    vertex_label.extend(list(np.repeat(0, start * 2)))
+                    vertex_label.extend(list(np.repeat(vertex_id, vertex)))
+                    fill_up = total_vertex - start * 2 - vertex
+                    if fill_up > 0:
+                        vertex_label.extend(list(np.repeat(0, fill_up)))
 
-                edge_label.extend(list(np.repeat(0, start)))
-                edge_label.extend(list(np.repeat(edge_id, edge)))
-                fill_up = total_edge - start - edge
-                if fill_up > 0:
-                    edge_label.extend(list(np.repeat(0, fill_up)))
+                    edge_label.extend(list(np.repeat(0, start)))
+                    edge_label.extend(list(np.repeat(edge_id, edge)))
+                    fill_up = total_edge - start - edge
+                    if fill_up > 0:
+                        edge_label.extend(list(np.repeat(0, fill_up)))
 
-            label_id += 2
-            vertex_id += 1
-            edge_id += 1
-            start += edge
+                label_id += 2
+                vertex_id += 1
+                edge_id += 1
+                start += edge
 
-            self._write_to_amira(data=vertex_label, file_dir=file_dir)
-            self._write_to_amira(data=edge_label, file_dir=file_dir)
+                self._write_to_amira(data=vertex_label, file_dir=file_dir)
+                self._write_to_amira(data=edge_label, file_dir=file_dir)
 
 
 def to_mrc(data: np.ndarray,
@@ -331,9 +367,9 @@ def to_mrc(data: np.ndarray,
                               0, 0, 0, 0, 0, 0, 0, 0,  # imodStamp imodFlags idtype lens nd1 nd2 vd1 vd2
                               0, 0, 0, 0, 0, 0,  # tilt_ox tilt_oy tilt_oz tilt_cx tilt_cy tilt_cz
                               0, 0, 0,  # xorg yorg zorg
-                              b'\x00' * 4, b'\x00' * 4,  # cmap stamp
+                              b'MAP\x00', b'\x00' * 4,  # cmap stamp
                               data.std(),  # rms
-                              0,  # nlabl
+                              0,  # nlabels
                               b'\x00' * 800)  # labels
 
     with open(file_dir, 'wb') as f:
