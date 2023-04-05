@@ -367,7 +367,7 @@ def to_mrc(data: np.ndarray,
                               0, 0, 0, 0, 0, 0, 0, 0,  # imodStamp imodFlags idtype lens nd1 nd2 vd1 vd2
                               0, 0, 0, 0, 0, 0,  # tilt_ox tilt_oy tilt_oz tilt_cx tilt_cy tilt_cz
                               0, 0, 0,  # xorg yorg zorg
-                              b'MAP\x00', b'\x00' * 4,  # cmap stamp
+                              b'MAP\x00', b'DD\x00\x00',  # cmap stamp
                               data.std(),  # rms
                               0,  # nlabels
                               b'\x00' * 800)  # labels
