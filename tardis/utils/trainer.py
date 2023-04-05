@@ -276,9 +276,9 @@ class BasicTrainer:
                 self._validate()
 
                 self._update_epoch_desc()
+                self._save_metric()
 
                 self.model.train()  # Move back to training
-                self._save_metric()
 
     def run_trainer(self):
         """

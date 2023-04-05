@@ -175,6 +175,46 @@ class DistTrainer(BasicTrainer):
                                                     f' LR: {self.lr:.5f})',
                                           idx=idx)
 
+    def _greedy_segmenter(self,
+                          graph: np.ndarray,
+                          coord: np.ndarray,
+                          th: float):
+        node = dict()
+        for j in range(len(graph)):
+            df = [[id, i] for id, i in enumerate(graph[j]) if i >= th and id != j]
+            node[j] = dict(df)
+        coord_list = dict()
+        seg_id = 0
+        full_list = list(range(len(graph)))
+
+        while len(full_list) != 0:
+            id, old_id = [full_list[0]], [full_list[0]]
+            added = list(node[id[0]].keys())
+            id = id + added
+
+            while len(id) != len(old_id):
+                old_id = id
+                added_new = []
+                for key in added:
+                    added_new = added_new + list(node[key].keys())
+                added = list(dict.fromkeys(added_new))
+
+                id = list(dict.fromkeys(id + added))
+            id = sorted(id)
+
+            coord_list[seg_id] = id
+            seg_id += 1
+
+            for i in id:
+                full_list.remove(i)
+
+        list_c = []
+        for key in coord_list:
+            value = coord[coord_list[key], :]
+            id = np.expand_dims(np.repeat(key, len(value)), 1)
+            list_c.append(np.hstack((id, value)))
+        return np.concatenate(list_c)
+
     def _validate(self):
         """
         Test model against validation dataset.
