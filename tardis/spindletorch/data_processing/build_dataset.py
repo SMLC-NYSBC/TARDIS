@@ -15,7 +15,7 @@ from typing import Tuple
 import numpy as np
 
 from tardis.dist_pytorch.utils.build_point_cloud import BuildPointCloud
-from tardis.spindletorch.data_processing.semantic_mask import draw_instances
+from tardis.spindletorch.data_processing.draw_mask import draw_instances
 from tardis.spindletorch.data_processing.trim import trim_with_stride
 from tardis.utils.errors import TardisError
 from tardis.utils.load_data import ImportDataFromAmira, load_image

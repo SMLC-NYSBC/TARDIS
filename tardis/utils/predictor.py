@@ -22,7 +22,7 @@ from tardis.dist_pytorch.datasets.patches import PatchDataSet
 from tardis.dist_pytorch.dist import build_dist_network
 from tardis.dist_pytorch.utils.build_point_cloud import BuildPointCloud
 from tardis.dist_pytorch.utils.segment_point_cloud import PropGreedyGraphCut
-from tardis.spindletorch.data_processing.semantic_mask import draw_semantic_membrane
+from tardis.spindletorch.data_processing.draw_mask import draw_semantic_membrane
 from tardis.spindletorch.data_processing.stitch import StitchImages
 from tardis.spindletorch.data_processing.trim import trim_with_stride
 from tardis.spindletorch.datasets.dataloader import PredictionDataset
@@ -332,7 +332,7 @@ class DataSetPredictor:
                       dataloader):
         iter_time = 1
         if self.rotate:
-            pred_title = 'CNN prediction with 90 degree rotation.'
+            pred_title = 'CNN prediction with four 90 degree rotations.'
         else:
             pred_title = ''
 
