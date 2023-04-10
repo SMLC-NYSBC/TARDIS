@@ -265,9 +265,15 @@ class DistTrainer(BasicTrainer):
                 threshold_mean.append(th)
 
                 # Update progress bar
+                df_05, df_09 = 0.0, 0.0
+                if len(mcov0_5) > 0:
+                    df_05 = mcov0_5[-1:][0]
+                if len(mcov0_9) > 0:
+                    df_09 = mcov0_9[-1:][0]
+
                 valid = f'Validation: (loss: {loss.item():.4f}; F1: {f1:.2f}) ' \
-                        f'mCov[0.5]: {mcov0_5[-1:][0]:.2f}; ' \
-                        f'mCov[0.9]: {mcov0_9[-1:][0]:.2f}'
+                        f'mCov[0.5]: {df_05:.2f}; ' \
+                        f'mCov[0.9]: {df_09:.2f}'
                 self._update_progress_bar(loss_desc=valid, idx=idx, train=False)
 
             # Build GT instance point cloud
