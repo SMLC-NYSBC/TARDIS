@@ -91,7 +91,13 @@ class EdgeEmbedding(nn.Module):
                  sigma: Union[int, float, list]):
         super().__init__()
         if isinstance(sigma, list):
-            self.linear = nn.Linear(len(sigma), n_out, bias=False)
+            self._range = torch.arange(sigma[0], sigma[1], sigma[2])
+            assert len(self._range) <= n_out, \
+                f'Sigma range is out of shape. n_out = {n_out} but sigma range = {len(self._range)}'
+            if len(self._range) == n_out:
+                self.linear = None
+            else:
+                self.linear = nn.Linear(len(sigma), n_out, bias=False)
         else:
             self.linear = nn.Linear(1, n_out, bias=False)
         self.n_out = n_out
@@ -131,4 +137,6 @@ class EdgeEmbedding(nn.Module):
             dist_range = torch.where(isnan, torch.zeros_like(dist_range), dist_range)
             dist_range[:, g_range, g_range, :] = 1
 
-            return self.linear(dist_range)
+            if self.linear is not None:
+                return self.linear(dist_range)
+            return dist_range
