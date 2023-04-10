@@ -130,7 +130,7 @@ class EdgeEmbedding(nn.Module):
         else:
             dist_range = torch.zeros((1, g_len, g_len, len(self.sigma)),
                                      device=dist.device)
-            for id, i in enumerate(self.sigma):
+            for id, i in enumerate(self._range):
                 dist_range[:, :, :, id] = torch.exp(-dist ** 2 / (i ** 2 * 2))
 
             isnan = torch.isnan(dist_range)
