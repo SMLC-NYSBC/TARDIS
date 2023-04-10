@@ -128,7 +128,7 @@ class EdgeEmbedding(nn.Module):
             dist[:, g_range, g_range] = 1
             return self.linear(dist.unsqueeze(3))
         else:
-            dist_range = torch.zeros((1, g_len, g_len, len(self.sigma)),
+            dist_range = torch.zeros((1, g_len, g_len, len(self._range)),
                                      device=dist.device)
             for id, i in enumerate(self._range):
                 dist_range[:, :, :, id] = torch.exp(-dist ** 2 / (i ** 2 * 2))
