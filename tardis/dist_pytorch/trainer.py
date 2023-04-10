@@ -229,17 +229,19 @@ class DistTrainer(BasicTrainer):
 
         for idx, (e, n, g, o, _) in enumerate(self.validation_DataLoader):
             coord = [x.cpu().detach().numpy()[0, :] for x in e]
+            edge_cpu, graph_cpu, out_cpu = [], [], []
 
             for edge, node, graph, out in zip(e, n, g, o):
                 edge, graph = edge.to(self.device), graph.to(self.device)
-                out = out.cpu().detach().numpy()[0, :]
 
                 with torch.no_grad():
+                    out_cpu.append(out.cpu().detach().numpy()[0, :])
+                    graph_cpu.append(graph[0, :].cpu().detach().numpy())
+
                     # Predict graph
                     if self.node_input:
-                        node = node.to(self.device)
                         edge = self.model(coords=edge,
-                                          node_features=node)
+                                          node_features=node.to(self.device))
                     else:
                         edge = self.model(coords=edge,
                                           node_features=None)
@@ -252,50 +254,7 @@ class DistTrainer(BasicTrainer):
                     acc, prec, recall, f1, th = eval_graph_f1(logits=edge,
                                                               targets=graph,
                                                               threshold=0.5)
-
-                    # Build GT instance point cloud
-                    graph = graph[0, :].cpu().detach().numpy()
-                    target = self.Graph_gt.patch_to_segment(graph=[graph],
-                                                            coord=coord,
-                                                            idx=[out],
-                                                            prune=0,
-                                                            sort=False)
-
-                    # Get Graph prediction
-                    edge = edge[0, :].cpu().detach().numpy()
-
-                    # Threshold 0.25
-                    try:
-                        input0_1 = self.Graph0_25.patch_to_segment(graph=[edge],
-                                                                   coord=coord,
-                                                                   idx=[out],
-                                                                   prune=0,
-                                                                   sort=False)
-                        mcov0_25.append(mcov(input0_1, target))
-                    except:
-                        mcov0_25.append(0.0)
-
-                    # Threshold 0.5
-                    try:
-                        input0_5 = self.Graph0_5.patch_to_segment(graph=[edge],
-                                                                  coord=coord,
-                                                                  idx=[out],
-                                                                  prune=0,
-                                                                  sort=False)
-                        mcov0_5.append(mcov(input0_5, target))
-                    except:
-                        mcov0_5.append(0.0)
-
-                    # Threshold 0.9
-                    try:
-                        input0_9 = self.Graph0_9.patch_to_segment(graph=[edge],
-                                                                  coord=coord,
-                                                                  idx=[out],
-                                                                  prune=0,
-                                                                  sort=False)
-                        mcov0_9.append(mcov(input0_9, target))
-                    except:
-                        mcov0_9.append(0.0)
+                    edge_cpu.append(edge[0, :].cpu().detach().numpy())
 
                 # Avg. precision score
                 valid_losses.append(loss.item())
@@ -305,12 +264,57 @@ class DistTrainer(BasicTrainer):
                 F1_mean.append(f1)
                 threshold_mean.append(th)
 
+                # Update progress bar
                 valid = f'Validation: (loss: {loss.item():.4f}; F1: {f1:.2f}) ' \
                         f'mCov[0.5]: {mcov0_5[-1:][0]:.2f}; ' \
                         f'mCov[0.9]: {mcov0_9[-1:][0]:.2f}'
-
-                # Update progress bar
                 self._update_progress_bar(loss_desc=valid, idx=idx, train=False)
+
+            # Build GT instance point cloud
+            target = self.Graph_gt.patch_to_segment(graph=graph_cpu,
+                                                    coord=coord,
+                                                    idx=out_cpu,
+                                                    prune=0,
+                                                    sort=False)
+
+            # Threshold 0.25
+            try:
+                input0_1 = self.Graph0_25.patch_to_segment(graph=edge_cpu,
+                                                           coord=coord,
+                                                           idx=out_cpu,
+                                                           prune=0,
+                                                           sort=False)
+                mcov0_25.append(mcov(input0_1, target))
+            except:
+                mcov0_25.append(0.0)
+
+            # Threshold 0.5
+            try:
+                input0_5 = self.Graph0_5.patch_to_segment(graph=edge_cpu,
+                                                          coord=coord,
+                                                          idx=out_cpu,
+                                                          prune=0,
+                                                          sort=False)
+                mcov0_5.append(mcov(input0_5, target))
+            except:
+                mcov0_5.append(0.0)
+
+            # Threshold 0.9
+            try:
+                input0_9 = self.Graph0_9.patch_to_segment(graph=edge_cpu,
+                                                          coord=coord,
+                                                          idx=out_cpu,
+                                                          prune=0,
+                                                          sort=False)
+                mcov0_9.append(mcov(input0_9, target))
+            except:
+                mcov0_9.append(0.0)
+
+            # Update progress bar
+            valid = f'Validation: (loss: {loss.item():.4f}; F1: {f1:.2f}) ' \
+                    f'mCov[0.5]: {mcov0_5[-1:][0]:.2f}; ' \
+                    f'mCov[0.9]: {mcov0_9[-1:][0]:.2f}'
+            self._update_progress_bar(loss_desc=valid, idx=idx, train=False)
 
         # Reduce eval. metric with mean
         self.validation_loss.append(np.mean(valid_losses))
