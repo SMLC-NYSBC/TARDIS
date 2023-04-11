@@ -80,6 +80,9 @@ class EdgeEmbedding(nn.Module):
     Input: Batch x Length x Dim
     Output: Batch x Length x Length x Dim
 
+    TODO: Buckets
+    TODO: Cos expansion
+
     Args:
         n_out (int): Number of features to output.
         sigma (int, optional tuple): Sigma value for an exponential function is
@@ -91,7 +94,7 @@ class EdgeEmbedding(nn.Module):
                  sigma: Union[int, float, list]):
         super().__init__()
         if isinstance(sigma, list):
-            self._range = torch.arange(sigma[0], sigma[1], sigma[2])
+            self._range = torch.arange(sigma[0], sigma[1], sigma[2])  # torch.linspace
             assert len(self._range) <= n_out, \
                 f'Sigma range is out of shape. n_out = {n_out} but sigma range = {len(self._range)}'
             if len(self._range) == n_out:
@@ -139,4 +142,4 @@ class EdgeEmbedding(nn.Module):
 
             if self.linear is not None:
                 return self.linear(dist_range)
-            return dist_range
+            return dist_range  # Log space

@@ -276,7 +276,8 @@ def main(dir: str,
                       'dropout_rate': dropout,
                       'structure': structure}
 
-    train_dist(train_dataloader=dl_train_graph,
+    train_dist(dataset_type=dataset_type,
+               train_dataloader=dl_train_graph,
                test_dataloader=dl_test_graph,
                model_structure=model_dict,
                checkpoint=checkpoint,

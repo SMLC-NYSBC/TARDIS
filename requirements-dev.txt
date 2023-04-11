@@ -1,5 +1,5 @@
 # Code testing
-pytest>7.2.1
+pytest>7.0.0
 
 # PEP-8
 flake8>5.0.0

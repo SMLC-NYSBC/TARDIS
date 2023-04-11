@@ -107,6 +107,7 @@ class BasicTrainer:
                  lr_scheduler=False,
                  epochs=100,
                  early_stop_rate=10,
+                 instance_cov=2,
                  checkpoint_name="DIST",
                  classification=False):
         super(BasicTrainer, self).__init__()
@@ -125,6 +126,7 @@ class BasicTrainer:
         self.early_stop_rate = early_stop_rate
         self.checkpoint_name = checkpoint_name
         self.structure = structure
+        self.instance_cov = instance_cov
 
         if 'cnn_type' in self.structure:
             self.classification = classification

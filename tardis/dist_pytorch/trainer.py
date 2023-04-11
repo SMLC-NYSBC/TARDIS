@@ -31,9 +31,9 @@ class DistTrainer(BasicTrainer):
         self.node_input = self.structure['node_input']
 
         self.Graph_gt = PropGreedyGraphCut(threshold=0.5, connection=1000)
-        self.Graph0_25 = PropGreedyGraphCut(threshold=0.25, connection=4)
-        self.Graph0_5 = PropGreedyGraphCut(threshold=0.5, connection=4)
-        self.Graph0_9 = PropGreedyGraphCut(threshold=0.9, connection=4)
+        self.Graph0_25 = PropGreedyGraphCut(threshold=0.25, connection=self.instance_cov)
+        self.Graph0_5 = PropGreedyGraphCut(threshold=0.5, connection=self.instance_cov)
+        self.Graph0_9 = PropGreedyGraphCut(threshold=0.9, connection=self.instance_cov)
 
         self.mCov0_25, self.mCov0_5, self.mCov0_9 = [], [], []
 

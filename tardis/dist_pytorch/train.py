@@ -31,7 +31,8 @@ torch.autograd.profiler.profile(enabled=False)
 torch.autograd.profiler.emit_nvtx(enabled=False)
 
 
-def train_dist(train_dataloader,
+def train_dist(dataset_type: str,
+               train_dataloader,
                test_dataloader,
                model_structure: dict,
                checkpoint: Optional[str] = None,
@@ -159,9 +160,15 @@ def train_dist(train_dataloader,
         del save_train
 
     """Build trainer"""
+    if dataset_type in ['filament', 'MT', 'Mem']:
+        dataset_type = 2
+    else:
+        dataset_type = 4
+
     if model_structure['dist_type'] == 'instance':
         train = DistTrainer(model=model,
                             structure=model_structure,
+                            instance_cov=dataset_type,
                             device=device,
                             criterion=loss_fn,
                             optimizer=optimizer,
