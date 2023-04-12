@@ -27,22 +27,16 @@ class EarlyStopping:
                new loss to be considered as an improvement.
     """
 
-    def __init__(self,
-                 patience=10,
-                 min_delta=0):
+    def __init__(self, patience=10, min_delta=0):
         self.patience = patience
         self.min_delta = min_delta
         self.counter = 0
         self.best_loss = None
         self.early_stop = False
 
-    def __call__(self,
-                 val_loss: Union[float, None] = None,
-                 f1_score: Union[float, None] = None):
+    def __call__(self, val_loss: Union[float, None] = None, f1_score: Union[float, None] = None):
         if val_loss is None and f1_score is None:
-            TardisError('124',
-                        'tardis/utils/utils',
-                        'Validation loss or F1 score is missing in early stop!')
+            TardisError("124", "tardis/utils/utils", "Validation loss or F1 score is missing in early stop!")
 
         if val_loss is not None:
             if self.best_loss is None:
@@ -54,7 +48,7 @@ class EarlyStopping:
                 self.counter += 1
 
                 if self.counter >= self.patience:
-                    print('INFO: Early stopping')
+                    print("INFO: Early stopping")
                     self.early_stop = True
         elif f1_score is not None:
             if self.best_loss is None:
@@ -66,7 +60,7 @@ class EarlyStopping:
                 self.counter += 1
 
                 if self.counter >= self.patience:
-                    print('INFO: Early stopping')
+                    print("INFO: Early stopping")
                     self.early_stop = True
 
 

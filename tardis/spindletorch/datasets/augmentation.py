@@ -26,21 +26,19 @@ class CenterCrop:
         size (tuple): Output size of image in DHW/HW.
     """
 
-    def __init__(self,
-                 size: tuple):
+    def __init__(self, size: tuple):
         if len(size) not in [2, 3]:
-            TardisError('146',
-                        'tardis/spindletorch/dataset/augmentation.py',
-                        'Image crop supported only for 3D and 2D! '
-                        f'But {size} was given.')
+            TardisError(
+                "146",
+                "tardis/spindletorch/dataset/augmentation.py",
+                "Image crop supported only for 3D and 2D! " f"But {size} was given.",
+            )
         self.size = size
 
         if len(self.size) == 2:
             self.size = (0, size[0], size[1])
 
-    def __call__(self,
-                 x: np.ndarray,
-                 y: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray]:
+    def __call__(self, x: np.ndarray, y: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray]:
         """
         Call for centre crop.
 
@@ -52,14 +50,14 @@ class CenterCrop:
             np.ndarray: Cropped array.
         """
         if x.ndim not in [2, 3]:
-            TardisError('146',
-                        'tardis/spindletorch/dataset/augmentation.py',
-                        'Image crop supported only for 3D and 2D!')
+            TardisError(
+                "146", "tardis/spindletorch/dataset/augmentation.py", "Image crop supported only for 3D and 2D!"
+            )
         if y is not None:
             if y.ndim not in [2, 3]:
-                TardisError('146',
-                            'tardis/spindletorch/dataset/augmentation.py',
-                            'Image crop supported only for 3D and 2D!')
+                TardisError(
+                    "146", "tardis/spindletorch/dataset/augmentation.py", "Image crop supported only for 3D and 2D!"
+                )
 
         if x.ndim == 3:
             d, h, w = x.shape
@@ -79,11 +77,9 @@ class CenterCrop:
         """Crop"""
         if y is not None:
             if x.ndim == 3 and y.ndim == 3:
-                return x[up_d:down_d, top_h:bottom_h, left_w:right_w], \
-                    y[up_d:down_d, top_h:bottom_h, left_w:right_w]
+                return x[up_d:down_d, top_h:bottom_h, left_w:right_w], y[up_d:down_d, top_h:bottom_h, left_w:right_w]
             elif x.ndim == 2 and y.ndim == 2:
-                return x[top_h:bottom_h, left_w:right_w], \
-                    y[top_h:bottom_h, left_w:right_w]
+                return x[top_h:bottom_h, left_w:right_w], y[top_h:bottom_h, left_w:right_w]
         else:
             if x.ndim == 3:
                 return x[up_d:down_d, top_h:bottom_h, left_w:right_w]
@@ -101,9 +97,7 @@ class RandomFlip:
         - 0 is x axis, 1 is y axis for 2D
     """
 
-    def __call__(self,
-                 x: np.ndarray,
-                 y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def __call__(self, x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
         Call for random flip.
 
@@ -141,9 +135,7 @@ class RandomRotation:
     def __init__(self):
         """Randomize rotation"""
 
-    def __call__(self,
-                 x: np.ndarray,
-                 y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def __call__(self, x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
         Call for random rotation.
 
@@ -194,14 +186,11 @@ class ComposeRandomTransformation:
             or multiple transformations will be selected.
     """
 
-    def __init__(self,
-                 transformations: list):
+    def __init__(self, transformations: list):
         self.transforms = transformations
         self.random_repetition = np.random.randint(1, 4)
 
-    def __call__(self,
-                 x: np.ndarray,
-                 y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def __call__(self, x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
         Call for random transformation.
 
@@ -221,11 +210,13 @@ class ComposeRandomTransformation:
         return x, y
 
 
-def preprocess(image: np.ndarray,
-               transformation: bool,
-               size: Optional[Union[tuple, int]] = int,
-               mask: Optional[np.ndarray] = None,
-               output_dim_mask=1) -> Union[Tuple[ndarray, ndarray], ndarray]:
+def preprocess(
+    image: np.ndarray,
+    transformation: bool,
+    size: Optional[Union[tuple, int]] = int,
+    mask: Optional[np.ndarray] = None,
+    output_dim_mask=1,
+) -> Union[Tuple[ndarray, ndarray], ndarray]:
     """
     Module to augment dataset.
 
@@ -242,9 +233,7 @@ def preprocess(image: np.ndarray,
     """
     # Check if image is 2D or 3D
     if image.ndim not in [2, 3]:
-        TardisError('146',
-                    'tardis/spindletorch/dataset/augmentation.py',
-                    'Image crop supported only for 3D and 2D!')
+        TardisError("146", "tardis/spindletorch/dataset/augmentation.py", "Image crop supported only for 3D and 2D!")
 
     if isinstance(size, tuple):
         if sum(size) / len(size) == size[0]:  # Check if image has uniform size

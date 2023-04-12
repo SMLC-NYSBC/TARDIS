@@ -36,9 +36,7 @@ class StitchImages:
         self.x, self.y, self.z = 0, 0, 0  # Variable to store number of patches in xyz
         self.stride = 0  # Variable to store step size
 
-    def _find_xyz(self,
-                  file_list: list,
-                  idx: int):
+    def _find_xyz(self, file_list: list, idx: int):
         """
         Find index from for stitching image patches into one file.
 
@@ -49,21 +47,12 @@ class StitchImages:
         Returns:
             Update global class values.
         """
-        self.z = max(list(map(int,
-                              [str.split(f[:-4], "_")[1] for f in file_list if
-                               f.startswith(f'{idx}')]))) + 1
-        self.y = max(list(map(int,
-                              [str.split(f[:-4], "_")[2] for f in file_list if
-                               f.startswith(f'{idx}')]))) + 1
-        self.x = max(list(map(int,
-                              [str.split(f[:-4], "_")[3] for f in file_list if
-                               f.startswith(f'{idx}')]))) + 1
-        self.stride = max(list(map(int,
-                                   [str.split(f[:-4], "_")[4] for f in file_list if
-                                    f.startswith(f'{idx}')])))
+        self.z = max(list(map(int, [str.split(f[:-4], "_")[1] for f in file_list if f.startswith(f"{idx}")]))) + 1
+        self.y = max(list(map(int, [str.split(f[:-4], "_")[2] for f in file_list if f.startswith(f"{idx}")]))) + 1
+        self.x = max(list(map(int, [str.split(f[:-4], "_")[3] for f in file_list if f.startswith(f"{idx}")]))) + 1
+        self.stride = max(list(map(int, [str.split(f[:-4], "_")[4] for f in file_list if f.startswith(f"{idx}")])))
 
-    def _calculate_dim(self,
-                       image: np.ndarray):
+    def _calculate_dim(self, image: np.ndarray):
         """
         Find and update image patch size from array.
 
@@ -79,12 +68,9 @@ class StitchImages:
             self.ny, self.nx = image.shape
             self.nz = 0
 
-    def __call__(self,
-                 image_dir: str,
-                 mask: bool,
-                 output: Optional[str] = None,
-                 prefix='',
-                 dtype=np.uint8) -> np.ndarray:
+    def __call__(
+        self, image_dir: str, mask: bool, output: Optional[str] = None, prefix="", dtype=np.uint8
+    ) -> np.ndarray:
         """
         STITCH IMAGE FROM IMAGE PATCHES
 
@@ -102,14 +88,13 @@ class StitchImages:
         """
         """Extract information about images in dir_path"""
         file_list = [f for f in listdir(image_dir) if isfile(join(image_dir, f))]
-        file_list = [f for f in file_list if f.endswith('.tif')]
+        file_list = [f for f in file_list if f.endswith(".tif")]
 
         self.idx = max(list(map(int, [str.split(f[:-4], "_")[0] for f in file_list]))) + 1
 
         for idx in range(self.idx):
             self._find_xyz(file_list, idx)
-            self._calculate_dim(tif.imread(join(image_dir,
-                                                f'{idx}_0_0_0_{self.stride}{prefix}.tif')))
+            self._calculate_dim(tif.imread(join(image_dir, f"{idx}_0_0_0_{self.stride}{prefix}.tif")))
 
             x_dim = self.nx + ((self.nx - self.stride) * (self.x - 1))
             y_dim = self.ny + ((self.ny - self.stride) * (self.y - 1))
@@ -143,38 +128,37 @@ class StitchImages:
                         x_start = x_start + self.nx - self.stride
                         x_stop = x_start + self.nx
 
-                        img_name = str(join(image_dir,
-                                            f"{idx}_{i}_{j}_{k}_{self.stride}{prefix}.tif"))
+                        img_name = str(join(image_dir, f"{idx}_{i}_{j}_{k}_{self.stride}{prefix}.tif"))
 
                         img = tif.imread(img_name)
 
                         if self.nz == 0:
                             if img.shape != (self.ny, self.nx):
-                                TardisError(id='',
-                                            py='tardis/spindletorch/data_processing/stitch.py',
-                                            desc=f'Stitch image size does not match. {img.shape} '
-                                                 f'doesnt match ({self.ny}, {self.nx})')
+                                TardisError(
+                                    id="",
+                                    py="tardis/spindletorch/data_processing/stitch.py",
+                                    desc=f"Stitch image size does not match. {img.shape} "
+                                    f"doesnt match ({self.ny}, {self.nx})",
+                                )
                                 sys.exit()
                         else:
                             if img.shape != (self.nz, self.ny, self.nx):
-                                TardisError(id='',
-                                            py='tardis/spindletorch/data_processing/stitch.py',
-                                            desc=f'Stitch image size does not match. {img.shape} '
-                                                 f'doesnt match ({self.nz}, {self.ny}, {self.nx})')
+                                TardisError(
+                                    id="",
+                                    py="tardis/spindletorch/data_processing/stitch.py",
+                                    desc=f"Stitch image size does not match. {img.shape} "
+                                    f"doesnt match ({self.nz}, {self.ny}, {self.nx})",
+                                )
                                 sys.exit()
 
                         if mask and self.nz == 0:
                             stitched_image[y_start:y_stop, x_start:x_stop] += img
                         elif mask and self.nz > 0:
-                            stitched_image[z_start:z_stop,
-                                           y_start:y_stop,
-                                           x_start:x_stop] += img
+                            stitched_image[z_start:z_stop, y_start:y_stop, x_start:x_stop] += img
                         elif not mask and self.nz == 0:
                             stitched_image[y_start:y_stop, x_start:x_stop] = img
                         else:
-                            stitched_image[z_start:z_stop,
-                                           y_start:y_stop,
-                                           x_start:x_stop] = img
+                            stitched_image[z_start:z_stop, y_start:y_stop, x_start:x_stop] = img
 
             if mask:
                 stitched_image = np.where(stitched_image > 0, 1, 0).astype(np.uint8)
@@ -182,5 +166,4 @@ class StitchImages:
             if output is None:
                 return np.array(stitched_image, dtype=dtype)
             else:
-                tif.imwrite(join(output, f'Stitched_Image_idx_{idx}.tif'),
-                            np.array(stitched_image, dtype=dtype))
+                tif.imwrite(join(output, f"Stitched_Image_idx_{idx}.tif"), np.array(stitched_image, dtype=dtype))

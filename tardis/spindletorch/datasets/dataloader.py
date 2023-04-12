@@ -36,13 +36,7 @@ class CNNDataset(Dataset):
         out_channels (int): Number of output channels.
     """
 
-    def __init__(self,
-                 img_dir: str,
-                 mask_dir: str,
-                 size=64,
-                 mask_suffix='_mask',
-                 transform=True,
-                 out_channels=1):
+    def __init__(self, img_dir: str, mask_dir: str, size=64, mask_suffix="_mask", transform=True, out_channels=1):
         self.img_dir = img_dir
         self.mask_dir = mask_dir
         self.size = size
@@ -51,14 +45,12 @@ class CNNDataset(Dataset):
         self.out_channels = out_channels
         self.minmax = MinMaxNormalize()
 
-        self.ids = [splitext(file)[0] for file in listdir(img_dir) if
-                    not file.startswith('.')]
+        self.ids = [splitext(file)[0] for file in listdir(img_dir) if not file.startswith(".")]
 
     def __len__(self):
         return len(self.ids)
 
-    def __getitem__(self,
-                    i: int) -> Tuple[torch.Tensor, torch.Tensor]:
+    def __getitem__(self, i: int) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Select and process dataset for CNN.
 
@@ -70,36 +62,35 @@ class CNNDataset(Dataset):
         """
         # Find next image and corresponding label mask image
         idx = self.ids[i]
-        mask_file = os.path.join(self.mask_dir, str(idx) + '_mask' + '.tif')
-        img_file = os.path.join(self.img_dir, str(idx) + '.tif')
+        mask_file = os.path.join(self.mask_dir, str(idx) + "_mask" + ".tif")
+        img_file = os.path.join(self.img_dir, str(idx) + ".tif")
 
         # Load image and corresponding label mask
         img, _ = load_image(img_file)
         mask, _ = load_image(mask_file)
 
         if mask.dtype != np.uint8:
-            TardisError('147',
-                        'tardis/spindletorch/dataset/dataloader.py',
-                        f'Mask should be of np.uint8 dtype but is {mask.dtype}!')
+            TardisError(
+                "147",
+                "tardis/spindletorch/dataset/dataloader.py",
+                f"Mask should be of np.uint8 dtype but is {mask.dtype}!",
+            )
 
         # Process image and mask
-        img, mask = preprocess(image=img,
-                               mask=mask,
-                               size=self.size,
-                               transformation=self.transform,
-                               output_dim_mask=self.out_channels)
+        img, mask = preprocess(
+            image=img, mask=mask, size=self.size, transformation=self.transform, output_dim_mask=self.out_channels
+        )
 
         if img.dtype != np.float32 and mask.dtype != np.uint8:
-            TardisError('147',
-                        'tardis/spindletorch/dataset/dataloader.py',
-                        f'Mask {mask.dtype} and image  {img.dtype} has wrong dtype!')
+            TardisError(
+                "147",
+                "tardis/spindletorch/dataset/dataloader.py",
+                f"Mask {mask.dtype} and image  {img.dtype} has wrong dtype!",
+            )
         if not img.min() >= -1 and not img.max() <= 1:
-            TardisError('147',
-                        'tardis/spindletorch/dataset/dataloader.py',
-                        'Image file is not binary!')
+            TardisError("147", "tardis/spindletorch/dataset/dataloader.py", "Image file is not binary!")
 
-        return torch.from_numpy(img.copy()).type(torch.float32), \
-            torch.from_numpy(mask.copy()).type(torch.float32)
+        return torch.from_numpy(img.copy()).type(torch.float32), torch.from_numpy(mask.copy()).type(torch.float32)
 
 
 class PredictionDataset(Dataset):
@@ -113,20 +104,16 @@ class PredictionDataset(Dataset):
         out_channels (int): Number of output channels.
     """
 
-    def __init__(self,
-                 img_dir: str,
-                 out_channels=1):
+    def __init__(self, img_dir: str, out_channels=1):
         self.img_dir = img_dir
         self.out_channels = out_channels
 
-        self.ids = [splitext(file)[0] for file in listdir(img_dir) if
-                    not file.startswith('.')]
+        self.ids = [splitext(file)[0] for file in listdir(img_dir) if not file.startswith(".")]
 
     def __len__(self):
         return len(self.ids)
 
-    def __getitem__(self,
-                    i: int):
+    def __getitem__(self, i: int):
         """
         Select and process dataset for CNN.
 
@@ -137,16 +124,13 @@ class PredictionDataset(Dataset):
             torch.Tensor, str: Tensor of processed image and image file name.
         """
         idx = self.ids[i]
-        img_file = join(self.img_dir, str(idx) + '.tif')
+        img_file = join(self.img_dir, str(idx) + ".tif")
 
         # Load image
         img, _ = load_image(img_file)
         img = img.astype(np.float32)
 
         # Process image and mask
-        img = preprocess(image=img,
-                         size=img.shape,
-                         transformation=False,
-                         output_dim_mask=self.out_channels)
+        img = preprocess(image=img, size=img.shape, transformation=False, output_dim_mask=self.out_channels)
 
         return torch.from_numpy(img).type(torch.float32), idx

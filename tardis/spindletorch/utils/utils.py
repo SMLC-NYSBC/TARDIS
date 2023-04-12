@@ -15,11 +15,9 @@ import torch
 import torch.nn.functional as F
 
 
-def scale_image(scale: tuple,
-                image: Optional[np.ndarray] = None,
-                mask: Optional[np.ndarray] = None) -> Union[Tuple[np.ndarray, np.ndarray, int],
-                                                            Tuple[np.ndarray, int],
-                                                            Tuple[None, int]]:
+def scale_image(
+    scale: tuple, image: Optional[np.ndarray] = None, mask: Optional[np.ndarray] = None
+) -> Union[Tuple[np.ndarray, np.ndarray, int], Tuple[np.ndarray, int], Tuple[None, int]]:
     """
     Scale image module using torch GPU interpolation
 
@@ -55,9 +53,7 @@ def scale_image(scale: tuple,
         return image, dim
 
 
-def trilinear_scaling(img: np.ndarray,
-                      scale: tuple,
-                      dtype: np.dtype) -> np.ndarray:
+def trilinear_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
     """
     Saling of 3D array using trilinear method from pytorch
 
@@ -69,16 +65,12 @@ def trilinear_scaling(img: np.ndarray,
     Returns:
         no.ndarray: Up or Down scale 3D array.
     """
-    img = torch.from_numpy(img[None, None, :]).to('cpu').type(torch.float)
-    img = F.interpolate(img,
-                        size=scale,
-                        mode='trilinear').cpu().detach().numpy()[0, 0, :].astype(dtype)
+    img = torch.from_numpy(img[None, None, :]).to("cpu").type(torch.float)
+    img = F.interpolate(img, size=scale, mode="trilinear").cpu().detach().numpy()[0, 0, :].astype(dtype)
     return img
 
 
-def area_scaling(img: np.ndarray,
-                 scale: tuple,
-                 dtype: np.dtype) -> np.ndarray:
+def area_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
     """
     Saling of 3D array using area method from pytorch
 
@@ -96,24 +88,31 @@ def area_scaling(img: np.ndarray,
 
     # Scale Z axis
     for i in range(img.shape[2]):
-        df_img = torch.from_numpy(img[:, :, i]).to('cpu').type(torch.float)
-        image_scale_Z[:, :, i] = F.interpolate(df_img[None, None, :],
-                                               size=size_Z[:2],
-                                               mode='area').cpu().detach().numpy()[0, 0, :].astype(dtype)
+        df_img = torch.from_numpy(img[:, :, i]).to("cpu").type(torch.float)
+        image_scale_Z[:, :, i] = (
+            F.interpolate(df_img[None, None, :], size=size_Z[:2], mode="area")
+            .cpu()
+            .detach()
+            .numpy()[0, 0, :]
+            .astype(dtype)
+        )
 
     # Scale XY axis
     img = np.zeros(scale, dtype=dtype)
     for i in range(scale[0]):
-        df_img = torch.from_numpy(image_scale_Z[i, :]).to('cpu').type(torch.float)
-        img[i, :] = F.interpolate(df_img[None, None, :],
-                                  size=scale[1:],
-                                  mode='area').cpu().detach().numpy()[0, 0, :].astype(dtype)
+        df_img = torch.from_numpy(image_scale_Z[i, :]).to("cpu").type(torch.float)
+        img[i, :] = (
+            F.interpolate(df_img[None, None, :], size=scale[1:], mode="area")
+            .cpu()
+            .detach()
+            .numpy()[0, 0, :]
+            .astype(dtype)
+        )
 
     return img
 
 
-def number_of_features_per_level(channel_scaler: int,
-                                 num_levels: int) -> list:
+def number_of_features_per_level(channel_scaler: int, num_levels: int) -> list:
     """
     Compute list of output channels for CNN.
 
@@ -128,18 +127,20 @@ def number_of_features_per_level(channel_scaler: int,
     Returns:
         list: List of output channels.
     """
-    return [channel_scaler * 2 ** k for k in range(num_levels)]
+    return [channel_scaler * 2**k for k in range(num_levels)]
 
 
-def max_number_of_conv_layer(img=None,
-                             input_volume=64,
-                             max_out=8,
-                             kernel_size=3,
-                             padding=1,
-                             stride=1,
-                             pool_size=2,
-                             pool_stride=2,
-                             first_max_pool=False) -> int:
+def max_number_of_conv_layer(
+    img=None,
+    input_volume=64,
+    max_out=8,
+    kernel_size=3,
+    padding=1,
+    stride=1,
+    pool_size=2,
+    pool_stride=2,
+    first_max_pool=False,
+) -> int:
     """
     Calculate maximum possible number of layers given image size.
 
@@ -231,31 +232,31 @@ def check_model_dict(model_dict: dict) -> dict:
     new_dict = {}
 
     for key, value in model_dict.items():
-        if key.endswith('type'):
-            new_dict['cnn_type'] = value
-        if key.endswith('cation'):
-            new_dict['classification'] = value
-        if key.endswith('_in') or key.startswith('in_'):
-            new_dict['in_channel'] = value
-        if key.endswith('_out') or key.startswith('out_'):
-            new_dict['out_channel'] = value
-        if key.endswith('size'):
-            new_dict['img_size'] = value
-        if key.endswith('dropout'):
-            new_dict['dropout'] = value
-        if key.endswith('layers'):
-            new_dict['num_conv_layers'] = value
-        if key.endswith('scaler') or key.endswith('multiplayer'):
-            new_dict['conv_scaler'] = value
-        if key.endswith('v_kernel'):
-            new_dict['conv_kernel'] = value
-        if key.endswith('padding'):
-            new_dict['conv_padding'] = value
-        if key.endswith('l_kernel'):
-            new_dict['maxpool_kernel'] = value
-        if key.endswith('components'):
-            new_dict['layer_components'] = value
-        if key.endswith('group'):
-            new_dict['num_group'] = value
+        if key.endswith("type"):
+            new_dict["cnn_type"] = value
+        if key.endswith("cation"):
+            new_dict["classification"] = value
+        if key.endswith("_in") or key.startswith("in_"):
+            new_dict["in_channel"] = value
+        if key.endswith("_out") or key.startswith("out_"):
+            new_dict["out_channel"] = value
+        if key.endswith("size"):
+            new_dict["img_size"] = value
+        if key.endswith("dropout"):
+            new_dict["dropout"] = value
+        if key.endswith("layers"):
+            new_dict["num_conv_layers"] = value
+        if key.endswith("scaler") or key.endswith("multiplayer"):
+            new_dict["conv_scaler"] = value
+        if key.endswith("v_kernel"):
+            new_dict["conv_kernel"] = value
+        if key.endswith("padding"):
+            new_dict["conv_padding"] = value
+        if key.endswith("l_kernel"):
+            new_dict["maxpool_kernel"] = value
+        if key.endswith("components"):
+            new_dict["layer_components"] = value
+        if key.endswith("group"):
+            new_dict["num_group"] = value
 
     return new_dict

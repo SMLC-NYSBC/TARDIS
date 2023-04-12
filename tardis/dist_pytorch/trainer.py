@@ -24,11 +24,10 @@ class DistTrainer(BasicTrainer):
     DIST MODEL TRAINER
     """
 
-    def __init__(self,
-                 **kwargs):
+    def __init__(self, **kwargs):
         super(DistTrainer, self).__init__(**kwargs)
 
-        self.node_input = self.structure['node_input']
+        self.node_input = self.structure["node_input"]
 
         self.Graph_gt = PropGreedyGraphCut(threshold=0.5, connection=1000)
         self.Graph0_25 = PropGreedyGraphCut(threshold=0.25, connection=self.instance_cov)
@@ -38,8 +37,7 @@ class DistTrainer(BasicTrainer):
         self.mCov0_25, self.mCov0_5, self.mCov0_9 = [], [], []
 
     @staticmethod
-    def _update_desc(stop_count: int,
-                     metric: list) -> str:
+    def _update_desc(stop_count: int, metric: list) -> str:
         """
         Utility function to update progress bar description.
 
@@ -50,83 +48,100 @@ class DistTrainer(BasicTrainer):
         Returns:
             str: Updated progress bar status.
         """
-        desc = f'Epochs: early_stop: {stop_count}; ' \
-               f'F1: [{metric[0]:.2f}; {metric[1]:.2f}]; ' \
-               f'mCov 0.5: [{metric[2]:.2f}; {metric[3]:.2f}]; ' \
-               f'mCov 0.9: [{metric[4]:.2f}; {metric[5]:.2f}]'
+        desc = (
+            f"Epochs: early_stop: {stop_count}; "
+            f"F1: [{metric[0]:.2f}; {metric[1]:.2f}]; "
+            f"mCov 0.5: [{metric[2]:.2f}; {metric[3]:.2f}]; "
+            f"mCov 0.9: [{metric[4]:.2f}; {metric[5]:.2f}]"
+        )
         return desc
 
     def _update_epoch_desc(self):
         # For each Epoch load be t model from previous run
         if self.id == 0:
-            self.epoch_desc = 'Epochs: early_stop: 0; best F1: NaN'
+            self.epoch_desc = "Epochs: early_stop: 0; best F1: NaN"
         else:
-            self.epoch_desc = self._update_desc(self.early_stopping.counter,
-                                                [np.max(self.f1),
-                                                 self.f1[-1:][0],
-                                                 np.max(self.mCov0_5),
-                                                 self.mCov0_5[-1:][0],
-                                                 np.max(self.mCov0_9),
-                                                 self.mCov0_9[-1:][0]])
+            self.epoch_desc = self._update_desc(
+                self.early_stopping.counter,
+                [
+                    np.max(self.f1),
+                    self.f1[-1:][0],
+                    np.max(self.mCov0_5),
+                    self.mCov0_5[-1:][0],
+                    np.max(self.mCov0_9),
+                    self.mCov0_9[-1:][0],
+                ],
+            )
 
     def _save_metric(self) -> bool:
-        """ Save training metrics """
+        """Save training metrics"""
         if len(self.training_loss) > 0:
-            np.savetxt(join(getcwd(),
-                            f'{self.checkpoint_name}_checkpoint',
-                            'training_losses.csv'),
-                       self.training_loss, delimiter=',')
+            np.savetxt(
+                join(getcwd(), f"{self.checkpoint_name}_checkpoint", "training_losses.csv"),
+                self.training_loss,
+                delimiter=",",
+            )
         if len(self.validation_loss) > 0:
-            np.savetxt(join(getcwd(),
-                            f'{self.checkpoint_name}_checkpoint',
-                            'validation_losses.csv'),
-                       self.validation_loss, delimiter=',')
+            np.savetxt(
+                join(getcwd(), f"{self.checkpoint_name}_checkpoint", "validation_losses.csv"),
+                self.validation_loss,
+                delimiter=",",
+            )
         if len(self.f1) > 0:
-            np.savetxt(join(getcwd(),
-                            f'{self.checkpoint_name}_checkpoint',
-                            'eval_metric.csv'),
-                       np.column_stack([self.accuracy, self.precision, self.recall,
-                                        self.threshold, self.f1,
-                                        self.mCov0_25, self.mCov0_5, self.mCov0_9]),
-                       delimiter=',')
+            np.savetxt(
+                join(getcwd(), f"{self.checkpoint_name}_checkpoint", "eval_metric.csv"),
+                np.column_stack(
+                    [
+                        self.accuracy,
+                        self.precision,
+                        self.recall,
+                        self.threshold,
+                        self.f1,
+                        self.mCov0_25,
+                        self.mCov0_5,
+                        self.mCov0_9,
+                    ]
+                ),
+                delimiter=",",
+            )
         if len(self.learning_rate) > 0:
-            np.savetxt(join(getcwd(),
-                            f'{self.checkpoint_name}_checkpoint',
-                            'learning_rate.csv'),
-                       self.learning_rate,
-                       delimiter=',')
+            np.savetxt(
+                join(getcwd(), f"{self.checkpoint_name}_checkpoint", "learning_rate.csv"),
+                self.learning_rate,
+                delimiter=",",
+            )
 
         """ Save current model weights"""
         # If mean evaluation f1 score is higher than save checkpoint
         if all(self.f1[-1:][0] >= i for i in self.f1[:-1]):
-            torch.save({
-                'model_struct_dict': self.structure,
-                'model_state_dict': self.model.state_dict(),
-                'optimizer_state_dict': self.optimizer.state_dict()
-            },
-                join(getcwd(),
-                     f'{self.checkpoint_name}_checkpoint',
-                     f'{self.checkpoint_name}_checkpoint_f1.pth'))
+            torch.save(
+                {
+                    "model_struct_dict": self.structure,
+                    "model_state_dict": self.model.state_dict(),
+                    "optimizer_state_dict": self.optimizer.state_dict(),
+                },
+                join(getcwd(), f"{self.checkpoint_name}_checkpoint", f"{self.checkpoint_name}_checkpoint_f1.pth"),
+            )
 
         # If mean evaluation mcov score is higher than save checkpoint
         if all(self.mCov0_9[-1:][0] >= i for i in self.mCov0_9[:-1]):
-            torch.save({
-                'model_struct_dict': self.structure,
-                'model_state_dict': self.model.state_dict(),
-                'optimizer_state_dict': self.optimizer.state_dict()
-            },
-                join(getcwd(),
-                     f'{self.checkpoint_name}_checkpoint',
-                     f'{self.checkpoint_name}_checkpoint_mcov.pth'))
+            torch.save(
+                {
+                    "model_struct_dict": self.structure,
+                    "model_state_dict": self.model.state_dict(),
+                    "optimizer_state_dict": self.optimizer.state_dict(),
+                },
+                join(getcwd(), f"{self.checkpoint_name}_checkpoint", f"{self.checkpoint_name}_checkpoint_mcov.pth"),
+            )
 
-        torch.save({
-            'model_struct_dict': self.structure,
-            'model_state_dict': self.model.state_dict(),
-            'optimizer_state_dict': self.optimizer.state_dict()
-        },
-            join(getcwd(),
-                 f'{self.checkpoint_name}_checkpoint',
-                 'model_weights.pth'))
+        torch.save(
+            {
+                "model_struct_dict": self.structure,
+                "model_state_dict": self.model.state_dict(),
+                "optimizer_state_dict": self.optimizer.state_dict(),
+            },
+            join(getcwd(), f"{self.checkpoint_name}_checkpoint", "model_weights.pth"),
+        )
 
         if self.early_stopping.early_stop:
             return True
@@ -137,7 +152,7 @@ class DistTrainer(BasicTrainer):
         Run model training.
         """
         # Update progress bar
-        self._update_progress_bar(loss_desc='Training: (loss 1.000)', idx=0)
+        self._update_progress_bar(loss_desc="Training: (loss 1.000)", idx=0)
 
         # Run training for DIST model
         for idx, (e, n, g, _, _) in enumerate(self.training_DataLoader):
@@ -150,11 +165,9 @@ class DistTrainer(BasicTrainer):
                 self.optimizer.zero_grad()
 
                 if self.node_input:
-                    edge = self.model(coords=edge,
-                                      node_features=node.to(self.device))
+                    edge = self.model(coords=edge, node_features=node.to(self.device))
                 else:
-                    edge = self.model(coords=edge,
-                                      node_features=None)
+                    edge = self.model(coords=edge, node_features=None)
 
                 # Back-propagate
                 loss = self.criterion(edge[:, 0, :], graph)  # Calc. loss
@@ -171,14 +184,11 @@ class DistTrainer(BasicTrainer):
                 self.learning_rate.append(self.lr)
 
                 # Update progress bar
-                self._update_progress_bar(loss_desc=f'Training: (loss {loss_value:.4f};'
-                                                    f' LR: {self.lr:.5f})',
-                                          idx=idx)
+                self._update_progress_bar(
+                    loss_desc=f"Training: (loss {loss_value:.4f};" f" LR: {self.lr:.5f})", idx=idx
+                )
 
-    def _greedy_segmenter(self,
-                          graph: np.ndarray,
-                          coord: np.ndarray,
-                          th: float):
+    def _greedy_segmenter(self, graph: np.ndarray, coord: np.ndarray, th: float):
         node = dict()
         for j in range(len(graph)):
             df = [[id, i] for id, i in enumerate(graph[j]) if i >= th and id != j]
@@ -240,20 +250,16 @@ class DistTrainer(BasicTrainer):
 
                     # Predict graph
                     if self.node_input:
-                        edge = self.model(coords=edge,
-                                          node_features=node.to(self.device))
+                        edge = self.model(coords=edge, node_features=node.to(self.device))
                     else:
-                        edge = self.model(coords=edge,
-                                          node_features=None)
+                        edge = self.model(coords=edge, node_features=None)
 
                     # Calculate validation loss
                     loss = self.criterion(edge[0, :], graph)
 
                     # Calculate F1 metric
                     edge = torch.sigmoid(edge)[0, :]
-                    acc, prec, recall, f1, th = eval_graph_f1(logits=edge,
-                                                              targets=graph,
-                                                              threshold=0.5)
+                    acc, prec, recall, f1, th = eval_graph_f1(logits=edge, targets=graph, threshold=0.5)
                     edge_cpu.append(edge[0, :].cpu().detach().numpy())
 
                 # Avg. precision score
@@ -271,55 +277,45 @@ class DistTrainer(BasicTrainer):
                 if len(mcov0_9) > 0:
                     df_09 = mcov0_9[-1:][0]
 
-                valid = f'Validation: (loss: {loss.item():.4f}; F1: {f1:.2f}) ' \
-                        f'mCov[0.5]: {df_05:.2f}; ' \
-                        f'mCov[0.9]: {df_09:.2f}'
+                valid = (
+                    f"Validation: (loss: {loss.item():.4f}; F1: {f1:.2f}) "
+                    f"mCov[0.5]: {df_05:.2f}; "
+                    f"mCov[0.9]: {df_09:.2f}"
+                )
                 self._update_progress_bar(loss_desc=valid, idx=idx, train=False)
 
             # Build GT instance point cloud
-            target = self.Graph_gt.patch_to_segment(graph=graph_cpu,
-                                                    coord=coord,
-                                                    idx=out_cpu,
-                                                    prune=0,
-                                                    sort=False)
+            target = self.Graph_gt.patch_to_segment(graph=graph_cpu, coord=coord, idx=out_cpu, prune=0, sort=False)
 
             # Threshold 0.25
             try:
-                input0_1 = self.Graph0_25.patch_to_segment(graph=edge_cpu,
-                                                           coord=coord,
-                                                           idx=out_cpu,
-                                                           prune=0,
-                                                           sort=False)
+                input0_1 = self.Graph0_25.patch_to_segment(
+                    graph=edge_cpu, coord=coord, idx=out_cpu, prune=0, sort=False
+                )
                 mcov0_25.append(mcov(input0_1, target))
             except:
                 mcov0_25.append(0.0)
 
             # Threshold 0.5
             try:
-                input0_5 = self.Graph0_5.patch_to_segment(graph=edge_cpu,
-                                                          coord=coord,
-                                                          idx=out_cpu,
-                                                          prune=0,
-                                                          sort=False)
+                input0_5 = self.Graph0_5.patch_to_segment(graph=edge_cpu, coord=coord, idx=out_cpu, prune=0, sort=False)
                 mcov0_5.append(mcov(input0_5, target))
             except:
                 mcov0_5.append(0.0)
 
             # Threshold 0.9
             try:
-                input0_9 = self.Graph0_9.patch_to_segment(graph=edge_cpu,
-                                                          coord=coord,
-                                                          idx=out_cpu,
-                                                          prune=0,
-                                                          sort=False)
+                input0_9 = self.Graph0_9.patch_to_segment(graph=edge_cpu, coord=coord, idx=out_cpu, prune=0, sort=False)
                 mcov0_9.append(mcov(input0_9, target))
             except:
                 mcov0_9.append(0.0)
 
             # Update progress bar
-            valid = f'Validation: (loss: {loss.item():.4f}; F1: {f1:.2f}) ' \
-                    f'mCov[0.5]: {mcov0_5[-1:][0]:.2f}; ' \
-                    f'mCov[0.9]: {mcov0_9[-1:][0]:.2f}'
+            valid = (
+                f"Validation: (loss: {loss.item():.4f}; F1: {f1:.2f}) "
+                f"mCov[0.5]: {mcov0_5[-1:][0]:.2f}; "
+                f"mCov[0.9]: {mcov0_9[-1:][0]:.2f}"
+            )
             self._update_progress_bar(loss_desc=valid, idx=idx, train=False)
 
         # Reduce eval. metric with mean
@@ -343,11 +339,10 @@ class CDistTrainer(BasicTrainer):
     C_DIST MODEL TRAINER
     """
 
-    def __init__(self,
-                 **kwargs):
+    def __init__(self, **kwargs):
         super(CDistTrainer, self).__init__(**kwargs)
 
-        if self.structure['dist_type'] == 'semantic':
+        if self.structure["dist_type"] == "semantic":
             self.criterion_cls = nn.CrossEntropyLoss()
 
     def _train(self):
@@ -355,7 +350,7 @@ class CDistTrainer(BasicTrainer):
         Run model training.
         """
         # Update progress bar
-        self._update_progress_bar(loss_desc='Training: (loss 1.000)', idx=0)
+        self._update_progress_bar(loss_desc="Training: (loss 1.000)", idx=0)
 
         for idx, (e, n, g, _, c) in enumerate(self.training_DataLoader):
             """Mid-training eval"""
@@ -373,8 +368,7 @@ class CDistTrainer(BasicTrainer):
                     edge, out_cls = self.model(coords=edge, node_features=None)
 
                 # Back-propagate
-                loss = self.criterion(edge[0, :], graph) + self.criterion_cls(out_cls,
-                                                                              cls)
+                loss = self.criterion(edge[0, :], graph) + self.criterion_cls(out_cls, cls)
                 loss.backward()  # One backward pass
                 self.optimizer.step()  # Update the parameters
 
@@ -383,8 +377,7 @@ class CDistTrainer(BasicTrainer):
                 self.training_loss.append(loss_value)
 
                 # Update progress bar
-                self._update_progress_bar(loss_desc=f'Training: (loss {loss_value:.4f})',
-                                          idx=idx)
+                self._update_progress_bar(loss_desc=f"Training: (loss {loss_value:.4f})", idx=idx)
 
     def _validate(self):
         """
@@ -409,12 +402,10 @@ class CDistTrainer(BasicTrainer):
                     else:
                         edge, out_cls = self.model(coords=edge, node_features=None)
 
-                    loss = self.criterion(edge[0, :], graph) + self.criterion_cls(out_cls,
-                                                                                  cls)
+                    loss = self.criterion(edge[0, :], graph) + self.criterion_cls(out_cls, cls)
 
                     edge = torch.sigmoid(edge[:, 0, :])
-                    acc, prec, recall, f1, th = eval_graph_f1(logits=edge, targets=graph,
-                                                              threshold=0.5)
+                    acc, prec, recall, f1, th = eval_graph_f1(logits=edge, targets=graph, threshold=0.5)
 
                 # Avg. precision score
                 valid_losses.append(loss.item())
@@ -423,7 +414,7 @@ class CDistTrainer(BasicTrainer):
                 recall_mean.append(recall)
                 F1_mean.append(f1)
                 threshold_mean.append(th)
-                valid = f'Validation: (loss {loss.item():.4f} Prec: {prec:.2f} Rec: {recall:.2f} F1: {f1:.2f})'
+                valid = f"Validation: (loss {loss.item():.4f} Prec: {prec:.2f} Rec: {recall:.2f} F1: {f1:.2f})"
 
                 # Update progress bar
                 self._update_progress_bar(loss_desc=valid, idx=idx)

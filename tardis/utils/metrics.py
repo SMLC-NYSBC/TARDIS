@@ -15,8 +15,7 @@ import torch
 from sklearn.metrics import auc, average_precision_score, roc_curve
 
 
-def compare_dict_metrics(last_best_dict: dict,
-                         new_dict: dict) -> bool:
+def compare_dict_metrics(last_best_dict: dict, new_dict: dict) -> bool:
     """
     Compares two metric dictionaries and returns the one with the highest
     average metric values.
@@ -37,21 +36,18 @@ def compare_dict_metrics(last_best_dict: dict,
     return new_dict > last_best_dict
 
 
-def eval_graph_f1(logits: torch.Tensor,
-                  targets: torch.Tensor,
-                  threshold: float,
-                  soft=False):
+def eval_graph_f1(logits: torch.Tensor, targets: torch.Tensor, threshold: float, soft=False):
     """
-     Module used for calculating training metrics
+    Module used for calculating training metrics
 
-     Works with torch a numpy dataset.
+    Works with torch a numpy dataset.
 
-     Args:
-         logits (np.ndarray, torch.Tensor): Prediction output from the model.
-         targets (np.ndarray, torch.Tensor): Ground truth mask.
-         threshold (float):
-         soft:
-     """
+    Args:
+        logits (np.ndarray, torch.Tensor): Prediction output from the model.
+        targets (np.ndarray, torch.Tensor): Ground truth mask.
+        threshold (float):
+        soft:
+    """
     """Mask Diagonal as TP"""
     g_len = logits.shape[1]
     g_range = range(g_len)
@@ -136,15 +132,14 @@ def eval_graph_f1(logits: torch.Tensor,
             accuracy_score = (tp + tn) / (tp + tn + fp + fn + 1e-16)
             precision_score = tp / (tp + fp + 1e-16)
             recall_score = tp / (tp + fn + 1e-16)
-            F1_score = 2 * (precision_score * recall_score) / \
-                           (precision_score + recall_score + 1e-16)
+            F1_score = 2 * (precision_score * recall_score) / (precision_score + recall_score + 1e-16)
 
         return accuracy_score, precision_score, recall_score, F1_score, threshold
 
 
-def calculate_f1(logits: Optional[Union[np.ndarray, torch.Tensor]],
-                 targets: Optional[Union[np.ndarray, torch.Tensor]],
-                 best_f1=True):
+def calculate_f1(
+    logits: Optional[Union[np.ndarray, torch.Tensor]], targets: Optional[Union[np.ndarray, torch.Tensor]], best_f1=True
+):
     """
     Module used for calculating training metrics
 
@@ -211,23 +206,19 @@ def calculate_f1(logits: Optional[Union[np.ndarray, torch.Tensor]],
         recall_score = tp / (tp + fn + 1e-16)
 
         """F1 Score - 2 * [(Prec * Rec) / (Prec + Rec)]"""
-        F1_score = 2 * ((precision_score * recall_score) / (precision_score +
-                                                            recall_score +
-                                                            1e-16))
+        F1_score = 2 * ((precision_score * recall_score) / (precision_score + recall_score + 1e-16))
 
         return accuracy_score, precision_score, recall_score, F1_score
 
 
-def AP(logits: np.ndarray,
-       targets: np.ndarray) -> float:
+def AP(logits: np.ndarray, targets: np.ndarray) -> float:
     logits = logits.flatten()
     targets = targets.flatten()
 
     return average_precision_score(targets, logits)
 
 
-def AP_instance(input: np.ndarray,
-                targets: np.ndarray) -> float:
+def AP_instance(input: np.ndarray, targets: np.ndarray) -> float:
     prec = 0
 
     # Get GT instances, compute IoU for best mache between GT and input
@@ -246,9 +237,7 @@ def AP_instance(input: np.ndarray,
     return 1 / (len(np.unique(targets[:, 0]) + 1e-16)) * prec
 
 
-def AUC(logits: np.ndarray,
-        targets: np.ndarray,
-        diagonal=False) -> float:
+def AUC(logits: np.ndarray, targets: np.ndarray, diagonal=False) -> float:
     if diagonal:
         g_len = logits.shape[1]
         g_range = range(g_len)
@@ -267,9 +256,7 @@ def AUC(logits: np.ndarray,
     return auc(fpr, tpr)
 
 
-def IoU(input: np.ndarray,
-        targets: np.ndarray,
-        diagonal=False):
+def IoU(input: np.ndarray, targets: np.ndarray, diagonal=False):
     if diagonal:
         g_len = input.shape[1]
         g_range = range(g_len)
@@ -289,8 +276,7 @@ def IoU(input: np.ndarray,
     return tp / (tp + fp + fn + 1e-16)
 
 
-def mcov(input: Optional[Union[np.ndarray, torch.Tensor]],
-         targets: Optional[Union[np.ndarray, torch.Tensor]]) -> float:
+def mcov(input: Optional[Union[np.ndarray, torch.Tensor]], targets: Optional[Union[np.ndarray, torch.Tensor]]) -> float:
     mCov = []
 
     # Get GT instances, compute IoU for best mache between GT and input
@@ -319,8 +305,9 @@ def mcov(input: Optional[Union[np.ndarray, torch.Tensor]],
     return np.mean(mCov)
 
 
-def mwcov(input: Optional[Union[np.ndarray, torch.Tensor]],
-          targets: Optional[Union[np.ndarray, torch.Tensor]]) -> float:
+def mwcov(
+    input: Optional[Union[np.ndarray, torch.Tensor]], targets: Optional[Union[np.ndarray, torch.Tensor]]
+) -> float:
     mCov = []
 
     # Get GT instances, compute IoU for best mache between GT and input
@@ -346,24 +333,25 @@ def mwcov(input: Optional[Union[np.ndarray, torch.Tensor]],
     return sum(mCov)
 
 
-def confusion_matrix(logits: Optional[Union[np.ndarray, torch.Tensor]],
-                     targets: Optional[Union[np.ndarray, torch.Tensor]]):
+def confusion_matrix(
+    logits: Optional[Union[np.ndarray, torch.Tensor]], targets: Optional[Union[np.ndarray, torch.Tensor]]
+):
     if torch.is_tensor(logits):
         confusion_vector = logits / targets
 
         tp = torch.sum(confusion_vector == 1).item()
-        fp = torch.sum(confusion_vector == float('inf')).item()
+        fp = torch.sum(confusion_vector == float("inf")).item()
         tn = torch.sum(torch.isnan(confusion_vector)).item()
         fn = torch.sum(confusion_vector == 0).item()
     else:
         logits = normalize_image(logits)
         targets = normalize_image(targets)
 
-        with np.errstate(divide='ignore', invalid='ignore'):
+        with np.errstate(divide="ignore", invalid="ignore"):
             confusion_vector = logits / targets
 
         tp = np.sum(confusion_vector == 1)
-        fp = np.sum(confusion_vector == float('inf'))
+        fp = np.sum(confusion_vector == float("inf"))
         tn = np.sum(np.isnan(confusion_vector) is True)
         fn = np.sum(confusion_vector == 0)
 

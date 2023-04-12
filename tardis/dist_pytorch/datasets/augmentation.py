@@ -18,13 +18,9 @@ from tardis.utils.load_data import ImportDataFromAmira
 from tardis.utils.normalization import RescaleNormalize, SimpleNormalize
 
 
-def preprocess_data(coord: str,
-                    image: Optional[str] = None,
-                    size: Optional[int] = None,
-                    include_label=True,
-                    normalization='simple') -> Union[Tuple[np.ndarray, np.ndarray],
-                                                     Tuple[np.ndarray, np.ndarray,
-                                                     np.ndarray]]:
+def preprocess_data(
+    coord: str, image: Optional[str] = None, size: Optional[int] = None, include_label=True, normalization="simple"
+) -> Union[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray, np.ndarray]]:
     """
     Data augmentation function.
 
@@ -47,8 +43,8 @@ def preprocess_data(coord: str,
 
     """ Collect Coordinates [Length x Dimension] """
     if coord[-4:] == ".csv":
-        coord_label = np.genfromtxt(coord, delimiter=',')
-        if str(coord_label[0, 0]) == 'nan':
+        coord_label = np.genfromtxt(coord, delimiter=",")
+        if str(coord_label[0, 0]) == "nan":
             coord_label = coord_label[1:, :]
     elif coord[-4:] == ".npy":
         coord_label = np.load(coord)
@@ -57,7 +53,7 @@ def preprocess_data(coord: str,
             amira_import = ImportDataFromAmira(src_am=coord)
             coord_label = amira_import.get_segmented_points()
         else:
-            if image.endswith('.am'):
+            if image.endswith(".am"):
                 amira_import = ImportDataFromAmira(src_am=coord, src_img=image)
                 coord_label = amira_import.get_segmented_points()
             else:
@@ -65,11 +61,13 @@ def preprocess_data(coord: str,
                 coord_label = amira_import.get_segmented_points()
 
     if coord_label.shape[1] not in [3, 4]:
-        TardisError('',
-                    'tardis/dist_pytorch/dataset/augmentation.py',
-                    f'Coord file {coord} is without labels.'
-                    'Expected dim to be in [3, 4] for 2D or 3D '
-                    f'coord but got {coord_label.shape[1]}')
+        TardisError(
+            "",
+            "tardis/dist_pytorch/dataset/augmentation.py",
+            f"Coord file {coord} is without labels."
+            "Expected dim to be in [3, 4] for 2D or 3D "
+            f"coord but got {coord_label.shape[1]}",
+        )
 
     """ Coordinates without labels """
     coords = coord_label[:, 1:]
@@ -85,24 +83,23 @@ def preprocess_data(coord: str,
     """ Collect Image Patches [Channels x Length] """
     # Normalize image between 0,1
     if image is not None:
-        if normalization not in ['simple', 'minmax', None]:
-            TardisError('124',
-                        'tardis/dist_pytorch/dataset/augmentation.py',
-                        f'Not implemented normalization. Given {normalization} '
-                        'But expected simple or minmax!')
+        if normalization not in ["simple", "minmax", None]:
+            TardisError(
+                "124",
+                "tardis/dist_pytorch/dataset/augmentation.py",
+                f"Not implemented normalization. Given {normalization} " "But expected simple or minmax!",
+            )
 
         if normalization == "simple":
             normalization = SimpleNormalize()
-        elif normalization == 'rescale':
+        elif normalization == "rescale":
             normalization = RescaleNormalize()
 
     if image is not None and coord[-3:] != ".am":
         # Crop images size around coordinates
         img_stack = tiff.imread(image)
 
-        crop_tiff = Crop2D3D(image=img_stack,
-                             size=size,
-                             normalization=normalization)  # Z x Y x X
+        crop_tiff = Crop2D3D(image=img_stack, size=size, normalization=normalization)  # Z x Y x X
 
         # Load images in an array
         if len(size) == 2:
@@ -119,14 +116,12 @@ def preprocess_data(coord: str,
                 point = coords[i]  # X x Y x Z
                 img[i, :] = np.array(crop_tiff(center_point=point)).flatten()
 
-    elif image is not None and image.endswith('.am'):
-        """ Collect Image Patches for .am binary files """
+    elif image is not None and image.endswith(".am"):
+        """Collect Image Patches for .am binary files"""
         img_stack, _ = amira_import.get_image()
 
         # Crop image around coordinates
-        crop_tiff = Crop2D3D(image=img_stack,
-                             size=size,
-                             normalization=normalization)  # Z x Y x X
+        crop_tiff = Crop2D3D(image=img_stack, size=size, normalization=normalization)  # Z x Y x X
 
         # Load images patches into an array
         if len(size) == 2:
@@ -168,13 +163,10 @@ class BuildGraph:
             object-like structures.
     """
 
-    def __init__(self,
-                 mesh=False):
+    def __init__(self, mesh=False):
         self.mesh = mesh
 
-    def __call__(self,
-                 coord: np.ndarray,
-                 dist_th: Optional[float] = None) -> np.ndarray:
+    def __call__(self, coord: np.ndarray, dist_th: Optional[float] = None) -> np.ndarray:
         """
         Graph representation builder.
 
@@ -204,8 +196,7 @@ class BuildGraph:
                         if coord_df.shape[0] > 8:
                             dist, match_coord = tree.query(coord[j].reshape(1, -1), k=9)
                         else:
-                            dist, match_coord = tree.query(coord[j].reshape(1, -1),
-                                                           k=coord_df.shape[0] - 1)
+                            dist, match_coord = tree.query(coord[j].reshape(1, -1), k=coord_df.shape[0] - 1)
 
                         match_coord = match_coord[0][1:]
                         dist = dist[0][1:]
@@ -213,8 +204,7 @@ class BuildGraph:
 
                         match_coord = match_coord[np.where(dist <= 0)[0]]
                         # Select point in contour
-                        knn = [x for id, x in enumerate(points_in_contour) if
-                               id in match_coord]
+                        knn = [x for id, x in enumerate(points_in_contour) if id in match_coord]
 
                         # Symmetric in-coming and out-coming connection
                         graph[j, j] = 1
@@ -247,8 +237,7 @@ class BuildGraph:
                         graph[j - 1, j] = 1
 
                 # Check euclidean distance between fist and last point
-                ends_distance = np.linalg.norm(coord[points_in_contour[0]][1:] -
-                                               coord[points_in_contour[-1]][1:])
+                ends_distance = np.linalg.norm(coord[points_in_contour[0]][1:] - coord[points_in_contour[-1]][1:])
 
                 # If < 2 nm pixel size, connect
                 if ends_distance < 2:
@@ -270,10 +259,7 @@ class Crop2D3D:
         normalization (class): Normalization type.
     """
 
-    def __init__(self,
-                 image: np.ndarray,
-                 size: tuple,
-                 normalization):
+    def __init__(self, image: np.ndarray, size: tuple, normalization):
         self.image = image
         self.size = size
         self.normalization = normalization
@@ -285,9 +271,7 @@ class Crop2D3D:
             self.depth, self.width, self.height = image.shape
 
     @staticmethod
-    def get_xyz_position(center_point: int,
-                         size: int,
-                         max_size: int) -> Tuple[int, int]:
+    def get_xyz_position(center_point: int, size: int, max_size: int) -> Tuple[int, int]:
         """
         Given the center point calculate the range to crop.
 
@@ -315,8 +299,7 @@ class Crop2D3D:
 
         return int(x0), int(x1)
 
-    def __call__(self,
-                 center_point: tuple) -> np.ndarray:
+    def __call__(self, center_point: tuple) -> np.ndarray:
         """
         Call for image cropping.
 
@@ -327,26 +310,23 @@ class Crop2D3D:
             np.ndarray: Cropped image patch.
         """
         if len(center_point) not in [2, 3]:
-            TardisError('113',
-                        'tardis/dist_pytorch/dataset/augmentation.py',
-                        'Given position for cropping is not 2D or 3D!. '
-                        f'Given {center_point}. But expected shape in [2, 3]!')
+            TardisError(
+                "113",
+                "tardis/dist_pytorch/dataset/augmentation.py",
+                "Given position for cropping is not 2D or 3D!. " f"Given {center_point}. But expected shape in [2, 3]!",
+            )
         if len(center_point) != len(self.size):
-            TardisError('124',
-                        'tardis/dist_pytorch/dataset/augmentation.py',
-                        f'Given cropping shape {len(self.size)} is not compatible '
-                        f'with given cropping coordinates shape {len(center_point)}!')
+            TardisError(
+                "124",
+                "tardis/dist_pytorch/dataset/augmentation.py",
+                f"Given cropping shape {len(self.size)} is not compatible "
+                f"with given cropping coordinates shape {len(center_point)}!",
+            )
 
         if len(center_point) == 3:
-            z0, z1 = self.get_xyz_position(center_point=center_point[-1],
-                                           size=self.size[-1],
-                                           max_size=self.depth)
-            x0, x1 = self.get_xyz_position(center_point=center_point[0],
-                                           size=self.size[0],
-                                           max_size=self.height)
-            y0, y1 = self.get_xyz_position(center_point=center_point[1],
-                                           size=self.size[1],
-                                           max_size=self.width)
+            z0, z1 = self.get_xyz_position(center_point=center_point[-1], size=self.size[-1], max_size=self.depth)
+            x0, x1 = self.get_xyz_position(center_point=center_point[0], size=self.size[0], max_size=self.height)
+            y0, y1 = self.get_xyz_position(center_point=center_point[1], size=self.size[1], max_size=self.width)
             crop_img = self.image[z0:z1, y0:y1, x0:x1]
 
             if crop_img.shape != (self.size[-1], self.size[0], self.size[1]):
@@ -354,21 +334,17 @@ class Crop2D3D:
                 shape = crop_img.shape
 
                 crop_img = np.zeros((self.size[2], self.size[0], self.size[1]))
-                crop_img[0:shape[0], 0:shape[1], 0:shape[2]] = crop_df
+                crop_img[0 : shape[0], 0 : shape[1], 0 : shape[2]] = crop_df
         elif len(center_point) == 2:
-            x0, x1 = self.get_xyz_position(center_point=center_point[0],
-                                           size=self.size[0],
-                                           max_size=self.height)
-            y0, y1 = self.get_xyz_position(center_point=center_point[1],
-                                           size=self.size[1],
-                                           max_size=self.width)
+            x0, x1 = self.get_xyz_position(center_point=center_point[0], size=self.size[0], max_size=self.height)
+            y0, y1 = self.get_xyz_position(center_point=center_point[1], size=self.size[1], max_size=self.width)
             crop_img = self.image[y0:y1, x0:x1]
 
             if crop_img.shape != (self.size[0], self.size[1]):
                 crop_df = np.array(crop_img)
                 shape = crop_img.shape
                 crop_img = np.zeros((self.size[0], self.size[1]))
-                crop_img[0:shape[0], 0:shape[1]] = crop_df
+                crop_img[0 : shape[0], 0 : shape[1]] = crop_df
 
         if self.normalization is not None:
             return self.normalization(crop_img)

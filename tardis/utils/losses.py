@@ -20,10 +20,7 @@ class AdaptiveDiceLoss(nn.Module):
     ADAPTIVE DICE LOSS FUNCTION
     """
 
-    def __init__(self,
-                 alpha=0.1,
-                 smooth=1e-16,
-                 diagonal=False):
+    def __init__(self, alpha=0.1, smooth=1e-16, diagonal=False):
         """
         Loss initialization
 
@@ -37,9 +34,7 @@ class AdaptiveDiceLoss(nn.Module):
         self.smooth = smooth
         self.diagonal = diagonal
 
-    def forward(self,
-                logits: torch.Tensor,
-                targets: torch.Tensor) -> torch.Tensor:
+    def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         """
         Forward loos function
 
@@ -62,8 +57,7 @@ class AdaptiveDiceLoss(nn.Module):
         logits = ((1 - logits) ** self.alpha) * logits
 
         intersection = (logits * targets).sum()
-        dice = (2. * intersection + self.smooth) / (logits.square().sum() +
-                                                    targets.square().sum() + self.smooth)
+        dice = (2.0 * intersection + self.smooth) / (logits.square().sum() + targets.square().sum() + self.smooth)
 
         return 1 - dice
 
@@ -73,9 +67,7 @@ class BCELoss(nn.Module):
     STANDARD BINARY CROSS-ENTROPY LOSS FUNCTION
     """
 
-    def __init__(self,
-                 reduction='mean',
-                 diagonal=False):
+    def __init__(self, reduction="mean", diagonal=False):
         """
         Loss initialization
 
@@ -89,9 +81,7 @@ class BCELoss(nn.Module):
 
         self.loss = nn.BCEWithLogitsLoss(reduction=self.reduction)
 
-    def forward(self,
-                logits: torch.Tensor,
-                targets: torch.Tensor) -> torch.Tensor:
+    def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         """
         Forward loos function
 
@@ -105,8 +95,7 @@ class BCELoss(nn.Module):
             mask = torch.ones_like(targets)
             mask[:, g_range, g_range] = 0
 
-            self.loss = nn.BCEWithLogitsLoss(reduction=self.reduction,
-                                             weight=mask.float())
+            self.loss = nn.BCEWithLogitsLoss(reduction=self.reduction, weight=mask.float())
         return self.loss(logits, targets)
 
 
@@ -115,8 +104,7 @@ class BCEDiceLoss(nn.Module):
     DICE BCE COMBO LOSS FUNCTION
     """
 
-    def __init__(self,
-                 diagonal=False):
+    def __init__(self, diagonal=False):
         """
         Loss initialization
 
@@ -128,9 +116,7 @@ class BCEDiceLoss(nn.Module):
         self.dice = DiceLoss(diagonal=diagonal)
         self.diagonal = diagonal
 
-    def forward(self,
-                logits: torch.Tensor,
-                targets: torch.Tensor) -> torch.Tensor:
+    def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         """
         Forward loos function
 
@@ -160,9 +146,7 @@ class CELoss(nn.Module):
     STANDARD CROSS-ENTROPY LOSS FUNCTION
     """
 
-    def __init__(self,
-                 reduction='mean',
-                 diagonal=False):
+    def __init__(self, reduction="mean", diagonal=False):
         """
         Loss initialization
 
@@ -176,9 +160,7 @@ class CELoss(nn.Module):
         self.loss = nn.CrossEntropyLoss(reduction=reduction)
         self.diagonal = diagonal
 
-    def forward(self,
-                logits: torch.Tensor,
-                targets: torch.Tensor) -> torch.Tensor:
+    def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         """
         Forward loos function
 
@@ -203,9 +185,7 @@ class DiceLoss(nn.Module):
     are not "activated" in the target mask.
     """
 
-    def __init__(self,
-                 smooth=1e-16,
-                 diagonal=False):
+    def __init__(self, smooth=1e-16, diagonal=False):
         """
         Loss initialization
 
@@ -217,9 +197,7 @@ class DiceLoss(nn.Module):
         self.smooth = smooth
         self.diagonal = diagonal
 
-    def forward(self,
-                logits: torch.Tensor,
-                targets: torch.Tensor) -> torch.Tensor:
+    def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         """
         Forward loos function
 
@@ -242,8 +220,7 @@ class DiceLoss(nn.Module):
 
         # Calculate dice loss
         intersection = (logits * targets).sum()
-        dice = (2 * intersection + self.smooth) / (logits.square().sum() +
-                                                   targets.square().sum() + self.smooth)
+        dice = (2 * intersection + self.smooth) / (logits.square().sum() + targets.square().sum() + self.smooth)
 
         return 1 - dice
 
@@ -253,10 +230,7 @@ class SoftSkeletonization(nn.Module):
     General soft skeletonization with DICE loss function
     """
 
-    def __init__(self,
-                 _iter=5,
-                 smooth=1e-16,
-                 diagonal=False):
+    def __init__(self, _iter=5, smooth=1e-16, diagonal=False):
         """
         Loss initialization
 
@@ -292,13 +266,10 @@ class SoftSkeletonization(nn.Module):
         elif len(binary_mask.shape) == 5:  # 3D
             return F.max_pool3d(binary_mask, (3, 3, 3), (1, 1, 1), (1, 1, 1))
 
-    def _soft_open(self,
-                   binary_mask):
+    def _soft_open(self, binary_mask):
         return self._soft_dilate(self._soft_erode(binary_mask))
 
-    def soft_skel(self,
-                  binary_mask: torch.Tensor,
-                  iter_: int) -> torch.Tensor:
+    def soft_skel(self, binary_mask: torch.Tensor, iter_: int) -> torch.Tensor:
         """
         Soft skeletonization
 
@@ -324,9 +295,7 @@ class SoftSkeletonization(nn.Module):
 
         return s_skeleton
 
-    def forward(self,
-                logits: torch.Tensor,
-                targets: torch.Tensor) -> torch.Tensor:
+    def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         """
         Forward loos function
 
@@ -342,14 +311,11 @@ class ClBCE(SoftSkeletonization):
     Soft skeletonization with BCE loss function
     """
 
-    def __init__(self,
-                 **kwargs):
+    def __init__(self, **kwargs):
         super(ClBCE, self).__init__(**kwargs)
         self.bce = BCELoss()
 
-    def forward(self,
-                logits: torch.Tensor,
-                targets: torch.Tensor) -> torch.Tensor:
+    def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         """
         Forward loos function
 
@@ -367,10 +333,8 @@ class ClBCE(SoftSkeletonization):
         sk_logits = self.soft_skel(logits, self.iter)
         sk_targets = self.soft_skel(targets, self.iter)
 
-        t_prec = ((sk_logits * targets).sum() + self.smooth) / \
-                 (sk_logits.sum() + self.smooth)
-        t_sens = ((sk_targets * logits).sum() + self.smooth) / \
-                 (sk_targets.sum() + self.smooth)
+        t_prec = ((sk_logits * targets).sum() + self.smooth) / (sk_logits.sum() + self.smooth)
+        t_sens = ((sk_targets * logits).sum() + self.smooth) / (sk_targets.sum() + self.smooth)
 
         # ClBCE
         cl_bce = 2 * (t_prec * t_sens) / (t_prec + t_sens)
@@ -383,14 +347,11 @@ class ClDice(SoftSkeletonization):
     Soft skeletonization with DICE loss function
     """
 
-    def __init__(self,
-                 **kwargs):
+    def __init__(self, **kwargs):
         super(ClDice, self).__init__(**kwargs)
         self.soft_dice = DiceLoss(diagonal=self.diagonal)
 
-    def forward(self,
-                logits: torch.Tensor,
-                targets: torch.Tensor) -> torch.Tensor:
+    def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         """
         Forward loos function
 
@@ -415,10 +376,8 @@ class ClDice(SoftSkeletonization):
         sk_logits = self.soft_skel(logits, self.iter)
         sk_targets = self.soft_skel(targets, self.iter)
 
-        t_prec = ((sk_logits * targets).sum() + self.smooth) / \
-                 (sk_logits.sum() + self.smooth)
-        t_sens = ((sk_targets * logits).sum() + self.smooth) / \
-                 (sk_targets.sum() + self.smooth)
+        t_prec = ((sk_logits * targets).sum() + self.smooth) / (sk_logits.sum() + self.smooth)
+        t_sens = ((sk_targets * logits).sum() + self.smooth) / (sk_targets.sum() + self.smooth)
 
         # CLDice loss
         cl_dice = 2 * (t_prec * t_sens) / (t_prec + t_sens)
@@ -437,10 +396,7 @@ class SigmoidFocalLoss(nn.Module):
         alpha (int, optional): Optional alpha factor used for normalizing SPF.
     """
 
-    def __init__(self,
-                 gamma=0.25,
-                 alpha: Optional[int] = None,
-                 diagonal=False):
+    def __init__(self, gamma=0.25, alpha: Optional[int] = None, diagonal=False):
         """
         Loss initialization
 
@@ -454,9 +410,7 @@ class SigmoidFocalLoss(nn.Module):
         self.alpha = alpha
         self.diagonal = diagonal
 
-    def forward(self,
-                logits: torch.Tensor,
-                targets: torch.Tensor) -> torch.Tensor:
+    def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         """
         Forward loos function
 
@@ -475,7 +429,7 @@ class SigmoidFocalLoss(nn.Module):
 
         y = targets.unsqueeze(1)
         term1 = (1 - p) ** self.gamma * torch.log(p)
-        term2 = p ** self.gamma * torch.log(1 - p)
+        term2 = p**self.gamma * torch.log(1 - p)
 
         if self.alpha is None:
             # SFL(p, y) = -1/n(Σ[y(1-p)^γ*log(p) + (1-y)*p^γ*log(1-p)])

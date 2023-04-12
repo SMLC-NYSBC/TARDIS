@@ -9,8 +9,16 @@
 #######################################################################
 import torch
 
-from tardis.utils.losses import (AdaptiveDiceLoss, BCEDiceLoss, BCELoss, CELoss, ClBCE,
-                                 ClDice, DiceLoss, SigmoidFocalLoss)
+from tardis.utils.losses import (
+    AdaptiveDiceLoss,
+    BCEDiceLoss,
+    BCELoss,
+    CELoss,
+    ClBCE,
+    ClDice,
+    DiceLoss,
+    SigmoidFocalLoss,
+)
 
 logits = torch.rand((1, 64, 64, 64))
 targets = torch.softmax(logits, 0)
@@ -20,10 +28,8 @@ class GeneralLoss:
     """
     General class for testing loss functions
     """
-    def __init__(self,
-                 logits_: torch.Tensor,
-                 targets_: torch.Tensor,
-                 criterion):
+
+    def __init__(self, logits_: torch.Tensor, targets_: torch.Tensor, criterion):
         self.logits = logits_
         self.targets = targets_
         self.criterion = criterion

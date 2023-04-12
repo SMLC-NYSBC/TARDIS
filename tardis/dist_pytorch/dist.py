@@ -37,19 +37,21 @@ class BasicDIST(nn.Module):
         predict (bool): If True sigmoid output.
     """
 
-    def __init__(self,
-                 n_out=1,
-                 node_input=0,
-                 node_dim=None,
-                 edge_dim=128,
-                 num_layers=6,
-                 num_heads=8,
-                 num_cls=None,
-                 rgb_embed_sigma=1.0,
-                 coord_embed_sigma=1.0,
-                 dropout_rate=0,
-                 structure='full',
-                 predict=False):
+    def __init__(
+        self,
+        n_out=1,
+        node_input=0,
+        node_dim=None,
+        edge_dim=128,
+        num_layers=6,
+        num_heads=8,
+        num_cls=None,
+        rgb_embed_sigma=1.0,
+        coord_embed_sigma=1.0,
+        dropout_rate=0,
+        structure="full",
+        predict=False,
+    ):
         super(BasicDIST, self).__init__()
 
         self.n_out = n_out
@@ -67,28 +69,25 @@ class BasicDIST(nn.Module):
 
         if self.node_dim is not None:
             if self.node_input > 0:
-                self.node_embed = NodeEmbedding(n_in=self.node_input,
-                                                n_out=self.node_dim,
-                                                sigma=self.node_sigma)
+                self.node_embed = NodeEmbedding(n_in=self.node_input, n_out=self.node_dim, sigma=self.node_sigma)
 
-        self.coord_embed = EdgeEmbedding(n_out=self.edge_dim,
-                                         sigma=self.edge_sigma)
+        self.coord_embed = EdgeEmbedding(n_out=self.edge_dim, sigma=self.edge_sigma)
 
-        self.layers = DistStack(node_dim=self.node_dim,
-                                pairs_dim=self.edge_dim,
-                                dropout=self.dropout_rate,
-                                num_layers=self.num_layers,
-                                num_heads=self.num_heads,
-                                structure=self.structure)
+        self.layers = DistStack(
+            node_dim=self.node_dim,
+            pairs_dim=self.edge_dim,
+            dropout=self.dropout_rate,
+            num_layers=self.num_layers,
+            num_heads=self.num_heads,
+            structure=self.structure,
+        )
 
         self.decoder = nn.Linear(in_features=self.edge_dim, out_features=self.n_out)
 
         if self.predict:
             self.logits_sigmoid = nn.Sigmoid()
 
-    def embed_input(self,
-                    coords: torch.Tensor,
-                    node_features: Optional[torch.Tensor] = None):
+    def embed_input(self, coords: torch.Tensor, node_features: Optional[torch.Tensor] = None):
         """
         Embedding features
 
@@ -100,7 +99,7 @@ class BasicDIST(nn.Module):
             torch.tensor: Embedded features for prediction.
         """
         if node_features is not None:
-            """ Batch x Length x Embedded_Dim """
+            """Batch x Length x Embedded_Dim"""
             x = self.node_embed(input_node=node_features)
         else:
             x = None
@@ -109,10 +108,9 @@ class BasicDIST(nn.Module):
         z = self.coord_embed(input_coord=coords)
         return x, z
 
-    def forward(self,
-                coords: torch.Tensor,
-                node_features=None) -> Union[Tuple[torch.Tensor, torch.Tensor],
-                                             torch.Tensor]:
+    def forward(
+        self, coords: torch.Tensor, node_features=None
+    ) -> Union[Tuple[torch.Tensor, torch.Tensor], torch.Tensor]:
         """
         Forward DIST model.
 
@@ -125,13 +123,11 @@ class BasicDIST(nn.Module):
         node, edge = self.embed_input(coords=coords, node_features=node_features)
 
         if node is not None:
-            """ Length x Batch x Embedded_Dim """
+            """Length x Batch x Embedded_Dim"""
             node = node.transpose(0, 1)
 
         """ Encode throughout the transformer layers """
-        _, edge = self.layers(node_features=node,
-                              edge_features=edge,
-                              src_key_padding_mask=None)
+        _, edge = self.layers(node_features=node, edge_features=edge, src_key_padding_mask=None)
 
         """ Predict the graph edges """
         logits = self.decoder(edge + edge.transpose(1, 2))  # symmetries z
@@ -173,8 +169,7 @@ class DIST(BasicDIST):
             linear layer (training).
     """
 
-    def __init__(self,
-                 **kwargs):
+    def __init__(self, **kwargs):
         super(DIST, self).__init__(**kwargs)
 
 
@@ -192,13 +187,10 @@ class CDIST(BasicDIST):
             sigmoid (prediction) or last linear layer (training).
     """
 
-    def __init__(self,
-                 **kwargs):
+    def __init__(self, **kwargs):
         super(CDIST, self).__init__(**kwargs)
         if self.num_cls is None:
-            TardisError('build_cdist_network',
-                        'tardis/dist',
-                        'Undefined num_cls parameter!')
+            TardisError("build_cdist_network", "tardis/dist", "Undefined num_cls parameter!")
 
         self.decoder_cls = nn.Linear(in_features=self.edge_dim, out_features=self.num_cls)
 
@@ -207,9 +199,7 @@ class CDIST(BasicDIST):
         self.logits_cls_softmax = nn.Softmax(dim=2)
 
 
-def build_dist_network(network_type: str,
-                       structure: dict,
-                       prediction: bool):
+def build_dist_network(network_type: str, structure: dict, prediction: bool):
     """
     Wrapper for building DIST model
 
@@ -224,34 +214,36 @@ def build_dist_network(network_type: str,
     Returns:
         DIST: DIST network structure.
     """
-    if network_type not in ['instance', 'semantic']:
-        TardisError('build_dist_network',
-                    'tardis/dist',
-                    f'Wrong DIST network name {network_type}')
+    if network_type not in ["instance", "semantic"]:
+        TardisError("build_dist_network", "tardis/dist", f"Wrong DIST network name {network_type}")
 
-    if network_type == 'instance':
-        return DIST(n_out=structure['n_out'],
-                    node_input=structure['node_input'],
-                    node_dim=structure['node_dim'],
-                    edge_dim=structure['edge_dim'],
-                    num_layers=structure['num_layers'],
-                    num_heads=structure['num_heads'],
-                    rgb_embed_sigma=structure['rgb_embed_sigma'],
-                    coord_embed_sigma=structure['coord_embed_sigma'],
-                    dropout_rate=structure['dropout_rate'],
-                    structure=structure['structure'],
-                    predict=prediction)
-    elif network_type == 'semantic':
-        return CDIST(n_out=structure['n_out'],
-                     node_input=structure['node_input'],
-                     node_dim=structure['node_dim'],
-                     edge_dim=structure['edge_dim'],
-                     num_layers=structure['num_layers'],
-                     num_heads=structure['num_heads'],
-                     num_cls=structure['num_cls'],
-                     coord_embed_sigma=structure['coord_embed_sigma'],
-                     dropout_rate=structure['dropout_rate'],
-                     structure=structure['structure'],
-                     predict=prediction)
+    if network_type == "instance":
+        return DIST(
+            n_out=structure["n_out"],
+            node_input=structure["node_input"],
+            node_dim=structure["node_dim"],
+            edge_dim=structure["edge_dim"],
+            num_layers=structure["num_layers"],
+            num_heads=structure["num_heads"],
+            rgb_embed_sigma=structure["rgb_embed_sigma"],
+            coord_embed_sigma=structure["coord_embed_sigma"],
+            dropout_rate=structure["dropout_rate"],
+            structure=structure["structure"],
+            predict=prediction,
+        )
+    elif network_type == "semantic":
+        return CDIST(
+            n_out=structure["n_out"],
+            node_input=structure["node_input"],
+            node_dim=structure["node_dim"],
+            edge_dim=structure["edge_dim"],
+            num_layers=structure["num_layers"],
+            num_heads=structure["num_heads"],
+            num_cls=structure["num_cls"],
+            coord_embed_sigma=structure["coord_embed_sigma"],
+            dropout_rate=structure["dropout_rate"],
+            structure=structure["structure"],
+            predict=prediction,
+        )
     else:
         return None

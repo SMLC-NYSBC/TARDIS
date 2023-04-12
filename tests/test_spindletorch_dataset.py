@@ -14,14 +14,13 @@ import numpy as np
 import torch
 
 from tardis.spindletorch.datasets.augmentation import preprocess
-from tardis.spindletorch.datasets.dataloader import (CNNDataset, PredictionDataset)
+from tardis.spindletorch.datasets.dataloader import CNNDataset, PredictionDataset
 from tardis.utils.normalization import MinMaxNormalize, RescaleNormalize, SimpleNormalize
 
 
 def test_dataloader():
-    dir = './tests/test_data/data_loader/cnn/test/'
-    dataset = CNNDataset(img_dir=join(dir, 'imgs'),
-                         mask_dir=join(dir, 'masks'))
+    dir = "./tests/test_data/data_loader/cnn/test/"
+    dataset = CNNDataset(img_dir=join(dir, "imgs"), mask_dir=join(dir, "masks"))
     assert len(dataset) == 2
 
     img, mask = dataset.__getitem__(0)
@@ -30,7 +29,7 @@ def test_dataloader():
     assert img.min() >= 0 and img.max() <= 255
     assert torch.sum(img) != 0
 
-    dataset = PredictionDataset(img_dir=join(dir, 'imgs'))
+    dataset = PredictionDataset(img_dir=join(dir, "imgs"))
     assert len(dataset) == 2
 
     img, idx = dataset.__getitem__(0)
@@ -67,10 +66,7 @@ class TestDataSetBuilder2D3D:
         img = np.random.rand(64, 64, 64)
         img = img.astype(np.float32)
 
-        img_proc, mask = preprocess(image=img,
-                                    mask=img,
-                                    transformation=True,
-                                    size=64)
+        img_proc, mask = preprocess(image=img, mask=img, transformation=True, size=64)
         assert img_proc.shape == (1, 64, 64, 64)
         assert mask.shape == (1, 64, 64, 64)
         assert img_proc.dtype == np.float32
@@ -82,10 +78,7 @@ class TestDataSetBuilder2D3D:
         img = np.random.rand(64, 64)
         img = img.astype(np.float32)
 
-        img_proc, mask = preprocess(image=img,
-                                    mask=img,
-                                    transformation=True,
-                                    size=64)
+        img_proc, mask = preprocess(image=img, mask=img, transformation=True, size=64)
         assert img_proc.shape == (1, 64, 64)
         assert mask.shape == (1, 64, 64)
         assert img_proc.dtype == np.float32

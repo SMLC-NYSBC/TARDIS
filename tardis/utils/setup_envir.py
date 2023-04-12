@@ -26,17 +26,14 @@ def build_new_dir(dir: str):
     """
     """ Build temp files directory """
     output = join(dir, "output")
-    image_list = glob.glob(dir + '/*.tif')
+    image_list = glob.glob(dir + "/*.tif")
     if not len(image_list) > 0:
-        TardisError('12',
-                    'tardis/utils/setup_envir.py',
-                    'At least one .tif image has to be in the directory!')
+        TardisError("12", "tardis/utils/setup_envir.py", "At least one .tif image has to be in the directory!")
 
     if not isdir(output):
         mkdir(output)
     else:
-        print("Output directory already exist! Files moved to new output_old "
-              "directory.")
+        print("Output directory already exist! Files moved to new output_old " "directory.")
         rename(output, join(dir, "output_old"))
         mkdir(output)
 
@@ -48,23 +45,23 @@ def build_temp_dir(dir: str):
     Args:
         dir (str): Directory where folder will be build.
     """
-    if isdir(join(dir, 'temp')):
-        if isdir(join(dir, 'temp', 'Patches')) or isdir(join(dir, 'temp', 'Predictions')):
+    if isdir(join(dir, "temp")):
+        if isdir(join(dir, "temp", "Patches")) or isdir(join(dir, "temp", "Predictions")):
             clean_up(dir=dir)
 
-            mkdir(join(dir, 'temp'))
-            mkdir(join(dir, 'temp', 'Patches'))
-            mkdir(join(dir, 'temp', 'Predictions'))
+            mkdir(join(dir, "temp"))
+            mkdir(join(dir, "temp", "Patches"))
+            mkdir(join(dir, "temp", "Predictions"))
         else:
-            mkdir(join(dir, 'temp', 'Patches'))
-            mkdir(join(dir, 'temp', 'Predictions'))
+            mkdir(join(dir, "temp", "Patches"))
+            mkdir(join(dir, "temp", "Predictions"))
     else:
-        mkdir(join(dir, 'temp'))
-        mkdir(join(dir, 'temp', 'Patches'))
-        mkdir(join(dir, 'temp', 'Predictions'))
+        mkdir(join(dir, "temp"))
+        mkdir(join(dir, "temp", "Patches"))
+        mkdir(join(dir, "temp", "Predictions"))
 
-    if not isdir(join(dir, 'Predictions')):
-        mkdir(join(dir, 'Predictions'))
+    if not isdir(join(dir, "Predictions")):
+        mkdir(join(dir, "Predictions"))
 
 
 def clean_up(dir: str):
@@ -74,23 +71,25 @@ def clean_up(dir: str):
     Args:
         dir (str): Main directory where temp dir is located.
     """
-    if isdir(join(dir, 'temp', 'Patches')):
-        rmtree(join(dir, 'temp', 'Patches'))
+    if isdir(join(dir, "temp", "Patches")):
+        rmtree(join(dir, "temp", "Patches"))
 
-    if isdir(join(dir, 'temp', 'Predictions')):
-        rmtree(join(dir, 'temp', 'Predictions'))
+    if isdir(join(dir, "temp", "Predictions")):
+        rmtree(join(dir, "temp", "Predictions"))
 
-    rmtree(join(dir, 'temp'))
+    rmtree(join(dir, "temp"))
 
 
-def check_dir(dir: str,
-              train_img: str,
-              train_mask: str,
-              test_img: str,
-              test_mask: str,
-              with_img: bool,
-              img_format: Optional[tuple] = str,
-              mask_format: Optional[tuple] = str) -> bool:
+def check_dir(
+    dir: str,
+    train_img: str,
+    train_mask: str,
+    test_img: str,
+    test_mask: str,
+    with_img: bool,
+    img_format: Optional[tuple] = str,
+    mask_format: Optional[tuple] = str,
+) -> bool:
     """
     Check list used to evaluate if directory containing dataset for CNN.
 
@@ -108,28 +107,26 @@ def check_dir(dir: str,
         bool: Bool value indicating detection of the correct structure dataset
     """
     dataset_test = False
-    if isdir(join(dir, 'train')) and isdir(join(dir, 'test')):
+    if isdir(join(dir, "train")) and isdir(join(dir, "test")):
         dataset_test = True
 
         if with_img:
             # Check if train img and coord exist and have same files
             if isdir(train_img) and isdir(train_mask):
-                if len([f for f in listdir(train_img)
-                        if f.endswith(img_format)]) == \
-                        len([f for f in listdir(train_mask) if f.endswith(mask_format)]):
-                    if len([f for f in listdir(train_img)
-                            if f.endswith(img_format)]) == 0:
+                if len([f for f in listdir(train_img) if f.endswith(img_format)]) == len(
+                    [f for f in listdir(train_mask) if f.endswith(mask_format)]
+                ):
+                    if len([f for f in listdir(train_img) if f.endswith(img_format)]) == 0:
                         dataset_test = False
                 else:
                     dataset_test = False
 
             # Check if test img and mask exist and have same files
             if isdir(test_img) and isdir(test_mask):
-                if len([f for f in listdir(test_img)
-                        if f.endswith(img_format)]) == len([f for f in listdir(test_mask)
-                                                            if f.endswith(mask_format)]):
-                    if len([f for f in listdir(test_img)
-                            if f.endswith(img_format)]) == 0:
+                if len([f for f in listdir(test_img) if f.endswith(img_format)]) == len(
+                    [f for f in listdir(test_mask) if f.endswith(mask_format)]
+                ):
+                    if len([f for f in listdir(test_img) if f.endswith(img_format)]) == 0:
                         dataset_test = False
                 else:
                     dataset_test = False

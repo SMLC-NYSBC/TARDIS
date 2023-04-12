@@ -22,11 +22,7 @@ class PairBiasSelfAttention(nn.Module):
     Self-attention block that attends coordinate and image patches or RGB.
     """
 
-    def __init__(self,
-                 embed_dim: int,
-                 pairs_dim: int,
-                 num_heads: int,
-                 init_scaling=1 / 1.4142135623730951):
+    def __init__(self, embed_dim: int, pairs_dim: int, num_heads: int, init_scaling=1 / 1.4142135623730951):
         """
 
         Args:
@@ -42,9 +38,8 @@ class PairBiasSelfAttention(nn.Module):
 
         self.num_heads = num_heads
         self.head_dim = embed_dim // num_heads
-        assert (self.head_dim * num_heads == self.embed_dim), \
-            "embed_dim must be divisible by num_heads"
-        self.scaling = self.head_dim ** -0.5
+        assert self.head_dim * num_heads == self.embed_dim, "embed_dim must be divisible by num_heads"
+        self.scaling = self.head_dim**-0.5
 
         # Initializing scaling factor
         self.init_scaling = init_scaling
@@ -76,15 +71,15 @@ class PairBiasSelfAttention(nn.Module):
 
         nn.init.xavier_uniform_(self.pairs_proj.weight, gain=self.init_scaling)
 
-    def forward(self,
-                query: torch.Tensor,
-                pairs: torch.Tensor,
-                attn_mask: Optional[torch.Tensor] = None,
-                key_padding_mask: Optional[torch.Tensor] = None,
-                need_weights: bool = False,
-                need_head_weights: bool = False) -> Union[Tuple[torch.Tensor,
-                                                                torch.Tensor],
-                                                          torch.Tensor]:
+    def forward(
+        self,
+        query: torch.Tensor,
+        pairs: torch.Tensor,
+        attn_mask: Optional[torch.Tensor] = None,
+        key_padding_mask: Optional[torch.Tensor] = None,
+        need_weights: bool = False,
+        need_head_weights: bool = False,
+    ) -> Union[Tuple[torch.Tensor, torch.Tensor], torch.Tensor]:
         """
         Forward attention over node features.
 
@@ -117,11 +112,9 @@ class PairBiasSelfAttention(nn.Module):
         v = self.v_proj(query)
 
         q *= self.scaling
-        q = (
-            q.contiguous().view(tgt_len, bsz * self.num_heads, self.head_dim).transpose(0,
-                                                                                        1))
-        k = (k.contiguous().view(-1, bsz * self.num_heads, self.head_dim).transpose(0, 1))
-        v = (v.contiguous().view(-1, bsz * self.num_heads, self.head_dim).transpose(0, 1))
+        q = q.contiguous().view(tgt_len, bsz * self.num_heads, self.head_dim).transpose(0, 1)
+        k = k.contiguous().view(-1, bsz * self.num_heads, self.head_dim).transpose(0, 1)
+        v = v.contiguous().view(-1, bsz * self.num_heads, self.head_dim).transpose(0, 1)
         src_len = k.size(1)
         """
         This is part of a workaround to get around fork/join parallelism
@@ -142,10 +135,7 @@ class PairBiasSelfAttention(nn.Module):
 
         # pair_weights are B x L x L x H, needs to be B x H x L x L
         pair_weights = pair_weights.permute(0, 3, 1, 2)
-        attn_weights = attn_weights.view(bsz,
-                                         self.num_heads,
-                                         tgt_len,
-                                         src_len) + pair_weights
+        attn_weights = attn_weights.view(bsz, self.num_heads, tgt_len, src_len) + pair_weights
         attn_weights = attn_weights.view(bsz * self.num_heads, tgt_len, src_len)
 
         if attn_mask is not None:
@@ -195,10 +185,7 @@ class ComparisonLayer(nn.Module):
         channel_dim (int): Number of output channels.
     """
 
-    def __init__(self,
-                 input_dim: int,
-                 output_dim: int,
-                 channel_dim=128):
+    def __init__(self, input_dim: int, output_dim: int, channel_dim=128):
         super().__init__()
         # Linear layer for converting pairs node futures to edge shape.
         self.norm = nn.LayerNorm(input_dim)
@@ -213,8 +200,7 @@ class ComparisonLayer(nn.Module):
 
         nn.init.constant_(self.linear4.weight, 0.0)
 
-    def forward(self,
-                x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Forward node compatible layer.
 
@@ -231,8 +217,7 @@ class ComparisonLayer(nn.Module):
         b = self.linear2(x)
 
         """Batch x Length x Length x Out_Channels"""
-        return self.linear3(a.unsqueeze(2) * b.unsqueeze(1)) + \
-            self.linear4(a.unsqueeze(2) - b.unsqueeze(1))
+        return self.linear3(a.unsqueeze(2) * b.unsqueeze(1)) + self.linear4(a.unsqueeze(2) - b.unsqueeze(1))
 
 
 class TriangularEdgeUpdate(nn.Module):
@@ -248,10 +233,7 @@ class TriangularEdgeUpdate(nn.Module):
         axis (int): Indicate the axis around which the attention is given.
     """
 
-    def __init__(self,
-                 input_dim,
-                 channel_dim=128,
-                 axis=1):
+    def __init__(self, input_dim, channel_dim=128, axis=1):
         super().__init__()
         self.input_dim = input_dim
         self.channel_dim = channel_dim
@@ -285,9 +267,7 @@ class TriangularEdgeUpdate(nn.Module):
         nn.init.constant_(self.linear_o.weight, 0.0)
         nn.init.constant_(self.linear_o.bias, 0.0)
 
-    def forward(self,
-                z: torch.Tensor,
-                mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(self, z: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
         """
         Forward Triangular edge update.
 
@@ -304,18 +284,15 @@ class TriangularEdgeUpdate(nn.Module):
         b = torch.sigmoid(self.gate_b(z)) * self.linear_b(z)  # B x L x L x O
 
         if mask is not None:
-            mask = mask.unsqueeze(3).expand(mask.size(0),
-                                            mask.size(1),
-                                            mask.size(2),
-                                            a.size(3))
+            mask = mask.unsqueeze(3).expand(mask.size(0), mask.size(1), mask.size(2), a.size(3))
             a = torch.where(mask, torch.zeros_like(a), a)
             b = torch.where(mask, torch.zeros_like(b), b)
 
         # i,j -> i,k j,k
         if self.axis == 1:
-            k = torch.einsum('biko,bjko->bijo', a, b)
+            k = torch.einsum("biko,bjko->bijo", a, b)
         else:
-            k = torch.einsum('bkio,bkjo->bijo', a, b)
+            k = torch.einsum("bkio,bkjo->bijo", a, b)
 
         return torch.sigmoid(self.gate_o(z)) * self.linear_o(self.norm_o(k))
 
@@ -333,10 +310,7 @@ class QuadraticEdgeUpdate(nn.Module):
         axis (int): Indicate the axis around which the attention is given.
     """
 
-    def __init__(self,
-                 input_dim,
-                 channel_dim=128,
-                 axis=1):
+    def __init__(self, input_dim, channel_dim=128, axis=1):
         super().__init__()
         self.input_dim = input_dim
         self.channel_dim = channel_dim
@@ -382,9 +356,7 @@ class QuadraticEdgeUpdate(nn.Module):
         nn.init.constant_(self.linear_o.weight, 0.0)
         nn.init.constant_(self.linear_o.bias, 0.0)
 
-    def forward(self,
-                z: torch.Tensor,
-                mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(self, z: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
         """
         Forward Quadratic edge update.
 
@@ -403,10 +375,7 @@ class QuadraticEdgeUpdate(nn.Module):
         d = torch.sigmoid(self.gate_d(z)) * self.linear_d(z)  # B x L x L x O
 
         if mask is not None:
-            mask = mask.unsqueeze(3).expand(mask.size(0),
-                                            mask.size(1),
-                                            mask.size(2),
-                                            a.size(3))
+            mask = mask.unsqueeze(3).expand(mask.size(0), mask.size(1), mask.size(2), a.size(3))
             a = torch.where(mask, torch.zeros_like(a), a)
             b = torch.where(mask, torch.zeros_like(b), b)
             c = torch.where(mask, torch.zeros_like(c), c)
@@ -414,9 +383,9 @@ class QuadraticEdgeUpdate(nn.Module):
 
         # i,j -> i,k j,k, il, jl
         if self.axis == 1:
-            k = torch.einsum('biko,bjko,bilo,bjlo->bijo', a, b, c, d)
+            k = torch.einsum("biko,bjko,bilo,bjlo->bijo", a, b, c, d)
         elif self.axis == 0:
-            k = torch.einsum('bkio,bkjo,blio,bljo->bijo', a, b, c, d)
+            k = torch.einsum("bkio,bkjo,blio,bljo->bijo", a, b, c, d)
 
         return torch.sigmoid(self.gate_o(z)) * self.linear_o(self.norm_o(k))
 
@@ -442,18 +411,20 @@ class MultiHeadAttention(nn.Module):
         init_scaling (float): The initial scaling factor used for reset parameters.
     """
 
-    def __init__(self,
-                 embed_dim: int,
-                 num_heads: int,
-                 kdim=None,
-                 vdim=None,
-                 dropout=0.0,
-                 bias=True,
-                 add_bias_kv=False,
-                 add_zero_attn=False,
-                 self_attention=False,
-                 encoder_decoder_attention=False,
-                 init_scaling=1 / 1.4142135623730951):
+    def __init__(
+        self,
+        embed_dim: int,
+        num_heads: int,
+        kdim=None,
+        vdim=None,
+        dropout=0.0,
+        bias=True,
+        add_bias_kv=False,
+        add_zero_attn=False,
+        self_attention=False,
+        encoder_decoder_attention=False,
+        init_scaling=1 / 1.4142135623730951,
+    ):
         super().__init__()
 
         self.embed_dim = embed_dim
@@ -465,15 +436,15 @@ class MultiHeadAttention(nn.Module):
         self.dropout_module = nn.Dropout(dropout)
 
         self.head_dim = embed_dim // num_heads
-        assert (self.head_dim * num_heads == self.embed_dim), \
-            "embed_dim must be divisible by num_heads"
-        self.scaling = self.head_dim ** -0.5
+        assert self.head_dim * num_heads == self.embed_dim, "embed_dim must be divisible by num_heads"
+        self.scaling = self.head_dim**-0.5
 
         self.self_attention = self_attention
         self.encoder_decoder_attention = encoder_decoder_attention
 
-        assert not self.self_attention or self.qkv_same_dim, \
-            "Self-attention requires query, key and value to be of the same size"
+        assert (
+            not self.self_attention or self.qkv_same_dim
+        ), "Self-attention requires query, key and value to be of the same size"
 
         self.init_scaling = init_scaling
         self.v_proj = nn.Linear(self.vdim, embed_dim, bias=bias)
@@ -510,17 +481,17 @@ class MultiHeadAttention(nn.Module):
         if self.bias_v is not None:
             nn.init.constant_(self.bias_v.bias, 0.0)
 
-    def forward(self,
-                query: torch.Tensor,
-                key: Optional[torch.Tensor] = None,
-                value: Optional[torch.Tensor] = None,
-                key_padding_mask: Optional[torch.Tensor] = None,
-                need_weights: bool = False,
-                attn_mask: Optional[torch.Tensor] = None,
-                before_softmax: bool = False,
-                need_head_weights: bool = False) -> Union[Tuple[torch.Tensor,
-                                                                torch.Tensor],
-                                                          torch.Tensor]:
+    def forward(
+        self,
+        query: torch.Tensor,
+        key: Optional[torch.Tensor] = None,
+        value: Optional[torch.Tensor] = None,
+        key_padding_mask: Optional[torch.Tensor] = None,
+        need_weights: bool = False,
+        attn_mask: Optional[torch.Tensor] = None,
+        before_softmax: bool = False,
+        need_head_weights: bool = False,
+    ) -> Union[Tuple[torch.Tensor, torch.Tensor], torch.Tensor]:
         """
         Forward for MHA.
 
@@ -570,24 +541,18 @@ class MultiHeadAttention(nn.Module):
             k = torch.cat([k, self.bias_k.repeat(1, bsz, 1)])
             v = torch.cat([v, self.bias_v.repeat(1, bsz, 1)])
             if attn_mask is not None:
-                attn_mask = torch.cat([attn_mask,
-                                       attn_mask.new_zeros(attn_mask.size(0), 1)], dim=1)
+                attn_mask = torch.cat([attn_mask, attn_mask.new_zeros(attn_mask.size(0), 1)], dim=1)
             if key_padding_mask is not None:
                 key_padding_mask = torch.cat(
-                    [key_padding_mask,
-                     key_padding_mask.new_zeros(key_padding_mask.size(0), 1)],
+                    [key_padding_mask, key_padding_mask.new_zeros(key_padding_mask.size(0), 1)],
                     dim=1,
                 )
 
-        q = (q.contiguous().view(tgt_len,
-                                 bsz * self.num_heads,
-                                 self.head_dim).transpose(0, 1))
+        q = q.contiguous().view(tgt_len, bsz * self.num_heads, self.head_dim).transpose(0, 1)
         if k is not None:
-            k = (k.contiguous().view(-1, bsz * self.num_heads, self.head_dim).transpose(0,
-                                                                                        1))
+            k = k.contiguous().view(-1, bsz * self.num_heads, self.head_dim).transpose(0, 1)
         if v is not None:
-            v = (v.contiguous().view(-1, bsz * self.num_heads, self.head_dim).transpose(0,
-                                                                                        1))
+            v = v.contiguous().view(-1, bsz * self.num_heads, self.head_dim).transpose(0, 1)
 
         assert k is not None
         src_len = k.size(1)
@@ -609,13 +574,11 @@ class MultiHeadAttention(nn.Module):
             k = torch.cat([k, k.new_zeros((k.size(0), 1) + k.size()[2:])], dim=1)
             v = torch.cat([v, v.new_zeros((v.size(0), 1) + v.size()[2:])], dim=1)
             if attn_mask is not None:
-                attn_mask = torch.cat([attn_mask,
-                                       attn_mask.new_zeros(attn_mask.size(0), 1)], dim=1)
+                attn_mask = torch.cat([attn_mask, attn_mask.new_zeros(attn_mask.size(0), 1)], dim=1)
             if key_padding_mask is not None:
-                key_padding_mask = torch.cat([key_padding_mask,
-                                             torch.zeros(key_padding_mask.size(0),
-                                                         1).type_as(key_padding_mask)],
-                                             dim=1)
+                key_padding_mask = torch.cat(
+                    [key_padding_mask, torch.zeros(key_padding_mask.size(0), 1).type_as(key_padding_mask)], dim=1
+                )
 
         attn_weights = torch.bmm(q, k.transpose(1, 2))
 
@@ -632,8 +595,7 @@ class MultiHeadAttention(nn.Module):
             attn_weights = attn_weights.view(bsz, self.num_heads, tgt_len, src_len)
             if not self.tpu:
                 attn_weights = attn_weights.masked_fill(
-                    key_padding_mask.unsqueeze(1).unsqueeze(2).to(torch.bool),
-                    float("-inf")
+                    key_padding_mask.unsqueeze(1).unsqueeze(2).to(torch.bool), float("-inf")
                 )
             else:
                 attn_weights = attn_weights.transpose(0, 2)
@@ -688,22 +650,12 @@ class SelfAttention2D(MultiHeadAttention):
         max_size (int): Maximum size of the batch.
     """
 
-    def __init__(self,
-                 embed_dim: int,
-                 num_heads: int,
-                 axis=None,
-                 dropout=0.0,
-                 max_size=4194304):
-        super(SelfAttention2D, self).__init__(embed_dim,
-                                              num_heads,
-                                              dropout=dropout,
-                                              self_attention=True)
+    def __init__(self, embed_dim: int, num_heads: int, axis=None, dropout=0.0, max_size=4194304):
+        super(SelfAttention2D, self).__init__(embed_dim, num_heads, dropout=dropout, self_attention=True)
         self.axis = axis
         self.max_size = max_size
 
-    def forward(self,
-                x: torch.Tensor,
-                padding_mask=None) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, padding_mask=None) -> torch.Tensor:
         """
         Forward self-attention over 2D edge features.
 
@@ -754,10 +706,10 @@ class SelfAttention2D(MultiHeadAttention):
 
             h = []
             for i in range(0, x.size(1), batch_size):
-                xi = x[:, i:i + batch_size]
+                xi = x[:, i : i + batch_size]
                 mask = None
                 if padding_mask is not None:
-                    mask = padding_mask[i:i + batch_size]
+                    mask = padding_mask[i : i + batch_size]
                 h.append(super(SelfAttention2D, self).forward(xi, key_padding_mask=mask))
             h = torch.cat(h, 1)
         else:
@@ -787,9 +739,7 @@ class GeluFeedForward(nn.Module):
         ff_dim (int): Number of feed-forward dimensions in linear transformation.
     """
 
-    def __init__(self,
-                 input_dim: int,
-                 ff_dim: int):
+    def __init__(self, input_dim: int, ff_dim: int):
         super().__init__()
         self.norm = nn.LayerNorm(input_dim)
         self.linear1 = nn.Linear(input_dim, ff_dim)
@@ -798,8 +748,7 @@ class GeluFeedForward(nn.Module):
         nn.init.constant_(self.linear2.weight, 0.0)
         nn.init.constant_(self.linear2.bias, 0.0)
 
-    def forward(self,
-                x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Forward Gelu normalized tensor.
 

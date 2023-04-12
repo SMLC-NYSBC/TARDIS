@@ -21,9 +21,7 @@ class FilterConnectedNearSegments:
     Connect splines based on spline trajectory and splines end distances.
     """
 
-    def __init__(self,
-                 distance_th=1000,
-                 cylinder_radius=150):
+    def __init__(self, distance_th=1000, cylinder_radius=150):
         """
         Initialize the class with the distance threshold and cylinder radius parameters.
 
@@ -37,10 +35,7 @@ class FilterConnectedNearSegments:
         self.cylinder_radius = cylinder_radius
 
     @staticmethod
-    def _in_cylinder(point: np.ndarray,
-                     axis: tuple,
-                     r: int,
-                     h: int) -> bool:
+    def _in_cylinder(point: np.ndarray, axis: tuple, r: int, h: int) -> bool:
         """
         Fast check if point is inside a cylinder by projecting point on cylinder
         volume in 3D.
@@ -62,8 +57,7 @@ class FilterConnectedNearSegments:
             return False
 
         # calculate the perpendicular distance
-        d = np.linalg.norm(point - axis[0] - d * (axis[1] - axis[0]) /
-                           np.linalg.norm(axis[1] - axis[0]))
+        d = np.linalg.norm(point - axis[0] - d * (axis[1] - axis[0]) / np.linalg.norm(axis[1] - axis[0]))
 
         # check if d is less than the radius
         return d <= r
@@ -80,14 +74,11 @@ class FilterConnectedNearSegments:
             dict: dictionary containing unique splines.
         """
         new_d = {}
-        [new_d.update({k: v.tolist()}) for k, v in d.items() if
-         v.tolist() not in new_d.values()]
+        [new_d.update({k: v.tolist()}) for k, v in d.items() if v.tolist() not in new_d.values()]
 
         return new_d
 
-    def splines_direction(self,
-                          spline1: list,
-                          spline2: list) -> bool:
+    def splines_direction(self, spline1: list, spline2: list) -> bool:
         """
         Check if two splines facing the same direction. Knowing that spline1 facing
         direction of spline2, check if spline2 also face direction of spline1.
@@ -100,32 +91,23 @@ class FilterConnectedNearSegments:
             bool: If true, given splines facing the same direction
         """
         # Check 01 - 01 & Check 01 - 10
-        ax = [(np.array(spline2[1]), np.array(spline2[0])),
-              (np.array(spline2[1]), np.array(spline2[0]))]
+        ax = [(np.array(spline2[1]), np.array(spline2[0])), (np.array(spline2[1]), np.array(spline2[0]))]
         points = [np.array(spline1[0]), np.array(spline1[-1])]
-        s201_s101, s201_s110 = [self._in_cylinder(point=p,
-                                                  axis=a,
-                                                  r=self.cylinder_radius,
-                                                  h=self.distance_th)
-                                for p, a in zip(points, ax)]
+        s201_s101, s201_s110 = [
+            self._in_cylinder(point=p, axis=a, r=self.cylinder_radius, h=self.distance_th) for p, a in zip(points, ax)
+        ]
 
         # Check 10 - 01 and Check 10 - 10
-        ax = [(np.array(spline2[-2]), np.array(spline2[-1])),
-              (np.array(spline2[-2]), np.array(spline2[-1]))]
+        ax = [(np.array(spline2[-2]), np.array(spline2[-1])), (np.array(spline2[-2]), np.array(spline2[-1]))]
         points = [np.array(spline1[0]), np.array(spline1[-1])]
-        s210_s101, s210_s110 = [self._in_cylinder(point=p,
-                                                  axis=a,
-                                                  r=self.cylinder_radius,
-                                                  h=self.distance_th)
-                                for p, a in zip(points, ax)]
+        s210_s101, s210_s110 = [
+            self._in_cylinder(point=p, axis=a, r=self.cylinder_radius, h=self.distance_th) for p, a in zip(points, ax)
+        ]
 
         # Check if splines facing same direction in any way
         return np.any((s201_s101, s201_s110, s210_s101, s210_s110))
 
-    def marge_splines(self,
-                      point_cloud: np.ndarray,
-                      omit_border: int,
-                      initial: bool) -> np.ndarray:
+    def marge_splines(self, point_cloud: np.ndarray, omit_border: int, initial: bool) -> np.ndarray:
         """
         Connect splines in the point_cloud that are close enough to each other
          and return the reordered splines.
@@ -210,26 +192,28 @@ class FilterConnectedNearSegments:
             end10_list = [list(x)[1][-1] for x in splines_list.items()]
 
             # Check if any ends is within threshold distance
-            end01_list01 = np.sqrt(np.sum((np.asarray(end01_list) - np.asarray(end01)) ** 2,
-                                          axis=1))
-            end01_list01 = [{id: dist} for id, dist in zip(list(splines_list.keys()),
-                                                           end01_list01)
-                            if dist <= 1000 and id != key]
-            end01_list10 = np.sqrt(np.sum((np.asarray(end10_list) - np.asarray(end01)) ** 2,
-                                          axis=1))
-            end01_list10 = [{id: dist} for id, dist in zip(list(splines_list.keys()),
-                                                           end01_list10)
-                            if dist <= self.distance_th and id != key]
-            end10_list01 = np.sqrt(np.sum((np.asarray(end01_list) - np.asarray(end10)) ** 2,
-                                          axis=1))
-            end10_list01 = [{id: dist} for id, dist in zip(list(splines_list.keys()),
-                                                           end10_list01)
-                            if dist <= self.distance_th and id != key]
-            end10_list10 = np.sqrt(np.sum((np.asarray(end10_list) - np.asarray(end10)) ** 2,
-                                          axis=1))
-            end10_list10 = [{id: dist} for id, dist in zip(list(splines_list.keys()),
-                                                           end10_list10)
-                            if dist <= self.distance_th and id != key]
+            end01_list01 = np.sqrt(np.sum((np.asarray(end01_list) - np.asarray(end01)) ** 2, axis=1))
+            end01_list01 = [
+                {id: dist} for id, dist in zip(list(splines_list.keys()), end01_list01) if dist <= 1000 and id != key
+            ]
+            end01_list10 = np.sqrt(np.sum((np.asarray(end10_list) - np.asarray(end01)) ** 2, axis=1))
+            end01_list10 = [
+                {id: dist}
+                for id, dist in zip(list(splines_list.keys()), end01_list10)
+                if dist <= self.distance_th and id != key
+            ]
+            end10_list01 = np.sqrt(np.sum((np.asarray(end01_list) - np.asarray(end10)) ** 2, axis=1))
+            end10_list01 = [
+                {id: dist}
+                for id, dist in zip(list(splines_list.keys()), end10_list01)
+                if dist <= self.distance_th and id != key
+            ]
+            end10_list10 = np.sqrt(np.sum((np.asarray(end10_list) - np.asarray(end10)) ** 2, axis=1))
+            end10_list10 = [
+                {id: dist}
+                for id, dist in zip(list(splines_list.keys()), end10_list10)
+                if dist <= self.distance_th and id != key
+            ]
 
             # Check if any of the point is within the cylinder and get the closest one
             splines_to_merge = []
@@ -237,33 +221,26 @@ class FilterConnectedNearSegments:
 
             for end_list in end_lists:
                 for i in end_list:
-                    m_id = list(i.keys())[-1 if end_list in [end10_list01, end10_list10]
-                                          else 0]
+                    m_id = list(i.keys())[-1 if end_list in [end10_list01, end10_list10] else 0]
                     m_end = list(splines_list[m_id])
 
-                    not_at_the_border = np.all([(m_end[-1 if end_list in [end10_list01,
-                                                                          end10_list10]
-                                                else 0][2] - MIN_Z) >= omit_border,
-                                                (MAX_Z - m_end[-1 if end_list
-                                                               in [end10_list01,
-                                                                   end10_list10]
-                                                 else 0][2]) >= omit_border])
+                    not_at_the_border = np.all(
+                        [
+                            (m_end[-1 if end_list in [end10_list01, end10_list10] else 0][2] - MIN_Z) >= omit_border,
+                            (MAX_Z - m_end[-1 if end_list in [end10_list01, end10_list10] else 0][2]) >= omit_border,
+                        ]
+                    )
 
                     if not_at_the_border:
-                        points = np.array(m_end[-1 if end_list in [end10_list01,
-                                                                   end10_list10]
-                                                else 0])
-                        axis = (np.array(value[-2 if end_list in [end10_list01,
-                                                                  end10_list10]
-                                               else 1]),
-                                np.array(value[-1 if end_list in [end10_list01,
-                                                                  end10_list10]
-                                               else 0]))
+                        points = np.array(m_end[-1 if end_list in [end10_list01, end10_list10] else 0])
+                        axis = (
+                            np.array(value[-2 if end_list in [end10_list01, end10_list10] else 1]),
+                            np.array(value[-1 if end_list in [end10_list01, end10_list10] else 0]),
+                        )
 
-                        in_cylinder = self._in_cylinder(point=points,
-                                                        axis=axis,
-                                                        r=self.cylinder_radius,
-                                                        h=self.distance_th)
+                        in_cylinder = self._in_cylinder(
+                            point=points, axis=axis, r=self.cylinder_radius, h=self.distance_th
+                        )
                         if in_cylinder:
                             splines_to_merge.append([m_id, m_end])
 
@@ -291,15 +268,13 @@ class FilterConnectedNearSegments:
                         del splines_list[splines_to_merge[0][0]]
                 else:
                     end_lists = {}
-                    for d in np.concatenate([end01_list01, end01_list10, end10_list01,
-                                             end10_list10]):
+                    for d in np.concatenate([end01_list01, end01_list10, end10_list01, end10_list10]):
                         end_lists.update(d)
 
                     # Check which splines facing the same direction
                     same_direction = []
                     for d in end_lists:
-                        same_direction.append(self.splines_direction(value,
-                                                                     splines_list[d]))
+                        same_direction.append(self.splines_direction(value, splines_list[d]))
 
                     # Pick splines with the smallest distance that facing same direction
                     end_lists_id = [x for x, b in zip(end_lists, same_direction) if b]
@@ -328,24 +303,19 @@ class FilterConnectedNearSegments:
         except IndexError:
             pass
 
-        return np.concatenate([np.hstack((np.expand_dims(np.repeat(id, len(array)), 1),
-                                          array)) for id, array in merge_splines.items()])
+        return np.concatenate(
+            [np.hstack((np.expand_dims(np.repeat(id, len(array)), 1), array)) for id, array in merge_splines.items()]
+        )
 
-    def __call__(self,
-                 point_cloud: np.ndarray,
-                 omit_border: int):
+    def __call__(self, point_cloud: np.ndarray, omit_border: int):
         past_l = 0
         while len(np.unique(point_cloud[:, 0])) != past_l:
             if past_l == 0:
                 past_l = len(np.unique(point_cloud[:, 0]))
-                point_cloud = self.marge_splines(point_cloud=point_cloud,
-                                                 omit_border=omit_border,
-                                                 initial=True)
+                point_cloud = self.marge_splines(point_cloud=point_cloud, omit_border=omit_border, initial=True)
             else:
                 past_l = len(np.unique(point_cloud[:, 0]))
-                point_cloud = self.marge_splines(point_cloud=point_cloud,
-                                                 omit_border=omit_border,
-                                                 initial=False)
+                point_cloud = self.marge_splines(point_cloud=point_cloud, omit_border=omit_border, initial=False)
         return point_cloud
 
 
@@ -361,18 +331,15 @@ class FilterSpatialGraph:
     ones that are too short.
     """
 
-    def __init__(self,
-                 connect_seg_if_closer_then=1000,
-                 cylinder_radius=200,
-                 filter_short_segments=1000):
+    def __init__(self, connect_seg_if_closer_then=1000, cylinder_radius=200, filter_short_segments=1000):
         self.connect_seg_if_closer_then = connect_seg_if_closer_then
         self.filter_short_segments = filter_short_segments
 
-        self.marge_splines = FilterConnectedNearSegments(distance_th=connect_seg_if_closer_then,
-                                                         cylinder_radius=cylinder_radius)
+        self.marge_splines = FilterConnectedNearSegments(
+            distance_th=connect_seg_if_closer_then, cylinder_radius=cylinder_radius
+        )
 
-    def __call__(self,
-                 segments: np.ndarray) -> np.ndarray:
+    def __call__(self, segments: np.ndarray) -> np.ndarray:
         """
         Connect splines that have their end's in close distance and remove
         splines that are too short.
@@ -394,8 +361,7 @@ class FilterSpatialGraph:
         if self.filter_short_segments > 0:
             length = []
             for i in np.unique(segments[:, 0]):
-                length.append(total_length(segments[np.where(segments[:, 0] == int(i))[0],
-                                           1:]))
+                length.append(total_length(segments[np.where(segments[:, 0] == int(i))[0], 1:]))
 
             length = [id for id, i in enumerate(length) if i > self.filter_short_segments]
 
@@ -438,15 +404,11 @@ class SpatialGraphCompare:
     The selection threshold for the spline interaction is given between 0 and 1.
     """
 
-    def __init__(self,
-                 distance_threshold: int,
-                 interaction_threshold: float):
+    def __init__(self, distance_threshold: int, interaction_threshold: float):
         self.dist_th = distance_threshold
         self.inter_th = interaction_threshold
 
-    def _compare_spatial_graphs(self,
-                                spatial_graph_1: np.ndarray,
-                                spatial_graph_2: np.ndarray) -> list:
+    def _compare_spatial_graphs(self, spatial_graph_1: np.ndarray, spatial_graph_2: np.ndarray) -> list:
         """
         Wrapper to compare all MT's between two spatial graphs
 
@@ -465,18 +427,14 @@ class SpatialGraphCompare:
 
             for j in np.unique(spatial_graph_2[:, 0]):
                 sg2_spline = spatial_graph_2[spatial_graph_2[:, 0] == j, :]
-                iou.append(compare_splines_probability(sg1_spline[:, 1:],
-                                                       sg2_spline[:, 1:],
-                                                       self.dist_th))
+                iou.append(compare_splines_probability(sg1_spline[:, 1:], sg2_spline[:, 1:], self.dist_th))
 
             ids = [id for id, i in enumerate(iou) if np.sum(i) > 0 and i >= self.inter_th]
             match_sg1_sg2.append([i, ids])
 
         return match_sg1_sg2
 
-    def __call__(self,
-                 amira_sg: np.ndarray,
-                 tardis_sg: np.ndarray) -> Tuple[list, list]:
+    def __call__(self, amira_sg: np.ndarray, tardis_sg: np.ndarray) -> Tuple[list, list]:
         """
         Compute comparison of Amira and Tardis spatial graphs and output tuple of
         arrays with different selected MTs:
@@ -492,16 +450,13 @@ class SpatialGraphCompare:
         Returns:
             Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]: Tuple of all arrays
         """
-        label = ['TardisFilterBasedOnAmira', 'TardisNoise',
-                 'AmiraFilterBasedOnTardis', 'AmiraNoise']
+        label = ["TardisFilterBasedOnAmira", "TardisNoise", "AmiraFilterBasedOnTardis", "AmiraNoise"]
 
         """Amira splines scores"""
-        amira_comp = self._compare_spatial_graphs(spatial_graph_1=amira_sg,
-                                                  spatial_graph_2=tardis_sg)
+        amira_comp = self._compare_spatial_graphs(spatial_graph_1=amira_sg, spatial_graph_2=tardis_sg)
 
         """Compare Tardis with Amira"""
-        tardis_comp = self._compare_spatial_graphs(spatial_graph_1=tardis_sg,
-                                                   spatial_graph_2=amira_sg)
+        tardis_comp = self._compare_spatial_graphs(spatial_graph_1=tardis_sg, spatial_graph_2=amira_sg)
 
         # Select all splines from Tardis that match Amira
         match = [x[0] for x in tardis_comp if x[1] != []]
@@ -517,18 +472,13 @@ class SpatialGraphCompare:
         noise = [x[0] for x in amira_comp if x[1] == []]
         amira_noise = np.stack([x for x in amira_sg if x[0] in noise])
 
-        spatial_graphs = [g for g in (tardis_match, tardis_noise,
-                                      amira_match, amira_noise) if g is not None]
-        label = [l for g, l in zip((tardis_match, tardis_noise,
-                                    amira_match, amira_noise), label) if
-                 g is not None]
+        spatial_graphs = [g for g in (tardis_match, tardis_noise, amira_match, amira_noise) if g is not None]
+        label = [l for g, l in zip((tardis_match, tardis_noise, amira_match, amira_noise), label) if g is not None]
 
         return spatial_graphs, label
 
 
-def compare_splines_probability(spline_1: np.ndarray,
-                                spline_2: np.ndarray,
-                                threshold=100):
+def compare_splines_probability(spline_1: np.ndarray, spline_2: np.ndarray, threshold=100):
     """
     Compare two splines and calculate probability of how likely given two
     splines are the same line given array of points for same or similar splines
@@ -568,8 +518,7 @@ def compare_splines_probability(spline_1: np.ndarray,
     return probability
 
 
-def smooth_spline(points: np.ndarray,
-                  s=500.0):
+def smooth_spline(points: np.ndarray, s=500.0):
     """
     Spline smoothing given an 's' smoothness factor.
 
@@ -620,10 +569,7 @@ def sort_segment(coord: np.ndarray) -> np.ndarray:
     new_c = []
     for i in range(len(coord) - 1):
         if i == 0:
-            id = np.where([sum(i)
-                           for i in cdist(coord, coord)] == max([sum(i)
-                                                                 for i in cdist(coord,
-                                                                                coord)]))[0]
+            id = np.where([sum(i) for i in cdist(coord, coord)] == max([sum(i) for i in cdist(coord, coord)]))[0]
 
             new_c.append(coord[id[0]])
             coord = np.delete(coord, id[0], 0)
@@ -636,8 +582,7 @@ def sort_segment(coord: np.ndarray) -> np.ndarray:
     return np.stack(new_c)
 
 
-def reorder_segments_id(coord: np.ndarray,
-                        order_range: Optional[list] = None) -> np.ndarray:
+def reorder_segments_id(coord: np.ndarray, order_range: Optional[list] = None) -> np.ndarray:
     """
     Reorder list of segments to remove missing IDs
 
@@ -677,9 +622,10 @@ def tortuosity(coord: np.ndarray) -> float:
         return 1.0
 
     length = total_length(coord) + 1e-16
-    end_length = sqrt((coord[0][0] - coord[-1][0]) ** 2 +
-                      (coord[0][1] - coord[-1][1]) ** 2 +
-                      (coord[0][2] - coord[-1][2]) ** 2) + 1e-16
+    end_length = (
+        sqrt((coord[0][0] - coord[-1][0]) ** 2 + (coord[0][1] - coord[-1][1]) ** 2 + (coord[0][2] - coord[-1][2]) ** 2)
+        + 1e-16
+    )
 
     return length / end_length
 
@@ -702,8 +648,10 @@ def total_length(coord: np.ndarray) -> float:
             break
 
         # sqrt((x2 - x1)2 + (y2 - y1)2 + (z2 - z1)2)
-        length += sqrt((coord[id][0] - coord[id + 1][0]) ** 2 +
-                       (coord[id][1] - coord[id + 1][1]) ** 2 +
-                       (coord[id][2] - coord[id + 1][2]) ** 2)
+        length += sqrt(
+            (coord[id][0] - coord[id + 1][0]) ** 2
+            + (coord[id][1] - coord[id + 1][1]) ** 2
+            + (coord[id][2] - coord[id + 1][2]) ** 2
+        )
 
     return length

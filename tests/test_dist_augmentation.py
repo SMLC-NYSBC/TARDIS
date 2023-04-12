@@ -19,15 +19,20 @@ from tardis.utils.normalization import RescaleNormalize, SimpleNormalize
 
 def test_preprocess_data_general():
     # Test for csv file
-    coord = join('tests', 'test_data', 'data_loader',
-                 'filament_mem', 'train', 'masks',
-                 '20dec04c_Grey1_00028gr_00012sq_v02_00003hln_00003enn2-a-DW-contours-tb.csv')
-    image = join('tests', 'test_data', 'data_type',
-                 'tif2D.tif')
+    coord = join(
+        "tests",
+        "test_data",
+        "data_loader",
+        "filament_mem",
+        "train",
+        "masks",
+        "20dec04c_Grey1_00028gr_00012sq_v02_00003hln_00003enn2-a-DW-contours-tb.csv",
+    )
+    image = join("tests", "test_data", "data_type", "tif2D.tif")
 
     size = 32
     include_label = True
-    normalization = 'simple'
+    normalization = "simple"
 
     result = preprocess_data(coord, image, size, include_label, normalization)
 
@@ -41,15 +46,13 @@ def test_preprocess_data_general():
 
 def test_preprocess_data_npy():
     # Test for npy file
-    coord = join('tests', 'test_data', 'data_type',
-                 'coord2D.npy')
+    coord = join("tests", "test_data", "data_type", "coord2D.npy")
 
-    image = join('tests', 'test_data', 'data_type',
-                 'tif2D.tif')
+    image = join("tests", "test_data", "data_type", "tif2D.tif")
 
     size = 32
     include_label = True
-    normalization = 'simple'
+    normalization = "simple"
 
     result = preprocess_data(coord, image, size, include_label, normalization)
 
@@ -63,15 +66,13 @@ def test_preprocess_data_npy():
 
 def test_preprocess_data_am():
     # Test for am file
-    coord = join('tests', 'test_data', 'data_type',
-                 'am3D.CorrelationLines.am')
+    coord = join("tests", "test_data", "data_type", "am3D.CorrelationLines.am")
 
-    image = join('tests', 'test_data', 'data_type',
-                 'am3D.am')
+    image = join("tests", "test_data", "data_type", "am3D.am")
 
     size = 32
     include_label = True
-    normalization = 'simple'
+    normalization = "simple"
 
     result = preprocess_data(coord, image, size, include_label, normalization)
 
@@ -85,14 +86,12 @@ def test_preprocess_data_am():
 
 def test_preprocess_data_normalization():
     # Test for normalization
-    coord = join('tests', 'test_data', 'data_type',
-                 'am3D.CorrelationLines.am')
-    image = join('tests', 'test_data', 'data_type',
-                 'tif3D.tif')
+    coord = join("tests", "test_data", "data_type", "am3D.CorrelationLines.am")
+    image = join("tests", "test_data", "data_type", "tif3D.tif")
 
     size = 32
     include_label = True
-    normalization = 'minmax'
+    normalization = "minmax"
 
     result = preprocess_data(coord, image, size, include_label, normalization)
 
@@ -106,14 +105,12 @@ def test_preprocess_data_normalization():
 
 def test_preprocess_data_size():
     # Test for size
-    coord = join('tests', 'test_data', 'data_type',
-                 'am3D.CorrelationLines.am')
-    image = join('tests', 'test_data', 'data_type',
-                 'tif3D.tif')
+    coord = join("tests", "test_data", "data_type", "am3D.CorrelationLines.am")
+    image = join("tests", "test_data", "data_type", "tif3D.tif")
 
     size = None
     include_label = True
-    normalization = 'minmax'
+    normalization = "minmax"
 
     result = preprocess_data(coord, image, size, include_label, normalization)
 
@@ -127,14 +124,12 @@ def test_preprocess_data_size():
 
 def test_preprocess_data_label():
     # Test for include label
-    coord = join('tests', 'test_data', 'data_type',
-                 'am3D.CorrelationLines.am')
-    image = join('tests', 'test_data', 'data_type',
-                 'tif3D.tif')
+    coord = join("tests", "test_data", "data_type", "am3D.CorrelationLines.am")
+    image = join("tests", "test_data", "data_type", "tif3D.tif")
 
     size = None
     include_label = False
-    normalization = 'minmax'
+    normalization = "minmax"
 
     result = preprocess_data(coord, image, size, include_label, normalization)
 

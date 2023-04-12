@@ -14,8 +14,7 @@ import numpy as np
 import open3d as o3d
 
 
-def _dataset_format(coord: np.ndarray,
-                    segmented: bool) -> Tuple[np.ndarray, bool]:
+def _dataset_format(coord: np.ndarray, segmented: bool) -> Tuple[np.ndarray, bool]:
     """
     Silently check for an array format and correct 2D datasets to 3D.
 
@@ -32,16 +31,15 @@ def _dataset_format(coord: np.ndarray,
     if segmented:
         if coord.shape[1] not in [3, 4]:
             check = False
-            print('Coord data must be 2D/3D with labels (4D/5D)')
+            print("Coord data must be 2D/3D with labels (4D/5D)")
 
         # Correct 2D to 3D
         if coord.shape[1] == 3:
-            coord = np.vstack((coord[:, 0], coord[:, 1], coord[:, 2],
-                               np.zeros((coord.shape[0],)))).T
+            coord = np.vstack((coord[:, 0], coord[:, 1], coord[:, 2], np.zeros((coord.shape[0],)))).T
     else:
         if coord.shape[1] not in [2, 3]:
             check = False
-            print('Coord data must be 2D/3D with labels (2D/3D)')
+            print("Coord data must be 2D/3D with labels (2D/3D)")
 
         # Correct 2D to 3D
         if coord.shape[1] == 2:
@@ -50,9 +48,7 @@ def _dataset_format(coord: np.ndarray,
     return coord, check
 
 
-def _rgb(coord: np.ndarray,
-         segmented: bool,
-         ScanNet=False) -> np.ndarray:
+def _rgb(coord: np.ndarray, segmented: bool, ScanNet=False) -> np.ndarray:
     """
     Convert float to RGB classes.
 
@@ -69,45 +65,45 @@ def _rgb(coord: np.ndarray,
     rgb = np.zeros((coord.shape[0], 3), dtype=np.float64)
 
     SCANNET_COLOR_MAP_20 = {
-        0: (0., 0., 0.),
-        1: (174., 199., 232.),
-        2: (152., 223., 138.),
-        3: (31., 119., 180.),
-        4: (255., 187., 120.),
-        5: (188., 189., 34.),
-        6: (140., 86., 75.),
-        7: (255., 152., 150.),
-        8: (214., 39., 40.),
-        9: (197., 176., 213.),
-        10: (148., 103., 189.),
-        11: (196., 156., 148.),
-        12: (23., 190., 207.),
-        14: (247., 182., 210.),
-        15: (66., 188., 102.),
-        16: (219., 219., 141.),
-        17: (140., 57., 197.),
-        18: (202., 185., 52.),
-        19: (51., 176., 203.),
-        20: (200., 54., 131.),
-        21: (92., 193., 61.),
-        22: (78., 71., 183.),
-        23: (172., 114., 82.),
-        24: (255., 127., 14.),
-        25: (91., 163., 138.),
-        26: (153., 98., 156.),
-        27: (140., 153., 101.),
-        28: (158., 218., 229.),
-        29: (100., 125., 154.),
-        30: (178., 127., 135.),
-        32: (146., 111., 194.),
-        33: (44., 160., 44.),
-        34: (112., 128., 144.),
-        35: (96., 207., 209.),
-        36: (227., 119., 194.),
-        37: (213., 92., 176.),
-        38: (94., 106., 211.),
-        39: (82., 84., 163.),
-        40: (100., 85., 144.),
+        0: (0.0, 0.0, 0.0),
+        1: (174.0, 199.0, 232.0),
+        2: (152.0, 223.0, 138.0),
+        3: (31.0, 119.0, 180.0),
+        4: (255.0, 187.0, 120.0),
+        5: (188.0, 189.0, 34.0),
+        6: (140.0, 86.0, 75.0),
+        7: (255.0, 152.0, 150.0),
+        8: (214.0, 39.0, 40.0),
+        9: (197.0, 176.0, 213.0),
+        10: (148.0, 103.0, 189.0),
+        11: (196.0, 156.0, 148.0),
+        12: (23.0, 190.0, 207.0),
+        14: (247.0, 182.0, 210.0),
+        15: (66.0, 188.0, 102.0),
+        16: (219.0, 219.0, 141.0),
+        17: (140.0, 57.0, 197.0),
+        18: (202.0, 185.0, 52.0),
+        19: (51.0, 176.0, 203.0),
+        20: (200.0, 54.0, 131.0),
+        21: (92.0, 193.0, 61.0),
+        22: (78.0, 71.0, 183.0),
+        23: (172.0, 114.0, 82.0),
+        24: (255.0, 127.0, 14.0),
+        25: (91.0, 163.0, 138.0),
+        26: (153.0, 98.0, 156.0),
+        27: (140.0, 153.0, 101.0),
+        28: (158.0, 218.0, 229.0),
+        29: (100.0, 125.0, 154.0),
+        30: (178.0, 127.0, 135.0),
+        32: (146.0, 111.0, 194.0),
+        33: (44.0, 160.0, 44.0),
+        34: (112.0, 128.0, 144.0),
+        35: (96.0, 207.0, 209.0),
+        36: (227.0, 119.0, 194.0),
+        37: (213.0, 92.0, 176.0),
+        38: (94.0, 106.0, 211.0),
+        39: (82.0, 84.0, 163.0),
+        40: (100.0, 85.0, 144.0),
     }
 
     if segmented:
@@ -117,8 +113,7 @@ def _rgb(coord: np.ndarray,
                 rgb[id, :] = [x / 255 for x in color]
         else:
             unique_ids = np.unique(coord[:, 0])
-            rgb_list = [np.array((np.random.rand(), np.random.rand(), np.random.rand()))
-                        for _ in unique_ids]
+            rgb_list = [np.array((np.random.rand(), np.random.rand(), np.random.rand())) for _ in unique_ids]
             id_to_rgb = {idx: color for idx, color in zip(unique_ids, rgb_list)}
 
             for id, i in enumerate(coord[:, 0]):
@@ -166,10 +161,7 @@ def segment_to_graph(coord: np.ndarray) -> list:
     return graph_list
 
 
-def VisualizePointCloud(coord: np.ndarray,
-                        segmented: bool,
-                        rgb: Optional[np.ndarray] = None,
-                        animate=True):
+def VisualizePointCloud(coord: np.ndarray, segmented: bool, rgb: Optional[np.ndarray] = None, animate=True):
     """
     Visualized point cloud.
 
@@ -236,8 +228,7 @@ def VisualizeFilaments(coord: np.ndarray):
         o3d.visualization.draw_geometries([line_set])
 
 
-def VisualizeScanNet(coord: np.ndarray,
-                     segmented: True):
+def VisualizeScanNet(coord: np.ndarray, segmented: True):
     """
     Visualized scannet scene
 

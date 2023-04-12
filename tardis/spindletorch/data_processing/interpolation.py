@@ -27,10 +27,11 @@ def interpolate_generator(points: np.ndarray) -> Iterable:
         points as [X x Y x (Z)]
     """
     if points.shape != (2, 3):
-        TardisError('134',
-                    'tardis/spindletorch/data_processing/interpolation.py',
-                    'Interpolation supports only 3D for 2 points at a time; '
-                    f'But {points.shape} was given!')
+        TardisError(
+            "134",
+            "tardis/spindletorch/data_processing/interpolation.py",
+            "Interpolation supports only 3D for 2 points at a time; " f"But {points.shape} was given!",
+        )
 
     points = np.round(points).astype(np.int32)
 
@@ -43,8 +44,9 @@ def interpolate_generator(points: np.ndarray) -> Iterable:
     delta_x, delta_y, delta_z = x1 - x0, y1 - y0, z1 - z0
 
     # Calculate axis to iterate throw
-    max_delta = np.where((abs(delta_x), abs(delta_y), abs(delta_z)) ==
-                         np.max((abs(delta_x), abs(delta_y), abs(delta_z))))[0][0]
+    max_delta = np.where(
+        (abs(delta_x), abs(delta_y), abs(delta_z)) == np.max((abs(delta_x), abs(delta_y), abs(delta_z)))
+    )[0][0]
     if delta_x == 0 and delta_y == 0 and delta_z == 0:
         max_delta = 3
 
@@ -52,19 +54,33 @@ def interpolate_generator(points: np.ndarray) -> Iterable:
     dx_sign, dy_sign, dz_sign = np.sign(delta_x), np.sign(delta_y), np.sign(delta_z)
 
     # Calculating scaling threshold
-    delta_err_x = 0.0 if delta_x == 0 \
-        else abs(delta_x / delta_y) if delta_y != 0 \
-        else abs(delta_x / delta_z) if delta_z != 0 \
+    delta_err_x = (
+        0.0
+        if delta_x == 0
+        else abs(delta_x / delta_y)
+        if delta_y != 0
+        else abs(delta_x / delta_z)
+        if delta_z != 0
         else 0.0
-    delta_err_y = 0.0 if delta_y == 0 \
-        else abs(delta_y / delta_x) if delta_x != 0 \
-        else abs(delta_y / delta_z) if delta_z != 0 \
+    )
+    delta_err_y = (
+        0.0
+        if delta_y == 0
+        else abs(delta_y / delta_x)
+        if delta_x != 0
+        else abs(delta_y / delta_z)
+        if delta_z != 0
         else 0.0
-    delta_err_z = 0.0 if delta_z == 0 \
-        else np.minimum(abs(delta_z / delta_x),
-                        abs(delta_z / delta_y)) if delta_x != 0 and delta_y != 0 \
-        else (abs(delta_z / delta_y) if delta_x == 0 and delta_y != 0
-              else abs(delta_z / delta_x) if delta_x != 0 else 0.0)
+    )
+    delta_err_z = (
+        0.0
+        if delta_z == 0
+        else np.minimum(abs(delta_z / delta_x), abs(delta_z / delta_y))
+        if delta_x != 0 and delta_y != 0
+        else (
+            abs(delta_z / delta_y) if delta_x == 0 and delta_y != 0 else abs(delta_z / delta_x) if delta_x != 0 else 0.0
+        )
+    )
 
     # Zero out threshold
     error_x, error_y, error_z = 0, 0, 0
@@ -122,7 +138,7 @@ def interpolation(points: np.ndarray) -> np.ndarray:
     for i in range(0, len(points) - 1):
         """3D interpolation for XYZ dimension"""
 
-        new_coord.append(list(interpolate_generator(points[i:i + 2, :])))
+        new_coord.append(list(interpolate_generator(points[i : i + 2, :])))
     new_coord.append(list(points[-1, :]))
 
     return np.vstack(new_coord)

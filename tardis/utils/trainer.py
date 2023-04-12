@@ -24,11 +24,8 @@ class ISR_LR:
     """
     Costume Inverse Square Root Learning Rate Schedular
     """
-    def __init__(self,
-                 optimizer: optim.Adam,
-                 lr_mul: float,
-                 warmup_steps=1000,
-                 scale=100):
+
+    def __init__(self, optimizer: optim.Adam, lr_mul: float, warmup_steps=1000, scale=100):
         self._optimizer = optimizer
         self.lr_mul = lr_mul
         self.warmup_steps = warmup_steps
@@ -36,8 +33,7 @@ class ISR_LR:
         self.scale = scale
         self.param_groups = self._optimizer.param_groups
 
-    def load_state_dict(self,
-                        checkpoint: dict):
+    def load_state_dict(self, checkpoint: dict):
         """
         Wrapper for loading Optimizer state dictionary
 
@@ -62,8 +58,7 @@ class ISR_LR:
     def get_lr_scale(self):
         """Compute scaler for LR"""
         n_steps, n_warmup_steps = self.steps, self.warmup_steps
-        return (self.scale ** -0.5) * min(n_steps ** (-0.5),
-                                          n_steps * n_warmup_steps ** (-1.5))
+        return (self.scale**-0.5) * min(n_steps ** (-0.5), n_steps * n_warmup_steps ** (-1.5))
 
     def _update_learning_rate(self):
         """Learning rate scheduling per step"""
@@ -72,7 +67,7 @@ class ISR_LR:
         lr = self.lr_mul * self.get_lr_scale()
 
         for g in self._optimizer.param_groups:
-            g['lr'] = lr
+            g["lr"] = lr
 
 
 class BasicTrainer:
@@ -95,21 +90,23 @@ class BasicTrainer:
         checkpoint_name (str): Name of the checkpoint.
     """
 
-    def __init__(self,
-                 model,
-                 structure: dict,
-                 device: torch.device,
-                 criterion,
-                 optimizer: Union[ISR_LR, optim.Adam],
-                 print_setting: tuple,
-                 training_DataLoader,
-                 validation_DataLoader=None,
-                 lr_scheduler=False,
-                 epochs=100,
-                 early_stop_rate=10,
-                 instance_cov=2,
-                 checkpoint_name="DIST",
-                 classification=False):
+    def __init__(
+        self,
+        model,
+        structure: dict,
+        device: torch.device,
+        criterion,
+        optimizer: Union[ISR_LR, optim.Adam],
+        print_setting: tuple,
+        training_DataLoader,
+        validation_DataLoader=None,
+        lr_scheduler=False,
+        epochs=100,
+        early_stop_rate=10,
+        instance_cov=2,
+        checkpoint_name="DIST",
+        classification=False,
+    ):
         super(BasicTrainer, self).__init__()
 
         self.early_stopping = None
@@ -121,21 +118,21 @@ class BasicTrainer:
         if lr_scheduler:
             self.lr = 1.0
         else:
-            self.lr = self.optimizer.param_groups[0]['lr']
+            self.lr = self.optimizer.param_groups[0]["lr"]
         self.epochs = epochs
         self.early_stop_rate = early_stop_rate
         self.checkpoint_name = checkpoint_name
         self.structure = structure
         self.instance_cov = instance_cov
 
-        if 'cnn_type' in self.structure:
+        if "cnn_type" in self.structure:
             self.classification = classification
-            self.nn_name = self.structure['cnn_type']
-        elif 'dist_type' in self.structure:
-            self.nn_name = self.structure['dist_type']
+            self.nn_name = self.structure["cnn_type"]
+        elif "dist_type" in self.structure:
+            self.nn_name = self.structure["dist_type"]
 
-            if 'node_input' in structure:
-                self.node_input = structure['node_input']
+            if "node_input" in structure:
+                self.node_input = structure["node_input"]
 
         self.training_DataLoader = training_DataLoader
         self.validation_DataLoader = validation_DataLoader
@@ -146,7 +143,7 @@ class BasicTrainer:
         self.print_setting = print_setting
 
         self.id = 0
-        self.epoch_desc = ''
+        self.epoch_desc = ""
         self.gpu_info = ""
 
         # Storage for all training metrics
@@ -162,8 +159,7 @@ class BasicTrainer:
         self.threshold = []
 
     @staticmethod
-    def _update_desc(stop_count: int,
-                     metric: list) -> str:
+    def _update_desc(stop_count: int, metric: list) -> str:
         """
         Utility function to update progress bar description.
 
@@ -174,23 +170,17 @@ class BasicTrainer:
         Returns:
             str: Updated progress bar status.
         """
-        desc = f'Epochs: early_stop: {stop_count}; ' \
-               f'F1: [{metric[0]:.2f}; {metric[1]:.2f}]'
+        desc = f"Epochs: early_stop: {stop_count}; " f"F1: [{metric[0]:.2f}; {metric[1]:.2f}]"
         return desc
 
     def _update_epoch_desc(self):
         # For each Epoch load be t model from previous run
         if self.id == 0:
-            self.epoch_desc = 'Epochs: early_stop: 0; best F1: NaN'
+            self.epoch_desc = "Epochs: early_stop: 0; best F1: NaN"
         else:
-            self.epoch_desc = self._update_desc(self.early_stopping.counter,
-                                                [np.max(self.f1),
-                                                 self.f1[-1:][0]])
+            self.epoch_desc = self._update_desc(self.early_stopping.counter, [np.max(self.f1), self.f1[-1:][0]])
 
-    def _update_progress_bar(self,
-                             loss_desc: str,
-                             idx: int,
-                             train=True):
+    def _update_progress_bar(self, loss_desc: str, idx: int, train=True):
         """
         Update entire Tardis progress bar.
 
@@ -205,72 +195,74 @@ class BasicTrainer:
         else:
             data_set_len = len(self.validation_DataLoader)
 
-        self.progress_train(title=f'{self.checkpoint_name} training module',
-                            text_1=self.print_setting[0],
-                            text_2=self.print_setting[1],
-                            text_3=self.print_setting[2],
-                            text_4=self.print_setting[3],
-                            text_7=self.epoch_desc,
-                            text_8=print_progress_bar(self.id, self.epochs),
-                            text_9=loss_desc,
-                            text_10=print_progress_bar(idx, data_set_len))
+        self.progress_train(
+            title=f"{self.checkpoint_name} training module",
+            text_1=self.print_setting[0],
+            text_2=self.print_setting[1],
+            text_3=self.print_setting[2],
+            text_4=self.print_setting[3],
+            text_7=self.epoch_desc,
+            text_8=print_progress_bar(self.id, self.epochs),
+            text_9=loss_desc,
+            text_10=print_progress_bar(idx, data_set_len),
+        )
 
     def _save_metric(self) -> bool:
-        """ Save training metrics """
+        """Save training metrics"""
         if len(self.training_loss) > 0:
-            np.savetxt(join(getcwd(),
-                            f'{self.checkpoint_name}_checkpoint',
-                            'training_losses.csv'),
-                       self.training_loss, delimiter=',')
+            np.savetxt(
+                join(getcwd(), f"{self.checkpoint_name}_checkpoint", "training_losses.csv"),
+                self.training_loss,
+                delimiter=",",
+            )
 
         if len(self.validation_loss) > 0:
-            np.savetxt(join(getcwd(),
-                            f'{self.checkpoint_name}_checkpoint',
-                            'validation_losses.csv'),
-                       self.validation_loss, delimiter=',')
+            np.savetxt(
+                join(getcwd(), f"{self.checkpoint_name}_checkpoint", "validation_losses.csv"),
+                self.validation_loss,
+                delimiter=",",
+            )
 
         if len(self.f1) > 0:
-            np.savetxt(join(getcwd(),
-                            f'{self.checkpoint_name}_checkpoint',
-                            'eval_metric.csv'),
-                       np.column_stack([self.accuracy, self.precision, self.recall,
-                                        self.threshold, self.f1]),
-                       delimiter=',')
+            np.savetxt(
+                join(getcwd(), f"{self.checkpoint_name}_checkpoint", "eval_metric.csv"),
+                np.column_stack([self.accuracy, self.precision, self.recall, self.threshold, self.f1]),
+                delimiter=",",
+            )
 
         if len(self.learning_rate) > 0:
-            np.savetxt(join(getcwd(),
-                            f'{self.checkpoint_name}_checkpoint',
-                            'learning_rate.csv'),
-                       self.learning_rate,
-                       delimiter=',')
+            np.savetxt(
+                join(getcwd(), f"{self.checkpoint_name}_checkpoint", "learning_rate.csv"),
+                self.learning_rate,
+                delimiter=",",
+            )
 
         """ Save current model weights"""
         # If mean evaluation loss is higher than save checkpoint
         if all(self.f1[-1:][0] >= i for i in self.f1[:-1]):
-            torch.save({
-                'model_struct_dict': self.structure,
-                'model_state_dict': self.model.state_dict(),
-                'optimizer_state_dict': self.optimizer.state_dict()
-            },
-                join(getcwd(),
-                     f'{self.checkpoint_name}_checkpoint',
-                     f'{self.checkpoint_name}_checkpoint.pth'))
+            torch.save(
+                {
+                    "model_struct_dict": self.structure,
+                    "model_state_dict": self.model.state_dict(),
+                    "optimizer_state_dict": self.optimizer.state_dict(),
+                },
+                join(getcwd(), f"{self.checkpoint_name}_checkpoint", f"{self.checkpoint_name}_checkpoint.pth"),
+            )
 
-        torch.save({
-            'model_struct_dict': self.structure,
-            'model_state_dict': self.model.state_dict(),
-            'optimizer_state_dict': self.optimizer.state_dict()
-        },
-            join(getcwd(),
-                 f'{self.checkpoint_name}_checkpoint',
-                 'model_weights.pth'))
+        torch.save(
+            {
+                "model_struct_dict": self.structure,
+                "model_state_dict": self.model.state_dict(),
+                "optimizer_state_dict": self.optimizer.state_dict(),
+            },
+            join(getcwd(), f"{self.checkpoint_name}_checkpoint", "model_weights.pth"),
+        )
 
         if self.early_stopping.early_stop:
             return True
         return False
 
-    def _mid_training_eval(self,
-                           idx):
+    def _mid_training_eval(self, idx):
         if idx % (len(self.training_DataLoader) // 4) == 0:
             # Do not validate at first idx and last 10%
             if idx != 0 and idx <= int(len(self.training_DataLoader) * 0.75):
@@ -287,32 +279,36 @@ class BasicTrainer:
         Main training loop.
         """
         # Initialize progress bar.
-        self.progress_epoch(title=f'{self.checkpoint_name} training module.',
-                            text_2='Epoch: 0',
-                            text_3=print_progress_bar(0, self.epochs))
+        self.progress_epoch(
+            title=f"{self.checkpoint_name} training module.",
+            text_2="Epoch: 0",
+            text_3=print_progress_bar(0, self.epochs),
+        )
 
         # Initialize early stop check.
         self.early_stopping = EarlyStopping(patience=self.early_stop_rate)
 
         # Build training directory.
-        if isdir(f'{self.checkpoint_name}_checkpoint'):
-            rmtree(f'{self.checkpoint_name}_checkpoint')
-            mkdir(f'{self.checkpoint_name}_checkpoint')
+        if isdir(f"{self.checkpoint_name}_checkpoint"):
+            rmtree(f"{self.checkpoint_name}_checkpoint")
+            mkdir(f"{self.checkpoint_name}_checkpoint")
         else:
-            mkdir(f'{self.checkpoint_name}_checkpoint')
+            mkdir(f"{self.checkpoint_name}_checkpoint")
 
         for id in range(self.epochs):
             """Initialized training"""
             self.id = id
 
             self._update_epoch_desc()
-            self.progress_epoch(title=f'{self.checkpoint_name} training module',
-                                text_1=self.print_setting[0],
-                                text_2=self.print_setting[1],
-                                text_3=self.print_setting[2],
-                                text_4=self.print_setting[3],
-                                text_7=self.epoch_desc,
-                                text_8=print_progress_bar(self.id, self.epochs))
+            self.progress_epoch(
+                title=f"{self.checkpoint_name} training module",
+                text_1=self.print_setting[0],
+                text_2=self.print_setting[1],
+                text_3=self.print_setting[2],
+                text_4=self.print_setting[3],
+                text_7=self.epoch_desc,
+                text_8=print_progress_bar(self.id, self.epochs),
+            )
 
             """Validation block"""
             if self.validation_DataLoader is not None:

@@ -3,7 +3,7 @@ pytest>7.0.0
 
 # PEP-8
 flake8>5.0.0
-
+black>23.0.0
 # Documentation
 sphinx>5.2.3
 myst-parser>=1.0.0

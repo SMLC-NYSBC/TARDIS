@@ -29,18 +29,15 @@ def get_benchmark_aws() -> dict:
     Returns:
         dict: Dictionary with keys[network name] and values[list of scores]
     """
-    network_benchmark = requests.get('https://tardis-weigths.s3.amazonaws.com/'
-                                     'benchmark/best_scores.json')
+    network_benchmark = requests.get("https://tardis-weigths.s3.amazonaws.com/" "benchmark/best_scores.json")
 
     if network_benchmark.status_code == 200:
-        network_benchmark = json.loads(network_benchmark.content.decode('utf-8'))
+        network_benchmark = json.loads(network_benchmark.content.decode("utf-8"))
 
     return network_benchmark
 
 
-def put_benchmark_aws(data: dict,
-                      network: Optional[str] = '',
-                      model=None) -> bool:
+def put_benchmark_aws(data: dict, network: Optional[str] = "", model=None) -> bool:
     """
     Upload new or update dictionary stored on S3
 
@@ -52,14 +49,13 @@ def put_benchmark_aws(data: dict,
     Returns:
         bool: True if save correctly
     """
-    r = requests.put('https://tardis-weigths.s3.amazonaws.com/'
-                     'benchmark/best_scores.json',
-                     json.dumps(data, indent=2, default=str))
+    r = requests.put(
+        "https://tardis-weigths.s3.amazonaws.com/" "benchmark/best_scores.json", json.dumps(data, indent=2, default=str)
+    )
 
     if model is not None and r.status_code == 200:
-        with open(model, 'rb') as data:
-            r_m = requests.put('https://tardis-weigths.s3.amazonaws.com/'
-                               f'benchmark/models/{network}.pth', data=data)
+        with open(model, "rb") as data:
+            r_m = requests.put("https://tardis-weigths.s3.amazonaws.com/" f"benchmark/models/{network}.pth", data=data)
 
         return r_m.status_code == 200
     return r.status_code == 200
@@ -69,9 +65,7 @@ def get_model_aws(https: str):
     return requests.get(https)
 
 
-def get_weights_aws(network: str,
-                    subtype: str,
-                    model: Optional[str] = None):
+def get_weights_aws(network: str, subtype: str, model: Optional[str] = None):
     """
     Module to download pre-train weights from S3 AWS bucket.
 
@@ -90,67 +84,59 @@ def get_weights_aws(network: str,
         subtype (str): Sub-name of the network or sub-parameter for the network.
         model (str): Additional dataset name used for the DIST.
     """
-    ALL_MODELS = ['unet', 'unet3plus', 'fnet', 'dist']
-    ALL_SUBTYPE = ['16', '32', '64', '96', '128', 'triang', 'full']
-    CNN = ['unet', 'unet3plus', 'fnet']
-    CNN_DATASET = ['microtubules', 'cryo_mem']
-    DIST_DATASET = ['microtubules', 's3dis']
+    ALL_MODELS = ["unet", "unet3plus", "fnet", "dist"]
+    ALL_SUBTYPE = ["16", "32", "64", "96", "128", "triang", "full"]
+    CNN = ["unet", "unet3plus", "fnet"]
+    CNN_DATASET = ["microtubules", "cryo_mem"]
+    DIST_DATASET = ["microtubules", "s3dis"]
 
     """Get weights for CNN"""
-    dir = join(expanduser('~'), '.tardis_pytorch', f'{network}_{subtype}', f'{model}')
+    dir = join(expanduser("~"), ".tardis_pytorch", f"{network}_{subtype}", f"{model}")
 
     if network not in ALL_MODELS:
-        TardisError('19',
-                    'tardis/utils/aws.py',
-                    f'Incorrect CNN network selected {network}_{subtype}')
+        TardisError("19", "tardis/utils/aws.py", f"Incorrect CNN network selected {network}_{subtype}")
     if subtype not in ALL_SUBTYPE:
-        TardisError('19',
-                    'tardis/utils/aws.py',
-                    f'Incorrect CNN subtype selected {network}_{subtype}')
+        TardisError("19", "tardis/utils/aws.py", f"Incorrect CNN subtype selected {network}_{subtype}")
 
     if network in CNN:
         if model not in CNN_DATASET:
-            TardisError('19',
-                        'tardis/utils/aws.py',
-                        f'Incorrect CNN model selected {model} but expected {CNN_DATASET}')
+            TardisError("19", "tardis/utils/aws.py", f"Incorrect CNN model selected {model} but expected {CNN_DATASET}")
 
-    if network == 'dist':
+    if network == "dist":
         if model not in DIST_DATASET:
-            TardisError('19',
-                        'tardis/utils/aws.py',
-                        f'Incorrect DIST model selected {model} but expected {DIST_DATASET}')
+            TardisError(
+                "19", "tardis/utils/aws.py", f"Incorrect DIST model selected {model} but expected {DIST_DATASET}"
+            )
 
     if aws_check_with_temp(model_name=[network, subtype, model]):
-        if isfile(join(dir, 'model_weights.pth')):
-            return join(dir, 'model_weights.pth')
+        if isfile(join(dir, "model_weights.pth")):
+            return join(dir, "model_weights.pth")
         else:
-            TardisError('19',
-                        'tardis/utils/aws.py',
-                        'No weights found')
+            TardisError("19", "tardis/utils/aws.py", "No weights found")
     else:
-        weight = get_model_aws('https://tardis-weigths.s3.amazonaws.com/'
-                               f'{network}_{subtype}/'
-                               f'{model}/model_weights.pth')
+        weight = get_model_aws(
+            "https://tardis-weigths.s3.amazonaws.com/" f"{network}_{subtype}/" f"{model}/model_weights.pth"
+        )
 
     """Save temp weights"""
-    if not isdir(join(expanduser('~'), '.tardis_pytorch')):
-        mkdir(join(expanduser('~'), '.tardis_pytorch'))
+    if not isdir(join(expanduser("~"), ".tardis_pytorch")):
+        mkdir(join(expanduser("~"), ".tardis_pytorch"))
 
     if not isdir(dir):
         makedirs(dir)
 
     # Save weights
-    open(join(dir, 'model_weights.pth'), 'wb').write(weight.content)
+    open(join(dir, "model_weights.pth"), "wb").write(weight.content)
 
     # Save header
-    with open(join(dir, 'model_header.json'), 'w') as f:
+    with open(join(dir, "model_header.json"), "w") as f:
         json.dump(dict(weight.headers), f)
 
-    print(f'Pre-Trained model download from S3 and saved/updated in {dir}')
+    print(f"Pre-Trained model download from S3 and saved/updated in {dir}")
 
     weight = weight.content
-    if 'AccessDenied' in str(weight[:100]):
-        return join(dir, 'model_weights.pth')
+    if "AccessDenied" in str(weight[:100]):
+        return join(dir, "model_weights.pth")
     return io.BytesIO(weight)
 
 
@@ -167,56 +153,73 @@ def aws_check_with_temp(model_name: list) -> bool:
         bool: If True, local file is up-to-date.
     """
     """Check if temp dir exist"""
-    if not isdir(join(expanduser('~'), '.tardis_pytorch')):
+    if not isdir(join(expanduser("~"), ".tardis_pytorch")):
         return False  # No weight, first Tardis run, download from aws
 
     """Check for stored file header in ~/.tardis_pytorch/..."""
-    if not isfile(join(expanduser('~'),
-                       '.tardis_pytorch',
-                       f'{model_name[0]}_{model_name[1]}',
-                       f'{model_name[2]}',
-                       'model_weights.pth')):
+    if not isfile(
+        join(
+            expanduser("~"),
+            ".tardis_pytorch",
+            f"{model_name[0]}_{model_name[1]}",
+            f"{model_name[2]}",
+            "model_weights.pth",
+        )
+    ):
         return False  # Define network was never used with tardis, download from aws
     else:
-        if not isfile(join(expanduser('~'),
-                           '.tardis_pytorch',
-                           f'{model_name[0]}_{model_name[1]}',
-                           f'{model_name[2]}',
-                           'model_header.json')):
+        if not isfile(
+            join(
+                expanduser("~"),
+                ".tardis_pytorch",
+                f"{model_name[0]}_{model_name[1]}",
+                f"{model_name[2]}",
+                "model_header.json",
+            )
+        ):
             return False  # Weight found but no json, download from aws
         else:
             try:
-                save = json.load(open(join(expanduser('~'),
-                                           '.tardis_pytorch',
-                                           f'{model_name[0]}_{model_name[1]}',
-                                           f'{model_name[2]}',
-                                           'model_header.json')))
+                save = json.load(
+                    open(
+                        join(
+                            expanduser("~"),
+                            ".tardis_pytorch",
+                            f"{model_name[0]}_{model_name[1]}",
+                            f"{model_name[2]}",
+                            "model_header.json",
+                        )
+                    )
+                )
             except:
                 save = None
 
     """Compare stored file with file stored on aws"""
     if save is None:
-        print('Network cannot be checked! Connect to the internet next time!')
+        print("Network cannot be checked! Connect to the internet next time!")
         return False  # Error loading json, download from aws
     else:
         try:
-            weight = requests.get('https://tardis-weigths.s3.amazonaws.com/'
-                                  f'{model_name[0]}_{model_name[1]}/'
-                                  f'{model_name[2]}/model_weights.pth', stream=True)
+            weight = requests.get(
+                "https://tardis-weigths.s3.amazonaws.com/"
+                f"{model_name[0]}_{model_name[1]}/"
+                f"{model_name[2]}/model_weights.pth",
+                stream=True,
+            )
             aws = dict(weight.headers)
         except:
-            print('Network cannot be checked! Connect to the internet next time!')
+            print("Network cannot be checked! Connect to the internet next time!")
             return True  # Found saved weight but cannot connect to aws
 
     try:
-        aws_data = aws['Last-Modified']
+        aws_data = aws["Last-Modified"]
     except KeyError:
-        aws_data = aws['Date']
+        aws_data = aws["Date"]
 
     try:
-        save_data = save['Last-Modified']
+        save_data = save["Last-Modified"]
     except KeyError:
-        save_data = save['Date']
+        save_data = save["Date"]
 
     if save_data == aws_data:
         return True  # Up-to data weight, load from local dir

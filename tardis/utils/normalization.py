@@ -20,8 +20,7 @@ class SimpleNormalize:
     between 0 - 1.
     """
 
-    def __call__(self,
-                 x: np.ndarray) -> np.ndarray:
+    def __call__(self, x: np.ndarray) -> np.ndarray:
         """
         Call for image normalization.
 
@@ -52,8 +51,7 @@ class MinMaxNormalize:
     IMAGE NORMALIZATION BETWEEN MIN AND MAX VALUE
     """
 
-    def __call__(self,
-                 x: np.ndarray) -> np.ndarray:
+    def __call__(self, x: np.ndarray) -> np.ndarray:
         """
         Call for normalization.
 
@@ -86,8 +84,7 @@ class MeanStdNormalize:
     IMAGE NORMALIZATION BASED ON MEAN AND STD
     """
 
-    def __call__(self,
-                 x: np.ndarray) -> np.ndarray:
+    def __call__(self, x: np.ndarray) -> np.ndarray:
         """
         Call for standardization.
 
@@ -114,12 +111,10 @@ class RescaleNormalize:
         clip_range: Histogram percentiles range crop.
     """
 
-    def __init__(self,
-                 clip_range=(2, 98)):
+    def __init__(self, clip_range=(2, 98)):
         self.range = clip_range
 
-    def __call__(self,
-                 x: np.ndarray) -> np.ndarray:
+    def __call__(self, x: np.ndarray) -> np.ndarray:
         """
         Call for normalization.
 

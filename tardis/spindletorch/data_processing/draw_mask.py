@@ -18,11 +18,9 @@ from tardis.spindletorch.data_processing.interpolation import interpolation
 from tardis.utils.errors import TardisError
 
 
-def draw_instances(mask_size: tuple,
-                   coordinate: np.ndarray,
-                   pixel_size: float,
-                   circle_size=250,
-                   label=True) -> np.ndarray:
+def draw_instances(
+    mask_size: tuple, coordinate: np.ndarray, pixel_size: float, circle_size=250, label=True
+) -> np.ndarray:
     """
     Module to build semantic mask from corresponding coordinates
 
@@ -38,10 +36,12 @@ def draw_instances(mask_size: tuple,
     """
     if label:
         if coordinate.ndim != 2 and coordinate.shape[1] not in [3, 4]:
-            TardisError('113',
-                        'tardis/spindletorch/data_processing/draw_mask.py',
-                        'Coordinates are of not correct shape, expected: '
-                        f'shape [Label x X x Y x (Z)] but {coordinate.shape} given!')
+            TardisError(
+                "113",
+                "tardis/spindletorch/data_processing/draw_mask.py",
+                "Coordinates are of not correct shape, expected: "
+                f"shape [Label x X x Y x (Z)] but {coordinate.shape} given!",
+            )
 
     label_mask = np.zeros(mask_size, dtype=np.uint8)
     if pixel_size == 0:
@@ -50,9 +50,9 @@ def draw_instances(mask_size: tuple,
     r = round((circle_size / 2) / pixel_size)
 
     if coordinate.shape[1] == 3 or not label:  # Draw 2D mask
-        mask_shape = 'c'
+        mask_shape = "c"
     else:  # Draw 3D mask
-        mask_shape = 's'
+        mask_shape = "s"
 
     # Number of segments in coordinates
     if label:
@@ -70,23 +70,16 @@ def draw_instances(mask_size: tuple,
                 c = label[j, :]  # Point center
 
                 if len(c) == 3:
-                    cz, cy, cx = draw_mask(r=r,
-                                           c=c,
-                                           label_mask=label_mask,
-                                           segment_shape=mask_shape)
+                    cz, cy, cx = draw_mask(r=r, c=c, label_mask=label_mask, segment_shape=mask_shape)
                     all_cz.append(cz)
                     all_cy.append(cy)
                     all_cx.append(cx)
                 else:
-                    cy, cx = draw_mask(r=r,
-                                       c=c,
-                                       label_mask=label_mask,
-                                       segment_shape=mask_shape)
+                    cy, cx = draw_mask(r=r, c=c, label_mask=label_mask, segment_shape=mask_shape)
                     all_cy.append(cy)
                     all_cx.append(cx)
 
-            all_cz, all_cy, all_cx = np.concatenate(all_cz), np.concatenate(all_cy), \
-                np.concatenate(all_cx)
+            all_cz, all_cy, all_cx = np.concatenate(all_cz), np.concatenate(all_cy), np.concatenate(all_cx)
 
             label_mask[all_cz, all_cy, all_cx] = 1
     else:
@@ -95,32 +88,22 @@ def draw_instances(mask_size: tuple,
 
         for c in coordinate:
             if len(c) == 3:
-                cz, cy, cx = draw_mask(r=r,
-                                       c=c,
-                                       label_mask=label_mask,
-                                       segment_shape=mask_shape)
+                cz, cy, cx = draw_mask(r=r, c=c, label_mask=label_mask, segment_shape=mask_shape)
                 all_cz.append(cz)
                 all_cy.append(cy)
                 all_cx.append(cx)
             else:
-                cy, cx = draw_mask(r=r,
-                                   c=c,
-                                   label_mask=label_mask,
-                                   segment_shape=mask_shape)
+                cy, cx = draw_mask(r=r, c=c, label_mask=label_mask, segment_shape=mask_shape)
                 all_cy.append(cy)
                 all_cx.append(cx)
 
-        all_cz, all_cy, all_cx = np.concatenate(all_cz), np.concatenate(all_cy), \
-            np.concatenate(all_cx)
+        all_cz, all_cy, all_cx = np.concatenate(all_cz), np.concatenate(all_cy), np.concatenate(all_cx)
         label_mask[all_cz, all_cy, all_cx] = 1
 
     return np.where(label_mask == 1, 1, 0).astype(np.uint8)
 
 
-def draw_semantic_membrane(mask_size: tuple,
-                           coordinate: np.ndarray,
-                           pixel_size: float,
-                           spline_size=70) -> np.ndarray:
+def draw_semantic_membrane(mask_size: tuple, coordinate: np.ndarray, pixel_size: float, spline_size=70) -> np.ndarray:
     """
     Draw semantic membrane
 
@@ -149,21 +132,16 @@ def draw_semantic_membrane(mask_size: tuple,
         c = i[1:]
         id = i[0]
 
-        cz, cy, cx = draw_mask(r=r,
-                               c=c,
-                               label_mask=label_mask,
-                               segment_shape='s')
+        cz, cy, cx = draw_mask(r=r, c=c, label_mask=label_mask, segment_shape="s")
 
         label_mask[cz, cy, cx] = id
 
     return label_mask
 
 
-def draw_mask(r: int,
-              c: np.ndarray,
-              label_mask: np.ndarray,
-              segment_shape: str) -> Union[Tuple[np.ndarray, np.ndarray],
-                                           Tuple[np.ndarray, np.ndarray, np.ndarray]]:
+def draw_mask(
+    r: int, c: np.ndarray, label_mask: np.ndarray, segment_shape: str
+) -> Union[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray, np.ndarray]]:
     """
     Module draw_label to construct sphere shape of a label
 
@@ -177,9 +155,11 @@ def draw_mask(r: int,
         np.ndarray: Binary mask.
     """
     if label_mask.ndim != 3:
-        TardisError('113',
-                    'tardis/spindletorch/data_processing/draw_mask.py'
-                    f'Unsupported dimensions given {label_mask.ndim} expected 2!')
+        TardisError(
+            "113",
+            "tardis/spindletorch/data_processing/draw_mask.py"
+            f"Unsupported dimensions given {label_mask.ndim} expected 2!",
+        )
 
     x = int(c[0])
     y = int(c[1])
@@ -188,12 +168,14 @@ def draw_mask(r: int,
     else:
         z = None
 
-    if segment_shape not in ['s', 'c']:
-        TardisError('123',
-                    'tardis/spindletorch/data_processing/draw_mask.py'
-                    f'Unsupported shape type to draw given {segment_shape} but '
-                    'expected "c" - circle or "s" - sphere')
-    if segment_shape == 's':
+    if segment_shape not in ["s", "c"]:
+        TardisError(
+            "123",
+            "tardis/spindletorch/data_processing/draw_mask.py"
+            f"Unsupported shape type to draw given {segment_shape} but "
+            'expected "c" - circle or "s" - sphere',
+        )
+    if segment_shape == "s":
         cz, cy, cx = draw_sphere(r=r, c=(z, y, x), shape=label_mask.shape)
         return cz, cy, cx
     else:
@@ -205,10 +187,9 @@ def draw_mask(r: int,
             return cy, cx
 
 
-def draw_circle(r: int,
-                c: tuple,
-                shape: tuple) -> Union[Tuple[np.ndarray, np.ndarray],
-                                       Tuple[np.ndarray, np.ndarray, np.ndarray]]:
+def draw_circle(
+    r: int, c: tuple, shape: tuple
+) -> Union[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray, np.ndarray]]:
     """
     Draw a circle and shift coordinate to c position.
 
@@ -256,9 +237,7 @@ def draw_circle(r: int,
         return yx[:, 0], yx[:, 1]
 
 
-def draw_sphere(r: int,
-                c: tuple,
-                shape: tuple) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+def draw_sphere(r: int, c: tuple, shape: tuple) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Draw a sphere and shift coordinate to c position.
 
@@ -279,9 +258,9 @@ def draw_sphere(r: int,
     for z_dim in range(z):
         for y_dim in range(y):
             for x_dim in range(x):
-                dist_zyx_to_c = sqrt(pow(abs(z_dim - c_frame), 2) +
-                                     pow(abs(y_dim - c_frame), 2) +
-                                     pow(abs(x_dim - c_frame), 2))
+                dist_zyx_to_c = sqrt(
+                    pow(abs(z_dim - c_frame), 2) + pow(abs(y_dim - c_frame), 2) + pow(abs(x_dim - c_frame), 2)
+                )
                 if dist_zyx_to_c > c_frame:
                     sphere_frame[z_dim, y_dim, x_dim] = False
                 else:

@@ -20,16 +20,18 @@ from tardis.spindletorch.utils.utils import scale_image
 from tardis.utils.errors import TardisError
 
 
-def trim_with_stride(image: np.ndarray,
-                     trim_size_xy: int,
-                     trim_size_z: int,
-                     output: str,
-                     image_counter: int,
-                     scale: tuple,
-                     clean_empty=True,
-                     keep_if=0.01,
-                     stride=25,
-                     mask: Optional[np.ndarray] = None):
+def trim_with_stride(
+    image: np.ndarray,
+    trim_size_xy: int,
+    trim_size_z: int,
+    output: str,
+    image_counter: int,
+    scale: tuple,
+    clean_empty=True,
+    keep_if=0.01,
+    stride=25,
+    mask: Optional[np.ndarray] = None,
+):
     """
     Function to patch image and mask to specified patch size with overlying area
 
@@ -52,10 +54,10 @@ def trim_with_stride(image: np.ndarray,
     """
     img_dtype = np.float32
 
-    if not isdir(join(output, 'imgs')):
-        mkdir(join(output, 'imgs'))
-    if not isdir(join(output, 'masks')) and mask is not None:
-        mkdir(join(output, 'masks'))
+    if not isdir(join(output, "imgs")):
+        mkdir(join(output, "imgs"))
+    if not isdir(join(output, "masks")) and mask is not None:
+        mkdir(join(output, "masks"))
 
     if mask is not None:
         mask_dtype = np.uint8
@@ -64,16 +66,20 @@ def trim_with_stride(image: np.ndarray,
         mask = mask.astype(np.uint8)
 
         if image.shape != mask.shape:
-            TardisError('111',
-                        'tardis/spindletorch/data_processing/trim.py',
-                        f'Image {image.shape} has different shape from mask {mask.shape}')
+            TardisError(
+                "111",
+                "tardis/spindletorch/data_processing/trim.py",
+                f"Image {image.shape} has different shape from mask {mask.shape}",
+            )
     else:
         image, dim = scale_image(image=image, scale=scale)
 
     if img_dtype != image.dtype:
-        TardisError('111',
-                    'tardis/spindletorch/data_processing/trim.py',
-                    f'Image {img_dtype} has different dtype after interpolation {image.dtype}')
+        TardisError(
+            "111",
+            "tardis/spindletorch/data_processing/trim.py",
+            f"Image {img_dtype} has different dtype after interpolation {image.dtype}",
+        )
 
     min_px_count = 0
     nz, ny, nx, nc = 0, 0, 0, None
@@ -98,18 +104,20 @@ def trim_with_stride(image: np.ndarray,
 
     if trim_size_xy is not None or trim_size_z is not None:
         if not nx >= trim_size_xy:
-            TardisError('112',
-                        'tardis/spindletorch/data_processing',
-                        "trim_size_xy should be equal or greater then X dimension!")
+            TardisError(
+                "112",
+                "tardis/spindletorch/data_processing",
+                "trim_size_xy should be equal or greater then X dimension!",
+            )
         if not ny >= trim_size_xy:
-            TardisError('112',
-                        'tardis/spindletorch/data_processing',
-                        "trim_size_xy should be equal or greater then Y dimension!")
+            TardisError(
+                "112",
+                "tardis/spindletorch/data_processing",
+                "trim_size_xy should be equal or greater then Y dimension!",
+            )
     else:
         if stride is None:
-            TardisError('112',
-                        'tardis/spindletorch/data_processing',
-                        "Trim sizes or stride has to be indicated!")
+            TardisError("112", "tardis/spindletorch/data_processing", "Trim sizes or stride has to be indicated!")
         trim_size_xy = 64
         trim_size_z = 64
 
@@ -117,13 +125,17 @@ def trim_with_stride(image: np.ndarray,
     x, y, z = ceil(nx / trim_size_xy), ceil(ny / trim_size_xy), ceil(nz / trim_size_z)
 
     if nz > 0:
-        x_pad, y_pad, z_pad = (trim_size_xy + ((trim_size_xy - stride) * (x - 1))) - nx, \
-            (trim_size_xy + ((trim_size_xy - stride) * (y - 1))) - ny, \
-            (trim_size_z + (trim_size_z - stride) * (z - 1)) - nz
+        x_pad, y_pad, z_pad = (
+            (trim_size_xy + ((trim_size_xy - stride) * (x - 1))) - nx,
+            (trim_size_xy + ((trim_size_xy - stride) * (y - 1))) - ny,
+            (trim_size_z + (trim_size_z - stride) * (z - 1)) - nz,
+        )
     else:
-        x_pad, y_pad, z_pad = (trim_size_xy + ((trim_size_xy - stride) * (x - 1))) - nx, \
-            (trim_size_xy + ((trim_size_xy - stride) * (y - 1))) - ny, \
-            0
+        x_pad, y_pad, z_pad = (
+            (trim_size_xy + ((trim_size_xy - stride) * (x - 1))) - nx,
+            (trim_size_xy + ((trim_size_xy - stride) * (y - 1))) - ny,
+            0,
+        )
 
     """Adapt number of patches or patch size for trimming"""
     if trim_size_xy is not None or trim_size_z is not None:
@@ -187,66 +199,53 @@ def trim_with_stride(image: np.ndarray,
                 x_start = x_start + trim_size_xy - stride
                 x_stop = x_start + trim_size_xy
 
-                img_name = str(f'{image_counter}_{i}_{j}_{k}_{stride}.tif')
+                img_name = str(f"{image_counter}_{i}_{j}_{k}_{stride}.tif")
 
                 if nc is None:
                     if nz > 0:
-                        trim_img = image_padded[z_start:z_stop,
-                                                y_start:y_stop,
-                                                x_start:x_stop]
+                        trim_img = image_padded[z_start:z_stop, y_start:y_stop, x_start:x_stop]
                         if mask is not None:
-                            trim_mask = mask_padded[z_start:z_stop,
-                                                    y_start:y_stop,
-                                                    x_start:x_stop]
+                            trim_mask = mask_padded[z_start:z_stop, y_start:y_stop, x_start:x_stop]
                     else:
                         trim_img = image_padded[y_start:y_stop, x_start:x_stop]
                         if mask is not None:
                             trim_mask = mask_padded[y_start:y_stop, x_start:x_stop]
                 else:
                     if nz > 0:
-                        trim_img = image_padded[z_start:z_stop,
-                                                y_start:y_stop,
-                                                x_start:x_stop,
-                                                :]
+                        trim_img = image_padded[z_start:z_stop, y_start:y_stop, x_start:x_stop, :]
                         if mask is not None:
-                            trim_mask = mask_padded[z_start:z_stop,
-                                                    y_start:y_stop,
-                                                    x_start:x_stop]
+                            trim_mask = mask_padded[z_start:z_stop, y_start:y_stop, x_start:x_stop]
                     else:
                         trim_img = image_padded[y_start:y_stop, x_start:x_stop, :]
                         if mask is not None:
-                            trim_mask = mask_padded[z_start:z_stop,
-                                                    y_start:y_stop,
-                                                    x_start:x_stop]
+                            trim_mask = mask_padded[z_start:z_stop, y_start:y_stop, x_start:x_stop]
 
                 trim_img = np.array(trim_img, dtype=img_dtype)
 
                 if clean_empty and mask is not None:
                     if np.sum(trim_mask) > min_px_count:
-                        tif.imwrite(join(output, 'imgs', img_name),
-                                    trim_img,
-                                    shape=trim_img.shape)
-                        tif.imwrite(join(output, 'masks', f'{img_name[:-4]}_mask.tif'),
-                                    np.array(trim_mask, dtype=mask_dtype),
-                                    shape=trim_mask.shape)
+                        tif.imwrite(join(output, "imgs", img_name), trim_img, shape=trim_img.shape)
+                        tif.imwrite(
+                            join(output, "masks", f"{img_name[:-4]}_mask.tif"),
+                            np.array(trim_mask, dtype=mask_dtype),
+                            shape=trim_mask.shape,
+                        )
                 else:
                     if mask is None:
-                        tif.imwrite(join(output, 'imgs', img_name),
-                                    trim_img,
-                                    shape=trim_img.shape)
+                        tif.imwrite(join(output, "imgs", img_name), trim_img, shape=trim_img.shape)
 
                     else:
-                        tif.imwrite(join(output, 'imgs', img_name),
-                                    trim_img,
-                                    shape=trim_img.shape)
-                        tif.imwrite(join(output, 'masks', f'{img_name[:-4]}_mask.tif'),
-                                    np.array(trim_mask, dtype=mask_dtype),
-                                    shape=trim_mask.shape)
+                        tif.imwrite(join(output, "imgs", img_name), trim_img, shape=trim_img.shape)
+                        tif.imwrite(
+                            join(output, "masks", f"{img_name[:-4]}_mask.tif"),
+                            np.array(trim_mask, dtype=mask_dtype),
+                            shape=trim_mask.shape,
+                        )
 
 
-def trim_label_mask(points: np.ndarray,
-                    image: np.ndarray,
-                    label_mask: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+def trim_label_mask(
+    points: np.ndarray, image: np.ndarray, label_mask: np.ndarray
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     ! DEPRECIATED ! Module to trim image and mask to boundary box of point cloud.
 
@@ -262,13 +261,9 @@ def trim_label_mask(points: np.ndarray,
     if min_z < 0:
         min_z = 0
 
-    image_trim = image[int(min_z):int(max_z),
-                       int(min_y):int(max_y),
-                       int(min_x):int(max_x)]
+    image_trim = image[int(min_z) : int(max_z), int(min_y) : int(max_y), int(min_x) : int(max_x)]
 
-    label_mask_trim = label_mask[int(min_z):int(max_z),
-                                 int(min_y):int(max_y),
-                                 int(min_x):int(max_x)]
+    label_mask_trim = label_mask[int(min_z) : int(max_z), int(min_y) : int(max_y), int(min_x) : int(max_x)]
 
     points[:, 0] = points[:, 0] - min_x
     points[:, 1] = points[:, 1] - min_y

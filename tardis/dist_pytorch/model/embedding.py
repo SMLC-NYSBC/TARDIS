@@ -27,10 +27,7 @@ class NodeEmbedding(nn.Module):
         n_out (int): Number of output features.
     """
 
-    def __init__(self,
-                 n_in: int,
-                 n_out: int,
-                 sigma=1):
+    def __init__(self, n_in: int, n_out: int, sigma=1):
         super().__init__()
 
         self.linear = None
@@ -43,11 +40,10 @@ class NodeEmbedding(nn.Module):
             w = torch.randn(n_out, n_in)
             b = torch.rand(n_out) * 2 * torch.pi
 
-            self.register_buffer('weight', w)
-            self.register_buffer('bias', b)
+            self.register_buffer("weight", w)
+            self.register_buffer("bias", b)
 
-    def forward(self,
-                input_node: Optional[torch.Tensor] = None) -> Optional[torch.Tensor]:
+    def forward(self, input_node: Optional[torch.Tensor] = None) -> Optional[torch.Tensor]:
         """
         Forward node feature embedding.
 
@@ -65,9 +61,7 @@ class NodeEmbedding(nn.Module):
 
         if self.linear is not None:
             return self.linear(input_node)
-        return torch.cos(F.linear(input_node,
-                                  self.weight / self.sigma,
-                                  self.bias))
+        return torch.cos(F.linear(input_node, self.weight / self.sigma, self.bias))
 
 
 class EdgeEmbedding(nn.Module):
@@ -89,14 +83,13 @@ class EdgeEmbedding(nn.Module):
             used to normalize distances.
     """
 
-    def __init__(self,
-                 n_out: int,
-                 sigma: Union[int, float, list]):
+    def __init__(self, n_out: int, sigma: Union[int, float, list]):
         super().__init__()
         if isinstance(sigma, list):
             self._range = torch.arange(sigma[0], sigma[1], sigma[2])  # torch.linspace
-            assert len(self._range) <= n_out, \
-                f'Sigma range is out of shape. n_out = {n_out} but sigma range = {len(self._range)}'
+            assert (
+                len(self._range) <= n_out
+            ), f"Sigma range is out of shape. n_out = {n_out} but sigma range = {len(self._range)}"
             if len(self._range) == n_out:
                 self.linear = None
             else:
@@ -106,8 +99,7 @@ class EdgeEmbedding(nn.Module):
         self.n_out = n_out
         self.sigma = sigma
 
-    def forward(self,
-                input_coord: torch.Tensor) -> torch.Tensor:
+    def forward(self, input_coord: torch.Tensor) -> torch.Tensor:
         """
         Forward node feature embedding.
 
@@ -123,7 +115,7 @@ class EdgeEmbedding(nn.Module):
 
         dist = torch.cdist(input_coord, input_coord)
         if isinstance(self.sigma, (int, float)):
-            dist = torch.exp(-dist ** 2 / (self.sigma ** 2 * 2))
+            dist = torch.exp(-(dist**2) / (self.sigma**2 * 2))
             isnan = torch.isnan(dist)
             dist = torch.where(isnan, torch.zeros_like(dist), dist)
 
@@ -131,10 +123,9 @@ class EdgeEmbedding(nn.Module):
             dist[:, g_range, g_range] = 1
             return self.linear(dist.unsqueeze(3))
         else:
-            dist_range = torch.zeros((1, g_len, g_len, len(self._range)),
-                                     device=dist.device)
+            dist_range = torch.zeros((1, g_len, g_len, len(self._range)), device=dist.device)
             for id, i in enumerate(self._range):
-                dist_range[:, :, :, id] = torch.exp(-dist ** 2 / (i ** 2 * 2))
+                dist_range[:, :, :, id] = torch.exp(-(dist**2) / (i**2 * 2))
 
             isnan = torch.isnan(dist_range)
             dist_range = torch.where(isnan, torch.zeros_like(dist_range), dist_range)

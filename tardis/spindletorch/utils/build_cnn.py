@@ -12,8 +12,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from tardis.spindletorch.model.convolution import (DoubleConvolution,
-                                                   RecurrentDoubleConvolution)
+from tardis.spindletorch.model.convolution import DoubleConvolution, RecurrentDoubleConvolution
 from tardis.spindletorch.model.decoder_blocks import build_decoder
 from tardis.spindletorch.model.encoder_blocks import build_encoder
 from tardis.spindletorch.utils.utils import number_of_features_per_level
@@ -51,21 +50,23 @@ class BasicCNN(nn.Module):
             torch.tensor: 5D torch with final activation from nn.Softmax(dim=1).
     """
 
-    def __init__(self,
-                 model='CNN',
-                 in_channels=1,
-                 out_channels=1,
-                 sigmoid=True,
-                 num_conv_layer=5,
-                 conv_layer_scaler=64,
-                 conv_kernel=3,
-                 padding=1,
-                 pool_kernel=2,
-                 img_patch_size=64,
-                 layer_components="3gcl",
-                 dropout=None,
-                 num_group=8,
-                 prediction=False):
+    def __init__(
+        self,
+        model="CNN",
+        in_channels=1,
+        out_channels=1,
+        sigmoid=True,
+        num_conv_layer=5,
+        conv_layer_scaler=64,
+        conv_kernel=3,
+        padding=1,
+        pool_kernel=2,
+        img_patch_size=64,
+        layer_components="3gcl",
+        dropout=None,
+        num_group=8,
+        prediction=False,
+    ):
         super(BasicCNN, self).__init__()
         self.prediction = prediction
         self.model = model
@@ -77,47 +78,49 @@ class BasicCNN(nn.Module):
         patch_sizes = list(reversed(patch_sizes))[2:]
 
         """ Encoder """
-        if self.model == 'CNN':
-            self.encoder = build_encoder(in_ch=in_channels,
-                                         conv_layers=num_conv_layer,
-                                         conv_layer_scaler=conv_layer_scaler,
-                                         conv_kernel=conv_kernel,
-                                         padding=padding,
-                                         dropout=dropout,
-                                         num_group=num_group,
-                                         components=layer_components,
-                                         pool_kernel=pool_kernel,
-                                         conv_module=DoubleConvolution)
-        elif self.model == 'RCNN':
-            self.encoder = build_encoder(in_ch=in_channels,
-                                         conv_layers=num_conv_layer,
-                                         conv_layer_scaler=conv_layer_scaler,
-                                         conv_kernel=conv_kernel,
-                                         padding=padding,
-                                         dropout=dropout,
-                                         num_group=num_group,
-                                         components=layer_components,
-                                         pool_kernel=pool_kernel,
-                                         conv_module=RecurrentDoubleConvolution)
+        if self.model == "CNN":
+            self.encoder = build_encoder(
+                in_ch=in_channels,
+                conv_layers=num_conv_layer,
+                conv_layer_scaler=conv_layer_scaler,
+                conv_kernel=conv_kernel,
+                padding=padding,
+                dropout=dropout,
+                num_group=num_group,
+                components=layer_components,
+                pool_kernel=pool_kernel,
+                conv_module=DoubleConvolution,
+            )
+        elif self.model == "RCNN":
+            self.encoder = build_encoder(
+                in_ch=in_channels,
+                conv_layers=num_conv_layer,
+                conv_layer_scaler=conv_layer_scaler,
+                conv_kernel=conv_kernel,
+                padding=padding,
+                dropout=dropout,
+                num_group=num_group,
+                components=layer_components,
+                pool_kernel=pool_kernel,
+                conv_module=RecurrentDoubleConvolution,
+            )
         """ Decoder """
-        self.decoder = build_decoder(conv_layers=num_conv_layer,
-                                     conv_layer_scaler=conv_layer_scaler,
-                                     components=layer_components,
-                                     conv_kernel=conv_kernel,
-                                     padding=padding,
-                                     sizes=patch_sizes,
-                                     num_group=num_group,
-                                     deconv_module=model)
+        self.decoder = build_decoder(
+            conv_layers=num_conv_layer,
+            conv_layer_scaler=conv_layer_scaler,
+            components=layer_components,
+            conv_kernel=conv_kernel,
+            padding=padding,
+            sizes=patch_sizes,
+            num_group=num_group,
+            deconv_module=model,
+        )
 
         """ Final Layer """
-        if '3' in layer_components:
-            self.final_conv_layer = nn.Conv3d(in_channels=conv_layer_scaler,
-                                              out_channels=out_channels,
-                                              kernel_size=1)
-        elif '2' in layer_components:
-            self.final_conv_layer = nn.Conv2d(in_channels=conv_layer_scaler,
-                                              out_channels=out_channels,
-                                              kernel_size=1)
+        if "3" in layer_components:
+            self.final_conv_layer = nn.Conv3d(in_channels=conv_layer_scaler, out_channels=out_channels, kernel_size=1)
+        elif "2" in layer_components:
+            self.final_conv_layer = nn.Conv2d(in_channels=conv_layer_scaler, out_channels=out_channels, kernel_size=1)
 
         """ Prediction """
         if sigmoid:
@@ -134,14 +137,11 @@ class UNet(BasicCNN):
     <https://arxiv.org/pdf/1606.06650.pdf>.
     """
 
-    def __init__(self,
-                 model='CNN',
-                 **kwargs):
+    def __init__(self, model="CNN", **kwargs):
         super(UNet, self).__init__(**kwargs)
         self.model = model
 
-    def forward(self,
-                x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Forward for Unet model.
 
@@ -180,14 +180,11 @@ class ResUNet(BasicCNN):
     modified of <10.1016/j.isprsjprs.2020.01.013>
     """
 
-    def __init__(self,
-                 model='RCNN',
-                 **kwargs):
+    def __init__(self, model="RCNN", **kwargs):
         super(ResUNet, self).__init__(**kwargs)
         self.model = model
 
-    def forward(self,
-                x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Forward for ResNet model.
 
@@ -226,21 +223,23 @@ class UNet3Plus(nn.Module):
     modified of <https://arxiv.org/abs/2004.08790>
     """
 
-    def __init__(self,
-                 in_channels=1,
-                 out_channels=1,
-                 sigmoid=True,
-                 num_conv_layer=5,
-                 conv_layer_scaler=64,
-                 conv_kernel=3,
-                 padding=1,
-                 pool_kernel=2,
-                 img_patch_size=64,
-                 layer_components="3gcl",
-                 dropout=None,
-                 num_group=8,
-                 prediction=False,
-                 classifies=False):
+    def __init__(
+        self,
+        in_channels=1,
+        out_channels=1,
+        sigmoid=True,
+        num_conv_layer=5,
+        conv_layer_scaler=64,
+        conv_kernel=3,
+        padding=1,
+        pool_kernel=2,
+        img_patch_size=64,
+        layer_components="3gcl",
+        dropout=None,
+        num_group=8,
+        prediction=False,
+        classifies=False,
+    ):
         super(UNet3Plus, self).__init__()
         self.prediction = prediction
 
@@ -253,55 +252,55 @@ class UNet3Plus(nn.Module):
         feature_map = number_of_features_per_level(conv_layer_scaler, num_conv_layer)
 
         """ Encoder """
-        self.encoder = build_encoder(in_ch=in_channels,
-                                     conv_layers=num_conv_layer,
-                                     conv_layer_scaler=conv_layer_scaler,
-                                     conv_kernel=conv_kernel,
-                                     padding=padding,
-                                     num_group=num_group,
-                                     dropout=dropout,
-                                     components=layer_components,
-                                     pool_kernel=pool_kernel,
-                                     conv_module=DoubleConvolution)
+        self.encoder = build_encoder(
+            in_ch=in_channels,
+            conv_layers=num_conv_layer,
+            conv_layer_scaler=conv_layer_scaler,
+            conv_kernel=conv_kernel,
+            padding=padding,
+            num_group=num_group,
+            dropout=dropout,
+            components=layer_components,
+            pool_kernel=pool_kernel,
+            conv_module=DoubleConvolution,
+        )
 
         """ UNet3Plus classifier """
         if classifies:
-            if '3' in layer_components:
-                self.cls = nn.Sequential(nn.Dropout(),
-                                         nn.Conv3d(in_channels=feature_map[len(feature_map) - 1],
-                                                   out_channels=2,
-                                                   kernel_size=1),
-                                         nn.AdaptiveAvgPool3d(output_size=1),
-                                         nn.Sigmoid())
-            elif '2' in layer_components:
-                self.cls = nn.Sequential(nn.Dropout(),
-                                         nn.Conv2d(in_channels=feature_map[len(feature_map) - 1],
-                                                   out_channels=2,
-                                                   kernel_size=1),
-                                         nn.AdaptiveAvgPool2d(output_size=1),
-                                         nn.Sigmoid())
+            if "3" in layer_components:
+                self.cls = nn.Sequential(
+                    nn.Dropout(),
+                    nn.Conv3d(in_channels=feature_map[len(feature_map) - 1], out_channels=2, kernel_size=1),
+                    nn.AdaptiveAvgPool3d(output_size=1),
+                    nn.Sigmoid(),
+                )
+            elif "2" in layer_components:
+                self.cls = nn.Sequential(
+                    nn.Dropout(),
+                    nn.Conv2d(in_channels=feature_map[len(feature_map) - 1], out_channels=2, kernel_size=1),
+                    nn.AdaptiveAvgPool2d(output_size=1),
+                    nn.Sigmoid(),
+                )
         else:
             self.cls = None
 
         """ Decoder """
-        self.decoder = build_decoder(conv_layers=num_conv_layer,
-                                     conv_layer_scaler=conv_layer_scaler,
-                                     components=layer_components,
-                                     conv_kernel=conv_kernel,
-                                     padding=padding,
-                                     sizes=patch_sizes,
-                                     num_group=num_group,
-                                     deconv_module='unet3plus')
+        self.decoder = build_decoder(
+            conv_layers=num_conv_layer,
+            conv_layer_scaler=conv_layer_scaler,
+            components=layer_components,
+            conv_kernel=conv_kernel,
+            padding=padding,
+            sizes=patch_sizes,
+            num_group=num_group,
+            deconv_module="unet3plus",
+        )
 
         """ Final Layer """
-        if '3' in layer_components:
-            self.final_conv_layer = nn.Conv3d(in_channels=conv_layer_scaler,
-                                              out_channels=out_channels,
-                                              kernel_size=1)
-        elif '2' in layer_components:
-            self.final_conv_layer = nn.Conv2d(in_channels=conv_layer_scaler,
-                                              out_channels=out_channels,
-                                              kernel_size=1)
+        if "3" in layer_components:
+            self.final_conv_layer = nn.Conv3d(in_channels=conv_layer_scaler, out_channels=out_channels, kernel_size=1)
+        elif "2" in layer_components:
+            self.final_conv_layer = nn.Conv2d(in_channels=conv_layer_scaler, out_channels=out_channels, kernel_size=1)
 
         """ Prediction """
         if sigmoid:
@@ -310,8 +309,7 @@ class UNet3Plus(nn.Module):
             self.activation = nn.Softmax(dim=1)
 
     @staticmethod
-    def dot_product(x: torch.Tensor,
-                    x_cls: torch.Tensor) -> torch.Tensor:
+    def dot_product(x: torch.Tensor, x_cls: torch.Tensor) -> torch.Tensor:
         """
         Dot product for two tensors.
 
@@ -330,8 +328,7 @@ class UNet3Plus(nn.Module):
 
         return final
 
-    def forward(self,
-                x: torch.Tensor):
+    def forward(self, x: torch.Tensor):
         """
         Forward for Unet3Plus model.
 
@@ -362,9 +359,7 @@ class UNet3Plus(nn.Module):
         for decoder in self.decoder:
             decoder_features = [x]
 
-            x = decoder(x=x,
-                        encoder_features=encoder_features,
-                        decoder_features=decoder_features[2:])
+            x = decoder(x=x, encoder_features=encoder_features, decoder_features=decoder_features[2:])
 
             # add/remove layer at each iter
             decoder_features.insert(0, x)
@@ -411,19 +406,21 @@ class FNet(nn.Module):
         prediction: If True, prediction mode is on
     """
 
-    def __init__(self,
-                 in_channels=1,
-                 out_channels=1,
-                 sigmoid=True,
-                 num_conv_layer=5,
-                 conv_layer_scaler=64,
-                 conv_kernel=3,
-                 padding=1,
-                 pool_kernel=2,
-                 img_patch_size=64,
-                 layer_components="3gcl",
-                 num_group=8,
-                 prediction=False):
+    def __init__(
+        self,
+        in_channels=1,
+        out_channels=1,
+        sigmoid=True,
+        num_conv_layer=5,
+        conv_layer_scaler=64,
+        conv_kernel=3,
+        padding=1,
+        pool_kernel=2,
+        img_patch_size=64,
+        layer_components="3gcl",
+        num_group=8,
+        prediction=False,
+    ):
         super(FNet, self).__init__()
         self.prediction = prediction
 
@@ -434,56 +431,58 @@ class FNet(nn.Module):
         patch_sizes = list(reversed(patch_sizes))[2:]
 
         """ Encoder """
-        self.encoder = build_encoder(in_ch=in_channels,
-                                     conv_layers=num_conv_layer,
-                                     conv_layer_scaler=conv_layer_scaler,
-                                     conv_kernel=conv_kernel,
-                                     padding=padding,
-                                     num_group=num_group,
-                                     components=layer_components,
-                                     pool_kernel=pool_kernel,
-                                     conv_module=DoubleConvolution)
+        self.encoder = build_encoder(
+            in_ch=in_channels,
+            conv_layers=num_conv_layer,
+            conv_layer_scaler=conv_layer_scaler,
+            conv_kernel=conv_kernel,
+            padding=padding,
+            num_group=num_group,
+            components=layer_components,
+            pool_kernel=pool_kernel,
+            conv_module=DoubleConvolution,
+        )
 
         """ Decoder """
-        self.decoder_unet = build_decoder(conv_layers=num_conv_layer,
-                                          conv_layer_scaler=conv_layer_scaler,
-                                          components=layer_components,
-                                          conv_kernel=conv_kernel,
-                                          padding=padding,
-                                          sizes=patch_sizes,
-                                          num_group=num_group)
-        self.decoder_3plus = build_decoder(conv_layers=num_conv_layer,
-                                           conv_layer_scaler=conv_layer_scaler,
-                                           components=layer_components,
-                                           conv_kernel=conv_kernel,
-                                           padding=padding,
-                                           sizes=patch_sizes,
-                                           num_group=num_group,
-                                           deconv_module='unet3plus')
+        self.decoder_unet = build_decoder(
+            conv_layers=num_conv_layer,
+            conv_layer_scaler=conv_layer_scaler,
+            components=layer_components,
+            conv_kernel=conv_kernel,
+            padding=padding,
+            sizes=patch_sizes,
+            num_group=num_group,
+        )
+        self.decoder_3plus = build_decoder(
+            conv_layers=num_conv_layer,
+            conv_layer_scaler=conv_layer_scaler,
+            components=layer_components,
+            conv_kernel=conv_kernel,
+            padding=padding,
+            sizes=patch_sizes,
+            num_group=num_group,
+            deconv_module="unet3plus",
+        )
 
         """ Final Layer """
-        if '3' in layer_components:
-            self.unet_conv_layer = nn.Conv3d(in_channels=conv_layer_scaler,
-                                             out_channels=conv_layer_scaler,
-                                             kernel_size=1)
-            self.unet3plus_conv_layer = nn.Conv3d(in_channels=conv_layer_scaler,
-                                                  out_channels=conv_layer_scaler,
-                                                  kernel_size=1)
+        if "3" in layer_components:
+            self.unet_conv_layer = nn.Conv3d(
+                in_channels=conv_layer_scaler, out_channels=conv_layer_scaler, kernel_size=1
+            )
+            self.unet3plus_conv_layer = nn.Conv3d(
+                in_channels=conv_layer_scaler, out_channels=conv_layer_scaler, kernel_size=1
+            )
 
-            self.final_conv_layer = nn.Conv3d(in_channels=conv_layer_scaler,
-                                              out_channels=out_channels,
-                                              kernel_size=1)
-        elif '2' in layer_components:
-            self.unet_conv_layer = nn.Conv2d(in_channels=conv_layer_scaler,
-                                             out_channels=conv_layer_scaler,
-                                             kernel_size=1)
-            self.unet3plus_conv_layer = nn.Conv2d(in_channels=conv_layer_scaler,
-                                                  out_channels=conv_layer_scaler,
-                                                  kernel_size=1)
+            self.final_conv_layer = nn.Conv3d(in_channels=conv_layer_scaler, out_channels=out_channels, kernel_size=1)
+        elif "2" in layer_components:
+            self.unet_conv_layer = nn.Conv2d(
+                in_channels=conv_layer_scaler, out_channels=conv_layer_scaler, kernel_size=1
+            )
+            self.unet3plus_conv_layer = nn.Conv2d(
+                in_channels=conv_layer_scaler, out_channels=conv_layer_scaler, kernel_size=1
+            )
 
-            self.final_conv_layer = nn.Conv2d(in_channels=conv_layer_scaler,
-                                              out_channels=out_channels,
-                                              kernel_size=1)
+            self.final_conv_layer = nn.Conv2d(in_channels=conv_layer_scaler, out_channels=out_channels, kernel_size=1)
 
         """ Prediction """
         if sigmoid:
@@ -491,8 +490,7 @@ class FNet(nn.Module):
         else:
             self.activation = nn.Softmax(dim=1)
 
-    def forward(self,
-                x: torch.Tensor):
+    def forward(self, x: torch.Tensor):
         """
         Forward for FNet model.
 
@@ -521,9 +519,7 @@ class FNet(nn.Module):
         for decoder in self.decoder_3plus:
             decoder_features = [x_3plus]
 
-            x_3plus = decoder(x=x_3plus,
-                              encoder_features=encoder_features,
-                              decoder_features=decoder_features[2:])
+            x_3plus = decoder(x=x_3plus, encoder_features=encoder_features, decoder_features=decoder_features[2:])
 
             # add/remove layer at each iter
             decoder_features.insert(0, x_3plus)

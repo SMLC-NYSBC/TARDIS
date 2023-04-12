@@ -18,8 +18,7 @@ from tardis.utils.aws import get_weights_aws
 from tardis.utils.device import get_device
 from tardis.utils.errors import TardisError
 from tardis.utils.export_data import NumpyToAmira
-from tardis.utils.load_data import (import_am, import_tiff, ImportDataFromAmira,
-                                    load_mrc_file)
+from tardis.utils.load_data import import_am, import_tiff, ImportDataFromAmira, load_mrc_file
 from tardis.utils.logo import TardisLogo
 from tardis.utils.spline_metric import compare_splines_probability
 from tardis.utils.utils import EarlyStopping
@@ -52,48 +51,48 @@ def test_early_stop():
 
 
 def test_check_device():
-    dev = get_device('cpu')
-    assert dev == torch.device('cpu')
+    dev = get_device("cpu")
+    assert dev == torch.device("cpu")
 
     dev = get_device(1)
-    assert dev == torch.device(type='cuda', index=1)
+    assert dev == torch.device(type="cuda", index=1)
 
 
 def test_tif():
-    tif, px = import_tiff(tiff='./tests/test_data/data_type/tif2D.tif')
+    tif, px = import_tiff(tiff="./tests/test_data/data_type/tif2D.tif")
     assert tif.shape == (64, 32)
 
-    tif, px = import_tiff(tiff='./tests/test_data/data_type/tif3D.tif')
+    tif, px = import_tiff(tiff="./tests/test_data/data_type/tif3D.tif")
     assert tif.shape == (78, 64, 32)
 
 
 def test_rec_mrc():
-    mrc, px = load_mrc_file(mrc='./tests/test_data/data_type/mrc2D.mrc')
+    mrc, px = load_mrc_file(mrc="./tests/test_data/data_type/mrc2D.mrc")
     assert mrc.shape == (64, 32)
     assert px == 23.2
 
-    rec, px = load_mrc_file(mrc='./tests/test_data/data_type/rec2D.rec')
+    rec, px = load_mrc_file(mrc="./tests/test_data/data_type/rec2D.rec")
     assert rec.shape == (64, 32)
     assert px == 23.2
 
-    mrc, px = load_mrc_file(mrc='./tests/test_data/data_type/mrc3D.mrc')
+    mrc, px = load_mrc_file(mrc="./tests/test_data/data_type/mrc3D.mrc")
     assert mrc.shape == (64, 78, 32)
     assert px == 23.2
 
-    rec, px = load_mrc_file(mrc='./tests/test_data/data_type/rec3D.rec')
+    rec, px = load_mrc_file(mrc="./tests/test_data/data_type/rec3D.rec")
     assert rec.shape == (64, 78, 32)
     assert px == 23.2
 
 
 def test_am():
-    am, px, ps, trans = import_am(am_file='./tests/test_data/data_type/am2D.am')
+    am, px, ps, trans = import_am(am_file="./tests/test_data/data_type/am2D.am")
 
     assert am.shape == (64, 32)
     assert am.dtype == np.uint8
     assert px == 23.2
     assert np.all(trans == np.array((0, 0, 4640)))
 
-    am, px, ps, trans = import_am(am_file='./tests/test_data/data_type/am3D.am')
+    am, px, ps, trans = import_am(am_file="./tests/test_data/data_type/am3D.am")
 
     assert am.shape == (8, 256, 256)
     assert am.dtype == np.uint8
@@ -101,8 +100,9 @@ def test_am():
 
 
 def test_am_sg():
-    am = ImportDataFromAmira(src_am='./tests/test_data/data_type/am3D.CorrelationLines.am',
-                             src_img='./tests/test_data/data_type/am3D.am')
+    am = ImportDataFromAmira(
+        src_am="./tests/test_data/data_type/am3D.CorrelationLines.am", src_img="./tests/test_data/data_type/am3D.am"
+    )
     segments = am.get_segmented_points()
     assert segments.shape == (10, 4)
 
@@ -118,20 +118,19 @@ def test_am_sg():
 
 
 def test_aws():
-    aws = get_weights_aws(network='dist', subtype='triang', model='microtubules')
+    aws = get_weights_aws(network="dist", subtype="triang", model="microtubules")
     assert isinstance(aws, str) or isinstance(aws, io.BytesIO)
 
-    aws = get_weights_aws(network='dist', subtype='triang', model='microtubules')
+    aws = get_weights_aws(network="dist", subtype="triang", model="microtubules")
     assert isinstance(aws, str)
 
 
 def test_device():
-    assert get_device('cpu') == torch.device('cpu')
+    assert get_device("cpu") == torch.device("cpu")
 
-    assert get_device(0) == torch.device('cpu') or get_device(0) == torch.device('cuda:0')
+    assert get_device(0) == torch.device("cpu") or get_device(0) == torch.device("cuda:0")
 
-    assert get_device('mps') == torch.device('cpu') or get_device('mps') == torch.device(
-        'mps')
+    assert get_device("mps") == torch.device("cpu") or get_device("mps") == torch.device("mps")
 
 
 def test_am_single_export():
@@ -141,10 +140,10 @@ def test_am_single_export():
     df[:, 0] = df_line
 
     exporter = NumpyToAmira()
-    exporter.export_amira(coords=df, file_dir='./test.am')
+    exporter.export_amira(coords=df, file_dir="./test.am")
 
-    assert os.path.isfile('./test.am')
-    os.remove('./test.am')
+    assert os.path.isfile("./test.am")
+    os.remove("./test.am")
 
 
 def test_am_multi_export():
@@ -157,11 +156,10 @@ def test_am_multi_export():
     df_2 = np.array(df_1)
 
     exporter = NumpyToAmira()
-    exporter.export_amira(coords=(df_1, df_2),
-                          file_dir='./test.am')
+    exporter.export_amira(coords=(df_1, df_2), file_dir="./test.am")
 
-    assert os.path.isfile('./test.am')
-    os.remove('./test.am')
+    assert os.path.isfile("./test.am")
+    os.remove("./test.am")
 
 
 def test_am_label_export():
@@ -174,29 +172,27 @@ def test_am_label_export():
     df_2 = np.array(df_1)
 
     exporter = NumpyToAmira()
-    exporter.export_amira(coords=(df_1, df_2),
-                          file_dir='./test.am',
-                          labels=['test1', 'test2'])
+    exporter.export_amira(coords=(df_1, df_2), file_dir="./test.am", labels=["test1", "test2"])
 
-    assert os.path.isfile('./test.am')
-    os.remove('./test.am')
+    assert os.path.isfile("./test.am")
+    os.remove("./test.am")
 
 
 def test_logo():
     logo = TardisLogo()
     # Test short
-    logo(title='Test_pytest')
+    logo(title="Test_pytest")
 
     # Test long
-    logo(title='Test_pytest',
-         text_1='xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' +
-                'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
+    logo(
+        title="Test_pytest",
+        text_1="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        + "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    )
 
 
 def test_error():
-    TardisError(id='20',
-                py='tests/test_general_utils.py',
-                desc='PyTest Failed!')
+    TardisError(id="20", py="tests/test_general_utils.py", desc="PyTest Failed!")
 
 
 def test_compare_splines_probability():
@@ -204,8 +200,7 @@ def test_compare_splines_probability():
     spline_tardis = np.array([[0, 0, 0], [1, 1, 1], [2, 2, 2]])
     spline_amira = np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3]])
     threshold = 1
-    assert round(compare_splines_probability(spline_tardis, spline_amira, threshold),
-                 2) == 0.67
+    assert round(compare_splines_probability(spline_tardis, spline_amira, threshold), 2) == 0.67
 
     # Test with non-matching splines
     spline_tardis = np.array([[0, 0], [1, 1], [2, 2]])
@@ -220,20 +215,16 @@ def test_compare_splines_probability():
     assert compare_splines_probability(spline_tardis, spline_amira, threshold) == 1.0
 
     # Test with matching splines and threshold set too low
-    spline_tardis = np.array([[0, 0, 0], [1, 1, 1], [2, 2, 2],
-                              [4, 4, 4], [5, 5, 5], [6, 6, 6]])
+    spline_tardis = np.array([[0, 0, 0], [1, 1, 1], [2, 2, 2], [4, 4, 4], [5, 5, 5], [6, 6, 6]])
     spline_amira = np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3]])
     threshold = 1
-    assert round(compare_splines_probability(spline_tardis, spline_amira, threshold),
-                 2) == 0.33
+    assert round(compare_splines_probability(spline_tardis, spline_amira, threshold), 2) == 0.33
 
     # Test with matching splines and threshold set too low
     spline_tardis = np.array([[1, 1, 1], [2, 2, 2], [4, 4, 4]])
-    spline_amira = np.array([[0, 0, 0], [1, 1, 1], [2, 2, 2],
-                             [4, 4, 4], [5, 5, 5], [6, 6, 6]])
+    spline_amira = np.array([[0, 0, 0], [1, 1, 1], [2, 2, 2], [4, 4, 4], [5, 5, 5], [6, 6, 6]])
     threshold = 1
-    assert round(compare_splines_probability(spline_tardis, spline_amira, threshold),
-                 2) == 1.0
+    assert round(compare_splines_probability(spline_tardis, spline_amira, threshold), 2) == 1.0
 
     # Test with empty spline
     spline_tardis = np.array([[0, 0], [1, 1], [2, 2]])

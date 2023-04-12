@@ -20,9 +20,7 @@ with open("requirements.txt") as r:
 setup(
     author="Robert Kiewisz, Tristan Bepler",
     author_email="rkiewisz@nysbc.com",
-
     python_requires=">=3.7, <3.11",  # 3.11 support soon
-
     install_requires=required,
     dependency_links=["https://download.pytorch.org/whl/cu117"],
     classifiers=[
@@ -38,8 +36,8 @@ setup(
         "Programming Language :: Python :: 3.10",
     ],
     description="PyTorch segmentation of 2D/3D images such as electron tomography "
-                "(ET), Cryo-EM or fluorescent microscopy data into 3D segmented "
-                "point cloud.",
+    "(ET), Cryo-EM or fluorescent microscopy data into 3D segmented "
+    "point cloud.",
     entry_points={
         "console_scripts": [
             "tardis_cnn_train = tardis.train_spindletorch:main",

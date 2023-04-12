@@ -17,9 +17,7 @@ from sklearn.neighbors import KDTree
 from tardis.utils.errors import TardisError
 
 
-def pc_median_dist(pc: np.ndarray,
-                   avg_over=False,
-                   box_size=0.15) -> float:
+def pc_median_dist(pc: np.ndarray, avg_over=False, box_size=0.15) -> float:
     """
     !DEPRECIATED! - Remove in RC3
 
@@ -69,13 +67,15 @@ def pc_median_dist(pc: np.ndarray,
         else:
             z = 0
 
-        voxel = point_in_bb(pc,
-                            min_x=x - offset_x,
-                            max_x=x + offset_x,
-                            min_y=y - offset_y,
-                            max_y=y + offset_y,
-                            min_z=z - offset_z,
-                            max_z=z + offset_z)
+        voxel = point_in_bb(
+            pc,
+            min_x=x - offset_x,
+            max_x=x + offset_x,
+            min_y=y - offset_y,
+            max_y=y + offset_y,
+            min_z=z - offset_z,
+            max_z=z + offset_z,
+        )
         pc = pc[voxel]
 
         # Calculate KNN dist
@@ -96,13 +96,15 @@ def pc_median_dist(pc: np.ndarray,
     return float(np.mean(knn_df))
 
 
-def point_in_bb(points: np.ndarray,
-                min_x: int,
-                max_x: int,
-                min_y: int,
-                max_y: int,
-                min_z: Optional[np.float32] = None,
-                max_z: Optional[np.float32] = None) -> np.ndarray:
+def point_in_bb(
+    points: np.ndarray,
+    min_x: int,
+    max_x: int,
+    min_y: int,
+    max_y: int,
+    min_z: Optional[np.float32] = None,
+    max_z: Optional[np.float32] = None,
+) -> np.ndarray:
     """
     !DEPRECIATED! - Remove in RC3
 
@@ -139,16 +141,13 @@ class RandomDownSampling:
     Wrapper for random sampling of the point cloud
     """
 
-    def __init__(self,
-                 threshold):
+    def __init__(self, threshold):
         self.threshold = threshold
 
     @staticmethod
-    def pc_rand_down_sample(coord: np.ndarray,
-                            threshold,
-                            rgb: Optional[np.ndarray] = None) -> Union[Tuple[np.ndarray,
-                                                                             np.ndarray],
-                                                                       np.ndarray]:
+    def pc_rand_down_sample(
+        coord: np.ndarray, threshold, rgb: Optional[np.ndarray] = None
+    ) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
         """
         Random picked point to down sample point cloud
 
@@ -175,39 +174,34 @@ class RandomDownSampling:
         else:
             return coord[rand_keep][:, :3], rgb[rand_keep][:, :3]
 
-    def __call__(self,
-                 coord: Optional[np.ndarray] = list,
-                 rgb: Optional[Union[np.ndarray, list]] = None) -> Union[Tuple[np.ndarray,
-                                                                               np.ndarray],
-                                                                         np.ndarray]:
+    def __call__(
+        self, coord: Optional[np.ndarray] = list, rgb: Optional[Union[np.ndarray, list]] = None
+    ) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
         ds_pc = []
         ds_rgb = []
 
         if isinstance(coord, list):
             if rgb is not None and not isinstance(rgb, list):
-                TardisError('130',
-                            'tardis/dist_pytorch/utils/utils.py',
-                            'List of coordinates require list of rbg but array was give!')
+                TardisError(
+                    "130",
+                    "tardis/dist_pytorch/utils/utils.py",
+                    "List of coordinates require list of rbg but array was give!",
+                )
 
             id = 0
             for idx, i in enumerate(coord):
                 if rgb is not None:
                     rgb_df = rgb[idx]
-                    ds_coord, ds_node_f = self.pc_rand_down_sample(coord=i,
-                                                                   rgb=rgb_df,
-                                                                   threshold=self.threshold)
+                    ds_coord, ds_node_f = self.pc_rand_down_sample(coord=i, rgb=rgb_df, threshold=self.threshold)
                     ds_rgb.append(ds_node_f)
                 else:
                     ds_coord = self.pc_rand_down_sample(coord=i, threshold=self.threshold)
 
-                ds_pc.append(np.hstack((np.expand_dims(np.repeat(id, len(ds_coord)), 1),
-                                        ds_coord)))
+                ds_pc.append(np.hstack((np.expand_dims(np.repeat(id, len(ds_coord)), 1), ds_coord)))
                 id += 1
         elif coord.shape[1] == 3:
             if rgb is not None:
-                return self.pc_rand_down_sample(coord=coord,
-                                                rgb=rgb,
-                                                threshold=self.threshold)
+                return self.pc_rand_down_sample(coord=coord, rgb=rgb, threshold=self.threshold)
             else:
                 return self.pc_rand_down_sample(coord=coord, threshold=self.threshold)
         else:
@@ -218,16 +212,12 @@ class RandomDownSampling:
 
                 if rgb is not None:
                     rgb_df = rgb[peak_id, :]
-                    ds_coord, ds_node_f = self.pc_rand_down_sample(coord=coord_df,
-                                                                   rgb=rgb_df,
-                                                                   threshold=self.threshold)
+                    ds_coord, ds_node_f = self.pc_rand_down_sample(coord=coord_df, rgb=rgb_df, threshold=self.threshold)
                     ds_rgb.append(ds_node_f)
                 else:
-                    ds_coord = self.pc_rand_down_sample(coord=coord_df,
-                                                        threshold=self.threshold)
+                    ds_coord = self.pc_rand_down_sample(coord=coord_df, threshold=self.threshold)
 
-                ds_coord = np.hstack((np.expand_dims(np.repeat(i, len(ds_coord)), 1),
-                                      ds_coord))
+                ds_coord = np.hstack((np.expand_dims(np.repeat(i, len(ds_coord)), 1), ds_coord))
                 ds_pc.append(ds_coord)
 
         if rgb is not None:
@@ -249,36 +239,36 @@ def check_model_dict(model_dict: dict) -> dict:
     new_dict = {}
 
     for key, value in model_dict.items():
-        if key.endswith('type'):
-            new_dict['dist_type'] = value
-        if key.endswith('out'):
-            new_dict['n_out'] = value
-        if key.endswith('node_input'):
-            new_dict['node_input'] = value
-        if key.endswith('node_dim'):
-            new_dict['node_dim'] = value
-        if key.endswith('edge_dim'):
-            new_dict['edge_dim'] = value
-        if key.endswith('layers'):
-            new_dict['num_layers'] = value
-        if key.endswith('heads'):
-            new_dict['num_heads'] = value
-        if key.endswith('cls'):
-            new_dict['num_cls'] = value
-        if key.endswith('sigma'):
-            if key.startswith('coord'):
-                new_dict['coord_embed_sigma'] = value
-            if key.startswith('rgb'):
-                new_dict['rgb_embed_sigma'] = value
-        if key.endswith('dropout') or key.startswith('dropout'):
-            new_dict['dropout_rate'] = value
-        if key.endswith('structure'):
-            new_dict['structure'] = value
+        if key.endswith("type"):
+            new_dict["dist_type"] = value
+        if key.endswith("out"):
+            new_dict["n_out"] = value
+        if key.endswith("node_input"):
+            new_dict["node_input"] = value
+        if key.endswith("node_dim"):
+            new_dict["node_dim"] = value
+        if key.endswith("edge_dim"):
+            new_dict["edge_dim"] = value
+        if key.endswith("layers"):
+            new_dict["num_layers"] = value
+        if key.endswith("heads"):
+            new_dict["num_heads"] = value
+        if key.endswith("cls"):
+            new_dict["num_cls"] = value
+        if key.endswith("sigma"):
+            if key.startswith("coord"):
+                new_dict["coord_embed_sigma"] = value
+            if key.startswith("rgb"):
+                new_dict["rgb_embed_sigma"] = value
+        if key.endswith("dropout") or key.startswith("dropout"):
+            new_dict["dropout_rate"] = value
+        if key.endswith("structure"):
+            new_dict["structure"] = value
 
-    if 'num_cls' not in new_dict:
-        new_dict['num_cls'] = None
+    if "num_cls" not in new_dict:
+        new_dict["num_cls"] = None
 
-    if 'rgb_embed_sigma' not in new_dict:
-        new_dict['rgb_embed_sigma'] = 1.0
+    if "rgb_embed_sigma" not in new_dict:
+        new_dict["rgb_embed_sigma"] = 1.0
 
     return new_dict
