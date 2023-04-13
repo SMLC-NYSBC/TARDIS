@@ -53,7 +53,9 @@ class ImportDataFromAmira:
 
             if src_img.split("/")[-1:][:-3] != src_am.split("/")[-1:][:-20]:
                 TardisError(
-                    "131", "tardis/utils/load_data.py", f"Image file {src_img} has wrong extension for {src_am}!"
+                    "131",
+                    "tardis/utils/load_data.py",
+                    f"Image file {src_img} has wrong extension for {src_am}!",
                 )
 
             try:
@@ -63,7 +65,8 @@ class ImportDataFromAmira:
                 TardisError(
                     "130",
                     "tardis/utils/load_data.py",
-                    "Directory or input .am image file is not correct..." f"for given dir: {src_img}",
+                    "Directory or input .am image file is not correct..."
+                    f"for given dir: {src_img}",
                 )
         else:
             self.pixel_size = 1
@@ -95,7 +98,9 @@ class ImportDataFromAmira:
             return None
 
         # Find line starting with EDGE { int NumEdgePoints }
-        segments = str([word for word in self.spatial_graph if word.startswith("EDGE { int NumEdgePoints }")])
+        segments = str(
+            [word for word in self.spatial_graph if word.startswith("EDGE { int NumEdgePoints }")]
+        )
 
         segment_start = "".join((ch if ch in "0123456789" else " ") for ch in segments)
         segment_start = [int(i) for i in segment_start.split()]
@@ -136,7 +141,11 @@ class ImportDataFromAmira:
 
         # Find line starting with POINT { float[3] EdgePointCoordinates }
         points = str(
-            [word for word in self.spatial_graph if word.startswith("POINT { float[3] EdgePointCoordinates }")]
+            [
+                word
+                for word in self.spatial_graph
+                if word.startswith("POINT { float[3] EdgePointCoordinates }")
+            ]
         )
 
         # Find in the line directory that starts with @..
@@ -293,7 +302,9 @@ def import_tiff(tiff: str):
         np.ndarray, float: Image data and unified pixel size.
     """
     if not isfile(tiff):
-        TardisError("130", "tardis/utils/load_data.py", f"Indicated .tif  {tiff} file does not exist...")
+        TardisError(
+            "130", "tardis/utils/load_data.py", f"Indicated .tif  {tiff} file does not exist..."
+        )
 
     return np.array(tif.imread(tiff)), 1.0
 
@@ -446,7 +457,11 @@ def mrc_mode(mode: int, amin: int):
     }
 
     if mode == 101:
-        TardisError("130", "tardis/utils/load_data.py", "4 bit .mrc file are not supported. Ask Dev if you need it!")
+        TardisError(
+            "130",
+            "tardis/utils/load_data.py",
+            "4 bit .mrc file are not supported. Ask Dev if you need it!",
+        )
     if mode == 1024:
         TardisError("130", "tardis/utils/load_data.py", "Are your trying to load tiff file as mrc?")
 
@@ -459,7 +474,11 @@ def mrc_mode(mode: int, amin: int):
         if mode in dtype_:
             return dtype_[mode]
         else:
-            TardisError("130", "tardis/utils/load_data.py", f"Unknown dtype mode: {str(mode)} and {str(amin)}")
+            TardisError(
+                "130",
+                "tardis/utils/load_data.py",
+                f"Unknown dtype mode: {str(mode)} and {str(amin)}",
+            )
     else:
         if mode in [np.int8, np.uint8]:
             return 0
@@ -479,17 +498,25 @@ def import_am(am_file: str):
         np.ndarray, float, float, list: Image file as well images parameters.
     """
     if not isfile(am_file):
-        TardisError("130", "tardis/utils/load_data.py", f"Indicated .am {am_file} file does not exist...")
+        TardisError(
+            "130", "tardis/utils/load_data.py", f"Indicated .am {am_file} file does not exist..."
+        )
 
     am = open(am_file, "r", encoding="iso-8859-1").read(8000)
 
     asci = False
     if "AmiraMesh 3D ASCII" in am:
         if "define Lattice" not in am:
-            TardisError("130", "tardis/utils/load_data.py", f".am {am_file} file is coordinate file not image!")
+            TardisError(
+                "130",
+                "tardis/utils/load_data.py",
+                f".am {am_file} file is coordinate file not image!",
+            )
         asci = True
 
-    size = [word for word in am.split("\n") if word.startswith("define Lattice ")][0][15:].split(" ")
+    size = [word for word in am.split("\n") if word.startswith("define Lattice ")][0][15:].split(
+        " "
+    )
 
     nx, ny, nz = int(size[0]), int(size[1]), int(size[2])
 
@@ -509,7 +536,9 @@ def import_am(am_file: str):
         transformation = np.array((float(bb[5]), float(bb[7]), float(bb[9])))
 
     try:
-        coordinate = str([word for word in am.split("\n") if word.startswith("        Coordinates")]).split(" ")[9][1:2]
+        coordinate = str(
+            [word for word in am.split("\n") if word.startswith("        Coordinates")]
+        ).split(" ")[9][1:2]
     except IndexError:
         coordinate = None
 
@@ -521,7 +550,11 @@ def import_am(am_file: str):
 
     if "Lattice { byte Data }" in am:
         if asci:
-            img = open("../../rand_sample/T216_grid3b.am", "r", encoding="iso-8859-1").read().split("\n")
+            img = (
+                open("../../rand_sample/T216_grid3b.am", "r", encoding="iso-8859-1")
+                .read()
+                .split("\n")
+            )
             img = [x for x in img if x != ""]
             img = np.asarray(img)
             return img
@@ -582,7 +615,9 @@ def load_mrc_file(mrc: str) -> Union[Tuple[np.ndarray, float], Tuple[None, float
         np.ndarray, float: Image data and pixel size.
     """
     if not isfile(mrc):
-        TardisError("130", "tardis/utils/load_data.py", f"Indicated .mrc {mrc} file does not exist...")
+        TardisError(
+            "130", "tardis/utils/load_data.py", f"Indicated .mrc {mrc} file does not exist..."
+        )
 
     header = mrc_read_header(mrc)
     extended_header = header.next
@@ -634,12 +669,14 @@ def load_mrc_file(mrc: str) -> Union[Tuple[np.ndarray, float], Tuple[None, float
     return image, pixel_size
 
 
-def load_ply_scannet(ply: str, downscaling=0, color: Optional[str] = None) -> Union[Tuple[ndarray, ndarray], ndarray]:
+def load_ply_scannet(
+    ply: str, downscaling=0, color: Optional[str] = None
+) -> Union[Tuple[ndarray, ndarray], ndarray]:
     """
     Function to read .ply files.
     Args:
         ply (str): File directory.
-        downscaling (float): Downscaling point cloud by fixing voxel size defaults to 0.1.
+        downscaling (float): Down scaling point cloud by fixing voxel size defaults to 0.1.
         color (str, optional): Optional color feature defaults to None.
     Returns:
         np.ndarray: Label point cloud coordinates and optionally RGB value for
@@ -648,62 +685,49 @@ def load_ply_scannet(ply: str, downscaling=0, color: Optional[str] = None) -> Un
     # Load .ply scannet file
     ply = PlyData.read(ply)["vertex"]
 
-    pcd = np.stack((ply["x"], ply["y"], ply["z"], ply["red"], ply["green"], ply["blue"]), axis=-1).astype(np.float32)
+    pcd = np.stack(
+        (ply["x"], ply["y"], ply["z"], ply["red"], ply["green"], ply["blue"]), axis=-1
+    ).astype(np.float32)
 
-    coord_org = pcd[:, :3]
-    label_org = pcd[:, 3:]
+    coord = pcd[:, :3]
+    label = pcd[:, 3:]
 
-    # Downscaling point cloud with labels
-    down_scale = VoxelDownSampling(voxel=downscaling, labels=False)
-    if downscaling > 0:
-        coord = down_scale(coord_org)
-    else:
-        coord = coord_org
+    # Retrieve ScanNet v2 labels after down scaling
+    cls_id = np.zeros((len(label), 1))
+    get_key_from_value = lambda value: next((key for key, val in SCANNET_COLOR_MAP_20.items() if val == value), None)
+
+    for id, i in enumerate(label):
+        cls_id[id, 0] = get_key_from_value(tuple(i))
+    coord = np.hstack((cls_id, coord))
 
     # Retrieve Node RGB features
     if color is not None:
-        ply = PlyData.read(ply)["vertex"]
+        ply = PlyData.read(color)["vertex"]
 
         rgb = np.stack((ply["red"], ply["green"], ply["blue"]), axis=-1).astype(np.float32)
 
-        down_scale = VoxelDownSampling(voxel=downscaling, labels=False)
         if downscaling > 0:
-            _, rgb = down_scale(coord=coord_org, rgb=rgb)
+            down_scale = VoxelDownSampling(voxel=downscaling, labels=True)
+            coord, rgb = down_scale(coord=coord, rgb=rgb)
 
-        if coord.shape != rgb.shape:
+        if coord[:, 1:].shape != rgb.shape:
             TardisError(
                 "131",
                 "tardis/utils/load_data.py",
                 "RGB shape must be the same as coord!" f"But {coord.shape} != {rgb.shape}",
             )
+    else:
+        # Down scaling point cloud with labels
+        if downscaling > 0:
+            down_scale = VoxelDownSampling(voxel=downscaling, labels=True)
+            print(coord.shape)
+            coord = down_scale(coord)
 
-    # Retrieve ScanNet v2 labels after downscaling
-    cls_id = []
-    tree = KDTree(coord_org, leaf_size=coord_org.shape[0])
-    for i in coord:
-        _, match_coord = tree.query(i.reshape(1, -1))
-        match_coord = match_coord[0][0]
-
-        color_df = label_org[match_coord] * 255
-        color_id = [key for key in SCANNET_COLOR_MAP_20 if np.all(SCANNET_COLOR_MAP_20[key] == color_df)]
-
-        if len(color_id) > 0:
-            cls_id.append(color_id[0])
-        else:
-            cls_id.append(0)
-
-    cls_id = np.asarray(cls_id)[:, None]
-
-    # Remove 0 labels
-    coord = coord[np.where(cls_id != 0)[0]]
 
     if color is not None:
-        rgb = rgb[np.where(cls_id != 0)[0]]  # Remove 0 labels
-        cls_id = cls_id[np.where(cls_id != 0)[0]]
-
-        return np.hstack((cls_id, coord)), rgb
+        return coord, rgb
     else:
-        return np.hstack((cls_id[np.where(cls_id != 0)[0]], coord))
+        return coord
 
 
 def load_ply_partnet(ply, downscaling=0) -> np.ndarray:
@@ -718,7 +742,9 @@ def load_ply_partnet(ply, downscaling=0) -> np.ndarray:
     # Load .ply scannet file
     ply = PlyData.read(ply)["vertex"]
 
-    pcd = np.stack((ply["x"], ply["y"], ply["z"], ply["red"], ply["green"], ply["blue"]), axis=-1).astype(np.float32)
+    pcd = np.stack(
+        (ply["x"], ply["y"], ply["z"], ply["red"], ply["green"], ply["blue"]), axis=-1
+    ).astype(np.float32)
 
     coord_org = pcd[:, :3]
     label_org = pcd[:, 3:]
@@ -742,7 +768,9 @@ def load_ply_partnet(ply, downscaling=0) -> np.ndarray:
     return np.hstack((np.asarray(label_id)[:, None], coord))
 
 
-def load_txt_s3dis(txt: str, rgb=False, downscaling=0) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
+def load_txt_s3dis(
+    txt: str, rgb=False, downscaling=0
+) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
     """
     Function to read .txt Stanford 3D instance scene file.
 
@@ -800,7 +828,9 @@ def load_s3dis_scene(
         else:
             coord_inst = load_txt_s3dis(join(dir, i))
 
-        coord_scene.append(np.hstack((np.expand_dims(np.repeat(id, len(coord_inst)), 1), coord_inst)))
+        coord_scene.append(
+            np.hstack((np.expand_dims(np.repeat(id, len(coord_inst)), 1), coord_inst))
+        )
 
         id += 1
     coord = np.concatenate(coord_scene)

@@ -36,7 +36,9 @@ class EarlyStopping:
 
     def __call__(self, val_loss: Union[float, None] = None, f1_score: Union[float, None] = None):
         if val_loss is None and f1_score is None:
-            TardisError("124", "tardis/utils/utils", "Validation loss or F1 score is missing in early stop!")
+            TardisError(
+                "124", "tardis/utils/utils", "Validation loss or F1 score is missing in early stop!"
+            )
 
         if val_loss is not None:
             if self.best_loss is None:
