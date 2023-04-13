@@ -136,51 +136,59 @@ def point_in_bb(
     return bb_filter
 
 
-class RandomDownSampling:
+class DownSampling:
     """
-    Wrapper for random sampling of the point cloud
+    Base down sampling wrapper
     """
 
-    def __init__(self, threshold):
-        self.threshold = threshold
+    def __init__(self, voxel=None, threshold=None, labels=True):
+        if voxel is None:
+            self.sample = threshold
+        else:
+            self.sample = voxel
+
+        # If true downsample with class ids. expect [ID x X x Y x (Z)] [[N, 3] or [N, 4]]
+        self.labels = labels
 
     @staticmethod
-    def pc_rand_down_sample(
-        coord: np.ndarray, threshold, rgb: Optional[np.ndarray] = None
+    def pc_down_sample(
+        coord: np.ndarray,
+        sampling,
+        rgb=None,
     ) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
-        """
-        Random picked point to down sample point cloud
-
-        Args:
-            coord: Array of point to downs-sample
-            rgb: Extra node feature like e.g. RGB values do sample with coord.
-            threshold: Lambda function to calculate down-sampling rate or fixed float ratio.
-
-        Returns:
-            np.ndarray: Down-sample array of points.
-        """
-        if isinstance(threshold, int) or isinstance(threshold, float):
-            rand_keep = int(len(coord) * threshold)
-        else:
-            rand_keep = threshold(coord)
-
-        if rand_keep != len(coord):
-            rand_keep = random.sample(range(len(coord)), rand_keep)
-        else:
-            rand_keep = list(range(len(coord)))
-
-        if rgb is None:
-            return coord[rand_keep][:, :3]
-        else:
-            return coord[rand_keep][:, :3], rgb[rand_keep][:, :3]
+        if rgb is not None:
+            return coord, rgb
+        return coord
 
     def __call__(
         self, coord: Optional[np.ndarray] = list, rgb: Optional[Union[np.ndarray, list]] = None
     ) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
+        """
+        Compute voxel down sampling for entire point cloud at once or if coord is a list
+        compute voxel down sampling for each list index.
+        """
         ds_pc = []
         ds_rgb = []
 
+        # Assert correct data structure
+        if self.labels:
+            if coord.shape[1] not in [3, 4]:
+                TardisError(
+                    "130",
+                    "tardis/dist_pytorch/utils/utils.py",
+                    f"Expected coordinate array with IDs of shape [[N, 3] or [N, 4]], but {coord.shape} was given!",
+                )
+        else:
+            if coord.shape[1] not in [2, 3]:
+                TardisError(
+                    "130",
+                    "tardis/dist_pytorch/utils/utils.py",
+                    f"Expected coordinate array without IDs of shape [[N, 2] or [N, 3]], but {coord.shape} was given!",
+                )
+
+        """Down-sample each instance from list and combine"""
         if isinstance(coord, list):
+            # Assert if RGB are of the same structure as coord
             if rgb is not None and not isinstance(rgb, list):
                 TardisError(
                     "130",
@@ -188,42 +196,121 @@ class RandomDownSampling:
                     "List of coordinates require list of rbg but array was give!",
                 )
 
+            # Down sample
             id = 0
             for idx, i in enumerate(coord):
+                coord_df = i
+                if self.labels:
+                    id = coord_df[0, 0]
+
                 if rgb is not None:
                     rgb_df = rgb[idx]
-                    ds_coord, ds_node_f = self.pc_rand_down_sample(coord=i, rgb=rgb_df, threshold=self.threshold)
-                    ds_rgb.append(ds_node_f)
-                else:
-                    ds_coord = self.pc_rand_down_sample(coord=i, threshold=self.threshold)
 
-                ds_pc.append(np.hstack((np.expand_dims(np.repeat(id, len(ds_coord)), 1), ds_coord)))
-                id += 1
-        elif coord.shape[1] == 3:
-            if rgb is not None:
-                return self.pc_rand_down_sample(coord=coord, rgb=rgb, threshold=self.threshold)
-            else:
-                return self.pc_rand_down_sample(coord=coord, threshold=self.threshold)
+                    coord_df, rgb_df = self.pc_down_sample(coord=coord_df, rgb=rgb_df, sampling=self.sample)
+                    ds_rgb.append(rgb_df)
+                else:
+                    coord_df = self.pc_down_sample(coord=coord_df, sampling=self.sample)
+
+                ds_pc.append(np.hstack((np.expand_dims(np.repeat(id, len(coord_df)), 1), coord_df)))
+                if not self.labels:
+                    id += 1
         else:
-            labels = np.unique(coord[:, 0])
-            for i in labels:
-                peak_id = np.where(coord[:, 0] == i)[0]
-                coord_df = coord[peak_id, 1:]
+            """Down-sample entire point cloud at once"""
+            if rgb is not None:
+                return self.pc_down_sample(coord=coord, rgb=rgb, sampling=self.sample)
+            else:
+                return self.pc_down_sample(coord=coord, sampling=self.sample)
 
-                if rgb is not None:
-                    rgb_df = rgb[peak_id, :]
-                    ds_coord, ds_node_f = self.pc_rand_down_sample(coord=coord_df, rgb=rgb_df, threshold=self.threshold)
-                    ds_rgb.append(ds_node_f)
-                else:
-                    ds_coord = self.pc_rand_down_sample(coord=coord_df, threshold=self.threshold)
 
-                ds_coord = np.hstack((np.expand_dims(np.repeat(i, len(ds_coord)), 1), ds_coord))
-                ds_pc.append(ds_coord)
+class VoxelDownSampling(DownSampling):
+    """
+    Wrapper for down sampling of the point cloud using voxel grid (Based on Open3d library)
+    """
+
+    def __init__(self, **kwargs):
+        super(VoxelDownSampling, self).__init__(**kwargs)
+
+    @staticmethod
+    def pc_down_sample(
+        coord: np.ndarray, sampling: float, rgb: Optional[np.ndarray] = None
+    ) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
+        """
+        This function takes a set of 3D points and a voxel size and returns the centroids
+        of the voxels in which the points are located.
+
+        Args:
+            coord (np.ndarray): A numpy array of shape (N, 3) containing the 3D coordinates
+            of the input points.
+            rgb (np.ndarray): A numpy array of shape (N, 3) containing RGB values of each point.
+            sampling (float): The size of each voxel in each dimension.
+
+        Returns:
+            voxel_centers (np.ndarray): A numpy array of shape (M, 3) containing the centroids
+            of the voxels in which the points are located, where M is the number
+            of unique voxels.
+        """
+        # Find the grid cell index for each point
+        voxel_index = np.floor(coord / sampling).astype(np.int32)
+
+        # Compute the unique set of voxel indices
+        unique_voxel_index, inverse_index, voxel_counts = np.unique(
+            voxel_index, axis=0, return_inverse=True, return_counts=True
+        )
+
+        # Compute the centroids of each voxel
+        voxel_centers = np.zeros((len(unique_voxel_index), 3))
+        np.add.at(voxel_centers, inverse_index, coord)
+        voxel_centers /= voxel_counts[:, np.newaxis]
 
         if rgb is not None:
-            return np.concatenate(ds_pc), np.concatenate(ds_rgb)
+            # Find the nearest voxel center for each point
+            nearest_voxel_index = np.argmin(np.linalg.norm(voxel_centers[:, np.newaxis, :] - coord, axis=-1), axis=-1)
+
+            # Compute the color of the nearest voxel center for each down-sampled point
+            down_sampled_rgb = rgb[nearest_voxel_index]
+
+            return voxel_centers, down_sampled_rgb
+        return voxel_centers
+
+
+class RandomDownSampling(DownSampling):
+    """
+    Wrapper for random sampling of the point cloud
+    """
+
+    def __init__(self, **kwargs):
+        super(RandomDownSampling, self).__init__(**kwargs)
+
+    @staticmethod
+    def pc_down_sample(
+        coord: np.ndarray, sampling, rgb: Optional[np.ndarray] = None
+    ) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
+        """
+        Random picked point to down sample point cloud.
+        Return correctly preserve ID class.
+
+        Args:
+            coord: Array of point to downs-sample
+            rgb: Extra node feature like e.g. RGB values do sample with coord.
+            sampling: Lambda function to calculate down-sampling rate or fixed float ratio.
+
+        Returns:
+            random_sample (np.ndarray): Down-sample array of points.
+        """
+        if isinstance(sampling, int) or isinstance(sampling, float):
+            rand_keep = int(len(coord) * sampling)
         else:
-            return np.concatenate(ds_pc)
+            rand_keep = sampling(coord)
+
+        if rand_keep != len(coord):
+            rand_keep = random.sample(range(len(coord)), rand_keep)  # Randomly select coords
+        else:
+            rand_keep = list(range(len(coord)))  # Keep all
+
+        if rgb is None:
+            return coord[rand_keep]
+        else:
+            return coord[rand_keep], rgb[rand_keep]
 
 
 def check_model_dict(model_dict: dict) -> dict:

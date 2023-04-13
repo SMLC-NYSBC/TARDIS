@@ -7,7 +7,6 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
-import random
 import struct
 from collections import namedtuple
 from os import listdir
@@ -15,14 +14,15 @@ from os.path import isfile, join
 from typing import Optional, Tuple, Union
 
 import numpy as np
-import open3d as o3d
 import tifffile.tifffile as tif
 from numpy import ndarray
-from sklearn.neighbors import KDTree, NearestNeighbors
+from plyfile import PlyData
+from sklearn.neighbors import KDTree
 
+from tardis.dist_pytorch.utils.utils import RandomDownSampling, VoxelDownSampling
 from tardis.utils.errors import TardisError
 from tardis.utils.normalization import RescaleNormalize
-from tardis.utils.visualize_pc import _rgb
+from tardis.utils import SCANNET_COLOR_MAP_20
 
 
 class ImportDataFromAmira:
@@ -646,65 +646,30 @@ def load_ply_scannet(ply: str, downscaling=0, color: Optional[str] = None) -> Un
             each point.
     """
     # Load .ply scannet file
-    pcd = o3d.io.read_point_cloud(ply)
-    coord_org = np.asarray(pcd.points)
-    label_org = np.asarray(pcd.colors)
+    ply = PlyData.read(ply)["vertex"]
 
-    SCANNET_COLOR_MAP_20 = {
-        0: (0.0, 0.0, 0.0),
-        1: (174.0, 199.0, 232.0),
-        2: (152.0, 223.0, 138.0),
-        3: (31.0, 119.0, 180.0),
-        4: (255.0, 187.0, 120.0),
-        5: (188.0, 189.0, 34.0),
-        6: (140.0, 86.0, 75.0),
-        7: (255.0, 152.0, 150.0),
-        8: (214.0, 39.0, 40.0),
-        9: (197.0, 176.0, 213.0),
-        10: (148.0, 103.0, 189.0),
-        11: (196.0, 156.0, 148.0),
-        12: (23.0, 190.0, 207.0),
-        14: (247.0, 182.0, 210.0),
-        15: (66.0, 188.0, 102.0),
-        16: (219.0, 219.0, 141.0),
-        17: (140.0, 57.0, 197.0),
-        18: (202.0, 185.0, 52.0),
-        19: (51.0, 176.0, 203.0),
-        20: (200.0, 54.0, 131.0),
-        21: (92.0, 193.0, 61.0),
-        22: (78.0, 71.0, 183.0),
-        23: (172.0, 114.0, 82.0),
-        24: (255.0, 127.0, 14.0),
-        25: (91.0, 163.0, 138.0),
-        26: (153.0, 98.0, 156.0),
-        27: (140.0, 153.0, 101.0),
-        28: (158.0, 218.0, 229.0),
-        29: (100.0, 125.0, 154.0),
-        30: (178.0, 127.0, 135.0),
-        32: (146.0, 111.0, 194.0),
-        33: (44.0, 160.0, 44.0),
-        34: (112.0, 128.0, 144.0),
-        35: (96.0, 207.0, 209.0),
-        36: (227.0, 119.0, 194.0),
-        37: (213.0, 92.0, 176.0),
-        38: (94.0, 106.0, 211.0),
-        39: (82.0, 84.0, 163.0),
-        40: (100.0, 85.0, 144.0),
-    }
+    pcd = np.stack((ply["x"], ply["y"], ply["z"], ply["red"], ply["green"], ply["blue"]), axis=-1).astype(np.float32)
+
+    coord_org = pcd[:, :3]
+    label_org = pcd[:, 3:]
 
     # Downscaling point cloud with labels
-    if downscaling != 0 and downscaling > 0:
-        pcd = pcd.voxel_down_sample(voxel_size=downscaling)
-        coord = np.asarray(pcd.points)
+    down_scale = VoxelDownSampling(voxel=downscaling, labels=False)
+    if downscaling > 0:
+        coord = down_scale(coord_org)
     else:
         coord = coord_org
 
     # Retrieve Node RGB features
     if color is not None:
-        rgb = o3d.io.read_point_cloud(color)
+        ply = PlyData.read(ply)["vertex"]
+
+        rgb = np.stack((ply["red"], ply["green"], ply["blue"]), axis=-1).astype(np.float32)
+
+        down_scale = VoxelDownSampling(voxel=downscaling, labels=False)
         if downscaling > 0:
-            rgb = rgb.voxel_down_sample(voxel_size=downscaling)
-        rgb = np.asarray(rgb.colors)
+            _, rgb = down_scale(coord=coord_org, rgb=rgb)
+
         if coord.shape != rgb.shape:
             TardisError(
                 "131",
@@ -750,15 +715,21 @@ def load_ply_partnet(ply, downscaling=0) -> np.ndarray:
     Returns:
         np.ndarray: Labeled point cloud coordinates.
     """
-    pcd = o3d.io.read_point_cloud(ply)
-    label_uniq = np.unique(np.asarray(pcd.colors), axis=0)
+    # Load .ply scannet file
+    ply = PlyData.read(ply)["vertex"]
 
-    coord_org = np.asarray(pcd.points)
-    label_org = np.asarray(pcd.colors)
+    pcd = np.stack((ply["x"], ply["y"], ply["z"], ply["red"], ply["green"], ply["blue"]), axis=-1).astype(np.float32)
 
-    if downscaling != 0 and downscaling > 0:
-        pcd = pcd.voxel_down_sample(voxel_size=downscaling)
-    coord = np.asarray(pcd.points)
+    coord_org = pcd[:, :3]
+    label_org = pcd[:, 3:]
+    label_uniq = np.unique(label_org, axis=0)
+
+    # Downscaling point cloud with labels
+    down_scale = VoxelDownSampling(voxel=downscaling, labels=False)
+    if downscaling > 0:
+        coord = down_scale(coord_org)
+    else:
+        coord = coord_org
 
     label_id = []
     tree = KDTree(coord_org, leaf_size=coord_org.shape[0])
@@ -788,21 +759,13 @@ def load_txt_s3dis(txt: str, rgb=False, downscaling=0) -> Union[Tuple[np.ndarray
     rgb_values = coord[:, 3:]
     coord = coord[:, :3]
 
+    # Downscaling point cloud with labels
+    down_scale = VoxelDownSampling(voxel=downscaling, labels=False)
     if downscaling > 0:
-        pcd = o3d.geometry.PointCloud()
-
-        pcd.points = o3d.utility.Vector3dVector(coord)
+        coord = down_scale(coord=coord)
 
         if rgb:
-            pcd.colors = o3d.utility.Vector3dVector(rgb_values)
-
-        pcd = pcd.voxel_down_sample(voxel_size=downscaling)
-
-        coord = np.asarray(pcd.points)
-
-        if rgb:
-            rgb_values = np.asarray(pcd.colors)
-            return coord, rgb_values
+            coord, rgb_values = down_scale(coord=coord, rgb=rgb_values)
 
     if rgb:
         return coord, rgb_values
@@ -819,12 +782,14 @@ def load_s3dis_scene(
         dir (str): Folder directory with all instances.
         downscaling (float): Downscaling point cloud by fixing voxel size.
         random_ds (None, float): If not None, indicate ration of point to keep.
+        rgb (bool): If True, load rgb value.
 
     Returns:
         np.ndarray: Labeled point cloud coordinates.
     """
     dir_list = [x for x in listdir(dir) if x not in [".DS_Store", "Icon"]]
 
+    # Build S3DIS scene with IDs [ID, X, Y, Z] [R, G, B]
     coord_scene = []
     rgb_scene = []
     id = 0
@@ -839,41 +804,19 @@ def load_s3dis_scene(
 
         id += 1
     coord = np.concatenate(coord_scene)
+    rgb_v = np.concatenate(rgb_scene) / 255
 
+    # Down scale scene
     if downscaling > 0:
         if random_ds is not None:
-            pick = int(len(coord) * random_ds)
-            pick = random.sample(range(len(coord)), pick)
-            coord = coord[pick, :]
-
-            if rgb:
-                rgb_v = np.concatenate(rgb_scene) / 255
-                rgb_v = rgb_v[pick, :]
+            down_scale = RandomDownSampling(threshold=random_ds, labels=True)
         else:
-            pcd = o3d.geometry.PointCloud()
-            pcd.points = o3d.utility.Vector3dVector(coord[:, 1:])
+            down_scale = VoxelDownSampling(voxel=downscaling, labels=True)
 
-            if rgb:
-                rgb_v = np.concatenate(rgb_scene) / 255
-
-                pcd.colors = o3d.utility.Vector3dVector(rgb_v)
-            else:
-                pcd.colors = o3d.utility.Vector3dVector(_rgb(coord, True))
-
-            pcd = pcd.voxel_down_sample(voxel_size=downscaling)
-            coord_ds = np.asarray(pcd.points)
-
-            if rgb:
-                rgb_v = np.asarray(pcd.colors)
-
-            # Associate labels
-            knn = NearestNeighbors(n_neighbors=1, algorithm="kd_tree").fit(coord[:, 1:])
-
-            # Query the nearest neighbor for all points in coord_ds
-            _, indices = knn.kneighbors(coord_ds)
-            indices = np.concatenate(indices)
-            cls_id = np.expand_dims(coord[indices, 0], 1)
-            coord = np.hstack((cls_id, coord_ds))
+        if rgb:
+            coord, rgb_v = down_scale(coord=coord, rgb=rgb_v)
+        else:
+            coord = down_scale(coord=coord)
 
     if rgb:
         return coord, rgb_v

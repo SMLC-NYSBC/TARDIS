@@ -14,13 +14,12 @@ opencv-python>4.6.0.66
 scipy>1.7.2
 edt>=2.3.0
 
-# Point cloud processing library
-open3d==0.9.0; sys_platform == "linux" and python_version < "3.8"
-open3d>=0.9.0; sys_platform == "linux" and python_version >= "3.8"
-open3d>0.16.0; sys_platform != "linux"
+# External file format reader
+plyfile>=0.9
 
 # Other
 requests>2.28.0
 ipython>7.33.0
 click>8.0.4
 nvidia-smi>=0.1.3; sys_platform != 'darwin'
+setuptools~=67.6.1
