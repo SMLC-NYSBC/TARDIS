@@ -132,13 +132,17 @@ def eval_graph_f1(logits: torch.Tensor, targets: torch.Tensor, threshold: float,
             accuracy_score = (tp + tn) / (tp + tn + fp + fn + 1e-16)
             precision_score = tp / (tp + fp + 1e-16)
             recall_score = tp / (tp + fn + 1e-16)
-            F1_score = 2 * (precision_score * recall_score) / (precision_score + recall_score + 1e-16)
+            F1_score = (
+                2 * (precision_score * recall_score) / (precision_score + recall_score + 1e-16)
+            )
 
         return accuracy_score, precision_score, recall_score, F1_score, threshold
 
 
 def calculate_f1(
-    logits: Optional[Union[np.ndarray, torch.Tensor]], targets: Optional[Union[np.ndarray, torch.Tensor]], best_f1=True
+    logits: Optional[Union[np.ndarray, torch.Tensor]],
+    targets: Optional[Union[np.ndarray, torch.Tensor]],
+    best_f1=True,
 ):
     """
     Module used for calculating training metrics
@@ -276,7 +280,10 @@ def IoU(input: np.ndarray, targets: np.ndarray, diagonal=False):
     return tp / (tp + fp + fn + 1e-16)
 
 
-def mcov(input: Optional[Union[np.ndarray, torch.Tensor]], targets: Optional[Union[np.ndarray, torch.Tensor]]) -> float:
+def mcov(
+    input: Optional[Union[np.ndarray, torch.Tensor]],
+    targets: Optional[Union[np.ndarray, torch.Tensor]],
+) -> float:
     mCov = []
 
     # Get GT instances, compute IoU for best mache between GT and input
@@ -306,7 +313,8 @@ def mcov(input: Optional[Union[np.ndarray, torch.Tensor]], targets: Optional[Uni
 
 
 def mwcov(
-    input: Optional[Union[np.ndarray, torch.Tensor]], targets: Optional[Union[np.ndarray, torch.Tensor]]
+    input: Optional[Union[np.ndarray, torch.Tensor]],
+    targets: Optional[Union[np.ndarray, torch.Tensor]],
 ) -> float:
     mCov = []
 
@@ -334,7 +342,8 @@ def mwcov(
 
 
 def confusion_matrix(
-    logits: Optional[Union[np.ndarray, torch.Tensor]], targets: Optional[Union[np.ndarray, torch.Tensor]]
+    logits: Optional[Union[np.ndarray, torch.Tensor]],
+    targets: Optional[Union[np.ndarray, torch.Tensor]],
 ):
     if torch.is_tensor(logits):
         confusion_vector = logits / targets

@@ -26,7 +26,9 @@ def build_cnn_network(network_type: str, structure: dict, img_size: int, predict
         prediction (bool): If true, build CNN in prediction patch.
     """
     if network_type not in ["unet", "resunet", "unet3plus", "fnet"]:
-        TardisError("141", "tardis/spindletorch/spindletorch.py", f"Wrong CNN network name {network_type}")
+        TardisError(
+            "141", "tardis/spindletorch/spindletorch.py", f"Wrong CNN network name {network_type}"
+        )
 
     if network_type == "unet":
         return UNet(

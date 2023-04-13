@@ -161,7 +161,9 @@ def train_dist(
     if lr_scheduler:
         optimizer = optim.Adam(params=model.parameters(), betas=(0.9, 0.98), eps=1e-9)
     else:
-        optimizer = optim.Adam(params=model.parameters(), lr=learning_rate, betas=(0.9, 0.98), eps=1e-9)
+        optimizer = optim.Adam(
+            params=model.parameters(), lr=learning_rate, betas=(0.9, 0.98), eps=1e-9
+        )
 
     """Optionally: Build learning rate scheduler"""
     if lr_scheduler:

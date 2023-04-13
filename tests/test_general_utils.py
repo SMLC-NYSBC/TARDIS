@@ -101,7 +101,8 @@ def test_am():
 
 def test_am_sg():
     am = ImportDataFromAmira(
-        src_am="./tests/test_data/data_type/am3D.CorrelationLines.am", src_img="./tests/test_data/data_type/am3D.am"
+        src_am="./tests/test_data/data_type/am3D.CorrelationLines.am",
+        src_img="./tests/test_data/data_type/am3D.am",
     )
     segments = am.get_segmented_points()
     assert segments.shape == (10, 4)

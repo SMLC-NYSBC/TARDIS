@@ -45,7 +45,9 @@ def test_trim_stitch_3d():
     stitch_3d_15 = stitch(image_dir="./tests/test_data/temp/imgs", mask=False, dtype=np.float32)
     assert stitch_3d_15.shape == (15, 15, 15)
 
-    stitch_3d_15 = stitch(image_dir="./tests/test_data/temp/masks", mask=True, prefix="_mask", dtype=np.uint8)
+    stitch_3d_15 = stitch(
+        image_dir="./tests/test_data/temp/masks", mask=True, prefix="_mask", dtype=np.uint8
+    )
     assert stitch_3d_15.shape == (15, 15, 15)
 
     rmtree("./tests/test_data/temp")
@@ -68,7 +70,9 @@ def test_trim_stitch_3d():
     stitch_3d_15 = stitch(image_dir="./tests/test_data/temp/imgs", mask=False, dtype=np.float32)
     assert stitch_3d_15.shape == (192, 192, 192)
 
-    stitch_3d_15 = stitch(image_dir="./tests/test_data/temp/masks", mask=True, prefix="_mask", dtype=np.uint8)
+    stitch_3d_15 = stitch(
+        image_dir="./tests/test_data/temp/masks", mask=True, prefix="_mask", dtype=np.uint8
+    )
     assert stitch_3d_15.shape == (192, 192, 192)
 
     rmtree("./tests/test_data/temp")
@@ -102,7 +106,9 @@ def test_trim_stitch_2d():
     stitch_2d_15 = stitch(image_dir="./tests/test_data/temp/imgs", mask=False, dtype=np.float32)
     assert stitch_2d_15.shape == (15, 15)
 
-    stitch_2d_15 = stitch(image_dir="./tests/test_data/temp/masks", mask=True, prefix="_mask", dtype=np.uint8)
+    stitch_2d_15 = stitch(
+        image_dir="./tests/test_data/temp/masks", mask=True, prefix="_mask", dtype=np.uint8
+    )
     assert stitch_2d_15.shape == (15, 15)
 
     rmtree("./tests/test_data/temp")
@@ -124,7 +130,9 @@ def test_trim_stitch_2d():
 
     stitch_2d_15 = stitch(image_dir="./tests/test_data/temp/imgs", mask=False, dtype=np.float32)
     assert stitch_2d_15.shape == (192, 192)
-    stitch_2d_15 = stitch(image_dir="./tests/test_data/temp/masks", mask=True, prefix="_mask", dtype=np.uint8)
+    stitch_2d_15 = stitch(
+        image_dir="./tests/test_data/temp/masks", mask=True, prefix="_mask", dtype=np.uint8
+    )
     assert stitch_2d_15.shape == (192, 192)
 
     rmtree("./tests/test_data/temp")

@@ -56,13 +56,17 @@ class PropGreedyGraphCut:
             for k, _ in enumerate(idx_patch):
                 row = graph_patch[k, :]
                 row_v = [
-                    row[id] if graph[i, idx_patch[k]] == 0 else np.mean((graph[i, idx_patch[k]], row[id]))
+                    row[id]
+                    if graph[i, idx_patch[k]] == 0
+                    else np.mean((graph[i, idx_patch[k]], row[id]))
                     for id, i in enumerate(idx_patch)
                 ]
 
                 column = graph_patch[:, k]
                 column_v = [
-                    row[id] if graph[i, idx_patch[k]] == 0 else np.mean((graph[i, idx_patch[k]], column[id]))
+                    row[id]
+                    if graph[i, idx_patch[k]] == 0
+                    else np.mean((graph[i, idx_patch[k]], column[id]))
                     for id, i in enumerate(idx_patch)
                 ]
 
@@ -158,11 +162,14 @@ class PropGreedyGraphCut:
             # Find the indices of the non-zero values
             if threshold:
                 top_k_indices = [
-                    [x for x, y in zip(i, p) if y >= self.threshold] for i, p in zip(top_k_indices, top_k_probs)
+                    [x for x, y in zip(i, p) if y >= self.threshold]
+                    for i, p in zip(top_k_indices, top_k_probs)
                 ]
                 top_k_probs = [[x for x in p if x >= self.threshold] for p in top_k_probs]
             else:
-                top_k_indices = [[x for x, y in zip(i, p) if y != 0] for i, p in zip(top_k_indices, top_k_probs)]
+                top_k_indices = [
+                    [x for x, y in zip(i, p) if y != 0] for i, p in zip(top_k_indices, top_k_probs)
+                ]
                 top_k_probs = [[x for x in p if x != 0] for p in top_k_probs]
 
             adj = list(zip(o, top_k_indices, top_k_probs))
@@ -186,7 +193,8 @@ class PropGreedyGraphCut:
             if len(inter) > 1:
                 all_prop[p_id][2] = list(np.unique(inter))
                 all_prop[p_id][3] = [
-                    np.median([x for idx, x in enumerate(prop) if inter[idx] == k]) for k in np.unique(inter)
+                    np.median([x for idx, x in enumerate(prop) if inter[idx] == k])
+                    for k in np.unique(inter)
                 ]
 
         # Sort and remove self connection
@@ -320,7 +328,8 @@ class PropGreedyGraphCut:
                 TardisError(
                     "114",
                     "tardis/dist/utils/segment_point_cloud.py",
-                    "Coord must be an array of all nodes! " f"Expected list of ndarrays but got {type(coord)}",
+                    "Coord must be an array of all nodes! "
+                    f"Expected list of ndarrays but got {type(coord)}",
                 )
 
         """Build Adjacency list from graph representation"""
@@ -344,7 +353,12 @@ class PropGreedyGraphCut:
                 if segment.shape[1] == 3:
                     coord_segment.append(
                         np.stack(
-                            (np.repeat(segment_id, segment.shape[0]), segment[:, 0], segment[:, 1], segment[:, 2])
+                            (
+                                np.repeat(segment_id, segment.shape[0]),
+                                segment[:, 0],
+                                segment[:, 1],
+                                segment[:, 2],
+                            )
                         ).T
                     )
                 elif segment.shape[1] == 2:
@@ -362,7 +376,11 @@ class PropGreedyGraphCut:
 
             # Mask point assigned to the instance
             for id in idx:
-                adjacency_matrix[id][1], adjacency_matrix[id][2], adjacency_matrix[id][3] = [], [], []
+                adjacency_matrix[id][1], adjacency_matrix[id][2], adjacency_matrix[id][3] = (
+                    [],
+                    [],
+                    [],
+                )
 
             if sum([1 for i in adjacency_matrix if sum(i[2]) > 0]) == 0:
                 stop = True

@@ -19,7 +19,11 @@ from tardis.utils.normalization import RescaleNormalize, SimpleNormalize
 
 
 def preprocess_data(
-    coord: str, image: Optional[str] = None, size: Optional[int] = None, include_label=True, normalization="simple"
+    coord: str,
+    image: Optional[str] = None,
+    size: Optional[int] = None,
+    include_label=True,
+    normalization="simple",
 ) -> Union[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray, np.ndarray]]:
     """
     Data augmentation function.
@@ -87,7 +91,8 @@ def preprocess_data(
             TardisError(
                 "124",
                 "tardis/dist_pytorch/dataset/augmentation.py",
-                f"Not implemented normalization. Given {normalization} " "But expected simple or minmax!",
+                f"Not implemented normalization. Given {normalization} "
+                "But expected simple or minmax!",
             )
 
         if normalization == "simple":
@@ -196,7 +201,9 @@ class BuildGraph:
                         if coord_df.shape[0] > 8:
                             dist, match_coord = tree.query(coord[j].reshape(1, -1), k=9)
                         else:
-                            dist, match_coord = tree.query(coord[j].reshape(1, -1), k=coord_df.shape[0] - 1)
+                            dist, match_coord = tree.query(
+                                coord[j].reshape(1, -1), k=coord_df.shape[0] - 1
+                            )
 
                         match_coord = match_coord[0][1:]
                         dist = dist[0][1:]
@@ -237,7 +244,9 @@ class BuildGraph:
                         graph[j - 1, j] = 1
 
                 # Check euclidean distance between fist and last point
-                ends_distance = np.linalg.norm(coord[points_in_contour[0]][1:] - coord[points_in_contour[-1]][1:])
+                ends_distance = np.linalg.norm(
+                    coord[points_in_contour[0]][1:] - coord[points_in_contour[-1]][1:]
+                )
 
                 # If < 2 nm pixel size, connect
                 if ends_distance < 2:
@@ -313,7 +322,8 @@ class Crop2D3D:
             TardisError(
                 "113",
                 "tardis/dist_pytorch/dataset/augmentation.py",
-                "Given position for cropping is not 2D or 3D!. " f"Given {center_point}. But expected shape in [2, 3]!",
+                "Given position for cropping is not 2D or 3D!. "
+                f"Given {center_point}. But expected shape in [2, 3]!",
             )
         if len(center_point) != len(self.size):
             TardisError(
@@ -324,9 +334,15 @@ class Crop2D3D:
             )
 
         if len(center_point) == 3:
-            z0, z1 = self.get_xyz_position(center_point=center_point[-1], size=self.size[-1], max_size=self.depth)
-            x0, x1 = self.get_xyz_position(center_point=center_point[0], size=self.size[0], max_size=self.height)
-            y0, y1 = self.get_xyz_position(center_point=center_point[1], size=self.size[1], max_size=self.width)
+            z0, z1 = self.get_xyz_position(
+                center_point=center_point[-1], size=self.size[-1], max_size=self.depth
+            )
+            x0, x1 = self.get_xyz_position(
+                center_point=center_point[0], size=self.size[0], max_size=self.height
+            )
+            y0, y1 = self.get_xyz_position(
+                center_point=center_point[1], size=self.size[1], max_size=self.width
+            )
             crop_img = self.image[z0:z1, y0:y1, x0:x1]
 
             if crop_img.shape != (self.size[-1], self.size[0], self.size[1]):
@@ -336,8 +352,12 @@ class Crop2D3D:
                 crop_img = np.zeros((self.size[2], self.size[0], self.size[1]))
                 crop_img[0 : shape[0], 0 : shape[1], 0 : shape[2]] = crop_df
         elif len(center_point) == 2:
-            x0, x1 = self.get_xyz_position(center_point=center_point[0], size=self.size[0], max_size=self.height)
-            y0, y1 = self.get_xyz_position(center_point=center_point[1], size=self.size[1], max_size=self.width)
+            x0, x1 = self.get_xyz_position(
+                center_point=center_point[0], size=self.size[0], max_size=self.height
+            )
+            y0, y1 = self.get_xyz_position(
+                center_point=center_point[1], size=self.size[1], max_size=self.width
+            )
             crop_img = self.image[y0:y1, x0:x1]
 
             if crop_img.shape != (self.size[0], self.size[1]):

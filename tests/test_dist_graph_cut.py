@@ -13,7 +13,13 @@ from math import sqrt
 import numpy as np
 
 from tardis.utils.load_data import ImportDataFromAmira
-from tardis.utils.spline_metric import FilterSpatialGraph, reorder_segments_id, sort_segment, tortuosity, total_length
+from tardis.utils.spline_metric import (
+    FilterSpatialGraph,
+    reorder_segments_id,
+    sort_segment,
+    tortuosity,
+    total_length,
+)
 
 
 def test_reorder_segments():

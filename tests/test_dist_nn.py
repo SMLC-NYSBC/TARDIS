@@ -57,7 +57,9 @@ class TestGraphFormer:
                             coord_embed_sigma=16,
                             predict=False,
                         )
-                        x = model(coords=rand_tensor((1, 5, 3)), node_features=rand_tensor((1, 5, 3)))
+                        x = model(
+                            coords=rand_tensor((1, 5, 3)), node_features=rand_tensor((1, 5, 3))
+                        )
                         assert x.shape == torch.Size((1, 1, 5, 5))
 
                         model = DIST(
@@ -71,7 +73,9 @@ class TestGraphFormer:
                             coord_embed_sigma=16,
                             predict=False,
                         )
-                        x = model(coords=rand_tensor((1, 5, 2)), node_features=rand_tensor((1, 5, 3)))
+                        x = model(
+                            coords=rand_tensor((1, 5, 2)), node_features=rand_tensor((1, 5, 3))
+                        )
                         assert x.shape == torch.Size((1, 1, 5, 5))
 
     def test_cdist_wo_rgb(self):
@@ -116,10 +120,14 @@ class TestGraphFormer:
                             coord_embed_sigma=16,
                             predict=False,
                         )
-                        x, cls = model(coords=rand_tensor((1, 5, 3)), node_features=rand_tensor((1, 5, 3)))
+                        x, cls = model(
+                            coords=rand_tensor((1, 5, 3)), node_features=rand_tensor((1, 5, 3))
+                        )
                         assert x.shape == torch.Size((1, 1, 5, 5))
                         assert cls.shape == torch.Size((1, 5, 200))
 
-                        x, cls = model(coords=rand_tensor((1, 5, 2)), node_features=rand_tensor((1, 5, 3)))
+                        x, cls = model(
+                            coords=rand_tensor((1, 5, 2)), node_features=rand_tensor((1, 5, 3))
+                        )
                         assert x.shape == torch.Size((1, 1, 5, 5))
                         assert cls.shape == torch.Size((1, 5, 200))

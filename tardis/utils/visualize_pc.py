@@ -36,7 +36,9 @@ def _dataset_format(coord: np.ndarray, segmented: bool) -> Tuple[np.ndarray, boo
 
         # Correct 2D to 3D
         if coord.shape[1] == 3:
-            coord = np.vstack((coord[:, 0], coord[:, 1], coord[:, 2], np.zeros((coord.shape[0],)))).T
+            coord = np.vstack(
+                (coord[:, 0], coord[:, 1], coord[:, 2], np.zeros((coord.shape[0],)))
+            ).T
     else:
         if coord.shape[1] not in [2, 3]:
             check = False
@@ -72,7 +74,9 @@ def _rgb(coord: np.ndarray, segmented: bool, ScanNet=False) -> np.ndarray:
                 rgb[id, :] = [x / 255 for x in color]
         else:
             unique_ids = np.unique(coord[:, 0])
-            rgb_list = [np.array((np.random.rand(), np.random.rand(), np.random.rand())) for _ in unique_ids]
+            rgb_list = [
+                np.array((np.random.rand(), np.random.rand(), np.random.rand())) for _ in unique_ids
+            ]
             id_to_rgb = {idx: color for idx, color in zip(unique_ids, rgb_list)}
 
             for id, i in enumerate(coord[:, 0]):
@@ -120,7 +124,9 @@ def segment_to_graph(coord: np.ndarray) -> list:
     return graph_list
 
 
-def VisualizePointCloud(coord: np.ndarray, segmented: bool, rgb: Optional[np.ndarray] = None, animate=True):
+def VisualizePointCloud(
+    coord: np.ndarray, segmented: bool, rgb: Optional[np.ndarray] = None, animate=True
+):
     """
     Visualized point cloud.
 

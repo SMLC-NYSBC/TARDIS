@@ -47,7 +47,12 @@ class GeLU(nn.Module):
 
 
 def convolution(
-    in_ch: int, out_ch: int, components: str, kernel: int or tuple, padding: int or tuple, num_group=None
+    in_ch: int,
+    out_ch: int,
+    components: str,
+    kernel: int or tuple,
+    padding: int or tuple,
+    num_group=None,
 ) -> list:
     """
     Customizable convolution block builder.
@@ -84,7 +89,11 @@ def convolution(
                         (
                             "Conv3D",
                             nn.Conv3d(
-                                in_channels=in_ch, out_channels=out_ch, kernel_size=kernel, padding=padding, bias=False
+                                in_channels=in_ch,
+                                out_channels=out_ch,
+                                kernel_size=kernel,
+                                padding=padding,
+                                bias=False,
                             ),
                         )
                     )
@@ -92,7 +101,12 @@ def convolution(
                     modules.append(
                         (
                             "Conv3D",
-                            nn.Conv3d(in_channels=in_ch, out_channels=out_ch, kernel_size=kernel, padding=padding),
+                            nn.Conv3d(
+                                in_channels=in_ch,
+                                out_channels=out_ch,
+                                kernel_size=kernel,
+                                padding=padding,
+                            ),
                         )
                     )
             # Add 2DConv
@@ -102,7 +116,11 @@ def convolution(
                         (
                             "Conv2D",
                             nn.Conv2d(
-                                in_channels=in_ch, out_channels=out_ch, kernel_size=kernel, padding=padding, bias=False
+                                in_channels=in_ch,
+                                out_channels=out_ch,
+                                kernel_size=kernel,
+                                padding=padding,
+                                bias=False,
                             ),
                         )
                     )
@@ -110,7 +128,12 @@ def convolution(
                     modules.append(
                         (
                             "Conv2D",
-                            nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=kernel, padding=padding),
+                            nn.Conv2d(
+                                in_channels=in_ch,
+                                out_channels=out_ch,
+                                kernel_size=kernel,
+                                padding=padding,
+                            ),
                         )
                     )
         "Add GroupNorm"
@@ -125,9 +148,13 @@ def convolution(
             if num_group > in_ch:
                 num_group = 1
             if conv:
-                modules.append(("GroupNorm1", nn.GroupNorm(num_groups=num_group, num_channels=out_ch)))
+                modules.append(
+                    ("GroupNorm1", nn.GroupNorm(num_groups=num_group, num_channels=out_ch))
+                )
             else:
-                modules.append(("GroupNorm2", nn.GroupNorm(num_groups=num_group, num_channels=in_ch)))
+                modules.append(
+                    ("GroupNorm2", nn.GroupNorm(num_groups=num_group, num_channels=in_ch))
+                )
         """Add BatchNorm"""
         if "b" == letter:
             if "3" in components:
@@ -171,14 +198,25 @@ class SingleConvolution(nn.Sequential):
     """
 
     def __init__(
-        self, in_ch: int, out_ch: int, components: str, kernel: int or tuple, padding: int or tuple, num_group=None
+        self,
+        in_ch: int,
+        out_ch: int,
+        components: str,
+        kernel: int or tuple,
+        padding: int or tuple,
+        num_group=None,
     ):
         super(SingleConvolution, self).__init__()
 
         """Build single Conv3D"""
         if "3" in components:
             conv3d = convolution(
-                in_ch=in_ch, out_ch=out_ch, components=components, kernel=kernel, padding=padding, num_group=num_group
+                in_ch=in_ch,
+                out_ch=out_ch,
+                components=components,
+                kernel=kernel,
+                padding=padding,
+                num_group=num_group,
             )
 
             for name, module in conv3d:
@@ -187,7 +225,12 @@ class SingleConvolution(nn.Sequential):
         """Build single Conv2D"""
         if "2" in components:
             conv2d = convolution(
-                in_ch=in_ch, out_ch=out_ch, components=components, kernel=kernel, padding=padding, num_group=num_group
+                in_ch=in_ch,
+                out_ch=out_ch,
+                components=components,
+                kernel=kernel,
+                padding=padding,
+                num_group=num_group,
             )
 
             for name, module in conv2d:
@@ -226,7 +269,9 @@ class DoubleConvolution(nn.Sequential):
         # Define in and out channels for 1st and 2nd convolutions
         if block_type not in ["encoder", "decoder"]:
             TardisError(
-                "143", "tardis/spindletorch/model/convolution.py", 'Only "encoder", decoder block type is supported.'
+                "143",
+                "tardis/spindletorch/model/convolution.py",
+                'Only "encoder", decoder block type is supported.',
             )
 
         """Calculate in and out channels for double convolution"""
@@ -296,7 +341,9 @@ class RecurrentDoubleConvolution(nn.Module):
         # Define in and out channels for 1st and 2nd convolutions
         if block_type not in ["encoder", "decoder"]:
             TardisError(
-                "143", "tardis/spindletorch/model/convolution.py", 'Only "encoder", decoder block type is supported.'
+                "143",
+                "tardis/spindletorch/model/convolution.py",
+                'Only "encoder", decoder block type is supported.',
             )
 
         """Calculate in and out channels for double convolution"""
@@ -328,7 +375,12 @@ class RecurrentDoubleConvolution(nn.Module):
         )
 
         self.conv3 = SingleConvolution(
-            in_ch=conv2_out_ch, out_ch=conv2_out_ch, components="c", kernel=kernel, padding=padding, num_group=num_group
+            in_ch=conv2_out_ch,
+            out_ch=conv2_out_ch,
+            components="c",
+            kernel=kernel,
+            padding=padding,
+            num_group=num_group,
         )
         if "l" in components:
             self.non_linearity = nn.LeakyReLU(negative_slope=0.1, inplace=True)

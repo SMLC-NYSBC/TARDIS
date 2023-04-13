@@ -39,14 +39,24 @@ class CnnBenchmark:
         threshold (float): Threshold value used for prediction..
     """
 
-    def __init__(self, model: Predictor, dataset: str, dir_: str, patch_size: int, threshold: float):
+    def __init__(
+        self, model: Predictor, dataset: str, dir_: str, patch_size: int, threshold: float
+    ):
         self.tardis_progress = TardisLogo()
         self.title = "TARDIS - CNN Benchmark"
         self.tardis_progress(title=self.title)
 
         self.model = model
         self.threshold = threshold
-        self.metric = {"Acc": [], "Prec": [], "Recall": [], "F1": [], "AUC": [], "IoU": [], "AP": []}
+        self.metric = {
+            "Acc": [],
+            "Prec": [],
+            "Recall": [],
+            "F1": [],
+            "AUC": [],
+            "IoU": [],
+            "AP": [],
+        }
 
         self.data_set = dataset
         self.dir = dir_
@@ -67,7 +77,9 @@ class CnnBenchmark:
             )
         else:
             TardisError(
-                id="", py="tardis/benchmarks/benchmarks.py", desc=f"Given data set {self.data_set} is not supporter!"
+                id="",
+                py="tardis/benchmarks/benchmarks.py",
+                desc=f"Given data set {self.data_set} is not supporter!",
             )
 
         self.eval_data = PredictionDataset(img_dir=join(self.dir, "train", "imgs"))
@@ -176,7 +188,9 @@ class DISTBenchmark:
         threshold (float): Threshold value used for prediction..
     """
 
-    def __init__(self, model: Predictor, dataset: str, dir_: str, points_in_patch: int, threshold: float):
+    def __init__(
+        self, model: Predictor, dataset: str, dir_: str, points_in_patch: int, threshold: float
+    ):
         self.tardis_progress = TardisLogo()
         self.title = "TARDIS - DIST Benchmark"
         self.tardis_progress(title=self.title)
@@ -202,7 +216,10 @@ class DISTBenchmark:
             self.rgb = False
 
         self.eval_data = build_dataset(
-            dataset_type=dataset, dirs=[None, self.dir], max_points_per_patch=points_in_patch, benchmark=True
+            dataset_type=dataset,
+            dirs=[None, self.dir],
+            max_points_per_patch=points_in_patch,
+            benchmark=True,
         )
 
         if dataset in ["MT", "Mem"]:
@@ -219,9 +236,13 @@ class DISTBenchmark:
         # AUC
         self.metric["AUC"].append(AUC(logits, target, True))
 
-    def _benchmark_IS(self, logits: List[np.ndarray], coords: np.ndarray, output_idx: List[np.ndarray]):
+    def _benchmark_IS(
+        self, logits: List[np.ndarray], coords: np.ndarray, output_idx: List[np.ndarray]
+    ):
         # Graph cut
-        GraphToSegment = PropGreedyGraphCut(threshold=self.threshold, connection=self.max_connections)
+        GraphToSegment = PropGreedyGraphCut(
+            threshold=self.threshold, connection=self.max_connections
+        )
         input_IS = GraphToSegment.patch_to_segment(
             graph=logits, coord=coords[:, 1:], idx=output_idx, prune=2, sort=self.sort
         )

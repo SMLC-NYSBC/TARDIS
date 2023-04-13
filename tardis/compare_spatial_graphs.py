@@ -42,17 +42,28 @@ from tardis.version import version
     show_default=True,
 )
 @click.option(
-    "-pf_a", "--amira_prefix", default=None, type=str, help="Prefix name for amira spatial graph.", show_default=True
+    "-pf_a",
+    "--amira_prefix",
+    default=None,
+    type=str,
+    help="Prefix name for amira spatial graph.",
+    show_default=True,
 )
 @click.option(
-    "-pf_t", "--tardis_prefix", default=None, type=str, help="Prefix name for tardis spatial graph.", show_default=True
+    "-pf_t",
+    "--tardis_prefix",
+    default=None,
+    type=str,
+    help="Prefix name for tardis spatial graph.",
+    show_default=True,
 )
 @click.option(
     "-th_dist",
     "--distance_threshold",
     default=0,
     type=int,
-    help="Distance threshold used to evaluate similarity between two " "splines based on its coordinates.",
+    help="Distance threshold used to evaluate similarity between two "
+    "splines based on its coordinates.",
     show_default=True,
 )
 @click.option(
@@ -60,7 +71,8 @@ from tardis.version import version
     "--interaction_threshold",
     default=100.0,
     type=float,
-    help="Interaction threshold used to evaluate reject splines that are" "similar below that threshold.",
+    help="Interaction threshold used to evaluate reject splines that are"
+    "similar below that threshold.",
     show_default=True,
 )
 @click.option(
@@ -136,13 +148,16 @@ def main(
         f.write("List of Tardis files: \n" f"{tardis_files}\n" "\n")
 
     if len(amira_files) == 0 and len(tardis_files) == 0:
-        TardisError(id="121", py="tardis/compare_spatial_graphs.py", desc="No file found in given folders!")
+        TardisError(
+            id="121", py="tardis/compare_spatial_graphs.py", desc="No file found in given folders!"
+        )
 
     if len(amira_files) != len(tardis_files):
         TardisError(
             id="121",
             py="tardis/compare_spatial_graphs.py",
-            desc=f"Amira folder have {len(amira_files)} files but " f"Tardis folder have {len(tardis_files)} files!",
+            desc=f"Amira folder have {len(amira_files)} files but "
+            f"Tardis folder have {len(tardis_files)} files!",
         )
 
     tardis_progress(
@@ -193,7 +208,12 @@ def main(
         tardis_sg = tardis_sg.get_segmented_points()
 
         with open(join(output, "log.txt"), "a+") as f:
-            f.write("\n" f"{datetime.now()}" f"Pixel size Amira: {amira_px} \n" f"Pixel size Tardis: {tardis_px} \n")
+            f.write(
+                "\n"
+                f"{datetime.now()}"
+                f"Pixel size Amira: {amira_px} \n"
+                f"Pixel size Tardis: {tardis_px} \n"
+            )
 
         tardis_progress(
             title=f"Spline matching module {str_debug}",
@@ -215,7 +235,12 @@ def main(
             export_to_amira.export_amira(
                 file_dir=output_file,
                 coords=compare_spline(amira_sg=amira_sg, tardis_sg=tardis_sg),
-                labels=["TardisFilterBasedOnAmira", "TardisNoise", "AmiraFilterBasedOnTardis", "AmiraNoise"],
+                labels=[
+                    "TardisFilterBasedOnAmira",
+                    "TardisNoise",
+                    "AmiraFilterBasedOnTardis",
+                    "AmiraNoise",
+                ],
             )
         else:
             with open(join(output, "log.txt"), "a+") as f:

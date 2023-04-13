@@ -18,7 +18,9 @@ from typing import Optional
 from tardis.utils.errors import TardisError
 
 
-def move_train_dataset(dir: str, coord_format: tuple, with_img: bool, img_format: Optional[tuple] = None):
+def move_train_dataset(
+    dir: str, coord_format: tuple, with_img: bool, img_format: Optional[tuple] = None
+):
     """
     Detect and copy all date to new train directory.
 
@@ -40,7 +42,9 @@ def move_train_dataset(dir: str, coord_format: tuple, with_img: bool, img_format
             copytree(join(dir, i), join(dir, "train", "masks", i))
 
     if not len([f for f in listdir(dir) if f.endswith(coord_format)]) > 0:
-        TardisError("121", "tardis/utils/dataset.py", f"No coordinate file found in given dir {dir}")
+        TardisError(
+            "121", "tardis/utils/dataset.py", f"No coordinate file found in given dir {dir}"
+        )
 
     idx_coord = [f for f in listdir(dir) if f.endswith(coord_format)]
 
@@ -74,7 +78,11 @@ def build_test_dataset(dataset_dir: str, dataset_no: int, stanford=False):
         stanford (bool): Marker for stanford S3DIS dataset
     """
     if "test" not in listdir(dataset_dir) and "train" not in listdir(dataset_dir):
-        TardisError("122", "tardis/utils/dataset.py", f"Could not find train or test folder in directory {dataset_dir}")
+        TardisError(
+            "122",
+            "tardis/utils/dataset.py",
+            f"Could not find train or test folder in directory {dataset_dir}",
+        )
 
     if stanford:
         mkdir(join(dataset_dir, "test", "masks", "Area_1"))
@@ -86,7 +94,8 @@ def build_test_dataset(dataset_dir: str, dataset_no: int, stanford=False):
             join(dataset_dir, "test", "masks", "Area_1", "office_1"),
         )
         move(
-            join(dataset_dir, "train", "masks", "Area_3", "WC_1"), join(dataset_dir, "test", "masks", "Area_3", "WC_1")
+            join(dataset_dir, "train", "masks", "Area_3", "WC_1"),
+            join(dataset_dir, "test", "masks", "Area_3", "WC_1"),
         )
         move(
             join(dataset_dir, "train", "masks", "Area_5", "storage_1"),

@@ -30,7 +30,8 @@ def interpolate_generator(points: np.ndarray) -> Iterable:
         TardisError(
             "134",
             "tardis/spindletorch/data_processing/interpolation.py",
-            "Interpolation supports only 3D for 2 points at a time; " f"But {points.shape} was given!",
+            "Interpolation supports only 3D for 2 points at a time; "
+            f"But {points.shape} was given!",
         )
 
     points = np.round(points).astype(np.int32)
@@ -45,7 +46,8 @@ def interpolate_generator(points: np.ndarray) -> Iterable:
 
     # Calculate axis to iterate throw
     max_delta = np.where(
-        (abs(delta_x), abs(delta_y), abs(delta_z)) == np.max((abs(delta_x), abs(delta_y), abs(delta_z)))
+        (abs(delta_x), abs(delta_y), abs(delta_z))
+        == np.max((abs(delta_x), abs(delta_y), abs(delta_z)))
     )[0][0]
     if delta_x == 0 and delta_y == 0 and delta_z == 0:
         max_delta = 3
@@ -78,7 +80,11 @@ def interpolate_generator(points: np.ndarray) -> Iterable:
         else np.minimum(abs(delta_z / delta_x), abs(delta_z / delta_y))
         if delta_x != 0 and delta_y != 0
         else (
-            abs(delta_z / delta_y) if delta_x == 0 and delta_y != 0 else abs(delta_z / delta_x) if delta_x != 0 else 0.0
+            abs(delta_z / delta_y)
+            if delta_x == 0 and delta_y != 0
+            else abs(delta_z / delta_x)
+            if delta_x != 0
+            else 0.0
         )
     )
 

@@ -206,7 +206,9 @@ class DownSampling:
                 if rgb is not None:
                     rgb_df = rgb[idx]
 
-                    coord_df, rgb_df = self.pc_down_sample(coord=coord_df, rgb=rgb_df, sampling=self.sample)
+                    coord_df, rgb_df = self.pc_down_sample(
+                        coord=coord_df, rgb=rgb_df, sampling=self.sample
+                    )
                     ds_rgb.append(rgb_df)
                 else:
                     coord_df = self.pc_down_sample(coord=coord_df, sampling=self.sample)
@@ -230,9 +232,8 @@ class VoxelDownSampling(DownSampling):
     def __init__(self, **kwargs):
         super(VoxelDownSampling, self).__init__(**kwargs)
 
-    @staticmethod
     def pc_down_sample(
-        coord: np.ndarray, sampling: float, rgb: Optional[np.ndarray] = None
+        self, coord: np.ndarray, sampling: float, rgb: Optional[np.ndarray] = None
     ) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
         """
         This function takes a set of 3D points and a voxel size and returns the centroids
@@ -249,6 +250,10 @@ class VoxelDownSampling(DownSampling):
             of the voxels in which the points are located, where M is the number
             of unique voxels.
         """
+        if self.labels:
+            coord_label = coord
+            coord = coord[:, 1:]
+
         # Find the grid cell index for each point
         voxel_index = np.floor(coord / sampling).astype(np.int32)
 
@@ -262,13 +267,21 @@ class VoxelDownSampling(DownSampling):
         np.add.at(voxel_centers, inverse_index, coord)
         voxel_centers /= voxel_counts[:, np.newaxis]
 
-        if rgb is not None:
+        # Retrive ID value for down sampled point cloud 
+        if self.labels or rgb is not None:
             # Find the nearest voxel center for each point
-            nearest_voxel_index = np.argmin(np.linalg.norm(voxel_centers[:, np.newaxis, :] - coord, axis=-1), axis=-1)
+            nearest_voxel_index = np.argmin(
+                np.linalg.norm(voxel_centers[:, np.newaxis, :] - coord, axis=-1), axis=-1
+            )
 
+        if self.labels:
+            # Compute the color of the nearest voxel center for each down-sampled point
+            down_sampled_id = coord_label[nearest_voxel_index]
+            voxel_centers = np.vstack((down_sampled_id))
+
+        if rgb is not None:
             # Compute the color of the nearest voxel center for each down-sampled point
             down_sampled_rgb = rgb[nearest_voxel_index]
-
             return voxel_centers, down_sampled_rgb
         return voxel_centers
 

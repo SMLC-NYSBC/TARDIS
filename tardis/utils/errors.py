@@ -135,7 +135,9 @@ class TardisError(Exception):
             text_3 = desc
             text_4, text_5, text_6, text_7, text_8, text_9, text_10 = "", "", "", "", "", "", ""
         else:
-            text_3, text_4, text_5, text_6, text_7, text_8, text_9, text_10 = self._truncate_str(desc, WIDTH)
+            text_3, text_4, text_5, text_6, text_7, text_8, text_9, text_10 = self._truncate_str(
+                desc, WIDTH
+            )
 
         return text_3, text_4, text_5, text_6, text_7, text_8, text_9, text_10
 

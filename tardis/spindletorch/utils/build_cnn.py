@@ -118,9 +118,13 @@ class BasicCNN(nn.Module):
 
         """ Final Layer """
         if "3" in layer_components:
-            self.final_conv_layer = nn.Conv3d(in_channels=conv_layer_scaler, out_channels=out_channels, kernel_size=1)
+            self.final_conv_layer = nn.Conv3d(
+                in_channels=conv_layer_scaler, out_channels=out_channels, kernel_size=1
+            )
         elif "2" in layer_components:
-            self.final_conv_layer = nn.Conv2d(in_channels=conv_layer_scaler, out_channels=out_channels, kernel_size=1)
+            self.final_conv_layer = nn.Conv2d(
+                in_channels=conv_layer_scaler, out_channels=out_channels, kernel_size=1
+            )
 
         """ Prediction """
         if sigmoid:
@@ -270,14 +274,18 @@ class UNet3Plus(nn.Module):
             if "3" in layer_components:
                 self.cls = nn.Sequential(
                     nn.Dropout(),
-                    nn.Conv3d(in_channels=feature_map[len(feature_map) - 1], out_channels=2, kernel_size=1),
+                    nn.Conv3d(
+                        in_channels=feature_map[len(feature_map) - 1], out_channels=2, kernel_size=1
+                    ),
                     nn.AdaptiveAvgPool3d(output_size=1),
                     nn.Sigmoid(),
                 )
             elif "2" in layer_components:
                 self.cls = nn.Sequential(
                     nn.Dropout(),
-                    nn.Conv2d(in_channels=feature_map[len(feature_map) - 1], out_channels=2, kernel_size=1),
+                    nn.Conv2d(
+                        in_channels=feature_map[len(feature_map) - 1], out_channels=2, kernel_size=1
+                    ),
                     nn.AdaptiveAvgPool2d(output_size=1),
                     nn.Sigmoid(),
                 )
@@ -298,9 +306,13 @@ class UNet3Plus(nn.Module):
 
         """ Final Layer """
         if "3" in layer_components:
-            self.final_conv_layer = nn.Conv3d(in_channels=conv_layer_scaler, out_channels=out_channels, kernel_size=1)
+            self.final_conv_layer = nn.Conv3d(
+                in_channels=conv_layer_scaler, out_channels=out_channels, kernel_size=1
+            )
         elif "2" in layer_components:
-            self.final_conv_layer = nn.Conv2d(in_channels=conv_layer_scaler, out_channels=out_channels, kernel_size=1)
+            self.final_conv_layer = nn.Conv2d(
+                in_channels=conv_layer_scaler, out_channels=out_channels, kernel_size=1
+            )
 
         """ Prediction """
         if sigmoid:
@@ -359,7 +371,9 @@ class UNet3Plus(nn.Module):
         for decoder in self.decoder:
             decoder_features = [x]
 
-            x = decoder(x=x, encoder_features=encoder_features, decoder_features=decoder_features[2:])
+            x = decoder(
+                x=x, encoder_features=encoder_features, decoder_features=decoder_features[2:]
+            )
 
             # add/remove layer at each iter
             decoder_features.insert(0, x)
@@ -473,7 +487,9 @@ class FNet(nn.Module):
                 in_channels=conv_layer_scaler, out_channels=conv_layer_scaler, kernel_size=1
             )
 
-            self.final_conv_layer = nn.Conv3d(in_channels=conv_layer_scaler, out_channels=out_channels, kernel_size=1)
+            self.final_conv_layer = nn.Conv3d(
+                in_channels=conv_layer_scaler, out_channels=out_channels, kernel_size=1
+            )
         elif "2" in layer_components:
             self.unet_conv_layer = nn.Conv2d(
                 in_channels=conv_layer_scaler, out_channels=conv_layer_scaler, kernel_size=1
@@ -482,7 +498,9 @@ class FNet(nn.Module):
                 in_channels=conv_layer_scaler, out_channels=conv_layer_scaler, kernel_size=1
             )
 
-            self.final_conv_layer = nn.Conv2d(in_channels=conv_layer_scaler, out_channels=out_channels, kernel_size=1)
+            self.final_conv_layer = nn.Conv2d(
+                in_channels=conv_layer_scaler, out_channels=out_channels, kernel_size=1
+            )
 
         """ Prediction """
         if sigmoid:
@@ -519,7 +537,9 @@ class FNet(nn.Module):
         for decoder in self.decoder_3plus:
             decoder_features = [x_3plus]
 
-            x_3plus = decoder(x=x_3plus, encoder_features=encoder_features, decoder_features=decoder_features[2:])
+            x_3plus = decoder(
+                x=x_3plus, encoder_features=encoder_features, decoder_features=decoder_features[2:]
+            )
 
             # add/remove layer at each iter
             decoder_features.insert(0, x_3plus)

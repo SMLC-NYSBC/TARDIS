@@ -49,22 +49,61 @@ warnings.simplefilter("ignore", UserWarning)
     show_default=True,
 )
 @click.option(
-    "-ps", "--patch_size", default=96, type=int, help="Size of image size used for prediction.", show_default=True
-)
-@click.option("-cnn", "--cnn_network", default="fnet_32", type=str, help="CNN network name.", show_default=True)
-@click.option(
-    "-cch", "--cnn_checkpoint", default=None, type=str, help="If not None, str checkpoints for CNN", show_default=True
-)
-@click.option(
-    "-ct", "--cnn_threshold", default=0.2, type=float, help="Threshold use for model prediction.", show_default=True
+    "-ps",
+    "--patch_size",
+    default=96,
+    type=int,
+    help="Size of image size used for prediction.",
+    show_default=True,
 )
 @click.option(
-    "-dch", "--dist_checkpoint", default=None, type=str, help="If not None, str checkpoints for DIST", show_default=True
+    "-cnn",
+    "--cnn_network",
+    default="fnet_32",
+    type=str,
+    help="CNN network name.",
+    show_default=True,
 )
 @click.option(
-    "-dt", "--dist_threshold", default=0.5, type=float, help="Threshold use for graph segmentation.", show_default=True
+    "-cch",
+    "--cnn_checkpoint",
+    default=None,
+    type=str,
+    help="If not None, str checkpoints for CNN",
+    show_default=True,
 )
-@click.option("-pv", "--points_in_patch", default=1000, type=int, help="Number of point per voxel.", show_default=True)
+@click.option(
+    "-ct",
+    "--cnn_threshold",
+    default=0.2,
+    type=float,
+    help="Threshold use for model prediction.",
+    show_default=True,
+)
+@click.option(
+    "-dch",
+    "--dist_checkpoint",
+    default=None,
+    type=str,
+    help="If not None, str checkpoints for DIST",
+    show_default=True,
+)
+@click.option(
+    "-dt",
+    "--dist_threshold",
+    default=0.5,
+    type=float,
+    help="Threshold use for graph segmentation.",
+    show_default=True,
+)
+@click.option(
+    "-pv",
+    "--points_in_patch",
+    default=1000,
+    type=int,
+    help="Number of point per voxel.",
+    show_default=True,
+)
 @click.option(
     "-f",
     "--filter_mt",
@@ -211,7 +250,11 @@ def main(
 
     # Build DIST network with loaded pre-trained weights
     predict_dist = Predictor(
-        checkpoint=checkpoints[1], network="dist", subtype="triang", model_type="microtubules", device=device
+        checkpoint=checkpoints[1],
+        network="dist",
+        subtype="triang",
+        model_type="microtubules",
+        device=device,
     )
 
     """Process each image with CNN and DIST"""
@@ -254,11 +297,14 @@ def main(
 
         if px == 0:
             px = click.prompt(
-                f"Image file has pixel size {px}, that's obviously wrong... " "What is the correct value:", type=float
+                f"Image file has pixel size {px}, that's obviously wrong... "
+                "What is the correct value:",
+                type=float,
             )
         if px == 1:
             px = click.prompt(
-                f"Image file has pixel size {px}, that's maybe wrong... " "What is the correct value:",
+                f"Image file has pixel size {px}, that's maybe wrong... "
+                "What is the correct value:",
                 default=px,
                 type=float,
             )
@@ -415,7 +461,9 @@ def main(
         )
 
         # Post-process predicted image patches
-        point_cloud_hd, point_cloud = post_processes.build_point_cloud(image=image, EDT=True, down_sampling=5)
+        point_cloud_hd, point_cloud = post_processes.build_point_cloud(
+            image=image, EDT=True, down_sampling=5
+        )
 
         # Transform for xyz and pixel size for coord
         del image
@@ -537,13 +585,22 @@ def main(
         )
 
         """Save as .am"""
-        build_amira_file.export_amira(coords=segments, file_dir=join(am_output, f"{i[:-out_format]}_SpatialGraph.am"))
         build_amira_file.export_amira(
-            coords=segments_filter, file_dir=join(am_output, f"{i[:-out_format]}_SpatialGraph_filter.am")
+            coords=segments, file_dir=join(am_output, f"{i[:-out_format]}_SpatialGraph.am")
+        )
+        build_amira_file.export_amira(
+            coords=segments_filter,
+            file_dir=join(am_output, f"{i[:-out_format]}_SpatialGraph_filter.am"),
         )
         if output == "csv":
-            np.savetxt(join(am_output, f"{i[:-out_format]}" "_SpatialGraph.csv"), segments, delimiter=",")
-            np.savetxt(join(am_output, f"{i[:-out_format]}" "_SpatialGraph_filter.csv"), segments_filter, delimiter=",")
+            np.savetxt(
+                join(am_output, f"{i[:-out_format]}" "_SpatialGraph.csv"), segments, delimiter=","
+            )
+            np.savetxt(
+                join(am_output, f"{i[:-out_format]}" "_SpatialGraph_filter.csv"),
+                segments_filter,
+                delimiter=",",
+            )
 
         """Clean-up temp dir"""
         clean_up(dir=dir)

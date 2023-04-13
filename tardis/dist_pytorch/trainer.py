@@ -120,7 +120,11 @@ class DistTrainer(BasicTrainer):
                     "model_state_dict": self.model.state_dict(),
                     "optimizer_state_dict": self.optimizer.state_dict(),
                 },
-                join(getcwd(), f"{self.checkpoint_name}_checkpoint", f"{self.checkpoint_name}_checkpoint_f1.pth"),
+                join(
+                    getcwd(),
+                    f"{self.checkpoint_name}_checkpoint",
+                    f"{self.checkpoint_name}_checkpoint_f1.pth",
+                ),
             )
 
         # If mean evaluation mcov score is higher than save checkpoint
@@ -131,7 +135,11 @@ class DistTrainer(BasicTrainer):
                     "model_state_dict": self.model.state_dict(),
                     "optimizer_state_dict": self.optimizer.state_dict(),
                 },
-                join(getcwd(), f"{self.checkpoint_name}_checkpoint", f"{self.checkpoint_name}_checkpoint_mcov.pth"),
+                join(
+                    getcwd(),
+                    f"{self.checkpoint_name}_checkpoint",
+                    f"{self.checkpoint_name}_checkpoint_mcov.pth",
+                ),
             )
 
         torch.save(
@@ -259,7 +267,9 @@ class DistTrainer(BasicTrainer):
 
                     # Calculate F1 metric
                     edge = torch.sigmoid(edge)[0, :]
-                    acc, prec, recall, f1, th = eval_graph_f1(logits=edge, targets=graph, threshold=0.5)
+                    acc, prec, recall, f1, th = eval_graph_f1(
+                        logits=edge, targets=graph, threshold=0.5
+                    )
                     edge_cpu.append(edge[0, :].cpu().detach().numpy())
 
                 # Avg. precision score
@@ -285,7 +295,9 @@ class DistTrainer(BasicTrainer):
                 self._update_progress_bar(loss_desc=valid, idx=idx, train=False)
 
             # Build GT instance point cloud
-            target = self.Graph_gt.patch_to_segment(graph=graph_cpu, coord=coord, idx=out_cpu, prune=0, sort=False)
+            target = self.Graph_gt.patch_to_segment(
+                graph=graph_cpu, coord=coord, idx=out_cpu, prune=0, sort=False
+            )
 
             # Threshold 0.25
             try:
@@ -298,14 +310,18 @@ class DistTrainer(BasicTrainer):
 
             # Threshold 0.5
             try:
-                input0_5 = self.Graph0_5.patch_to_segment(graph=edge_cpu, coord=coord, idx=out_cpu, prune=0, sort=False)
+                input0_5 = self.Graph0_5.patch_to_segment(
+                    graph=edge_cpu, coord=coord, idx=out_cpu, prune=0, sort=False
+                )
                 mcov0_5.append(mcov(input0_5, target))
             except:
                 mcov0_5.append(0.0)
 
             # Threshold 0.9
             try:
-                input0_9 = self.Graph0_9.patch_to_segment(graph=edge_cpu, coord=coord, idx=out_cpu, prune=0, sort=False)
+                input0_9 = self.Graph0_9.patch_to_segment(
+                    graph=edge_cpu, coord=coord, idx=out_cpu, prune=0, sort=False
+                )
                 mcov0_9.append(mcov(input0_9, target))
             except:
                 mcov0_9.append(0.0)
@@ -405,7 +421,9 @@ class CDistTrainer(BasicTrainer):
                     loss = self.criterion(edge[0, :], graph) + self.criterion_cls(out_cls, cls)
 
                     edge = torch.sigmoid(edge[:, 0, :])
-                    acc, prec, recall, f1, th = eval_graph_f1(logits=edge, targets=graph, threshold=0.5)
+                    acc, prec, recall, f1, th = eval_graph_f1(
+                        logits=edge, targets=graph, threshold=0.5
+                    )
 
                 # Avg. precision score
                 valid_losses.append(loss.item())

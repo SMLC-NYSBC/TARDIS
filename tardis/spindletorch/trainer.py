@@ -59,7 +59,9 @@ class CNNTrainer(BasicTrainer):
             self.learning_rate.append(self.lr)
 
             # Update progress bar
-            self._update_progress_bar(loss_desc=f"Training: (loss {loss_value:.4f};" f" LR: {self.lr:.5f})", idx=idx)
+            self._update_progress_bar(
+                loss_desc=f"Training: (loss {loss_value:.4f};" f" LR: {self.lr:.5f})", idx=idx
+            )
 
     def _validate(self):
         """
@@ -99,7 +101,10 @@ class CNNTrainer(BasicTrainer):
                 recall_mean.append(recall)
                 F1_mean.append(f1)
                 threshold_mean.append(0.5)
-                valid = f"Validation: (loss {loss.item():.4f} " f"Prec: {prec:.2f} Rec: {recall:.2f} F1: {f1:.2f})"
+                valid = (
+                    f"Validation: (loss {loss.item():.4f} "
+                    f"Prec: {prec:.2f} Rec: {recall:.2f} F1: {f1:.2f})"
+                )
 
                 # Update progress bar
                 self._update_progress_bar(loss_desc=valid, idx=idx, train=False)

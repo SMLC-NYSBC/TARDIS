@@ -29,7 +29,9 @@ def get_benchmark_aws() -> dict:
     Returns:
         dict: Dictionary with keys[network name] and values[list of scores]
     """
-    network_benchmark = requests.get("https://tardis-weigths.s3.amazonaws.com/" "benchmark/best_scores.json")
+    network_benchmark = requests.get(
+        "https://tardis-weigths.s3.amazonaws.com/" "benchmark/best_scores.json"
+    )
 
     if network_benchmark.status_code == 200:
         network_benchmark = json.loads(network_benchmark.content.decode("utf-8"))
@@ -50,12 +52,16 @@ def put_benchmark_aws(data: dict, network: Optional[str] = "", model=None) -> bo
         bool: True if save correctly
     """
     r = requests.put(
-        "https://tardis-weigths.s3.amazonaws.com/" "benchmark/best_scores.json", json.dumps(data, indent=2, default=str)
+        "https://tardis-weigths.s3.amazonaws.com/" "benchmark/best_scores.json",
+        json.dumps(data, indent=2, default=str),
     )
 
     if model is not None and r.status_code == 200:
         with open(model, "rb") as data:
-            r_m = requests.put("https://tardis-weigths.s3.amazonaws.com/" f"benchmark/models/{network}.pth", data=data)
+            r_m = requests.put(
+                "https://tardis-weigths.s3.amazonaws.com/" f"benchmark/models/{network}.pth",
+                data=data,
+            )
 
         return r_m.status_code == 200
     return r.status_code == 200
@@ -94,18 +100,28 @@ def get_weights_aws(network: str, subtype: str, model: Optional[str] = None):
     dir = join(expanduser("~"), ".tardis_pytorch", f"{network}_{subtype}", f"{model}")
 
     if network not in ALL_MODELS:
-        TardisError("19", "tardis/utils/aws.py", f"Incorrect CNN network selected {network}_{subtype}")
+        TardisError(
+            "19", "tardis/utils/aws.py", f"Incorrect CNN network selected {network}_{subtype}"
+        )
     if subtype not in ALL_SUBTYPE:
-        TardisError("19", "tardis/utils/aws.py", f"Incorrect CNN subtype selected {network}_{subtype}")
+        TardisError(
+            "19", "tardis/utils/aws.py", f"Incorrect CNN subtype selected {network}_{subtype}"
+        )
 
     if network in CNN:
         if model not in CNN_DATASET:
-            TardisError("19", "tardis/utils/aws.py", f"Incorrect CNN model selected {model} but expected {CNN_DATASET}")
+            TardisError(
+                "19",
+                "tardis/utils/aws.py",
+                f"Incorrect CNN model selected {model} but expected {CNN_DATASET}",
+            )
 
     if network == "dist":
         if model not in DIST_DATASET:
             TardisError(
-                "19", "tardis/utils/aws.py", f"Incorrect DIST model selected {model} but expected {DIST_DATASET}"
+                "19",
+                "tardis/utils/aws.py",
+                f"Incorrect DIST model selected {model} but expected {DIST_DATASET}",
             )
 
     if aws_check_with_temp(model_name=[network, subtype, model]):
@@ -115,7 +131,9 @@ def get_weights_aws(network: str, subtype: str, model: Optional[str] = None):
             TardisError("19", "tardis/utils/aws.py", "No weights found")
     else:
         weight = get_model_aws(
-            "https://tardis-weigths.s3.amazonaws.com/" f"{network}_{subtype}/" f"{model}/model_weights.pth"
+            "https://tardis-weigths.s3.amazonaws.com/"
+            f"{network}_{subtype}/"
+            f"{model}/model_weights.pth"
         )
 
     """Save temp weights"""

@@ -69,7 +69,9 @@ class BasicDIST(nn.Module):
 
         if self.node_dim is not None:
             if self.node_input > 0:
-                self.node_embed = NodeEmbedding(n_in=self.node_input, n_out=self.node_dim, sigma=self.node_sigma)
+                self.node_embed = NodeEmbedding(
+                    n_in=self.node_input, n_out=self.node_dim, sigma=self.node_sigma
+                )
 
         self.coord_embed = EdgeEmbedding(n_out=self.edge_dim, sigma=self.edge_sigma)
 

@@ -137,7 +137,9 @@ def build_encoder(
         nn.ModuleList: Encoder block.
     """
     encoders = []
-    feature_map = number_of_features_per_level(channel_scaler=conv_layer_scaler, num_levels=conv_layers)
+    feature_map = number_of_features_per_level(
+        channel_scaler=conv_layer_scaler, num_levels=conv_layers
+    )
 
     for i, feature in enumerate(feature_map):
         if i == 0:  # first encoder layer skips max pooling

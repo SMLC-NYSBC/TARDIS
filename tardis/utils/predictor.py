@@ -130,9 +130,13 @@ class DataSetPredictor:
         # Initiate log output
         self.tardis_progress = TardisLogo()
         if self.predict_instance:
-            self.title = f"Fully-automatic Instance {self.predict} segmentation module " f"{str_debug}"
+            self.title = (
+                f"Fully-automatic Instance {self.predict} segmentation module " f"{str_debug}"
+            )
         else:
-            self.title = f"Fully-automatic Semantic {self.predict} segmentation module " f"{str_debug}"
+            self.title = (
+                f"Fully-automatic Semantic {self.predict} segmentation module " f"{str_debug}"
+            )
 
         # Check for spatial graph in folder from amira/tardis comp.
         self.amira_check = False
@@ -140,7 +144,8 @@ class DataSetPredictor:
             self.amira_check = True
             self.dir_amira = join(dir, "amira")
             self.title = (
-                f"Fully-automatic Instance {self.predict} segmentation module " f"with Amira comparison {str_debug}"
+                f"Fully-automatic Instance {self.predict} segmentation module "
+                f"with Amira comparison {str_debug}"
             )
 
         self.tardis_progress(title=self.title, text_2=f"Device: {self.device}")
@@ -156,7 +161,9 @@ class DataSetPredictor:
         # Tardis progress bar update
         if len(self.predict_list) == 0:
             TardisError(
-                id="12", py="tardis/utils/predictor.py", desc=f"Given {dir} does not contain any recognizable file!"
+                id="12",
+                py="tardis/utils/predictor.py",
+                desc=f"Given {dir} does not contain any recognizable file!",
             )
             sys.exit()
         else:
@@ -171,7 +178,9 @@ class DataSetPredictor:
         self.tif_px = None
         if np.any([True for x in self.predict_list if x.endswith((".tif", ".tiff"))]):
             self.tif_px = click.prompt(
-                "Detected .tif files, please provide pixel size " "(It will be used for all .tif images):", type=float
+                "Detected .tif files, please provide pixel size "
+                "(It will be used for all .tif images):",
+                type=float,
             )
 
         """Build handler's"""
@@ -198,10 +207,13 @@ class DataSetPredictor:
                     filter_short_segments=filter_by_length,
                 )
                 self.compare_spline = SpatialGraphCompare(
-                    distance_threshold=amira_compare_distance, interaction_threshold=amira_inter_probability
+                    distance_threshold=amira_compare_distance,
+                    interaction_threshold=amira_inter_probability,
                 )
             else:
-                self.GraphToSegment = PropGreedyGraphCut(threshold=dist_threshold, connection=999999999)
+                self.GraphToSegment = PropGreedyGraphCut(
+                    threshold=dist_threshold, connection=999999999
+                )
 
         # Build handler to output amira file
         self.amira_file = NumpyToAmira()
@@ -241,7 +253,9 @@ class DataSetPredictor:
             )
 
             # Build DIST network with loaded pre-trained weights
-            self.predict_dist = Predictor(network="dist", subtype="triang", model_type="s3dis", device=self.device)
+            self.predict_dist = Predictor(
+                network="dist", subtype="triang", model_type="s3dis", device=self.device
+            )
 
     def __load_data(self, id_name: str):
         # Build temp dir
@@ -259,12 +273,14 @@ class DataSetPredictor:
         # In case of unreadable pixel size ask user
         if self.px == 0:
             self.px = click.prompt(
-                f"Image file has pixel size {self.px}, that's obviously wrong... " "What is the correct value:",
+                f"Image file has pixel size {self.px}, that's obviously wrong... "
+                "What is the correct value:",
                 type=float,
             )
         if self.px == 1:
             self.px = click.prompt(
-                f"Image file has pixel size {self.px}, that's maybe wrong... " "What is the correct value:",
+                f"Image file has pixel size {self.px}, that's maybe wrong... "
+                "What is the correct value:",
                 default=self.px,
                 type=float,
             )
@@ -317,7 +333,9 @@ class DataSetPredictor:
     def __preproces_DIST(self, id_name: str):
         # Post-process predicted image patches
         if self.predict == "Microtubule":
-            self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(image=self.image, EDT=True, down_sampling=5)
+            self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
+                image=self.image, EDT=True, down_sampling=5
+            )
         else:
             self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
                 image=self.image, down_sampling=5, as_2d=True
@@ -406,16 +424,31 @@ class DataSetPredictor:
     def _debug(self, id_name: str, debug_id: str):
         if self.debug:
             if debug_id == "cnn":
-                tif.imwrite(join(self.am_output, f"{id_name[:-self.in_format]}_CNN.tif"), self.image)
+                tif.imwrite(
+                    join(self.am_output, f"{id_name[:-self.in_format]}_CNN.tif"), self.image
+                )
             elif debug_id == "pc":
-                np.save(join(self.am_output, f"{id_name[:-self.in_format]}_raw_pc_hd.npy"), self.pc_hd)
-                np.save(join(self.am_output, f"{id_name[:-self.in_format]}_raw_pc_ld.npy"), self.pc_ld)
+                np.save(
+                    join(self.am_output, f"{id_name[:-self.in_format]}_raw_pc_hd.npy"), self.pc_hd
+                )
+                np.save(
+                    join(self.am_output, f"{id_name[:-self.in_format]}_raw_pc_ld.npy"), self.pc_ld
+                )
             elif debug_id == "graph":
-                np.save(join(self.am_output, f"{id_name[:-self.in_format]}_graph_voxel.npy"), self.graphs)
+                np.save(
+                    join(self.am_output, f"{id_name[:-self.in_format]}_graph_voxel.npy"),
+                    self.graphs,
+                )
             elif debug_id == "segment":
                 if self.device == "cpu":
-                    np.save(join(self.am_output, f"{id_name[:-self.in_format]}_coord_voxel.npy"), self.coords_df)
-                    np.save(join(self.am_output, f"{id_name[:-self.in_format]}_idx_voxel.npy"), self.output_idx)
+                    np.save(
+                        join(self.am_output, f"{id_name[:-self.in_format]}_coord_voxel.npy"),
+                        self.coords_df,
+                    )
+                    np.save(
+                        join(self.am_output, f"{id_name[:-self.in_format]}_idx_voxel.npy"),
+                        self.output_idx,
+                    )
                 else:
                     np.save(
                         join(self.am_output, f"{id_name[:-self.in_format]}_coord_voxel.npy"),
@@ -425,9 +458,14 @@ class DataSetPredictor:
                         join(self.am_output, f"{id_name[:-self.in_format]}_idx_voxel.npy"),
                         self.output_idx.cpu().detach().numpy(),
                     )
-                np.save(join(self.am_output, f"{id_name[:-self.in_format]}_segments.npy"), self.segments)
+                np.save(
+                    join(self.am_output, f"{id_name[:-self.in_format]}_segments.npy"), self.segments
+                )
             elif debug_id == "instance_mask":
-                np.save(join(self.am_output, f"{id_name[:-self.in_format]}_instance_mask.npy"), self.mask_semantic)
+                np.save(
+                    join(self.am_output, f"{id_name[:-self.in_format]}_instance_mask.npy"),
+                    self.mask_semantic,
+                )
 
     def __call__(self, *args, **kwargs):
         """Process each image with CNN and DIST"""
@@ -483,7 +521,9 @@ class DataSetPredictor:
 
             """CNN prediction"""
             self.__predict_cnn(
-                id=id, id_name=i, dataloader=PredictionDataset(join(self.dir, "temp", "Patches", "imgs"))
+                id=id,
+                id_name=i,
+                dataloader=PredictionDataset(join(self.dir, "temp", "Patches", "imgs")),
             )
 
             """CNN Post-Processing"""
@@ -568,9 +608,13 @@ class DataSetPredictor:
 
             # Build patches dataset
             if self.predict == "Microtubule":
-                self.coords_df, _, self.output_idx, _ = self.patch_pc.patched_dataset(coord=self.pc_ld)
+                self.coords_df, _, self.output_idx, _ = self.patch_pc.patched_dataset(
+                    coord=self.pc_ld
+                )
             else:
-                self.coords_df, _, self.output_idx, _ = self.patch_pc.patched_dataset(coord=self.pc_ld / 5)
+                self.coords_df, _, self.output_idx, _ = self.patch_pc.patched_dataset(
+                    coord=self.pc_ld / 5
+                )
 
             # Predict point cloud
             self.tardis_progress(
@@ -624,7 +668,11 @@ class DataSetPredictor:
 
                 try:
                     self.segments = self.GraphToSegment.patch_to_segment(
-                        graph=self.graphs, coord=self.pc_ld, idx=self.output_idx, sort=False, prune=10
+                        graph=self.graphs,
+                        coord=self.pc_ld,
+                        idx=self.output_idx,
+                        sort=False,
+                        prune=10,
                     )
                 except:
                     pass
@@ -641,7 +689,8 @@ class DataSetPredictor:
                 text_2=f"Device: {self.device}",
                 text_3=f"Image {id + 1}/{len(self.predict_list)}: {i}",
                 text_4=f"Original pixel size: {self.px} A",
-                text_5=f"Point Cloud: {self.pc_ld.shape[0]} Nodes;" f" {np.max(self.segments[:, 0])} Segments",
+                text_5=f"Point Cloud: {self.pc_ld.shape[0]} Nodes;"
+                f" {np.max(self.segments[:, 0])} Segments",
                 text_7="Current Task: Segmentation finished!",
             )
 
@@ -661,23 +710,33 @@ class DataSetPredictor:
                 )
 
                 if self.amira_check:
-                    dir_amira_file = join(self.dir_amira, i[: -self.in_format] + self.amira_prefix + ".am")
+                    dir_amira_file = join(
+                        self.dir_amira, i[: -self.in_format] + self.amira_prefix + ".am"
+                    )
 
                     if isfile(dir_amira_file):
                         amira_sg = ImportDataFromAmira(src_am=dir_amira_file)
                         amira_sg = amira_sg.get_segmented_points()
 
                         if amira_sg is not None:
-                            compare_sg, label_sg = self.compare_spline(amira_sg=amira_sg, tardis_sg=segments_filter)
+                            compare_sg, label_sg = self.compare_spline(
+                                amira_sg=amira_sg, tardis_sg=segments_filter
+                            )
 
                             self.amira_file.export_amira(
-                                file_dir=join(self.am_output, f"{i[:-self.in_format]}_AmiraCompare.am"),
+                                file_dir=join(
+                                    self.am_output, f"{i[:-self.in_format]}_AmiraCompare.am"
+                                ),
                                 coords=compare_sg,
                                 labels=label_sg,
                             )
 
             elif self.output_format.endswith("csv"):
-                np.savetxt(join(self.am_output, f"{i[:-self.in_format]}_Segments.csv"), self.segments, delimiter=",")
+                np.savetxt(
+                    join(self.am_output, f"{i[:-self.in_format]}_Segments.csv"),
+                    self.segments,
+                    delimiter=",",
+                )
 
                 if self.predict == "Microtubule":
                     np.savetxt(
@@ -685,9 +744,14 @@ class DataSetPredictor:
                         self.filter_splines(segments=self.segments),
                         delimiter=",",
                     )
-            elif self.output_format.endswith(("mrcM", "tifM", "amM")) and self.predict == "Membrane":
+            elif (
+                self.output_format.endswith(("mrcM", "tifM", "amM")) and self.predict == "Membrane"
+            ):
                 self.mask_semantic = draw_semantic_membrane(
-                    mask_size=self.org_shape, coordinate=self.segments, pixel_size=self.px, spline_size=60
+                    mask_size=self.org_shape,
+                    coordinate=self.segments,
+                    pixel_size=self.px,
+                    spline_size=60,
                 )
                 self._debug(id_name=i, debug_id="instance_mask")
 
@@ -698,7 +762,10 @@ class DataSetPredictor:
                         pixel_size=self.px,
                     )
                 elif self.output_format.endswith("tifM"):
-                    tif.imwrite(join(self.am_output, f"{i[:-self.in_format]}_instance.tif"), self.mask_semantic)
+                    tif.imwrite(
+                        join(self.am_output, f"{i[:-self.in_format]}_instance.tif"),
+                        self.mask_semantic,
+                    )
                 elif self.output_format.endswith("amM"):
                     to_am(
                         data=self.mask_semantic,
@@ -738,7 +805,9 @@ class Predictor:
         self.device = device
         self.img_size = img_size
         if checkpoint is None and network is None:
-            TardisError("139", "tardis/utils/predictor.py", "Missing network weights or network name!")
+            TardisError(
+                "139", "tardis/utils/predictor.py", "Missing network weights or network name!"
+            )
 
         if checkpoint is None:
             print(f"Searching for weight file for {network}_{subtype}...")
@@ -787,17 +856,24 @@ class Predictor:
             pytorch model: NN pytorch model.
         """
         if "dist_type" in structure:
-            model = build_dist_network(network_type=structure["dist_type"], structure=structure, prediction=sigmoid)
+            model = build_dist_network(
+                network_type=structure["dist_type"], structure=structure, prediction=sigmoid
+            )
         elif "cnn_type" in structure:
             model = build_cnn_network(
-                network_type=structure["cnn_type"], structure=structure, img_size=self.img_size, prediction=sigmoid
+                network_type=structure["cnn_type"],
+                structure=structure,
+                img_size=self.img_size,
+                prediction=sigmoid,
             )
         else:
             model = None
 
         return model.to(self.device)
 
-    def predict(self, x: torch.Tensor, y: Optional[torch.Tensor] = None, rotate=False) -> np.ndarray:
+    def predict(
+        self, x: torch.Tensor, y: Optional[torch.Tensor] = None, rotate=False
+    ) -> np.ndarray:
         """
         General predictor.
 
@@ -861,7 +937,13 @@ class BasicPredictor:
     """
 
     def __init__(
-        self, model, structure: dict, device: str, print_setting: tuple, predicting_DataLoader, classification=False
+        self,
+        model,
+        structure: dict,
+        device: str,
+        print_setting: tuple,
+        predicting_DataLoader,
+        classification=False,
     ):
         super(BasicPredictor, self).__init__()
 

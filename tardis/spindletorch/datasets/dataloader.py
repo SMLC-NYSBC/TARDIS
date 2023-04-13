@@ -36,7 +36,15 @@ class CNNDataset(Dataset):
         out_channels (int): Number of output channels.
     """
 
-    def __init__(self, img_dir: str, mask_dir: str, size=64, mask_suffix="_mask", transform=True, out_channels=1):
+    def __init__(
+        self,
+        img_dir: str,
+        mask_dir: str,
+        size=64,
+        mask_suffix="_mask",
+        transform=True,
+        out_channels=1,
+    ):
         self.img_dir = img_dir
         self.mask_dir = mask_dir
         self.size = size
@@ -78,7 +86,11 @@ class CNNDataset(Dataset):
 
         # Process image and mask
         img, mask = preprocess(
-            image=img, mask=mask, size=self.size, transformation=self.transform, output_dim_mask=self.out_channels
+            image=img,
+            mask=mask,
+            size=self.size,
+            transformation=self.transform,
+            output_dim_mask=self.out_channels,
         )
 
         if img.dtype != np.float32 and mask.dtype != np.uint8:
@@ -88,9 +100,13 @@ class CNNDataset(Dataset):
                 f"Mask {mask.dtype} and image  {img.dtype} has wrong dtype!",
             )
         if not img.min() >= -1 and not img.max() <= 1:
-            TardisError("147", "tardis/spindletorch/dataset/dataloader.py", "Image file is not binary!")
+            TardisError(
+                "147", "tardis/spindletorch/dataset/dataloader.py", "Image file is not binary!"
+            )
 
-        return torch.from_numpy(img.copy()).type(torch.float32), torch.from_numpy(mask.copy()).type(torch.float32)
+        return torch.from_numpy(img.copy()).type(torch.float32), torch.from_numpy(mask.copy()).type(
+            torch.float32
+        )
 
 
 class PredictionDataset(Dataset):
@@ -131,6 +147,8 @@ class PredictionDataset(Dataset):
         img = img.astype(np.float32)
 
         # Process image and mask
-        img = preprocess(image=img, size=img.shape, transformation=False, output_dim_mask=self.out_channels)
+        img = preprocess(
+            image=img, size=img.shape, transformation=False, output_dim_mask=self.out_channels
+        )
 
         return torch.from_numpy(img).type(torch.float32), idx

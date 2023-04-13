@@ -117,7 +117,11 @@ def trim_with_stride(
             )
     else:
         if stride is None:
-            TardisError("112", "tardis/spindletorch/data_processing", "Trim sizes or stride has to be indicated!")
+            TardisError(
+                "112",
+                "tardis/spindletorch/data_processing",
+                "Trim sizes or stride has to be indicated!",
+            )
         trim_size_xy = 64
         trim_size_z = 64
 
@@ -263,7 +267,9 @@ def trim_label_mask(
 
     image_trim = image[int(min_z) : int(max_z), int(min_y) : int(max_y), int(min_x) : int(max_x)]
 
-    label_mask_trim = label_mask[int(min_z) : int(max_z), int(min_y) : int(max_y), int(min_x) : int(max_x)]
+    label_mask_trim = label_mask[
+        int(min_z) : int(max_z), int(min_y) : int(max_y), int(min_x) : int(max_x)
+    ]
 
     points[:, 0] = points[:, 0] - min_x
     points[:, 1] = points[:, 1] - min_y

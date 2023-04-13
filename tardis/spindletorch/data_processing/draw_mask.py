@@ -70,7 +70,9 @@ def draw_instances(
                 c = label[j, :]  # Point center
 
                 if len(c) == 3:
-                    cz, cy, cx = draw_mask(r=r, c=c, label_mask=label_mask, segment_shape=mask_shape)
+                    cz, cy, cx = draw_mask(
+                        r=r, c=c, label_mask=label_mask, segment_shape=mask_shape
+                    )
                     all_cz.append(cz)
                     all_cy.append(cy)
                     all_cx.append(cx)
@@ -79,7 +81,11 @@ def draw_instances(
                     all_cy.append(cy)
                     all_cx.append(cx)
 
-            all_cz, all_cy, all_cx = np.concatenate(all_cz), np.concatenate(all_cy), np.concatenate(all_cx)
+            all_cz, all_cy, all_cx = (
+                np.concatenate(all_cz),
+                np.concatenate(all_cy),
+                np.concatenate(all_cx),
+            )
 
             label_mask[all_cz, all_cy, all_cx] = 1
     else:
@@ -97,13 +103,19 @@ def draw_instances(
                 all_cy.append(cy)
                 all_cx.append(cx)
 
-        all_cz, all_cy, all_cx = np.concatenate(all_cz), np.concatenate(all_cy), np.concatenate(all_cx)
+        all_cz, all_cy, all_cx = (
+            np.concatenate(all_cz),
+            np.concatenate(all_cy),
+            np.concatenate(all_cx),
+        )
         label_mask[all_cz, all_cy, all_cx] = 1
 
     return np.where(label_mask == 1, 1, 0).astype(np.uint8)
 
 
-def draw_semantic_membrane(mask_size: tuple, coordinate: np.ndarray, pixel_size: float, spline_size=70) -> np.ndarray:
+def draw_semantic_membrane(
+    mask_size: tuple, coordinate: np.ndarray, pixel_size: float, spline_size=70
+) -> np.ndarray:
     """
     Draw semantic membrane
 
@@ -259,7 +271,9 @@ def draw_sphere(r: int, c: tuple, shape: tuple) -> Tuple[np.ndarray, np.ndarray,
         for y_dim in range(y):
             for x_dim in range(x):
                 dist_zyx_to_c = sqrt(
-                    pow(abs(z_dim - c_frame), 2) + pow(abs(y_dim - c_frame), 2) + pow(abs(x_dim - c_frame), 2)
+                    pow(abs(z_dim - c_frame), 2)
+                    + pow(abs(y_dim - c_frame), 2)
+                    + pow(abs(x_dim - c_frame), 2)
                 )
                 if dist_zyx_to_c > c_frame:
                     sphere_frame[z_dim, y_dim, x_dim] = False

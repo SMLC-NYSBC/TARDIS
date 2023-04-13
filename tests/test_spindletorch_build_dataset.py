@@ -28,10 +28,17 @@ def test_build_datasets():
     mkdir("./tests/test_data/temp/train/masks")
 
     copy("./tests/test_data/data_type/am3D.am", "./tests/test_data/temp/am3D.am")
-    copy("./tests/test_data/data_type/am3D.CorrelationLines.am", "./tests/test_data/temp/am3D.CorrelationLines.am")
+    copy(
+        "./tests/test_data/data_type/am3D.CorrelationLines.am",
+        "./tests/test_data/temp/am3D.CorrelationLines.am",
+    )
 
     build_train_dataset(
-        dataset_dir="./tests/test_data/temp/", circle_size=250, resize_pixel_size=25, trim_xy=64, trim_z=64
+        dataset_dir="./tests/test_data/temp/",
+        circle_size=250,
+        resize_pixel_size=25,
+        trim_xy=64,
+        trim_z=64,
     )
 
     assert len(listdir("./tests/test_data/temp/train/imgs")) > 0

@@ -14,7 +14,12 @@ from os.path import join
 import numpy as np
 
 from tardis.dist_pytorch.datasets.augmentation import preprocess_data
-from tardis.dist_pytorch.datasets.dataloader import FilamentDataset, PartnetDataset, ScannetColorDataset, ScannetDataset
+from tardis.dist_pytorch.datasets.dataloader import (
+    FilamentDataset,
+    PartnetDataset,
+    ScannetColorDataset,
+    ScannetDataset,
+)
 
 
 class TestDataLoader:
@@ -24,7 +29,9 @@ class TestDataLoader:
 
     def test_preprocess_3d_img(self):
         coord, img = preprocess_data(
-            coord=self.coord_dir, image=join(self.img_dir, "filament_mt", "train", "imgs", "am3D.am"), size=64
+            coord=self.coord_dir,
+            image=join(self.img_dir, "filament_mt", "train", "imgs", "am3D.am"),
+            size=64,
         )
         assert coord.ndim == 2
         assert coord.shape == (10, 4), f"Coord of wrong shape {coord.shape}"
@@ -38,14 +45,18 @@ class TestDataLoader:
         assert img.shape == (64, 64, 64), f"img of wrong shape {img.shape}"
 
     def test_preprocess3d(self):
-        coord, _, graph = preprocess_data(coord=self.coord_dir, include_label=False, size=64, normalization="rescale")
+        coord, _, graph = preprocess_data(
+            coord=self.coord_dir, include_label=False, size=64, normalization="rescale"
+        )
         assert coord.ndim == 2, "Incorrect no. of dimension"
         assert coord.shape == (10, 3), f"Coord of wrong shape {coord.shape}"
         assert graph.shape == (10, 10), "Graph of wrong shape!"
 
     def test_filament_mt_dataloader(self):
         train_dl = FilamentDataset(
-            coord_dir=join(self.dir, "filament_mt", "train", "masks"), coord_format=".CorrelationLines.am", patch_if=500
+            coord_dir=join(self.dir, "filament_mt", "train", "masks"),
+            coord_format=".CorrelationLines.am",
+            patch_if=500,
         )
 
         # Build first time
@@ -68,7 +79,9 @@ class TestDataLoader:
 
     def test_filament_mem_dataloader(self):
         train_dl = FilamentDataset(
-            coord_dir=join(self.dir, "filament_mem", "train", "masks"), coord_format=".csv", patch_if=500
+            coord_dir=join(self.dir, "filament_mem", "train", "masks"),
+            coord_format=".csv",
+            patch_if=500,
         )
 
         # Build first time

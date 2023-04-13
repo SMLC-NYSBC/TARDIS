@@ -35,7 +35,9 @@ def unet_3d(image_size: int, layer_num: int, conv_scaler: int, dropout: Optional
     structure.update({"num_conv_layers": layer_num})
     structure.update({"conv_scaler": conv_scaler})
     structure.update({"dropout": dropout})
-    return build_cnn_network(network_type="unet", structure=structure, img_size=image_size, prediction=False)
+    return build_cnn_network(
+        network_type="unet", structure=structure, img_size=image_size, prediction=False
+    )
 
 
 def unet_2d(image_size: int, layer_num: int, conv_scaler: int, dropout: Optional[float] = None):
@@ -43,7 +45,9 @@ def unet_2d(image_size: int, layer_num: int, conv_scaler: int, dropout: Optional
     structure.update({"num_conv_layers": layer_num})
     structure.update({"conv_scaler": conv_scaler})
     structure.update({"dropout": dropout})
-    return build_cnn_network(network_type="unet", structure=structure, img_size=image_size, prediction=False)
+    return build_cnn_network(
+        network_type="unet", structure=structure, img_size=image_size, prediction=False
+    )
 
 
 def resunet_3d(image_size: int, layer_num: int, conv_scaler: int, dropout: Optional[float] = None):
@@ -51,7 +55,9 @@ def resunet_3d(image_size: int, layer_num: int, conv_scaler: int, dropout: Optio
     structure.update({"num_conv_layers": layer_num})
     structure.update({"conv_scaler": conv_scaler})
     structure.update({"dropout": dropout})
-    return build_cnn_network(network_type="resunet", structure=structure, img_size=image_size, prediction=False)
+    return build_cnn_network(
+        network_type="resunet", structure=structure, img_size=image_size, prediction=False
+    )
 
 
 def resunet_2d(image_size: int, layer_num: int, conv_scaler: int, dropout: Optional[float] = None):
@@ -59,23 +65,33 @@ def resunet_2d(image_size: int, layer_num: int, conv_scaler: int, dropout: Optio
     structure.update({"num_conv_layers": layer_num})
     structure.update({"conv_scaler": conv_scaler})
     structure.update({"dropout": dropout})
-    return build_cnn_network(network_type="resunet", structure=structure, img_size=image_size, prediction=False)
+    return build_cnn_network(
+        network_type="resunet", structure=structure, img_size=image_size, prediction=False
+    )
 
 
-def unet3plus_3d(image_size: int, layer_num: int, conv_scaler: int, dropout: Optional[float] = None):
+def unet3plus_3d(
+    image_size: int, layer_num: int, conv_scaler: int, dropout: Optional[float] = None
+):
     structure.update({"layer_components": "3gcl"})
     structure.update({"num_conv_layers": layer_num})
     structure.update({"conv_scaler": conv_scaler})
     structure.update({"dropout": dropout})
-    return build_cnn_network(network_type="unet3plus", structure=structure, img_size=image_size, prediction=False)
+    return build_cnn_network(
+        network_type="unet3plus", structure=structure, img_size=image_size, prediction=False
+    )
 
 
-def unet3plus_2d(image_size: int, layer_num: int, conv_scaler: int, dropout: Optional[float] = None):
+def unet3plus_2d(
+    image_size: int, layer_num: int, conv_scaler: int, dropout: Optional[float] = None
+):
     structure.update({"layer_components": "2gcl"})
     structure.update({"num_conv_layers": layer_num})
     structure.update({"conv_scaler": conv_scaler})
     structure.update({"dropout": dropout})
-    return build_cnn_network(network_type="unet3plus", structure=structure, img_size=image_size, prediction=False)
+    return build_cnn_network(
+        network_type="unet3plus", structure=structure, img_size=image_size, prediction=False
+    )
 
 
 def fnet_3d(image_size: int, layer_num: int, conv_scaler: int, dropout: Optional[float] = None):
@@ -83,7 +99,9 @@ def fnet_3d(image_size: int, layer_num: int, conv_scaler: int, dropout: Optional
     structure.update({"num_conv_layers": layer_num})
     structure.update({"conv_scaler": conv_scaler})
     structure.update({"dropout": dropout})
-    return build_cnn_network(network_type="fnet", structure=structure, img_size=image_size, prediction=False)
+    return build_cnn_network(
+        network_type="fnet", structure=structure, img_size=image_size, prediction=False
+    )
 
 
 def fnet_2d(image_size: int, layer_num: int, conv_scaler: int, dropout: Optional[float] = None):
@@ -91,7 +109,9 @@ def fnet_2d(image_size: int, layer_num: int, conv_scaler: int, dropout: Optional
     structure.update({"num_conv_layers": layer_num})
     structure.update({"conv_scaler": conv_scaler})
     structure.update({"dropout": dropout})
-    return build_cnn_network(network_type="fnet", structure=structure, img_size=image_size, prediction=False)
+    return build_cnn_network(
+        network_type="fnet", structure=structure, img_size=image_size, prediction=False
+    )
 
 
 class TestNetwork3D:

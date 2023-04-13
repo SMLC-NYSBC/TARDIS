@@ -178,7 +178,9 @@ class BasicTrainer:
         if self.id == 0:
             self.epoch_desc = "Epochs: early_stop: 0; best F1: NaN"
         else:
-            self.epoch_desc = self._update_desc(self.early_stopping.counter, [np.max(self.f1), self.f1[-1:][0]])
+            self.epoch_desc = self._update_desc(
+                self.early_stopping.counter, [np.max(self.f1), self.f1[-1:][0]]
+            )
 
     def _update_progress_bar(self, loss_desc: str, idx: int, train=True):
         """
@@ -226,7 +228,9 @@ class BasicTrainer:
         if len(self.f1) > 0:
             np.savetxt(
                 join(getcwd(), f"{self.checkpoint_name}_checkpoint", "eval_metric.csv"),
-                np.column_stack([self.accuracy, self.precision, self.recall, self.threshold, self.f1]),
+                np.column_stack(
+                    [self.accuracy, self.precision, self.recall, self.threshold, self.f1]
+                ),
                 delimiter=",",
             )
 
@@ -246,7 +250,11 @@ class BasicTrainer:
                     "model_state_dict": self.model.state_dict(),
                     "optimizer_state_dict": self.optimizer.state_dict(),
                 },
-                join(getcwd(), f"{self.checkpoint_name}_checkpoint", f"{self.checkpoint_name}_checkpoint.pth"),
+                join(
+                    getcwd(),
+                    f"{self.checkpoint_name}_checkpoint",
+                    f"{self.checkpoint_name}_checkpoint.pth",
+                ),
             )
 
         torch.save(

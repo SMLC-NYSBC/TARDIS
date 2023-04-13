@@ -37,15 +37,43 @@ from tardis.version import version
     show_default=True,
 )
 @click.option(
-    "-dt", "--dataset_type", default="filament", type=str, help="Define training dataset type.", show_default=True
+    "-dt",
+    "--dataset_type",
+    default="filament",
+    type=str,
+    help="Define training dataset type.",
+    show_default=True,
 )
-@click.option("-no", "--n_out", default=1, type=int, help="Number of output channels in DIST.", show_default=True)
-@click.option("-nd", "--node_dim", default=0, type=int, help="Number embedding channels for nodes.", show_default=True)
 @click.option(
-    "-ed", "--edge_dim", default=128, type=int, help="Number embedding channels for edges.", show_default=True
+    "-no",
+    "--n_out",
+    default=1,
+    type=int,
+    help="Number of output channels in DIST.",
+    show_default=True,
 )
-@click.option("-ly", "--layers", default=6, type=int, help="Number of DIST layers", show_default=True)
-@click.option("-hd", "--heads", default=8, type=int, help="Number of DIST heads in MHA", show_default=True)
+@click.option(
+    "-nd",
+    "--node_dim",
+    default=0,
+    type=int,
+    help="Number embedding channels for nodes.",
+    show_default=True,
+)
+@click.option(
+    "-ed",
+    "--edge_dim",
+    default=128,
+    type=int,
+    help="Number embedding channels for edges.",
+    show_default=True,
+)
+@click.option(
+    "-ly", "--layers", default=6, type=int, help="Number of DIST layers", show_default=True
+)
+@click.option(
+    "-hd", "--heads", default=8, type=int, help="Number of DIST heads in MHA", show_default=True
+)
 @click.option(
     "-dp",
     "--dropout",
@@ -55,10 +83,20 @@ from tardis.version import version
     show_default=True,
 )
 @click.option(
-    "-nsg", "--node_sigma", default=1.0, type=float, help="Sigma value for RGB node embedding.", show_default=True
+    "-nsg",
+    "--node_sigma",
+    default=1.0,
+    type=float,
+    help="Sigma value for RGB node embedding.",
+    show_default=True,
 )
 @click.option(
-    "-esg", "--edge_sigma", default=2.0, type=str, help="Sigma value for distance edges embedding.", show_default=True
+    "-esg",
+    "--edge_sigma",
+    default=2.0,
+    type=str,
+    help="Sigma value for distance edges embedding.",
+    show_default=True,
 )
 @click.option(
     "-st",
@@ -76,7 +114,14 @@ from tardis.version import version
     help="Type of DIST model prediction.",
     show_default=True,
 )
-@click.option("-ps", "--pc_sampling", default=500, type=int, help="Max number of points per patch.", show_default=True)
+@click.option(
+    "-ps",
+    "--pc_sampling",
+    default=500,
+    type=int,
+    help="Max number of points per patch.",
+    show_default=True,
+)
 @click.option(
     "-lo",
     "--loss",
@@ -95,7 +140,12 @@ from tardis.version import version
     show_default=True,
 )
 @click.option(
-    "-ch", "--checkpoint", default=None, type=str, help="If not None, directory to checkpoint.", show_default=True
+    "-ch",
+    "--checkpoint",
+    default=None,
+    type=str,
+    help="If not None, directory to checkpoint.",
+    show_default=True,
 )
 @click.option(
     "-dv",
@@ -108,7 +158,9 @@ from tardis.version import version
     "0-9 - specified gpu device id to use",
     show_default=True,
 )
-@click.option("-ep", "--epochs", default=100, type=int, help="Number of epoches.", show_default=True)
+@click.option(
+    "-ep", "--epochs", default=100, type=int, help="Number of epoches.", show_default=True
+)
 @click.option(
     "-er",
     "--early_stop",
@@ -208,7 +260,9 @@ def main(
 
     """Build DataLoader for training/validation"""
     dl_train_graph, dl_test_graph = build_dataset(
-        dataset_type=dataset_type, dirs=[TRAIN_COORD_DIR, TEST_COORD_DIR], max_points_per_patch=pc_sampling
+        dataset_type=dataset_type,
+        dirs=[TRAIN_COORD_DIR, TEST_COORD_DIR],
+        max_points_per_patch=pc_sampling,
     )
 
     """Setup training"""

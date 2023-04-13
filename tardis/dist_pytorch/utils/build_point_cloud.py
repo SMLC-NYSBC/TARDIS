@@ -51,15 +51,23 @@ class BuildPointCloud:
 
                 image, _ = import_tiff(tiff=image)
         except RuntimeWarning:
-            TardisError("121", "tardis/dist/utils", "Directory/input .tiff file/array is not correct...")
+            TardisError(
+                "121", "tardis/dist/utils", "Directory/input .tiff file/array is not correct..."
+            )
 
         if image.ndim not in [2, 3]:
-            TardisError("113", "tardis/dist/utils", f"Image dim expected to be 2 or 3 bu got {image.ndim}")
+            TardisError(
+                "113", "tardis/dist/utils", f"Image dim expected to be 2 or 3 bu got {image.ndim}"
+            )
 
         """Check for binary"""
         unique_val = np.sort(pd.unique(image.flatten()))  # Use panda for speed
         if len(unique_val) != 2:
-            TardisError("115", "tardis/dist/utils", f"Not binary image. Expected 0-1 value but got: {unique_val}")
+            TardisError(
+                "115",
+                "tardis/dist/utils",
+                f"Not binary image. Expected 0-1 value but got: {unique_val}",
+            )
 
         """Check for int8 vs uint8"""
         if np.any(unique_val > 254):  # Fix uint8 formatting
@@ -158,7 +166,9 @@ class BuildPointCloud:
         """Output point cloud [X x Y x Z]"""
         if len(image_point) == 2:
             """If 2D bring artificially Z dim == 0"""
-            coordinates_HD = np.stack((image_point[1], image_point[0], np.zeros(image_point[0].shape))).T
+            coordinates_HD = np.stack(
+                (image_point[1], image_point[0], np.zeros(image_point[0].shape))
+            ).T
         else:
             coordinates_HD = np.stack((image_point[2], image_point[1], image_point[0])).T
 
@@ -178,7 +188,11 @@ class BuildPointCloud:
             if not as_2d:
                 dist = cdist(coordinates_LD, coordinates_LD).astype(np.float16)
                 # indices = np.where(dist <= 1.5)
-                dist = [id for id, x in enumerate(dist) if len(np.where(x <= sqrt(2 * down_sampling**2))[0]) > 2]
+                dist = [
+                    id
+                    for id, x in enumerate(dist)
+                    if len(np.where(x <= sqrt(2 * down_sampling**2))[0]) > 2
+                ]
                 coordinates_LD = coordinates_LD[dist, :]
 
             return coordinates_HD, coordinates_LD

@@ -22,7 +22,9 @@ class PairBiasSelfAttention(nn.Module):
     Self-attention block that attends coordinate and image patches or RGB.
     """
 
-    def __init__(self, embed_dim: int, pairs_dim: int, num_heads: int, init_scaling=1 / 1.4142135623730951):
+    def __init__(
+        self, embed_dim: int, pairs_dim: int, num_heads: int, init_scaling=1 / 1.4142135623730951
+    ):
         """
 
         Args:
@@ -38,7 +40,9 @@ class PairBiasSelfAttention(nn.Module):
 
         self.num_heads = num_heads
         self.head_dim = embed_dim // num_heads
-        assert self.head_dim * num_heads == self.embed_dim, "embed_dim must be divisible by num_heads"
+        assert (
+            self.head_dim * num_heads == self.embed_dim
+        ), "embed_dim must be divisible by num_heads"
         self.scaling = self.head_dim**-0.5
 
         # Initializing scaling factor
@@ -217,7 +221,9 @@ class ComparisonLayer(nn.Module):
         b = self.linear2(x)
 
         """Batch x Length x Length x Out_Channels"""
-        return self.linear3(a.unsqueeze(2) * b.unsqueeze(1)) + self.linear4(a.unsqueeze(2) - b.unsqueeze(1))
+        return self.linear3(a.unsqueeze(2) * b.unsqueeze(1)) + self.linear4(
+            a.unsqueeze(2) - b.unsqueeze(1)
+        )
 
 
 class TriangularEdgeUpdate(nn.Module):
@@ -436,7 +442,9 @@ class MultiHeadAttention(nn.Module):
         self.dropout_module = nn.Dropout(dropout)
 
         self.head_dim = embed_dim // num_heads
-        assert self.head_dim * num_heads == self.embed_dim, "embed_dim must be divisible by num_heads"
+        assert (
+            self.head_dim * num_heads == self.embed_dim
+        ), "embed_dim must be divisible by num_heads"
         self.scaling = self.head_dim**-0.5
 
         self.self_attention = self_attention
@@ -577,7 +585,11 @@ class MultiHeadAttention(nn.Module):
                 attn_mask = torch.cat([attn_mask, attn_mask.new_zeros(attn_mask.size(0), 1)], dim=1)
             if key_padding_mask is not None:
                 key_padding_mask = torch.cat(
-                    [key_padding_mask, torch.zeros(key_padding_mask.size(0), 1).type_as(key_padding_mask)], dim=1
+                    [
+                        key_padding_mask,
+                        torch.zeros(key_padding_mask.size(0), 1).type_as(key_padding_mask),
+                    ],
+                    dim=1,
                 )
 
         attn_weights = torch.bmm(q, k.transpose(1, 2))
@@ -651,7 +663,9 @@ class SelfAttention2D(MultiHeadAttention):
     """
 
     def __init__(self, embed_dim: int, num_heads: int, axis=None, dropout=0.0, max_size=4194304):
-        super(SelfAttention2D, self).__init__(embed_dim, num_heads, dropout=dropout, self_attention=True)
+        super(SelfAttention2D, self).__init__(
+            embed_dim, num_heads, dropout=dropout, self_attention=True
+        )
         self.axis = axis
         self.max_size = max_size
 

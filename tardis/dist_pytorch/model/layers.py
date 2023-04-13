@@ -124,7 +124,13 @@ class DistLayer(nn.Module):
     """
 
     def __init__(
-        self, pairs_dim: int, node_dim: Optional[int] = None, dropout=0, ff_factor=4, num_heads=8, structure="full"
+        self,
+        pairs_dim: int,
+        node_dim: Optional[int] = None,
+        dropout=0,
+        ff_factor=4,
+        num_heads=8,
+        structure="full",
     ):
         super().__init__()
         self.pairs_dim = pairs_dim
@@ -138,38 +144,64 @@ class DistLayer(nn.Module):
         # Node optional features update
         if node_dim is not None:
             if node_dim > 0:
-                self.input_attn = PairBiasSelfAttention(embed_dim=node_dim, pairs_dim=pairs_dim, num_heads=num_heads)
+                self.input_attn = PairBiasSelfAttention(
+                    embed_dim=node_dim, pairs_dim=pairs_dim, num_heads=num_heads
+                )
                 self.input_ffn = GeluFeedForward(input_dim=node_dim, ff_dim=node_dim * ff_factor)
-                self.pair_update = ComparisonLayer(input_dim=node_dim, output_dim=pairs_dim, channel_dim=pairs_dim)
+                self.pair_update = ComparisonLayer(
+                    input_dim=node_dim, output_dim=pairs_dim, channel_dim=pairs_dim
+                )
 
         # Edge optional MHA update
         if self.structure in ["full", "full_af", "self_attn"]:
-            self.row_attention = SelfAttention2D(embed_dim=pairs_dim, num_heads=num_heads, dropout=dropout, axis=1)
-            self.col_attention = SelfAttention2D(embed_dim=pairs_dim, num_heads=num_heads, dropout=dropout, axis=0)
+            self.row_attention = SelfAttention2D(
+                embed_dim=pairs_dim, num_heads=num_heads, dropout=dropout, axis=1
+            )
+            self.col_attention = SelfAttention2D(
+                embed_dim=pairs_dim, num_heads=num_heads, dropout=dropout, axis=0
+            )
 
         # Edge triangular update
         if self.structure in ["full", "full_af", "triang"]:
-            self.row_update = TriangularEdgeUpdate(input_dim=pairs_dim, channel_dim=self.channel_dim)
-            self.col_update = TriangularEdgeUpdate(input_dim=pairs_dim, channel_dim=self.channel_dim, axis=0)
+            self.row_update = TriangularEdgeUpdate(
+                input_dim=pairs_dim, channel_dim=self.channel_dim
+            )
+            self.col_update = TriangularEdgeUpdate(
+                input_dim=pairs_dim, channel_dim=self.channel_dim, axis=0
+            )
 
         # Edge Optional Quadratic
         if self.structure == "quad":
             self.row_update = QuadraticEdgeUpdate(input_dim=pairs_dim, channel_dim=self.channel_dim)
-            self.col_update = QuadraticEdgeUpdate(input_dim=pairs_dim, channel_dim=self.channel_dim, axis=0)
+            self.col_update = QuadraticEdgeUpdate(
+                input_dim=pairs_dim, channel_dim=self.channel_dim, axis=0
+            )
 
         # Edge Optional dual-triang update
         if self.structure == "dualtriang":
-            self.row_update_1 = TriangularEdgeUpdate(input_dim=pairs_dim, channel_dim=self.channel_dim)
-            self.col_update_1 = TriangularEdgeUpdate(input_dim=pairs_dim, channel_dim=self.channel_dim, axis=0)
+            self.row_update_1 = TriangularEdgeUpdate(
+                input_dim=pairs_dim, channel_dim=self.channel_dim
+            )
+            self.col_update_1 = TriangularEdgeUpdate(
+                input_dim=pairs_dim, channel_dim=self.channel_dim, axis=0
+            )
 
-            self.row_update_2 = TriangularEdgeUpdate(input_dim=pairs_dim, channel_dim=self.channel_dim)
-            self.col_update_2 = TriangularEdgeUpdate(input_dim=pairs_dim, channel_dim=self.channel_dim, axis=0)
+            self.row_update_2 = TriangularEdgeUpdate(
+                input_dim=pairs_dim, channel_dim=self.channel_dim
+            )
+            self.col_update_2 = TriangularEdgeUpdate(
+                input_dim=pairs_dim, channel_dim=self.channel_dim, axis=0
+            )
 
         # Edge GeLu FFN normalization layer
         self.pair_ffn = GeluFeedForward(input_dim=pairs_dim, ff_dim=pairs_dim * ff_factor)
 
     def update_nodes(
-        self, h_pairs: torch.Tensor, h_nodes: Optional[torch.Tensor] = None, src_mask=None, src_key_padding_mask=None
+        self,
+        h_pairs: torch.Tensor,
+        h_nodes: Optional[torch.Tensor] = None,
+        src_mask=None,
+        src_key_padding_mask=None,
     ) -> torch.Tensor:
         """
         Transformer on the input weighted by the pair representations
@@ -251,15 +283,31 @@ class DistLayer(nn.Module):
                 + self.col_attention(x=h_pairs, padding_mask=mask)
             )
         elif self.structure in ["triang", "quad"]:
-            h_pairs = h_pairs + self.row_update(z=h_pairs, mask=mask) + self.col_update(z=h_pairs, mask=mask)
+            h_pairs = (
+                h_pairs
+                + self.row_update(z=h_pairs, mask=mask)
+                + self.col_update(z=h_pairs, mask=mask)
+            )
         elif self.structure == "dualtriang":
-            h_pairs = h_pairs + self.row_update_1(z=h_pairs, mask=mask) + self.col_update_1(z=h_pairs, mask=mask)
-            h_pairs = h_pairs + self.row_update_2(z=h_pairs, mask=mask) + self.col_update_2(z=h_pairs, mask=mask)
+            h_pairs = (
+                h_pairs
+                + self.row_update_1(z=h_pairs, mask=mask)
+                + self.col_update_1(z=h_pairs, mask=mask)
+            )
+            h_pairs = (
+                h_pairs
+                + self.row_update_2(z=h_pairs, mask=mask)
+                + self.col_update_2(z=h_pairs, mask=mask)
+            )
 
         return h_pairs + self.pair_ffn(x=h_pairs)
 
     def forward(
-        self, h_pairs: torch.Tensor, h_nodes: Optional[torch.Tensor] = None, src_mask=None, src_key_padding_mask=None
+        self,
+        h_pairs: torch.Tensor,
+        h_nodes: Optional[torch.Tensor] = None,
+        src_mask=None,
+        src_key_padding_mask=None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Wrapped forward throw all DIST layers.
@@ -276,9 +324,14 @@ class DistLayer(nn.Module):
         # Update node features and convert to edge shape
         if h_nodes is not None:
             h_nodes = self.update_nodes(
-                h_pairs=h_pairs, h_nodes=h_nodes, src_mask=src_mask, src_key_padding_mask=src_key_padding_mask
+                h_pairs=h_pairs,
+                h_nodes=h_nodes,
+                src_mask=src_mask,
+                src_key_padding_mask=src_key_padding_mask,
             )
 
         # Update edge features
-        h_pairs = self.update_edges(h_pairs=h_pairs, h_nodes=h_nodes, src_key_padding_mask=src_key_padding_mask)
+        h_pairs = self.update_edges(
+            h_pairs=h_pairs, h_nodes=h_nodes, src_key_padding_mask=src_key_padding_mask
+        )
         return h_nodes, h_pairs

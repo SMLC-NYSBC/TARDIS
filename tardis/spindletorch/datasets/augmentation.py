@@ -38,7 +38,9 @@ class CenterCrop:
         if len(self.size) == 2:
             self.size = (0, size[0], size[1])
 
-    def __call__(self, x: np.ndarray, y: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray]:
+    def __call__(
+        self, x: np.ndarray, y: Optional[np.ndarray] = None
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Call for centre crop.
 
@@ -51,12 +53,16 @@ class CenterCrop:
         """
         if x.ndim not in [2, 3]:
             TardisError(
-                "146", "tardis/spindletorch/dataset/augmentation.py", "Image crop supported only for 3D and 2D!"
+                "146",
+                "tardis/spindletorch/dataset/augmentation.py",
+                "Image crop supported only for 3D and 2D!",
             )
         if y is not None:
             if y.ndim not in [2, 3]:
                 TardisError(
-                    "146", "tardis/spindletorch/dataset/augmentation.py", "Image crop supported only for 3D and 2D!"
+                    "146",
+                    "tardis/spindletorch/dataset/augmentation.py",
+                    "Image crop supported only for 3D and 2D!",
                 )
 
         if x.ndim == 3:
@@ -77,7 +83,10 @@ class CenterCrop:
         """Crop"""
         if y is not None:
             if x.ndim == 3 and y.ndim == 3:
-                return x[up_d:down_d, top_h:bottom_h, left_w:right_w], y[up_d:down_d, top_h:bottom_h, left_w:right_w]
+                return (
+                    x[up_d:down_d, top_h:bottom_h, left_w:right_w],
+                    y[up_d:down_d, top_h:bottom_h, left_w:right_w],
+                )
             elif x.ndim == 2 and y.ndim == 2:
                 return x[top_h:bottom_h, left_w:right_w], y[top_h:bottom_h, left_w:right_w]
         else:
@@ -233,7 +242,11 @@ def preprocess(
     """
     # Check if image is 2D or 3D
     if image.ndim not in [2, 3]:
-        TardisError("146", "tardis/spindletorch/dataset/augmentation.py", "Image crop supported only for 3D and 2D!")
+        TardisError(
+            "146",
+            "tardis/spindletorch/dataset/augmentation.py",
+            "Image crop supported only for 3D and 2D!",
+        )
 
     if isinstance(size, tuple):
         if sum(size) / len(size) == size[0]:  # Check if image has uniform size

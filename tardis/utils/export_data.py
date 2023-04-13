@@ -48,14 +48,22 @@ class NumpyToAmira:
         """
         if isinstance(coord, np.ndarray):
             if coord.shape[1] == 3 and not self.as_point_cloud:
-                TardisError("132", "tardis/utils/export_data.py", "Numpy 3D array may not have IDs for each point.")
+                TardisError(
+                    "132",
+                    "tardis/utils/export_data.py",
+                    "Numpy 3D array may not have IDs for each point.",
+                )
 
             if coord.shape[1] == 2:
                 if self.as_point_cloud:
                     z = np.expand_dims(np.repeat(0, len(coord)), 1)
                     coord = np.hstack((coord, z))
                 else:
-                    TardisError("132", "tardis/utils/export_data.py", "Numpy 2D array may not have IDs for each point.")
+                    TardisError(
+                        "132",
+                        "tardis/utils/export_data.py",
+                        "Numpy 2D array may not have IDs for each point.",
+                    )
 
             if coord.shape[1] == 4 and self.as_point_cloud:
                 coord = coord[:, 1:]
@@ -64,7 +72,9 @@ class NumpyToAmira:
                 TardisError("130", "tardis/utils/export_data.py", "Expected list of np.ndarrays!")
 
             # Add dummy Z dimension
-            coord = [np.hstack((c, np.zeros((c.shape[0], 1)))) if c.shape[1] == 3 else c for c in coord]
+            coord = [
+                np.hstack((c, np.zeros((c.shape[0], 1)))) if c.shape[1] == 3 else c for c in coord
+            ]
 
             # Fixed ordering
             ordered_coord = []
@@ -129,20 +139,28 @@ class NumpyToAmira:
             for i in self.tardis_header:
                 f.write(i)
             f.write("\n")
-            f.write(f"define VERTEX {vertex} \n" f"define EDGE {edge} \n" f"define POINT {point} \n")
+            f.write(
+                f"define VERTEX {vertex} \n" f"define EDGE {edge} \n" f"define POINT {point} \n"
+            )
             f.write("\n")
             f.write("Parameters { \n")
             if not self.as_point_cloud:
                 f.write("    SpatialGraphUnitsVertex { \n")
                 for i in label:
                     f.write(
-                        f"        {i}" + " { \n" "            Unit -1, \n" "            Dimension -1 \n" "        } \n"
+                        f"        {i}" + " { \n"
+                        "            Unit -1, \n"
+                        "            Dimension -1 \n"
+                        "        } \n"
                     )
                 f.write("    } \n")
                 f.write("    SpatialGraphUnitsEdge { \n")
                 for i in label:
                     f.write(
-                        f"        {i}" + " { \n" "            Unit -1, \n" "            Dimension -1 \n" "        } \n"
+                        f"        {i}" + " { \n"
+                        "            Unit -1, \n"
+                        "            Dimension -1 \n"
+                        "        } \n"
                     )
                 f.write("    } \n")
                 f.write("    SpatialGraphUnitsPoint { \n")
@@ -221,7 +239,9 @@ class NumpyToAmira:
 
             if len(labels) != len(coord_list):
                 TardisError(
-                    id="117", py="tardis/utils/export_data.py", desc="Number of labels do not mach number of Arrays!"
+                    id="117",
+                    py="tardis/utils/export_data.py",
+                    desc="Number of labels do not mach number of Arrays!",
                 )
 
         # Build Amira header
@@ -250,9 +270,13 @@ class NumpyToAmira:
                 vertex = np.array((segment[0], segment[-1:][0]), dtype=object)
 
                 # Append vertex #1 (aka Node #1)
-                vertex_coord.append(f"{vertex[0][0]:.15e} " f"{vertex[0][1]:.15e} " f"{vertex[0][2]:.15e}")
+                vertex_coord.append(
+                    f"{vertex[0][0]:.15e} " f"{vertex[0][1]:.15e} " f"{vertex[0][2]:.15e}"
+                )
                 # Append vertex #2 (aka Node #2)
-                vertex_coord.append(f"{vertex[1][0]:.15e} " f"{vertex[1][1]:.15e} " f"{vertex[1][2]:.15e}")
+                vertex_coord.append(
+                    f"{vertex[1][0]:.15e} " f"{vertex[1][1]:.15e} " f"{vertex[1][2]:.15e}"
+                )
 
                 # Get Update id number of vertex #1 and #2
                 vertex_id_1 += 2

@@ -66,7 +66,13 @@ def trilinear_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndar
         no.ndarray: Up or Down scale 3D array.
     """
     img = torch.from_numpy(img[None, None, :]).to("cpu").type(torch.float)
-    img = F.interpolate(img, size=scale, mode="trilinear").cpu().detach().numpy()[0, 0, :].astype(dtype)
+    img = (
+        F.interpolate(img, size=scale, mode="trilinear")
+        .cpu()
+        .detach()
+        .numpy()[0, 0, :]
+        .astype(dtype)
+    )
     return img
 
 

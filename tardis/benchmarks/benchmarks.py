@@ -38,7 +38,8 @@ from tardis.version import version
     "-ds",
     "--data_set",
     type=str,
-    help="Data set name used for testing, should be the same as dataset" "storage folder name for given dataset.",
+    help="Data set name used for testing, should be the same as dataset"
+    "storage folder name for given dataset.",
     show_default=True,
 )
 @click.option(
@@ -49,7 +50,12 @@ from tardis.version import version
     show_default=True,
 )
 @click.option(
-    "-th", "--nn_threshold", default=0.5, type=float, help="Threshold use for NN prediction.", show_default=True
+    "-th",
+    "--nn_threshold",
+    default=0.5,
+    type=float,
+    help="Threshold use for NN prediction.",
+    show_default=True,
 )
 @click.option(
     "-ps",
@@ -60,10 +66,20 @@ from tardis.version import version
     show_default=True,
 )
 @click.option(
-    "-sg", "--sigma", default=None, type=float, help="Optional: Sigma value for distance embedding.", show_default=True
+    "-sg",
+    "--sigma",
+    default=None,
+    type=float,
+    help="Optional: Sigma value for distance embedding.",
+    show_default=True,
 )
 @click.option(
-    "-pv", "--points_in_patch", default=1000, type=int, help="Optional: Number of point per voxel.", show_default=True
+    "-pv",
+    "--points_in_patch",
+    default=1000,
+    type=int,
+    help="Optional: Number of point per voxel.",
+    show_default=True,
 )
 @click.option(
     "-sv",
@@ -132,7 +148,8 @@ def main(
         TardisError(
             id="",
             py="tardis/benchmarks/benchmarks.py",
-            desc=f"Given data set {data_set} is not supporter! " f'Expected one of {listdir(join(DIR_, "Eval_DIST"))}',
+            desc=f"Given data set {data_set} is not supporter! "
+            f'Expected one of {listdir(join(DIR_, "Eval_DIST"))}',
         )
 
     if rgb:
@@ -142,20 +159,30 @@ def main(
 
     m_name = model["model_struct_dict"]
 
-    predictor = Predictor(checkpoint=model, img_size=patch_size, sigma=sigma, device=get_device(device))
+    predictor = Predictor(
+        checkpoint=model, img_size=patch_size, sigma=sigma, device=get_device(device)
+    )
 
     """Build DataLoader"""
     if network == "cnn":
         m_name = f'{m_name["cnn_type"]}_{m_name["conv_scaler"]}'
 
         predictor_bch = CnnBenchmark(
-            model=predictor, dataset=data_set, dir_=DIR_EVAL, threshold=nn_threshold, patch_size=patch_size
+            model=predictor,
+            dataset=data_set,
+            dir_=DIR_EVAL,
+            threshold=nn_threshold,
+            patch_size=patch_size,
         )
     else:
         m_name = f'dist_{m_name["dist_type"]}_{m_name["structure"]}'
 
         predictor_bch = DISTBenchmark(
-            model=predictor, dataset=data_set, dir_=DIR_EVAL, threshold=nn_threshold, points_in_patch=points_in_patch
+            model=predictor,
+            dataset=data_set,
+            dir_=DIR_EVAL,
+            threshold=nn_threshold,
+            points_in_patch=points_in_patch,
         )
     nbm = predictor_bch()
 
@@ -176,7 +203,9 @@ def main(
         pass
 
     """Benchmark Summary"""
-    metric_keys = ["IoU", "AUC", "mCov", "mWCov"] if network != "cnn" else ["F1", "AUC", "IoU", "AP"]
+    metric_keys = (
+        ["IoU", "AUC", "mCov", "mWCov"] if network != "cnn" else ["F1", "AUC", "IoU", "AP"]
+    )
 
     if model_best_time != "None":
         # Take mean of all metrics and check which one performs better
@@ -209,12 +238,18 @@ def main(
     if save:
         if m_name in BEST_SCORE:
             if data_set in BEST_SCORE[m_name]:
-                BEST_SCORE[m_name][data_set].append([time.asctime(), link, round(sum(nbm.values()) / len(nbm), 2), nbm])
+                BEST_SCORE[m_name][data_set].append(
+                    [time.asctime(), link, round(sum(nbm.values()) / len(nbm), 2), nbm]
+                )
             else:
-                BEST_SCORE[m_name][data_set] = [[time.asctime(), link, round(sum(nbm.values()) / len(nbm), 2), nbm]]
+                BEST_SCORE[m_name][data_set] = [
+                    [time.asctime(), link, round(sum(nbm.values()) / len(nbm), 2), nbm]
+                ]
         else:
             BEST_SCORE[m_name] = {f"{data_set}": []}
-            BEST_SCORE[m_name][data_set].append([time.asctime(), link, round(sum(nbm.values()) / len(nbm), 2), nbm])
+            BEST_SCORE[m_name][data_set].append(
+                [time.asctime(), link, round(sum(nbm.values()) / len(nbm), 2), nbm]
+            )
 
         """Upload model and json"""
         if model_best_time == "None":

@@ -57,7 +57,9 @@ class AdaptiveDiceLoss(nn.Module):
         logits = ((1 - logits) ** self.alpha) * logits
 
         intersection = (logits * targets).sum()
-        dice = (2.0 * intersection + self.smooth) / (logits.square().sum() + targets.square().sum() + self.smooth)
+        dice = (2.0 * intersection + self.smooth) / (
+            logits.square().sum() + targets.square().sum() + self.smooth
+        )
 
         return 1 - dice
 
@@ -220,7 +222,9 @@ class DiceLoss(nn.Module):
 
         # Calculate dice loss
         intersection = (logits * targets).sum()
-        dice = (2 * intersection + self.smooth) / (logits.square().sum() + targets.square().sum() + self.smooth)
+        dice = (2 * intersection + self.smooth) / (
+            logits.square().sum() + targets.square().sum() + self.smooth
+        )
 
         return 1 - dice
 

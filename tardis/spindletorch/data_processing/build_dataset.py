@@ -79,10 +79,19 @@ def build_train_dataset(
 
     # All expected formats
     IMG_FORMATS = (".am", ".mrc", ".rec")
-    MASK_FORMATS = (".CorrelationLines.am", "_mask.am", "_mask.mrc", "_mask.rec", ".csv", "_mask.tif")
+    MASK_FORMATS = (
+        ".CorrelationLines.am",
+        "_mask.am",
+        "_mask.mrc",
+        "_mask.rec",
+        ".csv",
+        "_mask.tif",
+    )
 
     """Check what file are in the folder to build dataset"""
-    img_list = [f for f in listdir(dataset_dir) if f.endswith(IMG_FORMATS) and not f.endswith(MASK_FORMATS)]
+    img_list = [
+        f for f in listdir(dataset_dir) if f.endswith(IMG_FORMATS) and not f.endswith(MASK_FORMATS)
+    ]
 
     """For each image find matching mask, pre-process, trim and save"""
     img_counter = 0
@@ -107,7 +116,9 @@ def build_train_dataset(
         img_dir = join(dataset_dir, i)
         if not isfile(img_dir):
             # Store fail in the log file
-            log_file = error_log_build_data(dir=join(dataset_dir, "log.txt"), log_file=log_file, id=id, i=i)
+            log_file = error_log_build_data(
+                dir=join(dataset_dir, "log.txt"), log_file=log_file, id=id, i=i
+            )
             continue
 
         """Get matching mask file and check if maks is a file"""
@@ -115,7 +126,11 @@ def build_train_dataset(
         mask_name = ""
         mask_dir = ""
         while not isfile(join(dataset_dir, mask_name)):
-            mask_name = i[:-3] + MASK_FORMATS[mask_prefix] if i.endswith(".am") else i[:-4] + MASK_FORMATS[mask_prefix]
+            mask_name = (
+                i[:-3] + MASK_FORMATS[mask_prefix]
+                if i.endswith(".am")
+                else i[:-4] + MASK_FORMATS[mask_prefix]
+            )
 
             mask_dir = join(dataset_dir, mask_name)
             mask_prefix += 1
@@ -170,7 +185,10 @@ def build_train_dataset(
 
             # Draw mask from coordinates
             mask = draw_instances(
-                mask_size=scale_shape, coordinate=mask, pixel_size=resize_pixel_size, circle_size=circle_size
+                mask_size=scale_shape,
+                coordinate=mask,
+                pixel_size=resize_pixel_size,
+                circle_size=circle_size,
             )
         else:  # Detect image mask array
             # Convert to binary
@@ -181,7 +199,8 @@ def build_train_dataset(
                 TardisError(
                     id="115",
                     py="tardis/spindletorch/data_processing/build_training_dataset",
-                    desc=f"Mask min: {mask.min()}; max: {mask.max()} " "but expected min: 0 and max: >1",
+                    desc=f"Mask min: {mask.min()}; max: {mask.max()} "
+                    "but expected min: 0 and max: >1",
                 )
 
             # Flip mask if MRC/REC
@@ -194,7 +213,11 @@ def build_train_dataset(
                 pc = pc.astype(np.uint32)
 
                 # Remove gaps from conversion to int
-                gaps = [i for i in list(range(min(pc[:, 2]), max(pc[:, 2]) + 1)) if i not in np.unique(pc[:, 2])]
+                gaps = [
+                    i
+                    for i in list(range(min(pc[:, 2]), max(pc[:, 2]) + 1))
+                    if i not in np.unique(pc[:, 2])
+                ]
 
                 gaps_pc = []
                 for j in gaps:

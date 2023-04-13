@@ -96,7 +96,11 @@ def train_cnn(
             prediction=False,
         )
     except:
-        TardisError("14", "tardis/spindletorch/train.py", f"CNNModelError: Model type: {type} was not build correctly!")
+        TardisError(
+            "14",
+            "tardis/spindletorch/train.py",
+            f"CNNModelError: Model type: {type} was not build correctly!",
+        )
         sys.exit()
 
     """Build TARDIS progress bar output"""
@@ -132,9 +136,13 @@ def train_cnn(
 
     """Build training optimizer"""
     if learning_rate_scheduler:
-        optimizer = optim.Adam(params=model.parameters(), betas=(0.9, 0.98), lr=learning_rate, eps=1e-9)
+        optimizer = optim.Adam(
+            params=model.parameters(), betas=(0.9, 0.98), lr=learning_rate, eps=1e-9
+        )
     else:
-        optimizer = optim.Adam(params=model.parameters(), lr=learning_rate, betas=(0.9, 0.98), eps=1e-9)
+        optimizer = optim.Adam(
+            params=model.parameters(), lr=learning_rate, betas=(0.9, 0.98), eps=1e-9
+        )
 
     """Optionally: Build learning rate scheduler"""
     if learning_rate_scheduler:

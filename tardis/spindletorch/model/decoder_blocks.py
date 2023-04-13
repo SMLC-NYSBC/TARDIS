@@ -318,7 +318,9 @@ class DecoderBlockUnet3Plus(nn.Module):
 
             init_weights(m)
 
-    def forward(self, x: torch.Tensor, decoder_features: list, encoder_features: list) -> torch.Tensor:
+    def forward(
+        self, x: torch.Tensor, decoder_features: list, encoder_features: list
+    ) -> torch.Tensor:
         """
         Forward CNN decoder block for Unet3Plus
 
@@ -411,7 +413,9 @@ def build_decoder(
         nn.ModuleList: List of decoders blocks.
     """
     decoders = []
-    feature_map = number_of_features_per_level(channel_scaler=conv_layer_scaler, num_levels=conv_layers)
+    feature_map = number_of_features_per_level(
+        channel_scaler=conv_layer_scaler, num_levels=conv_layers
+    )
     feature_map = list(reversed(feature_map))
 
     """Forward decoder"""

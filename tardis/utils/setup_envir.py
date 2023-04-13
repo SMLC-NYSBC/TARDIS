@@ -28,7 +28,11 @@ def build_new_dir(dir: str):
     output = join(dir, "output")
     image_list = glob.glob(dir + "/*.tif")
     if not len(image_list) > 0:
-        TardisError("12", "tardis/utils/setup_envir.py", "At least one .tif image has to be in the directory!")
+        TardisError(
+            "12",
+            "tardis/utils/setup_envir.py",
+            "At least one .tif image has to be in the directory!",
+        )
 
     if not isdir(output):
         mkdir(output)

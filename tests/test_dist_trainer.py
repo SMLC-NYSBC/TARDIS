@@ -136,13 +136,19 @@ def test_c_dist_trainer():
     }
 
     train_dl = ScannetColorDataset(
-        coord_dir="./tests/test_data/data_loader/scannet/train/masks/", coord_format=".ply", patch_if=50, train=True
+        coord_dir="./tests/test_data/data_loader/scannet/train/masks/",
+        coord_format=".ply",
+        patch_if=50,
+        train=True,
     )
     train_dl = train_dl + train_dl + train_dl + train_dl
     train_dl = DataLoader(dataset=train_dl, batch_size=1, shuffle=True, pin_memory=True)
 
     test_dl = ScannetColorDataset(
-        coord_dir="./tests/test_data/data_loader/scannet/test/masks/", coord_format=".ply", patch_if=50, train=False
+        coord_dir="./tests/test_data/data_loader/scannet/test/masks/",
+        coord_format=".ply",
+        patch_if=50,
+        train=False,
     )
     test_dl = DataLoader(dataset=test_dl, shuffle=True, pin_memory=True)
 

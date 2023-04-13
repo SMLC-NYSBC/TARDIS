@@ -47,10 +47,42 @@ class StitchImages:
         Returns:
             Update global class values.
         """
-        self.z = max(list(map(int, [str.split(f[:-4], "_")[1] for f in file_list if f.startswith(f"{idx}")]))) + 1
-        self.y = max(list(map(int, [str.split(f[:-4], "_")[2] for f in file_list if f.startswith(f"{idx}")]))) + 1
-        self.x = max(list(map(int, [str.split(f[:-4], "_")[3] for f in file_list if f.startswith(f"{idx}")]))) + 1
-        self.stride = max(list(map(int, [str.split(f[:-4], "_")[4] for f in file_list if f.startswith(f"{idx}")])))
+        self.z = (
+            max(
+                list(
+                    map(
+                        int,
+                        [str.split(f[:-4], "_")[1] for f in file_list if f.startswith(f"{idx}")],
+                    )
+                )
+            )
+            + 1
+        )
+        self.y = (
+            max(
+                list(
+                    map(
+                        int,
+                        [str.split(f[:-4], "_")[2] for f in file_list if f.startswith(f"{idx}")],
+                    )
+                )
+            )
+            + 1
+        )
+        self.x = (
+            max(
+                list(
+                    map(
+                        int,
+                        [str.split(f[:-4], "_")[3] for f in file_list if f.startswith(f"{idx}")],
+                    )
+                )
+            )
+            + 1
+        )
+        self.stride = max(
+            list(map(int, [str.split(f[:-4], "_")[4] for f in file_list if f.startswith(f"{idx}")]))
+        )
 
     def _calculate_dim(self, image: np.ndarray):
         """
@@ -94,7 +126,9 @@ class StitchImages:
 
         for idx in range(self.idx):
             self._find_xyz(file_list, idx)
-            self._calculate_dim(tif.imread(join(image_dir, f"{idx}_0_0_0_{self.stride}{prefix}.tif")))
+            self._calculate_dim(
+                tif.imread(join(image_dir, f"{idx}_0_0_0_{self.stride}{prefix}.tif"))
+            )
 
             x_dim = self.nx + ((self.nx - self.stride) * (self.x - 1))
             y_dim = self.ny + ((self.ny - self.stride) * (self.y - 1))
@@ -128,7 +162,9 @@ class StitchImages:
                         x_start = x_start + self.nx - self.stride
                         x_stop = x_start + self.nx
 
-                        img_name = str(join(image_dir, f"{idx}_{i}_{j}_{k}_{self.stride}{prefix}.tif"))
+                        img_name = str(
+                            join(image_dir, f"{idx}_{i}_{j}_{k}_{self.stride}{prefix}.tif")
+                        )
 
                         img = tif.imread(img_name)
 
@@ -166,4 +202,7 @@ class StitchImages:
             if output is None:
                 return np.array(stitched_image, dtype=dtype)
             else:
-                tif.imwrite(join(output, f"Stitched_Image_idx_{idx}.tif"), np.array(stitched_image, dtype=dtype))
+                tif.imwrite(
+                    join(output, f"Stitched_Image_idx_{idx}.tif"),
+                    np.array(stitched_image, dtype=dtype),
+                )
