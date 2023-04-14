@@ -12,6 +12,7 @@ from typing import Optional, Tuple, Union
 
 import numpy as np
 import torch
+from scipy.spatial.distance import cdist
 from sklearn.neighbors import KDTree
 
 from tardis.utils.errors import TardisError
@@ -213,7 +214,7 @@ class DownSampling:
                 else:
                     coord_df = self.pc_down_sample(coord=coord_df, sampling=self.sample)
 
-                ds_pc.append(np.hstack((np.expand_dims(np.repeat(id, len(coord_df)), 1), coord_df)))
+                ds_pc.append(np.hstack((np.repeat(id, len(coord_df)).reshape(-1, 1), coord_df)))
                 if not self.labels:
                     id += 1
         else:
@@ -267,22 +268,20 @@ class VoxelDownSampling(DownSampling):
         np.add.at(voxel_centers, inverse_index, coord)
         voxel_centers /= voxel_counts[:, np.newaxis]
 
-        # Retrive ID value for down sampled point cloud 
+        # Retrieve ID value for down sampled point cloud
         if self.labels or rgb is not None:
             # Find the nearest voxel center for each point
-            nearest_voxel_index = np.argmin(
-                np.linalg.norm(voxel_centers[:, np.newaxis, :] - coord, axis=-1), axis=-1
-            )
+            nearest_voxel_index = np.argmin(cdist(voxel_centers, coord), axis=1)
 
-        if self.labels:
-            # Compute the color of the nearest voxel center for each down-sampled point
-            down_sampled_id = coord_label[nearest_voxel_index]
-            voxel_centers = np.vstack((down_sampled_id))
+            if self.labels:
+                # Compute the color of the nearest voxel center for each down-sampled point
+                voxel_centers = np.hstack(
+                    (coord_label[nearest_voxel_index, 0].reshape(-1, 1), voxel_centers)
+                )
 
         if rgb is not None:
             # Compute the color of the nearest voxel center for each down-sampled point
-            down_sampled_rgb = rgb[nearest_voxel_index]
-            return voxel_centers, down_sampled_rgb
+            return voxel_centers, rgb[nearest_voxel_index]
         return voxel_centers
 
 

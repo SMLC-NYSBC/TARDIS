@@ -101,6 +101,7 @@ def test_dist_trainer():
     test_dl = DataLoader(dataset=test_dl, shuffle=True, pin_memory=True)
 
     train_dist(
+        dataset_type="MT",
         train_dataloader=train_dl,
         test_dataloader=test_dl,
         model_structure=structure,
@@ -153,6 +154,7 @@ def test_c_dist_trainer():
     test_dl = DataLoader(dataset=test_dl, shuffle=True, pin_memory=True)
 
     train_dist(
+        dataset_type="MT",
         train_dataloader=train_dl,
         test_dataloader=test_dl,
         model_structure=structure,

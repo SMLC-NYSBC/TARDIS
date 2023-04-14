@@ -694,7 +694,9 @@ def load_ply_scannet(
 
     # Retrieve ScanNet v2 labels after down scaling
     cls_id = np.zeros((len(label), 1))
-    get_key_from_value = lambda value: next((key for key, val in SCANNET_COLOR_MAP_20.items() if val == value), None)
+    get_key_from_value = lambda value: next(
+        (key for key, val in SCANNET_COLOR_MAP_20.items() if val == value), None
+    )
 
     for id, i in enumerate(label):
         cls_id[id, 0] = get_key_from_value(tuple(i))
@@ -722,7 +724,6 @@ def load_ply_scannet(
             down_scale = VoxelDownSampling(voxel=downscaling, labels=True)
             print(coord.shape)
             coord = down_scale(coord)
-
 
     if color is not None:
         return coord, rgb
@@ -776,7 +777,7 @@ def load_txt_s3dis(
 
     Args:
         txt (str): File directory.
-        rgb (bool):
+        rgb (bool): If True return RGB value.
         downscaling (float): Downscaling point cloud by fixing voxel size.
 
     Returns:
@@ -820,7 +821,7 @@ def load_s3dis_scene(
     # Build S3DIS scene with IDs [ID, X, Y, Z] [R, G, B]
     coord_scene = []
     rgb_scene = []
-    id = 0
+    id_ = 0
     for i in dir_list:
         if rgb:
             coord_inst, rgb_v = load_txt_s3dis(join(dir, i), rgb=rgb)
@@ -828,13 +829,12 @@ def load_s3dis_scene(
         else:
             coord_inst = load_txt_s3dis(join(dir, i))
 
-        coord_scene.append(
-            np.hstack((np.expand_dims(np.repeat(id, len(coord_inst)), 1), coord_inst))
-        )
+        coord_scene.append(np.hstack((np.repeat(id_, len(coord_inst)).reshape(-1, 1), coord_inst)))
 
-        id += 1
+        id_ += 1
     coord = np.concatenate(coord_scene)
-    rgb_v = np.concatenate(rgb_scene) / 255
+    if rgb:
+        rgb_v = np.concatenate(rgb_scene) / 255
 
     # Down scale scene
     if downscaling > 0:

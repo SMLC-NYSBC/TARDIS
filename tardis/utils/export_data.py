@@ -56,7 +56,7 @@ class NumpyToAmira:
 
             if coord.shape[1] == 2:
                 if self.as_point_cloud:
-                    z = np.expand_dims(np.repeat(0, len(coord)), 1)
+                    z = np.repeat(0, len(coord)).reshape(-1, 1)
                     coord = np.hstack((coord, z))
                 else:
                     TardisError(

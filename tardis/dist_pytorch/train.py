@@ -56,6 +56,7 @@ def train_dist(
     Wrapper for DIST or C_DIST models.
 
     Args:
+        dataset_type (str):
         train_dataloader (torch.DataLoader): DataLoader with train dataset.
         test_dataloader (torch.DataLoader): DataLoader with test dataset.
         model_structure (dict): Dictionary with model setting.

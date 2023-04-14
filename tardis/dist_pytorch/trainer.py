@@ -229,7 +229,7 @@ class DistTrainer(BasicTrainer):
         list_c = []
         for key in coord_list:
             value = coord[coord_list[key], :]
-            id = np.expand_dims(np.repeat(key, len(value)), 1)
+            id = np.repeat(key, len(value)).reshape(-1, 1)
             list_c.append(np.hstack((id, value)))
         return np.concatenate(list_c)
 

@@ -337,7 +337,7 @@ class FilterConnectedNearSegments:
 
         return np.concatenate(
             [
-                np.hstack((np.expand_dims(np.repeat(id, len(array)), 1), array))
+                np.hstack((np.repeat(id, len(array)).reshape(-1, 1), array))
                 for id, array in merge_splines.items()
             ]
         )
