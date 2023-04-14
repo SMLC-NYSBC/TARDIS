@@ -18,6 +18,7 @@ from numpy import ndarray
 from scipy.spatial.distance import cdist
 from skimage.morphology import skeletonize, skeletonize_3d
 
+from dist_pytorch.utils.utils import VoxelDownSampling
 from tardis.utils.errors import TardisError
 
 
@@ -26,7 +27,7 @@ class BuildPointCloud:
     MAIN MODULE FOR SEMANTIC MASK IMAGE DATA TRANSFORMATION INTO POINT CLOUD
 
     Module build point cloud from semantic mask based on skeletonization in 3D.
-    Optionally, user can trigger point cloud correction with euclidean distance
+    Optionally, user can trigger point cloud correction with Euclidean distance
     transformation to correct for skeletonization artefact. It will not fix
     issue with heavily overlapping objects.
 
@@ -178,22 +179,7 @@ class BuildPointCloud:
 
         """ Down-sampling point cloud by removing closest point """
         if down_sampling is not None:
-            import open3d as o3d
+            down_sampling = VoxelDownSampling(voxel=down_sampling, labels=False, KNN=True)
 
-            pcd = o3d.geometry.PointCloud()
-            pcd.points = o3d.utility.Vector3dVector(coordinates_HD)
-            coordinates_LD = np.asarray(pcd.voxel_down_sample(voxel_size=down_sampling).points)
-
-            # Pick the closest matching coordinates
-            if not as_2d:
-                dist = cdist(coordinates_LD, coordinates_LD).astype(np.float16)
-                # indices = np.where(dist <= 1.5)
-                dist = [
-                    id
-                    for id, x in enumerate(dist)
-                    if len(np.where(x <= sqrt(2 * down_sampling**2))[0]) > 2
-                ]
-                coordinates_LD = coordinates_LD[dist, :]
-
-            return coordinates_HD, coordinates_LD
+            return coordinates_HD, down_sampling(coord=coordinates_HD)
         return coordinates_HD

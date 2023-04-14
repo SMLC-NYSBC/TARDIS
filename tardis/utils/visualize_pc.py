@@ -11,7 +11,10 @@
 from typing import Optional, Tuple
 
 import numpy as np
-import open3d as o3d
+try:
+    import open3d as o3d
+except ModuleNotFoundError:
+    pass
 from tardis.utils import SCANNET_COLOR_MAP_20
 
 

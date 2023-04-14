@@ -142,14 +142,15 @@ class DownSampling:
     Base down sampling wrapper
     """
 
-    def __init__(self, voxel=None, threshold=None, labels=True):
+    def __init__(self, voxel=None, threshold=None, labels=True, KNN=False):
         if voxel is None:
             self.sample = threshold
         else:
             self.sample = voxel
 
-        # If true downsample with class ids. expect [ID x X x Y x (Z)] [[N, 3] or [N, 4]]
+        # If true downs ample with class ids. expect [ID x X x Y x (Z)] [[N, 3] or [N, 4]]
         self.labels = labels
+        self.KNN = KNN
 
     @staticmethod
     def pc_down_sample(
@@ -269,15 +270,19 @@ class VoxelDownSampling(DownSampling):
         voxel_centers /= voxel_counts[:, np.newaxis]
 
         # Retrieve ID value for down sampled point cloud
-        if self.labels or rgb is not None:
+        if self.labels or rgb is not None or self.KNN:
             # Find the nearest voxel center for each point
             nearest_voxel_index = np.argmin(cdist(voxel_centers, coord), axis=1)
 
-            if self.labels:
+            if self.labels and not self.KNN:
                 # Compute the color of the nearest voxel center for each down-sampled point
                 voxel_centers = np.hstack(
                     (coord_label[nearest_voxel_index, 0].reshape(-1, 1), voxel_centers)
                 )
+            if self.labels and self.KNN:
+                # Compute the color of the nearest voxel center for each down-sampled point
+                voxel_centers = np.hstack((coord_label[nearest_voxel_index, 0].reshape(-1, 1),
+                                           coord[nearest_voxel_index, :]))
 
         if rgb is not None:
             # Compute the color of the nearest voxel center for each down-sampled point
