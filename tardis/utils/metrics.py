@@ -286,6 +286,10 @@ def mcov(
     weight=False
 ) -> float:
     mCov = []
+    unique_target = np.unique(targets[:, 0])
+    unique_input = np.unique(input[:, 0])
+    if len(unique_input) > len(unique_target) * 4:
+        return 0.0
 
     # Get GT instances, compute IoU for best mache between GT and input
     for j in np.unique(targets[:, 0]):
