@@ -302,7 +302,7 @@ class DistTrainer(BasicTrainer):
             # Threshold 0.25
             try:
                 input0_1 = self.Graph0_25.patch_to_segment(
-                    graph=edge_cpu, coord=coord, idx=out_cpu, prune=0, sort=False
+                    graph=edge_cpu, coord=coord, idx=out_cpu, prune=5, sort=False
                 )
                 mcov0_25.append(mcov(input0_1, target))
             except:
@@ -311,7 +311,7 @@ class DistTrainer(BasicTrainer):
             # Threshold 0.5
             try:
                 input0_5 = self.Graph0_5.patch_to_segment(
-                    graph=edge_cpu, coord=coord, idx=out_cpu, prune=0, sort=False
+                    graph=edge_cpu, coord=coord, idx=out_cpu, prune=5, sort=False
                 )
                 mcov0_5.append(mcov(input0_5, target))
             except:
@@ -320,7 +320,7 @@ class DistTrainer(BasicTrainer):
             # Threshold 0.9
             try:
                 input0_9 = self.Graph0_9.patch_to_segment(
-                    graph=edge_cpu, coord=coord, idx=out_cpu, prune=0, sort=False
+                    graph=edge_cpu, coord=coord, idx=out_cpu, prune=5, sort=False
                 )
                 mcov0_9.append(mcov(input0_9, target))
             except:

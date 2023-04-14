@@ -283,48 +283,41 @@ def IoU(input: np.ndarray, targets: np.ndarray, diagonal=False):
 def mcov(
     input: Optional[Union[np.ndarray, torch.Tensor]],
     targets: Optional[Union[np.ndarray, torch.Tensor]],
-    weight=False,
+    weight=False
 ) -> float:
     mCov = []
 
-    # Get unique target instances
-    target_ids = np.unique(targets[:, 0])
-
-    # Loop over target instances
-    for j in target_ids:
+    # Get GT instances, compute IoU for best mache between GT and input
+    for j in np.unique(targets[:, 0]):
         true_c = targets[targets[:, 0] == j, 1:]  # Pick GT instance
+        df = []
         if weight:
             w = true_c.shape[0] / targets.shape[0]  # ratio of instance to whole PC
 
-        # Compute intersection and union with all input instances
-        intersections = np.sum(
-            np.all(true_c[np.newaxis, :, :] == input[:, 1:][..., np.newaxis, :], axis=-1), axis=-1
-        )
-        unions = np.sum(
-            np.logical_or.reduce(
-                (true_c[np.newaxis, :, :] == input[:, 1:][..., np.newaxis, :], np.newaxis)
-            ),
-            axis=-1,
-        )
+        # Select max IoU (the best mach)
+        for i in np.unique(input[:, 0]):
+            pred = input[input[:, 0] == i, 1:]  # Pick input instance
 
-        # Compute IoUs
-        ious = intersections / unions
+            # Intersection of coordinates between GT and input instances
+            intersection = np.sum([True for i in true_c if i in pred])
 
-        # Pick max IoU
-        max_iou = np.max(ious)
-        if max_iou > 1.0:
+            # Union of coordinates between GT and input instances
+            union = len(np.unique(np.vstack((true_c, pred)), axis=0))
+
+            df.append(intersection / union)
+
+        df = np.max(df)
+        if df > 1.0:
             if weight:
                 mCov.append(w * 1.0)
             else:
                 mCov.append(1.0)
         else:
             if weight:
-                mCov.append(w * max_iou)
+                mCov.append(w * df)
             else:
-                mCov.append(max_iou)
+                mCov.append(df)  # Pick max IoU for GT instance
 
-    if weight:
-        return sum(mCov)
     return np.mean(mCov)
 
 
