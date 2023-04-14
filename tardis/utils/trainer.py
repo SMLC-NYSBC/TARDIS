@@ -272,15 +272,16 @@ class BasicTrainer:
 
     def _mid_training_eval(self, idx):
         if idx % (len(self.training_DataLoader) // 4) == 0:
-            # Do not validate at first idx and last 10%
-            if idx != 0 and idx <= int(len(self.training_DataLoader) * 0.75):
-                self.model.eval()  # Enter Validation
-                self._validate()
+            if idx != 0 and self.id != 0:
+                # Do not validate at first idx and last 10%
+                if idx != 0 and idx <= int(len(self.training_DataLoader) * 0.75):
+                    self.model.eval()  # Enter Validation
+                    self._validate()
 
-                self._update_epoch_desc()
-                self._save_metric()
+                    self._update_epoch_desc()
+                    self._save_metric()
 
-                self.model.train()  # Move back to training
+                    self.model.train()  # Move back to training
 
     def run_trainer(self):
         """
@@ -303,9 +304,9 @@ class BasicTrainer:
         else:
             mkdir(f"{self.checkpoint_name}_checkpoint")
 
-        for id in range(self.epochs):
+        for id_ in range(self.epochs):
             """Initialized training"""
-            self.id = id
+            self.id = id_
 
             self._update_epoch_desc()
             self.progress_epoch(
@@ -319,7 +320,7 @@ class BasicTrainer:
             )
 
             """Validation block"""
-            if self.validation_DataLoader is not None:
+            if self.validation_DataLoader is not None and self.id != 0:
                 self.model.eval()
                 self._validate()
 
