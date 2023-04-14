@@ -290,11 +290,7 @@ def mcov(
     unique_input = np.unique(input[:, 0])
 
     # Return 0.0 on over segmented PC
-    if len(unique_input) > len(unique_target) * 4:
-        return 0.0
-
-    # Return 0.0 if under segmented PC
-    if len(unique_input) < len(unique_target) // 4:
+    if len(unique_input) > len(unique_target) * 2:
         return 0.0
 
     # Return 0.0 if only none segmented PC
@@ -302,14 +298,14 @@ def mcov(
         return 0.0
 
     # Get GT instances, compute IoU for best mache between GT and input
-    for j in np.unique(targets[:, 0]):
+    for j in unique_target:
         true_c = targets[targets[:, 0] == j, 1:]  # Pick GT instance
         df = []
         if weight:
             w = true_c.shape[0] / targets.shape[0]  # ratio of instance to whole PC
 
         # Select max IoU (the best mach)
-        for i in np.unique(input[:, 0]):
+        for i in unique_input:
             pred = input[input[:, 0] == i, 1:]  # Pick input instance
 
             # Intersection of coordinates between GT and input instances
