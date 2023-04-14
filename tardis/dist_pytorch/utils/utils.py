@@ -281,8 +281,12 @@ class VoxelDownSampling(DownSampling):
                 )
             if self.labels and self.KNN:
                 # Compute the color of the nearest voxel center for each down-sampled point
-                voxel_centers = np.hstack((coord_label[nearest_voxel_index, 0].reshape(-1, 1),
-                                           coord[nearest_voxel_index, :]))
+                voxel_centers = np.hstack(
+                    (
+                        coord_label[nearest_voxel_index, 0].reshape(-1, 1),
+                        coord[nearest_voxel_index, :],
+                    )
+                )
 
         if rgb is not None:
             # Compute the color of the nearest voxel center for each down-sampled point

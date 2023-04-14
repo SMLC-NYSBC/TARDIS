@@ -11,6 +11,7 @@
 from typing import Optional, Tuple
 
 import numpy as np
+
 try:
     import open3d as o3d
 except ModuleNotFoundError:
