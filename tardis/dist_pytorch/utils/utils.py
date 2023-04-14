@@ -271,15 +271,17 @@ class VoxelDownSampling(DownSampling):
 
         # Retrieve ID value for down sampled point cloud
         if self.labels or rgb is not None or self.KNN:
-            # Find the nearest voxel center for each point
-            nearest_voxel_index = np.argmin(cdist(voxel_centers, coord), axis=1)
+            # Build a KDTree from the voxel_centers
+            tree = KDTree(coord)
+            # Query the KDTree to find the nearest voxel center for each coord point
+            _, nearest_voxel_index = tree.query(voxel_centers)
 
             if self.labels and not self.KNN:
                 # Compute the color of the nearest voxel center for each down-sampled point
                 voxel_centers = np.hstack(
                     (coord_label[nearest_voxel_index, 0].reshape(-1, 1), voxel_centers)
                 )
-            if self.labels and self.KNN:
+            elif self.labels and self.KNN:
                 # Compute the color of the nearest voxel center for each down-sampled point
                 voxel_centers = np.hstack(
                     (
@@ -287,6 +289,9 @@ class VoxelDownSampling(DownSampling):
                         coord[nearest_voxel_index, :],
                     )
                 )
+            elif not self.labels and self.KNN:
+                # Compute the color of the nearest voxel center for each down-sampled point
+                voxel_centers = coord[nearest_voxel_index, :]
 
         if rgb is not None:
             # Compute the color of the nearest voxel center for each down-sampled point
