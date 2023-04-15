@@ -283,7 +283,7 @@ def IoU(input: np.ndarray, targets: np.ndarray, diagonal=False):
 def mcov(
     input: Optional[Union[np.ndarray, torch.Tensor]],
     targets: Optional[Union[np.ndarray, torch.Tensor]],
-    weight=False
+    weight=False,
 ) -> float:
     mCov = []
     unique_target = np.unique(targets[:, 0])

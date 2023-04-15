@@ -64,12 +64,12 @@ class DistTrainer(BasicTrainer):
             self.epoch_desc = self._update_desc(
                 self.early_stopping.counter,
                 [
-                    np.max(self.f1),
-                    self.f1[-1:][0],
-                    np.max(self.mCov0_5),
-                    self.mCov0_5[-1:][0],
-                    np.max(self.mCov0_9),
-                    self.mCov0_9[-1:][0],
+                    np.max(self.f1) if len(self.f1) > 0 else 0.0,
+                    self.f1[-1:][0] if len(self.f1) > 0 else 0.0,
+                    np.max(self.mCov0_5) if len(self.mCov0_5) > 0 else 0.0,
+                    self.mCov0_5[-1:][0] if len(self.mCov0_5) > 0 else 0.0,
+                    np.max(self.mCov0_9) if len(self.mCov0_9) > 0 else 0.0,
+                    self.mCov0_9[-1:][0] if len(self.mCov0_9) > 0 else 0.0,
                 ],
             )
 
@@ -160,12 +160,16 @@ class DistTrainer(BasicTrainer):
         Run model training.
         """
         # Update progress bar
-        self._update_progress_bar(loss_desc="Training: (loss 1.000)", idx=0, task='Start Training...')
+        self._update_progress_bar(
+            loss_desc="Training: (loss 1.000)", idx=0, task="Start Training..."
+        )
 
         # Run training for DIST model
         for idx, (e, n, g, _, _) in enumerate(self.training_DataLoader):
             """Mid-training eval"""
-            self._update_progress_bar(loss_desc="Training: (loss 1.000)", idx=0, task='Mid-train Eval...')
+            self._update_progress_bar(
+                loss_desc="Training: (loss 1.000)", idx=0, task="Mid-train Eval..."
+            )
             self._mid_training_eval(idx=idx)
 
             """Training"""
@@ -194,7 +198,9 @@ class DistTrainer(BasicTrainer):
 
                 # Update progress bar
                 self._update_progress_bar(
-                    loss_desc=f"Training: (loss {loss_value:.4f};" f" LR: {self.lr:.5f})", idx=idx, task='Training...'
+                    loss_desc=f"Training: (loss {loss_value:.4f};" f" LR: {self.lr:.5f})",
+                    idx=idx,
+                    task="Training...",
                 )
 
     def _greedy_segmenter(self, graph: np.ndarray, coord: np.ndarray, th: float):

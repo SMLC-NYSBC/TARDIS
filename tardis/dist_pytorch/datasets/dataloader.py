@@ -462,7 +462,7 @@ class Stanford3DDataset(BasicDataset):
         coord_file = join(self.coord_dir, idx, "Annotations")
 
         if self.patch_size[i, 0] == 0:
-            print(f'Loading: {i}')
+            print(f"Loading: {idx}")
             start = time.time()
             # Pre-process coord and image data also, if exist remove duplicates
             if self.rgb:
@@ -471,7 +471,7 @@ class Stanford3DDataset(BasicDataset):
             else:
                 coord = load_s3dis_scene(dir=coord_file, downscaling=0.05)
             coord[:, 1:] = coord[:, 1:] / 0.05
-            print(f'Loaded: {i} in {time.time() - start}')
+            print(f"Loaded: {idx} in {time.time() - start}")
 
             start = time.time()
             if self.rgb:
@@ -489,7 +489,7 @@ class Stanford3DDataset(BasicDataset):
             coords_idx, df_idx, graph_idx, output_idx, cls_idx = VD.patched_dataset(
                 coord=coord, mesh=True, dist_th=0.125
             )
-            print(f'Patched: {i} in {time.time() - start}')
+            print(f"Patched: {idx} in {time.time() - start}")
 
             # save data for faster access later
             if not self.benchmark:

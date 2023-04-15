@@ -179,10 +179,11 @@ class BasicTrainer:
             self.epoch_desc = "Epochs: early_stop: 0; best F1: NaN"
         else:
             self.epoch_desc = self._update_desc(
-                self.early_stopping.counter, [
+                self.early_stopping.counter,
+                [
                     np.max(self.f1) if len(self.f1) > 0 else 0.0,
-                    self.f1[-1:][0] if len(self.f1) > 0 else 0.0
-                ]
+                    self.f1[-1:][0] if len(self.f1) > 0 else 0.0,
+                ],
             )
 
     def _update_progress_bar(self, loss_desc: str, idx: int, train=True, task=""):
@@ -276,7 +277,7 @@ class BasicTrainer:
 
     def _mid_training_eval(self, idx):
         if idx % (len(self.training_DataLoader) // 4) == 0:
-            if idx != 0 and self.id != 0:
+            if idx != 0 or self.id != 0:  # do not compute at trainer initialization
                 # Do not validate at first idx and last 10%
                 if idx != 0 and idx <= int(len(self.training_DataLoader) * 0.75):
                     self.model.eval()  # Enter Validation
