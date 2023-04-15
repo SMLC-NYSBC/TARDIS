@@ -179,10 +179,13 @@ class BasicTrainer:
             self.epoch_desc = "Epochs: early_stop: 0; best F1: NaN"
         else:
             self.epoch_desc = self._update_desc(
-                self.early_stopping.counter, [np.max(self.f1), self.f1[-1:][0]]
+                self.early_stopping.counter, [
+                    np.max(self.f1) if len(self.f1) > 0 else 0.0,
+                    self.f1[-1:][0] if len(self.f1) > 0 else 0.0
+                ]
             )
 
-    def _update_progress_bar(self, loss_desc: str, idx: int, train=True):
+    def _update_progress_bar(self, loss_desc: str, idx: int, train=True, task=""):
         """
         Update entire Tardis progress bar.
 
@@ -203,6 +206,7 @@ class BasicTrainer:
             text_2=self.print_setting[1],
             text_3=self.print_setting[2],
             text_4=self.print_setting[3],
+            text_6=task,
             text_7=self.epoch_desc,
             text_8=print_progress_bar(self.id, self.epochs),
             text_9=loss_desc,

@@ -7,7 +7,7 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
-
+import time
 from os import getcwd, listdir, mkdir
 from os.path import isdir, join
 from shutil import rmtree
@@ -462,6 +462,8 @@ class Stanford3DDataset(BasicDataset):
         coord_file = join(self.coord_dir, idx, "Annotations")
 
         if self.patch_size[i, 0] == 0:
+            print(f'Loading: {i}')
+            start = time.time()
             # Pre-process coord and image data also, if exist remove duplicates
             if self.rgb:
                 coord, rgb_v = load_s3dis_scene(dir=coord_file, downscaling=0.05, rgb=True)
@@ -469,7 +471,9 @@ class Stanford3DDataset(BasicDataset):
             else:
                 coord = load_s3dis_scene(dir=coord_file, downscaling=0.05)
             coord[:, 1:] = coord[:, 1:] / 0.05
+            print(f'Loaded: {i} in {time.time() - start}')
 
+            start = time.time()
             if self.rgb:
                 VD = PatchDataSet(
                     drop_rate=0.1,
@@ -485,7 +489,7 @@ class Stanford3DDataset(BasicDataset):
             coords_idx, df_idx, graph_idx, output_idx, cls_idx = VD.patched_dataset(
                 coord=coord, mesh=True, dist_th=0.125
             )
-            # graph_idx = [np.where(g >= 2, 1, 0) for g in graph_idx]
+            print(f'Patched: {i} in {time.time() - start}')
 
             # save data for faster access later
             if not self.benchmark:
