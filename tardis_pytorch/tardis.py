@@ -1,0 +1,26 @@
+import click
+from tardis_pytorch._version import version
+from tardis_pytorch.utils.logo import TardisLogo
+
+
+@click.command()
+@click.version_option(version=version)
+def main():
+    main_logo = TardisLogo()
+    main_logo(
+        title="| Transforms And Rapid Dimensionless Instance Segmentation",
+        text_0="WELCOME to TARDIS!",
+        text_1="TARDIS is fully automatic segmentation software no need for model training!",
+        text_3="Contact developers if segmentation of your organelle is not supported! "
+        "(rkiewisz@nysbc.org | tbepler@nysbc.org).",
+        text_4="Join Slack community: https://bit.ly/41hTCaP",
+        text_6="FUNCTIONALITY:",
+        text_7="To predict microtubule instances:",
+        text_8="    tardis_mt . | OR | tardis_mt --help",
+        text_10="To predict 3D membrane semantic and instances:",
+        text_11="    tardis_mem . | OR | tardis_mem --help",
+    )
+
+
+if __name__ == "__main__":
+    main()

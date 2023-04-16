@@ -1,4 +1,4 @@
 # SpindleTorch -> Encoder Block
 ```{eval-rst}
-.. automodule:: tardis.spindletorch.model.encoder_blocks
+.. automodule:: tardis_pytorch.spindletorch.model.encoder_blocks
 ```

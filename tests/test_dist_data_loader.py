@@ -13,8 +13,8 @@ from os.path import join
 
 import numpy as np
 
-from tardis.dist_pytorch.datasets.augmentation import preprocess_data
-from tardis.dist_pytorch.datasets.dataloader import (
+from tardis_pytorch.dist_pytorch.datasets.augmentation import preprocess_data
+from tardis_pytorch.dist_pytorch.datasets.dataloader import (
     FilamentDataset,
     PartnetDataset,
     ScannetColorDataset,
@@ -38,7 +38,9 @@ class TestDataLoader:
         assert img.shape == (10, 262144), f"img of wrong shape {img.shape}"
 
     def test_preprocess_3d_seg(self):
-        coord, img = preprocess_data(coord=self.coord_dir, size=64, normalization="rescale")
+        coord, img = preprocess_data(
+            coord=self.coord_dir, size=64, normalization="rescale"
+        )
         assert coord.ndim == 2
         assert coord.shape == (10, 4), f"Coord of wrong shape {coord.shape}"
         assert np.all(img == 0), "Image type not zeros"
@@ -104,7 +106,9 @@ class TestDataLoader:
 
     def test_scannet_dataloader(self):
         train_dl = ScannetDataset(
-            coord_dir=join(self.dir, "scannet", "train", "masks"), coord_format=".ply", patch_if=500
+            coord_dir=join(self.dir, "scannet", "train", "masks"),
+            coord_format=".ply",
+            patch_if=500,
         )
 
         # Build first time
@@ -129,7 +133,9 @@ class TestDataLoader:
 
     def test_scannet_color_dataloader(self):
         train_dl = ScannetColorDataset(
-            coord_dir=join(self.dir, "scannet", "train", "masks"), coord_format=".ply", patch_if=500
+            coord_dir=join(self.dir, "scannet", "train", "masks"),
+            coord_format=".ply",
+            patch_if=500,
         )
 
         # Build first time
@@ -156,7 +162,9 @@ class TestDataLoader:
 
     def test_partnet_dataloader(self):
         train_dl = PartnetDataset(
-            coord_dir=join(self.dir, "partnet", "train", "masks"), coord_format=".ply", patch_if=500
+            coord_dir=join(self.dir, "partnet", "train", "masks"),
+            coord_format=".ply",
+            patch_if=500,
         )
 
         # Build first time

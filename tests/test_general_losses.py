@@ -9,7 +9,7 @@
 #######################################################################
 import torch
 
-from tardis.utils.losses import (
+from tardis_pytorch.utils.losses import (
     AdaptiveDiceLoss,
     BCEDiceLoss,
     BCELoss,

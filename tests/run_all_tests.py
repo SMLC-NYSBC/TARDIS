@@ -13,9 +13,9 @@ import subprocess
 import subprocess as subp
 import sys
 
-from tardis.utils.errors import TardisError
-from tardis.utils.logo import TardisLogo
-from tardis.version import version
+from tardis_pytorch.utils.errors import TardisError
+from tardis_pytorch.utils.logo import TardisLogo
+from tardis_pytorch._version import version
 
 
 def env_exists(env_name: str) -> bool:
@@ -56,21 +56,28 @@ def py(python: str):
         subp.run("conda create --name PythonEnvTest -y", shell=True)
 
     # Set up Python 3.X env and update
-    subp.run(f"conda run -n PythonEnvTest conda install python={'3.' + python[1:]} -y", shell=True)
+    subp.run(
+        f"conda run -n PythonEnvTest conda install python={'3.' + python[1:]} -y",
+        shell=True,
+    )
 
     # Check and reinstall if needed requirements
-    subp.run("conda run -n PythonEnvTest pip install -r requirements-dev.txt", shell=True)
+    subp.run(
+        "conda run -n PythonEnvTest pip install -r requirements-dev.txt", shell=True
+    )
     subp.run("conda run -n PythonEnvTest pip install -r requirements.txt", shell=True)
 
     # Clean-up
     subp.run("conda run -n PythonEnvTest conda clean -a -y", shell=True)
     subp.run("conda run -n PythonEnvTest pip cache purge", shell=True)
 
-    # Install tardis-pytorch
+    # Install tardis_pytorch-pytorch
     subp.run("conda run -n PythonEnvTest pip install -e .", shell=True)
 
     # Test on Python 3.X.*
-    return subp.run("conda run -n PythonEnvTest pytest", shell=True, capture_output=True)
+    return subp.run(
+        "conda run -n PythonEnvTest pytest", shell=True, capture_output=True
+    )
 
 
 if __name__ == "__main__":

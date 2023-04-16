@@ -13,9 +13,16 @@ from os.path import join
 import numpy as np
 import torch
 
-from tardis.spindletorch.datasets.augmentation import preprocess
-from tardis.spindletorch.datasets.dataloader import CNNDataset, PredictionDataset
-from tardis.utils.normalization import MinMaxNormalize, RescaleNormalize, SimpleNormalize
+from tardis_pytorch.spindletorch.datasets.augmentation import preprocess
+from tardis_pytorch.spindletorch.datasets.dataloader import (
+    CNNDataset,
+    PredictionDataset,
+)
+from tardis_pytorch.utils.normalization import (
+    MinMaxNormalize,
+    RescaleNormalize,
+    SimpleNormalize,
+)
 
 
 def test_dataloader():

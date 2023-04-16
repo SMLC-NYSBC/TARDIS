@@ -14,7 +14,7 @@ from click.testing import CliRunner
 
 def test_cnn_trainer():
     filterwarnings(action="ignore", category=DeprecationWarning)
-    from tardis.train_spindletorch import main
+    from tardis_pytorch.train_spindletorch import main
 
     runner = CliRunner()
     result = runner.invoke(main, ["--version"])
@@ -22,7 +22,7 @@ def test_cnn_trainer():
 
 
 def test_predictor_mt():
-    from tardis.predict_mt import main
+    from tardis_pytorch.predict_mt import main
 
     filterwarnings(action="ignore", category=DeprecationWarning)
 
@@ -32,7 +32,7 @@ def test_predictor_mt():
 
 
 def test_compare_mt():
-    from tardis.compare_spatial_graphs import main
+    from tardis_pytorch.compare_spatial_graphs import main
 
     filterwarnings(action="ignore", category=DeprecationWarning)
 
@@ -42,7 +42,7 @@ def test_compare_mt():
 
 
 def test_predictor_cryo_mt():
-    from tardis.predict_cro_mt import main
+    from tardis_pytorch.predict_cro_mt import main
 
     filterwarnings(action="ignore", category=DeprecationWarning)
 
@@ -52,7 +52,7 @@ def test_predictor_cryo_mt():
 
 
 def test_predictor_mem():
-    from tardis.predict_mem import main
+    from tardis_pytorch.predict_mem import main
 
     runner = CliRunner()
     result = runner.invoke(main, ["--version"])
@@ -60,7 +60,7 @@ def test_predictor_mem():
 
 
 def test_gf_trainer():
-    from tardis.train_DIST import main
+    from tardis_pytorch.train_DIST import main
 
     filterwarnings(action="ignore", category=DeprecationWarning)
 

@@ -12,8 +12,8 @@ from math import sqrt
 
 import numpy as np
 
-from tardis.utils.load_data import ImportDataFromAmira
-from tardis.utils.spline_metric import (
+from tardis_pytorch.utils.load_data import ImportDataFromAmira
+from tardis_pytorch.utils.spline_metric import (
     FilterSpatialGraph,
     reorder_segments_id,
     sort_segment,
@@ -38,7 +38,9 @@ def test_reorder_segments():
 def test_sort_segment():
     # Test case 1: Check if the function sorts the points in line order
     coord = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]])
-    expected_output = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]])
+    expected_output = np.array(
+        [[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]
+    )
 
     assert np.array_equal(sort_segment(coord), expected_output)
 

@@ -1,4 +1,4 @@
 #SpindleTorch -> Modules
 ```{eval-rst}
-.. automodule:: tardis.spindletorch.spindletorch
+.. automodule:: tardis_pytorch.spindletorch.spindletorch
 ```

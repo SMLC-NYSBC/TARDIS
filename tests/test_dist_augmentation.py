@@ -13,8 +13,8 @@ from typing import Tuple
 
 import numpy as np
 
-from tardis.dist_pytorch.datasets.augmentation import Crop2D3D, preprocess_data
-from tardis.utils.normalization import RescaleNormalize, SimpleNormalize
+from tardis_pytorch.dist_pytorch.datasets.augmentation import Crop2D3D, preprocess_data
+from tardis_pytorch.utils.normalization import RescaleNormalize, SimpleNormalize
 
 
 def test_preprocess_data_general():

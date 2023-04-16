@@ -1,10 +1,11 @@
 import os
 import sys
+from tardis_pytorch import version
 
 project = "TARDIS-pytorch"
 copyright = "2021, Robert Kiewisz, Tristan Bepler"
 author = "Robert Kiewisz, Tristan Bepler"
-release = "0.1.0beta2"
+release = version
 
 sys.path.insert(0, os.path.abspath(".."))
 

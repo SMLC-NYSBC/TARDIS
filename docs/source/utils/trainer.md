@@ -1,15 +1,15 @@
 # Global -> Trainer/Predictor
 ## General NN trainer
 ```{eval-rst}
-.. automodule:: tardis.utils.trainer
+.. automodule:: tardis_pytorch.utils.trainer
 ```
 
 ## General NN predictor
 ```{eval-rst}
-.. automodule:: tardis.utils.predictor
+.. automodule:: tardis_pytorch.utils.predictor
 ```
 
 ## Training datasets
 ```{eval-rst}
-.. automodule:: tardis.utils.dataset
+.. automodule:: tardis_pytorch.utils.dataset
 ```

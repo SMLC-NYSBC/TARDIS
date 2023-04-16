@@ -13,8 +13,8 @@ from shutil import rmtree
 
 import numpy as np
 
-from tardis.spindletorch.data_processing.stitch import StitchImages
-from tardis.spindletorch.data_processing.trim import trim_with_stride
+from tardis_pytorch.spindletorch.data_processing.stitch import StitchImages
+from tardis_pytorch.spindletorch.data_processing.trim import trim_with_stride
 
 
 def test_trim_stitch_3d():
@@ -42,11 +42,16 @@ def test_trim_stitch_3d():
     assert len(listdir("./tests/test_data/temp/imgs")) == 1
     assert len(listdir("./tests/test_data/temp/masks")) == 1
 
-    stitch_3d_15 = stitch(image_dir="./tests/test_data/temp/imgs", mask=False, dtype=np.float32)
+    stitch_3d_15 = stitch(
+        image_dir="./tests/test_data/temp/imgs", mask=False, dtype=np.float32
+    )
     assert stitch_3d_15.shape == (15, 15, 15)
 
     stitch_3d_15 = stitch(
-        image_dir="./tests/test_data/temp/masks", mask=True, prefix="_mask", dtype=np.uint8
+        image_dir="./tests/test_data/temp/masks",
+        mask=True,
+        prefix="_mask",
+        dtype=np.uint8,
     )
     assert stitch_3d_15.shape == (15, 15, 15)
 
@@ -67,11 +72,16 @@ def test_trim_stitch_3d():
     assert len(listdir("./tests/test_data/temp/imgs")) == 27
     assert len(listdir("./tests/test_data/temp/masks")) == 27
 
-    stitch_3d_15 = stitch(image_dir="./tests/test_data/temp/imgs", mask=False, dtype=np.float32)
+    stitch_3d_15 = stitch(
+        image_dir="./tests/test_data/temp/imgs", mask=False, dtype=np.float32
+    )
     assert stitch_3d_15.shape == (192, 192, 192)
 
     stitch_3d_15 = stitch(
-        image_dir="./tests/test_data/temp/masks", mask=True, prefix="_mask", dtype=np.uint8
+        image_dir="./tests/test_data/temp/masks",
+        mask=True,
+        prefix="_mask",
+        dtype=np.uint8,
     )
     assert stitch_3d_15.shape == (192, 192, 192)
 
@@ -103,11 +113,16 @@ def test_trim_stitch_2d():
     assert len(listdir("./tests/test_data/temp/imgs")) == 1
     assert len(listdir("./tests/test_data/temp/masks")) == 1
 
-    stitch_2d_15 = stitch(image_dir="./tests/test_data/temp/imgs", mask=False, dtype=np.float32)
+    stitch_2d_15 = stitch(
+        image_dir="./tests/test_data/temp/imgs", mask=False, dtype=np.float32
+    )
     assert stitch_2d_15.shape == (15, 15)
 
     stitch_2d_15 = stitch(
-        image_dir="./tests/test_data/temp/masks", mask=True, prefix="_mask", dtype=np.uint8
+        image_dir="./tests/test_data/temp/masks",
+        mask=True,
+        prefix="_mask",
+        dtype=np.uint8,
     )
     assert stitch_2d_15.shape == (15, 15)
 
@@ -128,10 +143,15 @@ def test_trim_stitch_2d():
     assert len(listdir("./tests/test_data/temp/imgs")) == 9
     assert len(listdir("./tests/test_data/temp/masks")) == 9
 
-    stitch_2d_15 = stitch(image_dir="./tests/test_data/temp/imgs", mask=False, dtype=np.float32)
+    stitch_2d_15 = stitch(
+        image_dir="./tests/test_data/temp/imgs", mask=False, dtype=np.float32
+    )
     assert stitch_2d_15.shape == (192, 192)
     stitch_2d_15 = stitch(
-        image_dir="./tests/test_data/temp/masks", mask=True, prefix="_mask", dtype=np.uint8
+        image_dir="./tests/test_data/temp/masks",
+        mask=True,
+        prefix="_mask",
+        dtype=np.uint8,
     )
     assert stitch_2d_15.shape == (192, 192)
 

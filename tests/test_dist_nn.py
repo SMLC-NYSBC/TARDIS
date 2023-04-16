@@ -10,7 +10,7 @@
 
 import torch
 
-from tardis.dist_pytorch.dist import CDIST, DIST
+from tardis_pytorch.dist_pytorch.dist import CDIST, DIST
 
 
 def rand_tensor(shape: tuple):
@@ -58,7 +58,8 @@ class TestGraphFormer:
                             predict=False,
                         )
                         x = model(
-                            coords=rand_tensor((1, 5, 3)), node_features=rand_tensor((1, 5, 3))
+                            coords=rand_tensor((1, 5, 3)),
+                            node_features=rand_tensor((1, 5, 3)),
                         )
                         assert x.shape == torch.Size((1, 1, 5, 5))
 
@@ -74,7 +75,8 @@ class TestGraphFormer:
                             predict=False,
                         )
                         x = model(
-                            coords=rand_tensor((1, 5, 2)), node_features=rand_tensor((1, 5, 3))
+                            coords=rand_tensor((1, 5, 2)),
+                            node_features=rand_tensor((1, 5, 3)),
                         )
                         assert x.shape == torch.Size((1, 1, 5, 5))
 
@@ -95,11 +97,15 @@ class TestGraphFormer:
                             coord_embed_sigma=16,
                             predict=False,
                         )
-                        x, cls = model(coords=rand_tensor((1, 5, 3)), node_features=None)
+                        x, cls = model(
+                            coords=rand_tensor((1, 5, 3)), node_features=None
+                        )
                         assert x.shape == torch.Size((1, 1, 5, 5))
                         assert cls.shape == torch.Size((1, 5, 200))
 
-                        x, cls = model(coords=rand_tensor((1, 5, 2)), node_features=None)
+                        x, cls = model(
+                            coords=rand_tensor((1, 5, 2)), node_features=None
+                        )
                         assert x.shape == torch.Size((1, 1, 5, 5))
                         assert cls.shape == torch.Size((1, 5, 200))
 
@@ -121,13 +127,15 @@ class TestGraphFormer:
                             predict=False,
                         )
                         x, cls = model(
-                            coords=rand_tensor((1, 5, 3)), node_features=rand_tensor((1, 5, 3))
+                            coords=rand_tensor((1, 5, 3)),
+                            node_features=rand_tensor((1, 5, 3)),
                         )
                         assert x.shape == torch.Size((1, 1, 5, 5))
                         assert cls.shape == torch.Size((1, 5, 200))
 
                         x, cls = model(
-                            coords=rand_tensor((1, 5, 2)), node_features=rand_tensor((1, 5, 3))
+                            coords=rand_tensor((1, 5, 2)),
+                            node_features=rand_tensor((1, 5, 3)),
                         )
                         assert x.shape == torch.Size((1, 1, 5, 5))
                         assert cls.shape == torch.Size((1, 5, 200))

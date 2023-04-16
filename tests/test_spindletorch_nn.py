@@ -12,7 +12,7 @@ from typing import Optional
 
 import torch
 
-from tardis.spindletorch.spindletorch import build_cnn_network
+from tardis_pytorch.spindletorch.spindletorch import build_cnn_network
 
 structure = {
     "in_channel": 1,
@@ -30,7 +30,9 @@ structure = {
 }
 
 
-def unet_3d(image_size: int, layer_num: int, conv_scaler: int, dropout: Optional[float] = None):
+def unet_3d(
+    image_size: int, layer_num: int, conv_scaler: int, dropout: Optional[float] = None
+):
     structure.update({"layer_components": "3gcl"})
     structure.update({"num_conv_layers": layer_num})
     structure.update({"conv_scaler": conv_scaler})
@@ -40,7 +42,9 @@ def unet_3d(image_size: int, layer_num: int, conv_scaler: int, dropout: Optional
     )
 
 
-def unet_2d(image_size: int, layer_num: int, conv_scaler: int, dropout: Optional[float] = None):
+def unet_2d(
+    image_size: int, layer_num: int, conv_scaler: int, dropout: Optional[float] = None
+):
     structure.update({"layer_components": "2gcl"})
     structure.update({"num_conv_layers": layer_num})
     structure.update({"conv_scaler": conv_scaler})
@@ -50,23 +54,33 @@ def unet_2d(image_size: int, layer_num: int, conv_scaler: int, dropout: Optional
     )
 
 
-def resunet_3d(image_size: int, layer_num: int, conv_scaler: int, dropout: Optional[float] = None):
+def resunet_3d(
+    image_size: int, layer_num: int, conv_scaler: int, dropout: Optional[float] = None
+):
     structure.update({"layer_components": "3gcl"})
     structure.update({"num_conv_layers": layer_num})
     structure.update({"conv_scaler": conv_scaler})
     structure.update({"dropout": dropout})
     return build_cnn_network(
-        network_type="resunet", structure=structure, img_size=image_size, prediction=False
+        network_type="resunet",
+        structure=structure,
+        img_size=image_size,
+        prediction=False,
     )
 
 
-def resunet_2d(image_size: int, layer_num: int, conv_scaler: int, dropout: Optional[float] = None):
+def resunet_2d(
+    image_size: int, layer_num: int, conv_scaler: int, dropout: Optional[float] = None
+):
     structure.update({"layer_components": "2gcl"})
     structure.update({"num_conv_layers": layer_num})
     structure.update({"conv_scaler": conv_scaler})
     structure.update({"dropout": dropout})
     return build_cnn_network(
-        network_type="resunet", structure=structure, img_size=image_size, prediction=False
+        network_type="resunet",
+        structure=structure,
+        img_size=image_size,
+        prediction=False,
     )
 
 
@@ -78,7 +92,10 @@ def unet3plus_3d(
     structure.update({"conv_scaler": conv_scaler})
     structure.update({"dropout": dropout})
     return build_cnn_network(
-        network_type="unet3plus", structure=structure, img_size=image_size, prediction=False
+        network_type="unet3plus",
+        structure=structure,
+        img_size=image_size,
+        prediction=False,
     )
 
 
@@ -90,11 +107,16 @@ def unet3plus_2d(
     structure.update({"conv_scaler": conv_scaler})
     structure.update({"dropout": dropout})
     return build_cnn_network(
-        network_type="unet3plus", structure=structure, img_size=image_size, prediction=False
+        network_type="unet3plus",
+        structure=structure,
+        img_size=image_size,
+        prediction=False,
     )
 
 
-def fnet_3d(image_size: int, layer_num: int, conv_scaler: int, dropout: Optional[float] = None):
+def fnet_3d(
+    image_size: int, layer_num: int, conv_scaler: int, dropout: Optional[float] = None
+):
     structure.update({"layer_components": "3gcl"})
     structure.update({"num_conv_layers": layer_num})
     structure.update({"conv_scaler": conv_scaler})
@@ -104,7 +126,9 @@ def fnet_3d(image_size: int, layer_num: int, conv_scaler: int, dropout: Optional
     )
 
 
-def fnet_2d(image_size: int, layer_num: int, conv_scaler: int, dropout: Optional[float] = None):
+def fnet_2d(
+    image_size: int, layer_num: int, conv_scaler: int, dropout: Optional[float] = None
+):
     structure.update({"layer_components": "2gcl"})
     structure.update({"num_conv_layers": layer_num})
     structure.update({"conv_scaler": conv_scaler})
@@ -168,7 +192,9 @@ class TestNetwork3D:
                 # Batch x Channel x Z x Y x X
                 input = torch.rand((1, 1, i, i))
 
-                nn = unet3plus_2d(image_size=i, layer_num=5, conv_scaler=j, dropout=None)
+                nn = unet3plus_2d(
+                    image_size=i, layer_num=5, conv_scaler=j, dropout=None
+                )
 
                 with torch.no_grad():
                     nn(input)
@@ -179,7 +205,9 @@ class TestNetwork3D:
                 # Batch x Channel x Z x Y x X
                 input = torch.rand((1, 1, i, i, i))
 
-                nn = unet3plus_3d(image_size=i, layer_num=5, conv_scaler=j, dropout=None)
+                nn = unet3plus_3d(
+                    image_size=i, layer_num=5, conv_scaler=j, dropout=None
+                )
 
                 with torch.no_grad():
                     nn(input)
