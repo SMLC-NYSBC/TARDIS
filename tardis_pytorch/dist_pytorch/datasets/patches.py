@@ -139,28 +139,9 @@ class PatchDataSet:
             Tuple[list, list]: ID's list of all patches with more than 1 point
             and list of point numbers in each patch.
         """
-        not_empty_patch = []
-        points_no = []
-
-        for i, patch in enumerate(patches):
-            # Pick a points idx's
-            idx = self._points_in_patch(patch_center=patch)
-
-            # Select points from full point cloud array
-            if self.coord.shape[1] == 2:
-                coord_patch = np.hstack(
-                    (
-                        np.array([0] * self.coord[idx, :].shape[0])[:, None],
-                        self.coord[idx, :],
-                    )
-                )
-            else:
-                coord_patch = self.coord[idx, :]
-
-            # Evaluate patch for number of points if it contains more then 1 point
-            if coord_patch.shape[0] > 1:
-                not_empty_patch.append(i)
-                points_no.append(coord_patch.shape[0])
+        not_empty_patch = [i for i, patch in enumerate(patches) if len(self._points_in_patch(patch_center=patch)) > 1]
+        points_no = [self.coord[self._points_in_patch(patch_center=patch)].shape[0] for patch in patches if
+                     len(self._points_in_patch(patch_center=patch)) > 1]
 
         return not_empty_patch, points_no
 
@@ -176,15 +157,12 @@ class PatchDataSet:
         Returns:
             np.ndarray: An array all points in a patch with corrected ID value.
         """
-        unique_idx = list(np.unique(coord_with_idx[:, 0]))
-        norm_idx = list(range(len(np.unique(coord_with_idx[:, 0]))))
+        unique_idx, inverse_idx = np.unique(coord_with_idx[:, 0], return_inverse=True)
+        norm_idx = np.arange(len(unique_idx))
 
-        for id, i in enumerate(unique_idx):
-            idx_list = list(np.where(coord_with_idx[:, 0] == i)[0])
-
-            for j in idx_list:
-                coord_with_idx[j, 0] = norm_idx[id]
-
+        for i, id_ in enumerate(unique_idx):
+            mask = coord_with_idx[:, 0] == id_
+            coord_with_idx[:, 0][mask] = norm_idx[inverse_idx[mask]]
         return coord_with_idx
 
     def _output_format(self, data: np.ndarray) -> Union[np.ndarray, torch.Tensor]:
@@ -215,11 +193,8 @@ class PatchDataSet:
             np.ndarray: Array with XYZ coordinates to localize patch centers.
         """
         patch = []
-        patch_positions_x = []
-        patch_positions_y = []
-
-        bb_min = boundary_box[0]
-        bb_max = boundary_box[1]
+        patch_positions_x, patch_positions_y = [], []
+        bb_min, bb_max = boundary_box[0], boundary_box[1]
 
         if len(bb_min) == 3:
             z_mean = bb_max[2] / 2

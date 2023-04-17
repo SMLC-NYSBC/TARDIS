@@ -186,9 +186,10 @@ class PropGreedyGraphCut:
                 probs = i[2]
 
                 # Remove self connection
-                self_connect = [id for id, x in enumerate(indices) if x == i[0]][0]
-                indices.pop(self_connect)
-                probs.pop(self_connect)
+                self_connect = [id for id, x in enumerate(indices) if x == i[0]]
+                if len(self_connect) > 0:
+                    indices.pop(self_connect[0])
+                    probs.pop(self_connect[0])
 
                 all_prop[i[0]][2].extend(indices)
                 all_prop[i[0]][3].extend(probs)

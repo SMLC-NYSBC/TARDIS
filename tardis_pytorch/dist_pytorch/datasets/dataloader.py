@@ -175,7 +175,7 @@ class FilamentDataset(BasicDataset):
                 px = 1
 
             # Normalize point cloud to pixel size
-            coord[:, 1:] = coord[:, 1:] / px
+            coord[:, 1:] = coord[:, 1:] / px  # Normalize for pixel size
             coord[:, 1:] = coord[:, 1:] / 20  # in nm know distance between points
 
             VD = PatchDataSet(
@@ -242,6 +242,7 @@ class PartnetDataset(BasicDataset):
         if self.patch_size[i, 0] == 0:
             # Pre-process coord and image data also, if exist remove duplicates
             coord = load_ply_partnet(coord_file, downscaling=0.05)
+            coord[:, 1:] = coord[:, 1:] / 0.05
 
             VD = PatchDataSet(
                 drop_rate=0.01,
@@ -309,6 +310,7 @@ class ScannetDataset(BasicDataset):
         if self.patch_size[i, 0] == 0:
             # Pre-process coord and image data also, if exist remove duplicates
             coord = load_ply_scannet(coord_file, downscaling=0.1)
+            coord[:, 1:] = coord[:, 1:] / 0.1
 
             VD = PatchDataSet(
                 drop_rate=0.01,
@@ -396,6 +398,7 @@ class ScannetColorDataset(BasicDataset):
                 downscaling=0.1,
                 color=join(self.color_dir, f"{idx[:-11]}.ply"),
             )
+            coord[:, 1:] = coord[:, 1:] / 0.1
 
             classes = coord[:, 0]
             VD = PatchDataSet(

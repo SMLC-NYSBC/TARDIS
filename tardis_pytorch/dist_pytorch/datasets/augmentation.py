@@ -263,6 +263,8 @@ class BuildGraph:
                     graph[points_in_contour[0], points_in_contour[-1]] = 1
                     graph[points_in_contour[-1], points_in_contour[0]] = 1
 
+        range_ = list(range(len(graph)))
+        graph[range_, range_] = 1
         return graph
 
 
