@@ -260,14 +260,12 @@ class DISTBenchmark:
             threshold=self.threshold, connection=self.max_connections
         )
         input_IS = GraphToSegment.patch_to_segment(
-            graph=logits, coord=coords[:, 1:], idx=output_idx, prune=2, sort=self.sort
+            graph=logits, coord=coords[:, 1:], idx=output_idx, prune=5, sort=self.sort
         )
 
-        # mCov
-        self.metric["mCov"].append(mcov(input_IS, coords))
-
-        # mWCov
-        self.metric["mWCov"].append(mwcov(input_IS, coords))
+        # mCov and mWCov
+        self.metric["mCov"].append(mcov(input_IS, coords, eval=True))
+        self.metric["mWCov"].append(mcov(input_IS, coords, weight=True, eval=True))
 
     def _predict(self, input, node=None):
         if node is not None:

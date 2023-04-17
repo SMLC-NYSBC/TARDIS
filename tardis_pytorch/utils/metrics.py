@@ -294,18 +294,20 @@ def mcov(
     input: Optional[Union[np.ndarray, torch.Tensor]],
     targets: Optional[Union[np.ndarray, torch.Tensor]],
     weight=False,
+    eval=False
 ) -> float:
     mCov = []
     unique_target = np.unique(targets[:, 0])
     unique_input = np.unique(input[:, 0])
 
-    # Return 0.0 on over segmented PC
-    if len(unique_input) > len(unique_target) * 2:
-        return 0.0
+    if eval:
+        # Return 0.0 on over segmented PC
+        if len(unique_input) > len(unique_target) * 2:
+            return 0.0
 
-    # Return 0.0 if only none segmented PC
-    if len(unique_input) == 1 and len(unique_target) != 1:
-        return 0.0
+        # Return 0.0 if only none segmented PC
+        if len(unique_input) == 1 and len(unique_target) != 1:
+            return 0.0
 
     # Get GT instances, compute IoU for best mache between GT and input
     for j in unique_target:

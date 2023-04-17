@@ -506,7 +506,7 @@ class Stanford3DDataset(BasicDataset):
             else:
                 coord = load_s3dis_scene(dir=coord_file, downscaling=0.05)
             coord[:, 1:] = coord[:, 1:] / 0.05
-            print(f"Loaded: {idx} in {time.time() - start}")
+            print(f"Loaded: {idx} in {round(time.time() - start, 2)}s")
 
             start = time.time()
             if self.rgb:
@@ -526,7 +526,7 @@ class Stanford3DDataset(BasicDataset):
             coords_idx, df_idx, graph_idx, output_idx, cls_idx = VD.patched_dataset(
                 coord=coord, mesh=True, dist_th=0.125
             )
-            print(f"Patched: {idx} in {time.time() - start}")
+            print(f"Patched: {idx} in {round(time.time() - start, 2)}s")
 
             # save data for faster access later
             if not self.benchmark:
