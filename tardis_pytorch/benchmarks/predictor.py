@@ -264,8 +264,8 @@ class DISTBenchmark:
         )
 
         # mCov and mWCov
-        self.metric["mCov"].append(mcov(input_IS, coords, eval=True))
-        self.metric["mWCov"].append(mcov(input_IS, coords, weight=True, eval=True))
+        self.metric["mCov"].append(mcov(input_IS, coords, eval=False))
+        self.metric["mWCov"].append(mcov(input_IS, coords, weight=True, eval=False))
 
     def _predict(self, input, node=None):
         if node is not None:
