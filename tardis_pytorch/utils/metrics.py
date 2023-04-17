@@ -296,7 +296,10 @@ def mcov(
     weight=False,
     eval=True
 ) -> float:
-    mCov = []
+    if weight:
+        mCov = 0
+    else:
+        mCov = []
     unique_target = np.unique(targets[:, 0])
     unique_input = np.unique(input[:, 0])
 
@@ -331,12 +334,12 @@ def mcov(
         df = np.max(df)
         if df > 1.0:
             if weight:
-                mCov.append(w * 1.0)
+                mCov += w * 1.0
             else:
                 mCov.append(1.0)
         else:
             if weight:
-                mCov.append(w * df)
+                mCov += w * 1.0
             else:
                 mCov.append(df)  # Pick max IoU for GT instance
 
