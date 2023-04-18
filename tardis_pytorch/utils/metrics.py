@@ -294,7 +294,7 @@ def mcov(
     input: Optional[Union[np.ndarray, torch.Tensor]],
     targets: Optional[Union[np.ndarray, torch.Tensor]],
     weight=False,
-    eval=True
+    eval=True,
 ) -> float:
     if weight:
         mCov = 0

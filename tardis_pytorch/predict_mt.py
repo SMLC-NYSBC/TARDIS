@@ -229,7 +229,7 @@ def main(
 
     predictor = DataSetPredictor(
         predict="Microtubule",
-        dir=dir,
+        dir_=dir,
         output_format=output_format,
         patch_size=patch_size,
         cnn_threshold=cnn_threshold,

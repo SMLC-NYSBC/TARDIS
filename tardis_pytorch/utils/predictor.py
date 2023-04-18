@@ -49,7 +49,7 @@ class DataSetPredictor:
 
     Args:
         predict (str): Dataset type name.
-        dir (str): Dataset directory.
+        dir_ (str): Dataset directory.
         output_format (str): Two output format for semantic and instance prediction.
         patch_size (int): Image 3D crop size.
         cnn_threshold (float): Threshold for CNN model.
@@ -72,7 +72,7 @@ class DataSetPredictor:
     def __init__(
         self,
         predict: str,
-        dir: str,
+        dir_: str,
         output_format: str,
         patch_size: int,
         cnn_threshold: float,
@@ -98,7 +98,7 @@ class DataSetPredictor:
             sys.exit()
 
         # Directories and dataset info
-        self.dir = dir
+        self.dir = dir_
         self.output_format = output_format
         self.predict = predict
         self.amira_prefix = amira_prefix
@@ -144,7 +144,7 @@ class DataSetPredictor:
         self.amira_check = False
         if isdir(join(self.dir, "amira")):
             self.amira_check = True
-            self.dir_amira = join(dir, "amira")
+            self.dir_amira = join(dir_, "amira")
             self.title = (
                 f"Fully-automatic Instance {self.predict} segmentation module "
                 f"with Amira comparison {str_debug}"
@@ -158,14 +158,14 @@ class DataSetPredictor:
         self.am_output = join(self.dir, "Predictions")
 
         # Pickup files for the prediction
-        self.predict_list = [f for f in listdir(dir) if f.endswith(available_format)]
+        self.predict_list = [f for f in listdir(dir_) if f.endswith(available_format)]
 
         # Tardis progress bar update
         if len(self.predict_list) == 0:
             TardisError(
                 id="12",
                 py="tardis_pytorch/utils/predictor.py",
-                desc=f"Given {dir} does not contain any recognizable file!",
+                desc=f"Given {dir_} does not contain any recognizable file!",
             )
             sys.exit()
         else:
@@ -349,7 +349,7 @@ class DataSetPredictor:
         # Restored original image pixel size
         self.image, _ = scale_image(image=self.image, scale=self.org_shape)
 
-    def __preproces_DIST(self, id_name: str):
+    def __preprocess_DIST(self, id_name: str):
         # Post-process predicted image patches
         if self.predict == "Microtubule":
             self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
@@ -637,7 +637,11 @@ class DataSetPredictor:
                 text_7="Current Task: Image Postprocessing...",
             )
 
-            self.__preproces_DIST(id_name=i)
+            self.__preprocess_DIST(id_name=i)
+            if len(self.pc_hd) == 0:
+                continue
+            if len(self.pc_ld) < 100 and len(self.pc_hd) > 0:
+                self.pc_ld = self.pc_hd
 
             # Tardis progress bar update
             self.tardis_progress(

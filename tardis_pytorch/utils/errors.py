@@ -92,8 +92,8 @@ class TardisError(Exception):
         self.tardis_error_rise = TardisLogo()
         prev_frame = inspect.currentframe().f_back
 
-        dir = join(expanduser("~"), "_tardis_error.log")
-        with open(dir, "w") as f:
+        dir_ = join(expanduser("~"), "_tardis_error.log")
+        with open(dir_, "w") as f:
             f.write(f"TARDIS ERROR CODE: {id} {id_desc} \n")
             f.write(f"{prev_frame} \n")
             f.write("\n")

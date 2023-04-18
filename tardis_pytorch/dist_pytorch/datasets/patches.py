@@ -139,9 +139,16 @@ class PatchDataSet:
             Tuple[list, list]: ID's list of all patches with more than 1 point
             and list of point numbers in each patch.
         """
-        not_empty_patch = [i for i, patch in enumerate(patches) if len(self._points_in_patch(patch_center=patch)) > 1]
-        points_no = [self.coord[self._points_in_patch(patch_center=patch)].shape[0] for patch in patches if
-                     len(self._points_in_patch(patch_center=patch)) > 1]
+        not_empty_patch = [
+            i
+            for i, patch in enumerate(patches)
+            if len(self._points_in_patch(patch_center=patch)) > 1
+        ]
+        points_no = [
+            self.coord[self._points_in_patch(patch_center=patch)].shape[0]
+            for patch in patches
+            if len(self._points_in_patch(patch_center=patch)) > 1
+        ]
 
         return not_empty_patch, points_no
 

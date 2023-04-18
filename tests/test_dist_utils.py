@@ -38,6 +38,6 @@ def test_build_pc():
     assert len(pc) > 0
 
     pc_hd, pc_ld = builder.build_point_cloud(image=y, EDT=True, down_sampling=1)
-    assert pc_hd.ndim == 2 and pc_ld.ndim == 2
+    assert pc_hd.ndim == 3 and pc_ld.ndim == 3
     assert len(pc_hd) > 0
     assert len(pc_ld) > 0

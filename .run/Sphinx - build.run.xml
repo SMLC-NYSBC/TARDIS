@@ -5,10 +5,10 @@
     <option name="PARENT_ENVS" value="true" />
     <option name="SDK_HOME" value="$USER_HOME$/miniconda/envs/tardis310/bin/python" />
     <option name="SDK_NAME" value="tardis310" />
-    <option name="WORKING_DIRECTORY" value="" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     <option name="IS_MODULE_SDK" value="false" />
-    <option name="ADD_CONTENT_ROOTS" value="true" />
-    <option name="ADD_SOURCE_ROOTS" value="true" />
+    <option name="ADD_CONTENT_ROOTS" value="false" />
+    <option name="ADD_SOURCE_ROOTS" value="false" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
     <option name="docutils_input_file" value="$PROJECT_DIR$/docs/source" />
     <option name="docutils_output_file" value="$PROJECT_DIR$/docs/build/html" />
@@ -17,9 +17,11 @@
     <option name="docutils_open_in_browser" value="false" />
     <method v="2">
       <option name="FwBeforeLaunchTask" enabled="true" />
+      <option name="RunConfigurationTask" enabled="true" run_configuration_name="pytest - Python 3.7" run_configuration_type="tests" />
       <option name="RunConfigurationTask" enabled="true" run_configuration_name="pytest - Python 3.8" run_configuration_type="tests" />
       <option name="RunConfigurationTask" enabled="true" run_configuration_name="pytest - Python 3.9" run_configuration_type="tests" />
       <option name="RunConfigurationTask" enabled="true" run_configuration_name="pytest - Python 3.10" run_configuration_type="tests" />
+      <option name="RunConfigurationTask" enabled="true" run_configuration_name="pytest - Python 3.11" run_configuration_type="tests" />
     </method>
   </configuration>
 </component>

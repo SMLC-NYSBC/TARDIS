@@ -98,7 +98,7 @@ def get_weights_aws(network: str, subtype: str, model: Optional[str] = None):
     DIST_DATASET = ["microtubules", "s3dis"]
 
     """Get weights for CNN"""
-    dir = join(expanduser("~"), ".tardis_pytorch", f"{network}_{subtype}", f"{model}")
+    dir_ = join(expanduser("~"), ".tardis_pytorch", f"{network}_{subtype}", f"{model}")
 
     if network not in ALL_MODELS:
         TardisError(
@@ -130,8 +130,8 @@ def get_weights_aws(network: str, subtype: str, model: Optional[str] = None):
             )
 
     if aws_check_with_temp(model_name=[network, subtype, model]):
-        if isfile(join(dir, "model_weights.pth")):
-            return join(dir, "model_weights.pth")
+        if isfile(join(dir_, "model_weights.pth")):
+            return join(dir_, "model_weights.pth")
         else:
             TardisError("19", "tardis_pytorch/utils/aws.py", "No weights found")
     else:
@@ -145,21 +145,21 @@ def get_weights_aws(network: str, subtype: str, model: Optional[str] = None):
     if not isdir(join(expanduser("~"), ".tardis_pytorch")):
         mkdir(join(expanduser("~"), ".tardis_pytorch"))
 
-    if not isdir(dir):
-        makedirs(dir)
+    if not isdir(dir_):
+        makedirs(dir_)
 
     # Save weights
-    open(join(dir, "model_weights.pth"), "wb").write(weight.content)
+    open(join(dir_, "model_weights.pth"), "wb").write(weight.content)
 
     # Save header
-    with open(join(dir, "model_header.json"), "w") as f:
+    with open(join(dir_, "model_header.json"), "w") as f:
         json.dump(dict(weight.headers), f)
 
-    print(f"Pre-Trained model download from S3 and saved/updated in {dir}")
+    print(f"Pre-Trained model download from S3 and saved/updated in {dir_}")
 
     weight = weight.content
     if "AccessDenied" in str(weight[:100]):
-        return join(dir, "model_weights.pth")
+        return join(dir_, "model_weights.pth")
     return io.BytesIO(weight)
 
 

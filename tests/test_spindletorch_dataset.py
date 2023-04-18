@@ -26,8 +26,8 @@ from tardis_pytorch.utils.normalization import (
 
 
 def test_dataloader():
-    dir = "./tests/test_data/data_loader/cnn/test/"
-    dataset = CNNDataset(img_dir=join(dir, "imgs"), mask_dir=join(dir, "masks"))
+    dir_ = "./tests/test_data/data_loader/cnn/test/"
+    dataset = CNNDataset(img_dir=join(dir_, "imgs"), mask_dir=join(dir_, "masks"))
     assert len(dataset) == 2
 
     img, mask = dataset.__getitem__(0)
@@ -36,7 +36,7 @@ def test_dataloader():
     assert img.min() >= 0 and img.max() <= 255
     assert torch.sum(img) != 0
 
-    dataset = PredictionDataset(img_dir=join(dir, "imgs"))
+    dataset = PredictionDataset(img_dir=join(dir_, "imgs"))
     assert len(dataset) == 2
 
     img, idx = dataset.__getitem__(0)

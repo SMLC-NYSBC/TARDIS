@@ -770,8 +770,8 @@ def load_ply_scannet(
             TardisError(
                 "131",
                 "tardis_pytorch/utils/load_data.py",
-                "RGB shape must be the same as coord!"
-                f"But {coord.shape} != {rgb.shape}",
+                "RGB shape must be the same as coord! "
+                f"But {coord[:, 1:].shape} != {rgb.shape}",
             )
     else:
         # Down scaling point cloud with labels

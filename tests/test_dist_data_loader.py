@@ -23,8 +23,8 @@ from tardis_pytorch.dist_pytorch.datasets.dataloader import (
 
 
 class TestDataLoader:
-    dir = join("tests", "test_data", "data_loader")
-    coord_dir = join(dir, "filament_mt", "train", "masks", "am3D.CorrelationLines.am")
+    dir_ = join("tests", "test_data", "data_loader")
+    coord_dir = join(dir_, "filament_mt", "train", "masks", "am3D.CorrelationLines.am")
     img_dir = join("tests", "test_data", "data_loader")
 
     def test_preprocess_3d_img(self):
@@ -56,7 +56,7 @@ class TestDataLoader:
 
     def test_filament_mt_dataloader(self):
         train_dl = FilamentDataset(
-            coord_dir=join(self.dir, "filament_mt", "train", "masks"),
+            coord_dir=join(self.dir_, "filament_mt", "train", "masks"),
             coord_format=".CorrelationLines.am",
             patch_if=500,
         )
@@ -81,7 +81,7 @@ class TestDataLoader:
 
     def test_filament_mem_dataloader(self):
         train_dl = FilamentDataset(
-            coord_dir=join(self.dir, "filament_mem", "train", "masks"),
+            coord_dir=join(self.dir_, "filament_mem", "train", "masks"),
             coord_format=".csv",
             patch_if=500,
         )
@@ -106,7 +106,7 @@ class TestDataLoader:
 
     def test_scannet_dataloader(self):
         train_dl = ScannetDataset(
-            coord_dir=join(self.dir, "scannet", "train", "masks"),
+            coord_dir=join(self.dir_, "scannet", "train", "masks"),
             coord_format=".ply",
             patch_if=500,
         )
@@ -133,7 +133,7 @@ class TestDataLoader:
 
     def test_scannet_color_dataloader(self):
         train_dl = ScannetColorDataset(
-            coord_dir=join(self.dir, "scannet", "train", "masks"),
+            coord_dir=join(self.dir_, "scannet", "train", "masks"),
             coord_format=".ply",
             patch_if=500,
         )
@@ -162,7 +162,7 @@ class TestDataLoader:
 
     def test_partnet_dataloader(self):
         train_dl = PartnetDataset(
-            coord_dir=join(self.dir, "partnet", "train", "masks"),
+            coord_dir=join(self.dir_, "partnet", "train", "masks"),
             coord_format=".ply",
             patch_if=500,
         )
