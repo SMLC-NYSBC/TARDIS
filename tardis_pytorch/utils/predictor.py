@@ -89,7 +89,7 @@ class DataSetPredictor:
         device_: str,
         debug: bool,
     ):
-        if predict not in ["Membrane", "Microtubule"]:
+        if predict not in ["Membrane2D", "Membrane", "Microtubule"]:
             TardisError(
                 id="01",
                 py="tardis_pytorch/utils/predictor.py",
@@ -710,11 +710,15 @@ class DataSetPredictor:
                 )
 
             try:
+                if self.predict in ["Microtubule", "Membrane2D"]:
+                    sort = True
+                else:
+                    sort = False
                 self.segments = self.GraphToSegment.patch_to_segment(
                     graph=self.graphs,
                     coord=self.pc_ld,
                     idx=self.output_idx,
-                    sort=False,
+                    sort=sort,
                     prune=10,
                 )
             except:
