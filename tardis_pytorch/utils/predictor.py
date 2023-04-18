@@ -698,11 +698,6 @@ class DataSetPredictor:
                 self.pc_ld[:, 0] = self.pc_ld[:, 0] + self.transformation[0]
                 self.pc_ld[:, 1] = self.pc_ld[:, 1] + self.transformation[1]
                 self.pc_ld[:, 2] = self.pc_ld[:, 2] + self.transformation[2]
-
-                self.segments = self.GraphToSegment.patch_to_segment(
-                    graph=self.graphs, coord=self.pc_ld, idx=self.output_idx, prune=5
-                )
-
             else:
                 self.tardis_progress(
                     title=self.title,
@@ -714,16 +709,16 @@ class DataSetPredictor:
                     text_7="Current Task: Instance segmentation...",
                 )
 
-                try:
-                    self.segments = self.GraphToSegment.patch_to_segment(
-                        graph=self.graphs,
-                        coord=self.pc_ld,
-                        idx=self.output_idx,
-                        sort=False,
-                        prune=10,
-                    )
-                except:
-                    pass
+            try:
+                self.segments = self.GraphToSegment.patch_to_segment(
+                    graph=self.graphs,
+                    coord=self.pc_ld,
+                    idx=self.output_idx,
+                    sort=False,
+                    prune=10,
+                )
+            except:
+                self.segments = None
 
             if self.segments is None:
                 continue

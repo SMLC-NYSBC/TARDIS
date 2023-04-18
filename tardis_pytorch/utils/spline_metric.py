@@ -15,6 +15,8 @@ from scipy.interpolate import splev, splprep
 from scipy.spatial.distance import cdist
 from sklearn.neighbors import KDTree
 
+from tardis_pytorch.dist_pytorch.utils.utils import pc_median_dist
+
 
 class FilterConnectedNearSegments:
     """
@@ -642,7 +644,7 @@ def compare_splines_probability(
     return probability
 
 
-def smooth_spline(points: np.ndarray, s=500.0):
+def smooth_spline(points: np.ndarray, s=0.5):
     """
     Spline smoothing given an 's' smoothness factor.
 
@@ -655,23 +657,30 @@ def smooth_spline(points: np.ndarray, s=500.0):
         Returns: Smooth spline
     """
     if points.shape[1] == 4:  # [ID, X, Y, Z]
-        id = points[0, 0]
+        id = int(points[0, 0])
         points = points[:, 1:]
+        norm_pc = pc_median_dist(points)
+        points = points / norm_pc
+
         t_before = tortuosity(points)
 
-        tck, u = splprep(points.T, s=s)
-        spline = np.stack(splev(u, tck)).T
-        t_after = tortuosity(spline)
+        try:
+            tck, u = splprep(points.T, s=s)
+            spline = np.stack(splev(u, tck)).T
+        except ValueError:
+            spline = points
 
+        spline = spline * norm_pc
+        t_after = tortuosity(spline)
         ids = np.zeros((len(spline), 1))
-        ids += id
+        ids[:, 0] = id
 
         # Sanity check if spline smoothing failed
         if t_after > t_before:
             return np.hstack((ids, points))
         return np.hstack((ids, spline))
     else:  # [X, Y, Z]
-        tck, u = splprep(points.T, s=s)
+        tck, u = splprep(points.T)
 
         return np.stack(splev(u, tck)).T
 

@@ -280,7 +280,7 @@ class PropGreedyGraphCut:
 
         # Smooth spline
         for i in np.unique(coord[:, 0]):
-            x = coord[np.where(coord[:, 0] == int(i))[0], :]
+            x = coord[coord[:, 0] == int(i), :]
 
             if len(x) > 4:
                 splines.append(smooth_spline(x))
