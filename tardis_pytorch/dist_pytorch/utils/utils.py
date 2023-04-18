@@ -277,8 +277,10 @@ class VoxelDownSampling(DownSampling):
         if self.labels or rgb is not None or self.KNN:
             # Build a KDTree from the voxel_centers
             tree = KDTree(coord)
+
             # Query the KDTree to find the nearest voxel center for each coord point
             _, nearest_voxel_index = tree.query(voxel_centers)
+            nearest_voxel_index = np.concatenate(nearest_voxel_index)
 
             if self.labels and not self.KNN:
                 # Compute the color of the nearest voxel center for each down-sampled point
