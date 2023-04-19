@@ -15,8 +15,7 @@ import click
 
 from tardis_pytorch.utils.predictor import DataSetPredictor
 from tardis_pytorch._version import version
-from tardis_pytorch.utils.logo import TardisLogo
-from utils.errors import TardisError
+from tardis_pytorch.utils.errors import TardisError
 
 warnings.simplefilter("ignore", UserWarning)
 
