@@ -15,10 +15,10 @@ def main():
         "(rkiewisz@nysbc.org | tbepler@nysbc.org).",
         text_4="Join Slack community: https://bit.ly/41hTCaP",
         text_6="FUNCTIONALITY:",
-        text_7="To predict microtubule instances:",
-        text_8="    tardis_mt . | OR | tardis_mt --help",
+        text_7="To predict microtubule and filament instances:",
+        text_8="    tardis_mt . | OR | tardis_mt --help          tardis_filament . | OR | tardis_filament --help",
         text_10="To predict 3D membrane semantic and instances:",
-        text_11="    tardis_mem . | OR | tardis_mem --help",
+        text_11="    tardis_mem . | OR | tardis_mem --help       tardis_mem2d . | OR | tardis_mem2d --help",
     )
 
 
