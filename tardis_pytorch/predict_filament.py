@@ -178,6 +178,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.version_option(version=version)
 def main(
     dir: str,
+    feature_size: float,
     output_format: str,
     patch_size: int,
     rotate: bool,
