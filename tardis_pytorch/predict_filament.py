@@ -7,6 +7,7 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
+import sys
 import warnings
 from os import getcwd
 
@@ -14,7 +15,7 @@ import click
 
 from tardis_pytorch.utils.predictor import DataSetPredictor
 from tardis_pytorch._version import version
-
+from tardis_pytorch.utils.logo import TardisLogo
 warnings.simplefilter("ignore", UserWarning)
 
 
@@ -25,6 +26,16 @@ warnings.simplefilter("ignore", UserWarning)
     default=getcwd(),
     type=str,
     help="Directory with images for prediction with CNN model.",
+    show_default=True,
+)
+@click.option(
+    "-fs",
+    "--feature_size",
+    default=getcwd(),
+    type=str,
+    help="Filament thickness in pixels you want segment. This parameter overwrite "
+         "image scaling by pixel size to scale the image to fit correct filament "
+         "thickens to about 7px.",
     show_default=True,
 )
 @click.option(
@@ -109,23 +120,11 @@ warnings.simplefilter("ignore", UserWarning)
     show_default=True,
 )
 @click.option(
-    "-ap",
-    "--amira_prefix",
-    default=".CorrelationLines",
-    type=str,
-    help="If dir/amira foldr exist, TARDIS will search for files with "
-    "given prefix (e.g. file_name.CorrelationLines.am). If the correct "
-    "file is found, TARDIS will use its instance segmentation with "
-    "ZiB Amira prediction, and output additional file called "
-    "file_name_AmiraCompare.am.",
-    show_default=True,
-)
-@click.option(
     "-fl",
     "--filter_by_length",
     default=500,
     type=int,
-    help="Filtering parameters for microtubules, defining maximum microtubule "
+    help="Filtering parameters for filament, defining maximum filament "
     "length in angstrom. All filaments shorter then this length "
     "will be deleted.",
     show_default=True,
@@ -135,7 +134,7 @@ warnings.simplefilter("ignore", UserWarning)
     "--connect_splines",
     default=2500,
     type=int,
-    help="Filtering parameter for microtubules. Some microtubules may be "
+    help="Filtering parameter for filament. Some filament may be "
     "predicted incorrectly as two separate filaments. To overcome this "
     "during filtering for each spline, we determine the vector in which "
     "filament end is facing and we connect all filament that faces "
@@ -148,36 +147,12 @@ warnings.simplefilter("ignore", UserWarning)
     "--connect_cylinder",
     default=250,
     type=int,
-    help="Filtering parameter for microtubules. To reduce false positive "
+    help="Filtering parameter for filament. To reduce false positive "
     "from connecting filaments, we reduce the searching are to cylinder "
     "radius given in angstrom. For each spline we determine vector "
     "in which filament end is facing and we search for a filament "
     "that faces the same direction and their end can be found "
     "within a cylinder.",
-    show_default=True,
-)
-@click.option(
-    "-acd",
-    "--amira_compare_distance",
-    default=175,
-    type=int,
-    help="If dir/amira/file_amira_prefix.am is recognized, TARDIS runs "
-    "a comparison between its instance segmentation and ZiB Amira prediction. "
-    "The comparison is done by evaluating the distance of two filaments from "
-    "each other. This parameter defines the maximum distance used to "
-    "evaluate the similarity between two splines based on their "
-    "coordinates [A].",
-    show_default=True,
-)
-@click.option(
-    "-aip",
-    "--amira_inter_probability",
-    default=0.25,
-    type=float,
-    help="If dir/amira/file_amira_prefix.am is recognized, TARDIS runs "
-    "a comparison between its instance segmentation and ZiB Amira prediction. "
-    "This parameter defines the interaction threshold used to identify splines "
-    "that are similar overlaps between TARDIS and ZiB Amira.",
     show_default=True,
 )
 @click.option(
@@ -212,14 +187,11 @@ def main(
     filter_by_length: float,
     connect_splines: int,
     connect_cylinder: int,
-    amira_prefix: str,
-    amira_compare_distance: int,
-    amira_inter_probability: float,
     device: str,
     debug: bool,
 ):
     """
-    MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
+    MAIN MODULE FOR PREDICTION GENERAL FILAMENT WITH TARDIS-PYTORCH
     """
     out = output_format.split("_")
     if out[1] == "None":
@@ -228,20 +200,18 @@ def main(
         instances = True
 
     predictor = DataSetPredictor(
-        predict="Microtubule",
+        predict="Filament",
         dir_=dir,
+        feature_size=feature_size,
         output_format=output_format,
         patch_size=patch_size,
         cnn_threshold=cnn_threshold,
         dist_threshold=dist_threshold,
         points_in_patch=points_in_patch,
         predict_with_rotation=rotate,
-        amira_prefix=amira_prefix,
         filter_by_length=filter_by_length,
         connect_splines=connect_splines,
         connect_cylinder=connect_cylinder,
-        amira_compare_distance=amira_compare_distance,
-        amira_inter_probability=amira_inter_probability,
         instances=instances,
         device_=str(device),
         debug=debug,

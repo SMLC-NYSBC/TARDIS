@@ -50,6 +50,7 @@ class DataSetPredictor:
     Args:
         predict (str): Dataset type name.
         dir_ (str): Dataset directory.
+        feature_size (float): Optional size of the filament use to scale image.
         output_format (str): Two output format for semantic and instance prediction.
         patch_size (int): Image 3D crop size.
         cnn_threshold (float): Threshold for CNN model.
@@ -73,6 +74,7 @@ class DataSetPredictor:
         self,
         predict: str,
         dir_: str,
+        feature_size: Optional[float],
         output_format: str,
         patch_size: int,
         cnn_threshold: float,
@@ -89,7 +91,7 @@ class DataSetPredictor:
         device_: str,
         debug: bool,
     ):
-        if predict not in ["Membrane2D", "Membrane", "Microtubule"]:
+        if predict not in ["Filament", "Membrane2D", "Membrane", "Microtubule"]:
             TardisError(
                 id="01",
                 py="tardis_pytorch/utils/predictor.py",
@@ -104,6 +106,7 @@ class DataSetPredictor:
         self.amira_prefix = amira_prefix
 
         # Pre-processing setting
+        self.feature_size = feature_size
         self.patch_size = patch_size
         self.points_in_patch = points_in_patch
 
@@ -115,6 +118,18 @@ class DataSetPredictor:
         # Global flags
         self.device = get_device(device_)
         self.debug = debug
+
+        # Variables:
+        self.normalize_px = 0
+        self.predict_cnn = None
+        self.predict_dist = None
+        self.transformation = []
+        self.px = 0
+        self.image = None
+        self.scale_factor = 0
+        self.scale_shape = ()
+        self.org_shape = ()
+        self.pc_hd, self.pc_ld = None, None
 
         """Initial Setup"""
         if debug:
@@ -152,6 +167,14 @@ class DataSetPredictor:
 
         self.tardis_progress(title=self.title, text_2=f"Device: {self.device}")
 
+        # Early stop if not semantic of instance was specified
+        if output_format == "None_None":
+            TardisError(
+                id="151",
+                py="tardis_pytorch/utils/predictor.py",
+                desc=f"Require that at lest one output format is not None but {output_format} was given!",
+            )
+            sys.exit()
         # Searching for available images for prediction
         available_format = (".tif", ".mrc", ".rec", ".am")
         self.output = join(self.dir, "temp", "Predictions")
@@ -225,11 +248,14 @@ class DataSetPredictor:
         self.amira_file = NumpyToAmira()
 
         """Build NN from checkpoints"""
-        self._build_NN(NN=self.predict)
+        self.build_NN(NN=self.predict)
 
-    def _build_NN(self, NN: str):
-        if NN == "Microtubule":
-            self.normalize_px = 25
+    def build_NN(self, NN: str):
+        if NN in ["Filament", "Microtubule"]:
+            if NN == "Microtubule":
+                self.normalize_px = 25
+            else:
+                self.normalize_px = 8
 
             # Build CNN network with loaded pre-trained weights
             self.predict_cnn = Predictor(
@@ -266,7 +292,7 @@ class DataSetPredictor:
                 network="dist", subtype="triang", model_type="s3dis", device=self.device
             )
 
-    def __load_data(self, id_name: str):
+    def load_data(self, id_name: str):
         # Build temp dir
         build_temp_dir(dir=self.dir)
 
@@ -278,6 +304,7 @@ class DataSetPredictor:
         else:
             self.image, self.px = load_image(join(self.dir, id_name))
             self.transformation = [0, 0, 0]
+
         if self.tif_px is not None:
             self.px = self.tif_px
 
@@ -296,9 +323,10 @@ class DataSetPredictor:
                 type=float,
             )
 
-        # Check image structure and normalize histogram
+        # Normalize image histogram
         self.image = self.normalize(self.mean_std(self.image)).astype(np.float32)
 
+        # Check image structure
         if (
             not self.image.min() >= -1 or not self.image.max() <= 1
         ):  # Image not between in -1 and 1
@@ -319,13 +347,21 @@ class DataSetPredictor:
             sys.exit()
 
         # Calculate parameters for normalizing image pixel size
-        self.scale_factor = self.px / self.normalize_px
+        """
+        Image px is 26.8
+        feature is 9px 
+        to 7px
+        """
+        if self.predict == 'Filament':
+            self.scale_factor = self.normalize_px / self.feature_size
+        else:
+            self.scale_factor = self.px / self.normalize_px
         self.org_shape = self.image.shape
         self.scale_shape = tuple(
             np.multiply(self.org_shape, self.scale_factor).astype(np.int16)
         )
 
-    def __postproces_CNN(self, id_name: str):
+    def postprocess_CNN(self, id_name: str):
         # Stitch predicted image patches
         self.image = self.image_stitcher(
             image_dir=self.output, mask=False, dtype=np.float32
@@ -349,7 +385,7 @@ class DataSetPredictor:
         # Restored original image pixel size
         self.image, _ = scale_image(image=self.image, scale=self.org_shape)
 
-    def __preprocess_DIST(self, id_name: str):
+    def preprocess_DIST(self, id_name: str):
         # Post-process predicted image patches
         if self.predict == "Microtubule":
             self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
@@ -362,7 +398,7 @@ class DataSetPredictor:
         del self.image
         self._debug(id_name=id_name, debug_id="pc")
 
-    def __predict_cnn(self, id: int, id_name: str, dataloader):
+    def predict_cnn(self, id: int, id_name: str, dataloader):
         iter_time = 1
         if self.rotate:
             pred_title = "CNN prediction with four 90 degree rotations."
@@ -383,13 +419,13 @@ class DataSetPredictor:
                 )
 
             # Pick image['s]
-            input, name = dataloader.__getitem__(j)
+            input_, name = dataloader.__getitem__(j)
 
             if j == 0:
                 start = time.time()
 
                 # Predict
-                input = self.predict_cnn.predict(input[None, :], rotate=self.rotate)
+                input_ = self.predict_cnn.predict(input_[None, :], rotate=self.rotate)
 
                 # Scale progress bar refresh to 10s
                 end = time.time()
@@ -398,13 +434,13 @@ class DataSetPredictor:
                     iter_time = 1
             else:
                 # Predict
-                input = self.predict_cnn.predict(input[None, :], rotate=self.rotate)
+                input_ = self.predict_cnn.predict(input_[None, :], rotate=self.rotate)
 
             tif.imwrite(
-                join(self.output, f"{name}.tif"), np.array(input, dtype=input.dtype)
+                join(self.output, f"{name}.tif"), np.array(input_, dtype=input_.dtype)
             )
 
-    def __predict_DIST(self, id: int, id_name: str):
+    def predict_DIST(self, id: int, id_name: str):
         iter_time = int(round(len(self.coords_df) / 10))
         if iter_time == 0:
             iter_time = 1
@@ -508,9 +544,10 @@ class DataSetPredictor:
 
     def __call__(self, *args, **kwargs):
         """Process each image with CNN and DIST"""
-        for id, i in enumerate(self.predict_list):
+        for id_, i in enumerate(self.predict_list):
             """CNN Pre-Processing"""
             if i.endswith("CorrelationLines.am"):
+                # Skip .am files which are spatial graphs not images
                 continue
 
             # Find file format
@@ -527,20 +564,20 @@ class DataSetPredictor:
                 title=self.title,
                 text_1=f"Found {len(self.predict_list)} images to predict!",
                 text_2=f"Device: {self.device}",
-                text_3=f"Image {id + 1}/{len(self.predict_list)}: {i}",
+                text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
                 text_4="Original Pixel size: Nan A",
                 text_7="Current Task: Preprocessing for CNN...",
             )
 
             # Load data
-            self.__load_data(id_name=i)
+            self.load_data(id_name=i)
 
             # Tardis progress bar update
             self.tardis_progress(
                 title=self.title,
                 text_1=f"Found {len(self.predict_list)} images to predict!",
                 text_2=f"Device: {self.device}",
-                text_3=f"Image {id + 1}/{len(self.predict_list)}: {i}",
+                text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
                 text_4=f"Original Pixel size: {self.px} A",
                 text_7=f"Current Task: Sub-dividing images for {self.patch_size} size",
             )
@@ -559,8 +596,8 @@ class DataSetPredictor:
             self.image = None
 
             """CNN prediction"""
-            self.__predict_cnn(
-                id=id,
+            self.predict_cnn(
+                id=id_,
                 id_name=i,
                 dataloader=PredictionDataset(join(self.dir, "temp", "Patches", "imgs")),
             )
@@ -571,12 +608,12 @@ class DataSetPredictor:
                 title=self.title,
                 text_1=f"Found {len(self.predict_list)} images to predict!",
                 text_2=f"Device: {self.device}",
-                text_3=f"Image {id + 1}/{len(self.predict_list)}: {i}",
+                text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
                 text_4=f"Original pixel size: {self.px} A",
                 text_7="Current Task: Stitching...",
             )
 
-            self.__postproces_CNN(id_name=i)
+            self.postprocess_CNN(id_name=i)
             if self.image is None:
                 continue
 
@@ -631,13 +668,13 @@ class DataSetPredictor:
                 title=self.title,
                 text_1=f"Found {len(self.predict_list)} images to predict!",
                 text_2=f"Device: {self.device}",
-                text_3=f"Image {id + 1}/{len(self.predict_list)}: {i}",
+                text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
                 text_4=f"Original pixel size: {self.px} A",
                 text_5="Point Cloud: In processing...",
                 text_7="Current Task: Image Postprocessing...",
             )
 
-            self.__preprocess_DIST(id_name=i)
+            self.preprocess_DIST(id_name=i)
             if len(self.pc_hd) == 0:
                 continue
             if len(self.pc_ld) < 100 and len(self.pc_hd) > 0:
@@ -648,7 +685,7 @@ class DataSetPredictor:
                 title=self.title,
                 text_1=f"Found {len(self.predict_list)} images to predict!",
                 text_2=f"Device: {self.device}",
-                text_3=f"Image {id + 1}/{len(self.predict_list)}: {i}",
+                text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
                 text_4=f"Original pixel size: {self.px} A",
                 text_5=f"Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments",
                 text_7="Current Task: Preparing for instance segmentation...",
@@ -669,7 +706,7 @@ class DataSetPredictor:
                 title=self.title,
                 text_1=f"Found {len(self.predict_list)} images to predict!",
                 text_2=f"Device: {self.device}",
-                text_3=f"Image {id + 1}/{len(self.predict_list)}: {i}",
+                text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
                 text_4=f"Original pixel size: {self.px} A",
                 text_5=f"Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments",
                 text_7="Current Task: DIST prediction...",
@@ -677,7 +714,7 @@ class DataSetPredictor:
             )
 
             """DIST prediction"""
-            self.graphs = self.__predict_DIST(id=id, id_name=i)
+            self.graphs = self.predict_DIST(id=id_, id_name=i)
             self._debug(id_name=i, debug_id="graph")
 
             self.segments = None
@@ -686,7 +723,7 @@ class DataSetPredictor:
                     title=self.title,
                     text_1=f"Found {len(self.predict_list)} images to predict!",
                     text_2=f"Device: {self.device}",
-                    text_3=f"Image {id + 1}/{len(self.predict_list)}: {i}",
+                    text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
                     text_4=f"Original pixel size: {self.px} A",
                     text_5=f"Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments",
                     text_7="Current Task: Instance Segmentation...",
@@ -703,7 +740,7 @@ class DataSetPredictor:
                     title=self.title,
                     text_1=f"Found {len(self.predict_list)} images to predict!",
                     text_2=f"Device: {self.device}",
-                    text_3=f"Image {id + 1}/{len(self.predict_list)}: {i}",
+                    text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
                     text_4=f"Original pixel size: {self.px} A",
                     text_5=f"Point Cloud: {self.pc_ld.shape[0]}; NaN Segments",
                     text_7="Current Task: Instance segmentation...",
@@ -734,7 +771,7 @@ class DataSetPredictor:
                 title=self.title,
                 text_1=f"Found {len(self.predict_list)} images to predict!",
                 text_2=f"Device: {self.device}",
-                text_3=f"Image {id + 1}/{len(self.predict_list)}: {i}",
+                text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
                 text_4=f"Original pixel size: {self.px} A",
                 text_5=f"Point Cloud: {self.pc_ld.shape[0]} Nodes;"
                 f" {np.max(self.segments[:, 0])} Segments",
