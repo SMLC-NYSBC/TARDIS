@@ -258,7 +258,7 @@ class DataSetPredictor:
                 self.normalize_px = 8
 
             # Build CNN network with loaded pre-trained weights
-            self.predict_cnn = Predictor(
+            self.cnn = Predictor(
                 network="fnet",
                 subtype="32",
                 model_type="microtubules",
@@ -268,7 +268,7 @@ class DataSetPredictor:
             )
 
             # Build DIST network with loaded pre-trained weights
-            self.predict_dist = Predictor(
+            self.dist = Predictor(
                 network="dist",
                 subtype="triang",
                 model_type="microtubules",
@@ -278,7 +278,7 @@ class DataSetPredictor:
             self.normalize_px = 15
 
             # Build CNN network with loaded pre-trained weights
-            self.predict_cnn = Predictor(
+            self.cnn = Predictor(
                 network="fnet",
                 subtype="64",
                 model_type="cryo_mem",
@@ -288,7 +288,7 @@ class DataSetPredictor:
             )
 
             # Build DIST network with loaded pre-trained weights
-            self.predict_dist = Predictor(
+            self.dist = Predictor(
                 network="dist", subtype="triang", model_type="s3dis", device=self.device
             )
 
@@ -425,7 +425,7 @@ class DataSetPredictor:
                 start = time.time()
 
                 # Predict
-                input_ = self.predict_cnn.predict(input_[None, :], rotate=self.rotate)
+                input_ = self.cnn.predict(input_[None, :], rotate=self.rotate)
 
                 # Scale progress bar refresh to 10s
                 end = time.time()
@@ -434,7 +434,7 @@ class DataSetPredictor:
                     iter_time = 1
             else:
                 # Predict
-                input_ = self.predict_cnn.predict(input_[None, :], rotate=self.rotate)
+                input_ = self.cnn.predict(input_[None, :], rotate=self.rotate)
 
             tif.imwrite(
                 join(self.output, f"{name}.tif"), np.array(input_, dtype=input_.dtype)
@@ -462,7 +462,7 @@ class DataSetPredictor:
                     text_8=print_progress_bar(id_dist, len(self.coords_df)),
                 )
 
-            graph = self.predict_dist.predict(x=coord[None, :])
+            graph = self.dist.predict(x=coord[None, :])
             graphs.append(graph)
 
         # Tardis progress bar update
@@ -779,7 +779,10 @@ class DataSetPredictor:
             )
 
             """Save as .am"""
-            if self.output_format.endswith("amSG") and self.predict in ["Filament", "Microtubule"]:
+            if self.output_format.endswith("amSG") and self.predict in [
+                "Filament",
+                "Microtubule",
+            ]:
                 self.amira_file.export_amira(
                     coords=self.segments,
                     file_dir=join(
