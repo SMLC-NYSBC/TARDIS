@@ -33,7 +33,7 @@ warnings.simplefilter("ignore", UserWarning)
     "-fs",
     "--feature_size",
     default=getcwd(),
-    type=str,
+    type=float,
     help="Filament thickness in pixels you want segment. This parameter overwrite "
     "image scaling by pixel size to scale the image to fit correct filament "
     "thickens to about 7px.",
