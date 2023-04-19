@@ -119,18 +119,6 @@ class DataSetPredictor:
         self.device = get_device(device_)
         self.debug = debug
 
-        # Variables:
-        self.normalize_px = 0
-        self.predict_cnn = None
-        self.predict_dist = None
-        self.transformation = []
-        self.px = 0
-        self.image = None
-        self.scale_factor = 0
-        self.scale_shape = ()
-        self.org_shape = ()
-        self.pc_hd, self.pc_ld = None, None
-
         """Initial Setup"""
         if debug:
             str_debug = " <Debugging Mode>"
