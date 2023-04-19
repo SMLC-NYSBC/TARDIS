@@ -782,7 +782,6 @@ class DataSetPredictor:
                                 coords=compare_sg,
                                 labels=label_sg,
                             )
-
             elif self.output_format.endswith("csv"):
                 np.savetxt(
                     join(self.am_output, f"{i[:-self.in_format]}_Segments.csv"),

@@ -718,6 +718,7 @@ def load_mrc_file(mrc: str) -> Union[Tuple[np.ndarray, float], Tuple[None, float
     elif nz > nx:
         image = image.transpose((2, 1, 0))  # XYZ to ZYX
 
+    image = np.flip(image, 1)
     return image, pixel_size
 
 
