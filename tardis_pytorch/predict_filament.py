@@ -16,6 +16,7 @@ import click
 from tardis_pytorch.utils.predictor import DataSetPredictor
 from tardis_pytorch._version import version
 from tardis_pytorch.utils.logo import TardisLogo
+from utils.errors import TardisError
 
 warnings.simplefilter("ignore", UserWarning)
 
@@ -32,7 +33,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-fs",
     "--feature_size",
-    default=getcwd(),
+    default=float,
     type=float,
     help="Filament thickness in pixels you want segment. This parameter overwrite "
     "image scaling by pixel size to scale the image to fit correct filament "
@@ -61,6 +62,7 @@ warnings.simplefilter("ignore", UserWarning)
             "am_csv",
             "mrc_csv",
             "tif_csv",
+            "None_csv",
             "am_None",
             "mrc_None",
             "tif_None",
@@ -97,7 +99,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-ct",
     "--cnn_threshold",
-    default=0.5,
+    default=0.1,
     type=float,
     help="Threshold used for CNN prediction.",
     show_default=True,
@@ -200,6 +202,13 @@ def main(
         instances = False
     else:
         instances = True
+    if feature_size == 0:
+        TardisError(
+            id="151",
+            py="tardis_pytorch/predict_filament.py",
+            desc=f"Need to specified filament diameter but {feature_size} was given.!",
+        )
+        sys.exit()
 
     predictor = DataSetPredictor(
         predict="Filament",

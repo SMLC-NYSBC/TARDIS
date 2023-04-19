@@ -49,6 +49,7 @@ warnings.simplefilter("ignore", UserWarning)
             "am_csv",
             "mrc_csv",
             "tif_csv",
+            "None_csv",
             "am_None",
             "mrc_None",
             "tif_None",
