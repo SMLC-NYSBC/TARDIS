@@ -16,6 +16,7 @@ import click
 from tardis_pytorch.utils.predictor import DataSetPredictor
 from tardis_pytorch._version import version
 from tardis_pytorch.utils.logo import TardisLogo
+
 warnings.simplefilter("ignore", UserWarning)
 
 
@@ -34,8 +35,8 @@ warnings.simplefilter("ignore", UserWarning)
     default=getcwd(),
     type=str,
     help="Filament thickness in pixels you want segment. This parameter overwrite "
-         "image scaling by pixel size to scale the image to fit correct filament "
-         "thickens to about 7px.",
+    "image scaling by pixel size to scale the image to fit correct filament "
+    "thickens to about 7px.",
     show_default=True,
 )
 @click.option(
@@ -216,6 +217,9 @@ def main(
         instances=instances,
         device_=str(device),
         debug=debug,
+        amira_prefix=None,
+        amira_compare_distance=None,
+        amira_inter_probability=None,
     )
 
     predictor()

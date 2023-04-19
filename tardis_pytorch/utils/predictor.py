@@ -352,7 +352,7 @@ class DataSetPredictor:
         feature is 9px 
         to 7px
         """
-        if self.predict == 'Filament':
+        if self.predict == "Filament":
             self.scale_factor = self.normalize_px / self.feature_size
         else:
             self.scale_factor = self.px / self.normalize_px
