@@ -225,7 +225,7 @@ class DataSetPredictor:
             self.patch_pc = PatchDataSet(
                 max_number_of_points=points_in_patch, graph=False
             )
-            if predict == "Microtubule":
+            if predict in ["Filament", "Microtubule"]:
                 self.GraphToSegment = PropGreedyGraphCut(
                     threshold=dist_threshold, smooth=True
                 )
@@ -387,7 +387,7 @@ class DataSetPredictor:
 
     def preprocess_DIST(self, id_name: str):
         # Post-process predicted image patches
-        if self.predict == "Microtubule":
+        if self.predict in ["Filament", "Microtubule"]:
             self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
                 image=self.image, EDT=True, down_sampling=5
             )
@@ -692,7 +692,7 @@ class DataSetPredictor:
             )
 
             # Build patches dataset
-            if self.predict == "Microtubule":
+            if self.predict in ["Filament", "Microtubule"]:
                 self.coords_df, _, self.output_idx, _ = self.patch_pc.patched_dataset(
                     coord=self.pc_ld
                 )
@@ -718,7 +718,7 @@ class DataSetPredictor:
             self._debug(id_name=i, debug_id="graph")
 
             self.segments = None
-            if self.predict == "Microtubule":
+            if self.predict in ["Filament", "Microtubule"]:
                 self.tardis_progress(
                     title=self.title,
                     text_1=f"Found {len(self.predict_list)} images to predict!",
@@ -747,7 +747,7 @@ class DataSetPredictor:
                 )
 
             try:
-                if self.predict in ["Microtubule", "Membrane2D"]:
+                if self.predict in ["Filament", "Membrane2D", "Microtubule"]:
                     sort = True
                 else:
                     sort = False
@@ -779,7 +779,7 @@ class DataSetPredictor:
             )
 
             """Save as .am"""
-            if self.output_format.endswith("amSG") and self.predict == "Microtubule":
+            if self.output_format.endswith("amSG") and self.predict in ["Filament", "Microtubule"]:
                 self.amira_file.export_amira(
                     coords=self.segments,
                     file_dir=join(
@@ -797,7 +797,7 @@ class DataSetPredictor:
                     labels=["TardisPrediction"],
                 )
 
-                if self.amira_check:
+                if self.amira_check and self.predict == "Microtubule":
                     dir_amira_file = join(
                         self.dir_amira, i[: -self.in_format] + self.amira_prefix + ".am"
                     )
@@ -826,7 +826,7 @@ class DataSetPredictor:
                     delimiter=",",
                 )
 
-                if self.predict == "Microtubule":
+                if self.predict in ["Filament", "Microtubule"]:
                     np.savetxt(
                         join(self.am_output, f"{i[:-self.in_format]}_Segments.csv"),
                         self.filter_splines(segments=self.segments),
