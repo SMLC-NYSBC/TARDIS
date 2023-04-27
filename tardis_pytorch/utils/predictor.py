@@ -819,7 +819,9 @@ class DataSetPredictor:
 
                 if self.predict in ["Filament", "Microtubule"]:
                     np.savetxt(
-                        join(self.am_output, f"{i[:-self.in_format]}_Segments_filter.csv"),
+                        join(
+                            self.am_output, f"{i[:-self.in_format]}_Segments_filter.csv"
+                        ),
                         self.filter_splines(segments=self.segments),
                         delimiter=",",
                     )

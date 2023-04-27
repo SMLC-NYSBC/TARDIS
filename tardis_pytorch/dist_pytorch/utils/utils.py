@@ -90,7 +90,7 @@ def pc_median_dist(pc: np.ndarray, avg_over=False, box_size=0.15) -> float:
         return 1.0
 
     knn_df = []
-    for id, i in enumerate(pc):
+    for id, _ in enumerate(pc):
         knn, _ = tree.query(pc[id].reshape(1, -1), k=4)
         knn_df.append(knn[0][1])
 

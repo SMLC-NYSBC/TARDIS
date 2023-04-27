@@ -15,6 +15,7 @@ import torch
 from sklearn.metrics import auc, average_precision_score, roc_curve
 
 
+# AUPR not AUC!!!!
 def compare_dict_metrics(last_best_dict: dict, new_dict: dict) -> bool:
     """
     Compares two metric dictionaries and returns the one with the highest
@@ -299,8 +300,10 @@ def mcov(
     if weight:
         mCov = 0
     else:
-        mCov = []
+        mCov = 0
+
     unique_target = np.unique(targets[:, 0])
+    G = len(unique_target)
     unique_input = np.unique(input[:, 0])
 
     if eval:
@@ -336,16 +339,16 @@ def mcov(
             if weight:
                 mCov += w * 1.0
             else:
-                mCov.append(1.0)
+                mCov += 1.0
         else:
             if weight:
                 mCov += w * 1.0
             else:
-                mCov.append(df)  # Pick max IoU for GT instance
+                mCov += df  # Pick max IoU for GT instance
 
     if weight:
-        return mCov / len(unique_target)
-    return np.mean(mCov)
+        return mCov
+    return np.mean(mCov) / G
 
 
 def mwcov(
@@ -388,12 +391,12 @@ def mwcov(
         df = np.max(df)
         if df > 1.0:
             mwCov += w * 1.0
-            mCov.append(1.0)
+            mCov += 1.0
         else:
             mCov += w * 1.0
-            mCov.append(df)  # Pick max IoU for GT instance
+            mCov += 1.0  # Pick max IoU for GT instance
 
-    return mCov, mwCov / len(unique_target)
+    return mCov / len(unique_target), mwCov
 
 
 def confusion_matrix(
