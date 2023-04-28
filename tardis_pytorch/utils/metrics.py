@@ -339,11 +339,12 @@ def mcov(
             p = input[input[:, 0] == i, 1:]  # Pick input instance
 
             # Intersection of coordinates between GT and input instances
-            # Union of coordinates between GT and input instances
-            iou.append(
-                np.sum(np.isin(g, p))
-                / len(np.intersect1d(g, p, assume_unique=True, return_indices=True)[1])
+            # Union of coordinates between GT and input instance
+            union = (
+                len(np.intersect1d(g, p, assume_unique=True, return_indices=True)[1])
+                + 1e-16
             )
+            iou.append(np.sum(np.isin(g, p)) / union)
 
         max_iou = np.max(iou)
         if max_iou > 1.0:

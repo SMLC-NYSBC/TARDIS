@@ -19,9 +19,6 @@ class NodeEmbedding(nn.Module):
     """
     NODE FEATURE EMBEDDING
 
-    Input: Batch x Length x Dim or Batch x Length
-    Output: Batch x Length x Dim
-
     Args:
         n_in (int): Number of input features.
         n_out (int): Number of output features.
@@ -76,19 +73,16 @@ class EdgeEmbedding(nn.Module):
     Input: Batch x Length x Dim
     Output: Batch x Length x Length x Dim
 
-    TODO: Buckets
-    TODO: Cos expansion
-
     Args:
         n_out (int): Number of features to output.
         sigma (int, optional tuple): Sigma value for an exponential function is
             used to normalize distances.
     """
 
-    def __init__(self, n_out: int, sigma: Union[int, float, list]):
+    def __init__(self, n_out: int, sigma: Union[int, float, list], cos=False):
         super().__init__()
         if isinstance(sigma, list):
-            self._range = torch.arange(sigma[0], sigma[1], sigma[2])  # torch.linspace
+            self._range = torch.linspace(sigma[0], sigma[1], n_out)
             assert (
                 len(self._range) <= n_out
             ), f"Sigma range is out of shape. n_out = {n_out} but sigma range = {len(self._range)}"
@@ -98,8 +92,18 @@ class EdgeEmbedding(nn.Module):
                 self.linear = nn.Linear(len(sigma), n_out, bias=False)
         else:
             self.linear = nn.Linear(1, n_out, bias=False)
+
+        if cos:
+            self.linear = None
+            w = torch.randn(n_out, 1)
+            b = torch.rand(n_out) * 2 * torch.pi
+
+            self.register_buffer("weight", w)
+            self.register_buffer("bias", b)
+
         self.n_out = n_out
         self.sigma = sigma
+        self.cos = cos
 
     def forward(self, input_coord: torch.Tensor) -> torch.Tensor:
         """
@@ -123,6 +127,9 @@ class EdgeEmbedding(nn.Module):
 
             # Overwrite diagonal with 1
             dist[:, g_range, g_range] = 1
+
+            if self.cos:
+                return torch.cos(F.linear(dist[..., None], self.weight / self.sigma, self.bias))
             return self.linear(dist.unsqueeze(3))
         else:
             dist_range = torch.zeros(
