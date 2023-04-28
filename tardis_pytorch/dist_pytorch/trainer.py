@@ -326,7 +326,8 @@ class DistTrainer(BasicTrainer):
                 input0_1 = self.Graph0_25.patch_to_segment(
                     graph=edge_cpu, coord=coord, idx=out_cpu, prune=5, sort=False
                 )
-                mcov0_25.append(mcov(input0_1, target))
+                mcov_m, _ = mcov(input0_1, target)
+                mcov0_25.append(mcov_m)
             except:
                 mcov0_25.append(0.0)
 
@@ -335,7 +336,8 @@ class DistTrainer(BasicTrainer):
                 input0_5 = self.Graph0_5.patch_to_segment(
                     graph=edge_cpu, coord=coord, idx=out_cpu, prune=5, sort=False
                 )
-                mcov0_5.append(mcov(input0_5, target))
+                mcov_m, _ = mcov(input0_5, target)
+                mcov0_5.append(mcov_m)
             except:
                 mcov0_5.append(0.0)
 
@@ -344,7 +346,8 @@ class DistTrainer(BasicTrainer):
                 input0_9 = self.Graph0_9.patch_to_segment(
                     graph=edge_cpu, coord=coord, idx=out_cpu, prune=5, sort=False
                 )
-                mcov0_9.append(mcov(input0_9, target))
+                mcov_m = mcov(input0_9, target)
+                mcov0_9.append(mcov_m)
             except:
                 mcov0_9.append(0.0)
 

@@ -328,14 +328,12 @@ def mcov(
 
     # Get GT instances, compute IoU for best mach between GT and input
     for j in unique_target:
-        print(j)
         g = targets[targets[:, 0] == j, 1:]  # Pick GT instance
         w_g = g.shape[0] / targets.shape[0]  # ratio of instance to whole PC
         iou = []
 
         # Select max IoU (the best mach)
         for i in unique_input:
-            print(i)
             p = input[input[:, 0] == i, 1:]  # Pick input instance
 
             # Intersection of coordinates between GT and input instances
