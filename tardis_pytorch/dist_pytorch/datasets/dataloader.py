@@ -43,6 +43,7 @@ class BasicDataset(Dataset):
         coord_dir: str,
         coord_format=".csv",
         patch_if=500,
+        downscale=None,
         rgb=False,
         benchmark=False,
         train=True,
@@ -51,6 +52,8 @@ class BasicDataset(Dataset):
         self.coord_dir = coord_dir
         self.coord_format = coord_format
         self.rgb = rgb
+
+        self.downscale = downscale
 
         self.train = train
         self.benchmark = benchmark
@@ -184,8 +187,12 @@ class FilamentDataset(BasicDataset):
                 px = 1
 
             # Normalize point cloud to pixel size
+            if self.downscale is None:
+                scale = 1
+            else:
+                scale = self.downscale
             coord[:, 1:] = coord[:, 1:] / px  # Normalize for pixel size
-            coord[:, 1:] = coord[:, 1:] / 20  # in nm know distance between points
+            coord[:, 1:] = coord[:, 1:] / scale  # in nm know distance between points
 
             coords_idx, df_idx, graph_idx, output_idx, _ = self.VD.patched_dataset(
                 coord=coord, mesh=2
@@ -254,9 +261,14 @@ class PartnetDataset(BasicDataset):
         coord_file = join(self.coord_dir, str(idx))
 
         if self.patch_size[i, 0] == 0:
+            if self.downscale is None:
+                scale = 0.05
+            else:
+                scale = self.downscale
+
             # Pre-process coord and image data also, if exist remove duplicates
-            coord = load_ply_partnet(coord_file, downscaling=0.05)
-            coord[:, 1:] = coord[:, 1:] / 0.05
+            coord = load_ply_partnet(coord_file, downscaling=scale)
+            coord[:, 1:] = coord[:, 1:] / scale
 
             coords_idx, df_idx, graph_idx, output_idx, _ = self.VD.patched_dataset(
                 coord=coord, mesh=6
@@ -324,9 +336,14 @@ class ScannetDataset(BasicDataset):
         coord_file = join(self.coord_dir, str(idx))
 
         if self.patch_size[i, 0] == 0:
+            if self.downscale is None:
+                scale = 0.05
+            else:
+                scale = self.downscale
+
             # Pre-process coord and image data also, if exist remove duplicates
-            coord = load_ply_scannet(coord_file, downscaling=0.05)
-            coord[:, 1:] = coord[:, 1:] / 0.05
+            coord = load_ply_scannet(coord_file, downscaling=scale)
+            coord[:, 1:] = coord[:, 1:] / scale
 
             (
                 coords_idx,
@@ -413,13 +430,18 @@ class ScannetColorDataset(BasicDataset):
         coord_file = join(self.coord_dir, str(idx))
 
         if self.patch_size[i, 0] == 0:
+            if self.downscale is None:
+                scale = 0.05
+            else:
+                scale = self.downscale
+
             # Pre-process coord and image data also, if exist remove duplicates
             coord, rgb = load_ply_scannet(
                 coord_file,
-                downscaling=0.1,
+                downscaling=scale,
                 color=join(self.color_dir, f"{idx[:-11]}.ply"),
             )
-            coord[:, 1:] = coord[:, 1:] / 0.1
+            coord[:, 1:] = coord[:, 1:] / scale
             classes = coord[:, 0]
 
             (
@@ -521,15 +543,20 @@ class Stanford3DDataset(BasicDataset):
         coord_file = join(self.coord_dir, idx, "Annotations")
 
         if self.patch_size[i, 0] == 0:
+            if self.downscale is None:
+                scale = 0.05
+            else:
+                scale = self.downscale
+
             print(f"Loading: {idx}")
             start = time.time()
             # Pre-process coord and image data also, if exist remove duplicates
             if self.rgb:
                 coord, rgb_v = load_s3dis_scene(
-                    dir=coord_file, downscaling=0.05, rgb=True
+                    dir=coord_file, downscaling=scale, rgb=True
                 )
             else:
-                coord = load_s3dis_scene(dir=coord_file, downscaling=0.05)
+                coord = load_s3dis_scene(dir=coord_file, downscaling=scale)
             coord[:, 1:] = coord[:, 1:] / 0.05
             print(f"Loaded: {idx} in {round(time.time() - start, 2)}s")
 
@@ -583,7 +610,7 @@ class Stanford3DDataset(BasicDataset):
 
 
 def build_dataset(
-    dataset_type: str, dirs: list, max_points_per_patch: int, benchmark=False
+    dataset_type: str, dirs: list, max_points_per_patch: int, downscale=None, benchmark=False
 ):
     """
     Wrapper for DataLoader
@@ -595,6 +622,7 @@ def build_dataset(
         dataset_type (str):  Ask to recognize and process the dataset.
         dirs (list): Ask for a list with the directory given as [train, test].
         max_points_per_patch (int):  Max number of points per patch.
+        downscale (None, float): Overweight downscale factor
         benchmark (bool): If True construct data for benchmark.er
 
     Returns:
