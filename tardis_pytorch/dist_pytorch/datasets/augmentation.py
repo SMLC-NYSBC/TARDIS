@@ -329,3 +329,24 @@ class Crop2D3D:
             return self.normalization(crop_img)
         else:
             return crop_img
+
+
+def upsample_pc(org_coord: np.ndarray, sampled_coord: np.ndarray):
+    """
+    upsample_pc _summary_
+
+    Args:
+        org_coord (np.ndarray): _description_
+        sampled_coord (np.ndarray): _description_
+    """
+    # build a KDTree for efficient nearest neighbor search
+    tree = KDTree(sampled_coord[:, 1:] * 0.075)
+
+    # find the indices of the K-nearest neighbors for each point
+    _, indices = tree.query(org_coord[:, 1:], k=2)
+
+    # exclude the first element in each row, which is the index of the point itself
+    indices = indices[:, 1]
+    indices = sampled_coord[indices, 0]
+
+    return np.hstack((np.expand_dims(indices, 1), org_coord[:, 1:]))
