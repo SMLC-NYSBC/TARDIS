@@ -300,7 +300,7 @@ class PatchDataSet:
             segmented_coord = coord
             coord = coord[:, 1:]
 
-            graph_builder = BuildGraph(mesh=mesh)
+            graph_builder = BuildGraph(K=6)
         else:
             graph_builder = None
             if coord.shape[1] not in [2, 3]:

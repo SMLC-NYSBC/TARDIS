@@ -11,7 +11,7 @@ from typing import Optional, Tuple, Union
 
 import numpy as np
 import tifffile.tifffile as tiff
-from sklearn.neighbors import KDTree
+from sklearn.neighbors import KDTree, NearestNeighbors
 
 from tardis_pytorch.utils.errors import TardisError
 from tardis_pytorch.utils.load_data import ImportDataFromAmira
@@ -168,101 +168,47 @@ class BuildGraph:
     all points in the class and searching for 4 KNN for each node inside the class.
 
     Args:
-        mesh (bool): If True graph representation is computed for
-            object-like structures.
+        K (int): Number of maximum connections per node.
     """
 
-    def __init__(self, mesh=False):
-        self.mesh = mesh
+    def __init__(self, K=2):
+        self.K = K
 
     def __call__(
-        self, coord: np.ndarray, dist_th: Optional[float] = None
-    ) -> np.ndarray:
+        self, coord: np.ndarray) -> np.ndarray:
         """
-        Graph representation builder.
+        Graph representation builder.   
+
+        Assuming the coordinate array is stored in a variable named 'coords',
+        where the first column represents the class ID and the remaining three
+        columns represent the XYZ coordinates.
 
         Args:
             coord (np.ndarray): A coordinate array of the shape (Nx[3, 4]).
-            dist_th (float, None): Distance threshold for identifiers correct
-                connection. Especially useful for better resolving edges on the
-                corners of the objects.
 
         Returns:
             np.ndarray: Graph representation 2D array.
         """
-        coord = coord
-        graph = np.zeros((len(coord), len(coord)))
-        all_idx = np.unique(coord[:, 0])
+        # extract the class ID and XYZ coordinates from the array
+        class_id = coord[:, 0]
+        xyz = coord[:, 1:]
 
-        for i in all_idx:
-            points_in_contour = np.where(coord[:, 0] == i)[0].tolist()
+        # build a NearestNeighbors object for efficient nearest neighbor search
+        nn = NearestNeighbors(n_neighbors=self.K, algorithm='kd_tree').fit(xyz)
 
-            if self.mesh:
-                coord_df = coord[points_in_contour]
+        # find the indices of the K-nearest neighbors for each point
+        distances, indices = nn.kneighbors(xyz)
 
-                if coord_df.shape[0] > 4:
-                    tree = KDTree(coord_df, leaf_size=coord_df.shape[0])
+        # build the connectivity matrix
+        N = coord.shape[0]
+        graph = np.zeros((N, N))
+        for i in range(N):
+            for j in indices[i]:
+                if class_id[i] == class_id[j]:  # check class ID before adding edges
+                    graph[i, j] = 1
+                    graph[j, i] = 1
 
-                    for j in points_in_contour:
-                        if coord_df.shape[0] > 8:
-                            dist, match_coord = tree.query(coord[j].reshape(1, -1), k=9)
-                        else:
-                            dist, match_coord = tree.query(
-                                coord[j].reshape(1, -1), k=coord_df.shape[0] - 1
-                            )
-
-                        match_coord = match_coord[0][1:]
-                        dist = dist[0][1:]
-                        dist = (dist - dist.mean()) / dist.std()
-
-                        match_coord = match_coord[np.where(dist <= 0)[0]]
-                        # Select point in contour
-                        knn = [
-                            x
-                            for id, x in enumerate(points_in_contour)
-                            if id in match_coord
-                        ]
-
-                        # Symmetric in-coming and out-coming connection
-                        graph[j, j] = 1
-                        # graph[j, knn] += 1
-                        graph[knn, j] = 1
-                else:
-                    for j in points_in_contour:
-                        graph[j, j] = 1
-
-                        # graph[j, points_in_contour] += 1
-                        graph[points_in_contour, j] += 1
-                # graph = np.where(graph >= 2, 1, 0)
-            else:
-                for j in points_in_contour:
-                    graph[j, j] = 1
-
-                    # First point in contour
-                    if j == points_in_contour[0]:  # First point
-                        if (j + 1) <= (len(coord) - 1):
-                            graph[j, j + 1] = 1
-                            graph[j + 1, j] = 1
-                    # Last point
-                    elif j == points_in_contour[len(points_in_contour) - 1]:
-                        graph[j, j - 1] = 1
-                        graph[j - 1, j] = 1
-                    else:  # Point in the middle
-                        graph[j, j + 1] = 1
-                        graph[j + 1, j] = 1
-                        graph[j, j - 1] = 1
-                        graph[j - 1, j] = 1
-
-                # Check euclidean distance between fist and last point
-                ends_distance = np.linalg.norm(
-                    coord[points_in_contour[0]][1:] - coord[points_in_contour[-1]][1:]
-                )
-
-                # If < 2 nm pixel size, connect
-                if ends_distance < 2:
-                    graph[points_in_contour[0], points_in_contour[-1]] = 1
-                    graph[points_in_contour[-1], points_in_contour[0]] = 1
-
+        # Ensure self-connection
         range_ = list(range(len(graph)))
         graph[range_, range_] = 1
         return graph
