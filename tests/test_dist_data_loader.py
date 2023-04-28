@@ -19,7 +19,7 @@ from tardis_pytorch.dist_pytorch.datasets.dataloader import (
     PartnetDataset,
     ScannetColorDataset,
     ScannetDataset,
-    Stanford3DDataset
+    Stanford3DDataset,
 )
 
 
@@ -191,7 +191,6 @@ class TestDataLoader:
         assert output_idx[0].shape == (s,)
 
         shutil.rmtree("./temp_train")
-
 
     def test_s3dis_dataloader(self):
         train_dl = Stanford3DDataset(

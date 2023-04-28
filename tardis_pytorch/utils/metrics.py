@@ -8,7 +8,7 @@
 #  MIT License 2021 - 2023                                            #
 #######################################################################
 
-from typing import Optional, Union
+from typing import Optional, Union, Tuple
 
 import numpy as np
 import torch
@@ -292,15 +292,26 @@ def IoU(input: np.ndarray, targets: np.ndarray, diagonal=False):
 
 
 def mcov(
-    input: Optional[Union[np.ndarray, torch.Tensor]],
-    targets: Optional[Union[np.ndarray, torch.Tensor]],
-    weight=False,
+    input: np.ndarray,
+    targets: np.ndarray,
     eval=True,
-) -> float:
-    if weight:
-        mCov = 0
-    else:
-        mCov = 0
+):
+    """
+    mcov(G, P) = 1/|G| * Σ maxIoU(g, p)
+    mwcov(G, P) = Σ w_g * maxIoU(g, p); where w_g = |g| / Σ|g'|
+
+
+    Args:
+        input (Optional[Union[np.ndarray, torch.Tensor]]): _description_
+        targets (Optional[Union[np.ndarray, torch.Tensor]]): _description_
+        weight (bool, optional): _description_. Defaults to False.
+        eval (bool, optional): _description_. Defaults to True.
+
+    Returns:
+        float: _description_
+    """
+    mCov = 0
+    mwCov = 0
 
     unique_target = np.unique(targets[:, 0])
     G = len(unique_target)
@@ -315,88 +326,34 @@ def mcov(
         if len(unique_input) == 1 and len(unique_target) != 1:
             return 0.0
 
-    # Get GT instances, compute IoU for best mache between GT and input
+    # Get GT instances, compute IoU for best mach between GT and input
     for j in unique_target:
-        true_c = targets[targets[:, 0] == j, 1:]  # Pick GT instance
-        df = []
-        if weight:
-            w = true_c.shape[0] / targets.shape[0]  # ratio of instance to whole PC
+        print(j)
+        g = targets[targets[:, 0] == j, 1:]  # Pick GT instance
+        w_g = g.shape[0] / targets.shape[0]  # ratio of instance to whole PC
+        iou = []
 
         # Select max IoU (the best mach)
         for i in unique_input:
-            pred = input[input[:, 0] == i, 1:]  # Pick input instance
+            print(i)
+            p = input[input[:, 0] == i, 1:]  # Pick input instance
 
             # Intersection of coordinates between GT and input instances
-            intersection = np.sum([True for i in true_c if i in pred])
-
             # Union of coordinates between GT and input instances
-            union = len(np.unique(np.vstack((true_c, pred)), axis=0))
+            iou.append(
+                np.sum(np.isin(g, p))
+                / len(np.intersect1d(g, p, assume_unique=True, return_indices=True)[1])
+            )
 
-            df.append(intersection / union)
-
-        df = np.max(df)
-        if df > 1.0:
-            if weight:
-                mCov += w * 1.0
-            else:
-                mCov += 1.0
-        else:
-            if weight:
-                mCov += w * 1.0
-            else:
-                mCov += df  # Pick max IoU for GT instance
-
-    if weight:
-        return mCov
-    return np.mean(mCov) / G
-
-
-def mwcov(
-    input: Optional[Union[np.ndarray, torch.Tensor]],
-    targets: Optional[Union[np.ndarray, torch.Tensor]],
-):
-    mCov = []
-    mwCov = 0
-
-    unique_target = np.unique(targets[:, 0])
-    unique_input = np.unique(input[:, 0])
-
-    if eval:
-        # Return 0.0 on over segmented PC
-        if len(unique_input) > len(unique_target) * 2:
-            return 0.0
-
-        # Return 0.0 if only none segmented PC
-        if len(unique_input) == 1 and len(unique_target) != 1:
-            return 0.0
-
-    # Get GT instances, compute IoU for best mache between GT and input
-    for j in unique_target:
-        true_c = targets[targets[:, 0] == j, 1:]  # Pick GT instance
-        df = []
-        w = true_c.shape[0] / targets.shape[0]  # ratio of instance to whole PC
-
-        # Select max IoU (the best mach)
-        for i in unique_input:
-            pred = input[input[:, 0] == i, 1:]  # Pick input instance
-
-            # Intersection of coordinates between GT and input instances
-            intersection = np.sum([True for i in true_c if i in pred])
-
-            # Union of coordinates between GT and input instances
-            union = len(np.unique(np.vstack((true_c, pred)), axis=0))
-
-            df.append(intersection / union)
-
-        df = np.max(df)
-        if df > 1.0:
-            mwCov += w * 1.0
+        max_iou = np.max(iou)
+        if max_iou > 1.0:
+            mwCov += w_g * 1.0
             mCov += 1.0
         else:
-            mCov += w * 1.0
-            mCov += 1.0  # Pick max IoU for GT instance
+            mwCov += w_g * max_iou
+            mCov += max_iou
 
-    return mCov / len(unique_target), mwCov
+    return mCov / G, mwCov
 
 
 def confusion_matrix(

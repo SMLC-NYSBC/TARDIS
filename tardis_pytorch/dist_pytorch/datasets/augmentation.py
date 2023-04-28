@@ -340,13 +340,13 @@ def upsample_pc(org_coord: np.ndarray, sampled_coord: np.ndarray):
         sampled_coord (np.ndarray): _description_
     """
     # build a KDTree for efficient nearest neighbor search
-    tree = KDTree(sampled_coord[:, 1:] * 0.075)
+    tree = KDTree(sampled_coord[:, 1:])
 
     # find the indices of the K-nearest neighbors for each point
     _, indices = tree.query(org_coord[:, 1:], k=2)
 
-    # exclude the first element in each row, which is the index of the point itself
-    indices = indices[:, 1]
+    # Take only first NN point
+    indices = indices[:, 1, np.newaxis]
     indices = sampled_coord[indices, 0]
 
-    return np.hstack((np.expand_dims(indices, 1), org_coord[:, 1:]))
+    return np.hstack((indices, org_coord[:, 1]))
