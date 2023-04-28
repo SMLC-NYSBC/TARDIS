@@ -174,10 +174,9 @@ class BuildGraph:
     def __init__(self, K=2):
         self.K = K
 
-    def __call__(
-        self, coord: np.ndarray) -> np.ndarray:
+    def __call__(self, coord: np.ndarray) -> np.ndarray:
         """
-        Graph representation builder.   
+        Graph representation builder.
 
         Assuming the coordinate array is stored in a variable named 'coords',
         where the first column represents the class ID and the remaining three
@@ -194,7 +193,7 @@ class BuildGraph:
         xyz = coord[:, 1:]
 
         # build a NearestNeighbors object for efficient nearest neighbor search
-        nn = NearestNeighbors(n_neighbors=self.K, algorithm='kd_tree').fit(xyz)
+        nn = NearestNeighbors(n_neighbors=self.K, algorithm="kd_tree").fit(xyz)
 
         # find the indices of the K-nearest neighbors for each point
         distances, indices = nn.kneighbors(xyz)

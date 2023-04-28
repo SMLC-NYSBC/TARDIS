@@ -113,21 +113,15 @@ class PatchDataSet:
         # Calculate the coordinates of the voxel centers
         if n_x < 2:
             n_x = 2
-        x = np.linspace(
-            bbox[0, 0] - voxel_size / 2, bbox[1, 0] + voxel_size / 2, n_x
-        )
+        x = np.linspace(bbox[0, 0] - voxel_size / 2, bbox[1, 0] + voxel_size / 2, n_x)
 
         if n_y < 2:
             n_y = 2
-        y = np.linspace(
-            bbox[0, 1] - voxel_size / 2, bbox[1, 1] + voxel_size / 2, n_y
-        )
+        y = np.linspace(bbox[0, 1] - voxel_size / 2, bbox[1, 1] + voxel_size / 2, n_y)
 
         if n_z < 2:
             n_z = 2
-        z = np.linspace(
-            bbox[0, 2] - voxel_size / 2, bbox[1, 2] + voxel_size / 2, n_z
-        )
+        z = np.linspace(bbox[0, 2] - voxel_size / 2, bbox[1, 2] + voxel_size / 2, n_z)
 
         xv, yv, zv = np.meshgrid(x, y, z, indexing="ij")
         voxel_centers = np.column_stack((xv.flatten(), yv.flatten(), zv.flatten()))
@@ -283,7 +277,7 @@ class PatchDataSet:
         return data
 
     def patched_dataset(
-        self, coord: np.ndarray, label_cls=None, rgb=None, mesh=False
+        self, coord: np.ndarray, label_cls=None, rgb=None, mesh=6
     ) -> Union[Tuple[list, list, list, list, list], Tuple[list, list, list, list]]:
         coord_patch = []
         graph_patch = []
@@ -300,7 +294,7 @@ class PatchDataSet:
             segmented_coord = coord
             coord = coord[:, 1:]
 
-            graph_builder = BuildGraph(K=6)
+            graph_builder = BuildGraph(K=mesh)
         else:
             graph_builder = None
             if coord.shape[1] not in [2, 3]:

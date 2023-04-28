@@ -76,6 +76,7 @@ class BasicDataset(Dataset):
 
         # Save patch size value for speed-up
         self.patch_size = np.zeros((len(self.ids), 1))
+        self.VD = None
 
     def __len__(self):
         return len(self.ids)
@@ -152,6 +153,14 @@ class FilamentDataset(BasicDataset):
 
     def __init__(self, **kwargs):
         super(FilamentDataset, self).__init__(**kwargs)
+        self.VD = PatchDataSet(
+            max_number_of_points=self.max_point_in_patch,
+            voxel_size=15,
+            overlap=0.1,
+            drop_rate=0.1,
+            graph=True,
+            tensor=False,
+        )
 
     def __getitem__(self, i: int) -> Tuple[list, list, list, list, list]:
         """Get list of all coordinates and image patches"""
@@ -178,11 +187,8 @@ class FilamentDataset(BasicDataset):
             coord[:, 1:] = coord[:, 1:] / px  # Normalize for pixel size
             coord[:, 1:] = coord[:, 1:] / 20  # in nm know distance between points
 
-            VD = PatchDataSet(
-                max_number_of_points=self.max_point_in_patch, tensor=False
-            )
-            coords_idx, df_idx, graph_idx, output_idx, _ = VD.patched_dataset(
-                coord=coord
+            coords_idx, df_idx, graph_idx, output_idx, _ = self.VD.patched_dataset(
+                coord=coord, mesh=2
             )
 
             # save data for faster access later
@@ -226,6 +232,14 @@ class PartnetDataset(BasicDataset):
 
     def __init__(self, **kwargs):
         super(PartnetDataset, self).__init__(**kwargs)
+        self.VD = PatchDataSet(
+            max_number_of_points=self.max_point_in_patch,
+            voxel_size=15,
+            overlap=0.1,
+            drop_rate=0.1,
+            graph=True,
+            tensor=False,
+        )
 
     def __getitem__(self, i: int) -> Tuple[list, list, list, list, list]:
         """Get list of all coordinates and image patches"""
@@ -244,14 +258,8 @@ class PartnetDataset(BasicDataset):
             coord = load_ply_partnet(coord_file, downscaling=0.05)
             coord[:, 1:] = coord[:, 1:] / 0.05
 
-            VD = PatchDataSet(
-                drop_rate=0.01,
-                max_number_of_points=self.max_point_in_patch,
-                tensor=False,
-            )
-
-            coords_idx, df_idx, graph_idx, output_idx, _ = VD.patched_dataset(
-                coord=coord, mesh=True, dist_th=0.05
+            coords_idx, df_idx, graph_idx, output_idx, _ = self.VD.patched_dataset(
+                coord=coord, mesh=6
             )
             # save data for faster access later
             if not self.benchmark:
@@ -294,6 +302,14 @@ class ScannetDataset(BasicDataset):
 
     def __init__(self, **kwargs):
         super(ScannetDataset, self).__init__(**kwargs)
+        self.VD = PatchDataSet(
+            max_number_of_points=self.max_point_in_patch,
+            voxel_size=15,
+            overlap=0.1,
+            drop_rate=0.1,
+            graph=True,
+            tensor=False,
+        )
 
     def __getitem__(self, i: int) -> Tuple[list, list, list, list, list]:
         """Get list of all coordinates and image patches"""
@@ -309,19 +325,16 @@ class ScannetDataset(BasicDataset):
 
         if self.patch_size[i, 0] == 0:
             # Pre-process coord and image data also, if exist remove duplicates
-            coord = load_ply_scannet(coord_file, downscaling=0.1)
-            coord[:, 1:] = coord[:, 1:] / 0.1
+            coord = load_ply_scannet(coord_file, downscaling=0.05)
+            coord[:, 1:] = coord[:, 1:] / 0.05
 
-            VD = PatchDataSet(
-                drop_rate=0.01,
-                max_number_of_points=self.max_point_in_patch,
-                label_cls=coord[:, 0],
-                tensor=False,
-            )
-
-            coords_idx, df_idx, graph_idx, output_idx, cls_idx = VD.patched_dataset(
-                coord=coord, mesh=True, dist_th=0.15
-            )
+            (
+                coords_idx,
+                df_idx,
+                graph_idx,
+                output_idx,
+                cls_idx,
+            ) = self.VD.patched_dataset(coord=coord, mesh=6)
 
             if not self.benchmark:
                 # save data for faster access later
@@ -370,6 +383,14 @@ class ScannetColorDataset(BasicDataset):
     def __init__(self, **kwargs):
         super(ScannetColorDataset, self).__init__(**kwargs)
         self.color_dir = join(self.coord_dir, "../../", "color")
+        self.VD = PatchDataSet(
+            max_number_of_points=self.max_point_in_patch,
+            voxel_size=15,
+            overlap=0.1,
+            drop_rate=0.1,
+            graph=True,
+            tensor=False,
+        )
 
     def __getitem__(self, i: int) -> Tuple[list, list, list, list, list]:
         # Check if color folder exist
@@ -399,19 +420,15 @@ class ScannetColorDataset(BasicDataset):
                 color=join(self.color_dir, f"{idx[:-11]}.ply"),
             )
             coord[:, 1:] = coord[:, 1:] / 0.1
-
             classes = coord[:, 0]
-            VD = PatchDataSet(
-                drop_rate=0.01,
-                max_number_of_points=self.max_point_in_patch,
-                label_cls=classes,
-                rgb=rgb,
-                tensor=False,
-            )
 
-            coords_idx, rgb_idx, graph_idx, output_idx, cls_idx = VD.patched_dataset(
-                coord=coord, mesh=True, dist_th=0.05
-            )
+            (
+                coords_idx,
+                rgb_idx,
+                graph_idx,
+                output_idx,
+                cls_idx,
+            ) = self.VD.patched_dataset(coord=coord, label_cls=classes, rgb=rgb, mesh=6)
 
             if not self.benchmark:
                 # save data for faster access later
@@ -464,7 +481,7 @@ class Stanford3DDataset(BasicDataset):
     def __init__(self, **kwargs):
         super(Stanford3DDataset, self).__init__(**kwargs)
 
-        # Modified self.ids to recognise folder for .txt
+        # Modified self.ids to recognize folder for .txt
         area_list = [
             d for d in listdir(self.coord_dir) if isdir(join(self.coord_dir, d))
         ]
@@ -481,6 +498,15 @@ class Stanford3DDataset(BasicDataset):
 
         # Save patch size value for speed-up
         self.patch_size = np.zeros((len(self.ids), 1))
+
+        self.VD = PatchDataSet(
+            max_number_of_points=self.max_point_in_patch,
+            voxel_size=15,
+            overlap=0.1,
+            drop_rate=0.1,
+            graph=True,
+            tensor=False,
+        )
 
     def __getitem__(self, i: int):
         """Get list of all coordinates and image patches"""
@@ -502,7 +528,6 @@ class Stanford3DDataset(BasicDataset):
                 coord, rgb_v = load_s3dis_scene(
                     dir=coord_file, downscaling=0.05, rgb=True
                 )
-                # coord[:, 1:] = coord[:, 1:] / 0.05
             else:
                 coord = load_s3dis_scene(dir=coord_file, downscaling=0.05)
             coord[:, 1:] = coord[:, 1:] / 0.05
@@ -510,22 +535,21 @@ class Stanford3DDataset(BasicDataset):
 
             start = time.time()
             if self.rgb:
-                VD = PatchDataSet(
-                    drop_rate=0.1,
-                    max_number_of_points=self.max_point_in_patch,
-                    rgb=rgb_v,
-                    tensor=False,
-                )
+                (
+                    coords_idx,
+                    df_idx,
+                    graph_idx,
+                    output_idx,
+                    cls_idx,
+                ) = self.VD.patched_dataset(coord=coord, rgb=rgb_v, mesh=6)
             else:
-                VD = PatchDataSet(
-                    max_number_of_points=self.max_point_in_patch,
-                    drop_rate=0.1,
-                    tensor=False,
-                )
-
-            coords_idx, df_idx, graph_idx, output_idx, cls_idx = VD.patched_dataset(
-                coord=coord, mesh=True, dist_th=0.125
-            )
+                (
+                    coords_idx,
+                    df_idx,
+                    graph_idx,
+                    output_idx,
+                    cls_idx,
+                ) = self.VD.patched_dataset(coord=coord, mesh=6)
             print(f"Patched: {idx} in {round(time.time() - start, 2)}s")
 
             # save data for faster access later
