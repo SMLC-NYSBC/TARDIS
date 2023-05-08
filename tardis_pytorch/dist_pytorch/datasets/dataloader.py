@@ -610,7 +610,11 @@ class Stanford3DDataset(BasicDataset):
 
 
 def build_dataset(
-    dataset_type: str, dirs: list, max_points_per_patch: int, downscale=None, benchmark=False
+    dataset_type: str,
+    dirs: list,
+    max_points_per_patch: int,
+    downscale=None,
+    benchmark=False,
 ):
     """
     Wrapper for DataLoader
@@ -637,6 +641,7 @@ def build_dataset(
                 coord_format=(".CorrelationLines.am", ".csv"),
                 patch_if=max_points_per_patch,
                 train=True,
+                downscale=downscale,
             )
         dl_test = FilamentDataset(
             coord_dir=dirs[1],
@@ -644,6 +649,7 @@ def build_dataset(
             patch_if=max_points_per_patch,
             benchmark=benchmark,
             train=False,
+            downscale=downscale,
         )
     elif dataset_type in ["partnet", "PartNet"]:
         if not benchmark:
@@ -652,6 +658,7 @@ def build_dataset(
                 coord_format=".ply",
                 patch_if=max_points_per_patch,
                 train=True,
+                downscale=downscale,
             )
         dl_test = PartnetDataset(
             coord_dir=dirs[1],
@@ -659,6 +666,7 @@ def build_dataset(
             patch_if=max_points_per_patch,
             benchmark=benchmark,
             train=False,
+            downscale=downscale,
         )
     elif dataset_type in ["scannet", "ScanNetV2"]:
         if not benchmark:
@@ -667,6 +675,7 @@ def build_dataset(
                 coord_format=".ply",
                 patch_if=max_points_per_patch,
                 train=True,
+                downscale=downscale,
             )
         dl_test = ScannetDataset(
             coord_dir=dirs[1],
@@ -674,6 +683,7 @@ def build_dataset(
             patch_if=max_points_per_patch,
             benchmark=benchmark,
             train=False,
+            downscale=downscale,
         )
     elif dataset_type == "scannet_rgb":
         if not benchmark:
@@ -682,6 +692,7 @@ def build_dataset(
                 coord_format=".ply",
                 patch_if=max_points_per_patch,
                 train=True,
+                downscale=downscale,
             )
         dl_test = ScannetColorDataset(
             coord_dir=dirs[1],
@@ -689,6 +700,7 @@ def build_dataset(
             patch_if=max_points_per_patch,
             benchmark=benchmark,
             train=False,
+            downscale=downscale,
         )
     elif dataset_type in ["stanford", "S3DIS"]:
         if not benchmark:
@@ -697,6 +709,7 @@ def build_dataset(
                 coord_format=".txt",
                 patch_if=max_points_per_patch,
                 train=True,
+                downscale=downscale,
             )
         dl_test = Stanford3DDataset(
             coord_dir=dirs[1],
@@ -704,6 +717,7 @@ def build_dataset(
             patch_if=max_points_per_patch,
             benchmark=benchmark,
             train=False,
+            downscale=downscale,
         )
     elif dataset_type in ["stanford_rgb", "S3DIS_rgb"]:
         if not benchmark:
@@ -713,6 +727,7 @@ def build_dataset(
                 rgb=True,
                 patch_if=max_points_per_patch,
                 train=True,
+                downscale=downscale,
             )
         dl_test = Stanford3DDataset(
             coord_dir=dirs[1],
@@ -721,6 +736,7 @@ def build_dataset(
             patch_if=max_points_per_patch,
             benchmark=benchmark,
             train=False,
+            downscale=downscale,
         )
     else:
         # TODO General dataloader
@@ -738,7 +754,7 @@ def build_dataset(
         pass
 
     if not benchmark:
-        dl_train = DataLoader(dataset=dl_train, shuffle=True, pin_memory=True)
-        return dl_train, DataLoader(dataset=dl_test, shuffle=False, pin_memory=True)
-
+        return DataLoader(dataset=dl_train, shuffle=True, pin_memory=True), DataLoader(
+            dataset=dl_test, shuffle=False, pin_memory=True
+        )
     return dl_test

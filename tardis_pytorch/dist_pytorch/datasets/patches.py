@@ -217,28 +217,28 @@ class PatchDataSet:
                 point_idx = self.points_in_patch(coord=coord, patch_center=patch)
                 all_patch.append(point_idx)
 
-            """ Combine smaller patches with threshold limit """
-            new_patch = []
-            while len(all_patch) > 0:
-                df = all_patch[0]
-
-                if np.sum(df) >= self.DOWNSAMPLING_TH:
-                    new_patch.append(df)
-                    all_patch.pop(0)
-                else:
-                    while np.sum(df) <= self.DOWNSAMPLING_TH:
-                        if len(all_patch) == 1:
-                            break
-                        if np.sum(df) + np.sum(all_patch[1]) > self.DOWNSAMPLING_TH:
-                            break
-                        df += all_patch[1]
-                        all_patch.pop(1)
-                    new_patch.append(df)
-                    all_patch.pop(0)
-            all_patch = new_patch
-
             all_patch = [patch for patch in all_patch if np.sum(patch) > 0]
             th = sum([True for p in all_patch if np.sum(p) > self.DOWNSAMPLING_TH])
+
+        """ Combine smaller patches with threshold limit """
+        new_patch = []
+        while len(all_patch) > 0:
+            df = all_patch[0]
+
+            if np.sum(df) >= self.DOWNSAMPLING_TH:
+                new_patch.append(df)
+                all_patch.pop(0)
+            else:
+                while np.sum(df) <= self.DOWNSAMPLING_TH:
+                    if len(all_patch) == 1:
+                        break
+                    if np.sum(df) + np.sum(all_patch[1]) > self.DOWNSAMPLING_TH:
+                        break
+                    df += all_patch[1]
+                    all_patch.pop(1)
+                new_patch.append(df)
+                all_patch.pop(0)
+        all_patch = new_patch
 
         return all_patch
 
