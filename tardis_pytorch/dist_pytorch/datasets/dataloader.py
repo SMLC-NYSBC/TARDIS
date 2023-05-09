@@ -566,15 +566,15 @@ class Stanford3DDataset(BasicDataset):
                 if self.downscale is not None:
                     scale = self.downscale.split('_')
                     if scale[0] == 'v':
-                        coord, rgb_v = load_s3dis_scene(
+                        coord = load_s3dis_scene(
                             dir=coord_file, downscaling=float(scale[1])
                         )
                     else:
-                        coord, rgb_v = load_s3dis_scene(
+                        coord = load_s3dis_scene(
                             dir=coord_file, random_ds=float(scale[1])
                         )
                 else:
-                    coord, rgb_v = load_s3dis_scene(
+                    coord = load_s3dis_scene(
                         dir=coord_file, downscaling=0
                     )
 
