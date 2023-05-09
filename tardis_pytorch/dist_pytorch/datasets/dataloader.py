@@ -579,7 +579,7 @@ class Stanford3DDataset(BasicDataset):
                     )
 
             if self.downscale is not None:
-                coord[:, 1:] = coord[:, 1:] / self.downscale
+                coord[:, 1:] = coord[:, 1:] / float(scale[1])
             print(f"Loaded: {idx} in {round(time.time() - start, 2)}s")
 
             start = time.time()
