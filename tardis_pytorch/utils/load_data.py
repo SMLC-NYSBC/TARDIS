@@ -895,7 +895,7 @@ def load_s3dis_scene(
         rgb_v = np.concatenate(rgb_scene) / 255
 
     # Down scale scene
-    if downscaling > 0:
+    if downscaling > 0 or random_ds is not None:
         if random_ds is not None:
             down_scale = RandomDownSampling(threshold=random_ds, labels=True)
         else:

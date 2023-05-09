@@ -59,8 +59,10 @@ class NodeEmbedding(nn.Module):
             return None
 
         if self.linear is not None:
-            return self.linear(input_node)
-        return torch.cos(F.linear(input_node, self.weight / self.sigma, self.bias))
+            node = self.linear(input_node)
+        node = torch.cos(F.linear(input_node, self.weight / self.sigma, self.bias))
+
+        return (node + 1) / 2
 
 
 class EdgeEmbedding(nn.Module):

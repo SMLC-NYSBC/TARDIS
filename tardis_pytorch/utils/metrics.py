@@ -292,9 +292,8 @@ def IoU(input: np.ndarray, targets: np.ndarray, diagonal=False):
 
 
 def mcov(
-    input: np.ndarray,
-    targets: np.ndarray,
-    eval=True,
+    input,
+    targets,
 ):
     """
     mcov(G, P) = 1/|G| * Σ maxIoU(g, p)
@@ -305,7 +304,6 @@ def mcov(
         input (Optional[Union[np.ndarray, torch.Tensor]]): _description_
         targets (Optional[Union[np.ndarray, torch.Tensor]]): _description_
         weight (bool, optional): _description_. Defaults to False.
-        eval (bool, optional): _description_. Defaults to True.
 
     Returns:
         float: _description_
@@ -316,15 +314,6 @@ def mcov(
     unique_target = np.unique(targets[:, 0])
     G = len(unique_target)
     unique_input = np.unique(input[:, 0])
-
-    if eval:
-        # Return 0.0 on over segmented PC
-        if len(unique_input) > len(unique_target) * 2:
-            return 0.0
-
-        # Return 0.0 if only none segmented PC
-        if len(unique_input) == 1 and len(unique_target) != 1:
-            return 0.0
 
     # Get GT instances, compute IoU for best mach between GT and input
     for j in unique_target:
@@ -337,20 +326,22 @@ def mcov(
             p = input[input[:, 0] == i, 1:]  # Pick input instance
 
             # Intersection of coordinates between GT and input instances
-            # Union of coordinates between GT and input instance
-            union = (
-                len(np.intersect1d(g, p, assume_unique=True, return_indices=True)[1])
-                + 1e-16
-            )
-            iou.append(np.sum(np.isin(g, p)) / union)
-
-        max_iou = np.max(iou)
-        if max_iou > 1.0:
-            mwCov += w_g * 1.0
-            mCov += 1.0
+            # Union of coordinates between GT and input instances
+            # intersection = np.sum(np.any(np.all(g[:, np.newaxis, :] == p, axis=2), axis=0))
+            intersection = np.sum(np.any(np.isin(g, p), axis=1))
+            # print(intersection, np.sum(np.any(np.isin(g, p), axis=1)))
+            if intersection > 0:
+                union = np.unique(np.concatenate((g, p), axis=0), axis=0).shape[0]
+                iou.append(intersection / union)
+        #         print(intersection, union, intersection / union)
+        # print(np.max(iou))
+        if len(iou) > 0:
+            max_iou = np.max(iou)
         else:
-            mwCov += w_g * max_iou
-            mCov += max_iou
+            max_iou = 0.0
+
+        mwCov += w_g * max_iou
+        mCov += max_iou
 
     return mCov / G, mwCov
 

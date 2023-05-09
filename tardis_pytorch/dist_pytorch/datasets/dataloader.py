@@ -543,21 +543,43 @@ class Stanford3DDataset(BasicDataset):
         coord_file = join(self.coord_dir, idx, "Annotations")
 
         if self.patch_size[i, 0] == 0:
-            if self.downscale is None:
-                scale = 0.05
-            else:
-                scale = self.downscale
 
             print(f"Loading: {idx}")
             start = time.time()
             # Pre-process coord and image data also, if exist remove duplicates
             if self.rgb:
-                coord, rgb_v = load_s3dis_scene(
-                    dir=coord_file, downscaling=scale, rgb=True
-                )
+                if self.downscale is not None:
+                    scale = self.downscale.split('_')
+                    if scale[0] == 'v':
+                        coord, rgb_v = load_s3dis_scene(
+                            dir=coord_file, downscaling=float(scale[1]), rgb=True
+                        )
+                    else:
+                        coord, rgb_v = load_s3dis_scene(
+                            dir=coord_file, random_ds=float(scale[1]), rgb=True
+                        )
+                else:
+                    coord, rgb_v = load_s3dis_scene(
+                        dir=coord_file, downscaling=0, rgb=True
+                    )
             else:
-                coord = load_s3dis_scene(dir=coord_file, downscaling=scale)
-            coord[:, 1:] = coord[:, 1:] / 0.05
+                if self.downscale is not None:
+                    scale = self.downscale.split('_')
+                    if scale[0] == 'v':
+                        coord, rgb_v = load_s3dis_scene(
+                            dir=coord_file, downscaling=float(scale[1])
+                        )
+                    else:
+                        coord, rgb_v = load_s3dis_scene(
+                            dir=coord_file, random_ds=float(scale[1])
+                        )
+                else:
+                    coord, rgb_v = load_s3dis_scene(
+                        dir=coord_file, downscaling=0
+                    )
+
+            if self.downscale is not None:
+                coord[:, 1:] = coord[:, 1:] / self.downscale
             print(f"Loaded: {idx} in {round(time.time() - start, 2)}s")
 
             start = time.time()
@@ -568,7 +590,7 @@ class Stanford3DDataset(BasicDataset):
                     graph_idx,
                     output_idx,
                     cls_idx,
-                ) = self.VD.patched_dataset(coord=coord, rgb=rgb_v, mesh=6)
+                ) = self.VD.patched_dataset(coord=coord, rgb=rgb_v, mesh=12)
             else:
                 (
                     coords_idx,
@@ -576,7 +598,7 @@ class Stanford3DDataset(BasicDataset):
                     graph_idx,
                     output_idx,
                     cls_idx,
-                ) = self.VD.patched_dataset(coord=coord, mesh=6)
+                ) = self.VD.patched_dataset(coord=coord, mesh=12)
             print(f"Patched: {idx} in {round(time.time() - start, 2)}s")
 
             # save data for faster access later
