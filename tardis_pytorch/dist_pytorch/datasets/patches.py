@@ -235,9 +235,10 @@ class PatchDataSet:
 
                 # Check if picked voxel have more then self.mesh points and less then downsample threshold
                 pc_size = np.sum(all_patch[0])
-                
+
                 while (
-                    pc_size < self.DOWNSAMPLING_TH * 0.5 or pc_size > self.DOWNSAMPLING_TH
+                    pc_size < self.DOWNSAMPLING_TH * 0.5
+                    or pc_size > self.DOWNSAMPLING_TH
                 ):
                     if pc_size > self.DOWNSAMPLING_TH:
                         while pc_size > self.DOWNSAMPLING_TH:
