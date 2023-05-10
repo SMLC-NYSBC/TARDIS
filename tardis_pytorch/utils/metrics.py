@@ -301,9 +301,8 @@ def mcov(
 
 
     Args:
-        input (Optional[Union[np.ndarray, torch.Tensor]]): _description_
-        targets (Optional[Union[np.ndarray, torch.Tensor]]): _description_
-        weight (bool, optional): _description_. Defaults to False.
+        input (np.ndarray, torch.Tensor): _description_
+        targets (np.ndarray, torch.Tensor): _description_
 
     Returns:
         float: _description_
@@ -327,14 +326,12 @@ def mcov(
 
             # Intersection of coordinates between GT and input instances
             # Union of coordinates between GT and input instances
-            # intersection = np.sum(np.any(np.all(g[:, np.newaxis, :] == p, axis=2), axis=0))
+
             intersection = np.sum(np.any(np.isin(g, p), axis=1))
-            # print(intersection, np.sum(np.any(np.isin(g, p), axis=1)))
             if intersection > 0:
                 union = np.unique(np.concatenate((g, p), axis=0), axis=0).shape[0]
                 iou.append(intersection / union)
-        #         print(intersection, union, intersection / union)
-        # print(np.max(iou))
+
         if len(iou) > 0:
             max_iou = np.max(iou)
         else:

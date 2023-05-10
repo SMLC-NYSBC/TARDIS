@@ -25,6 +25,7 @@ from tardis_pytorch.utils.load_data import (
     load_ply_scannet,
     load_s3dis_scene,
 )
+from tardis_pytorch.dist_pytorch.utils.utils import pc_median_dist
 
 
 class BasicDataset(Dataset):
@@ -543,14 +544,13 @@ class Stanford3DDataset(BasicDataset):
         coord_file = join(self.coord_dir, idx, "Annotations")
 
         if self.patch_size[i, 0] == 0:
-
             print(f"Loading: {idx}")
             start = time.time()
             # Pre-process coord and image data also, if exist remove duplicates
             if self.rgb:
                 if self.downscale is not None:
-                    scale = self.downscale.split('_')
-                    if scale[0] == 'v':
+                    scale = self.downscale.split("_")
+                    if scale[0] == "v":
                         coord, rgb_v = load_s3dis_scene(
                             dir=coord_file, downscaling=float(scale[1]), rgb=True
                         )
@@ -564,8 +564,8 @@ class Stanford3DDataset(BasicDataset):
                     )
             else:
                 if self.downscale is not None:
-                    scale = self.downscale.split('_')
-                    if scale[0] == 'v':
+                    scale = self.downscale.split("_")
+                    if scale[0] == "v":
                         coord = load_s3dis_scene(
                             dir=coord_file, downscaling=float(scale[1])
                         )
@@ -574,12 +574,16 @@ class Stanford3DDataset(BasicDataset):
                             dir=coord_file, random_ds=float(scale[1])
                         )
                 else:
-                    coord = load_s3dis_scene(
-                        dir=coord_file, downscaling=0
-                    )
+                    coord = load_s3dis_scene(dir=coord_file, downscaling=0)
 
             if self.downscale is not None:
-                coord[:, 1:] = coord[:, 1:] / float(scale[1])
+                if scale[0] == "v":
+                    coord[:, 1:] = coord[:, 1:] / float(scale[1])
+                else:
+                    coord[:, 1:] = coord[:, 1:] / pc_median_dist(
+                        coord[:, 1:], avg_over=True
+                    )
+
             print(f"Loaded: {idx} in {round(time.time() - start, 2)}s")
 
             start = time.time()

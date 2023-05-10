@@ -128,7 +128,7 @@ from tardis_pytorch._version import version
 @click.option(
     "-sp",
     "--scale_pc",
-    default='v_0.05',
+    default="v_0.05",
     type=str,
     help="Point cloud downsampling factor.",
     show_default=True,
@@ -215,7 +215,7 @@ def main(
     structure: str,
     dist_structure: str,
     pc_sampling: int,
-scale_pc: float,
+    scale_pc: float,
     loss: str,
     loss_lr: float,
     lr_rate_schedule: bool,
@@ -297,7 +297,7 @@ scale_pc: float,
         dataset_type=dataset_type,
         dirs=[TRAIN_COORD_DIR, TEST_COORD_DIR],
         max_points_per_patch=pc_sampling,
-        downscale=scale_pc
+        downscale=scale_pc,
     )
 
     """Setup training"""
