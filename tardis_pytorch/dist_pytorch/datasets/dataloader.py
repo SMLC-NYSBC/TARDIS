@@ -516,7 +516,7 @@ class Stanford3DDataset(BasicDataset):
         self.ids = [item for sublist in self.ids if sublist for item in sublist]
 
         # Save patch size value for speed-up
-        # self.patch_size = np.zeros((len(self.ids), 1))
+        self.patch_size = np.zeros((len(self.ids), 1))
 
         self.VD = PatchDataSet(
             max_number_of_points=self.max_point_in_patch,
