@@ -223,60 +223,64 @@ class PatchDataSet:
             ]
 
             """Pick random patch"""
-            # Initially random pick
-            random_ = np.argwhere(all_patch_bool).flatten()[
-                np.random.choice(len(all_patch_df))
-            ]
-            all_patch = [
-                self.points_in_patch(coord=coord, patch_center=patch_grid[random_])
-            ]
+            df_all = []
+            for _ in range(10):
+                # Initially random pick
+                random_ = np.argwhere(all_patch_bool).flatten()[
+                    np.random.choice(len(all_patch_df))
+                ]
+                all_patch = [
+                    self.points_in_patch(coord=coord, patch_center=patch_grid[random_])
+                ]
 
-            # Check if picked voxel have more then self.mesh points and less then downsample threshold
-            pc_size = np.sum(all_patch[0])
-            while (
-                pc_size < self.DOWNSAMPLING_TH * 0.5 or pc_size > self.DOWNSAMPLING_TH
-            ):
-                if pc_size > self.DOWNSAMPLING_TH:
-                    while pc_size > self.DOWNSAMPLING_TH:
-                        self.INIT_PATCH_SIZE = [
-                            self.INIT_PATCH_SIZE[0] * 0.99,
-                            self.INIT_PATCH_SIZE[1] * 0.99,
-                            self.INIT_PATCH_SIZE[2] * 0.99,
-                        ]
-                        all_patch = [
-                            self.points_in_patch(
-                                coord=coord, patch_center=patch_grid[random_]
-                            )
-                        ]
-                        pc_size = np.sum(all_patch[0])
-                elif pc_size < self.DOWNSAMPLING_TH * 0.5:
-                    while pc_size < self.DOWNSAMPLING_TH * 0.8:
-                        self.INIT_PATCH_SIZE = [
-                            self.INIT_PATCH_SIZE[0] * 1.01,
-                            self.INIT_PATCH_SIZE[1] * 1.01,
-                            self.INIT_PATCH_SIZE[2] * 1.01,
-                        ]
-                        all_patch = [
-                            self.points_in_patch(
-                                coord=coord, patch_center=patch_grid[random_]
-                            )
-                        ]
-                        pc_size = np.sum(all_patch[0])
-
-                if (
-                    pc_size > self.DOWNSAMPLING_TH
-                    or pc_size < self.DOWNSAMPLING_TH * 0.5
+                # Check if picked voxel have more then self.mesh points and less then downsample threshold
+                pc_size = np.sum(all_patch[0])
+                
+                while (
+                    pc_size < self.DOWNSAMPLING_TH * 0.5 or pc_size > self.DOWNSAMPLING_TH
                 ):
-                    random_ = np.argwhere(all_patch_bool).flatten()[
-                        np.random.choice(len(all_patch_df))
-                    ]
-                    all_patch = [
-                        self.points_in_patch(
-                            coord=coord, patch_center=patch_grid[random_]
-                        )
-                    ]
-                    pc_size = np.sum(all_patch[0])
+                    if pc_size > self.DOWNSAMPLING_TH:
+                        while pc_size > self.DOWNSAMPLING_TH:
+                            self.INIT_PATCH_SIZE = [
+                                self.INIT_PATCH_SIZE[0] * 0.99,
+                                self.INIT_PATCH_SIZE[1] * 0.99,
+                                self.INIT_PATCH_SIZE[2] * 0.99,
+                            ]
+                            all_patch = [
+                                self.points_in_patch(
+                                    coord=coord, patch_center=patch_grid[random_]
+                                )
+                            ]
+                            pc_size = np.sum(all_patch[0])
+                    elif pc_size < self.DOWNSAMPLING_TH * 0.5:
+                        while pc_size < self.DOWNSAMPLING_TH * 0.8:
+                            self.INIT_PATCH_SIZE = [
+                                self.INIT_PATCH_SIZE[0] * 1.01,
+                                self.INIT_PATCH_SIZE[1] * 1.01,
+                                self.INIT_PATCH_SIZE[2] * 1.01,
+                            ]
+                            all_patch = [
+                                self.points_in_patch(
+                                    coord=coord, patch_center=patch_grid[random_]
+                                )
+                            ]
+                            pc_size = np.sum(all_patch[0])
 
+                    if (
+                        pc_size > self.DOWNSAMPLING_TH
+                        or pc_size < self.DOWNSAMPLING_TH * 0.5
+                    ):
+                        random_ = np.argwhere(all_patch_bool).flatten()[
+                            np.random.choice(len(all_patch_df))
+                        ]
+                        all_patch = [
+                            self.points_in_patch(
+                                coord=coord, patch_center=patch_grid[random_]
+                            )
+                        ]
+                        pc_size = np.sum(all_patch[0])
+                df_all.append(all_patch[0])
+            all_patch = df_all
         else:
             th = 1
             while th != 0:
