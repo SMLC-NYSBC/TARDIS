@@ -159,7 +159,6 @@ class FilamentDataset(BasicDataset):
         super(FilamentDataset, self).__init__(**kwargs)
         self.VD = PatchDataSet(
             max_number_of_points=self.max_point_in_patch,
-            voxel_size=15,
             overlap=0.1,
             drop_rate=0.1,
             graph=True,
@@ -242,7 +241,6 @@ class PartnetDataset(BasicDataset):
         super(PartnetDataset, self).__init__(**kwargs)
         self.VD = PatchDataSet(
             max_number_of_points=self.max_point_in_patch,
-            voxel_size=15,
             overlap=0.1,
             drop_rate=0.1,
             graph=True,
@@ -317,7 +315,6 @@ class ScannetDataset(BasicDataset):
         super(ScannetDataset, self).__init__(**kwargs)
         self.VD = PatchDataSet(
             max_number_of_points=self.max_point_in_patch,
-            voxel_size=15,
             overlap=0.1,
             drop_rate=0.1,
             graph=True,
@@ -403,7 +400,6 @@ class ScannetColorDataset(BasicDataset):
         self.color_dir = join(self.coord_dir, "../../", "color")
         self.VD = PatchDataSet(
             max_number_of_points=self.max_point_in_patch,
-            voxel_size=15,
             overlap=0.1,
             drop_rate=0.1,
             graph=True,
@@ -522,25 +518,13 @@ class Stanford3DDataset(BasicDataset):
         # Save patch size value for speed-up
         # self.patch_size = np.zeros((len(self.ids), 1))
 
-        if self.downscale is not None:
-            if self.downscale.split('_')[0] == 'r':
-                self.VD = PatchDataSet(
-                                max_number_of_points=self.max_point_in_patch,
-                                voxel_size=30,
-                                overlap=0,
-                                drop_rate=0.1,
-                                graph=True,
-                                tensor=False,
-                            )
-            else:
-                self.VD = PatchDataSet(
-                                max_number_of_points=self.max_point_in_patch,
-                                voxel_size=25,
-                                overlap=0,
-                                drop_rate=0.1,
-                                graph=True,
-                                tensor=False,
-                            )
+        self.VD = PatchDataSet(
+                        max_number_of_points=self.max_point_in_patch,
+                        overlap=0,
+                        drop_rate=0.1,
+                        graph=True,
+                        tensor=False,
+                    )
 
     def __getitem__(self, i: int):
         """Get list of all coordinates and image patches"""
@@ -555,8 +539,8 @@ class Stanford3DDataset(BasicDataset):
         coord_file = join(self.coord_dir, idx, "Annotations")
 
         # if self.patch_size[i, 0] == 0:
-        print(f"Loading: {idx}")
-        start = time.time()
+        # print(f"Loading: {idx}")
+        # start = time.time()
         # Pre-process coord and image data also, if exist remove duplicates
         if self.rgb:
             if self.downscale is not None:
@@ -588,9 +572,9 @@ class Stanford3DDataset(BasicDataset):
                 pc_median_dist(coord[:, 1:], avg_over=True, box_size=0.25), 3
             )
 
-        print(f"Loaded: {idx} in {round(time.time() - start, 2)}s")
+        # print(f"Loaded: {idx} in {round(time.time() - start, 2)}s")
 
-        start = time.time()
+        # start = time.time()
         if self.rgb:
             (
                 coords_idx,
@@ -607,7 +591,7 @@ class Stanford3DDataset(BasicDataset):
                 output_idx,
                 cls_idx,
             ) = self.VD.patched_dataset(coord=coord, mesh=12, random=True)
-        print(f"Patched: {idx} in {round(time.time() - start, 2)}s")
+        # print(f"Patched: {idx} in {round(time.time() - start, 2)}s")
 
         # save data for faster access later
         if not self.benchmark:

@@ -46,7 +46,6 @@ class PatchDataSet:
     def __init__(
         self,
         max_number_of_points=500,
-        voxel_size=15,
         overlap=0.15,
         drop_rate=0.1,
         graph=True,
@@ -56,7 +55,6 @@ class PatchDataSet:
         self.DOWNSAMPLING_TH = max_number_of_points
 
         # Patch setting
-        self.voxel = voxel_size
         self.drop_rate = drop_rate
         self.TORCH_OUTPUT = tensor
         self.GRAPH_OUTPUT = graph
@@ -176,12 +174,12 @@ class PatchDataSet:
             coord (np.ndarray): List of coordinates for voxelize
         """
         bbox = self.boundary_box(coord)
-        voxel = self.voxel + self.drop_rate
+        voxel = abs(bbox[0,0] - bbox[1,0]) // 10 + self.drop_rate
         all_patch = []
 
         """ Find points index in patches """
         if random:
-            voxel = self.voxel
+            voxel = abs(bbox[0,0] - bbox[1, 0]) // 10
             patch_grid = self.center_patch(bbox=bbox, voxel_size=voxel)
 
             x_pos = np.sort(np.unique(patch_grid[:, 0]))
@@ -216,17 +214,16 @@ class PatchDataSet:
             all_patch_bool = [True if np.sum(patch) > 0 else False for patch in all_patch]
 
             """Pick random patch"""
+            # Initially random pick
             random_ = np.argwhere(all_patch_bool).flatten()[np.random.choice(len(all_patch_df))]
             all_patch = [self.points_in_patch(coord=coord, patch_center=patch_grid[random_])]
-            while np.sum(all_patch[0]) < self.mesh:
-                random_ = np.argwhere(all_patch_bool).flatten()[np.random.choice(len(all_patch_df))]
-                all_patch = [self.points_in_patch(coord=coord, patch_center=patch_grid[random_])] 
 
-            while np.sum(all_patch[0]) > self.DOWNSAMPLING_TH:
+            # Check if picked voxel have more then self.mesh points and less then downsample threshold
+            while np.sum(all_patch[0]) > self.DOWNSAMPLING_TH and np.sum(all_patch[0]) != 0:
                 self.INIT_PATCH_SIZE = [
-                    self.INIT_PATCH_SIZE[0] * 0.9,
-                    self.INIT_PATCH_SIZE[1] * 0.9,
-                    self.INIT_PATCH_SIZE[2] * 0.9,
+                    self.INIT_PATCH_SIZE[0] * 0.99,
+                    self.INIT_PATCH_SIZE[1] * 0.99,
+                    self.INIT_PATCH_SIZE[2] * 0.99,
                     ]
                 all_patch = [self.points_in_patch(coord=coord, patch_center=patch_grid[random_])]
         else:
@@ -236,7 +233,6 @@ class PatchDataSet:
 
                 """Initialize search with new voxel size"""
                 voxel = round(voxel - self.drop_rate, 1)
-
                 patch_grid = self.center_patch(bbox=bbox, voxel_size=voxel)
                 if len(patch_grid) < 2:
                     continue
