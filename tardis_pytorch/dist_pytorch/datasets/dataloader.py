@@ -520,12 +520,12 @@ class Stanford3DDataset(BasicDataset):
         self.ids = [item for sublist in self.ids if sublist for item in sublist]
 
         # Save patch size value for speed-up
-        self.patch_size = np.zeros((len(self.ids), 1))
+        # self.patch_size = np.zeros((len(self.ids), 1))
 
         self.VD = PatchDataSet(
             max_number_of_points=self.max_point_in_patch,
             voxel_size=15,
-            overlap=0.01,
+            overlap=0,
             drop_rate=0.1,
             graph=True,
             tensor=False,
@@ -543,86 +543,82 @@ class Stanford3DDataset(BasicDataset):
         # Iterate throw every folder and generate S3DIS scene
         coord_file = join(self.coord_dir, idx, "Annotations")
 
-        if self.patch_size[i, 0] == 0:
-            print(f"Loading: {idx}")
-            start = time.time()
-            # Pre-process coord and image data also, if exist remove duplicates
-            if self.rgb:
-                if self.downscale is not None:
-                    scale = self.downscale.split("_")
-                    if scale[0] == "v":
-                        coord, rgb_v = load_s3dis_scene(
-                            dir=coord_file, downscaling=float(scale[1]), rgb=True
-                        )
-                    else:
-                        coord, rgb_v = load_s3dis_scene(
-                            dir=coord_file, random_ds=float(scale[1]), rgb=True
-                        )
+        # if self.patch_size[i, 0] == 0:
+        print(f"Loading: {idx}")
+        start = time.time()
+        # Pre-process coord and image data also, if exist remove duplicates
+        if self.rgb:
+            if self.downscale is not None:
+                scale = self.downscale.split("_")
+                if scale[0] == "v":
+                    coord, rgb_v = load_s3dis_scene(
+                        dir=coord_file, downscaling=float(scale[1]), rgb=True
+                    )
                 else:
                     coord, rgb_v = load_s3dis_scene(
-                        dir=coord_file, downscaling=0, rgb=True
+                        dir=coord_file, random_ds=float(scale[1]), rgb=True
                     )
             else:
-                if self.downscale is not None:
-                    scale = self.downscale.split("_")
-                    if scale[0] == "v":
-                        coord = load_s3dis_scene(
-                            dir=coord_file, downscaling=float(scale[1])
-                        )
-                    else:
-                        coord = load_s3dis_scene(
-                            dir=coord_file, random_ds=float(scale[1])
-                        )
-                else:
-                    coord = load_s3dis_scene(dir=coord_file, downscaling=0)
-
+                coord, rgb_v = load_s3dis_scene(dir=coord_file, downscaling=0, rgb=True)
+        else:
             if self.downscale is not None:
+                scale = self.downscale.split("_")
                 if scale[0] == "v":
-                    coord[:, 1:] = coord[:, 1:] / float(scale[1])
-                else:
-                    coord[:, 1:] = coord[:, 1:] / pc_median_dist(
-                        coord[:, 1:], avg_over=True
+                    coord = load_s3dis_scene(
+                        dir=coord_file, downscaling=float(scale[1])
                     )
-
-            print(f"Loaded: {idx} in {round(time.time() - start, 2)}s")
-
-            start = time.time()
-            if self.rgb:
-                (
-                    coords_idx,
-                    df_idx,
-                    graph_idx,
-                    output_idx,
-                    cls_idx,
-                ) = self.VD.patched_dataset(coord=coord, rgb=rgb_v, mesh=12)
+                else:
+                    coord = load_s3dis_scene(dir=coord_file, random_ds=float(scale[1]))
             else:
-                (
-                    coords_idx,
-                    df_idx,
-                    graph_idx,
-                    output_idx,
-                    cls_idx,
-                ) = self.VD.patched_dataset(coord=coord, mesh=12)
-            print(f"Patched: {idx} in {round(time.time() - start, 2)}s")
+                coord = load_s3dis_scene(dir=coord_file, downscaling=0)
 
-            # save data for faster access later
-            if not self.benchmark:
-                self.save_temp(
-                    i=i,
-                    coords=coords_idx,
-                    graph=graph_idx,
-                    out=output_idx,
-                    df=df_idx,
-                    cls=cls_idx,
+        if self.downscale is not None:
+            if scale[0] == "v":
+                coord[:, 1:] = coord[:, 1:] / float(scale[1])
+            else:
+                coord[:, 1:] = coord[:, 1:] / round(
+                    pc_median_dist(coord[:, 1:], avg_over=True, box_size=0.15), 3
                 )
 
-                # Store initial patch size for each data to speed up computation
-                self.patch_size[i, 0] = 1
+        print(f"Loaded: {idx} in {round(time.time() - start, 2)}s")
+
+        start = time.time()
+        if self.rgb:
+            (
+                coords_idx,
+                df_idx,
+                graph_idx,
+                output_idx,
+                cls_idx,
+            ) = self.VD.patched_dataset(coord=coord, rgb=rgb_v, mesh=12, random=True)
         else:
-            # Load pre-process data
-            coords_idx, graph_idx, output_idx, df_idx, cls_idx = self.load_temp(
-                i, coords=True, graph=True, out=True, df=True, cls=True
+            (
+                coords_idx,
+                df_idx,
+                graph_idx,
+                output_idx,
+                cls_idx,
+            ) = self.VD.patched_dataset(coord=coord, mesh=12, random=True)
+        print(f"Patched: {idx} in {round(time.time() - start, 2)}s")
+
+        # save data for faster access later
+        if not self.benchmark:
+            self.save_temp(
+                i=i,
+                coords=coords_idx,
+                graph=graph_idx,
+                out=output_idx,
+                df=df_idx,
+                cls=cls_idx,
             )
+
+        # Store initial patch size for each data to speed up computation
+        # self.patch_size[i, 0] = 1
+        # else:
+        #     # Load pre-process data
+        #     coords_idx, graph_idx, output_idx, df_idx, cls_idx = self.load_temp(
+        #         i, coords=True, graph=True, out=True, df=True, cls=True
+        #     )
 
         coords_idx, graph_idx, output_idx, df_idx, cls_idx = self.list_to_tensor(
             coord=coords_idx, graph=graph_idx, output=output_idx, df=df_idx, cls=cls_idx

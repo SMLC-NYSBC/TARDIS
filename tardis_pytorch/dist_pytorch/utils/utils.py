@@ -12,16 +12,13 @@ from typing import Optional, Tuple, Union
 
 import numpy as np
 import torch
-from scipy.spatial.distance import cdist
-from sklearn.neighbors import KDTree
+from sklearn.neighbors import NearestNeighbors, KDTree
 
 from tardis_pytorch.utils.errors import TardisError
 
 
 def pc_median_dist(pc: np.ndarray, avg_over=False, box_size=0.15) -> float:
     """
-    !DEPRECIATED! - Remove in RC3
-
     Calculate the median distance between KNN points in the point cloud.
 
     Args:
@@ -34,10 +31,10 @@ def pc_median_dist(pc: np.ndarray, avg_over=False, box_size=0.15) -> float:
     Returns:
         float: Median distance between points in given point cloud.
     """
-    if avg_over:
-        if isinstance(pc, torch.Tensor):
-            pc = pc.cpu().detach().numpy()
+    if isinstance(pc, torch.Tensor):
+        pc = pc.cpu().detach().numpy()
 
+    if avg_over:
         # Build BB and offset by 10% from the border
         box_dim = pc.shape[1]
 
@@ -79,22 +76,16 @@ def pc_median_dist(pc: np.ndarray, avg_over=False, box_size=0.15) -> float:
         )
         pc = pc[voxel]
 
-        # Calculate KNN dist
-        tree = KDTree(pc, leaf_size=pc.shape[0])
-    else:
-        if isinstance(pc, torch.Tensor):
-            pc = pc.cpu().detach().numpy()
-        tree = KDTree(pc, leaf_size=pc.shape[0])
+    # build a NearestNeighbors object for efficient nearest neighbor search
+    nn = NearestNeighbors(n_neighbors=2, algorithm="kd_tree").fit(pc)
 
     if pc.shape[0] < 3:
         return 1.0
 
-    knn_df = []
-    for id, _ in enumerate(pc):
-        knn, _ = tree.query(pc[id].reshape(1, -1), k=4)
-        knn_df.append(knn[0][1])
+    distances, _ = nn.kneighbors(pc)
+    distances = distances[:, 1]
 
-    return float(np.mean(knn_df))
+    return float(np.mean(distances))
 
 
 def point_in_bb(
@@ -107,8 +98,6 @@ def point_in_bb(
     max_z: Optional[np.float32] = None,
 ) -> np.ndarray:
     """
-    !DEPRECIATED! - Remove in RC3
-
     Compute a bounding_box filter on the given points
 
     Args:

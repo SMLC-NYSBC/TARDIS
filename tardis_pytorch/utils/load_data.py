@@ -14,6 +14,7 @@ from os.path import isfile, join
 from typing import Optional, Tuple, Union
 
 import numpy as np
+import pandas as pd
 import tifffile.tifffile as tif
 from numpy import ndarray
 from plyfile import PlyData
@@ -839,7 +840,9 @@ def load_txt_s3dis(
     Returns:
         np.ndarray: Labeled point cloud coordinates.
     """
-    coord = np.genfromtxt(txt, invalid_raise=False)
+    coord = pd.read_csv(txt, sep=' ', on_bad_lines='skip').to_numpy()
+    # print(coord.shape)
+    # coord = np.genfromtxt(txt, invalid_raise=False)
 
     rgb_values = coord[:, 3:]
     coord = coord[:, :3]

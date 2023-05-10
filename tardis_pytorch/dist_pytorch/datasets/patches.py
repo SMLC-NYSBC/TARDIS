@@ -66,7 +66,7 @@ class PatchDataSet:
         # Initialization
         self.INIT_PATCH_SIZE = np.zeros((2, 3))
 
-    def boundary_box(self, coord) -> np.ndarray:
+    def boundary_box(self, coord, offset=None) -> np.ndarray:
         """
         Utile class function to compute boundary box in 2D or 3D
 
@@ -81,6 +81,9 @@ class PatchDataSet:
             min_x, min_y = np.min(coord, axis=0)
             max_x, max_y = np.max(coord, axis=0)
             min_z, max_z = 0, 0
+
+        if offset is not None:
+            self.EXPAND = offset
 
         dx = ((min_x + max_x) / 2) - min_x
         min_x, max_x = min_x - dx * self.EXPAND, max_x + dx * self.EXPAND
@@ -161,7 +164,7 @@ class PatchDataSet:
 
         return coord_idx
 
-    def optimal_patches(self, coord: np.ndarray) -> list[bool]:
+    def optimal_patches(self, coord: np.ndarray, random=False) -> list[bool]:
         """
         Main class function to compute optimal patch size.
 
@@ -177,16 +180,9 @@ class PatchDataSet:
         all_patch = []
 
         """ Find points index in patches """
-        th = 1
-        while th != 0:
-            all_patch = []
-
-            """Initialize search with new voxel size"""
-            voxel = round(voxel - self.drop_rate, 1)
-
+        if random:
+            voxel = self.voxel
             patch_grid = self.center_patch(bbox=bbox, voxel_size=voxel)
-            if len(patch_grid) < 2:
-                continue
 
             x_pos = np.sort(np.unique(patch_grid[:, 0]))
             if len(x_pos) > 1:
@@ -216,29 +212,86 @@ class PatchDataSet:
             for patch in patch_grid:
                 point_idx = self.points_in_patch(coord=coord, patch_center=patch)
                 all_patch.append(point_idx)
+            all_patch_df = [patch for patch in all_patch if np.sum(patch) > 0]
+            all_patch_bool = [True if np.sum(patch) > 0 else False for patch in all_patch]
 
-            all_patch = [patch for patch in all_patch if np.sum(patch) > 0]
-            th = sum([True for p in all_patch if np.sum(p) > self.DOWNSAMPLING_TH])
+            """Pick random patch"""
+            random_ = np.argwhere(all_patch_bool).flatten()[np.random.choice(len(all_patch_df))]
+            all_patch = [self.points_in_patch(coord=coord, patch_center=patch_grid[random_])]
+            while np.sum(all_patch[0]) < self.mesh:
+                random_ = np.argwhere(all_patch_bool).flatten()[np.random.choice(len(all_patch_df))]
+                all_patch = [self.points_in_patch(coord=coord, patch_center=patch_grid[random_])] 
 
-        """ Combine smaller patches with threshold limit """
-        new_patch = []
-        while len(all_patch) > 0:
-            df = all_patch[0]
+            while np.sum(all_patch[0]) > self.DOWNSAMPLING_TH:
+                self.INIT_PATCH_SIZE = [
+                    self.INIT_PATCH_SIZE[0] * 0.9,
+                    self.INIT_PATCH_SIZE[1] * 0.9,
+                    self.INIT_PATCH_SIZE[2] * 0.9,
+                    ]
+                all_patch = [self.points_in_patch(coord=coord, patch_center=patch_grid[random_])]
+        else:
+            th = 1
+            while th != 0:
+                all_patch = []
 
-            if np.sum(df) >= self.DOWNSAMPLING_TH:
-                new_patch.append(df)
-                all_patch.pop(0)
-            else:
-                while np.sum(df) <= self.DOWNSAMPLING_TH:
-                    if len(all_patch) == 1:
-                        break
-                    if np.sum(df) + np.sum(all_patch[1]) > self.DOWNSAMPLING_TH:
-                        break
-                    df += all_patch[1]
-                    all_patch.pop(1)
-                new_patch.append(df)
-                all_patch.pop(0)
-        all_patch = new_patch
+                """Initialize search with new voxel size"""
+                voxel = round(voxel - self.drop_rate, 1)
+
+                patch_grid = self.center_patch(bbox=bbox, voxel_size=voxel)
+                if len(patch_grid) < 2:
+                    continue
+
+                x_pos = np.sort(np.unique(patch_grid[:, 0]))
+                if len(x_pos) > 1:
+                    x_pos = (x_pos[1] - x_pos[0]) / 2
+                else:
+                    x_pos = bbox[[1, 0]] - x_pos[0]
+
+                y_pos = np.sort(np.unique(patch_grid[:, 1]))
+                if len(y_pos) > 1:
+                    y_pos = (y_pos[1] - y_pos[0]) / 2
+                else:
+                    y_pos = bbox[1, 1] - y_pos[0]
+
+                z_pos = np.sort(np.unique(patch_grid[:, 2]))
+                if len(z_pos) > 1:
+                    z_pos = (z_pos[1] - z_pos[0]) / 2
+                else:
+                    z_pos = bbox[1, 2] - z_pos[0]
+
+                self.INIT_PATCH_SIZE = [
+                    x_pos + (x_pos * self.STRIDE),
+                    y_pos + (y_pos * self.STRIDE),
+                    z_pos + (z_pos * self.STRIDE),
+                ]
+
+                """Find points in each patch"""
+                for patch in patch_grid:
+                    point_idx = self.points_in_patch(coord=coord, patch_center=patch)
+                    all_patch.append(point_idx)
+
+                all_patch = [patch for patch in all_patch if np.sum(patch) > 0]
+                th = sum([True for p in all_patch if np.sum(p) > self.DOWNSAMPLING_TH])
+
+            """ Combine smaller patches with threshold limit """
+            new_patch = []
+            while len(all_patch) > 0:
+                df = all_patch[0]
+
+                if np.sum(df) >= self.DOWNSAMPLING_TH:
+                    new_patch.append(df)
+                    all_patch.pop(0)
+                else:
+                    while np.sum(df) <= self.DOWNSAMPLING_TH:
+                        if len(all_patch) == 1:
+                            break
+                        if np.sum(df) + np.sum(all_patch[1]) > self.DOWNSAMPLING_TH:
+                            break
+                        df += all_patch[1]
+                        all_patch.pop(1)
+                    new_patch.append(df)
+                    all_patch.pop(0)
+            all_patch = new_patch
 
         return all_patch
 
@@ -277,11 +330,17 @@ class PatchDataSet:
         return data
 
     def patched_dataset(
-        self, coord: np.ndarray, label_cls=None, rgb=None, mesh=6
+        self,
+        coord: np.ndarray,
+        label_cls=None,
+        rgb=None,
+        mesh=6,
+        random=False,
     ) -> Union[Tuple[list, list, list, list, list], Tuple[list, list, list, list]]:
         coord_patch = []
         graph_patch = []
         output_idx = []
+        self.mesh = mesh
 
         if self.GRAPH_OUTPUT:
             if coord.shape[1] not in [3, 4]:
@@ -349,7 +408,7 @@ class PatchDataSet:
             rgb_patch = []
 
             """ Find points index in patches """
-            all_patch = self.optimal_patches(coord=coord)
+            all_patch = self.optimal_patches(coord=coord, random=random)
 
             """Build embedded feature per patch"""
             for i in all_patch:

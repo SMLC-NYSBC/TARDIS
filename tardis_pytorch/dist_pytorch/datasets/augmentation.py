@@ -196,7 +196,7 @@ class BuildGraph:
         nn = NearestNeighbors(n_neighbors=self.K, algorithm="kd_tree").fit(xyz)
 
         # find the indices of the K-nearest neighbors for each point
-        distances, indices = nn.kneighbors(xyz)
+        _, indices = nn.kneighbors(xyz)
 
         # build the connectivity matrix
         N = coord.shape[0]
