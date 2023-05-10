@@ -592,6 +592,7 @@ class Stanford3DDataset(BasicDataset):
                 cls_idx,
             ) = self.VD.patched_dataset(coord=coord, mesh=12, random=True)
         # print(f"Patched: {idx} in {round(time.time() - start, 2)}s")
+        print(len(coords_idx[0]))
 
         # save data for faster access later
         if not self.benchmark:
