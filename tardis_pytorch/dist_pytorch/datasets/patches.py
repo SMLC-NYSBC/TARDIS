@@ -240,6 +240,11 @@ class PatchDataSet:
                         all_patch = [self.points_in_patch(coord=coord, patch_center=patch_grid[random_])]
                         pc_size = np.sum(all_patch[0])
 
+                if pc_size > self.DOWNSAMPLING_TH or pc_size < self.DOWNSAMPLING_TH * 0.5:
+                    random_ = np.argwhere(all_patch_bool).flatten()[np.random.choice(len(all_patch_df))]
+                    all_patch = [self.points_in_patch(coord=coord, patch_center=patch_grid[random_])]
+                    pc_size = np.sum(all_patch[0])
+
         else:
             th = 1
             while th != 0:
