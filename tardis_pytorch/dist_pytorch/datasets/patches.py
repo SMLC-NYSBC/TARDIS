@@ -219,13 +219,25 @@ class PatchDataSet:
             all_patch = [self.points_in_patch(coord=coord, patch_center=patch_grid[random_])]
 
             # Check if picked voxel have more then self.mesh points and less then downsample threshold
-            while np.sum(all_patch[0]) > self.DOWNSAMPLING_TH and np.sum(all_patch[0]) != 0:
-                self.INIT_PATCH_SIZE = [
-                    self.INIT_PATCH_SIZE[0] * 0.99,
-                    self.INIT_PATCH_SIZE[1] * 0.99,
-                    self.INIT_PATCH_SIZE[2] * 0.99,
-                    ]
-                all_patch = [self.points_in_patch(coord=coord, patch_center=patch_grid[random_])]
+            pc_size = np.sum(all_patch[0])
+            if pc_size > self.DOWNSAMPLING_TH:
+                while pc_size > self.DOWNSAMPLING_TH:
+                    self.INIT_PATCH_SIZE = [
+                        self.INIT_PATCH_SIZE[0] * 0.99,
+                        self.INIT_PATCH_SIZE[1] * 0.99,
+                        self.INIT_PATCH_SIZE[2] * 0.99,
+                        ]
+                    all_patch = [self.points_in_patch(coord=coord, patch_center=patch_grid[random_])]
+                    pc_size = np.sum(all_patch[0])
+            elif pc_size < self.DOWNSAMPLING_TH * 0.5:
+                while pc_size < self.DOWNSAMPLING_TH * 0.8:
+                    self.INIT_PATCH_SIZE = [
+                        self.INIT_PATCH_SIZE[0] * 1.01,
+                        self.INIT_PATCH_SIZE[1] * 1.01,
+                        self.INIT_PATCH_SIZE[2] * 1.01,
+                        ]
+                    all_patch = [self.points_in_patch(coord=coord, patch_center=patch_grid[random_])]
+                    pc_size = np.sum(all_patch[0])
         else:
             th = 1
             while th != 0:

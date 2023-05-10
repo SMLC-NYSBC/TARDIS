@@ -539,7 +539,7 @@ class Stanford3DDataset(BasicDataset):
         coord_file = join(self.coord_dir, idx, "Annotations")
 
         # if self.patch_size[i, 0] == 0:
-        # print(f"Loading: {idx}")
+        print(f"Loading: {idx}")
         # start = time.time()
         # Pre-process coord and image data also, if exist remove duplicates
         if self.rgb:
