@@ -522,14 +522,25 @@ class Stanford3DDataset(BasicDataset):
         # Save patch size value for speed-up
         # self.patch_size = np.zeros((len(self.ids), 1))
 
-        self.VD = PatchDataSet(
-            max_number_of_points=self.max_point_in_patch,
-            voxel_size=15,
-            overlap=0,
-            drop_rate=0.1,
-            graph=True,
-            tensor=False,
-        )
+        if self.downscale is not None:
+            if self.downscale.split('_')[0] == 'r':
+                self.VD = PatchDataSet(
+                                max_number_of_points=self.max_point_in_patch,
+                                voxel_size=30,
+                                overlap=0,
+                                drop_rate=0.1,
+                                graph=True,
+                                tensor=False,
+                            )
+            else:
+                self.VD = PatchDataSet(
+                                max_number_of_points=self.max_point_in_patch,
+                                voxel_size=25,
+                                overlap=0,
+                                drop_rate=0.1,
+                                graph=True,
+                                tensor=False,
+                            )
 
     def __getitem__(self, i: int):
         """Get list of all coordinates and image patches"""
@@ -573,12 +584,9 @@ class Stanford3DDataset(BasicDataset):
                 coord = load_s3dis_scene(dir=coord_file, downscaling=0)
 
         if self.downscale is not None:
-            if scale[0] == "v":
-                coord[:, 1:] = coord[:, 1:] / float(scale[1])
-            else:
-                coord[:, 1:] = coord[:, 1:] / round(
-                    pc_median_dist(coord[:, 1:], avg_over=True, box_size=0.15), 3
-                )
+            coord[:, 1:] = coord[:, 1:] / round(
+                pc_median_dist(coord[:, 1:], avg_over=True, box_size=0.25), 3
+            )
 
         print(f"Loaded: {idx} in {round(time.time() - start, 2)}s")
 
