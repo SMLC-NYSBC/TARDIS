@@ -466,7 +466,9 @@ class CDistTrainer(BasicTrainer):
                 valid = f"Validation: (loss {loss.item():.4f} Prec: {prec:.2f} Rec: {recall:.2f} F1: {f1:.2f})"
 
                 # Update progress bar
-                self._update_progress_bar(loss_desc=valid, idx=idx, task="Validation...")
+                self._update_progress_bar(
+                    loss_desc=valid, idx=idx, task="Validation..."
+                )
         # Reduce eval. metric with mean
         self.validation_loss.append(np.mean(valid_losses))
         self.accuracy.append(np.mean(accuracy_mean))

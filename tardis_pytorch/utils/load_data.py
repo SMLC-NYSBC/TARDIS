@@ -840,7 +840,7 @@ def load_txt_s3dis(
     Returns:
         np.ndarray: Labeled point cloud coordinates.
     """
-    coord = pd.read_csv(txt, sep=' ', on_bad_lines='skip').to_numpy()
+    coord = pd.read_csv(txt, sep=" ", on_bad_lines="skip").to_numpy()
     # print(coord.shape)
     # coord = np.genfromtxt(txt, invalid_raise=False)
 
