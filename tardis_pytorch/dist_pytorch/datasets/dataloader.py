@@ -582,7 +582,7 @@ class Stanford3DDataset(BasicDataset):
             if self.rgb:
                 (
                     coords_idx,
-                    df_idx,
+                    node_idx,
                     graph_idx,
                     output_idx,
                     cls_idx,
@@ -590,7 +590,7 @@ class Stanford3DDataset(BasicDataset):
             else:
                 (
                     coords_idx,
-                    df_idx,
+                    node_idx,
                     graph_idx,
                     output_idx,
                     cls_idx,
@@ -598,7 +598,7 @@ class Stanford3DDataset(BasicDataset):
 
             # save data for faster access later
             if not self.benchmark:
-                self.save_temp(i=i, coord=coord, rgb=rgb_v)
+                self.save_temp(i=i, coord=coord, rgb=node_idx)
                 # self.save_temp(
                 #     i=i,
                 #     coords=coords_idx,
@@ -617,7 +617,7 @@ class Stanford3DDataset(BasicDataset):
             if self.rgb:
                 (
                     coords_idx,
-                    df_idx,
+                    node_idx,
                     graph_idx,
                     output_idx,
                     cls_idx,
@@ -625,7 +625,7 @@ class Stanford3DDataset(BasicDataset):
             else:
                 (
                     coords_idx,
-                    df_idx,
+                    node_idx,
                     graph_idx,
                     output_idx,
                     cls_idx,
@@ -634,15 +634,15 @@ class Stanford3DDataset(BasicDataset):
             #     i, coords=True, graph=True, out=True, df=True, cls=True
             # )
 
-        coords_idx, graph_idx, output_idx, df_idx, cls_idx = self.list_to_tensor(
-            coord=coords_idx, graph=graph_idx, output=output_idx, df=df_idx, cls=cls_idx
+        coords_idx, graph_idx, output_idx, node_idx, cls_idx = self.list_to_tensor(
+            coord=coords_idx, graph=graph_idx, output=output_idx, df=node_idx, cls=cls_idx
         )
 
         if self.benchmark:
             # Output file_name, raw_coord, edge_f, node_f, graph, node_idx, node_class
-            return idx, coord, coords_idx, df_idx, graph_idx, output_idx, cls_idx
+            return idx, coord, coords_idx, node_idx, graph_idx, output_idx, cls_idx
         # Output edge_f,   node_f, graph,     node_idx,   node_class
-        return coords_idx, df_idx, graph_idx, output_idx, cls_idx
+        return coords_idx, node_idx, graph_idx, output_idx, cls_idx
 
 
 def build_dataset(
