@@ -615,8 +615,11 @@ class Stanford3DDataset(BasicDataset):
             self.patch_size[i, 0] = 1
         else:
             # Load pre-process data
-            coord, rgb_v = self.load_temp(i, coord=True, rgb=True)
-            print(coord.shape, rgb_v.shape)
+            if self.rgb:
+                coord, rgb_v = self.load_temp(i, coord=True, rgb=True)
+            else:
+                coord, rgb_v = self.load_temp(i, coord=True)
+
             if self.rgb:
                 (
                     coords_idx,
