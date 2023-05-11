@@ -635,7 +635,11 @@ class Stanford3DDataset(BasicDataset):
             # )
 
         coords_idx, graph_idx, output_idx, node_idx, cls_idx = self.list_to_tensor(
-            coord=coords_idx, graph=graph_idx, output=output_idx, df=node_idx, cls=cls_idx
+            coord=coords_idx,
+            graph=graph_idx,
+            output=output_idx,
+            df=node_idx,
+            cls=cls_idx,
         )
 
         if self.benchmark:

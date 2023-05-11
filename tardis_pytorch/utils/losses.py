@@ -69,7 +69,7 @@ class BCELoss(nn.Module):
     STANDARD BINARY CROSS-ENTROPY LOSS FUNCTION
     """
 
-    def __init__(self, reduction="mean", diagonal=False):
+    def __init__(self, reduction="mean", diagonal=False, pos_weight=None):
         """
         Loss initialization
 
@@ -80,6 +80,7 @@ class BCELoss(nn.Module):
         super(BCELoss, self).__init__()
         self.diagonal = diagonal
         self.reduction = reduction
+        self.pos_weight = pos_weight
 
         self.loss = nn.BCEWithLogitsLoss(reduction=self.reduction)
 
@@ -91,15 +92,31 @@ class BCELoss(nn.Module):
             logits (torch.Tensor): Logits of a shape [Batch x Channels x Length x Length]
             targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length]
         """
+        mask = None
+        pos_mask = None
+
         if self.diagonal:
             g_range = range(logits.shape[2])
 
             mask = torch.ones_like(targets)
-            mask[:, g_range, g_range] = 0
+            mask[:, g_range, g_range] = torch.float(0.0)
 
+        if self.pos_weight is not None:
+            pos_mask = torch.zeros_like(targets)
+            indices = torch.where(targets > 0)
+            pos_mask[indices] = self.pos_weight
+
+        if mask is not None:
+            self.loss = nn.BCEWithLogitsLoss(reduction=self.reduction, weight=mask)
+            if pos_mask is not None:
+                self.loss = nn.BCEWithLogitsLoss(
+                    reduction=self.reduction, weight=mask, pos_weight=pos_mask
+                )
+        elif pos_mask is not None and mask is None:
             self.loss = nn.BCEWithLogitsLoss(
-                reduction=self.reduction, weight=mask.float()
+                reduction=self.reduction, pos_weight=pos_mask
             )
+
         return self.loss(logits, targets)
 
 
