@@ -521,7 +521,7 @@ class Stanford3DDataset(BasicDataset):
         self.VD = PatchDataSet(
             max_number_of_points=self.max_point_in_patch,
             overlap=0,
-            drop_rate=0.1,
+            drop_rate=1,
             graph=True,
             tensor=False,
         )
