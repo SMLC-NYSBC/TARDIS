@@ -598,7 +598,7 @@ class Stanford3DDataset(BasicDataset):
 
             # save data for faster access later
             if not self.benchmark:
-                self.save_temp(i=i, coord=coord, rgb=node_idx)
+                self.save_temp(i=i, coord=coord, rgb=rgb_v)
                 # self.save_temp(
                 #     i=i,
                 #     coords=coords_idx,
