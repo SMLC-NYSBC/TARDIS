@@ -182,7 +182,8 @@ class DistTrainer(BasicTrainer):
             # self._update_progress_bar(
             #     loss_desc="Training: (loss 1.000)", idx=0, task="Mid-train Eval..."
             # )
-            self._mid_training_eval(idx=idx)
+            if len(self.training_DataLoader) > 100:
+                self._mid_training_eval(idx=idx)
 
             """Training"""
             for edge, node, graph in zip(e, n, g):
