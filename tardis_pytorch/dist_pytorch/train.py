@@ -71,14 +71,14 @@ def train_dist(
     """
     """Losses"""
     losses_f = {
-        "AdaptiveDiceLoss": AdaptiveDiceLoss(diagonal=True),
-        "BCELoss": BCELoss(diagonal=True),
-        "BCEDiceLoss": BCEDiceLoss(diagonal=True),
-        "CELoss": CELoss(diagonal=True),
-        "DiceLoss": DiceLoss(diagonal=True),
-        "ClDice": ClDice(diagonal=True),
-        "ClBCE": ClBCE(diagonal=True),
-        "SigmoidFocalLoss": SigmoidFocalLoss(diagonal=True),
+        "AdaptiveDiceLoss": AdaptiveDiceLoss(diagonal=False),
+        "BCELoss": BCELoss(diagonal=False),
+        "BCEDiceLoss": BCEDiceLoss(diagonal=False),
+        "CELoss": CELoss(diagonal=False),
+        "DiceLoss": DiceLoss(diagonal=False),
+        "ClDice": ClDice(diagonal=False),
+        "ClBCE": ClBCE(diagonal=False),
+        "SigmoidFocalLoss": SigmoidFocalLoss(diagonal=False),
     }
 
     """Check input variable"""
