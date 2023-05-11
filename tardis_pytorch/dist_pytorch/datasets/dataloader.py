@@ -618,7 +618,7 @@ class Stanford3DDataset(BasicDataset):
             if self.rgb:
                 coord, rgb_v = self.load_temp(i, coord=True, rgb=True)
             else:
-                coord, rgb_v = self.load_temp(i, coord=True)
+                coord = self.load_temp(i, coord=True)
 
             if self.rgb:
                 (
