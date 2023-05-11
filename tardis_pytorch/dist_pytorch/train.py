@@ -72,7 +72,7 @@ def train_dist(
     """Losses"""
     losses_f = {
         "AdaptiveDiceLoss": AdaptiveDiceLoss(diagonal=False),
-        "BCELoss": BCELoss(diagonal=False, pos_weight=5.),
+        "BCELoss": BCELoss(diagonal=False),
         "BCEDiceLoss": BCEDiceLoss(diagonal=False),
         "CELoss": CELoss(diagonal=False),
         "DiceLoss": DiceLoss(diagonal=False),
