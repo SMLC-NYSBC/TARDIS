@@ -779,7 +779,6 @@ def load_ply_scannet(
         # Down scaling point cloud with labels
         if downscaling > 0:
             down_scale = VoxelDownSampling(voxel=downscaling, labels=True)
-            print(coord.shape)
             coord = down_scale(coord)
 
     if color is not None:

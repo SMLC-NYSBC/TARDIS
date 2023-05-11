@@ -613,7 +613,7 @@ class Stanford3DDataset(BasicDataset):
         else:
             # Load pre-process data
             coord, rgb_v = self.load_temp(i, coord=True, rgb=True)
-
+            print(coord.shape, rgb_v.shape)
             if self.rgb:
                 (
                     coords_idx,
