@@ -631,7 +631,7 @@ class Stanford3DDataset(BasicDataset):
                     graph_idx,
                     output_idx,
                     cls_idx,
-                ) = self.VD.patched_dataset(coord=coord, rgb=rgb_v, mesh=8, random=True)
+                ) = self.VD.patched_dataset(coord=coord, rgb=rgb_v, mesh=4, random=True)
             else:
                 (
                     coords_idx,
@@ -639,7 +639,7 @@ class Stanford3DDataset(BasicDataset):
                     graph_idx,
                     output_idx,
                     cls_idx,
-                ) = self.VD.patched_dataset(coord=coord, mesh=8, random=True)
+                ) = self.VD.patched_dataset(coord=coord, mesh=4, random=True)
             # coords_idx, graph_idx, output_idx, df_idx, cls_idx = self.load_temp(
             #     i, coords=True, graph=True, out=True, df=True, cls=True
             # )
