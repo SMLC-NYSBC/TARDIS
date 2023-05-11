@@ -111,7 +111,11 @@ class BasicDataset(Dataset):
         Returns:
             List (list[np.ndarray]): List of kwargs arrays as a tensor arrays.
         """
-
+        if len(kwargs.items()) == 1:
+            return np.load(
+                join(self.cwd, self.temp, f"{list(kwargs.items())[0][0]}_{i}.npy"),
+                allow_pickle=True,
+            )
         return [
             np.load(join(self.cwd, self.temp, f"{key}_{i}.npy"), allow_pickle=True)
             for key, _ in kwargs.items()
@@ -618,7 +622,7 @@ class Stanford3DDataset(BasicDataset):
             if self.rgb:
                 coord, rgb_v = self.load_temp(i, coord=True, rgb=True)
             else:
-                coord = self.load_temp(i, coord=True)
+                coord = self.load_temp(i, coord=True)[0]
 
             if self.rgb:
                 (
