@@ -69,7 +69,7 @@ class BCELoss(nn.Module):
     STANDARD BINARY CROSS-ENTROPY LOSS FUNCTION
     """
 
-    def __init__(self, reduction="mean", diagonal=False, pos_weight=None):
+    def __init__(self, reduction="mean", diagonal=False):
         """
         Loss initialization
 
@@ -80,7 +80,6 @@ class BCELoss(nn.Module):
         super(BCELoss, self).__init__()
         self.diagonal = diagonal
         self.reduction = reduction
-        self.pos_weight = pos_weight
 
         self.loss = nn.BCEWithLogitsLoss(reduction=self.reduction)
 
@@ -93,31 +92,73 @@ class BCELoss(nn.Module):
             targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length]
         """
         mask = None
-        pos_mask = None
 
         if self.diagonal:
             g_range = range(logits.shape[2])
 
             mask = torch.ones_like(targets)
-            mask[:, g_range, g_range] = torch.float(0.0)
-
-        if self.pos_weight is not None:
-            pos_mask = torch.zeros_like(targets)
-            indices = torch.where(targets > 0)
-            pos_mask[indices] = self.pos_weight
+            mask[:, g_range, g_range] = 0.
 
         if mask is not None:
             self.loss = nn.BCEWithLogitsLoss(reduction=self.reduction, weight=mask)
-            if pos_mask is not None:
-                self.loss = nn.BCEWithLogitsLoss(
-                    reduction=self.reduction, weight=mask, pos_weight=pos_mask
-                )
-        elif pos_mask is not None and mask is None:
-            self.loss = nn.BCEWithLogitsLoss(
-                reduction=self.reduction, pos_weight=pos_mask
-            )
 
         return self.loss(logits, targets)
+
+
+class WBCELoss(nn.Module):
+    """
+    Weighted BINARY CROSS-ENTROPY LOSS FUNCTION
+    """
+    def __init__(self, reduction="mean", diagonal=False):
+        """
+        Loss initialization
+
+        Args:
+            reduction (str, optional): BCE reduction over batch type.
+            diagonal (bool): If True, remove diagonal axis for graph prediction.
+        """
+        super(WBCELoss, self).__init__()
+        self.reduction = reduction
+        self.diagonal = diagonal
+
+        assert self.reduction in ['sum', 'mean', 'none']
+
+    def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
+        """
+        Forward loos function
+
+        Args:
+            logits (torch.Tensor): Logits of a shape [Batch x Channels x Length x Length]
+            targets (torch.Tensor): Target of a shape [Batch x Channels x Length x Length]
+        """
+        if self.diagonal:
+            g_range = range(logits.shape[1])
+
+            logits[:, g_range, g_range] = 1
+
+        # Compute the percentage of positive samples
+        positive_samples = torch.sum(targets)
+        total_samples = targets.numel()
+        positive_ratio = positive_samples / total_samples
+
+        # Calculate class weights
+        weight_positive = 1 / positive_ratio
+        weight_negative = 1 / (1 - positive_ratio)
+
+        # Apply sigmoid function to the predictions
+        y_pred = torch.sigmoid(logits)
+
+        # Compute the binary cross entropy (BCE) loss
+        bce_loss = -((weight_positive * targets * torch.log(y_pred + 1e-8)) +
+                     (weight_negative * (1 - targets) * torch.log(1 - y_pred + 1e-8)))
+
+        # Average the losses across all samples
+        if self.reduction == 'sum':
+            return torch.sum(bce_loss)
+        elif self.reduction == 'mean':
+            return torch.mean(bce_loss)
+        else:
+            return bce_loss
 
 
 class BCEDiceLoss(nn.Module):

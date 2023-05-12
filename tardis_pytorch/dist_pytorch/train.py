@@ -24,6 +24,7 @@ from tardis_pytorch.utils.losses import (
     AdaptiveDiceLoss,
     BCEDiceLoss,
     BCELoss,
+    WBCELoss,
     CELoss,
     ClBCE,
     ClDice,
@@ -73,6 +74,7 @@ def train_dist(
     losses_f = {
         "AdaptiveDiceLoss": AdaptiveDiceLoss(diagonal=False),
         "BCELoss": BCELoss(diagonal=False, reduction="sum"),
+        "WBCELoss": WBCELoss(diagonal=True, reduction="mean"),
         "BCEDiceLoss": BCEDiceLoss(diagonal=False),
         "CELoss": CELoss(diagonal=False),
         "DiceLoss": DiceLoss(diagonal=False),
