@@ -89,9 +89,9 @@ class EdgeEmbedding(nn.Module):
                 len(self._range) <= n_out
             ), f"Sigma range is out of shape. n_out = {n_out} but sigma range = {len(self._range)}"
             if len(self._range) == n_out:
-                self.linear = nn.Linear(n_out, n_out, bias=False)
-            else:
                 self.linear = None
+            else:
+                self.linear = nn.Linear(len(self._range), n_out, bias=False)
         else:
             self.linear = nn.Linear(1, n_out, bias=False)
 
