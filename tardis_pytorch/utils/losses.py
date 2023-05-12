@@ -97,7 +97,7 @@ class BCELoss(nn.Module):
             g_range = range(logits.shape[2])
 
             mask = torch.ones_like(targets)
-            mask[:, g_range, g_range] = 0.
+            mask[:, g_range, g_range] = 0.0
 
         if mask is not None:
             self.loss = nn.BCEWithLogitsLoss(reduction=self.reduction, weight=mask)
@@ -109,6 +109,7 @@ class WBCELoss(nn.Module):
     """
     Weighted BINARY CROSS-ENTROPY LOSS FUNCTION
     """
+
     def __init__(self, reduction="mean", diagonal=False):
         """
         Loss initialization
@@ -121,7 +122,7 @@ class WBCELoss(nn.Module):
         self.reduction = reduction
         self.diagonal = diagonal
 
-        assert self.reduction in ['sum', 'mean', 'none']
+        assert self.reduction in ["sum", "mean", "none"]
 
     def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         """
@@ -149,13 +150,15 @@ class WBCELoss(nn.Module):
         y_pred = torch.sigmoid(logits)
 
         # Compute the binary cross entropy (BCE) loss
-        bce_loss = -((weight_positive * targets * torch.log(y_pred + 1e-8)) +
-                     (weight_negative * (1 - targets) * torch.log(1 - y_pred + 1e-8)))
+        bce_loss = -(
+            (weight_positive * targets * torch.log(y_pred + 1e-8))
+            + (weight_negative * (1 - targets) * torch.log(1 - y_pred + 1e-8))
+        )
 
         # Average the losses across all samples
-        if self.reduction == 'sum':
+        if self.reduction == "sum":
             return torch.sum(bce_loss)
-        elif self.reduction == 'mean':
+        elif self.reduction == "mean":
             return torch.mean(bce_loss)
         else:
             return bce_loss
