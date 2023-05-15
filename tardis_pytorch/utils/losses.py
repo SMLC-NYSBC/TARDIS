@@ -28,7 +28,7 @@ class AbstractLoss(nn.Module):
             diagonal (bool): If True, the diagonal of the adjacency matrix is removed in graph predictions.
             sigmoid (bool): If True, compute sigmoid before loss.
         """
-        super(AbstractLoss, self).__init__(smooth, reduction, diagonal, sigmoid)
+        super(AbstractLoss, self).__init__()
         self.smooth = smooth
         self.diagonal = diagonal
         self.sigmoid = sigmoid
@@ -57,6 +57,12 @@ class AbstractLoss(nn.Module):
             return logits, targets
         return logits, targets
 
+    def initialize_tensors(self, logits, targets, mask):
+        # Activation and optionally ignore diagonal for graphs
+        logits = self.activate(logits)
+
+        return self.ignor_diagonal(logits=logits, targets=targets, mask=mask)
+
     @abstractmethod
     def forward(self, logits: torch.Tensor, targets: torch.Tensor, mask=False):
         """
@@ -69,9 +75,7 @@ class AbstractLoss(nn.Module):
         Return:
             torch.Tensor: Computed loss function.
         """
-        # Activation and optionally ignore diagonal for graphs
-        logits = self.activate(logits)
-        logits, targets = self.ignor_diagonal(logits=logits, targets=targets, mask=mask)
+        pass
 
 
 class AdaptiveDiceLoss(AbstractLoss):
@@ -102,7 +106,7 @@ class AdaptiveDiceLoss(AbstractLoss):
         """
         Computes the adaptive Dice loss between the logits and targets.
         """
-        super().forward(logits, targets, mask)
+        logits, targets = self.initialize_tensors(logits, targets, mask)
 
         # Soft weighted dice
         logits = logits.view(-1)
@@ -131,10 +135,7 @@ class BCELoss(AbstractLoss):
         """
         super(BCELoss, self).__init__(**kwargs)
 
-        if not self.sigmoid:
-            self.loss = nn.BCEWithLogitsLoss(reduction=self.reduction)
-        else:
-            self.loss = nn.BCELoss(reduction=self.reduction)
+        self.loss = nn.BCELoss(reduction=self.reduction)
 
     def forward(
         self, logits: torch.Tensor, targets: torch.Tensor, mask=True
@@ -142,7 +143,7 @@ class BCELoss(AbstractLoss):
         """
         Computes the BCE loss between the logits and targets.
         """
-        super().forward(logits, targets, mask)
+        logits, targets = self.initialize_tensors(logits, targets, mask)
 
         return self.loss(logits, targets)
 
@@ -166,8 +167,6 @@ class BCEDiceLoss(AbstractLoss):
         """
         Forward loos function
         """
-        super().forward(logits, targets, mask)
-
         bce_loss = self.bce(logits, targets)
         dice_loss = self.dice(logits, targets)
 
@@ -196,7 +195,7 @@ class CELoss(AbstractLoss):
         """
         Forward loos function
         """
-        super().forward(logits, targets, mask)
+        logits, targets = self.initialize_tensors(logits, targets, mask)
 
         return self.loss(logits, targets)
 
@@ -229,7 +228,7 @@ class DiceLoss(AbstractLoss):
         """
         Forward loos function
         """
-        super().forward(logits, targets, mask)
+        logits, targets = self.initialize_tensors(logits, targets, mask)
 
         # Flatten label and prediction tensors
         logits = logits.view(-1)
@@ -279,7 +278,7 @@ class LaplacianEigenmapsLoss(AbstractLoss):
         """
         Computes the Laplacian-Eigenmaps loss between the true and predicted adjacency matrices.
         """
-        super().forward(logits, targets, mask)
+        logits, targets = self.initialize_tensors(logits, targets, mask)
 
         # Compute Laplacian matrices
         L_true = self.compute_laplacian(logits)
@@ -390,10 +389,11 @@ class ClBCELoss(SoftSkeletonization):
         """
         Forward loss function
         """
-        super().forward(logits, targets, mask)
-
         # BCE with activation
         bce = self.bce(logits, targets)
+
+        # Activation and optionally omit diagonal
+        logits, targets = self.initialize_tensors(logits, targets, mask)
 
         # Soft skeletonization
         sk_logits = self.soft_skel(logits, self.iter)
@@ -411,7 +411,7 @@ class ClBCELoss(SoftSkeletonization):
         return bce + (1 - cl_bce)
 
 
-class ClDice(SoftSkeletonization):
+class ClDiceLoss(SoftSkeletonization):
     """
     Soft skeletonization with DICE loss function
 
@@ -422,7 +422,7 @@ class ClDice(SoftSkeletonization):
     """
 
     def __init__(self, **kwargs):
-        super(ClDice, self).__init__(**kwargs)
+        super(ClDiceLoss, self).__init__(**kwargs)
         self.soft_dice = DiceLoss(diagonal=self.diagonal, sigmoid=self.sigmoid)
 
     def forward(
@@ -431,11 +431,10 @@ class ClDice(SoftSkeletonization):
         """
         Forward loss function
         """
-        super().forward(logits, targets, mask)
-
         # Dice loss with activation
         dice = self.soft_dice(logits, targets)
 
+        logits, targets = self.initialize_tensors(logits, targets, mask)
         # Soft skeletonization
         sk_logits = self.soft_skel(logits, self.iter)
         sk_targets = self.soft_skel(targets, self.iter)
@@ -482,7 +481,7 @@ class SigmoidFocalLoss(AbstractLoss):
         """
         Computes the sigmoid focal loss between the logits and targets.
         """
-        super().forward(logits, targets, mask)
+        logits, targets = self.initialize_tensors(logits, targets, mask)
 
         # Compute focal loss term_1 and term_2
         y = targets.unsqueeze(1)
@@ -524,7 +523,7 @@ class WBCELoss(AbstractLoss):
         """
         Computes the weighted BCE loss between the logits and targets.
         """
-        super().forward(logits, targets, mask)
+        logits, targets = self.initialize_tensors(logits, targets, mask)
 
         # Compute the percentage of positive samples
         positive_samples = torch.sum(targets)
@@ -532,8 +531,8 @@ class WBCELoss(AbstractLoss):
         positive_ratio = positive_samples / total_samples
 
         # Calculate class weights
-        weight_positive = 1 / positive_ratio
-        weight_negative = 1 / (1 - positive_ratio)
+        weight_positive = 1 / (1 - positive_ratio)
+        weight_negative = 1 / positive_ratio
 
         # Compute the binary cross entropy (BCE) loss
         bce_loss = -(
