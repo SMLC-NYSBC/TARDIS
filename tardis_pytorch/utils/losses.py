@@ -28,7 +28,8 @@ class AbstractLoss(nn.Module):
             diagonal (bool): If True, the diagonal of the adjacency matrix is removed in graph predictions.
             sigmoid (bool): If True, compute sigmoid before loss.
         """
-        super(AbstractLoss, self).__init__()
+        super(AbstractLoss, self).__init__(smooth, reduction, diagonal, sigmoid)
+        self.smooth = smooth
         self.diagonal = diagonal
         self.sigmoid = sigmoid
         self.reduction = reduction
