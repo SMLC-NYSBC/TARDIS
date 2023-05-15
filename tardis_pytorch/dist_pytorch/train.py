@@ -20,17 +20,7 @@ from tardis_pytorch.dist_pytorch.trainer import CDistTrainer, DistTrainer
 from tardis_pytorch.dist_pytorch.utils.utils import check_model_dict
 from tardis_pytorch.utils.device import get_device
 from tardis_pytorch.utils.logo import TardisLogo
-from tardis_pytorch.utils.losses import (
-    AdaptiveDiceLoss,
-    BCEDiceLoss,
-    BCELoss,
-    WBCELoss,
-    CELoss,
-    ClBCE,
-    ClDice,
-    DiceLoss,
-    SigmoidFocalLoss,
-)
+from tardis_pytorch.utils.losses import *
 from tardis_pytorch.utils.trainer import ISR_LR
 
 # Setting for stable release to turn off all debug APIs
@@ -71,16 +61,21 @@ def train_dist(
         epochs (int): Max number of epoch's.
     """
     """Losses"""
+    loss_functions = [
+        AdaptiveDiceLoss,
+        BCELoss,
+        WBCELoss,
+        BCEDiceLoss,
+        CELoss,
+        DiceLoss,
+        ClDiceLoss,
+        ClBCELoss,
+        SigmoidFocalLoss,
+        LaplacianEigenmapsLoss,
+    ]
     losses_f = {
-        "AdaptiveDiceLoss": AdaptiveDiceLoss(diagonal=False),
-        "BCELoss": BCELoss(diagonal=False, reduction="sum"),
-        "WBCELoss": WBCELoss(diagonal=True, reduction="mean"),
-        "BCEDiceLoss": BCEDiceLoss(diagonal=False),
-        "CELoss": CELoss(diagonal=False),
-        "DiceLoss": DiceLoss(diagonal=False),
-        "ClDice": ClDice(diagonal=False),
-        "ClBCE": ClBCE(diagonal=False),
-        "SigmoidFocalLoss": SigmoidFocalLoss(diagonal=False),
+        f.__name__: f(smooth=1e-16, reduction="mean", diagonal=True, sigmoid=True)
+        for f in loss_functions
     }
 
     """Check input variable"""

@@ -20,16 +20,7 @@ from tardis_pytorch.spindletorch.trainer import CNNTrainer
 from tardis_pytorch.spindletorch.utils.utils import check_model_dict
 from tardis_pytorch.utils.device import get_device
 from tardis_pytorch.utils.errors import TardisError
-from tardis_pytorch.utils.losses import (
-    AdaptiveDiceLoss,
-    BCEDiceLoss,
-    BCELoss,
-    CELoss,
-    ClBCE,
-    ClDice,
-    DiceLoss,
-    SigmoidFocalLoss,
-)
+from tardis_pytorch.utils.losses import *
 from tardis_pytorch.utils.trainer import ISR_LR
 
 # Setting for stable release to turn off all debug APIs
@@ -70,16 +61,19 @@ def train_cnn(
         epochs (int): Max number of epoch's.
     """
     """Losses"""
-    losses_f = {
-        "AdaptiveDiceLoss": AdaptiveDiceLoss(),
-        "BCELoss": BCELoss(),
-        "BCEDiceLoss": BCEDiceLoss(),
-        "CELoss": CELoss(),
-        "DiceLoss": DiceLoss(),
-        "ClDice": ClDice(),
-        "ClBCE": ClBCE(),
-        "SigmoidFocalLoss": SigmoidFocalLoss(),
-    }
+    loss_functions = [
+        AdaptiveDiceLoss,
+        BCELoss,
+        WBCELoss,
+        BCEDiceLoss,
+        CELoss,
+        DiceLoss,
+        ClDiceLoss,
+        ClBCELoss,
+        SigmoidFocalLoss,
+        LaplacianEigenmapsLoss,
+    ]
+    losses_f = {f.__name__: f() for f in loss_functions}
 
     """Check input variable"""
     model_structure = check_model_dict(model_structure)

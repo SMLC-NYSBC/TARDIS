@@ -484,11 +484,14 @@ class SigmoidFocalLoss(AbstractLoss):
         logits, targets = self.initialize_tensors(logits, targets, mask)
 
         # Compute focal loss term_1 and term_2
-        y = targets.unsqueeze(1)
         term1 = (1 - logits) ** self.gamma * torch.log(logits)
+        term1 = torch.where(torch.isinf(term1), 0, term1)
+
         term2 = logits**self.gamma * torch.log(1 - logits)
+        term2 = torch.where(torch.isinf(term2), 0, term2)
 
         # Compute sigmoid focal loss
+        y = targets.unsqueeze(1)
         if self.alpha is None:
             sfl = torch.mean(y * term1 + ((1 - y) * term2))
             sfl = -(1 / logits.size()[0]) * sfl
