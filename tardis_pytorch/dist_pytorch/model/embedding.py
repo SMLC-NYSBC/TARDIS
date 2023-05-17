@@ -91,9 +91,9 @@ class EdgeEmbedding(nn.Module):
             if len(self._range) == n_out:
                 self.linear = None
             else:
-                self.linear = None
+                self.linear = nn.Linear(1, n_out, bias=False)
         else:
-            self.linear = nn.Linear(1, n_out, bias=False)
+            self.linear = nn.Linear(len(self._range), n_out, bias=False)
 
         if cos:
             self.linear = None

@@ -120,9 +120,9 @@ class BasicDIST(nn.Module):
 
         Args:
             coords (torch.Tensor): Coordinates input of a shape
-                [Batch x Channels x Length].
+                [Batch x Length x Channels].
             node_features (torch.Tensor, None): Image patch input of a shape
-                [Batch x Length x Dimensions].
+                [Batch x Length x Channels].
         """
         node, edge = self.embed_input(coords=coords, node_features=node_features)
 

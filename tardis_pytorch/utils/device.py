@@ -31,7 +31,10 @@ def get_device(device: Optional[str] = 0) -> torch.device:
     elif device == "cpu":  # Load CPU
         device = torch.device("cpu")
     elif device_is_str(device):  # Load specific GPU ID
-        device = torch.device(f"cuda:{int(device)}")
+        if int(device) == -1:
+            device = torch.device("cpu")
+        else:
+            device = torch.device(f"cuda:{int(device)}")
     elif device == "mps":  # Load Apple silicon
         if torch.backends.mps.is_available():
             device = torch.device("mps")
