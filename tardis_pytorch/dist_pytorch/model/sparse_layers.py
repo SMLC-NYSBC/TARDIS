@@ -17,8 +17,13 @@ def sparse_sigmoid(coo_tensor: torch.sparse_coo_tensor) -> torch.sparse_coo_tens
     Input: sparse_coo_tensor[Batch x Length x Length x Channel]
     Output: sparse_coo_tensor[Batch x Length x Length x Channel]
     """
+    g_shape = coo_tensor.shape
 
-    return coo_tensor._values().sigmoid_()
+    return torch.sparse_coo_tensor(
+        indices=coo_tensor._indices(),
+        values=torch.sigmoid(coo_tensor._values()),
+        size=(g_shape[0], g_shape[1], g_shape[2], g_shape[3]),
+    )
 
 
 class SparseNorm(nn.Module):
