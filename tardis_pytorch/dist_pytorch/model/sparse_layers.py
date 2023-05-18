@@ -10,7 +10,6 @@
 
 import torch
 import torch.nn as nn
-import math
 
 
 def sparse_sigmoid(coo_tensor: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
@@ -18,8 +17,8 @@ def sparse_sigmoid(coo_tensor: torch.sparse_coo_tensor) -> torch.sparse_coo_tens
     Input: sparse_coo_tensor[Batch x Length x Length x Channel]
     Output: sparse_coo_tensor[Batch x Length x Length x Channel]
     """
-    coo_tensor._values().sigmoid_()
-    return coo_tensor
+
+    return coo_tensor._values().sigmoid_()
 
 
 class SparseNorm(nn.Module):
@@ -28,24 +27,18 @@ class SparseNorm(nn.Module):
     Output: sparse_coo_tensor[Batch x Length x Length x Channel]
     """
 
-    def __init__(self, eps=1e-5):
+    def __init__(self, input_dim: int):
         super().__init__()
 
-        self.eps = eps
-        self.alpha = torch.nn.Parameter(torch.ones(1))
-        self.beta = torch.nn.Parameter(torch.zeros(1))
+        self.layer_norm = nn.LayerNorm(input_dim)
 
     def forward(self, x: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
-        with torch.no_grad():
-            non_zero_values = x._values()
-            mean = non_zero_values.mean()
-            variance = non_zero_values.var(unbiased=False)
-            normalized_values = (non_zero_values - mean) / torch.sqrt(
-                variance + self.eps
-            )
+        g_shape = x.shape
 
         return torch.sparse_coo_tensor(
-            x._indices(), self.alpha * normalized_values + self.beta, x.shape
+            indices=x._indices(),
+            values=self.layer_norm(x._values()),
+            size=(g_shape[0], g_shape[1], g_shape[2], g_shape[3]),
         )
 
 
@@ -60,43 +53,16 @@ class SparseLinear(nn.Module):
         super(SparseLinear, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
-        self.weight = nn.Parameter(torch.Tensor(out_features, in_features))
 
-        if bias:
-            self.bias = nn.Parameter(torch.Tensor(out_features))
-        else:
-            self.register_parameter("bias", None)
-        self.reset_parameters()
-
-    def reset_parameters(self):
-        nn.init.kaiming_uniform_(self.weight, a=math.sqrt(5))
-        if self.bias is not None:
-            fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.weight)
-            bound = 1 / math.sqrt(fan_in)
-            nn.init.uniform_(self.bias, -bound, bound)
+        self.linear = nn.Linear(self.in_features, self.out_features, bias=bias)
 
     def forward(self, x: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
-        B, C, R = x._indices()
         g_shape = x.shape
-
-        # output_values = [
-        #     torch.matmul(self.weight, x[0, ci, ri])
-        #     if self.bias is not None
-        #     else torch.matmul(self.weight, x[0, ci, ri]) + self.bias
-        #     for ci, ri in zip(C, R)
-        # ]
-        output_values = []
-        for c, r in zip(C, R):
-            transformed_value = torch.matmul(self.weight, x[0, c, r])
-            if self.bias is not None:
-                transformed_value = transformed_value + self.bias
-
-            output_values.append(transformed_value)
 
         return torch.sparse_coo_tensor(
             indices=x._indices(),
-            values=torch.stack(output_values),
-            size=(g_shape[0], g_shape[1], self.out_features),
+            values=self.linear(x._values()),
+            size=(g_shape[0], g_shape[1], g_shape[2], self.out_features),
         )
 
 
