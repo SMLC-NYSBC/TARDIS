@@ -81,7 +81,7 @@ class SparsTriangularUpdate(nn.Module):
         self.linear_b = SparseLinear(input_dim, channel_dim)
         self.gate_b = SparseLinear(input_dim, channel_dim)
 
-        self.norm_o = SparseNorm()
+        self.norm_o = SparseNorm(channel_dim)
         self.gate_o = SparseLinear(input_dim, input_dim)
         self.linear_o = SparseLinear(channel_dim, input_dim)
 
