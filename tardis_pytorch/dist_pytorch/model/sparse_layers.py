@@ -70,12 +70,10 @@ class SparsTriangularUpdate(nn.Module):
     def __init__(self, input_dim: int, channel_dim=128, axis=1):
         super(SparsTriangularUpdate).__init__()
 
-        self.input_dim = input_dim
-        self.channel_dim = channel_dim
         self.axis = axis
         self.init_scaling = 1 / 1.4142135623730951
 
-        self.norm_input = SparseNorm()
+        self.norm_input = SparseNorm(input_dim)
 
         self.linear_a = SparseLinear(input_dim, channel_dim)
         self.gate_a = SparseLinear(input_dim, channel_dim)
@@ -88,20 +86,6 @@ class SparsTriangularUpdate(nn.Module):
         self.linear_o = SparseLinear(channel_dim, input_dim)
 
         self._reset_parameters()
-
-    @staticmethod
-    def sparse_batched_dot_product(
-        a: torch.sparse_coo_tensor, b: torch.sparse_coo_tensor
-    ) -> torch.sparse_coo_tensor:
-        # Assuming a and b are 4D tensors of shape [batch_size, i, j, o]
-        batch_size, i_dim, _, o_dim = a.shape
-        result = torch.zeros((batch_size, i_dim, i_dim, o_dim), device=a.device)
-
-        for b_i in range(batch_size):
-            for i in range(i_dim):
-                result[b_i, i] = a[b_i, i] @ b[b_i]
-
-        return result
 
     def _reset_parameters(self):
         """
@@ -116,19 +100,29 @@ class SparsTriangularUpdate(nn.Module):
         nn.init.constant_(self.linear_o.weight, 0.0)
         nn.init.constant_(self.linear_o.bias, 0.0)
 
-    def forward(self, z: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
+    def forward(self, z: torch.sparse_coo_tensor, k: int) -> torch.sparse_coo_tensor:
+        z_shape = z.shape
+        z_value_shape = z._values().shape
+
         z = self.norm_input(z)
 
-        a = torch.sigmoid(self.gate_a(z)) * self.linear_a(z)  # B x L x L x O
-        b = torch.sigmoid(self.gate_b(z)) * self.linear_b(z)  # B x L x L x O
+        a = torch.sigmoid(self.gate_a(z)) * self.linear_a(z)  # B x nzz x O
+        a = a.reshape((z_value_shape[0]//k, k, z_shape[3]))  # B x L x K x O
+        b = torch.sigmoid(self.gate_b(z)) * self.linear_b(z)  # B x nzz x O
+        b = b.reshape((z_value_shape[0] // k, k, z_shape[3]))  # B x L x K x O
 
         # i,j -> i,k j,k
         if self.axis == 1:
-            k = self.sparse_batched_dot_product(a, b)
+            k = torch.sparse_coo_tensor(
+                indices=z._indices(),
+                values=torch.einsum("iko,jko->iko", a, b).reshape((z_value_shape[0], z_shape[3])),
+                size=(z_shape[0], z_shape[1], z_shape[2], z_shape[3]),
+            )
         else:
-            # Transpose a and b for the second axis
-            a = a.permute(0, 2, 1, 3)
-            b = b.permute(0, 2, 1, 3)
-            k = self.sparse_batched_dot_product(a, b)
+            k = torch.sparse_coo_tensor(
+                indices=z._indices(),
+                values=torch.einsum("kio,kjo->iko", a, b).reshape((z_value_shape[0], z_shape[3])),
+                size=(z_shape[0], z_shape[1], z_shape[2], z_shape[3]),
+            )
 
         return torch.sigmoid(self.gate_o(z)) * self.linear_o(self.norm_o(k))
