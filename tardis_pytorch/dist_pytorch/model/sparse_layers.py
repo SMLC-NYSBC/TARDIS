@@ -106,9 +106,9 @@ class SparsTriangularUpdate(nn.Module):
 
         z = self.norm_input(z)
 
-        a = torch.sigmoid(self.gate_a(z)) * self.linear_a(z)  # B x nzz x O
+        a = sparse_sigmoid(self.gate_a(z)) * self.linear_a(z)  # B x nzz x O
         a = a.reshape((z_value_shape[0]//k, k, z_shape[3]))  # B x L x K x O
-        b = torch.sigmoid(self.gate_b(z)) * self.linear_b(z)  # B x nzz x O
+        b = sparse_sigmoid(self.gate_b(z)) * self.linear_b(z)  # B x nzz x O
         b = b.reshape((z_value_shape[0] // k, k, z_shape[3]))  # B x L x K x O
 
         # i,j -> i,k j,k
@@ -125,4 +125,4 @@ class SparsTriangularUpdate(nn.Module):
                 size=(z_shape[0], z_shape[1], z_shape[2], z_shape[3]),
             )
 
-        return torch.sigmoid(self.gate_o(z)) * self.linear_o(self.norm_o(k))
+        return sparse_sigmoid(self.gate_o(z)) * self.linear_o(self.norm_o(k))
