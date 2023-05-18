@@ -15,7 +15,7 @@ import math
 
 class SparseNorm(nn.Module):
     def __init__(self, eps=1e-5):
-        super(SparseNorm).__init__()
+        super().__init__()
 
         self.eps = eps
         self.alpha = torch.nn.Parameter(torch.ones(1))
