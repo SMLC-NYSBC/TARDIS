@@ -74,7 +74,8 @@ class SparseLinear(nn.Module):
 class SparsTriangularUpdate(nn.Module):
     def __init__(self, input_dim: int, channel_dim=128, axis=1):
         super().__init__()
-
+        self.input_dim = input_dim
+        self.channel_dim = channel_dim
         self.axis = axis
         self.init_scaling = 1 / 1.4142135623730951
 
@@ -112,21 +113,29 @@ class SparsTriangularUpdate(nn.Module):
         z = self.norm_input(z)
 
         a = sparse_sigmoid(self.gate_a(z)) * self.linear_a(z)  # B x nzz x O
-        a = a._values().reshape((z_value_shape[0]//k, k, z_shape[3]))  # B x L x K x O
+        a = a._values().reshape(
+            (z_value_shape[0] // k, k, self.channel_dim)
+        )  # B x L x K x O
         b = sparse_sigmoid(self.gate_b(z)) * self.linear_b(z)  # B x nzz x O
-        b = b._values().reshape((z_value_shape[0] // k, k, z_shape[3]))  # B x L x K x O
+        b = b._values().reshape(
+            (z_value_shape[0] // k, k, self.channel_dim)
+        )  # B x L x K x O
 
         # i,j -> i,k j,k
         if self.axis == 1:
             k = torch.sparse_coo_tensor(
                 indices=z._indices(),
-                values=torch.einsum("iko,jko->iko", a, b).reshape((z_value_shape[0], z_shape[3])),
+                values=torch.einsum("iko,jko->iko", a, b).reshape(
+                    (z_value_shape[0], self.input_dim)
+                ),
                 size=(z_shape[0], z_shape[1], z_shape[2], z_shape[3]),
             )
         else:
             k = torch.sparse_coo_tensor(
                 indices=z._indices(),
-                values=torch.einsum("kio,kjo->iko", a, b).reshape((z_value_shape[0], z_shape[3])),
+                values=torch.einsum("kio,kjo->iko", a, b).reshape(
+                    (z_value_shape[0], self.input_dim)
+                ),
                 size=(z_shape[0], z_shape[1], z_shape[2], z_shape[3]),
             )
 
