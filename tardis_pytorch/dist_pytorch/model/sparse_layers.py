@@ -81,7 +81,7 @@ class SparseLinear(nn.Module):
 
         output_values = [
             torch.matmul(self.weight, x[0, ci, ri])
-            if self.bias
+            if self.bias is not None
             else torch.matmul(self.weight, x[0, ci, ri]) + self.bias
             for ci, ri in zip(C, R)
         ]
