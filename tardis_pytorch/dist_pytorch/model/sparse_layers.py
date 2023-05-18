@@ -126,17 +126,17 @@ class SparsTriangularUpdate(nn.Module):
             k = torch.sparse_coo_tensor(
                 indices=z._indices(),
                 values=torch.einsum("iko,jko->iko", a, b).reshape(
-                    (z_value_shape[0], self.input_dim)
+                    (z_value_shape[0], self.channel_dim)
                 ),
-                size=(z_shape[0], z_shape[1], z_shape[2], z_shape[3]),
+                size=(z_shape[0], z_shape[1], z_shape[2], self.channel_dim),
             )
         else:
             k = torch.sparse_coo_tensor(
                 indices=z._indices(),
                 values=torch.einsum("kio,kjo->iko", a, b).reshape(
-                    (z_value_shape[0], self.input_dim)
+                    (z_value_shape[0], self.channel_dim)
                 ),
-                size=(z_shape[0], z_shape[1], z_shape[2], z_shape[3]),
+                size=(z_shape[0], z_shape[1], z_shape[2], self.channel_dim),
             )
 
         return sparse_sigmoid(self.gate_o(z)) * self.linear_o(self.norm_o(k))
