@@ -112,9 +112,9 @@ class SparsTriangularUpdate(nn.Module):
         z = self.norm_input(z)
 
         a = sparse_sigmoid(self.gate_a(z)) * self.linear_a(z)  # B x nzz x O
-        a = a.reshape((z_value_shape[0]//k, k, z_shape[3]))  # B x L x K x O
+        a = a._values().reshape((z_value_shape[0]//k, k, z_shape[3]))  # B x L x K x O
         b = sparse_sigmoid(self.gate_b(z)) * self.linear_b(z)  # B x nzz x O
-        b = b.reshape((z_value_shape[0] // k, k, z_shape[3]))  # B x L x K x O
+        b = b._values().reshape((z_value_shape[0] // k, k, z_shape[3]))  # B x L x K x O
 
         # i,j -> i,k j,k
         if self.axis == 1:
