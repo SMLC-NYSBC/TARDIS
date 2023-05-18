@@ -79,18 +79,19 @@ class SparseLinear(nn.Module):
         B, C, R = x._indices()
         g_shape = x.shape
 
-        output_values = [
-            torch.matmul(self.weight, x[0, ci, ri])
-            if self.bias is not None
-            else torch.matmul(self.weight, x[0, ci, ri]) + self.bias
-            for ci, ri in zip(C, R)
-        ]
-        # for c, r in zip(C, R):
-        #     transformed_value = torch.matmul(self.weight, x[0, c, r])
-        #     if self.bias is not None:
-        #         transformed_value = transformed_value + self.bias
-        #
-        #     output_values.append(transformed_value)
+        # output_values = [
+        #     torch.matmul(self.weight, x[0, ci, ri])
+        #     if self.bias is not None
+        #     else torch.matmul(self.weight, x[0, ci, ri]) + self.bias
+        #     for ci, ri in zip(C, R)
+        # ]
+        output_values = []
+        for c, r in zip(C, R):
+            transformed_value = torch.matmul(self.weight, x[0, c, r])
+            if self.bias is not None:
+                transformed_value = transformed_value + self.bias
+
+            output_values.append(transformed_value)
 
         return torch.sparse_coo_tensor(
             indices=x._indices(),
