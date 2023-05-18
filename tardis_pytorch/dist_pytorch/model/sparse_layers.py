@@ -14,11 +14,20 @@ import math
 
 
 def sparse_sigmoid(coo_tensor: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
+    """
+    Input: sparse_coo_tensor[Batch x Length x Length x Channel]
+    Output: sparse_coo_tensor[Batch x Length x Length x Channel]
+    """
     coo_tensor._values().sigmoid_()
     return coo_tensor
 
 
 class SparseNorm(nn.Module):
+    """
+    Input: sparse_coo_tensor[Batch x Length x Length x Channel]
+    Output: sparse_coo_tensor[Batch x Length x Length x Channel]
+    """
+
     def __init__(self, eps=1e-5):
         super().__init__()
 
@@ -41,6 +50,12 @@ class SparseNorm(nn.Module):
 
 
 class SparseLinear(nn.Module):
+    """
+    Support for batch = 1!!
+    Input: sparse_coo_tensor[Batch x Length x Length x Channel]
+    Output: sparse_coo_tensor[Batch x Length x Length x Channel]
+    """
+
     def __init__(self, in_features: int, out_features: int, bias=True):
         super(SparseLinear, self).__init__()
         self.in_features = in_features
@@ -61,16 +76,21 @@ class SparseLinear(nn.Module):
             nn.init.uniform_(self.bias, -bound, bound)
 
     def forward(self, x: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
-        C, R = x._indices()
+        B, C, R = x._indices()
         g_shape = x.shape
 
-        output_values = []
-        for c, r in zip(C, R):
-            transformed_value = torch.matmul(self.weight, x[c, r])
-            if self.bias is not None:
-                transformed_value = transformed_value + self.bias
-
-            output_values.append(transformed_value)
+        output_values = [
+            torch.matmul(self.weight, x[0, ci, ri])
+            if self.bias
+            else torch.matmul(self.weight, x[0, ci, ri]) + self.bias
+            for ci, ri in zip(C, R)
+        ]
+        # for c, r in zip(C, R):
+        #     transformed_value = torch.matmul(self.weight, x[0, c, r])
+        #     if self.bias is not None:
+        #         transformed_value = transformed_value + self.bias
+        #
+        #     output_values.append(transformed_value)
 
         return torch.sparse_coo_tensor(
             indices=x._indices(),

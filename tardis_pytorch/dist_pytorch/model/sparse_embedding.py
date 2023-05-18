@@ -69,11 +69,14 @@ class SparseEdgeEmbedding(nn.Module):
             .view(-1)
         )
         col = k_idx.view(-1)
+        batch = torch.zeros_like(col)
 
-        indices = torch.cat([row.unsqueeze(0), col.unsqueeze(0)], dim=0)
+        indices = torch.cat(
+            [batch.unsqueeze(0), row.unsqueeze(0), col.unsqueeze(0)], dim=0
+        )
         values = k_dist_range.view(-1, self.n_out)
         adj_matrix = torch.sparse_coo_tensor(
-            indices, values, (g_len, g_len, self.n_out)
+            indices, values, (1, g_len, g_len, self.n_out)
         )
 
         return adj_matrix
