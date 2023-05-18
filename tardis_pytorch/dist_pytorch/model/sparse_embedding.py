@@ -28,6 +28,7 @@ class SparseEdgeEmbedding(nn.Module):
         sigma (int, optional tuple): Sigma value for an exponential function is
             used to normalize distances.
     """
+
     def __init__(self, k: int, n_out: int, sigma: list):
         super().__init__()
         self.k = k
@@ -36,7 +37,7 @@ class SparseEdgeEmbedding(nn.Module):
         self.n_out = n_out
         self.sigma = sigma
 
-    def forward(self, input_coord: torch.Tensor) -> torch.Tensor:
+    def forward(self, input_coord: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
         """
         Forward node feature embedding.
 
@@ -56,16 +57,23 @@ class SparseEdgeEmbedding(nn.Module):
         )
 
         for id_, i in enumerate(self._range):
-            k_dist_range[: ,: ,id_] = torch.exp(-(k_dist**2) / (i**2 * 2))
+            k_dist_range[:, :, id_] = torch.exp(-(k_dist**2) / (i**2 * 2))
 
         isnan = torch.isnan(k_dist_range)
         k_dist_range = torch.where(isnan, torch.zeros_like(k_dist_range), k_dist_range)
 
-        row = torch.arange(g_len, device=dist_.device).unsqueeze(-1).repeat(1, self.k).view(-1)
+        row = (
+            torch.arange(g_len, device=dist_.device)
+            .unsqueeze(-1)
+            .repeat(1, self.k)
+            .view(-1)
+        )
         col = k_idx.view(-1)
 
         indices = torch.cat([row.unsqueeze(0), col.unsqueeze(0)], dim=0)
         values = k_dist_range.view(-1, self.n_out)
-        adj_matrix = torch.sparse_coo_tensor(indices, values, (g_len, g_len, self.n_out))
+        adj_matrix = torch.sparse_coo_tensor(
+            indices, values, (g_len, g_len, self.n_out)
+        )
 
         return adj_matrix

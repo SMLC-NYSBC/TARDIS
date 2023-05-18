@@ -13,7 +13,7 @@ import torch.nn as nn
 import math
 
 
-def sparse_sigmoid(coo_tensor):
+def sparse_sigmoid(coo_tensor: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
     coo_tensor._values().sigmoid_()
     return coo_tensor
 
@@ -26,18 +26,22 @@ class SparseNorm(nn.Module):
         self.alpha = torch.nn.Parameter(torch.ones(1))
         self.beta = torch.nn.Parameter(torch.zeros(1))
 
-    def forward(self, x: torch.sparse_coo):
+    def forward(self, x: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
         with torch.no_grad():
             non_zero_values = x._values()
             mean = non_zero_values.mean()
             variance = non_zero_values.var(unbiased=False)
-            normalized_values = (non_zero_values - mean) / torch.sqrt(variance + self.eps)
+            normalized_values = (non_zero_values - mean) / torch.sqrt(
+                variance + self.eps
+            )
 
-        return torch.sparse_coo_tensor(x._indices(), self.alpha * normalized_values + self.beta, x.shape)
+        return torch.sparse_coo_tensor(
+            x._indices(), self.alpha * normalized_values + self.beta, x.shape
+        )
 
 
 class SparseLinear(nn.Module):
-    def __init__(self, in_features, out_features, bias=True):
+    def __init__(self, in_features: int, out_features: int, bias=True):
         super(SparseLinear, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
@@ -46,7 +50,7 @@ class SparseLinear(nn.Module):
         if bias:
             self.bias = nn.Parameter(torch.Tensor(out_features))
         else:
-            self.register_parameter('bias', None)
+            self.register_parameter("bias", None)
         self.reset_parameters()
 
     def reset_parameters(self):
@@ -56,25 +60,27 @@ class SparseLinear(nn.Module):
             bound = 1 / math.sqrt(fan_in)
             nn.init.uniform_(self.bias, -bound, bound)
 
-    def forward(self, input):
-        C, R = input._indices()
-        g_shape = input.shape
+    def forward(self, x: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
+        C, R = x._indices()
+        g_shape = x.shape
 
         output_values = []
         for c, r in zip(C, R):
-            transformed_value = torch.matmul(self.weight, input[c, r])
+            transformed_value = torch.matmul(self.weight, x[c, r])
             if self.bias is not None:
                 transformed_value = transformed_value + self.bias
 
             output_values.append(transformed_value)
 
-        return torch.sparse_coo_tensor(indices=input._indices(),
-                                       values=torch.stack(output_values),
-                                       size=(g_shape[0], g_shape[1], self.out_features))
+        return torch.sparse_coo_tensor(
+            indices=x._indices(),
+            values=torch.stack(output_values),
+            size=(g_shape[0], g_shape[1], self.out_features),
+        )
 
 
 class SparsTriangularUpdate(nn.Module):
-    def __init__(self, input_dim, channel_dim=128, axis=1):
+    def __init__(self, input_dim: int, channel_dim=128, axis=1):
         super(SparsTriangularUpdate).__init__()
 
         self.input_dim = input_dim
@@ -97,7 +103,9 @@ class SparsTriangularUpdate(nn.Module):
         self._reset_parameters()
 
     @staticmethod
-    def sparse_batched_dot_product(a, b):
+    def sparse_batched_dot_product(
+        a: torch.sparse_coo_tensor, b: torch.sparse_coo_tensor
+    ) -> torch.sparse_coo_tensor:
         # Assuming a and b are 4D tensors of shape [batch_size, i, j, o]
         batch_size, i_dim, _, o_dim = a.shape
         result = torch.zeros((batch_size, i_dim, i_dim, o_dim), device=a.device)
@@ -121,7 +129,7 @@ class SparsTriangularUpdate(nn.Module):
         nn.init.constant_(self.linear_o.weight, 0.0)
         nn.init.constant_(self.linear_o.bias, 0.0)
 
-    def forward(self, z: torch.Tensor) -> torch.Tensor:
+    def forward(self, z: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
         z = self.norm_input(z)
 
         a = torch.sigmoid(self.gate_a(z)) * self.linear_a(z)  # B x L x L x O
