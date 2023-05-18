@@ -13,6 +13,11 @@ import torch.nn as nn
 import math
 
 
+def sparse_sigmoid(coo_tensor):
+    coo_tensor._values().sigmoid_()
+    return coo_tensor
+
+
 class SparseNorm(nn.Module):
     def __init__(self, eps=1e-5):
         super().__init__()
