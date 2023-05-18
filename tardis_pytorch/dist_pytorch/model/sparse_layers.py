@@ -68,7 +68,7 @@ class SparseLinear(nn.Module):
 
 class SparsTriangularUpdate(nn.Module):
     def __init__(self, input_dim: int, channel_dim=128, axis=1):
-        super(SparsTriangularUpdate).__init__()
+        super().__init__()
 
         self.axis = axis
         self.init_scaling = 1 / 1.4142135623730951
