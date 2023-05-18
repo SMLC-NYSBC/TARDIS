@@ -91,14 +91,14 @@ class SparsTriangularUpdate(nn.Module):
         """
         Initial parameter and bias scaling.
         """
-        nn.init.xavier_uniform_(self.linear_a.weight, gain=self.init_scaling)
-        nn.init.constant_(self.linear_a.bias, 0.0)
+        nn.init.xavier_uniform_(self.linear_a.linear.weight, gain=self.init_scaling)
+        nn.init.constant_(self.linear_a.linear.bias, 0.0)
 
-        nn.init.xavier_uniform_(self.linear_b.weight, gain=self.init_scaling)
-        nn.init.constant_(self.linear_b.bias, 0.0)
+        nn.init.xavier_uniform_(self.linear_b.linear.weight, gain=self.init_scaling)
+        nn.init.constant_(self.linear_b.linear.bias, 0.0)
 
-        nn.init.constant_(self.linear_o.weight, 0.0)
-        nn.init.constant_(self.linear_o.bias, 0.0)
+        nn.init.constant_(self.linear_o.linear.weight, 0.0)
+        nn.init.constant_(self.linear_o.linear.bias, 0.0)
 
     def forward(self, z: torch.sparse_coo_tensor, k: int) -> torch.sparse_coo_tensor:
         z_shape = z.shape
