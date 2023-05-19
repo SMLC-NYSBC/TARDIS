@@ -1,0 +1,162 @@
+#######################################################################
+#  TARDIS - Transformer And Rapid Dimensionless Instance Segmentation #
+#                                                                     #
+#  New York Structural Biology Center                                 #
+#  Simons Machine Learning Center                                     #
+#                                                                     #
+#  Robert Kiewisz, Tristan Bepler                                     #
+#  MIT License 2021 - 2023                                            #
+#######################################################################
+
+import torch
+import torch.nn as nn
+
+
+def sparse_gelu(x: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
+    g_shape = x.shape
+
+    return torch.sparse_coo_tensor(
+        indices=x._indices(),
+        values=x._values() * 0.5 * (1.0 + torch.erf(x._values() / 1.4142135623730951)),
+        size=(g_shape[0], g_shape[1], g_shape[2], g_shape[3]),
+    )
+
+
+def sparse_sigmoid(coo_tensor: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
+    g_shape = coo_tensor.shape
+
+    return torch.sparse_coo_tensor(
+        indices=coo_tensor._indices(),
+        values=torch.sigmoid(coo_tensor._values()),
+        size=(g_shape[0], g_shape[1], g_shape[2], g_shape[3]),
+    )
+
+
+class SparseGeluFeedForward(nn.Module):
+    def __init__(self, input_dim: int, ff_dim: int):
+        super().__init__()
+        self.norm = SparseNorm(input_dim)
+        self.linear1 = SparseLinear(input_dim, ff_dim)
+        self.linear2 = SparseLinear(ff_dim, input_dim)
+
+        nn.init.constant_(self.linear2.linear.weight, 0.0)
+        nn.init.constant_(self.linear2.linear.bias, 0.0)
+
+    def forward(self, x: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
+        x = self.norm(x)
+        x = self.linear1(x)
+        x = self.linear2(sparse_gelu(x))
+
+        return x
+
+
+class SparseNorm(nn.Module):
+    def __init__(self, input_dim: int):
+        super().__init__()
+
+        self.layer_norm = nn.LayerNorm(input_dim)
+
+    def forward(self, x: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
+        g_shape = x.shape
+
+        return torch.sparse_coo_tensor(
+            indices=x._indices(),
+            values=self.layer_norm(x._values()),
+            size=(g_shape[0], g_shape[1], g_shape[2], g_shape[3]),
+        )
+
+
+class SparseLinear(nn.Module):
+    """
+    Support for batch = 1!!
+    Input: sparse_coo_tensor[Batch x Length x Length x Channel]
+    Output: sparse_coo_tensor[Batch x Length x Length x Channel]
+    """
+
+    def __init__(self, in_features: int, out_features: int, bias=True):
+        super(SparseLinear, self).__init__()
+        self.in_features = in_features
+        self.out_features = out_features
+
+        self.linear = nn.Linear(self.in_features, self.out_features, bias=bias)
+
+    def forward(self, x: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
+        g_shape = x.shape
+
+        return torch.sparse_coo_tensor(
+            indices=x._indices(),
+            values=self.linear(x._values()),
+            size=(g_shape[0], g_shape[1], g_shape[2], self.out_features),
+        )
+
+
+class SparsTriangularUpdate(nn.Module):
+    def __init__(self, input_dim: int, channel_dim=128, axis=1, k=12):
+        super().__init__()
+        self.input_dim = input_dim
+        self.channel_dim = channel_dim
+        self.axis = axis
+        self.k = k
+        self.init_scaling = 1 / 1.4142135623730951
+
+        self.norm_input = SparseNorm(input_dim)
+
+        self.linear_a = SparseLinear(input_dim, channel_dim)
+        self.gate_a = SparseLinear(input_dim, channel_dim)
+
+        self.linear_b = SparseLinear(input_dim, channel_dim)
+        self.gate_b = SparseLinear(input_dim, channel_dim)
+
+        self.norm_o = SparseNorm(channel_dim)
+        self.gate_o = SparseLinear(input_dim, input_dim)
+        self.linear_o = SparseLinear(channel_dim, input_dim)
+
+        self._reset_parameters()
+
+    def _reset_parameters(self):
+        """
+        Initial parameter and bias scaling.
+        """
+        nn.init.xavier_uniform_(self.linear_a.linear.weight, gain=self.init_scaling)
+        nn.init.constant_(self.linear_a.linear.bias, 0.0)
+
+        nn.init.xavier_uniform_(self.linear_b.linear.weight, gain=self.init_scaling)
+        nn.init.constant_(self.linear_b.linear.bias, 0.0)
+
+        nn.init.constant_(self.linear_o.linear.weight, 0.0)
+        nn.init.constant_(self.linear_o.linear.bias, 0.0)
+
+    def forward(self, z: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
+        z_shape = z.shape
+        z_value_shape = z._values().shape
+
+        z = self.norm_input(z)
+
+        a = sparse_sigmoid(self.gate_a(z)) * self.linear_a(z)  # B x nzz x O
+        a = a._values().reshape(
+            (z_value_shape[0] // self.k, self.k, self.channel_dim)
+        )  # B x L x K x O
+        b = sparse_sigmoid(self.gate_b(z)) * self.linear_b(z)  # B x nzz x O
+        b = b._values().reshape(
+            (z_value_shape[0] // self.k, self.k, self.channel_dim)
+        )  # B x L x K x O
+
+        # i,j -> i,k j,k
+        if self.axis == 1:
+            k = torch.sparse_coo_tensor(
+                indices=z._indices(),
+                values=torch.einsum("iko,jko->iko", a, b).reshape(
+                    (z_value_shape[0], self.channel_dim)
+                ),
+                size=(z_shape[0], z_shape[1], z_shape[2], self.channel_dim),
+            )
+        else:
+            k = torch.sparse_coo_tensor(
+                indices=z._indices(),
+                values=torch.einsum("kio,kjo->iko", a, b).reshape(
+                    (z_value_shape[0], self.channel_dim)
+                ),
+                size=(z_shape[0], z_shape[1], z_shape[2], self.channel_dim),
+            )
+
+        return sparse_sigmoid(self.gate_o(z)) * self.linear_o(self.norm_o(k))

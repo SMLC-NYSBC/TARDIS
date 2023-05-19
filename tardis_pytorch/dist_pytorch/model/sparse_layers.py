@@ -9,134 +9,105 @@
 #######################################################################
 
 import torch
-import torch.nn as nn
+from torch import nn
+
+from tardis_pytorch.dist_pytorch.model.sparse_modules import SparsTriangularUpdate, SparseGeluFeedForward
 
 
-def sparse_sigmoid(coo_tensor: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
+class SparseDistStack(nn.Module):
     """
-    Input: sparse_coo_tensor[Batch x Length x Length x Channel]
-    Output: sparse_coo_tensor[Batch x Length x Length x Channel]
-    """
-    g_shape = coo_tensor.shape
-
-    return torch.sparse_coo_tensor(
-        indices=coo_tensor._indices(),
-        values=torch.sigmoid(coo_tensor._values()),
-        size=(g_shape[0], g_shape[1], g_shape[2], g_shape[3]),
-    )
-
-
-class SparseNorm(nn.Module):
-    """
-    Input: sparse_coo_tensor[Batch x Length x Length x Channel]
-    Output: sparse_coo_tensor[Batch x Length x Length x Channel]
+    Doc TBD
     """
 
-    def __init__(self, input_dim: int):
+    def __init__(
+        self,
+        pairs_dim: int,
+        num_layers=1,
+        ff_factor=4,
+    ):
         super().__init__()
+        self.layers = nn.ModuleList()
+        for _ in range(num_layers):
+            layer = SparseDistLayer(
+                pairs_dim=pairs_dim,
+                ff_factor=ff_factor,
+            )
+            self.layers.append(layer)
 
-        self.layer_norm = nn.LayerNorm(input_dim)
+    def __len__(self) -> int:
+        return len(self.layers)
 
-    def forward(self, x: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
-        g_shape = x.shape
+    def __getitem__(self, i: int):
+        return self.layers[i]
 
-        return torch.sparse_coo_tensor(
-            indices=x._indices(),
-            values=self.layer_norm(x._values()),
-            size=(g_shape[0], g_shape[1], g_shape[2], g_shape[3]),
+    def forward(self, edge_features: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
+        """
+        Doc TBD
+        """
+        for layer in self.layers:
+            node_features, edge_features = layer(h_pairs=edge_features)
+
+        return edge_features
+
+
+class SparseDistLayer(nn.Module):
+    """
+    MAIN SPARSE DIST LAYER
+    """
+
+    def __init__(self, pairs_dim: int, ff_factor=4, k=12):
+        super().__init__()
+        self.pairs_dim = pairs_dim
+        self.channel_dim = int(pairs_dim / 4)
+        if self.channel_dim <= 0:
+            self.channel_dim = 1
+        self.k = k
+
+        # ToDo Node optional features update
+
+        # ToDO Edge optional MHA update
+
+        # Edge triangular update
+        self.row_update = SparsTriangularUpdate(
+            input_dim=pairs_dim,
+            channel_dim=self.channel_dim,
+            axis=1,
+            k=self.k,
+        )
+        self.col_update = SparsTriangularUpdate(
+            input_dim=pairs_dim,
+            channel_dim=self.channel_dim,
+            axis=0,
+            k=self.k,
         )
 
-
-class SparseLinear(nn.Module):
-    """
-    Support for batch = 1!!
-    Input: sparse_coo_tensor[Batch x Length x Length x Channel]
-    Output: sparse_coo_tensor[Batch x Length x Length x Channel]
-    """
-
-    def __init__(self, in_features: int, out_features: int, bias=True):
-        super(SparseLinear, self).__init__()
-        self.in_features = in_features
-        self.out_features = out_features
-
-        self.linear = nn.Linear(self.in_features, self.out_features, bias=bias)
-
-    def forward(self, x: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
-        g_shape = x.shape
-
-        return torch.sparse_coo_tensor(
-            indices=x._indices(),
-            values=self.linear(x._values()),
-            size=(g_shape[0], g_shape[1], g_shape[2], self.out_features),
+        # Edge GeLu FFN normalization layer
+        self.pair_ffn = SparseGeluFeedForward(
+            input_dim=pairs_dim, ff_dim=pairs_dim * ff_factor
         )
 
-
-class SparsTriangularUpdate(nn.Module):
-    def __init__(self, input_dim: int, channel_dim=128, axis=1):
-        super().__init__()
-        self.input_dim = input_dim
-        self.channel_dim = channel_dim
-        self.axis = axis
-        self.init_scaling = 1 / 1.4142135623730951
-
-        self.norm_input = SparseNorm(input_dim)
-
-        self.linear_a = SparseLinear(input_dim, channel_dim)
-        self.gate_a = SparseLinear(input_dim, channel_dim)
-
-        self.linear_b = SparseLinear(input_dim, channel_dim)
-        self.gate_b = SparseLinear(input_dim, channel_dim)
-
-        self.norm_o = SparseNorm(channel_dim)
-        self.gate_o = SparseLinear(input_dim, input_dim)
-        self.linear_o = SparseLinear(channel_dim, input_dim)
-
-        self._reset_parameters()
-
-    def _reset_parameters(self):
+    def update_nodes(self) -> torch.sparse_coo_tensor:
         """
-        Initial parameter and bias scaling.
+        ToDo TBD
         """
-        nn.init.xavier_uniform_(self.linear_a.linear.weight, gain=self.init_scaling)
-        nn.init.constant_(self.linear_a.linear.bias, 0.0)
+        pass
 
-        nn.init.xavier_uniform_(self.linear_b.linear.weight, gain=self.init_scaling)
-        nn.init.constant_(self.linear_b.linear.bias, 0.0)
+    def update_edges(self, h_pairs: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
+        """
+        Doc TBD
+        """
+        # ToDo Convert node features to edge shape
 
-        nn.init.constant_(self.linear_o.linear.weight, 0.0)
-        nn.init.constant_(self.linear_o.linear.bias, 0.0)
+        # Update edge features
+        h_pairs = h_pairs + self.row_update(z=h_pairs) + self.col_update(z=h_pairs)
+        return h_pairs + self.pair_ffn(x=h_pairs)
 
-    def forward(self, z: torch.sparse_coo_tensor, k: int) -> torch.sparse_coo_tensor:
-        z_shape = z.shape
-        z_value_shape = z._values().shape
+    def forward(self, h_pairs: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
+        """
+        Doc TBD
+        """
+        # ToDo Update node features and convert to edge shape
 
-        z = self.norm_input(z)
-
-        a = sparse_sigmoid(self.gate_a(z)) * self.linear_a(z)  # B x nzz x O
-        a = a._values().reshape(
-            (z_value_shape[0] // k, k, self.channel_dim)
-        )  # B x L x K x O
-        b = sparse_sigmoid(self.gate_b(z)) * self.linear_b(z)  # B x nzz x O
-        b = b._values().reshape(
-            (z_value_shape[0] // k, k, self.channel_dim)
-        )  # B x L x K x O
-
-        # i,j -> i,k j,k
-        if self.axis == 1:
-            k = torch.sparse_coo_tensor(
-                indices=z._indices(),
-                values=torch.einsum("iko,jko->iko", a, b).reshape(
-                    (z_value_shape[0], self.channel_dim)
-                ),
-                size=(z_shape[0], z_shape[1], z_shape[2], self.channel_dim),
-            )
-        else:
-            k = torch.sparse_coo_tensor(
-                indices=z._indices(),
-                values=torch.einsum("kio,kjo->iko", a, b).reshape(
-                    (z_value_shape[0], self.channel_dim)
-                ),
-                size=(z_shape[0], z_shape[1], z_shape[2], self.channel_dim),
-            )
-
-        return sparse_sigmoid(self.gate_o(z)) * self.linear_o(self.norm_o(k))
+        # Update edge features
+        h_pairs = self.update_edges(h_pairs=h_pairs)
+        return h_pairs
