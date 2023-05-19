@@ -47,7 +47,7 @@ class SparseDistStack(nn.Module):
         Doc TBD
         """
         for layer in self.layers:
-            node_features, edge_features = layer(h_pairs=edge_features)
+            edge_features = layer(h_pairs=edge_features)
 
         return edge_features
 
