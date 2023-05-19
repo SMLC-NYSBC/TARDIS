@@ -24,6 +24,7 @@ class SparseDistStack(nn.Module):
         pairs_dim: int,
         num_layers=1,
         ff_factor=4,
+        knn=12
     ):
         super().__init__()
         self.layers = nn.ModuleList()
@@ -31,6 +32,7 @@ class SparseDistStack(nn.Module):
             layer = SparseDistLayer(
                 pairs_dim=pairs_dim,
                 ff_factor=ff_factor,
+                k=knn
             )
             self.layers.append(layer)
 

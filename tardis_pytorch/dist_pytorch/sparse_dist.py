@@ -7,17 +7,12 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
-
-from typing import Optional, Tuple, Union
-
-import numpy as np
 import torch
 import torch.nn as nn
 
 from tardis_pytorch.dist_pytorch.model.sparse_embedding import SparseEdgeEmbedding
 from tardis_pytorch.dist_pytorch.model.sparse_layers import SparseDistStack
 from tardis_pytorch.dist_pytorch.model.sparse_modules import SparseLinear, sparse_sigmoid
-from tardis_pytorch.utils.errors import TardisError
 
 
 class SparseDIST(nn.Module):
@@ -26,6 +21,7 @@ class SparseDIST(nn.Module):
         n_out=1,
         edge_dim=128,
         num_layers=6,
+        knn=12,
         coord_embed_sigma=1.0,
         predict=False,
     ):
@@ -33,15 +29,18 @@ class SparseDIST(nn.Module):
 
         self.n_out = n_out
         self.edge_dim = edge_dim
+        self.knn = knn
         self.num_layers = num_layers
         self.edge_sigma = coord_embed_sigma
         self.predict = predict
 
-        self.coord_embed = SparseEdgeEmbedding(n_out=self.edge_dim, sigma=self.edge_sigma)
+        self.coord_embed = SparseEdgeEmbedding(n_out=self.edge_dim, sigma=self.edge_sigma, k=self.knn)
 
         self.layers = SparseDistStack(
             pairs_dim=self.edge_dim,
             num_layers=self.num_layers,
+            ff_factor=4,
+            knn=self.knn
         )
 
         self.decoder = SparseLinear(in_features=self.edge_dim, out_features=self.n_out)
