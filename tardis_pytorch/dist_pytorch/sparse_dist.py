@@ -104,7 +104,7 @@ class SparseDIST(nn.Module):
         edge = self.layers(edge_features=edge)
 
         # Predict the graph edges
-        logits = self.decoder(edge + edge.transpose(1, 2))  # symmetries z
+        logits = self.decoder(edge)  # symmetries z (edge.transpose(1, 2))
 
         if self.predict:
             logits = sparse_sigmoid(logits)
