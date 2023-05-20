@@ -74,6 +74,7 @@ class SparseDistStack(nn.Module):
         """
         for layer in self.layers:
             edge_features = layer(h_pairs=edge_features)
+            print(f'Shape: {edge_features.shape}, indices: {edge_features._indices().shape}')
 
         return edge_features
 
