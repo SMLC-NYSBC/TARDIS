@@ -246,11 +246,19 @@ class SparsTriangularUpdate(nn.Module):
         x = self.norm_input(x)
 
         # Compute intermediate transformations
+        print('Triang A')
+        print(f'X Shape: {x.shape}, indices: {x._indices().shape}')
         a = sparse_sigmoid(self.gate_a(x)) * self.linear_a(x)
+        print(f'A Shape: {a.shape}, indices: {a._indices().shape}')
         a = a._values().reshape((x_value_shape[0] // self.k, self.k, self.channel_dim))
+        print(f'A Shape: {a.shape}, indices: {a._indices().shape}')
 
+        print('Triang B')
+        print(f'X Shape: {x.shape}, indices: {x._indices().shape}')
         b = sparse_sigmoid(self.gate_b(x)) * self.linear_b(x)
+        print(f'B Shape: {a.shape}, indices: {a._indices().shape}')
         b = b._values().reshape((x_value_shape[0] // self.k, self.k, self.channel_dim))
+        print(f'B Shape: {a.shape}, indices: {a._indices().shape}')
 
         # Apply triangular multiplication update
         if self.axis == 1:
