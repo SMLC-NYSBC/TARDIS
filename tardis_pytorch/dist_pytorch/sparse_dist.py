@@ -104,9 +104,16 @@ class SparseDIST(nn.Module):
         edge = self.layers(edge_features=edge)
 
         # Predict the graph edges
-        logits = self.decoder(edge)  # symmetries z (edge.transpose(1, 2))
+        g_shape = edge.shape
+
+        edge = torch.sparse_coo_tensor(
+            indices=edge._indices(),
+            values=edge._values() + edge.transpose(1, 2)._values(),
+            size=(g_shape[0], g_shape[1], g_shape[2], g_shape[3]),
+        )
+        # logits = self.decoder(edge + edge.transpose(1, 2))  # symmetries z
 
         if self.predict:
-            logits = sparse_sigmoid(logits)
+            edge = sparse_sigmoid(edge)
 
-        return logits
+        return edge
