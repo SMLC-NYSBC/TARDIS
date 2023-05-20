@@ -146,8 +146,17 @@ class SparseDistLayer(nn.Module):
         # ToDo Convert node features to edge shape
 
         # Update edge features
-        h_pairs = h_pairs + self.row_update(x=h_pairs) + self.col_update(x=h_pairs)
-        return h_pairs + self.pair_ffn(x=h_pairs)
+        print(f'Before update Shape: {h_pairs.shape}, indices: {h_pairs._indices().shape}')
+        row = self.row_update(x=h_pairs)
+        print(f'Before update Shape: {row.shape}, indices: {row._indices().shape}')
+        col = self.col_update(x=h_pairs)
+        print(f'Before update Shape: {col.shape}, indices: {col._indices().shape}')
+        h_pairs = h_pairs + row + col
+        print(f'After update Shape: {h_pairs.shape}, indices: {h_pairs._indices().shape}')
+
+        h_pairs = h_pairs + self.pair_ffn(x=h_pairs)
+        print(f'FFN Shape: {h_pairs.shape}, indices: {h_pairs._indices().shape}')
+        return h_pairs
 
     def forward(self, h_pairs: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
         """
