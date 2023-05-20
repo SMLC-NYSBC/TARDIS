@@ -10,12 +10,27 @@
 import torch
 import torch.nn as nn
 
-from tardis_pytorch.dist_pytorch.model.sparse_embedding import SparseEdgeEmbedding
-from tardis_pytorch.dist_pytorch.model.sparse_layers import SparseDistStack
-from tardis_pytorch.dist_pytorch.model.sparse_modules import SparseLinear, sparse_sigmoid
+from tardis_pytorch.dist_pytorch.sparse_model.embedding import SparseEdgeEmbedding
+from tardis_pytorch.dist_pytorch.sparse_model.layers import SparseDistStack
+from tardis_pytorch.dist_pytorch.sparse_model.modules import (
+    SparseLinear,
+    sparse_sigmoid,
+)
 
 
 class SparseDIST(nn.Module):
+    """
+    Sparse Distance Transformer model in a PyTorch Module.
+
+    This class implements a transformer model that can handle sparse data efficiently.
+    It first uses a SparseEdgeEmbedding layer to embed the input coordinate tensor into
+    a higher-dimensional space. The SparseDistStack then applies several transformer layers
+    to this embedded tensor.
+    Lastly, a SparseLinear layer decodes the result into the final output.
+    The forward pass of the model can optionally apply a sigmoid function
+    to the final output if the predict attribute is set to True.
+    """
+
     def __init__(
         self,
         n_out=1,
@@ -25,6 +40,18 @@ class SparseDIST(nn.Module):
         coord_embed_sigma=1.0,
         predict=False,
     ):
+        """
+        Initializes the SparseDIST.
+
+        Args:
+            n_out (int): The number of output features.
+            edge_dim (int): The dimensionality of the edge features.
+            num_layers (int): The number of transformer layers.
+            knn (int): The number of nearest neighbors to consider in each update.
+            coord_embed_sigma (int, list): The standard deviation for the edge embedding.
+            predict (bool): A boolean value to decide whether to apply a sigmoid activation to the final output.
+        """
+
         super(SparseDIST, self).__init__()
 
         self.n_out = n_out
@@ -34,28 +61,49 @@ class SparseDIST(nn.Module):
         self.edge_sigma = coord_embed_sigma
         self.predict = predict
 
-        self.coord_embed = SparseEdgeEmbedding(n_out=self.edge_dim, sigma=self.edge_sigma, k=self.knn)
+        self.coord_embed = SparseEdgeEmbedding(
+            n_out=self.edge_dim, sigma=self.edge_sigma, n_knn=self.knn
+        )
 
         self.layers = SparseDistStack(
             pairs_dim=self.edge_dim,
             num_layers=self.num_layers,
             ff_factor=4,
-            knn=self.knn
+            knn=self.knn,
         )
 
         self.decoder = SparseLinear(in_features=self.edge_dim, out_features=self.n_out)
 
     def embed_input(self, coords: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
-        z = self.coord_embed(input_coord=coords)
-        return z
+        """
+        Embeds the input coordinates using the coord_embed layer.
 
-    def forward(self, coords: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
+        Args:
+            coords (torch.sparse_coo_tensor): A sparse coordinate tensor containing the input coordinates.
+
+        Returns:
+            torch.sparse_coo_tensor: A sparse coordinate tensor containing the embedded coordinates.
+        """
+        x = self.coord_embed(input_coord=coords)
+        return x
+
+    def forward(self, coords: torch.tensor) -> torch.sparse_coo_tensor:
+        """
+        Forward pass for the SparseDIST.
+
+        Args:
+            coords (torch.tensor): A sparse coordinate tensor containing the input data.
+
+        Returns:
+            torch.sparse_coo_tensor: A sparse coordinate tensor representing the output from the model.
+        """
+        # Embed coord [n, 3] coordinates into spares tensor
         edge = self.embed_input(coords=coords)
 
-        """ Encode throughout the transformer layers """
+        # Encode throughout the transformer layers
         edge = self.layers(edge_features=edge)
 
-        """ Predict the graph edges """
+        # Predict the graph edges
         logits = self.decoder(edge + edge.transpose(1, 2))  # symmetries z
 
         if self.predict:
