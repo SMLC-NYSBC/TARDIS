@@ -190,7 +190,7 @@ class DistTrainer(BasicTrainer):
                 edge, graph = edge.to(self.device), graph.to(self.device)
                 self.optimizer.zero_grad()
 
-                if self.node_input:
+                if self.node_input > 0:
                     edge = self.model(coords=edge, node_features=node.to(self.device))
                 else:
                     edge = self.model(coords=edge, node_features=None)
@@ -278,7 +278,7 @@ class DistTrainer(BasicTrainer):
                     graph_cpu.append(graph[0, :].cpu().detach().numpy())
 
                     # Predict graph
-                    if self.node_input:
+                    if self.node_input > 0:
                         edge = self.model(
                             coords=edge, node_features=node.to(self.device)
                         )
