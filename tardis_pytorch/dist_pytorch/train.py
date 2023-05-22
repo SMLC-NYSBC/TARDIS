@@ -17,7 +17,7 @@ from torch import optim
 
 from tardis_pytorch.dist_pytorch.dist import CDIST, DIST
 from tardis_pytorch.dist_pytorch.sparse_dist import SparseDIST
-from tardis_pytorch.dist_pytorch.trainer import CDistTrainer, DistTrainer
+from tardis_pytorch.dist_pytorch.trainer import CDistTrainer, DistTrainer, SparseDistTrainer
 from tardis_pytorch.dist_pytorch.utils.utils import check_model_dict
 from tardis_pytorch.utils.device import get_device
 from tardis_pytorch.utils.logo import TardisLogo
@@ -188,7 +188,7 @@ def train_dist(
     else:
         dataset_type = 4
 
-    if model_structure["dist_type"] in ["instance", "instance-sparse"]:
+    if model_structure["dist_type"] == "instance":
         train = DistTrainer(
             model=model,
             structure=model_structure,
@@ -204,7 +204,23 @@ def train_dist(
             early_stop_rate=early_stop_rate,
             checkpoint_name=model_structure["dist_type"],
         )
-    elif model_structure["dist_type"] == "semantic":
+    elif model_structure["dist_type"] == "instance-sparse":
+        train = SparseDistTrainer(
+            model=model,
+            structure=model_structure,
+            instance_cov=dataset_type,
+            device=device,
+            criterion=loss_fn,
+            optimizer=optimizer,
+            print_setting=print_setting,
+            training_DataLoader=train_dataloader,
+            validation_DataLoader=test_dataloader,
+            epochs=epochs,
+            lr_scheduler=lr_scheduler,
+            early_stop_rate=early_stop_rate,
+            checkpoint_name=model_structure["dist_type"],
+        )
+    else:
         train = CDistTrainer(
             model=model,
             structure=model_structure,
