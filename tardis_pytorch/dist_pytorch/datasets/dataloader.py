@@ -48,6 +48,7 @@ class BasicDataset(Dataset):
         rgb=False,
         benchmark=False,
         train=True,
+        sparse=False,
     ):
         # Coord setting
         self.coord_dir = coord_dir
@@ -58,6 +59,7 @@ class BasicDataset(Dataset):
 
         self.train = train
         self.benchmark = benchmark
+        self.sparse = sparse
 
         # Setup environment
         self.cwd = getcwd()
@@ -606,14 +608,6 @@ class Stanford3DDataset(BasicDataset):
                     self.save_temp(i=i, coord=coord, rgb=rgb_v)
                 else:
                     self.save_temp(i=i, coord=coord)
-                # self.save_temp(
-                #     i=i,
-                #     coords=coords_idx,
-                #     graph=graph_idx,
-                #     out=output_idx,
-                #     df=df_idx,
-                #     cls=cls_idx,
-                # )
 
             # Store initial patch size for each data to speed up computation
             self.patch_size[i, 0] = 1
@@ -640,9 +634,6 @@ class Stanford3DDataset(BasicDataset):
                     output_idx,
                     cls_idx,
                 ) = self.VD.patched_dataset(coord=coord, mesh=4, random=True)
-            # coords_idx, graph_idx, output_idx, df_idx, cls_idx = self.load_temp(
-            #     i, coords=True, graph=True, out=True, df=True, cls=True
-            # )
 
         coords_idx, graph_idx, output_idx, node_idx, cls_idx = self.list_to_tensor(
             coord=coords_idx,
@@ -651,6 +642,9 @@ class Stanford3DDataset(BasicDataset):
             df=node_idx,
             cls=cls_idx,
         )
+
+        if self.sparse:
+            graph_idx = [g.to_sparse() for g in graph_idx]
 
         if self.benchmark:
             # Output file_name, raw_coord, edge_f, node_f, graph, node_idx, node_class

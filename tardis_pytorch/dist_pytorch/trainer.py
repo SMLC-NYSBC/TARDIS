@@ -19,6 +19,232 @@ from tardis_pytorch.utils.metrics import eval_graph_f1, mcov
 from tardis_pytorch.utils.trainer import BasicTrainer
 
 
+class SparseDistTrainer(BasicTrainer):
+    """
+    DIST MODEL TRAINER
+    """
+
+    def __init__(self, **kwargs):
+        super(SparseDistTrainer, self).__init__(**kwargs)
+
+        self.node_input = self.structure["node_input"]
+
+    @staticmethod
+    def _update_desc(stop_count: int, metric: list) -> str:
+        """
+        Utility function to update progress bar description.
+
+        Args:
+            stop_count (int): Early stop count.
+            metric (list): Best f1 and mCov score.
+
+        Returns:
+            str: Updated progress bar status.
+        """
+        desc = (
+            f"Epochs: early_stop: {stop_count}; "
+            f"F1: [{metric[0]:.2f}; {metric[1]:.2f}]; "
+            f"mCov 0.5: [{metric[2]:.2f}; {metric[3]:.2f}]; "
+            f"mCov 0.9: [{metric[4]:.2f}; {metric[5]:.2f}]"
+        )
+        return desc
+
+    def _update_epoch_desc(self):
+        # For each Epoch load be t model from previous run
+        if self.id == 0:
+            self.epoch_desc = "Epochs: early_stop: 0; best F1: NaN"
+        else:
+            self.epoch_desc = self._update_desc(
+                self.early_stopping.counter,
+                [
+                    np.max(self.f1) if len(self.f1) > 0 else 0.0,
+                    self.f1[-1:][0] if len(self.f1) > 0 else 0.0,
+                ],
+            )
+
+    def _save_metric(self) -> bool:
+        """Save training metrics"""
+        if len(self.training_loss) > 0:
+            np.savetxt(
+                join(
+                    getcwd(),
+                    f"{self.checkpoint_name}_checkpoint",
+                    "training_losses.csv",
+                ),
+                self.training_loss,
+                delimiter=",",
+            )
+        if len(self.validation_loss) > 0:
+            np.savetxt(
+                join(
+                    getcwd(),
+                    f"{self.checkpoint_name}_checkpoint",
+                    "validation_losses.csv",
+                ),
+                self.validation_loss,
+                delimiter=",",
+            )
+        if len(self.f1) > 0:
+            np.savetxt(
+                join(getcwd(), f"{self.checkpoint_name}_checkpoint", "eval_metric.csv"),
+                np.column_stack(
+                    [
+                        self.accuracy,
+                        self.precision,
+                        self.recall,
+                        self.threshold,
+                        self.f1,
+                    ]
+                ),
+                delimiter=",",
+            )
+        if len(self.learning_rate) > 0:
+            np.savetxt(
+                join(
+                    getcwd(), f"{self.checkpoint_name}_checkpoint", "learning_rate.csv"
+                ),
+                self.learning_rate,
+                delimiter=",",
+            )
+
+        """ Save current model weights"""
+        # If mean evaluation f1 score is higher than save checkpoint
+        if all(self.f1[-1:][0] >= i for i in self.f1[:-1]):
+            torch.save(
+                {
+                    "model_struct_dict": self.structure,
+                    "model_state_dict": self.model.state_dict(),
+                    "optimizer_state_dict": self.optimizer.state_dict(),
+                },
+                join(
+                    getcwd(),
+                    f"{self.checkpoint_name}_checkpoint",
+                    f"{self.checkpoint_name}_checkpoint_f1.pth",
+                ),
+            )
+
+        torch.save(
+            {
+                "model_struct_dict": self.structure,
+                "model_state_dict": self.model.state_dict(),
+                "optimizer_state_dict": self.optimizer.state_dict(),
+            },
+            join(getcwd(), f"{self.checkpoint_name}_checkpoint", "model_weights.pth"),
+        )
+
+        if self.early_stopping.early_stop:
+            return True
+        return False
+
+    def _train(self):
+        """
+        Run model training.
+        """
+        # Update progress bar
+        self._update_progress_bar(
+            loss_desc="Training: (loss 1.000)", idx=0, task="Start Training..."
+        )
+
+        # Run training for DIST model
+        for idx, (e, n, g, _, _) in enumerate(self.training_DataLoader):
+            """Mid-training eval"""
+            # self._update_progress_bar(
+            #     loss_desc="Training: (loss 1.000)", idx=0, task="Mid-train Eval..."
+            # )
+            if len(self.training_DataLoader) > 100:
+                self._mid_training_eval(idx=idx)
+
+            """Training"""
+            for edge, node, graph in zip(e, n, g):
+                edge, graph = edge.to(self.device), graph.to(self.device)
+                self.optimizer.zero_grad()
+
+                if self.node_input > 0:
+                    edge = self.model(coords=edge, node_features=node.to(self.device))
+                else:
+                    edge = self.model(coords=edge)
+
+                # Back-propagate
+                loss = self.criterion(edge, graph)  # Calc. loss
+                loss.backward()  # One backward pass
+                self.optimizer.step()  # Update the parameters
+
+                # Store training loss metric
+                loss_value = loss.item()
+                self.training_loss.append(loss_value)
+
+                # Store and update learning rate
+                if self.lr_scheduler:
+                    self.lr = self.optimizer.get_lr_scale()
+                self.learning_rate.append(self.lr)
+
+                # Update progress bar
+                self._update_progress_bar(
+                    loss_desc=f"Training: (loss {loss_value:.4f};"
+                    f" LR: {self.lr:.5f})",
+                    idx=idx,
+                    task="Training...",
+                )
+
+    def _validate(self):
+        """
+        Test model against validation dataset.
+        """
+        valid_losses = []
+        accuracy_mean = []
+        precision_mean = []
+        recall_mean = []
+        F1_mean = []
+        threshold_mean = []
+        # mcov0_25, mcov0_5, mcov0_9 = [], [], []
+
+        for idx, (e, n, g, _) in enumerate(self.validation_DataLoader):
+            for edge, node, graph in zip(e, n, g):
+                edge, graph = edge.to(self.device), graph.to(self.device)
+
+                with torch.no_grad():
+                    # Predict graph
+                    if self.node_input > 0:
+                        edge = self.model(
+                            coords=edge, node_features=node.to(self.device)
+                        )
+                    else:
+                        edge = self.model(coords=edge)
+
+                    # Calculate validation loss
+                    loss = self.criterion(edge, graph)
+
+                    # Calculate F1 metric
+                    edge = torch.sigmoid(edge)[0, :]
+                    acc, prec, recall, f1, th = eval_graph_f1(
+                        logits=edge, targets=graph, threshold=0.5
+                    )
+
+                # Avg. precision score
+                valid_losses.append(loss.item())
+                accuracy_mean.append(acc)
+                precision_mean.append(prec)
+                recall_mean.append(recall)
+                F1_mean.append(f1)
+                threshold_mean.append(th)
+
+                valid = (
+                    f"Validation: (loss: {loss.item():.4f}; F1: {f1:.2f}) "
+                )
+            self._update_progress_bar(loss_desc=valid, idx=idx, train=False)
+
+        # Reduce eval. metric with mean
+        self.validation_loss.append(np.mean(valid_losses))
+        self.accuracy.append(np.mean(accuracy_mean))
+        self.precision.append(np.mean(precision_mean))
+        self.recall.append(np.mean(recall_mean))
+        self.threshold.append(np.mean(threshold_mean))
+        self.f1.append(np.mean(F1_mean))
+
+        # Check if average evaluation loss dropped
+        self.early_stopping(f1_score=self.f1[-1:][0])
+
+
 class DistTrainer(BasicTrainer):
     """
     DIST MODEL TRAINER
@@ -193,10 +419,7 @@ class DistTrainer(BasicTrainer):
                 if self.node_input > 0:
                     edge = self.model(coords=edge, node_features=node.to(self.device))
                 else:
-                    if self.checkpoint_name == "instance-sparse":
-                        edge = self.model(coords=edge[0, :])
-                    else:
-                        edge = self.model(coords=edge)
+                    edge = self.model(coords=edge, node_features=None)
 
                 # Back-propagate
                 loss = self.criterion(edge[:, 0, :], graph)  # Calc. loss
@@ -286,10 +509,7 @@ class DistTrainer(BasicTrainer):
                             coords=edge, node_features=node.to(self.device)
                         )
                     else:
-                        if self.checkpoint_name == "instance-sparse":
-                            edge = self.model(coords=edge[0, :])
-                        else:
-                            edge = self.model(coords=edge)
+                        edge = self.model(coords=edge, node_features=None)
 
                     # Calculate validation loss
                     loss = self.criterion(edge[0, :], graph)
