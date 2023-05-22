@@ -188,7 +188,7 @@ def train_dist(
     else:
         dataset_type = 4
 
-    if model_structure["dist_type"] == "instance":
+    if model_structure["dist_type"] in ["instance", "instance-sparse"]:
         train = DistTrainer(
             model=model,
             structure=model_structure,
