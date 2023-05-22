@@ -79,7 +79,7 @@ def train_dist(
         LaplacianEigenmapsLoss,
     ]
     losses_f = {
-        f.__name__: f(smooth=1e-16, reduction="mean", diagonal=True, sigmoid=False)
+        f.__name__: f(smooth=1e-16, reduction="mean", diagonal=True, sigmoid=True)
         for f in loss_functions
     }
 
@@ -111,7 +111,7 @@ def train_dist(
             num_layers=model_structure["num_layers"],
             knn=model_structure["num_knn"],
             coord_embed_sigma=model_structure["coord_embed_sigma"],
-            predict=True,
+            predict=False,
         )
     elif model_structure["dist_type"] == "semantic":
         model = CDIST(

@@ -99,15 +99,15 @@ class SparseDIST(nn.Module):
             torch.sparse_coo_tensor: A sparse coordinate tensor representing the output from the model.
         """
         # Embed coord [n, 3] coordinates into spares tensor
-        edge = self.embed_input(coords=coords)
+        edge = self.embed_input(coords=coords)  # List[Indices, Values, Shape]
 
         # Encode throughout the transformer layers
-        edge = self.layers(edge_features=edge)
+        edge = self.layers(edge_features=edge)  # List[Indices, Values, Shape]
 
         # Predict the graph edges
-        edge = self.decoder(sparse_operation(edge, edge.transpose(1, 2), op="sum"))
+        edge = self.decoder(sparse_operation(edge, sparse_operation(edge, op="transpose"), op="sum"))
 
         if self.predict:
             edge = sparse_sigmoid(edge)
 
-        return edge
+        return edge  # List[Indices, Values, Shape]

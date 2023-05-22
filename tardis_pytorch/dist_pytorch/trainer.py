@@ -19,6 +19,7 @@ from tardis_pytorch.utils.metrics import eval_graph_f1, mcov
 from tardis_pytorch.utils.trainer import BasicTrainer
 from tardis_pytorch.dist_pytorch.sparse_model.modules import sparse_sigmoid
 
+
 class SparseDistTrainer(BasicTrainer):
     """
     DIST MODEL TRAINER
@@ -165,8 +166,10 @@ class SparseDistTrainer(BasicTrainer):
                     edge = self.model(coords=edge)
 
                 # Back-propagate
-
-                loss = self.criterion(edge.to_dense().cpu()[..., 0], graph)  # Calc. loss
+                edge = edge.to_dense().cpu()[..., 0]
+                print(edge.shape)
+                loss = self.criterion(edge, graph)  # Calc. loss
+                print(loss)
                 loss.backward()  # One backward pass
                 self.optimizer.step()  # Update the parameters
 
@@ -228,9 +231,7 @@ class SparseDistTrainer(BasicTrainer):
                 F1_mean.append(f1)
                 threshold_mean.append(th)
 
-                valid = (
-                    f"Validation: (loss: {loss.item():.4f}; F1: {f1:.2f}) "
-                )
+                valid = f"Validation: (loss: {loss.item():.4f}; F1: {f1:.2f}) "
             self._update_progress_bar(loss_desc=valid, idx=idx, train=False)
 
         # Reduce eval. metric with mean
