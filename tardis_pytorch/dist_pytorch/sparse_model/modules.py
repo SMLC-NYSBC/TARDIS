@@ -219,7 +219,7 @@ class SparseLinear(nn.Module):
         Returns:
             torch.sparse_coo_tensor: A sparse coordinate tensor with a linear transformation applied to its values.
         """
-        g_shape = x[2]
+        g_shape = list(x[2])
         g_shape[3] = self.out_features
 
         # return torch.sparse_coo_tensor(
