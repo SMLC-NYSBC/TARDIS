@@ -166,9 +166,9 @@ class SparseDistTrainer(BasicTrainer):
                     edge = self.model(coords=edge)
 
                 # Back-propagate
-
+                edge = sparse_sigmoid(edge).to_dense()[..., 0]
                 loss = self.criterion(
-                    sparse_sigmoid(edge).to_dense()[..., 0], graph.to(self.device)
+                    edge, graph.to(self.device)
                 )  # Calc. loss
                 loss.backward()  # One backward pass
                 self.optimizer.step()  # Update the parameters
@@ -215,7 +215,7 @@ class SparseDistTrainer(BasicTrainer):
                         edge = self.model(coords=edge)
 
                     # Calcu late validation loss
-                    edge = sparse_sigmoid(edge).to_dense().cpu()[..., 0]
+                    edge = sparse_sigmoid(edge).to_dense()[..., 0]
                     loss = self.criterion(edge, graph)
 
                     # Calculate F1 metric
