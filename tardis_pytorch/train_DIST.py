@@ -70,7 +70,7 @@ from tardis_pytorch._version import version
     show_default=True,
 )
 @click.option(
-    "-ed",
+    "-nk",
     "--num_knn",
     default=None,
     type=int,
