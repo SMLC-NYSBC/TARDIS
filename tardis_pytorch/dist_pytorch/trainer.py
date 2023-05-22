@@ -200,7 +200,7 @@ class SparseDistTrainer(BasicTrainer):
 
         for idx, (e, n, g, _, _) in enumerate(self.validation_DataLoader):
             for edge, node, graph in zip(e, n, g):
-                edge, graph = edge[0, :].to(self.device), graph.to(self.device)
+                edge = edge[0, :].to(self.device)
 
                 with torch.no_grad():
                     # Predict graph
@@ -212,7 +212,7 @@ class SparseDistTrainer(BasicTrainer):
                         edge = self.model(coords=edge)
 
                     # Calcu late validation loss
-                    loss = self.criterion(edge.to_dense()[..., 0], graph)
+                    loss = self.criterion(edge.to_dense().cpu()[..., 0], graph)
 
                     # Calculate F1 metric
                     edge = torch.sigmoid(edge)[0, :]
