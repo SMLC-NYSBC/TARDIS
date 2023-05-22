@@ -156,7 +156,7 @@ class SparseDistTrainer(BasicTrainer):
 
             """Training"""
             for edge, node, graph in zip(e, n, g):
-                edge, graph = edge[0, :].to(self.device), graph.to(self.device)
+                edge = edge[0, :].to(self.device)
                 self.optimizer.zero_grad()
 
                 if self.node_input > 0:
@@ -166,7 +166,7 @@ class SparseDistTrainer(BasicTrainer):
 
                 # Back-propagate
 
-                loss = self.criterion(edge.to_dense()[..., 0], graph)  # Calc. loss
+                loss = self.criterion(edge.to_dense().cpu()[..., 0], graph)  # Calc. loss
                 loss.backward()  # One backward pass
                 self.optimizer.step()  # Update the parameters
 
