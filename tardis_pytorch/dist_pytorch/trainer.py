@@ -193,7 +193,10 @@ class DistTrainer(BasicTrainer):
                 if self.node_input > 0:
                     edge = self.model(coords=edge, node_features=node.to(self.device))
                 else:
-                    edge = self.model(coords=edge)
+                    if self.checkpoint_name == "instance-sparse":
+                        edge = self.model(coords=edge[0, :])
+                    else:
+                        edge = self.model(coords=edge)
 
                 # Back-propagate
                 loss = self.criterion(edge[:, 0, :], graph)  # Calc. loss
@@ -283,7 +286,10 @@ class DistTrainer(BasicTrainer):
                             coords=edge, node_features=node.to(self.device)
                         )
                     else:
-                        edge = self.model(coords=edge)
+                        if self.checkpoint_name == "instance-sparse":
+                            edge = self.model(coords=edge[0, :])
+                        else:
+                            edge = self.model(coords=edge)
 
                     # Calculate validation loss
                     loss = self.criterion(edge[0, :], graph)
