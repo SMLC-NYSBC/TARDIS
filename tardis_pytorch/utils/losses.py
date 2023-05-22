@@ -231,8 +231,8 @@ class DiceLoss(AbstractLoss):
         logits, targets = self.initialize_tensors(logits, targets, mask)
 
         # Flatten label and prediction tensors
-        logits = logits.view(-1)
-        targets = targets.view(-1)
+        logits = logits[0, :].view(-1)
+        targets = targets[0, :].view(-1)
 
         # Calculate dice loss
         intersection = (logits * targets).sum()

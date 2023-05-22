@@ -165,7 +165,7 @@ class SparseDistTrainer(BasicTrainer):
                     edge = self.model(coords=edge)
 
                 # Back-propagate
-                loss = self.criterion(edge, graph)  # Calc. loss
+                loss = self.criterion(edge.to_dense()[..., 0], graph)  # Calc. loss
                 loss.backward()  # One backward pass
                 self.optimizer.step()  # Update the parameters
 
@@ -212,7 +212,7 @@ class SparseDistTrainer(BasicTrainer):
                         edge = self.model(coords=edge)
 
                     # Calculate validation loss
-                    loss = self.criterion(edge, graph)
+                    loss = self.criterion(edge.to_dense()[..., 0], graph)
 
                     # Calculate F1 metric
                     edge = torch.sigmoid(edge)[0, :]
