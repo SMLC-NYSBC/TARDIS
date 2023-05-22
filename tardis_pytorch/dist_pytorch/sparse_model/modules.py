@@ -219,14 +219,15 @@ class SparseLinear(nn.Module):
         Returns:
             torch.sparse_coo_tensor: A sparse coordinate tensor with a linear transformation applied to its values.
         """
-        # g_shape = x.shape
+        g_shape = x[2]
+        g_shape[3] = self.out_features
 
         # return torch.sparse_coo_tensor(
         #     indices=x._indices(),
         #     values=self.linear(x._values()),
         #     size=(g_shape[0], g_shape[1], g_shape[2], self.out_features),
         # )
-        return [x[0], self.linear(x[1]), x[2]]
+        return [x[0], self.linear(x[1]), g_shape]
 
 
 class SparsTriangularUpdate(nn.Module):
@@ -296,7 +297,7 @@ class SparsTriangularUpdate(nn.Module):
         # x_shape = x[2]
         x_value_shape = x[1].shape
 
-        x = self.norm_input(x)
+        x = self.norm_input(x)  # Length x Channels
 
         # Compute intermediate transformations
         a = sparse_operation(
