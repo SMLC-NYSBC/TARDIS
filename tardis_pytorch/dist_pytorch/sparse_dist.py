@@ -105,7 +105,8 @@ class SparseDIST(nn.Module):
         edge = self.layers(edge_features=edge)  # List[Indices, Values, Shape]
 
         # Predict the graph edges
-        edge = self.decoder(sparse_operation(edge, sparse_operation(edge, op="transpose"), op="sum"))
+        # edge = self.decoder(sparse_operation(edge, sparse_operation(edge, op="transpose"), op="sum"))
+        edge = self.decoder(edge)
 
         if self.predict:
             edge = sparse_sigmoid(edge)
