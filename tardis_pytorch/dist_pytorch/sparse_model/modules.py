@@ -209,10 +209,13 @@ class SparsTriangularUpdate(nn.Module):
 
         # Define the transformations to be applied
         self.norm_input = SparseNorm(input_dim)
+
         self.linear_a = SparseLinear(input_dim, channel_dim)
         self.gate_a = SparseLinear(input_dim, channel_dim)
+
         self.linear_b = SparseLinear(input_dim, channel_dim)
         self.gate_b = SparseLinear(input_dim, channel_dim)
+
         self.norm_o = SparseNorm(channel_dim)
         self.gate_o = SparseLinear(input_dim, input_dim)
         self.linear_o = SparseLinear(channel_dim, input_dim)
@@ -225,8 +228,10 @@ class SparsTriangularUpdate(nn.Module):
         """
         nn.init.xavier_uniform_(self.linear_a.linear.weight, gain=self.init_scaling)
         nn.init.constant_(self.linear_a.linear.bias, 0.0)
+
         nn.init.xavier_uniform_(self.linear_b.linear.weight, gain=self.init_scaling)
         nn.init.constant_(self.linear_b.linear.bias, 0.0)
+
         nn.init.constant_(self.linear_o.linear.weight, 0.0)
         nn.init.constant_(self.linear_o.linear.bias, 0.0)
 
