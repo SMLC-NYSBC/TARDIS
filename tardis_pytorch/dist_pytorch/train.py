@@ -79,7 +79,7 @@ def train_dist(
         LaplacianEigenmapsLoss,
     ]
     losses_f = {
-        f.__name__: f(smooth=1e-16, reduction="mean", diagonal=True, sigmoid=True)
+        f.__name__: f(smooth=1e-16, reduction="mean", diagonal=True, sigmoid=False)
         for f in loss_functions
     }
 

@@ -215,10 +215,10 @@ class SparseDistTrainer(BasicTrainer):
                         edge = self.model(coords=edge)
 
                     # Calcu late validation loss
-                    loss = self.criterion(edge.to_dense().cpu()[..., 0], graph)
+                    edge = sparse_sigmoid(edge).to_dense().cpu()[..., 0]
+                    loss = self.criterion(edge, graph)
 
                     # Calculate F1 metric
-                    edge = sparse_sigmoid(edge).to_dense().cpu()[..., 0]
                     acc, prec, recall, f1, th = eval_graph_f1(
                         logits=edge, targets=graph, threshold=0.5
                     )
