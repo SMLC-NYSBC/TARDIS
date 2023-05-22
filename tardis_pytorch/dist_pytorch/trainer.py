@@ -168,7 +168,7 @@ class SparseDistTrainer(BasicTrainer):
                 # Back-propagate
 
                 loss = self.criterion(
-                    sparse_sigmoid(edge).to_dense().cpu()[..., 0], graph
+                    sparse_sigmoid(edge).to_dense()[..., 0], graph.to(self.device)
                 )  # Calc. loss
                 loss.backward()  # One backward pass
                 self.optimizer.step()  # Update the parameters
