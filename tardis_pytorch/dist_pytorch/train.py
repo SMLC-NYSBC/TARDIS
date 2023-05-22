@@ -16,6 +16,7 @@ import torch
 from torch import optim
 
 from tardis_pytorch.dist_pytorch.dist import CDIST, DIST
+from tardis_pytorch.dist_pytorch.sparse_dist import SparseDIST
 from tardis_pytorch.dist_pytorch.trainer import CDistTrainer, DistTrainer
 from tardis_pytorch.dist_pytorch.utils.utils import check_model_dict
 from tardis_pytorch.utils.device import get_device
@@ -99,6 +100,15 @@ def train_dist(
             structure=model_structure["structure"],
             predict=False,
         )
+    elif model_structure["dist_type"] == "instance-sparse":
+        model = SparseDIST(
+            n_out=model_structure["n_out"],
+            edge_dim=model_structure["edge_dim"],
+            num_layers=model_structure["num_layers"],
+            knn=model_structure["num_knn"],
+            coord_embed_sigma=model_structure["coord_embed_sigma"],
+            predict=False,
+        )
     elif model_structure["dist_type"] == "semantic":
         model = CDIST(
             n_out=model_structure["n_out"],
@@ -116,12 +126,12 @@ def train_dist(
         )
     else:
         tardis_logo = TardisLogo()
-        tardis_logo(text_1=f"ValueError: Model type: {type} is not supported!")
+        tardis_logo(text_1=f"ValueError: Model type: DIST-{model_structure['dist_type']} is not supported!")
         sys.exit()
 
     """Build TARDIS progress bar output"""
     if model_structure["node_dim"] == 0:
-        node_sigma = ""
+        node_sigma = " "
     elif model_structure["rgb_embed_sigma"] == 0:
         node_sigma = ", [Linear] node_sigma"
     else:
