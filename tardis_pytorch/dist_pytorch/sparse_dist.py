@@ -15,6 +15,7 @@ from tardis_pytorch.dist_pytorch.sparse_model.layers import SparseDistStack
 from tardis_pytorch.dist_pytorch.sparse_model.modules import (
     SparseLinear,
     sparse_sigmoid,
+    sparse_operation,
 )
 
 
@@ -104,14 +105,7 @@ class SparseDIST(nn.Module):
         edge = self.layers(edge_features=edge)
 
         # Predict the graph edges
-        g_shape = edge.shape
-
-        edge = torch.sparse_coo_tensor(
-            indices=edge._indices(),
-            values=edge._values() + edge.transpose(1, 2)._values(),
-            size=(g_shape[0], g_shape[1], g_shape[2], g_shape[3]),
-        )
-        # logits = self.decoder(edge + edge.transpose(1, 2))  # symmetries z
+        edge = self.decoder(sparse_operation(edge, edge.transpose(1, 2), op="sum"))
 
         if self.predict:
             edge = sparse_sigmoid(edge)

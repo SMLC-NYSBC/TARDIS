@@ -14,6 +14,7 @@ from torch import nn
 from tardis_pytorch.dist_pytorch.sparse_model.modules import (
     SparsTriangularUpdate,
     SparseGeluFeedForward,
+    sparse_operation,
 )
 
 
@@ -133,35 +134,6 @@ class SparseDistLayer(nn.Module):
         """
         pass
 
-    @staticmethod
-    def sparse_summation(x, y, z=None) -> torch.sparse_coo_tensor:
-
-        # @staticmethod
-        # def list_to_tensor(**kwargs) -> List[List[np.ndarray]]:
-        #     """
-        #     Static class function to transform a list of numpy arrays to a list of
-        #     tensor arrays.
-        #
-        #     Args:
-        #         kwargs (np.ndarray): Dictionary of all files to transform into a tensor.
-        #
-        #     Returns:
-        #         List (list[torch.Tensor]): List of kwargs arrays as a tensor array.
-        #     """
-        g_shape = x.shape
-        if z is not None:
-            return torch.sparse_coo_tensor(
-                indices=x._indices(),
-                values=x._values() + y._values() + z._values(),
-                size=(g_shape[0], g_shape[1], g_shape[2], g_shape[3]),
-            )
-
-        return torch.sparse_coo_tensor(
-            indices=x._indices(),
-            values=x._values() + y._values(),
-            size=(g_shape[0], g_shape[1], g_shape[2], g_shape[3]),
-        )
-
     def update_edges(self, h_pairs: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
         """
         Updates edge features by applying row and column updates, then applying a feed-forward network.
@@ -175,11 +147,11 @@ class SparseDistLayer(nn.Module):
         # ToDo Convert node features to edge shape
 
         # Update edge features
-        # h_pairs = self.sparse_summation(h_pairs, self.row_update(x=h_pairs), self.col_update(x=h_pairs))
-        h_pairs = h_pairs + self.row_update(x=h_pairs) + self.col_update(x=h_pairs)
+        h_pairs = sparse_operation(
+            h_pairs, self.row_update(x=h_pairs), self.col_update(x=h_pairs), op="sum"
+        )
 
-        # return self.sparse_summation(h_pairs, self.pair_ffn(x=h_pairs))
-        return h_pairs + self.pair_ffn(x=h_pairs)
+        return sparse_operation(h_pairs, self.pair_ffn(x=h_pairs), op="sum")
 
     def forward(self, h_pairs: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
         """

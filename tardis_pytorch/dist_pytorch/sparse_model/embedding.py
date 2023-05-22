@@ -45,7 +45,7 @@ class SparseEdgeEmbedding(nn.Module):
             input_coord (torch.sparse_coo_tensor): A sparse coordinate tensor containing the input coordinates.
 
         Returns:
-            torch.sparse_coo_tensor: Asparse coordinate tensor representing the adjacency matrix.
+            torch.sparse_coo_tensor: A sparse coordinate tensor representing the adjacency matrix.
         """
         # Calculate pairwise distances between input coordinates
         g_len = input_coord.shape[0]

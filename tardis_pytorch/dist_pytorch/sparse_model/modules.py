@@ -10,26 +10,52 @@
 
 import torch
 import torch.nn as nn
+from math import sqrt
 
 
-def sparse_gelu(x: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
+def sparse_operation(x, y, z=None, op="sum") -> torch.sparse_coo_tensor:
     """
-    Applies the Gaussian Error Linear Unit (GELU) activation function to a sparse tensor.
-
-    This function applies the GELU activation function element-wise to the values of
-    a sparse tensor while preserving its sparsity.
+    Perform sparse operations on tensors.
 
     Args:
-        x (torch.sparse_coo_tensor): A sparse coordinate tensor to which the GELU function will be applied.
+        x (torch.sparse_coo_tensor): First input tensor.
+        y (torch.sparse_coo_tensor): Second input tensor.
+        z (torch.sparse_coo_tensor, optional): Third input tensor. Defaults to None.
+        op (str, optional): Operation to perform. Can be 'sum', 'subtract', 'divide', or 'multiply'. Defaults to 'sum'.
 
     Returns:
-        torch.sparse_coo_tensor: A new sparse coordinate tensor with the GELU function applied to its values.
+        torch.sparse_coo_tensor: Resulting sparse tensor.
     """
+    assert op in ["sum", "subtract", "divide", "multiply"]
+
     g_shape = x.shape
 
+    if z is not None:
+        assert op in ["sum", "subtract"]
+        if op == "sum":
+            # Perform element-wise addition of values from x, y, and z tensors
+            result_values = x._values() + y._values() + z._values()
+        else:
+            # Perform element-wise subtraction of values from x, y, and z tensors
+            result_values = x._values() - y._values() - z._values()
+    else:
+        if op == "sum":
+            # Perform element-wise addition of values from x and y tensors
+            result_values = x._values() + y._values()
+        elif op == "subtract":
+            # Perform element-wise subtraction of values from x and y tensors
+            result_values = x._values() - y._values()
+        elif op == "divide":
+            # Perform element-wise division of values from x and y tensors
+            result_values = x._values() / y._values()
+        else:
+            # Perform element-wise multiplication of values from x and y tensors
+            result_values = x._values() * y._values()
+
+    # Create a sparse tensor with the computed values and the same indices and size as x tensor
     return torch.sparse_coo_tensor(
         indices=x._indices(),
-        values=x._values() * 0.5 * (1.0 + torch.erf(x._values() / 1.4142135623730951)),
+        values=result_values,
         size=(g_shape[0], g_shape[1], g_shape[2], g_shape[3]),
     )
 
@@ -52,6 +78,28 @@ def sparse_sigmoid(x: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
     return torch.sparse_coo_tensor(
         indices=x._indices(),
         values=torch.sigmoid(x._values()),
+        size=(g_shape[0], g_shape[1], g_shape[2], g_shape[3]),
+    )
+
+
+def sparse_gelu(x: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
+    """
+    Applies the Gaussian Error Linear Unit (GELU) activation function to a sparse tensor.
+
+    This function applies the GELU activation function element-wise to the values of
+    a sparse tensor while preserving its sparsity.
+
+    Args:
+        x (torch.sparse_coo_tensor): A sparse coordinate tensor to which the GELU function will be applied.
+
+    Returns:
+        torch.sparse_coo_tensor: A new sparse coordinate tensor with the GELU function applied to its values.
+    """
+    g_shape = x.shape
+
+    return torch.sparse_coo_tensor(
+        indices=x._indices(),
+        values=x._values() * 0.5 * (1.0 + torch.erf(x._values() / sqrt(2))),
         size=(g_shape[0], g_shape[1], g_shape[2], g_shape[3]),
     )
 
@@ -205,7 +253,7 @@ class SparsTriangularUpdate(nn.Module):
         self.channel_dim = channel_dim
         self.axis = axis
         self.k = k
-        self.init_scaling = 1 / 1.4142135623730951
+        self.init_scaling = 1 / sqrt(2)
 
         # Define the transformations to be applied
         self.norm_input = SparseNorm(input_dim)
@@ -251,10 +299,14 @@ class SparsTriangularUpdate(nn.Module):
         x = self.norm_input(x)
 
         # Compute intermediate transformations
-        a = sparse_sigmoid(self.gate_a(x)) * self.linear_a(x)
+        a = sparse_operation(
+            sparse_sigmoid(self.gate_a(x)), self.linear_a(x), op="multiply"
+        )
         a = a._values().reshape((x_value_shape[0] // self.k, self.k, self.channel_dim))
 
-        b = sparse_sigmoid(self.gate_b(x)) * self.linear_b(x)
+        b = sparse_operation(
+            sparse_sigmoid(self.gate_b(x)), self.linear_b(x), op="multiply"
+        )
         b = b._values().reshape((x_value_shape[0] // self.k, self.k, self.channel_dim))
 
         # Apply triangular multiplication update
@@ -275,4 +327,6 @@ class SparsTriangularUpdate(nn.Module):
                 size=(x_shape[0], x_shape[1], x_shape[2], self.channel_dim),
             )
 
-        return sparse_sigmoid(self.gate_o(x)) * self.linear_o(self.norm_o(k))
+        return sparse_operation(
+            sparse_sigmoid(self.gate_o(x)), self.linear_o(self.norm_o(k)), op="multiply"
+        )
