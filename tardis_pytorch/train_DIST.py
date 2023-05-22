@@ -153,7 +153,7 @@ from tardis_pytorch._version import version
     "-lo",
     "--loss",
     default="BCELoss",
-    type=click.Choice(["WBCELoss", "BCELoss", "DiceLoss", "SigmoidFocalLoss"]),
+    type=click.Choice(["WBCELoss", "BCELoss", "DiceLoss", "BCEDiceLoss"]),
     help="Type of loss function use for training.",
     show_default=True,
 )
