@@ -156,7 +156,7 @@ class SparseDistTrainer(BasicTrainer):
 
             """Training"""
             for edge, node, graph in zip(e, n, g):
-                edge, graph = edge.to(self.device), graph.to(self.device)
+                edge, graph = edge[0, :].to(self.device), graph.to(self.device)
                 self.optimizer.zero_grad()
 
                 if self.node_input > 0:
@@ -200,7 +200,7 @@ class SparseDistTrainer(BasicTrainer):
 
         for idx, (e, n, g, _) in enumerate(self.validation_DataLoader):
             for edge, node, graph in zip(e, n, g):
-                edge, graph = edge.to(self.device), graph.to(self.device)
+                edge, graph = edge[0, :].to(self.device), graph.to(self.device)
 
                 with torch.no_grad():
                     # Predict graph
