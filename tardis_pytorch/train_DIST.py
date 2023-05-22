@@ -70,6 +70,14 @@ from tardis_pytorch._version import version
     show_default=True,
 )
 @click.option(
+    "-ed",
+    "--num_knn",
+    default=None,
+    type=int,
+    help="Number of KNN used for building sparse cdist matrix.",
+    show_default=True,
+)
+@click.option(
     "-ly",
     "--layers",
     default=6,
@@ -121,7 +129,7 @@ from tardis_pytorch._version import version
     "-ds",
     "--dist_structure",
     default="instance",
-    type=click.Choice(["instance", "semantic"]),
+    type=click.Choice(["instance", "instance-sparse", "semantic"]),
     help="Type of DIST model prediction.",
     show_default=True,
 )
@@ -207,6 +215,7 @@ def main(
     n_out: int,
     node_dim: int,
     edge_dim: int,
+    num_knn: int,
     layers: int,
     heads: int,
     dropout: float,
@@ -323,7 +332,7 @@ def main(
         if len(edge_sigma) == 1:
             edge_sigma = edge_sigma[0]
 
-    if dist_structure == "instance":
+    if dist_structure in ["instance", "instance-sparse"]:
         num_cls = None
     elif dist_structure == "semantic":
         num_cls = 200
@@ -348,6 +357,7 @@ def main(
             "node_input": node_input,
             "node_dim": node_dim,
             "edge_dim": edge_dim,
+            "num_knn": num_knn,
             "num_cls": num_cls,
             "num_layers": layers,
             "num_heads": heads,

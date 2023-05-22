@@ -374,11 +374,15 @@ def check_model_dict(model_dict: dict) -> dict:
             new_dict["dropout_rate"] = value
         if key.endswith("structure"):
             new_dict["structure"] = value
-
+        if key.endswith("knn"):
+            new_dict["num_knn"] = value
     if "num_cls" not in new_dict:
         new_dict["num_cls"] = None
 
     if "rgb_embed_sigma" not in new_dict:
         new_dict["rgb_embed_sigma"] = 1.0
+
+    if "num_knn" not in new_dict:
+        new_dict["num_knn"] = None
 
     return new_dict
