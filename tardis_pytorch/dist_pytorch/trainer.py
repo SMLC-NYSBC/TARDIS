@@ -165,6 +165,7 @@ class SparseDistTrainer(BasicTrainer):
                     edge = self.model(coords=edge)
 
                 # Back-propagate
+
                 loss = self.criterion(edge.to_dense()[..., 0], graph)  # Calc. loss
                 loss.backward()  # One backward pass
                 self.optimizer.step()  # Update the parameters
@@ -196,9 +197,8 @@ class SparseDistTrainer(BasicTrainer):
         recall_mean = []
         F1_mean = []
         threshold_mean = []
-        # mcov0_25, mcov0_5, mcov0_9 = [], [], []
 
-        for idx, (e, n, g, _) in enumerate(self.validation_DataLoader):
+        for idx, (e, n, g, _, _) in enumerate(self.validation_DataLoader):
             for edge, node, graph in zip(e, n, g):
                 edge, graph = edge[0, :].to(self.device), graph.to(self.device)
 
@@ -211,7 +211,7 @@ class SparseDistTrainer(BasicTrainer):
                     else:
                         edge = self.model(coords=edge)
 
-                    # Calculate validation loss
+                    # Calcu late validation loss
                     loss = self.criterion(edge.to_dense()[..., 0], graph)
 
                     # Calculate F1 metric
