@@ -111,4 +111,5 @@ class SparseDIST(nn.Module):
         if self.predict:
             edge = sparse_sigmoid(edge)
 
-        return edge  # List[Indices, Values, Shape]
+        return torch.sparse_coo_tensor(edge[0], edge[1], edge[2]).to_dense()
+        # return edge  # List[Indices, Values, Shape]
