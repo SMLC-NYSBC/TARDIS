@@ -17,7 +17,6 @@ from torch import nn
 from tardis_pytorch.dist_pytorch.utils.segment_point_cloud import PropGreedyGraphCut
 from tardis_pytorch.utils.metrics import eval_graph_f1, mcov
 from tardis_pytorch.utils.trainer import BasicTrainer
-from tardis_pytorch.dist_pytorch.sparse_model.modules import sparse_sigmoid
 
 
 class SparseDistTrainer(BasicTrainer):
@@ -44,9 +43,7 @@ class SparseDistTrainer(BasicTrainer):
         """
         desc = (
             f"Epochs: early_stop: {stop_count}; "
-            f"F1: [{metric[0]:.2f}; {metric[1]:.2f}]; "
-            f"mCov 0.5: [{metric[2]:.2f}; {metric[3]:.2f}]; "
-            f"mCov 0.9: [{metric[4]:.2f}; {metric[5]:.2f}]"
+            f"F1: [{metric[0]:.2f}; {metric[1]:.2f}]"
         )
         return desc
 
