@@ -17,7 +17,11 @@ from torch import optim
 
 from tardis_pytorch.dist_pytorch.dist import CDIST, DIST
 from tardis_pytorch.dist_pytorch.sparse_dist import SparseDIST
-from tardis_pytorch.dist_pytorch.trainer import CDistTrainer, DistTrainer, SparseDistTrainer
+from tardis_pytorch.dist_pytorch.trainer import (
+    CDistTrainer,
+    DistTrainer,
+    SparseDistTrainer,
+)
 from tardis_pytorch.dist_pytorch.utils.utils import check_model_dict
 from tardis_pytorch.utils.device import get_device
 from tardis_pytorch.utils.logo import TardisLogo
@@ -126,7 +130,9 @@ def train_dist(
         )
     else:
         tardis_logo = TardisLogo()
-        tardis_logo(text_1=f"ValueError: Model type: DIST-{model_structure['dist_type']} is not supported!")
+        tardis_logo(
+            text_1=f"ValueError: Model type: DIST-{model_structure['dist_type']} is not supported!"
+        )
         sys.exit()
 
     """Build TARDIS progress bar output"""

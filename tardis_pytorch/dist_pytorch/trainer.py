@@ -17,6 +17,7 @@ from torch import nn
 from tardis_pytorch.dist_pytorch.utils.segment_point_cloud import PropGreedyGraphCut
 from tardis_pytorch.utils.metrics import eval_graph_f1, mcov
 from tardis_pytorch.utils.trainer import BasicTrainer
+from tardis_pytorch.dist_pytorch.sparse_model.modules import sparse_sigmoid
 
 
 class SparseDistTrainer(BasicTrainer):
@@ -166,7 +167,9 @@ class SparseDistTrainer(BasicTrainer):
 
                 # Back-propagate
 
-                loss = self.criterion(edge.to_dense().cpu()[..., 0], graph)  # Calc. loss
+                loss = self.criterion(
+                    sparse_sigmoid(edge).to_dense().cpu()[..., 0], graph
+                )  # Calc. loss
                 loss.backward()  # One backward pass
                 self.optimizer.step()  # Update the parameters
 
@@ -215,7 +218,7 @@ class SparseDistTrainer(BasicTrainer):
                     loss = self.criterion(edge.to_dense().cpu()[..., 0], graph)
 
                     # Calculate F1 metric
-                    edge = torch.sigmoid(edge)[0, :]
+                    edge = sparse_sigmoid(edge).to_dense().cpu()[..., 0]
                     acc, prec, recall, f1, th = eval_graph_f1(
                         logits=edge, targets=graph, threshold=0.5
                     )
@@ -228,9 +231,7 @@ class SparseDistTrainer(BasicTrainer):
                 F1_mean.append(f1)
                 threshold_mean.append(th)
 
-                valid = (
-                    f"Validation: (loss: {loss.item():.4f}; F1: {f1:.2f}) "
-                )
+                valid = f"Validation: (loss: {loss.item():.4f}; F1: {f1:.2f}) "
             self._update_progress_bar(loss_desc=valid, idx=idx, train=False)
 
         # Reduce eval. metric with mean
