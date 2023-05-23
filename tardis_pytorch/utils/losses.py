@@ -167,8 +167,8 @@ class BCEDiceLoss(AbstractLoss):
         """
         Forward loos function
         """
-        bce_loss = self.bce(logits, targets)
-        dice_loss = self.dice(logits, targets)
+        bce_loss = self.bce(logits, targets, mask)
+        dice_loss = self.dice(logits, targets, mask)
 
         if dice_loss is None:
             return bce_loss + 1
@@ -534,8 +534,8 @@ class WBCELoss(AbstractLoss):
         positive_ratio = positive_samples / total_samples
 
         # Calculate class weights
-        weight_positive = 1 / (1 - positive_ratio)
-        weight_negative = 1 / positive_ratio
+        weight_positive = 1 / positive_ratio
+        weight_negative = 1 / (1 - positive_ratio)
 
         # Compute the binary cross entropy (BCE) loss
         bce_loss = -(
