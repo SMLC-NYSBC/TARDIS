@@ -84,9 +84,4 @@ class SparseEdgeEmbedding(nn.Module):
         # Prepare values for constructing the adjacency matrix
         values = k_dist_range.view(-1, self.n_out)
 
-        # Construct the adjacency matrix as a sparse coordinate tensor
-        # adj_matrix = torch.sparse_coo_tensor(
-        #     indices, values, (1, g_len, g_len, self.n_out)
-        # )
-
         return [indices, values, (1, g_len, g_len, self.n_out)]

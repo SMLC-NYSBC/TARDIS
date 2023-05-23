@@ -10,7 +10,7 @@
 
 import torch
 import torch.nn as nn
-from math import sqrt
+from math import sqrt, pi
 
 
 def sparse_operation(x, y=None, z=None, op="sum") -> torch.sparse_coo_tensor:
@@ -69,13 +69,7 @@ def sparse_sigmoid(x: list) -> list:
     Returns:
         torch.sparse_coo_tensor: A new sparse coordinate tensor with the sigmoid function applied to its values.
     """
-    # g_shape = x.shape
-    #
-    # return torch.sparse_coo_tensor(
-    #     indices=x._indices(),
-    #     values=torch.sigmoid(x._values()),
-    #     size=(g_shape[0], g_shape[1], g_shape[2], g_shape[3]),
-    # )
+
     return [x[0], torch.sigmoid(x[1]), x[2]]
 
 
@@ -92,13 +86,7 @@ def sparse_gelu(x: list) -> list:
     Returns:
         torch.sparse_coo_tensor: A new sparse coordinate tensor with the GELU function applied to its values.
     """
-    # g_shape = x.shape
-    #
-    # return torch.sparse_coo_tensor(
-    #     indices=x._indices(),
-    #     values=x._values() * 0.5 * (1.0 + torch.erf(x._values() / sqrt(2))),
-    #     size=(g_shape[0], g_shape[1], g_shape[2], g_shape[3]),
-    # )
+
     return [x[0], x[1] * 0.5 * (1.0 + torch.erf(x[1] / sqrt(2))), x[2]]
 
 
@@ -175,13 +163,7 @@ class SparseNorm(nn.Module):
         Returns:
             torch.sparse_coo_tensor: A sparse coordinate tensor with layer normalization applied to its values.
         """
-        # g_shape = x.shape
 
-        # return torch.sparse_coo_tensor(
-        #     indices=x._indices(),
-        #     values=self.layer_norm(x._values()),
-        #     size=(g_shape[0], g_shape[1], g_shape[2], g_shape[3]),
-        # )
         return [x[0], self.layer_norm(x[1]), x[2]]
 
 
@@ -222,11 +204,6 @@ class SparseLinear(nn.Module):
         g_shape = list(x[2])
         g_shape[3] = self.out_features
 
-        # return torch.sparse_coo_tensor(
-        #     indices=x._indices(),
-        #     values=self.linear(x._values()),
-        #     size=(g_shape[0], g_shape[1], g_shape[2], self.out_features),
-        # )
         return [x[0], self.linear(x[1]), g_shape]
 
 
@@ -254,7 +231,8 @@ class SparsTriangularUpdate(nn.Module):
         self.channel_dim = channel_dim
         self.axis = axis
         self.k = k
-        self.init_scaling = 1 / sqrt(2)
+        # self.init_scaling = 1 / sqrt(2)
+        self.init_scaling = sqrt(2 / (1 + pi / 2))
 
         # Define the transformations to be applied
         self.norm_input = SparseNorm(input_dim)

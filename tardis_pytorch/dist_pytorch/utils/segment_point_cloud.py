@@ -321,6 +321,9 @@ class PropGreedyGraphCut:
             graph = [graph]
         elif isinstance(graph, torch.Tensor):
             graph = [graph.cpu().detach().numpy()]
+        elif isinstance(graph, torch.Tensor):
+            if isinstance(graph[0], np.ndarray):
+                graph = [g.cpu().detach().numpy() for g in graph]
 
         if isinstance(idx, np.ndarray):
             idx = [idx.astype(int)]
