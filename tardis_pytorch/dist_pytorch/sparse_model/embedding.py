@@ -61,7 +61,9 @@ class SparseEdgeEmbedding(nn.Module):
 
         # Apply Gaussian kernel function to the top-k distances
         for id_, i in enumerate(self._range):
-            k_dist_range[:, :, id_] = torch.exp(-(k_dist**2) / (i**2 * 2))
+            dist_range = torch.exp(-(k_dist**2) / (i**2 * 2))
+
+            k_dist_range[:, :, id_] = torch.where(dist_range > 0.1, dist_range, 0)
 
         # Replace any NaN values with zero
         isnan = torch.isnan(k_dist_range)

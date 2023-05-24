@@ -281,28 +281,24 @@ class SparsTriangularUpdate(nn.Module):
         a = sparse_operation(
             sparse_sigmoid(self.gate_a(x)), self.linear_a(x), op="multiply"
         )
-        a[1] = a[1].reshape((x_value_shape[0] // self.k, self.k, self.channel_dim))
+        a[1] = a[1].reshape((1, x_value_shape[0] // self.k, self.k, self.channel_dim))
 
         b = sparse_operation(
             sparse_sigmoid(self.gate_b(x)), self.linear_b(x), op="multiply"
         )
-        b[1] = b[1].reshape((x_value_shape[0] // self.k, self.k, self.channel_dim))
+        b[1] = b[1].reshape((1, x_value_shape[0] // self.k, self.k, self.channel_dim))
 
         # Apply triangular multiplication update
         if self.axis == 1:
             k = [
                 x[0],
-                torch.einsum("iko,jko->iko", a[1], b[1]).reshape(
-                    (x_value_shape[0], self.channel_dim)
-                ),
+                torch.einsum("biko,bjko->bijo", a[1], b[1])[0, x[0][1], x[0][2]],
                 a[2],
             ]
         else:
             k = [
                 x[0],
-                torch.einsum("kio,kjo->iko", a[1], b[1]).reshape(
-                    (x_value_shape[0], self.channel_dim)
-                ),
+                torch.einsum("bkio,bkjo->biko", a[1], b[1])[0, x[0][1], x[0][2]],
                 b[2],
             ]
 
