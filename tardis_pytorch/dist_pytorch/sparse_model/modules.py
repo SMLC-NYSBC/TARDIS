@@ -11,9 +11,10 @@
 import torch
 import torch.nn as nn
 from math import sqrt, pi
+import time
 
 
-def sparse_operation(x, y=None, z=None, op="sum") -> torch.sparse_coo_tensor:
+def sparse_operation(x, y=None, z=None, knn=None, op="sum") -> torch.sparse_coo_tensor:
     """
     Perform sparse operations on tensors.
 
@@ -21,39 +22,53 @@ def sparse_operation(x, y=None, z=None, op="sum") -> torch.sparse_coo_tensor:
         x (torch.sparse_coo_tensor): First input tensor.
         y (torch.sparse_coo_tensor): Second input tensor.
         z (torch.sparse_coo_tensor, optional): Third input tensor. Defaults to None.
-        op (str, optional): Operation to perform. Can be 'sum', 'subtract', 'divide', or 'multiply'. Defaults to 'sum'.
+        op (str, optional): Operation to perform. Can be 'sum', 'subtract', 'divide', or 'multiply'.
 
     Returns:
         torch.sparse_coo_tensor: Resulting sparse tensor.
     """
-    assert op in ["sum", "subtract", "divide", "multiply", "transpose"]
+    assert op in [
+        "sum",
+        "subtract",
+        "divide",
+        "multiply",
+        "rowcol_transpose",
+    ], f"Operation op={op} not Supported"
 
     if z is not None:
         assert op in ["sum", "subtract"]
         if op == "sum":
             # Perform element-wise addition of values from x, y, and z tensors
-            result_values = x[1] + y[1] + z[1]
+            x[1] = x[1] + y[1] + z[1]
         else:
             # Perform element-wise subtraction of values from x, y, and z tensors
             result_values = x[1] - y[1] - z[1]
     else:
         if op == "sum":
             # Perform element-wise addition of values from x and y tensors
-            result_values = x[1] + y[1]
+            x[1] = x[1] + y[1]
         elif op == "subtract":
             # Perform element-wise subtraction of values from x and y tensors
-            result_values = x[1] - y[1]
+            x[1] = x[1] - y[1]
         elif op == "divide":
             # Perform element-wise division of values from x and y tensors
-            result_values = x[1] / y[1]
+            x[1] = x[1] / y[1]
         elif op == "multiply":
             # Perform element-wise multiplication of values from x and y tensors
-            result_values = x[1] * y[1]
-        else:
-            result_values = x[1].transpose(1, 2)
+            x[1] = x[1] * y[1]
+        elif op == "rowcol_transpose":
+            if knn is not None:
+                df_shape = x[1].shape
+                x[1] = x[1].reshape((1, df_shape[0] // knn, knn, df_shape[1]))
+
+            _shape = x[1].shape  # [1, Row, Col, Channel]
+            x[1] = x[1].reshape(*_shape)
+
+            if knn is not None:
+                x[1] = x[1].reshape(df_shape)
 
     # Create a sparse tensor with the computed values and the same indices and size as x tensor
-    return [x[0], result_values, x[2]]
+    return x
 
 
 def sparse_sigmoid(x: list) -> list:
@@ -272,7 +287,7 @@ class SparsTriangularUpdate(nn.Module):
         Returns:
             torch.sparse_coo_tensor: A sparse coordinate tensor representing the updated tensor.
         """
-        # x_shape = x[2]
+        start = time.time()
         x_value_shape = x[1].shape
 
         x = self.norm_input(x)  # Length x Channels
@@ -292,15 +307,22 @@ class SparsTriangularUpdate(nn.Module):
         if self.axis == 1:
             k = [
                 x[0],
-                torch.einsum("biko,bjko->bijo", a[1], b[1])[0, x[0][1], x[0][2]],
+                torch.einsum("biko,bjko->bijo", a[1], b[1])[0, x[0][1], x[0][2], :],
                 a[2],
             ]
         else:
+            # Reorder matrix to col/row
+            a = sparse_operation(a, op="rowcol_transpose")
+            b = sparse_operation(b, op="rowcol_transpose")
+
             k = [
                 x[0],
-                torch.einsum("bkio,bkjo->biko", a[1], b[1])[0, x[0][1], x[0][2]],
+                torch.einsum("biko,bjko->bijo", a[1], b[1])[0, x[0][1], x[0][2], :],
                 b[2],
             ]
+
+            # Reorder matrix to row/col
+            k = sparse_operation(k, knn=self.k, op="rowcol_transpose")
 
         return sparse_operation(
             sparse_sigmoid(self.gate_o(x)), self.linear_o(self.norm_o(k)), op="multiply"

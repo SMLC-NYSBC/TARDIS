@@ -105,11 +105,15 @@ class SparseDIST(nn.Module):
         edge = self.layers(edge_features=edge)  # List[Indices, Values, Shape]
 
         # Predict the graph edges
-        # edge = self.decoder(sparse_operation(edge, sparse_operation(edge, op="transpose"), op="sum"))
-        edge = self.decoder(edge)
+        edge = self.decoder(
+            sparse_operation(
+                edge,
+                sparse_operation(edge, knn=self.knn, op="rowcol_transpose"),
+                op="sum",
+            )
+        )
 
         if self.predict:
             edge = sparse_sigmoid(edge)
 
-        print(edge[0][0].shape, edge[1].shape, edge[2])
         return torch.sparse_coo_tensor(edge[0], edge[1], edge[2]).to_dense()

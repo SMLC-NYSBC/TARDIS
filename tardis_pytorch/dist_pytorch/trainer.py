@@ -213,7 +213,9 @@ class SparseDistTrainer(BasicTrainer):
 
                     # Calculate F1 metric
                     acc, prec, recall, f1, th = eval_graph_f1(
-                        logits=edge[0, ..., 0].cpu().detach(), targets=graph[0, ...].cpu().detach(), threshold=0.5
+                        logits=edge[0, ..., 0].cpu().detach(),
+                        targets=graph[0, ...].cpu().detach(),
+                        threshold=0.5,
                     )
 
                 # Avg. precision score
