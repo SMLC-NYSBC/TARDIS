@@ -47,43 +47,50 @@ class SparseEdgeEmbedding(nn.Module):
         Returns:
             torch.sparse_coo_tensor: A sparse coordinate tensor representing the adjacency matrix.
         """
-        # Calculate pairwise distances between input coordinates
-        g_len = input_coord.shape[0]
-        dist_ = torch.cdist(input_coord, input_coord)
+        with torch.no_grad():
+            # Calculate pairwise distances between input coordinates
+            g_len = int(input_coord.shape[0])
+            dist_ = torch.cdist(input_coord, input_coord).detach()
 
-        # Get the top-k nearest neighbors and their indices
-        k_dist, k_idx = dist_.topk(self.k, dim=-1, largest=False)
+            # Get the top-k nearest neighbors and their indices
+            k_dist, k_idx = dist_.topk(self.k, dim=-1, largest=False)
 
-        # Prepare tensor for storing range of distances
-        k_dist_range = torch.zeros(
-            (g_len, self.k, len(self._range)), device=dist_.device
-        )
+            # Prepare tensor for storing range of distances
+            k_dist_range = torch.zeros(
+                (g_len, self.k, len(self._range)), device=dist_.device
+            )
 
-        # Apply Gaussian kernel function to the top-k distances
-        for id_, i in enumerate(self._range):
-            dist_range = torch.exp(-(k_dist**2) / (i**2 * 2))
+            # Apply Gaussian kernel function to the top-k distances
+            for id_, i in enumerate(self._range):
+                dist_range = torch.exp(-(k_dist**2) / (i**2 * 2))
 
-            k_dist_range[:, :, id_] = torch.where(dist_range > 0.1, dist_range, 0)
+                k_dist_range[:, :, id_] = torch.where(dist_range > 0.1, dist_range, 0)
 
-        # Replace any NaN values with zero
-        isnan = torch.isnan(k_dist_range)
-        k_dist_range = torch.where(isnan, torch.zeros_like(k_dist_range), k_dist_range)
+            # Replace any NaN values with zero
+            isnan = torch.isnan(k_dist_range)
+            k_dist_range = torch.where(
+                isnan, torch.zeros_like(k_dist_range), k_dist_range
+            )
 
-        # Prepare indices for constructing the adjacency matrix
-        row = (
-            torch.arange(g_len, device=dist_.device)
-            .unsqueeze(-1)
-            .repeat(1, self.k)
-            .view(-1)
-        )
-        col = k_idx.view(-1)
-        batch = torch.zeros_like(col)
+            # Prepare indices for constructing the adjacency matrix
+            row = (
+                torch.arange(g_len, device=dist_.device)
+                .unsqueeze(-1)
+                .repeat(1, self.k)
+                .view(-1)
+            )
+            col = k_idx.view(-1)
+            batch = torch.zeros_like(col)
 
-        indices = torch.cat(
-            [batch.unsqueeze(0), row.unsqueeze(0), col.unsqueeze(0)], dim=0
-        )
+            indices = torch.cat(
+                [batch.unsqueeze(0), row.unsqueeze(0), col.unsqueeze(0)], dim=0
+            )
 
-        # Prepare values for constructing the adjacency matrix
-        values = k_dist_range.view(-1, self.n_out)
+            # Prepare values for constructing the adjacency matrix
+            values = k_dist_range.view(-1, self.n_out)
 
-        return [indices, values, (1, g_len, g_len, self.n_out)]
+        return [
+            indices.detach(),
+            values.requires_grad_(),
+            (1, g_len, g_len, self.n_out),
+        ]
