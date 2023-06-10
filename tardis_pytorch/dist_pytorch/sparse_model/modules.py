@@ -246,8 +246,8 @@ class SparsTriangularUpdate(nn.Module):
         self.channel_dim = channel_dim
         self.axis = axis
         self.k = k
-        # self.init_scaling = 1 / sqrt(2)
-        self.init_scaling = sqrt(2 / (1 + pi / 2))
+        self.init_scaling = 1 / sqrt(2)
+        # self.init_scaling = sqrt(2 / (1 + pi / 2))
 
         # Define the transformations to be applied
         self.norm_input = SparseNorm(input_dim)
@@ -304,14 +304,15 @@ class SparsTriangularUpdate(nn.Module):
         b[1] = b[1].reshape((1, x_value_shape[0] // self.k, self.k, self.channel_dim))
 
         # Apply triangular multiplication update
-        if self.axis == 1:
+        if self.axis == 1:  # Row-wise
+            # Reorder matrix to row/column
             k = [
                 x[0],
                 torch.einsum("biko,bjko->bijo", a[1], b[1])[0, x[0][1], x[0][2], :],
                 a[2],
             ]
-        else:
-            # Reorder matrix to col/row
+        else:  # Column-wise
+            # Reorder matrix to colum/row [a/b]
             a = sparse_operation(a, op="rowcol_transpose")
             b = sparse_operation(b, op="rowcol_transpose")
 
