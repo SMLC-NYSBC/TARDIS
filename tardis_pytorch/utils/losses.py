@@ -534,6 +534,7 @@ class WBCELoss(AbstractLoss):
         positive_ratio = positive_samples / total_samples
 
         # Calculate class weights
+        # TODO constant scale for pos and neg.
         weight_positive = 1 / positive_ratio
         weight_negative = 1 / (1 - positive_ratio)
 

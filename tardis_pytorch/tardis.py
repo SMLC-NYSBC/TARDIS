@@ -23,9 +23,9 @@ from tardis_pytorch.utils.logo import TardisLogo
 @click.version_option(version=version)
 def main(func=None):
     if func == "csv_am":
-        from tardis_pytorch.tardis.csv_to_am import CsvToAmira
-
-        CsvToAmira()
+        # from tardis_pytorch.tardis.csv_to_am import CsvToAmira
+        pass
+        # CsvToAmira()
     else:
         main_logo = TardisLogo()
         main_logo(

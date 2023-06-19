@@ -57,6 +57,7 @@ def sparse_operation(x, y=None, z=None, knn=None, op="sum") -> torch.sparse_coo_
             # Perform element-wise multiplication of values from x and y tensors
             x[1] = x[1] * y[1]
         elif op == "rowcol_transpose":
+            # N x Ch
             if knn is not None:
                 df_shape = x[1].shape
                 x[1] = x[1].reshape((1, df_shape[0] // knn, knn, df_shape[1]))
@@ -65,7 +66,7 @@ def sparse_operation(x, y=None, z=None, knn=None, op="sum") -> torch.sparse_coo_
             x[1] = x[1].reshape(*_shape)
 
             if knn is not None:
-                x[1] = x[1].reshape(df_shape)
+                x[1] = x[1].reshape(df_shape)  # N x Ch
 
     # Create a sparse tensor with the computed values and the same indices and size as x tensor
     return x
@@ -287,15 +288,15 @@ class SparsTriangularUpdate(nn.Module):
         Returns:
             torch.sparse_coo_tensor: A sparse coordinate tensor representing the updated tensor.
         """
-        start = time.time()
         x_value_shape = x[1].shape
 
-        x = self.norm_input(x)  # Length x Channels
+        x = self.norm_input(x)  # Length x Channels [N, Ch]
 
         # Compute intermediate transformations
         a = sparse_operation(
             sparse_sigmoid(self.gate_a(x)), self.linear_a(x), op="multiply"
         )
+        # [B, N, KNN, Ch]
         a[1] = a[1].reshape((1, x_value_shape[0] // self.k, self.k, self.channel_dim))
 
         b = sparse_operation(
@@ -306,15 +307,17 @@ class SparsTriangularUpdate(nn.Module):
         # Apply triangular multiplication update
         if self.axis == 1:  # Row-wise
             # Reorder matrix to row/column
+            b = sparse_operation(b, op="rowcol_transpose")
             k = [
                 x[0],
                 torch.einsum("biko,bjko->bijo", a[1], b[1])[0, x[0][1], x[0][2], :],
                 a[2],
             ]
+            # k = sparse_operation(k, knn=self.k, op="rowcol_transpose")
         else:  # Column-wise
             # Reorder matrix to colum/row [a/b]
             a = sparse_operation(a, op="rowcol_transpose")
-            b = sparse_operation(b, op="rowcol_transpose")
+            # b = sparse_operation(b, op="rowcol_transpose")
 
             k = [
                 x[0],
