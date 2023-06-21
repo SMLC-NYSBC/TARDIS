@@ -521,7 +521,7 @@ class WBCELoss(AbstractLoss):
         super(WBCELoss, self).__init__(**kwargs)
 
     def forward(
-        self, logits: torch.Tensor, targets: torch.Tensor, mask=False
+        self, logits: torch.Tensor, targets: torch.Tensor, mask=False, pos=1, neg=0.1
     ) -> torch.Tensor:
         """
         Computes the weighted BCE loss between the logits and targets.
@@ -535,8 +535,10 @@ class WBCELoss(AbstractLoss):
 
         # Calculate class weights
         # TODO constant scale for pos and neg.
-        weight_positive = 1 / positive_ratio
-        weight_negative = 1 / (1 - positive_ratio)
+        # weight_positive = 1 / positive_ratio
+        # weight_negative = 1 / (1 - positive_ratio)
+        weight_positive = pos
+        weight_negative = neg
 
         # Compute the binary cross entropy (BCE) loss
         bce_loss = -(

@@ -11,6 +11,8 @@
 import torch
 import torch.nn as nn
 
+import numpy as np
+
 
 class SparseEdgeEmbedding(nn.Module):
     """
@@ -93,4 +95,185 @@ class SparseEdgeEmbedding(nn.Module):
             indices.detach(),
             values.requires_grad_(),
             (1, g_len, g_len, self.n_out),
+        ]
+
+
+class SparseEdgeEmbeddingV2(nn.Module):
+    """
+    Module for Sparse Edge Embedding.
+
+    This class is responsible for computing a sparse adjacency matrix
+    with edge weights computed using a Gaussian kernel function over
+    the distances between input coordinates.
+    """
+
+    def __init__(self, n_knn: int, n_out: int, sigma: list):
+        """
+        Initializes the SparseEdgeEmbedding.
+
+        Args:
+            n_knn (int): The number of nearest neighbors to consider for each point.
+            n_out (int): The number of output channels.
+            sigma (list): The range of sigma values for the Gaussian kernel.
+        """
+        super().__init__()
+        self.k = n_knn
+        self._range = torch.linspace(sigma[0], sigma[1], n_out)
+
+        self.n_out = n_out
+        self.sigma = sigma
+
+    def forward(self, input_coord: torch.tensor) -> torch.sparse_coo_tensor:
+        """
+        Forward pass for SparseEdgeEmbedding.
+
+        Args:
+            input_coord (torch.sparse_coo_tensor): A sparse coordinate tensor containing the input coordinates.
+
+        Returns:
+            torch.sparse_coo_tensor: A sparse coordinate tensor representing the adjacency matrix.
+        """
+        input_coord = input_coord.detach().requires_grad_(False)
+
+        with torch.no_grad():
+            """Calculate pairwise distances between input coordinates"""
+            g_len = int(input_coord.shape[0])
+            dist_ = torch.cdist(input_coord, input_coord).detach()
+
+            """Drop too far point and keep only by top-k by row and coll"""
+            k_dist_row, k_idx_row = dist_.topk(
+                self.k + 1, dim=1, largest=False
+            )  # Rows N x knn aka. j's for each i
+            k_dist_row, k_idx_row = k_dist_row[:, 1:], k_idx_row[:, 1:]
+            # k_dist_col, k_idx_col = dist_.topk(self.k+1 , dim=0, largest=False)  # Colums knn x N aka i's for each j
+            # k_dist_col, k_idx_col = k_dist_col[1:, :], k_idx_col[1:, :]
+
+            k_dist_row = k_dist_row.flatten()
+
+            k_idx_row_flat = torch.zeros((g_len * self.k, 2), dtype=torch.int16)
+            # k_idx_col_flat = torch.zeros((g_len*self.k, 2), dtype=torch.int16)
+            df_idx = torch.Tensor(
+                np.repeat(np.arange(0, g_len), self.k).astype(np.int16)
+            )
+
+            k_idx_row_flat[:, 1] = k_idx_row.flatten()
+            k_idx_row_flat[:, 0] = df_idx
+            # k_idx_col_flat[:, 0] = k_idx_col.transpose(1,0).flatten()
+            # k_idx_col_flat[:, 1] = df_idx
+
+            # k_idx = torch.concatenate((k_idx_row_flat, k_idx_col_flat))
+
+            """[1] - Apply Gaussian kernel function to the top-k distances"""
+            k_dist_range = torch.zeros(
+                (k_dist_row.shape[0], len(self._range)), device=dist_.device
+            )
+
+            for id_, i in enumerate(self._range):
+                k_dist_range[:, id_] = torch.exp(
+                    -(k_dist_row**2) / (i**2 * 2)
+                )  # M x knn
+
+            # Replace any NaN values with zero
+            isnan = torch.isnan(k_dist_range)
+            k_dist_range = torch.where(
+                isnan, torch.zeros_like(k_dist_range), k_dist_range
+            )
+
+        # List
+        # [0] ij_idx [B, M, 2] (int) row_idx
+        # [1] All ij [B, M, O] (float_64)
+        # [2] Shape (B, Row, Col, Ch)
+        return [
+            k_idx_row_flat,
+            k_dist_range.unsqueeze(0),
+            (1, g_len, g_len, self.n_out),
+        ]
+
+
+class SparseEdgeEmbeddingV3(nn.Module):
+    """
+    Module for Sparse Edge Embedding.
+
+    This class is responsible for computing a sparse adjacency matrix
+    with edge weights computed using a Gaussian kernel function over
+    the distances between input coordinates.
+    """
+
+    def __init__(self, n_out: int, sigma: list):
+        """
+        Initializes the SparseEdgeEmbedding.
+
+        Args:
+            n_knn (int): The number of nearest neighbors to consider for each point.
+            n_out (int): The number of output channels.
+            sigma (list): The range of sigma values for the Gaussian kernel.
+        """
+        super().__init__()
+        self._range = torch.linspace(sigma[0], sigma[1], n_out)
+
+        self.n_out = n_out
+        self.sigma = sigma
+
+    def forward(self, input_coord: torch.tensor) -> list:
+        # Run on CPU
+        device = input_coord.device
+        input_coord = input_coord.cpu().detach()
+
+        with torch.no_grad():
+            """Calculate pairwise distances between input coordinates"""
+            g_len = int(input_coord.shape[0])
+            _dist = torch.cdist(input_coord, input_coord).detach()
+            _shape = (g_len, g_len)  # [4] Orginal 2D shape to reconstruct
+
+            """[0] - Get all IDX to reconstruct"""
+            mask = torch.exp(-(_dist**2) / (5**2 * 2)) < 0.5
+            keep_idx = torch.where(~mask)
+
+            _dist[torch.where(mask)] = 0
+            _dist[range(g_len), range(g_len)] = 0
+
+            indices = torch.where(_dist > 0)
+
+            """[2-3] Get Col/Row wise indices for ij element"""
+            unique_elements, inverse_indices = torch.unique(
+                indices[0], return_inverse=True
+            )
+            counts = torch.bincount(inverse_indices)
+
+            # get row wise indices
+            starts = torch.cat(
+                (torch.zeros(1, dtype=torch.long, device=_dist.device), 
+                 counts.cumsum(0)[:-1])
+            )
+            indices_ = [
+                torch.arange(start, start + count)
+                for start, count in zip(starts, counts)
+            ]
+            row_indices = [
+                idx.tolist() for element, idx in zip(unique_elements, indices_)
+            ]
+
+            # get col wise indices
+            col_indices = [[] for x in range(indices[0].size(0))]
+
+            for id_, col in enumerate(indices[1]):
+                col_indices[col.item()].append(id_)
+
+            """[1] - Apply Gaussian kernel function to the top-k distances"""
+            indices = list(
+                (list(indices[0].cpu().detach().numpy()), list(indices[1].cpu().detach().numpy()))
+            )
+            _dist = _dist[indices]
+            k_dist_range = torch.zeros((len(_dist), len(self._range)), device=_dist.device)
+
+            # Apply Gaussian kernel function to the top-k distances
+            for id_, i in enumerate(self._range):
+                k_dist_range[:, id_] = torch.exp(-(_dist**2) / (i**2 * 2))
+
+        return [
+            indices,  # All IDX to reconstruct
+            k_dist_range.unsqueeze(0).to(device),  # Non-zero ij element
+            row_indices,  # Row indices corresponding to ji tensor
+            col_indices,  # Column indices corresponding to ij tensor
+            _shape,  # Orginal 2D shape to reconstruct
         ]

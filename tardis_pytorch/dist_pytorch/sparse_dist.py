@@ -10,7 +10,7 @@
 import torch
 import torch.nn as nn
 
-from tardis_pytorch.dist_pytorch.sparse_model.embedding import SparseEdgeEmbedding
+from tardis_pytorch.dist_pytorch.sparse_model.embedding import SparseEdgeEmbeddingV2
 from tardis_pytorch.dist_pytorch.sparse_model.layers import SparseDistStack
 from tardis_pytorch.dist_pytorch.sparse_model.modules import (
     SparseLinear,
@@ -62,7 +62,7 @@ class SparseDIST(nn.Module):
         self.edge_sigma = coord_embed_sigma
         self.predict = predict
 
-        self.coord_embed = SparseEdgeEmbedding(
+        self.coord_embed = SparseEdgeEmbeddingV2(
             n_out=self.edge_dim, sigma=self.edge_sigma, n_knn=self.knn
         )
 
@@ -106,11 +106,12 @@ class SparseDIST(nn.Module):
 
         # Predict the graph edges
         edge = self.decoder(
-            sparse_operation(
-                edge,
-                sparse_operation(edge, knn=self.knn, op="rowcol_transpose"),
-                op="sum",
-            )
+            # sparse_operation(
+            #     edge,
+            #     sparse_operation(edge, knn=self.knn, op="rowcol_transpose"),
+            #     op="sum",
+            # )
+            edge
         )
 
         if self.predict:

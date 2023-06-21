@@ -116,12 +116,12 @@ class SparseDistLayer(nn.Module):
             axis=1,
             k=self.k,
         )
-        self.col_update = SparsTriangularUpdate(
-            input_dim=pairs_dim,
-            channel_dim=self.channel_dim,
-            axis=0,
-            k=self.k,
-        )
+        # self.col_update = SparsTriangularUpdate(
+        #     input_dim=pairs_dim,
+        #     channel_dim=self.channel_dim,
+        #     axis=0,
+        #     k=self.k,
+        # )
 
         # Edge GeLu FFN normalization layer
         self.pair_ffn = SparseGeluFeedForward(
@@ -147,9 +147,10 @@ class SparseDistLayer(nn.Module):
         # ToDo Convert node features to edge shape
 
         # Update edge features
-        h_pairs = sparse_operation(
-            h_pairs, self.row_update(x=h_pairs), self.col_update(x=h_pairs), op="sum"
-        )
+        # h_pairs = sparse_operation(
+        #     h_pairs, self.row_update(x=h_pairs), self.col_update(x=h_pairs), op="sum"
+        # )
+        h_pairs = sparse_operation(h_pairs, self.row_update(x=h_pairs), op="sum")
 
         return sparse_operation(h_pairs, self.pair_ffn(x=h_pairs), op="sum")
 

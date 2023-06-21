@@ -205,7 +205,7 @@ class BuildGraph:
             for j in indices[i]:
                 if class_id[i] == class_id[j]:  # check class ID before adding edges
                     graph[i, j] = 1
-                    graph[j, i] = 1
+                    # graph[j, i] = 1
 
         # Ensure self-connection
         range_ = list(range(len(graph)))

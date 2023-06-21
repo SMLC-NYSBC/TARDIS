@@ -12,9 +12,10 @@ import torch
 import torch.nn as nn
 from math import sqrt, pi
 import time
+import numpy as np
 
 
-def sparse_operation(x, y=None, z=None, knn=None, op="sum") -> torch.sparse_coo_tensor:
+def sparse_operation(x, y=None, z=None, knn=None, op="sum"):
     """
     Perform sparse operations on tensors.
 
@@ -32,7 +33,7 @@ def sparse_operation(x, y=None, z=None, knn=None, op="sum") -> torch.sparse_coo_
         "subtract",
         "divide",
         "multiply",
-        "rowcol_transpose",
+        "mm",
     ], f"Operation op={op} not Supported"
 
     if z is not None:
@@ -40,9 +41,9 @@ def sparse_operation(x, y=None, z=None, knn=None, op="sum") -> torch.sparse_coo_
         if op == "sum":
             # Perform element-wise addition of values from x, y, and z tensors
             x[1] = x[1] + y[1] + z[1]
-        else:
+        elif op == "subract":
             # Perform element-wise subtraction of values from x, y, and z tensors
-            result_values = x[1] - y[1] - z[1]
+            x[1] = x[1] - y[1] - z[1]
     else:
         if op == "sum":
             # Perform element-wise addition of values from x and y tensors
@@ -56,17 +57,13 @@ def sparse_operation(x, y=None, z=None, knn=None, op="sum") -> torch.sparse_coo_
         elif op == "multiply":
             # Perform element-wise multiplication of values from x and y tensors
             x[1] = x[1] * y[1]
-        elif op == "rowcol_transpose":
-            # N x Ch
-            if knn is not None:
-                df_shape = x[1].shape
-                x[1] = x[1].reshape((1, df_shape[0] // knn, knn, df_shape[1]))
+        elif op == "mm":
+            b, out, knn, ch = x.shape
+            out = out // knn
 
-            _shape = x[1].shape  # [1, Row, Col, Channel]
-            x[1] = x[1].reshape(*_shape)
-
-            if knn is not None:
-                x[1] = x[1].reshape(df_shape)  # N x Ch
+            """Triangular update"""
+            x = x*y
+            x = torch.sum(x, dim=2).reshape(b, out, knn, ch)
 
     # Create a sparse tensor with the computed values and the same indices and size as x tensor
     return x
@@ -85,8 +82,9 @@ def sparse_sigmoid(x: list) -> list:
     Returns:
         torch.sparse_coo_tensor: A new sparse coordinate tensor with the sigmoid function applied to its values.
     """
+    x[1] = torch.sigmoid(x[1])
 
-    return [x[0], torch.sigmoid(x[1]), x[2]]
+    return x
 
 
 def sparse_gelu(x: list) -> list:
@@ -102,8 +100,9 @@ def sparse_gelu(x: list) -> list:
     Returns:
         torch.sparse_coo_tensor: A new sparse coordinate tensor with the GELU function applied to its values.
     """
+    x[1] = x[1] * 0.5 * (1.0 + torch.erf(x[1] / sqrt(2)))
 
-    return [x[0], x[1] * 0.5 * (1.0 + torch.erf(x[1] / sqrt(2))), x[2]]
+    return x
 
 
 class SparseGeluFeedForward(nn.Module):
@@ -179,8 +178,9 @@ class SparseNorm(nn.Module):
         Returns:
             torch.sparse_coo_tensor: A sparse coordinate tensor with layer normalization applied to its values.
         """
+        x[1] = self.layer_norm(x[1])
 
-        return [x[0], self.layer_norm(x[1]), x[2]]
+        return x
 
 
 class SparseLinear(nn.Module):
@@ -217,10 +217,13 @@ class SparseLinear(nn.Module):
         Returns:
             torch.sparse_coo_tensor: A sparse coordinate tensor with a linear transformation applied to its values.
         """
-        g_shape = list(x[2])
+        g_shape = list(x[-1])
         g_shape[3] = self.out_features
 
-        return [x[0], self.linear(x[1]), g_shape]
+        x[1] = self.linear(x[1])
+        x[-1] = g_shape
+
+        return x
 
 
 class SparsTriangularUpdate(nn.Module):
@@ -290,44 +293,68 @@ class SparsTriangularUpdate(nn.Module):
         """
         x_value_shape = x[1].shape
 
-        x = self.norm_input(x)  # Length x Channels [N, Ch]
+        x = self.norm_input(x)  # Batch x Length x Channels [N, Ch]
 
         # Compute intermediate transformations
+        # [B, M, KNN, Ch]
+
         a = sparse_operation(
             sparse_sigmoid(self.gate_a(x)), self.linear_a(x), op="multiply"
         )
-        # [B, N, KNN, Ch]
-        a[1] = a[1].reshape((1, x_value_shape[0] // self.k, self.k, self.channel_dim))
-
         b = sparse_operation(
             sparse_sigmoid(self.gate_b(x)), self.linear_b(x), op="multiply"
         )
-        b[1] = b[1].reshape((1, x_value_shape[0] // self.k, self.k, self.channel_dim))
 
         # Apply triangular multiplication update
+        org_shape = x[2]
+        knn = self.k
+        batch, M_len, ch = a[1].shape
+        k = torch.zeros((batch, org_shape[1], knn, ch), device=x[1].device)
+        
         if self.axis == 1:  # Row-wise
-            # Reorder matrix to row/column
-            b = sparse_operation(b, op="rowcol_transpose")
-            k = [
-                x[0],
-                torch.einsum("biko,bjko->bijo", a[1], b[1])[0, x[0][1], x[0][2], :],
-                a[2],
-            ]
-            # k = sparse_operation(k, knn=self.k, op="rowcol_transpose")
+            a[0] = a[0].reshape(org_shape[1], knn, 2)
+            a[1] = a[1].reshape(1, org_shape[1], knn, ch)
+            b[0] = b[0].reshape(org_shape[1], knn, 2)
+            b[1] = b[1].reshape(1, org_shape[1], knn, ch)
+   
+            k = sparse_operation(x=a[1].repeat_interleave(self.k, dim=1),
+                                               y=b[1][0, b[0][..., 1].flatten().long(), :].unsqueeze(0),
+                                               op='mm')
+            k = [a[0].reshape(org_shape[1] * knn, 2), k.reshape(1, M_len, 32), a[2]]
         else:  # Column-wise
-            # Reorder matrix to colum/row [a/b]
-            a = sparse_operation(a, op="rowcol_transpose")
-            # b = sparse_operation(b, op="rowcol_transpose")
-
-            k = [
-                x[0],
-                torch.einsum("biko,bjko->bijo", a[1], b[1])[0, x[0][1], x[0][2], :],
-                b[2],
-            ]
-
-            # Reorder matrix to row/col
-            k = sparse_operation(k, knn=self.k, op="rowcol_transpose")
+            for _id in range(mm_len):
+                k[0, i_id, :] = sparse_mm(a[1][:, :mm_len, :][:, i_id, :], 
+                                               b[1][:, :mm_len, :][:, i_id, :], 
+                                               a[0][:mm_len, :][i_id, :])
 
         return sparse_operation(
             sparse_sigmoid(self.gate_o(x)), self.linear_o(self.norm_o(k)), op="multiply"
         )
+
+
+def sparse_to_dense(x: list, numpy=False):
+    _shape = x[-1]
+
+    if numpy:
+        try:
+            idx = x[0].cpu().detach().numpy()
+            x = x[1].cpu().detach().numpy()[0, ...]
+        except:
+            idx = x[0].detach().numpy()
+            x = x[1].detach().numpy()[0, ...]
+
+
+        graph = np.zeros(_shape, dtype=np.float16)
+    else:
+        idx = x[0]
+        x = x[1][0, ...]
+        graph = torch.zeros(_shape, dtype=torch.float32, device=x.device)
+
+    for _id, i in enumerate(idx):
+        i, j = i
+        graph[0, i, j, ...] = x[_id, ...]
+
+    graph[0, range(_shape[1]), range(_shape[2]),...] = 1
+
+    return graph
+    
