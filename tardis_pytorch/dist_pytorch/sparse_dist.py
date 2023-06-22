@@ -33,7 +33,6 @@ class SparseDIST(nn.Module):
         n_out=1,
         edge_dim=128,
         num_layers=6,
-        knn=12,
         coord_embed_sigma=1.0,
         predict=False,
     ):
@@ -44,11 +43,9 @@ class SparseDIST(nn.Module):
             n_out (int): The number of output features.
             edge_dim (int): The dimensionality of the edge features.
             num_layers (int): The number of transformer layers.
-            knn (int): The number of nearest neighbors to consider in each update.
             coord_embed_sigma (int, list): The standard deviation for the edge embedding.
             predict (bool): A boolean value to decide whether to apply a sigmoid activation to the final output.
         """
-
         super(SparseDIST, self).__init__()
 
         self.n_out = n_out
@@ -98,7 +95,7 @@ class SparseDIST(nn.Module):
 
         # Encode throughout the transformer layers
         edge, idx = self.layers(
-            edge_features=edge, idx=idx
+            edge_features=edge, indices=idx
         )  # List[Indices, Values, Shape]
 
         # Predict the graph edges

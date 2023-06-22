@@ -12,6 +12,7 @@ import torch
 import torch.nn as nn
 
 import numpy as np
+from typing import Union
 
 
 class SparseEdgeEmbedding(nn.Module):
@@ -203,7 +204,6 @@ class SparseEdgeEmbeddingV3(nn.Module):
         Initializes the SparseEdgeEmbedding.
 
         Args:
-            n_knn (int): The number of nearest neighbors to consider for each point.
             n_out (int): The number of output channels.
             sigma (list): The range of sigma values for the Gaussian kernel.
         """
@@ -213,7 +213,35 @@ class SparseEdgeEmbeddingV3(nn.Module):
         self.n_out = n_out
         self.sigma = sigma
 
-    def forward(self, input_coord: torch.tensor) -> list:
+    def forward(self, input_coord: torch.tensor) -> Union[torch.tensor, list]:
+        """
+        Embed input coordinates.
+
+        The embedding is processed by firstly extracting every ij elements from
+        distance matrix, and performing gaussian kernel function.
+        As a second step indices for all ij elements are extracted, followed by
+        ij id's for row and columns.
+
+            - Long tensor [Batch, M, Channel] <- M is every ij element
+            - Indices:
+                - All M_ij [[M, 1], [M, 1]] <- Correspond to i and j sorted along rows
+                - Rows: [[[0, 1, 2], ...], [[234, 12, 1], ...]
+                    Two list corresponding to M_ij. First indicates column M_ij id's per row,
+                    the second one, correspond to M_ij id's for each colum per row.
+                - Column: [[[0, 1, 2], ...], [[234, 12, 1], ...]
+                    Two list corresponding to M_ij. First indicates row M_ij id's per column,
+                    the second one, correspond to M_ij id's for each row per column.
+                - Shape: Final shape of 2D graph
+
+        Args:
+         input_coord (torch.tensor): 2D or 3D array of coordinates
+
+        Return:
+            torch.tensor, idx: Long tensor with all ij elements, and list of all indices.
+        """
+        if isinstance(input_coord, np.ndarray):
+            input_coord = torch.Tensor(input_coord)
+
         # Run on CPU
         device = input_coord.device
         input_coord = input_coord.cpu().detach()
@@ -222,11 +250,10 @@ class SparseEdgeEmbeddingV3(nn.Module):
             """Calculate pairwise distances between input coordinates"""
             g_len = int(input_coord.shape[0])
             _dist = torch.cdist(input_coord, input_coord).detach()
-            _shape = (g_len, g_len, self.n_out)  # [4] Orginal 2D shape to reconstruct
+            _shape = (g_len, g_len, self.n_out)  # [4] Original 2D shape to reconstruct
 
             """[0] - Get all IDX to reconstruct"""
             mask = torch.exp(-(_dist**2) / (5**2 * 2)) < 0.95
-            keep_idx = torch.where(~mask)
 
             _dist[torch.where(mask)] = 0
             _dist[range(g_len), range(g_len)] = 0
@@ -264,9 +291,9 @@ class SparseEdgeEmbeddingV3(nn.Module):
             # get col-wise indices
             col_indices = [[] for x in range(indices[0].size(0))]
             col_idx = [[] for x in range(indices[0].size(0))]
-            for id_, (row, col) in enumerate(zip(indices[0], indices[1])):
-                col_indices[col.item()].append(id_)
-                col_idx[col.item()].append(row.item())
+            for _id, (row, col) in enumerate(zip(indices[0], indices[1])):
+                col_indices[col.item()].append(_id)  # Colum id from M
+                col_idx[col.item()].append(row.item())  # Column triangle ID
 
             col_indices = [col_indices, col_idx]
 
@@ -282,13 +309,8 @@ class SparseEdgeEmbeddingV3(nn.Module):
                 (len(_dist), len(self._range)), device=_dist.device
             )
 
-            # Apply Gaussian kernel function to the top-k distances
+            # Apply Gaussian kernel function to all ij elements
             for id_, i in enumerate(self._range):
                 k_dist_range[:, id_] = torch.exp(-(_dist**2) / (i**2 * 2))
 
-        return k_dist_range.unsqueeze(0).to(device), [
-            indices,  # All IDX to reconstruct
-            row_indices,  # Row indices corresponding to ji tensor
-            col_indices,  # Column indices corresponding to ij tensor
-            _shape,  # Orginal 2D shape to reconstruct
-        ]
+        return k_dist_range.unsqueeze(0).to(device), [indices, row_indices, col_indices, _shape]
