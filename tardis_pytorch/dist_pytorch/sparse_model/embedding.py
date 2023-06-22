@@ -253,7 +253,7 @@ class SparseEdgeEmbeddingV3(nn.Module):
             _shape = (g_len, g_len, self.n_out)  # [4] Original 2D shape to reconstruct
 
             """[0] - Get all IDX to reconstruct"""
-            mask = torch.exp(-(_dist**2) / (5**2 * 2)) < 0.95
+            mask = torch.exp(-(_dist**2) / (self._range[-1]**2 * 2)) < 0.95
 
             _dist[torch.where(mask)] = 0
             _dist[range(g_len), range(g_len)] = 0
