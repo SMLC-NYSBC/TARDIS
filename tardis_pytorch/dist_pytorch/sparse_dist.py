@@ -10,13 +10,9 @@
 import torch
 import torch.nn as nn
 
-from tardis_pytorch.dist_pytorch.sparse_model.embedding import SparseEdgeEmbeddingV2
+import numpy as np
+from tardis_pytorch.dist_pytorch.sparse_model.embedding import SparseEdgeEmbeddingV3
 from tardis_pytorch.dist_pytorch.sparse_model.layers import SparseDistStack
-from tardis_pytorch.dist_pytorch.sparse_model.modules import (
-    SparseLinear,
-    sparse_sigmoid,
-    sparse_operation,
-)
 
 
 class SparseDIST(nn.Module):
@@ -57,23 +53,21 @@ class SparseDIST(nn.Module):
 
         self.n_out = n_out
         self.edge_dim = edge_dim
-        self.knn = knn
         self.num_layers = num_layers
         self.edge_sigma = coord_embed_sigma
         self.predict = predict
 
-        self.coord_embed = SparseEdgeEmbeddingV2(
-            n_out=self.edge_dim, sigma=self.edge_sigma, n_knn=self.knn
+        self.coord_embed = SparseEdgeEmbeddingV3(
+            n_out=self.edge_dim, sigma=self.edge_sigma
         )
 
         self.layers = SparseDistStack(
             pairs_dim=self.edge_dim,
             num_layers=self.num_layers,
             ff_factor=4,
-            knn=self.knn,
         )
 
-        self.decoder = SparseLinear(in_features=self.edge_dim, out_features=self.n_out)
+        self.decoder = nn.Linear(in_features=self.edge_dim, out_features=self.n_out)
 
     def embed_input(self, coords: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
         """
@@ -85,8 +79,9 @@ class SparseDIST(nn.Module):
         Returns:
             torch.sparse_coo_tensor: A sparse coordinate tensor containing the embedded coordinates.
         """
-        x = self.coord_embed(input_coord=coords)
-        return x
+        x, idx = self.coord_embed(input_coord=coords)
+
+        return x, idx
 
     def forward(self, coords: torch.tensor) -> torch.sparse_coo_tensor:
         """
@@ -99,22 +94,17 @@ class SparseDIST(nn.Module):
             torch.sparse_coo_tensor: A sparse coordinate tensor representing the output from the model.
         """
         # Embed coord [n, 3] coordinates into spares tensor
-        edge = self.embed_input(coords=coords)  # List[Indices, Values, Shape]
+        edge, idx = self.embed_input(coords=coords)  # List[Indices, Values, Shape]
 
         # Encode throughout the transformer layers
-        edge = self.layers(edge_features=edge)  # List[Indices, Values, Shape]
+        edge, idx = self.layers(
+            edge_features=edge, idx=idx
+        )  # List[Indices, Values, Shape]
 
         # Predict the graph edges
-        edge = self.decoder(
-            # sparse_operation(
-            #     edge,
-            #     sparse_operation(edge, knn=self.knn, op="rowcol_transpose"),
-            #     op="sum",
-            # )
-            edge
-        )
+        edge = self.decoder(edge + edge[:, np.concatenate(idx[2][1]), :])
 
         if self.predict:
-            edge = sparse_sigmoid(edge)
+            edge = torch.sigmoid(edge)
 
-        return edge
+        return edge, idx

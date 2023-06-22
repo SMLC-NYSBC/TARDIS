@@ -13,8 +13,7 @@ from torch import nn
 
 from tardis_pytorch.dist_pytorch.sparse_model.modules import (
     SparsTriangularUpdate,
-    SparseGeluFeedForward,
-    sparse_operation,
+    GeluFeedForward,
 )
 
 
@@ -61,9 +60,7 @@ class SparseDistStack(nn.Module):
         """
         return self.layers[i]
 
-    def forward(
-        self, edge_features: torch.sparse_coo_tensor
-    ) -> torch.sparse_coo_tensor:
+    def forward(self, edge_features, idx):
         """
         Forward pass for the SparseDistStack.
 
@@ -74,9 +71,9 @@ class SparseDistStack(nn.Module):
             torch.sparse_coo_tensor: A sparse coordinate tensor representing the output from the final layer in the stack.
         """
         for layer in self.layers:
-            edge_features = layer(h_pairs=edge_features)
+            edge_features, idx = layer(h_pairs=edge_features, idx=idx)
 
-        return edge_features
+        return edge_features, idx
 
 
 class SparseDistLayer(nn.Module):
@@ -111,20 +108,14 @@ class SparseDistLayer(nn.Module):
 
         # Edge triangular update
         self.row_update = SparsTriangularUpdate(
-            input_dim=pairs_dim,
-            channel_dim=self.channel_dim,
-            axis=1,
-            k=self.k,
+            input_dim=pairs_dim, channel_dim=self.channel_dim, axis=1
         )
-        # self.col_update = SparsTriangularUpdate(
-        #     input_dim=pairs_dim,
-        #     channel_dim=self.channel_dim,
-        #     axis=0,
-        #     k=self.k,
-        # )
+        self.col_update = SparsTriangularUpdate(
+            input_dim=pairs_dim, channel_dim=self.channel_dim, axis=0
+        )
 
         # Edge GeLu FFN normalization layer
-        self.pair_ffn = SparseGeluFeedForward(
+        self.pair_ffn = GeluFeedForward(
             input_dim=pairs_dim, ff_dim=pairs_dim * ff_factor
         )
 
@@ -134,7 +125,7 @@ class SparseDistLayer(nn.Module):
         """
         pass
 
-    def update_edges(self, h_pairs: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
+    def update_edges(self, h_pairs, idx):
         """
         Updates edge features by applying row and column updates, then applying a feed-forward network.
 
@@ -150,11 +141,14 @@ class SparseDistLayer(nn.Module):
         # h_pairs = sparse_operation(
         #     h_pairs, self.row_update(x=h_pairs), self.col_update(x=h_pairs), op="sum"
         # )
-        h_pairs = sparse_operation(h_pairs, self.row_update(x=h_pairs), op="sum")
+        # h_pairs = sparse_operation(h_pairs, self.row_update(x=h_pairs), op="sum")
+        row, _ = self.row_update(x=h_pairs, idx=idx)
+        col, _ = self.col_update(x=h_pairs, idx=idx)
+        h_paris = h_pairs + row + col
 
-        return sparse_operation(h_pairs, self.pair_ffn(x=h_pairs), op="sum")
+        return h_pairs + self.pair_ffn(x=h_pairs), idx
 
-    def forward(self, h_pairs: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
+    def forward(self, h_pairs, idx):
         """
         Forward pass for the SparseDistLayer.
 
@@ -167,5 +161,5 @@ class SparseDistLayer(nn.Module):
         # ToDo Update node features and convert to edge shape
 
         # Update edge features
-        h_pairs = self.update_edges(h_pairs=h_pairs)
-        return h_pairs
+        h_pairs, idx = self.update_edges(h_pairs=h_pairs, idx=idx)
+        return h_pairs, idx

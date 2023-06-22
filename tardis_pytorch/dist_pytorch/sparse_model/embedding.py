@@ -183,9 +183,8 @@ class SparseEdgeEmbeddingV2(nn.Module):
         # [0] ij_idx [B, M, 2] (int) row_idx
         # [1] All ij [B, M, O] (float_64)
         # [2] Shape (B, Row, Col, Ch)
-        return [
+        return k_dist_range.unsqueeze(0), [
             k_idx_row_flat,
-            k_dist_range.unsqueeze(0),
             (1, g_len, g_len, self.n_out),
         ]
 
@@ -223,10 +222,10 @@ class SparseEdgeEmbeddingV3(nn.Module):
             """Calculate pairwise distances between input coordinates"""
             g_len = int(input_coord.shape[0])
             _dist = torch.cdist(input_coord, input_coord).detach()
-            _shape = (g_len, g_len)  # [4] Orginal 2D shape to reconstruct
+            _shape = (g_len, g_len, self.n_out)  # [4] Orginal 2D shape to reconstruct
 
             """[0] - Get all IDX to reconstruct"""
-            mask = torch.exp(-(_dist**2) / (5**2 * 2)) < 0.5
+            mask = torch.exp(-(_dist**2) / (5**2 * 2)) < 0.95
             keep_idx = torch.where(~mask)
 
             _dist[torch.where(mask)] = 0
@@ -240,10 +239,12 @@ class SparseEdgeEmbeddingV3(nn.Module):
             )
             counts = torch.bincount(inverse_indices)
 
-            # get row wise indices
+            # get row-wise indices
             starts = torch.cat(
-                (torch.zeros(1, dtype=torch.long, device=_dist.device), 
-                 counts.cumsum(0)[:-1])
+                (
+                    torch.zeros(1, dtype=torch.long, device=_dist.device),
+                    counts.cumsum(0)[:-1],
+                )
             )
             indices_ = [
                 torch.arange(start, start + count)
@@ -253,26 +254,40 @@ class SparseEdgeEmbeddingV3(nn.Module):
                 idx.tolist() for element, idx in zip(unique_elements, indices_)
             ]
 
-            # get col wise indices
-            col_indices = [[] for x in range(indices[0].size(0))]
+            indices_ = [
+                indices[1][start : start + count]
+                for start, count in zip(starts, counts)
+            ]
+            row_idx = [idx.tolist() for element, idx in zip(unique_elements, indices_)]
+            row_indices = [row_indices, row_idx]
 
-            for id_, col in enumerate(indices[1]):
+            # get col-wise indices
+            col_indices = [[] for x in range(indices[0].size(0))]
+            col_idx = [[] for x in range(indices[0].size(0))]
+            for id_, (row, col) in enumerate(zip(indices[0], indices[1])):
                 col_indices[col.item()].append(id_)
+                col_idx[col.item()].append(row.item())
+
+            col_indices = [col_indices, col_idx]
 
             """[1] - Apply Gaussian kernel function to the top-k distances"""
             indices = list(
-                (list(indices[0].cpu().detach().numpy()), list(indices[1].cpu().detach().numpy()))
+                (
+                    list(indices[0].cpu().detach().numpy()),
+                    list(indices[1].cpu().detach().numpy()),
+                )
             )
             _dist = _dist[indices]
-            k_dist_range = torch.zeros((len(_dist), len(self._range)), device=_dist.device)
+            k_dist_range = torch.zeros(
+                (len(_dist), len(self._range)), device=_dist.device
+            )
 
             # Apply Gaussian kernel function to the top-k distances
             for id_, i in enumerate(self._range):
                 k_dist_range[:, id_] = torch.exp(-(_dist**2) / (i**2 * 2))
 
-        return [
+        return k_dist_range.unsqueeze(0).to(device), [
             indices,  # All IDX to reconstruct
-            k_dist_range.unsqueeze(0).to(device),  # Non-zero ij element
             row_indices,  # Row indices corresponding to ji tensor
             col_indices,  # Column indices corresponding to ij tensor
             _shape,  # Orginal 2D shape to reconstruct

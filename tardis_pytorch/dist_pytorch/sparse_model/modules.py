@@ -13,81 +13,10 @@ import torch.nn as nn
 from math import sqrt, pi
 import time
 import numpy as np
+from itertools import compress
 
 
-def sparse_operation(x, y=None, z=None, knn=None, op="sum"):
-    """
-    Perform sparse operations on tensors.
-
-    Args:
-        x (torch.sparse_coo_tensor): First input tensor.
-        y (torch.sparse_coo_tensor): Second input tensor.
-        z (torch.sparse_coo_tensor, optional): Third input tensor. Defaults to None.
-        op (str, optional): Operation to perform. Can be 'sum', 'subtract', 'divide', or 'multiply'.
-
-    Returns:
-        torch.sparse_coo_tensor: Resulting sparse tensor.
-    """
-    assert op in [
-        "sum",
-        "subtract",
-        "divide",
-        "multiply",
-        "mm",
-    ], f"Operation op={op} not Supported"
-
-    if z is not None:
-        assert op in ["sum", "subtract"]
-        if op == "sum":
-            # Perform element-wise addition of values from x, y, and z tensors
-            x[1] = x[1] + y[1] + z[1]
-        elif op == "subract":
-            # Perform element-wise subtraction of values from x, y, and z tensors
-            x[1] = x[1] - y[1] - z[1]
-    else:
-        if op == "sum":
-            # Perform element-wise addition of values from x and y tensors
-            x[1] = x[1] + y[1]
-        elif op == "subtract":
-            # Perform element-wise subtraction of values from x and y tensors
-            x[1] = x[1] - y[1]
-        elif op == "divide":
-            # Perform element-wise division of values from x and y tensors
-            x[1] = x[1] / y[1]
-        elif op == "multiply":
-            # Perform element-wise multiplication of values from x and y tensors
-            x[1] = x[1] * y[1]
-        elif op == "mm":
-            b, out, knn, ch = x.shape
-            out = out // knn
-
-            """Triangular update"""
-            x = x*y
-            x = torch.sum(x, dim=2).reshape(b, out, knn, ch)
-
-    # Create a sparse tensor with the computed values and the same indices and size as x tensor
-    return x
-
-
-def sparse_sigmoid(x: list) -> list:
-    """
-    Applies the sigmoid function to a sparse tensor.
-
-    This function applies the sigmoid function element-wise to the values of
-    a sparse tensor while preserving its sparsity.
-
-    Args:
-        x (torch.sparse_coo_tensor): A sparse coordinate tensor to which the sigmoid function will be applied.
-
-    Returns:
-        torch.sparse_coo_tensor: A new sparse coordinate tensor with the sigmoid function applied to its values.
-    """
-    x[1] = torch.sigmoid(x[1])
-
-    return x
-
-
-def sparse_gelu(x: list) -> list:
+def gelu(x: list) -> list:
     """
     Applies the Gaussian Error Linear Unit (GELU) activation function to a sparse tensor.
 
@@ -100,12 +29,11 @@ def sparse_gelu(x: list) -> list:
     Returns:
         torch.sparse_coo_tensor: A new sparse coordinate tensor with the GELU function applied to its values.
     """
-    x[1] = x[1] * 0.5 * (1.0 + torch.erf(x[1] / sqrt(2)))
 
-    return x
+    return x * 0.5 * (1.0 + torch.erf(x / sqrt(2)))
 
 
-class SparseGeluFeedForward(nn.Module):
+class GeluFeedForward(nn.Module):
     """
     Module for a sparse feedforward NN with GELU activation and sparse operations.
 
@@ -122,13 +50,13 @@ class SparseGeluFeedForward(nn.Module):
             ff_dim (int): The dimensionality of the output from the first linear transformation.
         """
         super().__init__()
-        self.norm = SparseNorm(input_dim)
-        self.linear1 = SparseLinear(input_dim, ff_dim)
-        self.linear2 = SparseLinear(ff_dim, input_dim)
+        self.norm = nn.LayerNorm(input_dim)
+        self.linear1 = nn.Linear(input_dim, ff_dim)
+        self.linear2 = nn.Linear(ff_dim, input_dim)
 
         # Initialize the weights and biases of the second linear transformation to zero
-        nn.init.constant_(self.linear2.linear.weight, 0.0)
-        nn.init.constant_(self.linear2.linear.bias, 0.0)
+        nn.init.constant_(self.linear2.weight, 0.0)
+        nn.init.constant_(self.linear2.bias, 0.0)
 
     def forward(self, x: list) -> list:
         """
@@ -143,85 +71,8 @@ class SparseGeluFeedForward(nn.Module):
         x = self.norm(x)  # Apply normalization
         x = self.linear1(x)  # Apply first linear transformation
         x = self.linear2(
-            sparse_gelu(x)
+            gelu(x)
         )  # Apply GELU activation and second linear transformation
-
-        return x
-
-
-class SparseNorm(nn.Module):
-    """
-    Module for applying layer normalization to sparse tensors.
-
-    This class applies the Layer Normalization operation to a sparse tensor,
-    preserving its sparsity.
-    """
-
-    def __init__(self, input_dim: int):
-        """
-        Initializes the SparseNorm.
-
-        Args:
-            input_dim (int): The dimensionality of the input data.
-        """
-        super().__init__()
-
-        self.layer_norm = nn.LayerNorm(input_dim)
-
-    def forward(self, x: list) -> list:
-        """
-        Forward pass for SparseNorm.
-
-        Args:
-            x (torch.sparse_coo_tensor): A sparse coordinate tensor containing the input data.
-
-        Returns:
-            torch.sparse_coo_tensor: A sparse coordinate tensor with layer normalization applied to its values.
-        """
-        x[1] = self.layer_norm(x[1])
-
-        return x
-
-
-class SparseLinear(nn.Module):
-    """
-    Module for applying a linear transformation to sparse tensors.
-
-    This class applies a linear transformation to a sparse tensor, preserving its sparsity.
-    The input and output tensors have the shape [Batch x Length x Length x Channel].
-    Currently, this class supports a batch size of 1.
-    """
-
-    def __init__(self, in_features: int, out_features: int, bias=True):
-        """
-        Initializes the SparseLinear.
-
-        Args:
-            in_features (int): The number of input features (i.e., input tensor's Channel dimension).
-            out_features (int): The number of output features (i.e., output tensor's Channel dimension).
-            bias (bool): A boolean value indicating whether to include a bias term in the linear transformation.
-        """
-        super(SparseLinear, self).__init__()
-        self.in_features = in_features
-        self.out_features = out_features
-
-        self.linear = nn.Linear(self.in_features, self.out_features, bias=bias)
-
-    def forward(self, x: list) -> list:
-        """
-        Forward pass for SparseLinear.
-
-        Args:
-            x (torch.sparse_coo_tensor): A sparse coordinate tensor containing the input data.
-
-        Returns:
-            torch.sparse_coo_tensor: A sparse coordinate tensor with a linear transformation applied to its values.
-        """
-        g_shape = list(x[-1])
-        g_shape[3] = self.out_features
-
-        x[1] = self.linear(x[1])
-        x[-1] = g_shape
 
         return x
 
@@ -254,17 +105,17 @@ class SparsTriangularUpdate(nn.Module):
         # self.init_scaling = sqrt(2 / (1 + pi / 2))
 
         # Define the transformations to be applied
-        self.norm_input = SparseNorm(input_dim)
+        self.norm_input = nn.LayerNorm(input_dim)
 
-        self.linear_a = SparseLinear(input_dim, channel_dim)
-        self.gate_a = SparseLinear(input_dim, channel_dim)
+        self.linear_a = nn.Linear(input_dim, channel_dim)
+        self.gate_a = nn.Linear(input_dim, channel_dim)
 
-        self.linear_b = SparseLinear(input_dim, channel_dim)
-        self.gate_b = SparseLinear(input_dim, channel_dim)
+        self.linear_b = nn.Linear(input_dim, channel_dim)
+        self.gate_b = nn.Linear(input_dim, channel_dim)
 
-        self.norm_o = SparseNorm(channel_dim)
-        self.gate_o = SparseLinear(input_dim, input_dim)
-        self.linear_o = SparseLinear(channel_dim, input_dim)
+        self.norm_o = nn.LayerNorm(channel_dim)
+        self.gate_o = nn.Linear(input_dim, input_dim)
+        self.linear_o = nn.Linear(channel_dim, input_dim)
 
         self._reset_parameters()
 
@@ -272,16 +123,16 @@ class SparsTriangularUpdate(nn.Module):
         """
         Initial parameter and bias scaling.
         """
-        nn.init.xavier_uniform_(self.linear_a.linear.weight, gain=self.init_scaling)
-        nn.init.constant_(self.linear_a.linear.bias, 0.0)
+        nn.init.xavier_uniform_(self.linear_a.weight, gain=self.init_scaling)
+        nn.init.constant_(self.linear_a.bias, 0.0)
 
-        nn.init.xavier_uniform_(self.linear_b.linear.weight, gain=self.init_scaling)
-        nn.init.constant_(self.linear_b.linear.bias, 0.0)
+        nn.init.xavier_uniform_(self.linear_b.weight, gain=self.init_scaling)
+        nn.init.constant_(self.linear_b.bias, 0.0)
 
-        nn.init.constant_(self.linear_o.linear.weight, 0.0)
-        nn.init.constant_(self.linear_o.linear.bias, 0.0)
+        nn.init.constant_(self.linear_o.weight, 0.0)
+        nn.init.constant_(self.linear_o.bias, 0.0)
 
-    def forward(self, x: list) -> list:
+    def forward(self, x: torch.tensor, idx: list) -> list:
         """
         Forward pass for SparsTriangularUpdate.
 
@@ -291,45 +142,68 @@ class SparsTriangularUpdate(nn.Module):
         Returns:
             torch.sparse_coo_tensor: A sparse coordinate tensor representing the updated tensor.
         """
-        x_value_shape = x[1].shape
+        x_value_shape = x.shape
 
         x = self.norm_input(x)  # Batch x Length x Channels [N, Ch]
 
         # Compute intermediate transformations
         # [B, M, KNN, Ch]
 
-        a = sparse_operation(
-            sparse_sigmoid(self.gate_a(x)), self.linear_a(x), op="multiply"
-        )
-        b = sparse_operation(
-            sparse_sigmoid(self.gate_b(x)), self.linear_b(x), op="multiply"
-        )
+        a = torch.sigmoid(self.gate_a(x)) * self.linear_a(x)
+        b = torch.sigmoid(self.gate_b(x)) * self.linear_b(x)
 
-        # Apply triangular multiplication update
-        org_shape = x[2]
-        knn = self.k
-        batch, M_len, ch = a[1].shape
-        k = torch.zeros((batch, org_shape[1], knn, ch), device=x[1].device)
-        
-        if self.axis == 1:  # Row-wise
-            a[0] = a[0].reshape(org_shape[1], knn, 2)
-            a[1] = a[1].reshape(1, org_shape[1], knn, ch)
-            b[0] = b[0].reshape(org_shape[1], knn, 2)
-            b[1] = b[1].reshape(1, org_shape[1], knn, ch)
-   
-            k = sparse_operation(x=a[1].repeat_interleave(self.k, dim=1),
-                                               y=b[1][0, b[0][..., 1].flatten().long(), :].unsqueeze(0),
-                                               op='mm')
-            k = [a[0].reshape(org_shape[1] * knn, 2), k.reshape(1, M_len, 32), a[2]]
-        else:  # Column-wise
-            for _id in range(mm_len):
-                k[0, i_id, :] = sparse_mm(a[1][:, :mm_len, :][:, i_id, :], 
-                                               b[1][:, :mm_len, :][:, i_id, :], 
-                                               a[0][:mm_len, :][i_id, :])
+        # # Apply triangular multiplication update
+        k = torch.zeros_like(a)
 
-        return sparse_operation(
-            sparse_sigmoid(self.gate_o(x)), self.linear_o(self.norm_o(k)), op="multiply"
-        )
+        if self.axis == 1:  # Row-wise update
+            for i in range(len(idx[1][1])):
+                i_element = idx[1][1][i].copy()
+                i_element.append(i)
+
+                for _id, j in enumerate(idx[1][1][i]):
+                    fil = [True if m in i_element else False for m in idx[1][1][j]]
+                    j_th = list(compress(idx[1][1][j], fil))
+
+                    fil = [True if m in idx[1][1][j] else False for m in i_element]
+                    i_th = list(compress(i_element, fil))
+
+                    k[:, idx[1][0][i][_id], :] = torch.sum(
+                        a[:, i_th, :] * b[:, j_th, :], dim=1
+                    )
+        else:
+            for i in range(len(idx[2][1])):
+                i_element = idx[2][1][i].copy()
+                i_element.append(i)
+
+                for _id, j in enumerate(idx[2][1][i]):
+                    fil = [True if m in i_element else False for m in idx[2][1][j]]
+                    j_th = list(compress(idx[2][1][j], fil))
+
+                    fil = [True if m in idx[2][1][j] else False for m in i_element]
+                    i_th = list(compress(i_element, fil))
+
+                    k[:, idx[2][0][i][_id], :] = torch.sum(
+                        a[:, i_th, :] * b[:, j_th, :], dim=1
+                    )
+
+        # if self.axis == 1:  # Row-wise
+        #     idx[0] = idx[0].reshape(org_shape[1], self.k, 2)
+        #     a = a.reshape(1, org_shape[1], self.k, ch)
+        #     idx[0] = idx[0].reshape(org_shape[1], self.k, 2)
+        #     b = b.reshape(1, org_shape[1], self.k, ch)
+
+        #     k = a.repeat_interleave(self.k, dim=1) * b[0, idx[0][..., 1].flatten().long(), :].unsqueeze(0)
+        #     k = torch.sum(k, dim=2)
+        #     k = k.reshape(1, M_len, 32)
+
+        #     idx = [idx[0].reshape(org_shape[1] * self.k, 2), idx[1]]
+        # else:  # Column-wise
+        #     for _id in range(mm_len):
+        #         k[0, i_id, :] = sparse_mm(a[1][:, :mm_len, :][:, i_id, :],
+        #                                        b[1][:, :mm_len, :][:, i_id, :],
+        #                                        a[0][:mm_len, :][i_id, :])
+
+        return torch.sigmoid(self.gate_o(x)) * self.linear_o(self.norm_o(k)), idx
 
 
 def sparse_to_dense(x: list, numpy=False):
@@ -343,7 +217,6 @@ def sparse_to_dense(x: list, numpy=False):
             idx = x[0].detach().numpy()
             x = x[1].detach().numpy()[0, ...]
 
-
         graph = np.zeros(_shape, dtype=np.float16)
     else:
         idx = x[0]
@@ -354,7 +227,6 @@ def sparse_to_dense(x: list, numpy=False):
         i, j = i
         graph[0, i, j, ...] = x[_id, ...]
 
-    graph[0, range(_shape[1]), range(_shape[2]),...] = 1
+    graph[0, range(_shape[1]), range(_shape[2]), ...] = 1
 
     return graph
-    
