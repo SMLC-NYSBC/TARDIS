@@ -253,10 +253,10 @@ class SparseEdgeEmbeddingV3(nn.Module):
             _shape = (g_len, g_len, self.n_out)  # [4] Original 2D shape to reconstruct
 
             """[0] - Get all IDX to reconstruct"""
-            mask = torch.exp(-(_dist**2) / (self._range[-1]**2 * 2)) < 0.95
+            mask = torch.exp(-(_dist**2) / (self._range[-1]**2 * 2)) < 0.9
 
             _dist[torch.where(mask)] = 0
-            _dist[range(g_len), range(g_len)] = 0
+            _dist.fill_diagonal_(0)
 
             indices = torch.where(_dist > 0)
 
@@ -289,8 +289,9 @@ class SparseEdgeEmbeddingV3(nn.Module):
             row_indices = [row_indices, row_idx]
 
             # get col-wise indices
-            col_indices = [[] for x in range(indices[0].size(0))]
-            col_idx = [[] for x in range(indices[0].size(0))]
+            col_indices = [[] for x in range(len(row_idx))]
+            col_idx = [[] for x in range(len(row_idx))]
+            
             for _id, (row, col) in enumerate(zip(indices[0], indices[1])):
                 col_indices[col.item()].append(_id)  # Colum id from M
                 col_idx[col.item()].append(row.item())  # Column triangle ID
