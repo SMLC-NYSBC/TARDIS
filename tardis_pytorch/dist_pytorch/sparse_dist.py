@@ -66,7 +66,7 @@ class SparseDIST(nn.Module):
 
         self.decoder = nn.Linear(in_features=self.edge_dim, out_features=self.n_out)
 
-    def embed_input(self, coords: torch.sparse_coo_tensor) -> torch.sparse_coo_tensor:
+    def embed_input(self, coords: torch.tensor) -> torch.tensor:
         """
         Embeds the input coordinates using the coord_embed layer.
 
@@ -80,7 +80,7 @@ class SparseDIST(nn.Module):
 
         return x, idx
 
-    def forward(self, coords: torch.tensor) -> torch.sparse_coo_tensor:
+    def forward(self, coords: torch.tensor) -> torch.tensor:
         """
         Forward pass for the SparseDIST.
 

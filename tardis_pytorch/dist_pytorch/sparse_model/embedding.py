@@ -222,16 +222,16 @@ class SparseEdgeEmbeddingV3(nn.Module):
         As a second step indices for all ij elements are extracted, followed by
         ij id's for row and columns.
 
-            - Long tensor [Batch, M, Channel] <- M is every ij element
-            - Indices:
-                - All M_ij [[M, 1], [M, 1]] <- Correspond to i and j sorted along rows
-                - Rows: [[[0, 1, 2], ...], [[234, 12, 1], ...]
-                    Two list corresponding to M_ij. First indicates column M_ij id's per row,
-                    the second one, correspond to M_ij id's for each colum per row.
-                - Column: [[[0, 1, 2], ...], [[234, 12, 1], ...]
-                    Two list corresponding to M_ij. First indicates row M_ij id's per column,
-                    the second one, correspond to M_ij id's for each row per column.
-                - Shape: Final shape of 2D graph
+        - Long tensor [Batch, M, Channel] <- M is every ij element
+        - Indices:
+            - All M_ij [[M, 1], [M, 1]] <- Correspond to i and j sorted along rows
+            - Rows: [[[0, 1, 2], ...], [[234, 12, 1], ...]
+                Two list corresponding to M_ij. First indicates column M_ij id's per row,
+                the second one, correspond to M_ij id's for each colum per row.
+            - Column: [[[0, 1, 2], ...], [[234, 12, 1], ...]
+                Two list corresponding to M_ij. First indicates row M_ij id's per column,
+                the second one, correspond to M_ij id's for each row per column.
+            - Shape: Final shape of 2D graph
 
         Args:
          input_coord (torch.tensor): 2D or 3D array of coordinates
