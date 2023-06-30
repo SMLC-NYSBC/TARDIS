@@ -239,7 +239,6 @@ def main(
         instances = True
 
     checkpoint = checkpoint.split('|')
-    print(checkpoint)
     if len(checkpoint) != 2:
         TardisError(
             id="00",
@@ -255,6 +254,7 @@ def main(
     predictor = DataSetPredictor(
         predict="Microtubule",
         dir_=dir,
+        feature_size=None,
         checkpoint=checkpoint,
         output_format=output_format,
         patch_size=patch_size,
