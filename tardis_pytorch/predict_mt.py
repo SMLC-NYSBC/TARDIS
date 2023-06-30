@@ -13,6 +13,7 @@ from os import getcwd
 import click
 
 from tardis_pytorch.utils.predictor import DataSetPredictor
+from tardis_pytorch.utils.errors import TardisError
 from tardis_pytorch._version import version
 
 warnings.simplefilter("ignore", UserWarning)
@@ -25,6 +26,14 @@ warnings.simplefilter("ignore", UserWarning)
     default=getcwd(),
     type=str,
     help="Directory with images for prediction with CNN model.",
+    show_default=True,
+)
+@click.option(
+    "-ch",
+    "--checkpoint",
+    default='None|None',
+    type=str,
+    help="Optional list of pre-trained weights",
     show_default=True,
 )
 @click.option(
@@ -204,6 +213,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.version_option(version=version)
 def main(
     dir: str,
+    checkpoint: str,
     output_format: str,
     patch_size: int,
     rotate: bool,
@@ -228,9 +238,22 @@ def main(
     else:
         instances = True
 
+    checkpoint = checkpoint.split('|')
+    if len(checkpoint) != 2:
+        TardisError(
+            id="00",
+            py="tardis_pytorch/predict_mt.py",
+            desc=f"Two checkpoint are expected!",
+        )
+    if checkpoint[0] == 'None':
+        checkpoint[0] = None
+    if checkpoint[1] == 'None':
+        checkpoint[1] = None
+
     predictor = DataSetPredictor(
         predict="Microtubule",
         dir_=dir,
+        checkpoint=checkpoint,
         output_format=output_format,
         patch_size=patch_size,
         cnn_threshold=cnn_threshold,

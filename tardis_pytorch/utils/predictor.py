@@ -74,6 +74,7 @@ class DataSetPredictor:
         self,
         predict: str,
         dir_: str,
+        checkpoint: list,
         feature_size: Optional[float],
         output_format: str,
         patch_size: int,
@@ -104,6 +105,7 @@ class DataSetPredictor:
         self.output_format = output_format
         self.predict = predict
         self.amira_prefix = amira_prefix
+        self.checkpoint = checkpoint
 
         # Pre-processing setting
         self.feature_size = feature_size
@@ -247,6 +249,7 @@ class DataSetPredictor:
 
             # Build CNN network with loaded pre-trained weights
             self.cnn = Predictor(
+                checkpoint=self.checkpoint[0],
                 network="fnet",
                 subtype="32",
                 model_type="microtubules",
@@ -257,6 +260,7 @@ class DataSetPredictor:
 
             # Build DIST network with loaded pre-trained weights
             self.dist = Predictor(
+                checkpoint=self.checkpoint[1],
                 network="dist",
                 subtype="triang",
                 model_type="microtubules",
