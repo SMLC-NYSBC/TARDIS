@@ -239,16 +239,18 @@ def main(
         instances = True
 
     checkpoint = checkpoint.split('|')
+    print(checkpoint)
     if len(checkpoint) != 2:
         TardisError(
             id="00",
             py="tardis_pytorch/predict_mt.py",
             desc=f"Two checkpoint are expected!",
         )
-    if checkpoint[0] == 'None':
-        checkpoint[0] = None
-    if checkpoint[1] == 'None':
-        checkpoint[1] = None
+    elif len(checkpoint) == 2:
+        if checkpoint[0] == 'None':
+            checkpoint[0] = None
+        if checkpoint[1] == 'None':
+            checkpoint[1] = None
 
     predictor = DataSetPredictor(
         predict="Microtubule",
