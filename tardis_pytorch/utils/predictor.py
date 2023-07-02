@@ -74,8 +74,6 @@ class DataSetPredictor:
         self,
         predict: str,
         dir_: str,
-        checkpoint: list,
-        feature_size: Optional[float],
         output_format: str,
         patch_size: int,
         cnn_threshold: float,
@@ -91,6 +89,8 @@ class DataSetPredictor:
         instances: bool,
         device_: str,
         debug: bool,
+        checkpoint: Optional[list] = None,
+        feature_size: Optional[float] = None,
     ):
         if predict not in ["Filament", "Membrane2D", "Membrane", "Microtubule"]:
             TardisError(
