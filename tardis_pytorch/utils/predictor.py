@@ -167,11 +167,12 @@ class DataSetPredictor:
             sys.exit()
         # Searching for available images for prediction
         available_format = (".tif", ".mrc", ".rec", ".am")
+        omit_format = ("mask.tif", "mask.mrc", "mask.rec", 'Correlation_Lines.am')
         self.output = join(self.dir, "temp", "Predictions")
         self.am_output = join(self.dir, "Predictions")
 
         # Pickup files for the prediction
-        self.predict_list = [f for f in listdir(dir_) if f.endswith(available_format)]
+        self.predict_list = [f for f in listdir(dir_) if f.endswith(available_format) and not f.endswith(omit_format)]
 
         # Tardis progress bar update
         if len(self.predict_list) == 0:
