@@ -1009,16 +1009,14 @@ class Predictor:
                 return out
             else:
                 if rotate:
-                    out = np.zeros((dim_, dim_, dim_), dtype=np.float32)
-
+                    out = torch.zeros((4, 1, dim_, dim_, dim_), dtype=torch.float32)
                     for k in range(4):
-                        x_ = torch.rot90(x, k=k, dims=(3, 4))
-                        x_ = self.model(x_) / 4
-                        x_ = x_.cpu().detach().numpy()[0, 0, :]
+                        out[k, 0, ...] = torch.rot90(x, k=k, dims=(3, 4))
 
-                        out += np.rot90(x_, k=-k, axes=(1, 2))
+                    out = torch.mean(self.model(out), dim=0)
+                    out = out.cpu().detach().numpy()[0, :]
                 else:
-                    out = self.model(x).cpu().detach().numpy()[0, 0, :]
+                    out = self.model(x).cpu().detach().numpy()[0, :]
 
                 return out
 
