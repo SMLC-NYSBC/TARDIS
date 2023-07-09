@@ -1009,7 +1009,7 @@ class Predictor:
                 return out
             else:
                 if rotate:
-                    out = torch.zeros((4, 1, dim_, dim_, dim_), dtype=torch.float32)
+                    out = torch.zeros((4, 1, dim_, dim_, dim_), dtype=torch.float32, device=self.device)
                     for k in range(4):
                         out[k, 0, ...] = torch.rot90(x, k=k, dims=(3, 4))
 
