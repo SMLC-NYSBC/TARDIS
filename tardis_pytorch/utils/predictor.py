@@ -1013,7 +1013,11 @@ class Predictor:
                     for k in range(4):
                         out[k, 0, ...] = torch.rot90(x, k=k, dims=(3, 4))
 
-                    out = torch.sum(self.model(out), dim=0) / 4
+                    out = self.model(out)
+                    for k in range(4):
+                        out[k, 0, ...] = torch.rot90(out[k, ...], k=-k, dims=(2, 3))
+
+                    out = torch.mean(self.model(out), dim=0)
                     out = out.cpu().detach().numpy()[0, :]
                 else:
                     out = self.model(x).cpu().detach().numpy()[0, :]
