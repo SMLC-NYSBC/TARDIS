@@ -513,19 +513,35 @@ class DataSetPredictor:
                         self.output_idx,
                     )
                 else:
-                    np.save(
-                        join(
-                            self.am_output,
-                            f"{id_name[:-self.in_format]}_coord_voxel.npy",
-                        ),
-                        self.coords_df.cpu().detach().numpy(),
-                    )
-                    np.save(
-                        join(
-                            self.am_output, f"{id_name[:-self.in_format]}_idx_voxel.npy"
-                        ),
-                        self.output_idx.cpu().detach().numpy(),
-                    )
+                    try:
+                        np.save(
+                            join(
+                                self.am_output,
+                                f"{id_name[:-self.in_format]}_coord_voxel.npy",
+                            ),
+                            self.coords_df.cpu().detach().numpy(),
+                        )
+                    except AttributeError:
+                        np.save(
+                            join(
+                                self.am_output,
+                                f"{id_name[:-self.in_format]}_coord_voxel.npy",
+                            ),
+                            self.coords_df,
+                        )
+                    try:
+                        np.save(
+                            join(
+                                self.am_output, f"{id_name[:-self.in_format]}_idx_voxel.npy"
+                            ),
+                            self.output_idx.cpu().detach().numpy(),
+                        )
+                    except AttributeError:
+                        np.save(
+                            join(
+                                self.am_output, f"{id_name[:-self.in_format]}_idx_voxel.npy"
+                            ),
+                            self.output_idx)
                 np.save(
                     join(self.am_output, f"{id_name[:-self.in_format]}_segments.npy"),
                     self.segments,
