@@ -488,12 +488,15 @@ class DataSetPredictor:
                     self.pc_ld,
                 )
             elif debug_id == "graph":
-                np.save(
-                    join(
-                        self.am_output, f"{id_name[:-self.in_format]}_graph_voxel.npy"
-                    ),
-                    self.graphs,
-                )
+                try:
+                    np.save(
+                        join(
+                            self.am_output, f"{id_name[:-self.in_format]}_graph_voxel.npy"
+                        ),
+                        self.graphs
+                    )
+                except ValueError:
+                    pass
             elif debug_id == "segment":
                 if self.device == "cpu":
                     np.save(
