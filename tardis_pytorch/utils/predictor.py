@@ -522,13 +522,7 @@ class DataSetPredictor:
                             self.coords_df.cpu().detach().numpy(),
                         )
                     except AttributeError:
-                        np.save(
-                            join(
-                                self.am_output,
-                                f"{id_name[:-self.in_format]}_coord_voxel.npy",
-                            ),
-                            self.coords_df,
-                        )
+                        pass
                     try:
                         np.save(
                             join(
@@ -536,12 +530,8 @@ class DataSetPredictor:
                             ),
                             self.output_idx.cpu().detach().numpy(),
                         )
-                    except AttributeError:
-                        np.save(
-                            join(
-                                self.am_output, f"{id_name[:-self.in_format]}_idx_voxel.npy"
-                            ),
-                            self.output_idx)
+                    except:
+                        pass
                 np.save(
                     join(self.am_output, f"{id_name[:-self.in_format]}_segments.npy"),
                     self.segments,
