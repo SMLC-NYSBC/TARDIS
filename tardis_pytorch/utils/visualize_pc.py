@@ -179,7 +179,7 @@ def rotate_view(vis):
     return False
 
 
-def VisualizeFilaments(coord: np.ndarray):
+def VisualizeFilaments(coord: np.ndarray, animate=True):
     """
     Visualized filaments.
 
@@ -197,7 +197,12 @@ def VisualizeFilaments(coord: np.ndarray):
         line_set.points = o3d.utility.Vector3dVector(coord[:, 1:])
         line_set.lines = o3d.utility.Vector2iVector(graph)
 
-        o3d.visualization.draw_geometries([line_set])
+        if animate:
+            o3d.visualization.draw_geometries_with_animation_callback(
+                [line_set], rotate_view
+            )
+        else:
+            o3d.visualization.draw_geometries([line_set])
 
 
 def VisualizeScanNet(coord: np.ndarray, segmented: True):
