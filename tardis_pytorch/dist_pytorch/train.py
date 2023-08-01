@@ -112,6 +112,7 @@ def train_dist(
             knn=model_structure["num_knn"],
             coord_embed_sigma=model_structure["coord_embed_sigma"],
             predict=True,
+            device=device
         )
     elif model_structure["dist_type"] == "semantic":
         model = CDIST(
@@ -173,10 +174,10 @@ def train_dist(
 
     """Build training optimizer"""
     if lr_scheduler:
-        optimizer = optim.Adam(params=model.parameters(), betas=(0.9, 0.98), eps=1e-9)
+        optimizer = optim.Adam(params=model.parameters(), betas=(0.9, 0.999), eps=1e-9)
     else:
         optimizer = optim.Adam(
-            params=model.parameters(), lr=learning_rate, betas=(0.9, 0.98), eps=1e-9
+            params=model.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-9
         )
 
     """Optionally: Build learning rate scheduler"""

@@ -11,7 +11,7 @@ import torch
 import torch.nn as nn
 
 import numpy as np
-from tardis_pytorch.dist_pytorch.sparse_model.embedding import SparseEdgeEmbeddingV3
+from tardis_pytorch.dist_pytorch.sparse_model.embedding import SparseEdgeEmbeddingV4
 from tardis_pytorch.dist_pytorch.sparse_model.layers import SparseDistStack
 
 
@@ -33,8 +33,10 @@ class SparseDIST(nn.Module):
         n_out=1,
         edge_dim=128,
         num_layers=6,
+        knn=8,
         coord_embed_sigma=1.0,
         predict=False,
+        device='cpu'
     ):
         """
         Initializes the SparseDIST.
@@ -51,11 +53,12 @@ class SparseDIST(nn.Module):
         self.n_out = n_out
         self.edge_dim = edge_dim
         self.num_layers = num_layers
+        self.knn = knn
         self.edge_sigma = coord_embed_sigma
         self.predict = predict
 
-        self.coord_embed = SparseEdgeEmbeddingV3(
-            n_out=self.edge_dim, sigma=self.edge_sigma
+        self.coord_embed = SparseEdgeEmbeddingV4(
+            n_out=self.edge_dim, sigma=self.edge_sigma, knn=self.knn, _device=device,
         )
 
         self.layers = SparseDistStack(
@@ -80,7 +83,7 @@ class SparseDIST(nn.Module):
 
         return x, idx
 
-    def forward(self, coords: torch.tensor) -> torch.tensor:
+    def forward(self, coords: torch.tensor, idx=None) -> torch.tensor:
         """
         Forward pass for the SparseDIST.
 
@@ -94,12 +97,11 @@ class SparseDIST(nn.Module):
         edge, idx = self.embed_input(coords=coords)  # List[Indices, Values, Shape]
 
         # Encode throughout the transformer layers
-        edge, idx = self.layers(
-            edge_features=edge, indices=idx
-        )  # List[Indices, Values, Shape]
+        edge = self.layers(edge_features=edge, indices=idx)  # List[Indices, Values, Shape]
 
         # Predict the graph edges
-        edge = self.decoder(edge + edge[:, np.concatenate(idx[2][1]), :])
+        # edge = self.decoder(edge + edge[:, np.concatenate(idx[2][1]), :])
+        edge = self.decoder(edge)
 
         if self.predict:
             edge = torch.sigmoid(edge)

@@ -69,7 +69,7 @@ class SparsTriangularUpdate(nn.Module):
         nn.init.constant_(self.linear_o.weight, 0.0)
         nn.init.constant_(self.linear_o.bias, 0.0)
 
-    def forward(self, x: torch.tensor, indices: list) -> Union[torch.tensor, list]:
+    def forward(self, x: torch.tensor, indices: list) -> torch.tensor:
         """
         Forward pass for SparsTriangularUpdate.
 
@@ -87,57 +87,14 @@ class SparsTriangularUpdate(nn.Module):
         b = torch.sigmoid(self.gate_b(x)) * self.linear_b(x)
 
         # # Apply triangular multiplication update
-        k = torch.zeros_like(a)
+        # k = torch.zeros_like(a)
 
         if self.axis == 1:  # Row-wise update
-            i_element = [indices[1][1][i].copy() + [i] for i in range(len(indices[1][1]))]
-            i_th = [list(compress(i_el, [True if k in indices[1][1][j] else False for k in i_el])) for i_el in i_element
-                    for j in i_el]
-            j_th = [list(compress(indices[1][1][j], [True if k in i_el else False for k in indices[1][1][j]])) for i_el
-                    in i_element for j in i_el]
-            i_element = [i for s in i_element for i in s]
-
-            shape_ = [len(x) for x in j_th]
-            cumulative_sizes = np.cumsum([0] + shape_)
-
-            df_ij = a[:, torch.from_numpy(np.concatenate(i_th)), :] * b[:, torch.from_numpy(np.concatenate(j_th)), :]
-            df_ij = [torch.sum(df_ij[:, cumulative_sizes[0]:cumulative_sizes[1]], dim=1) for i in range(len(shape_))]
-
-            k[:, i_element, :] = torch.cat(df_ij)
+            k = torch.einsum('ik,ijk->ik', a, b[indices[0]])
         else:
-            i_element = [indices[2][1][i].copy() + [i] for i in range(len(indices[2][1]))]
-            i_th = [list(compress(i_el, [True if k in indices[1][1][j] else False for k in i_el])) for i_el in i_element
-                    for j in i_el]
-            j_th = [list(compress(indices[2][1][j], [True if k in i_el else False for k in indices[2][1][j]])) for i_el
-                    in i_element for j in i_el]
-            i_element = [i for s in i_element for i in s]
+            k = torch.einsum('ik,ijk->ik', a, b[indices[1]])
 
-            shape_ = [len(x) for x in j_th]
-            cumulative_sizes = np.cumsum([0] + shape_)
-
-            df_ij = a[:, torch.from_numpy(np.concatenate(i_th)), :] * b[:, torch.from_numpy(np.concatenate(j_th)), :]
-            df_ij = [torch.sum(df_ij[:, cumulative_sizes[0]:cumulative_sizes[1]], dim=1) for i in range(len(shape_))]
-
-            k[:, i_element, :] = torch.cat(df_ij)
-
-        # if self.axis == 1:  # Row-wise
-        #     idx[0] = idx[0].reshape(org_shape[1], self.k, 2)
-        #     a = a.reshape(1, org_shape[1], self.k, ch)
-        #     idx[0] = idx[0].reshape(org_shape[1], self.k, 2)
-        #     b = b.reshape(1, org_shape[1], self.k, ch)
-
-        #     k = a.repeat_interleave(self.k, dim=1) * b[0, idx[0][..., 1].flatten().long(), :].unsqueeze(0)
-        #     k = torch.sum(k, dim=2)
-        #     k = k.reshape(1, M_len, 32)
-
-        #     idx = [idx[0].reshape(org_shape[1] * self.k, 2), idx[1]]
-        # else:  # Column-wise
-        #     for _id in range(mm_len):
-        #         k[0, i_id, :] = sparse_mm(a[1][:, :mm_len, :][:, i_id, :],
-        #                                        b[1][:, :mm_len, :][:, i_id, :],
-        #                                        a[0][:mm_len, :][i_id, :])
-
-        return torch.sigmoid(self.gate_o(x)) * self.linear_o(self.norm_o(k)), indices
+        return torch.sigmoid(self.gate_o(x)) * self.linear_o(self.norm_o(a))
 
 
 def sparse_to_dense(x: list, numpy=False) -> np.ndarray:

@@ -643,8 +643,8 @@ class Stanford3DDataset(BasicDataset):
             cls=cls_idx,
         )
 
-        if self.sparse:
-            graph_idx = [g.to_sparse() for g in graph_idx]
+        # if self.sparse:
+        #     graph_idx = [g.to_sparse() for g in graph_idx]
 
         if self.benchmark:
             # Output file_name, raw_coord, edge_f, node_f, graph, node_idx, node_class

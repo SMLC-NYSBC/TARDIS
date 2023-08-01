@@ -14,6 +14,9 @@ import torch.nn as nn
 import numpy as np
 from typing import Union
 
+from scipy.spatial import KDTree
+import numpy as np
+
 
 class SparseEdgeEmbedding(nn.Module):
     """
@@ -317,3 +320,74 @@ class SparseEdgeEmbeddingV3(nn.Module):
                 k_dist_range[:, id_] = torch.exp(-(_dist**2) / (i**2 * 2))
 
         return k_dist_range.unsqueeze(0).to(device), [indices, row_indices, col_indices, _shape]
+
+
+class SparseEdgeEmbeddingV4(nn.Module):
+    """
+    Module for Sparse Edge Embedding.
+
+    This class is responsible for computing a sparse adjacency matrix
+    with edge weights computed using a Gaussian kernel function over
+    the distances between input coordinates.
+    """
+
+    def __init__(self, n_out: int, sigma: list, knn: int, _device):
+        """
+        Initializes the SparseEdgeEmbedding.
+
+        Args:
+            n_out (int): The number of output channels.
+            sigma (list): The range of sigma values for the Gaussian kernel.
+        """
+        super().__init__()
+        self._range = torch.linspace(sigma[0], sigma[1], n_out)
+
+        self.knn = knn
+        self.n_out = n_out
+        self.sigma = sigma
+        self._device = _device
+
+    def forward(self, input_coord: np.ndarray) -> Union[torch.tensor, list]:
+        with torch.no_grad():
+            # Get all ij element from row and col
+            input_coord = input_coord.cpu().detach().numpy()
+            tree = KDTree(input_coord)
+            distances, indices = tree.query(input_coord, self.knn)
+            
+            n = len(input_coord)
+            M = distances.flatten()
+            
+            all_ij_id = np.array((np.repeat(np.arange(n), self.knn), indices.flatten())).T
+            
+            # Row-Wise M[ij] index
+            row_idx = np.repeat(np.arange(0, len(M)).reshape(len(input_coord), self.knn), self.knn, axis=0).reshape(len(M), self.knn) + 1
+            row_idx = np.vstack((np.repeat(0, self.knn), row_idx))
+    
+            # Column-Wise M[ij] index
+            col_idx = np.array([np.pad(c, (0, self.knn-len(c))) 
+                                if len(c) <= self.knn 
+                                else c[np.argsort(M[c-1])[:self.knn]] 
+                                for c in [np.where(all_ij_id[:, 1] == i)[0] + 1 
+                                          for i in range(len(input_coord))]])
+    
+            col_idx = np.repeat(col_idx, self.knn, axis=0)
+            col_idx = np.vstack((np.repeat(0, self.knn), col_idx))
+    
+            M = torch.from_numpy(np.pad(M, (1, 0)))
+            # Prepare tensor for storing range of distances
+            k_dist_range = torch.zeros(
+                (len(M), len(self._range))
+            )
+            
+            # Apply Gaussian kernel function to the top-k distances
+            for id_, i in enumerate(self._range):
+                k_dist_range[:, id_] = torch.exp(-(M**2) / (i**2 * 2))
+            k_dist_range[0, :] = 0
+            
+            # Replace any NaN values with zero
+            isnan = torch.isnan(k_dist_range)
+            k_dist_range = torch.where(
+                isnan, torch.zeros_like(k_dist_range), k_dist_range
+            )
+
+        return k_dist_range.to(self._device), [row_idx.astype(np.int32), col_idx.astype(np.int32), (n, n), all_ij_id]

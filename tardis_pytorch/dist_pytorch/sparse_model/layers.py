@@ -27,7 +27,7 @@ class SparseDistStack(nn.Module):
     is the output of the SparseDistStack.
     """
 
-    def __init__(self, pairs_dim: int, num_layers=1, ff_factor=4, knn=12):
+    def __init__(self, pairs_dim: int, num_layers=1, ff_factor=4):
         """
         Initializes the SparseDistStack.
 
@@ -73,9 +73,9 @@ class SparseDistStack(nn.Module):
             torch.sparse_coo_tensor: A sparse coordinate tensor representing the output from the final layer in the stack.
         """
         for layer in self.layers:
-            edge_features, _ = layer(h_pairs=edge_features, indices=indices)
+            edge_features = layer(h_pairs=edge_features, indices=indices)
 
-        return edge_features, indices
+        return edge_features
 
 
 class SparseDistLayer(nn.Module):
@@ -140,11 +140,11 @@ class SparseDistLayer(nn.Module):
         # ToDo Convert node features to edge shape
 
         # Update edge features
-        row, _ = self.row_update(x=h_pairs, indices=indices)
-        col, _ = self.col_update(x=h_pairs, indices=indices)
-        h_pairs = (h_pairs + row + col)
+        row = self.row_update(x=h_pairs, indices=indices)
+        # col = self.col_update(x=h_pairs, indices=indices)
+        h_pairs = h_pairs + row # + col
 
-        return h_pairs + self.pair_ffn(x=h_pairs), indices
+        return h_pairs + self.pair_ffn(x=h_pairs)
 
     def forward(self, h_pairs: torch.tensor, indices: list) -> Union[torch.tensor, list]:
         """
@@ -160,5 +160,6 @@ class SparseDistLayer(nn.Module):
         # ToDo Update node features and convert to edge shape
 
         # Update edge features
-        h_pairs, idx = self.update_edges(h_pairs=h_pairs, indices=indices)
-        return h_pairs, idx
+        h_pairs = self.update_edges(h_pairs=h_pairs, indices=indices)
+
+        return h_pairs
