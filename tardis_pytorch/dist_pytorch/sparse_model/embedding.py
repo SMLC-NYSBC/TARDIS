@@ -347,7 +347,7 @@ class SparseEdgeEmbeddingV4(nn.Module):
         self.sigma = sigma
         self._device = _device
 
-    def forward(self, input_coord: np.ndarray) -> Union[torch.tensor, list]:
+    def forward(self, input_coord: torch.tensor) -> Union[torch.tensor, list]:
         with torch.no_grad():
             # Get all ij element from row and col
             input_coord = input_coord.cpu().detach().numpy()

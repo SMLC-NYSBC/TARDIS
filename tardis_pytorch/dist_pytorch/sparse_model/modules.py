@@ -94,7 +94,7 @@ class SparsTriangularUpdate(nn.Module):
         else:
             k = torch.einsum('ik,ijk->ik', a, b[indices[1]])
 
-        return torch.sigmoid(self.gate_o(x)) * self.linear_o(self.norm_o(a))
+        return torch.sigmoid(self.gate_o(x)) * self.linear_o(self.norm_o(k))
 
 
 def sparse_to_dense(x: list, numpy=False) -> np.ndarray:

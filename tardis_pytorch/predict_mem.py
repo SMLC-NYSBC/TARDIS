@@ -29,6 +29,14 @@ warnings.simplefilter("ignore", UserWarning)
     show_default=True,
 )
 @click.option(
+    "-ch",
+    "--checkpoint",
+    default=None,
+    type=str,
+    help="Optional list of pre-trained weights",
+    show_default=True,
+)
+@click.option(
     "-out",
     "--output_format",
     default="mrc_None",
@@ -133,6 +141,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.version_option(version=version)
 def main(
     dir: str,
+    checkpoint: str,
     output_format: str,
     patch_size: int,
     rotate: bool,
@@ -151,9 +160,13 @@ def main(
     else:
         instances = True
 
+    if checkpoint is not None:
+        checkpoint = [checkpoint, None]
+
     predictor = DataSetPredictor(
         predict="Membrane",
         dir_=dir,
+        checkpoint=checkpoint,
         output_format=output_format,
         patch_size=patch_size,
         cnn_threshold=cnn_threshold,
