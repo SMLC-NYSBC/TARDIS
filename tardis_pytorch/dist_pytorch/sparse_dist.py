@@ -65,6 +65,7 @@ class SparseDIST(nn.Module):
             pairs_dim=self.edge_dim,
             num_layers=self.num_layers,
             ff_factor=4,
+            knn=self.knn
         )
 
         self.decoder = nn.Linear(in_features=self.edge_dim, out_features=self.n_out)
@@ -83,7 +84,7 @@ class SparseDIST(nn.Module):
 
         return x, idx
 
-    def forward(self, coords: torch.tensor, idx=None) -> torch.tensor:
+    def forward(self, edge: torch.tensor, idx=None) -> torch.tensor:
         """
         Forward pass for the SparseDIST.
 
@@ -94,7 +95,7 @@ class SparseDIST(nn.Module):
             torch.sparse_coo_tensor: A sparse coordinate tensor representing the output from the model.
         """
         # Embed coord [n, 3] coordinates into spares tensor
-        edge, idx = self.embed_input(coords=coords)  # List[Indices, Values, Shape]
+        # edge, idx = self.embed_input(coords=coords)  # List[Indices, Values, Shape]
 
         # Encode throughout the transformer layers
         edge = self.layers(edge_features=edge, indices=idx)  # List[Indices, Values, Shape]

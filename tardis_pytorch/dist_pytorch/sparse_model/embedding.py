@@ -352,7 +352,7 @@ class SparseEdgeEmbeddingV4(nn.Module):
             # Get all ij element from row and col
             input_coord = input_coord.cpu().detach().numpy()
             tree = KDTree(input_coord)
-            distances, indices = tree.query(input_coord, self.knn)
+            distances, indices = tree.query(input_coord, self.knn, p=1)
             
             n = len(input_coord)
             M = distances.flatten()
@@ -360,14 +360,14 @@ class SparseEdgeEmbeddingV4(nn.Module):
             all_ij_id = np.array((np.repeat(np.arange(n), self.knn), indices.flatten())).T
             
             # Row-Wise M[ij] index
-            row_idx = np.repeat(np.arange(0, len(M)).reshape(len(input_coord), self.knn), self.knn, axis=0).reshape(len(M), self.knn) + 1
+            row_idx = np.repeat(np.arange(0, len(M)).reshape(len(input_coord), self.knn), self.knn, axis=0).reshape(len(M), self.knn)
             row_idx = np.vstack((np.repeat(0, self.knn), row_idx))
     
             # Column-Wise M[ij] index
             col_idx = np.array([np.pad(c, (0, self.knn-len(c))) 
                                 if len(c) <= self.knn 
-                                else c[np.argsort(M[c-1])[:self.knn]] 
-                                for c in [np.where(all_ij_id[:, 1] == i)[0] + 1 
+                                else c[np.argsort(M[c - 1])[:self.knn]] 
+                                for c in [np.where(all_ij_id[:, 1] == i)[0] + 1
                                           for i in range(len(input_coord))]])
     
             col_idx = np.repeat(col_idx, self.knn, axis=0)
@@ -390,4 +390,18 @@ class SparseEdgeEmbeddingV4(nn.Module):
                 isnan, torch.zeros_like(k_dist_range), k_dist_range
             )
 
-        return k_dist_range.to(self._device), [row_idx.astype(np.int32), col_idx.astype(np.int32), (n, n), all_ij_id]
+
+        # # symetry indexes
+        # # Convert to structured arrays
+        # b = np.stack((all_ij_id[:,1], all_ij_id[:, 0])).T
+
+        # a_structured = np.ascontiguousarray(all_ij_id).view(np.dtype((np.void, all_ij_id.dtype.itemsize * all_ij_id.shape[1])))
+        # b_structured = np.ascontiguousarray(b).view(np.dtype((np.void, b.dtype.itemsize * b.shape[1])))
+        
+        # # Get the indices of duplicated rows
+        # sum_a_value = np.where(np.in1d(a_structured, b_structured))[0]
+        # sum_b_value = np.where(np.in1d(b_structured, a_structured))[0]
+
+        # add_value = np.setdiff1d(b_structured, a_structured).view(all_ij_id.dtype).reshape(-1, all_ij_id.shape[1])
+
+        return k_dist_range.to(self._device), [row_idx.astype(np.int32), col_idx.astype(np.int32), (n, n), all_ij_id.astype(np.int32)]

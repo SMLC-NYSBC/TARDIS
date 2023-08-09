@@ -164,7 +164,7 @@ class SparseDistTrainer(BasicTrainer):
 
                 # Back-propagate
                 loss = self.criterion(
-                    edge[1:, 0], graph[0, indices[3][:, 0], indices[3][:, 1]].type(torch.float32)
+                    edge[:, 0], graph[0, indices[3][:, 0], indices[3][:, 1]].type(torch.float32)
                 )  # Calc. loss
                 loss.backward()  # One backward pass
                 self.optimizer.step()  # Update the parameters
@@ -212,12 +212,12 @@ class SparseDistTrainer(BasicTrainer):
 
                     # Calcu late validation loss
                     loss = self.criterion(
-                        edge[1:, 0], graph[0, indices[3][:, 0], indices[3][:, 1]].type(torch.float32)
+                        edge[:, 0], graph[0, indices[3][:, 0], indices[3][:, 1]].type(torch.float32)
                     )  # Calc. loss
 
                     # Calculate F1 metric
                     pred_edge = np.zeros(indices[2])
-                    pred_edge[indices[3][:, 0], indices[3][:, 1]] = edge[1:, 0].cpu().detach().numpy()
+                    pred_edge[indices[3][:, 0], indices[3][:, 1]] = edge[:, 0].cpu().detach().numpy()
                     acc, prec, recall, f1, th = eval_graph_f1(
                         logits=torch.from_numpy(pred_edge),
                         targets=graph[0, ...].cpu().detach(),
