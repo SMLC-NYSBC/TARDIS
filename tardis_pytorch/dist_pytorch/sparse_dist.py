@@ -84,11 +84,7 @@ class SparseDIST(nn.Module):
 
         return x, idx
 
-<<<<<<< HEAD
-    def forward(self, edge: torch.tensor, idx=None) -> torch.tensor:
-=======
     def forward(self, coords: torch.tensor) -> torch.tensor:
->>>>>>> 1a950d7def86a8214e39f271030d4a6cf8fd06d5
         """
         Forward pass for the SparseDIST.
 
