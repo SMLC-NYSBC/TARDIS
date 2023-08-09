@@ -103,32 +103,3 @@ class SparsTriangularUpdate(nn.Module):
         # k = F.pad(k.T, (1, 0), "constant", 0).T
 
         return torch.sigmoid(self.gate_o(x)) * self.linear_o(self.norm_o(k))
-<<<<<<< HEAD
-=======
-
-
-def sparse_to_dense(x: list, numpy=False) -> np.ndarray:
-    _shape = x[-1]
-
-    if numpy:
-        try:
-            idx = x[0].cpu().detach().numpy()
-            x = x[1].cpu().detach().numpy()[0, ...]
-        except:
-            idx = x[0].detach().numpy()
-            x = x[1].detach().numpy()[0, ...]
-
-        graph = np.zeros(_shape, dtype=np.float16)
-    else:
-        idx = x[0]
-        x = x[1][0, ...]
-        graph = torch.zeros(_shape, dtype=torch.float32, device=x.device)
-
-    for _id, i in enumerate(idx):
-        i, j = i
-        graph[0, i, j, ...] = x[_id, ...]
-
-    graph[0, range(_shape[1]), range(_shape[2]), ...] = 1
-
-    return graph
->>>>>>> 1a950d7def86a8214e39f271030d4a6cf8fd06d5
