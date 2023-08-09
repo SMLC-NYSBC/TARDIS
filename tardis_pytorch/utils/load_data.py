@@ -89,19 +89,31 @@ class ImportDataFromAmira:
             if frame == 10000:
                 break
 
-        if not any(
+        binary = False
+        spatial_graph = ""
+        if any(
             [
                 True
                 for i in ["AmiraMesh 3D ASCII", "# ASCII Spatial Graph"]
                 if i not in am
             ]
         ):
-            self.spatial_graph = None
-        else:
+            if "AmiraMesh BINARY-LITTLE-ENDIAN 3.0" not in am:
+                spatial_graph = None
+            else:
+                binary = True
+        if spatial_graph is not None:
             self.spatial_graph = (
                 open(src_am, "r", encoding="iso-8859-1").read().split("\n")
             )
             self.spatial_graph = [x for x in self.spatial_graph if x != ""]
+
+        if binary:
+            return None
+            # self.spatial_graph = self.am_decode(self.spatial_graph)
+
+    def __am_decode(self, am: str) -> str:
+        pass
 
     def __get_segments(self) -> Union[np.ndarray, None]:
         """

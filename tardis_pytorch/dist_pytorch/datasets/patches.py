@@ -8,7 +8,7 @@
 #  MIT License 2021 - 2023                                            #
 #######################################################################
 
-from typing import Tuple, Union
+from typing import Tuple, Union, List
 
 import numpy as np
 import torch
@@ -162,7 +162,7 @@ class PatchDataSet:
 
         return coord_idx
 
-    def optimal_patches(self, coord: np.ndarray, random=False) -> list[bool]:
+    def optimal_patches(self, coord: np.ndarray, random=False) -> List[bool]:
         """
         Main class function to compute optimal patch size.
 
@@ -389,7 +389,7 @@ class PatchDataSet:
         mesh=6,
         random=False,
         voxel_size=None,
-    ) -> Union[Tuple[list, list, list, list, list], Tuple[list, list, list, list]]:
+    ) -> Union[Tuple[List, List, List, List, List], Tuple[List, List, List, List]]:
         coord_patch = []
         graph_patch = []
         output_idx = []
