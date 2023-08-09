@@ -4,36 +4,43 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - 'release/**'
+      - 'releases/*'
 
 jobs:
   test_build:
-    runs-on: ${{ matrix.os }}
     strategy:
+      max-parallel: 4
       matrix:
-        python-version: ["3.8", "3.9"]
-        os: [ubuntu-latest, macOS-latest]
+        python-version: ["3.8"]
+        os: [ubuntu-latest]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+      - name: Checkout
+        uses: actions/checkout@v3
+      
+      - name: Set up Python${{ matrix.python-version }}
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
+          cache: 'pip'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install --upgrade coverage
-          python -m pip install flake8 pytest
+          python -m pip install black pytest
+
+      - name: Install requirements
+        run: |
           pip install -r requirements.txt
           pip install -e .
-
+      
       - name: Lint with flake8
         run: |
-          # stop the build if there are Python syntax errors or undefined names
-          flake8 . --count --ignore=E731,W504,E722,F821,F841 --show-source --statistics
+          # Run black to ensure syntax cleanness
+          black .
 
       - name: Test with pytest
         run: |

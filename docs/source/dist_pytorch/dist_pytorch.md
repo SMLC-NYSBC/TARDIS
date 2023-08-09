@@ -1,4 +1,4 @@
 # DIST
 ```{eval-rst}
-.. automodule:: tardis.dist_pytorch.dist
+.. automodule:: tardis_pytorch.dist_pytorch.dist
 ```

@@ -1,4 +1,4 @@
-name: "TARDIS_pytorch Documentation Build"
+name: TARDIS_pytorch Documentation Build
 on: 
   workflow_dispatch:
   push:

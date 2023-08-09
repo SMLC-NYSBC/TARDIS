@@ -10,9 +10,15 @@
 
 import torch
 
-from tardis.dist_pytorch.model.modules import (ComparisonLayer, gelu, GeluFeedForward,
-                                               PairBiasSelfAttention, QuadraticEdgeUpdate,
-                                               SelfAttention2D, TriangularEdgeUpdate)
+from tardis_pytorch.dist_pytorch.model.modules import (
+    ComparisonLayer,
+    gelu,
+    GeluFeedForward,
+    PairBiasSelfAttention,
+    QuadraticEdgeUpdate,
+    SelfAttention2D,
+    TriangularEdgeUpdate,
+)
 
 
 def test_comparison_layer():
@@ -37,13 +43,10 @@ def test_gelu_forward():
 def test_pair_attention():
     data_q = torch.rand((10, 1, 32))  # (Length x Batch x Channels)
     data_p = torch.rand((1, 10, 10, 64))  # (Batch x Length x Length x Channels)
-    pair_attn = PairBiasSelfAttention(embed_dim=32,
-                                      pairs_dim=64,
-                                      num_heads=8)
+    pair_attn = PairBiasSelfAttention(embed_dim=32, pairs_dim=64, num_heads=8)
 
     with torch.no_grad():
-        data_attn = pair_attn(query=data_q,
-                              pairs=data_p)
+        data_attn = pair_attn(query=data_q, pairs=data_p)
 
     assert data_attn.shape == data_q.shape
 

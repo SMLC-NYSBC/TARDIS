@@ -29,7 +29,6 @@
    DIST -> DIST modules <dist_pytorch/modules>
    DIST -> DataLoader <dist_pytorch/data_loader>
    DIST -> Patch point cloud <dist_pytorch/patches>
-   DIST -> Visualizer <dist_pytorch/visualize>
    DIST -> Utils <dist_pytorch/utils>
 ```
 
@@ -41,6 +40,7 @@
    Global -> Trainer<utils/trainer>
    Global -> Import data <utils/import_data>
    Global -> Utils <utils/utils>
+   Global -> Visualizer <utils/visualize>
 ```
 
 

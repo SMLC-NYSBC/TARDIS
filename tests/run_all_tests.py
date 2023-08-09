@@ -13,9 +13,9 @@ import subprocess
 import subprocess as subp
 import sys
 
-from tardis.utils.errors import TardisError
-from tardis.utils.logo import TardisLogo
-from tardis.version import version
+from tardis_pytorch.utils.errors import TardisError
+from tardis_pytorch.utils.logo import TardisLogo
+from tardis_pytorch._version import version
 
 
 def env_exists(env_name: str) -> bool:
@@ -46,9 +46,9 @@ def py(python: str):
     Returns:
         list: Output log from pytest.
     """
-    os.chdir('../../')  # move to root dir
+    os.chdir("../../")  # move to root dir
 
-    if env_exists('PythonEnvTest'):
+    if env_exists("PythonEnvTest"):
         # Remove test environment
         subp.run("conda remove -n PythonEnvTest --all -y", shell=True)
     else:
@@ -56,62 +56,54 @@ def py(python: str):
         subp.run("conda create --name PythonEnvTest -y", shell=True)
 
     # Set up Python 3.X env and update
-    subp.run(f"conda run -n PythonEnvTest conda install python={'3.' + python[1:]} -y",
-             shell=True)
+    subp.run(
+        f"conda run -n PythonEnvTest conda install python={'3.' + python[1:]} -y",
+        shell=True,
+    )
 
     # Check and reinstall if needed requirements
-    subp.run("conda run -n PythonEnvTest pip install -r requirements-dev.txt",
-             shell=True)
-    subp.run("conda run -n PythonEnvTest pip install -r requirements.txt",
-             shell=True)
+    subp.run(
+        "conda run -n PythonEnvTest pip install -r requirements-dev.txt", shell=True
+    )
+    subp.run("conda run -n PythonEnvTest pip install -r requirements.txt", shell=True)
 
     # Clean-up
-    subp.run("conda run -n PythonEnvTest conda clean -a -y",
-             shell=True)
-    subp.run("conda run -n PythonEnvTest pip cache purge",
-             shell=True)
+    subp.run("conda run -n PythonEnvTest conda clean -a -y", shell=True)
+    subp.run("conda run -n PythonEnvTest pip cache purge", shell=True)
 
-    # Install tardis-pytorch
-    subp.run("conda run -n PythonEnvTest pip install -e .",
-             shell=True)
+    # Install tardis_pytorch-pytorch
+    subp.run("conda run -n PythonEnvTest pip install -e .", shell=True)
 
     # Test on Python 3.X.*
-    return subp.run("conda run -n PythonEnvTest pytest",
-                    shell=True,
-                    capture_output=True)
+    return subp.run(
+        "conda run -n PythonEnvTest pytest", shell=True, capture_output=True
+    )
 
 
 if __name__ == "__main__":
     tardis_progress = TardisLogo()
-    tardis_progress(title=f'Development - TARDIS {version} - pytest')
+    tardis_progress(title=f"Development - TARDIS {version} - pytest")
 
     """ Run Pytest on python 3.7 - 3.11"""
     if sys.platform != "darwin":  # Python 3.7 on macOS is only available throw x64
-        out = py(python='37')
+        out = py(python="37")
         if not out.retuncode == 0:
-            TardisError('20',
-                        f'{out}'
-                        'Pyton 3.7 pytest Failed')
+            TardisError("20", f"{out}" "Pyton 3.7 pytest Failed")
             exit()
 
-    out = py(python='38')
+    out = py(python="38")
     if not out.returncode == 0:
-        TardisError('20',
-                    f'{out}'
-                    'Pyton 3.8 pytest Failed')
+        TardisError("20", f"{out}" "Pyton 3.8 pytest Failed")
         exit()
 
-    out = py(python='39')
+    out = py(python="39")
     if not out.returncode == 0:
-        TardisError('20',
-                    f'{out}'
-                    'Pyton 3.9 pytest Failed')
+        TardisError("20", f"{out}" "Pyton 3.9 pytest Failed")
         exit()
 
-    out = py(python='310')
+    out = py(python="310")
     if not out.returncode == 0:
-        TardisError(f'{out}'
-                    'Pyton 3.10 pytest Failed')
+        TardisError(f"{out}" "Pyton 3.10 pytest Failed")
         exit()
 
     # !!! Python 3.11 missing compatibility with numpy open3d and pytorch !!!
@@ -123,6 +115,8 @@ if __name__ == "__main__":
     #     exit()
 
     """ Return output """
-    tardis_progress(title=f'Development - TARDIS {version} - pytest',
-                    text_1='All test passed correctly on python 3.7, 3.8, 3.9, 3.10',
-                    text_2='Sphinx-build Completed.')
+    tardis_progress(
+        title=f"Development - TARDIS {version} - pytest",
+        text_1="All test passed correctly on python 3.7, 3.8, 3.9, 3.10",
+        text_2="Sphinx-build Completed.",
+    )

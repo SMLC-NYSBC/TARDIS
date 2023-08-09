@@ -10,7 +10,7 @@
 
 import numpy as np
 
-from tardis.dist_pytorch.utils.build_point_cloud import BuildPointCloud
+from tardis_pytorch.dist_pytorch.utils.build_point_cloud import BuildPointCloud
 
 
 def test_build_pc():
@@ -29,20 +29,15 @@ def test_build_pc():
     assert pc.ndim == 2
     assert len(pc) > 0
 
-    pc = builder.build_point_cloud(image=y,
-                                   EDT=True)
+    pc = builder.build_point_cloud(image=y, EDT=True)
     assert pc.ndim == 2
     assert len(pc) > 0
 
-    pc = builder.build_point_cloud(image=y,
-                                   EDT=True,
-                                   as_2d=True)
+    pc = builder.build_point_cloud(image=y, EDT=True, as_2d=True)
     assert pc.ndim == 2
     assert len(pc) > 0
 
-    pc_hd, pc_ld = builder.build_point_cloud(image=y,
-                                             EDT=True,
-                                             down_sampling=1)
+    pc_hd, pc_ld = builder.build_point_cloud(image=y, EDT=True, down_sampling=1)
     assert pc_hd.ndim == 2 and pc_ld.ndim == 2
     assert len(pc_hd) > 0
     assert len(pc_ld) > 0

@@ -1,8 +1,18 @@
-History
-=======
+# History
+## 0.1.0-RC2-HotFix (2023-03-28)
+* **General changes:**
+  * Fixed saving int8 semantic output as mrc
+  * Added rotation for CNN prediction
 
-0.1.0-RC2 (2023-03-22)
-----------------------
+## 0.1.0-RC2-HotFix (2023-03-23)
+* **General changes:**
+  * Fixed loading for corrupted mrc files
+  * Fixed for loading and saving mrc/rec files (fix for reading headers size)
+  * Fix for loading new Amira SG with coordinates in 'nm' not 'Angstrom'
+  * Small fixed in general prediction loops
+  * Fixed missing membrane instance prediction output
+
+## 0.1.0-RC2 (2023-03-22)
 * **General changes:**
     * *#General*: 
       * Normalized all documentation to *.md
@@ -36,8 +46,7 @@ History
   * *#Optimize* 
     * Point cloud visualization can be now with or without animation
 
-0.1.0-RC1 (2023-02-08)
-----------------------
+## 0.1.0-RC1 (2023-02-08)
 * **Code restructure:**
     * *#Optimize*:
         * autonomization of tests for all python version
@@ -77,8 +86,7 @@ History
     * *#New_Feature*:
       * TardisError for all error handling
 
-0.1.0-beta2 (2022-09-14)
-------------------------
+## 0.1.0-beta2 (2022-09-14)
 * **Code restructure:**
     * Finished documentation with Sphinx
     * Build testes for the whole tardis-pytorch
@@ -100,8 +108,7 @@ History
     * Support for python 3.11 (awaiting pytorch and open3d)
     * requirements.txt changes and include pytroch with support for different os
 
-0.1.0-pre_beta2 (2022-09-14)
-----------------------------
+## 0.1.0-pre_beta2 (2022-09-14)
 * **Code restructure:**
     * Clean-up
     * Restructure code organization
@@ -139,8 +146,7 @@ History
     * Minor bugfixes from prebeta2 and new additions to beta2
 
 
-0.1.0-beta1 (2022-09-14)
-------------------------
+## 0.1.0-beta1 (2022-09-14)
 * **DIST module changes:**
     * Added new classification model based on DIST
     * Simplified logic for patching big point cloud + reduction of number of patches
@@ -192,8 +198,7 @@ History
     * Flake8 and pyteset fixes
     * Global tunning for segmentation quality
 
-0.1.0-alpha6 (2022-07-12)
--------------------------
+## 0.1.0-alpha6 (2022-07-12)
 * Check pipeline for image embedding (normalization to enhance features)
     * Introduce new normalization ResaleNormalize that spread histogram from 
         2-98 projectile of intensity distribution
@@ -211,8 +216,7 @@ History
 * Bumped version for DIST and slcpy
 * Cleaned code and documentation
 
-0.1.0-alpha5 (2022-04-25)
--------------------------
+## 0.1.0-alpha5 (2022-04-25)
 * Rename GraphFormer to DIST (Dimensionless instance Segmentation Transformer)
 * Updates for DIST
     * SetUp metric evaluation
@@ -222,15 +226,13 @@ History
     * Dist version to 0.1.5
     * Added evaluation pipeline
 
-0.1.0a2-alpha4 (2022-04-25)
----------------------------
+## 0.1.0a2-alpha4 (2022-04-25)
 * Fix for better handling graph prediction
 * Fix for #4-#6 issues
 * Small bugfixes for GraphFormer while training
 * Add point cloud normalization before training/prediction
 
-0.1.0-alpha1 (2022-04-13)
--------------------------
+## 0.1.0-alpha1 (2022-04-13)
 * Rename tardis to tardis-pytorch
 * Build tests for all modules
 * Integrated slcpy, spindletorch and graphformer
@@ -248,6 +250,5 @@ History
     * GRAPHFORMER
         * Included all graphformer modules
 
-0.0.1 (2022-03-24)
-------------------
+## 0.0.1 (2022-03-24)
 * Initial commit

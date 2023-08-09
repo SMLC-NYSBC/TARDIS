@@ -9,8 +9,7 @@
 #######################################################################
 import torch
 
-from tardis.utils.losses import (AdaptiveDiceLoss, BCEDiceLoss, BCELoss, CELoss, ClBCE,
-                                 ClDice, DiceLoss, SigmoidFocalLoss)
+from tardis_pytorch.utils.losses import *
 
 logits = torch.rand((1, 64, 64, 64))
 targets = torch.softmax(logits, 0)
@@ -20,10 +19,8 @@ class GeneralLoss:
     """
     General class for testing loss functions
     """
-    def __init__(self,
-                 logits_: torch.Tensor,
-                 targets_: torch.Tensor,
-                 criterion):
+
+    def __init__(self, logits_: torch.Tensor, targets_: torch.Tensor, criterion):
         self.logits = logits_
         self.targets = targets_
         self.criterion = criterion
@@ -86,13 +83,13 @@ def test_ce():
 
 
 def test_cl_bce():
-    loss = GeneralLoss(logits, targets, ClBCE())
+    loss = GeneralLoss(logits, targets, ClBCELoss())
     loss = loss.test_loss()
 
     assert isinstance(loss.data, torch.Tensor)
     assert loss > 0
 
-    loss = GeneralLoss(logits, targets, ClDice(diagonal=True))
+    loss = GeneralLoss(logits, targets, ClDiceLoss(diagonal=True))
     loss = loss.test_loss()
 
     assert isinstance(loss.data, torch.Tensor)
@@ -100,13 +97,13 @@ def test_cl_bce():
 
 
 def test_cl_dice():
-    loss = GeneralLoss(logits, targets, ClDice())
+    loss = GeneralLoss(logits, targets, ClDiceLoss())
     loss = loss.test_loss()
 
     assert isinstance(loss.data, torch.Tensor)
     assert loss > 0
 
-    loss = GeneralLoss(logits, targets, ClDice(diagonal=True))
+    loss = GeneralLoss(logits, targets, ClDiceLoss(diagonal=True))
     loss = loss.test_loss()
 
     assert isinstance(loss.data, torch.Tensor)
