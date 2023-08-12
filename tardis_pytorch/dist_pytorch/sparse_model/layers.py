@@ -27,7 +27,7 @@ class SparseDistStack(nn.Module):
     is the output of the SparseDistStack.
     """
 
-    def __init__(self, pairs_dim: int, num_layers=1, ff_factor=4):
+    def __init__(self, pairs_dim: int, num_layers=1, ff_factor=4, knn=8):
         """
         Initializes the SparseDistStack.
 
@@ -40,8 +40,7 @@ class SparseDistStack(nn.Module):
         super().__init__()
         self.layers = nn.ModuleList()
         for _ in range(num_layers):
-            layer = SparseDistLayer(pairs_dim=pairs_dim, ff_factor=ff_factor)
-            self.layers.append(layer)
+            self.layers.append(SparseDistLayer(pairs_dim=pairs_dim, ff_factor=ff_factor, knn=knn))
 
     def __len__(self) -> int:
         """
@@ -88,7 +87,7 @@ class SparseDistLayer(nn.Module):
     The edge updates include a row update, a column update, and a feed-forward network.
     """
 
-    def __init__(self, pairs_dim: int, ff_factor=4):
+    def __init__(self, pairs_dim: int, ff_factor=4, knn=8):
         """
         Initializes the SparseDistLayer.
 
@@ -109,10 +108,10 @@ class SparseDistLayer(nn.Module):
 
         # Edge triangular update
         self.row_update = SparsTriangularUpdate(
-            input_dim=pairs_dim, channel_dim=self.channel_dim, axis=1
+            input_dim=pairs_dim, channel_dim=self.channel_dim, axis=1, knn=knn
         )
         self.col_update = SparsTriangularUpdate(
-            input_dim=pairs_dim, channel_dim=self.channel_dim, axis=0
+            input_dim=pairs_dim, channel_dim=self.channel_dim, axis=0, knn=knn
         )
 
         # Edge GeLu FFN normalization layer
@@ -140,9 +139,7 @@ class SparseDistLayer(nn.Module):
         # ToDo Convert node features to edge shape
 
         # Update edge features
-        row = self.row_update(x=h_pairs, indices=indices)
-        # col = self.col_update(x=h_pairs, indices=indices)
-        h_pairs = h_pairs + row # + col
+        h_pairs = h_pairs + self.row_update(x=h_pairs, indices=indices) + self.col_update(x=h_pairs, indices=indices)
 
         return h_pairs + self.pair_ffn(x=h_pairs)
 

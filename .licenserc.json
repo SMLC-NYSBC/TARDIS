@@ -20,6 +20,7 @@
     "tardis_pytorch/dist_pytorch/utils/__init__.py",
 
     "tardis_pytorch/benchmarks/__init__.py",
+    "tardis_pytorch/dist_pytorch/sparse_model/__init__.py",
 
     "docs/"
   ]
