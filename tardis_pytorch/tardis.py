@@ -10,11 +10,13 @@
 import click
 from tardis_pytorch._version import version
 from tardis_pytorch.utils.logo import TardisLogo
+from tardis_pytorch.tardis.helper_func import tardis_helper
 
 
 @click.command()
 @click.option(
     "-f",
+    "--func",
     default=None,
     type=str,
     help="Directory with images for prediction with CNN model.",
@@ -22,10 +24,8 @@ from tardis_pytorch.utils.logo import TardisLogo
 )
 @click.version_option(version=version)
 def main(func=None):
-    if func == "csv_am":
-        # from tardis_pytorch.tardis.csv_to_am import CsvToAmira
-        pass
-        # CsvToAmira()
+    if func is not None:
+        tardis_helper(func)
     else:
         main_logo = TardisLogo()
         main_logo(

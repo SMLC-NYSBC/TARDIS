@@ -7,3 +7,7 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
+
+
+def tardis_helper(func: str):
+    pass
