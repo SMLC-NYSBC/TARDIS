@@ -26,6 +26,9 @@ from tardis_pytorch.utils.load_data import (
     load_s3dis_scene,
 )
 from tardis_pytorch.dist_pytorch.utils.utils import pc_median_dist
+from tardis_pytorch.dist_pytorch.utils.build_point_cloud import (
+    generate_bezier_curve_dataset,
+)
 
 
 class BasicDataset(Dataset):
@@ -48,7 +51,6 @@ class BasicDataset(Dataset):
         rgb=False,
         benchmark=False,
         train=True,
-        sparse=False,
     ):
         # Coord setting
         self.coord_dir = coord_dir
@@ -59,7 +61,6 @@ class BasicDataset(Dataset):
 
         self.train = train
         self.benchmark = benchmark
-        self.sparse = sparse
 
         # Setup environment
         self.cwd = getcwd()
@@ -75,7 +76,10 @@ class BasicDataset(Dataset):
             mkdir(join(self.cwd, "temp_test"))
 
         # List of detected coordinates files
-        self.ids = [f for f in listdir(coord_dir) if f.endswith(self.coord_format)]
+        if isinstance(coord_dir, str):
+            self.ids = [f for f in listdir(coord_dir) if f.endswith(self.coord_format)]
+        else:
+            self.ids = ["" for f in range(coord_dir)]
 
         # Patch build setting
         self.max_point_in_patch = patch_if
@@ -161,19 +165,24 @@ class FilamentSimulateDataset(BasicDataset):
         df_idx: Normalize zero-out output for standardized dummy.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, sample_count=50, **kwargs):
         super(FilamentSimulateDataset, self).__init__(**kwargs)
+
+        self.sample_count = sample_count
         self.VD = PatchDataSet(
             max_number_of_points=self.max_point_in_patch,
             overlap=0.1,
             drop_rate=0.1,
             graph=True,
-            tensor=False,
+            tensor=True,
         )
 
     def __getitem__(self, i: int) -> Tuple[list, list, list, list, list]:
         """Get list of all coordinates and image patches"""
-        idx = self.ids[i]
+        # Random 2D/3D
+        flatten_ = False
+        if np.random.randint(0, 100) > 50:
+            flatten_ = True
 
         if self.train:
             self.temp = "temp_train"
@@ -181,7 +190,19 @@ class FilamentSimulateDataset(BasicDataset):
             self.temp = "temp_test"
 
         # Simulate filament dataset
-        coord_file = join(self.coord_dir, str(idx))
+        coord_file = generate_bezier_curve_dataset(n=self.sample_count)
+
+        # Pre-process coord and image data also, if exist remove duplicates
+        coord, _ = preprocess_data(coord=coord_file)
+        if flatten_:
+            coord[:, -1] = 0
+
+        coords_idx, df_idx, graph_idx, output_idx, _ = self.VD.patched_dataset(
+            coord=coord, mesh=2
+        )
+
+        # Output edge_f,   node_f, graph,     node_idx,   node_class
+        return coords_idx, df_idx, graph_idx, output_idx, df_idx
 
 
 class FilamentDataset(BasicDataset):
@@ -682,9 +703,6 @@ class Stanford3DDataset(BasicDataset):
             df=node_idx,
             cls=cls_idx,
         )
-
-        # if self.sparse:
-        #     graph_idx = [g.to_sparse() for g in graph_idx]
 
         if self.benchmark:
             # Output file_name, raw_coord, edge_f, node_f, graph, node_idx, node_class

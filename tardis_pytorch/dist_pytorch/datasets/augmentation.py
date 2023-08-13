@@ -19,7 +19,7 @@ from tardis_pytorch.utils.normalization import RescaleNormalize, SimpleNormalize
 
 
 def preprocess_data(
-    coord: str,
+    coord: Union[str, np.ndarray],
     image: Optional[str] = None,
     size: Optional[int] = None,
     include_label=True,
@@ -34,7 +34,7 @@ def preprocess_data(
     Additionally, the graph output can be created.
 
     Args:
-        coord (str): Directory for the file containing coordinate data.
+        coord (str, ndarray): Directory for the file containing coordinate data.
         image (str, None): Directory to the supported image file.
         size (int, None): Image patch size.
         include_label (bool): If True output coordinate array with label ids.
@@ -46,23 +46,26 @@ def preprocess_data(
     """
 
     """ Collect Coordinates [Length x Dimension] """
-    if coord[-4:] == ".csv":
-        coord_label = np.genfromtxt(coord, delimiter=",")
-        if str(coord_label[0, 0]) == "nan":
-            coord_label = coord_label[1:, :]
-    elif coord[-4:] == ".npy":
-        coord_label = np.load(coord)
-    elif coord[-3:] == ".am":
-        if image is None:
-            amira_import = ImportDataFromAmira(src_am=coord)
-            coord_label = amira_import.get_segmented_points()
-        else:
-            if image.endswith(".am"):
-                amira_import = ImportDataFromAmira(src_am=coord, src_img=image)
-                coord_label = amira_import.get_segmented_points()
-            else:
+    if not isinstance(coord, np.ndarray):
+        if coord[-4:] == ".csv":
+            coord_label = np.genfromtxt(coord, delimiter=",")
+            if str(coord_label[0, 0]) == "nan":
+                coord_label = coord_label[1:, :]
+        elif coord[-4:] == ".npy":
+            coord_label = np.load(coord)
+        elif coord[-3:] == ".am":
+            if image is None:
                 amira_import = ImportDataFromAmira(src_am=coord)
                 coord_label = amira_import.get_segmented_points()
+            else:
+                if image.endswith(".am"):
+                    amira_import = ImportDataFromAmira(src_am=coord, src_img=image)
+                    coord_label = amira_import.get_segmented_points()
+                else:
+                    amira_import = ImportDataFromAmira(src_am=coord)
+                    coord_label = amira_import.get_segmented_points()
+    else:
+        coord_label = coord.copy()
 
     if coord_label.shape[1] not in [3, 4]:
         TardisError(
