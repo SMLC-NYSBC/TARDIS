@@ -91,7 +91,7 @@ class ImportDataFromAmira:
 
         binary = False
         spatial_graph = ""
-        if any(
+        if not any(
             [
                 True
                 for i in ["AmiraMesh 3D ASCII", "# ASCII Spatial Graph"]

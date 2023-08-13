@@ -112,7 +112,7 @@ def train_dist(
             knn=model_structure["num_knn"],
             coord_embed_sigma=model_structure["coord_embed_sigma"],
             predict=True,
-            device=device
+            device=device,
         )
     elif model_structure["dist_type"] == "semantic":
         model = CDIST(

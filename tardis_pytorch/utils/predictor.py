@@ -167,12 +167,22 @@ class DataSetPredictor:
             sys.exit()
         # Searching for available images for prediction
         available_format = (".tif", ".mrc", ".rec", ".am")
-        omit_format = ("mask.tif", "mask.mrc", "mask.rec", 'Correlation_Lines.am', 'mask.am')
+        omit_format = (
+            "mask.tif",
+            "mask.mrc",
+            "mask.rec",
+            "Correlation_Lines.am",
+            "mask.am",
+        )
         self.output = join(self.dir, "temp", "Predictions")
         self.am_output = join(self.dir, "Predictions")
 
         # Pickup files for the prediction
-        self.predict_list = [f for f in listdir(dir_) if f.endswith(available_format) and not f.endswith(omit_format)]
+        self.predict_list = [
+            f
+            for f in listdir(dir_)
+            if f.endswith(available_format) and not f.endswith(omit_format)
+        ]
 
         # Tardis progress bar update
         if len(self.predict_list) == 0:
@@ -491,9 +501,10 @@ class DataSetPredictor:
                 try:
                     np.save(
                         join(
-                            self.am_output, f"{id_name[:-self.in_format]}_graph_voxel.npy"
+                            self.am_output,
+                            f"{id_name[:-self.in_format]}_graph_voxel.npy",
                         ),
-                        self.graphs
+                        self.graphs,
                     )
                 except ValueError:
                     pass
@@ -526,7 +537,8 @@ class DataSetPredictor:
                     try:
                         np.save(
                             join(
-                                self.am_output, f"{id_name[:-self.in_format]}_idx_voxel.npy"
+                                self.am_output,
+                                f"{id_name[:-self.in_format]}_idx_voxel.npy",
                             ),
                             self.output_idx.cpu().detach().numpy(),
                         )

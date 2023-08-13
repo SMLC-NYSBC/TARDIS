@@ -256,12 +256,14 @@ class SparseEdgeEmbeddingV3(nn.Module):
             _shape = (g_len, g_len, self.n_out)  # [4] Original 2D shape to reconstruct
 
             """[0] - Get all IDX to reconstruct"""
-            mask = torch.exp(-(_dist**2) / (self._range[-1]**2 * 2)) < 0.9
+            mask = torch.exp(-(_dist**2) / (self._range[-1] ** 2 * 2)) < 0.9
 
             _dist[torch.where(mask)] = 0
             _dist.fill_diagonal_(0)
 
-            indices = torch.where(_dist > 0)  # every ij elemtent from distance embedding
+            indices = torch.where(
+                _dist > 0
+            )  # every ij elemtent from distance embedding
 
             """[2-3] Get Col/Row wise indices for ij element"""
             # Columns list
@@ -296,7 +298,7 @@ class SparseEdgeEmbeddingV3(nn.Module):
             # get col-wise indices
             col_indices = [[] for x in range(len(row_idx))]
             col_idx = [[] for x in range(len(row_idx))]
-            
+
             for _id, (row, col) in enumerate(zip(indices[0], indices[1])):
                 col_indices[col.item()].append(_id)  # Colum id from M
                 col_idx[col.item()].append(row.item())  # Column triangle ID
@@ -319,7 +321,12 @@ class SparseEdgeEmbeddingV3(nn.Module):
             for id_, i in enumerate(self._range):
                 k_dist_range[:, id_] = torch.exp(-(_dist**2) / (i**2 * 2))
 
-        return k_dist_range.unsqueeze(0).to(device), [indices, row_indices, col_indices, _shape]
+        return k_dist_range.unsqueeze(0).to(device), [
+            indices,
+            row_indices,
+            col_indices,
+            _shape,
+        ]
 
 
 class SparseEdgeEmbeddingV4(nn.Module):
@@ -353,43 +360,52 @@ class SparseEdgeEmbeddingV4(nn.Module):
             input_coord = input_coord.cpu().detach().numpy()
             tree = KDTree(input_coord)
             distances, indices = tree.query(input_coord, self.knn, p=1)
-            
+
             n = len(input_coord)
             M = distances.flatten()
-            
-            all_ij_id = np.array((np.repeat(np.arange(n), self.knn), indices.flatten())).T
-            
+
+            all_ij_id = np.array(
+                (np.repeat(np.arange(n), self.knn), indices.flatten())
+            ).T
+
             # Row-Wise M[ij] index
-            row_idx = np.repeat(np.arange(0, len(M)).reshape(len(input_coord), self.knn), self.knn, axis=0).reshape(len(M), self.knn)
+            row_idx = np.repeat(
+                np.arange(0, len(M)).reshape(len(input_coord), self.knn),
+                self.knn,
+                axis=0,
+            ).reshape(len(M), self.knn)
             row_idx = np.vstack((np.repeat(0, self.knn), row_idx))
-    
+
             # Column-Wise M[ij] index
-            col_idx = np.array([np.pad(c, (0, self.knn-len(c))) 
-                                if len(c) <= self.knn 
-                                else c[np.argsort(M[c - 1])[:self.knn]] 
-                                for c in [np.where(all_ij_id[:, 1] == i)[0] + 1
-                                          for i in range(len(input_coord))]])
-    
+            col_idx = np.array(
+                [
+                    np.pad(c, (0, self.knn - len(c)))
+                    if len(c) <= self.knn
+                    else c[np.argsort(M[c - 1])[: self.knn]]
+                    for c in [
+                        np.where(all_ij_id[:, 1] == i)[0] + 1
+                        for i in range(len(input_coord))
+                    ]
+                ]
+            )
+
             col_idx = np.repeat(col_idx, self.knn, axis=0)
             col_idx = np.vstack((np.repeat(0, self.knn), col_idx))
-    
+
             M = torch.from_numpy(np.pad(M, (1, 0)))
             # Prepare tensor for storing range of distances
-            k_dist_range = torch.zeros(
-                (len(M), len(self._range))
-            )
-            
+            k_dist_range = torch.zeros((len(M), len(self._range)))
+
             # Apply Gaussian kernel function to the top-k distances
             for id_, i in enumerate(self._range):
                 k_dist_range[:, id_] = torch.exp(-(M**2) / (i**2 * 2))
             k_dist_range[0, :] = 0
-            
+
             # Replace any NaN values with zero
             isnan = torch.isnan(k_dist_range)
             k_dist_range = torch.where(
                 isnan, torch.zeros_like(k_dist_range), k_dist_range
             )
-
 
         # # symetry indexes
         # # Convert to structured arrays
@@ -397,11 +413,16 @@ class SparseEdgeEmbeddingV4(nn.Module):
 
         # a_structured = np.ascontiguousarray(all_ij_id).view(np.dtype((np.void, all_ij_id.dtype.itemsize * all_ij_id.shape[1])))
         # b_structured = np.ascontiguousarray(b).view(np.dtype((np.void, b.dtype.itemsize * b.shape[1])))
-        
+
         # # Get the indices of duplicated rows
         # sum_a_value = np.where(np.in1d(a_structured, b_structured))[0]
         # sum_b_value = np.where(np.in1d(b_structured, a_structured))[0]
 
         # add_value = np.setdiff1d(b_structured, a_structured).view(all_ij_id.dtype).reshape(-1, all_ij_id.shape[1])
 
-        return k_dist_range.to(self._device), [row_idx.astype(np.int32), col_idx.astype(np.int32), (n, n), all_ij_id.astype(np.int32)]
+        return k_dist_range.to(self._device), [
+            row_idx.astype(np.int32),
+            col_idx.astype(np.int32),
+            (n, n),
+            all_ij_id.astype(np.int32),
+        ]

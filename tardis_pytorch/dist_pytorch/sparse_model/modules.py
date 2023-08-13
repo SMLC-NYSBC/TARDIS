@@ -91,15 +91,15 @@ class SparsTriangularUpdate(nn.Module):
         # # Apply triangular multiplication update
 
         if self.axis == 1:  # Row-wise update
-            # k = torch.einsum('kio,kjo->iko', 
-            #              a.reshape(indices[2][0], self.knn, a.shape[1]), 
+            # k = torch.einsum('kio,kjo->iko',
+            #              a.reshape(indices[2][0], self.knn, a.shape[1]),
             #              b.reshape(indices[2][0], self.knn, b.shape[1])).reshape(indices[2][0]*self.knn, b.shape[1])
-            k = torch.einsum('ik,ijk->ik', a, b[indices[0]])
+            k = torch.einsum("ik,ijk->ik", a, b[indices[0]])
         else:
-            # k = torch.einsum('kio,kjo->iko', 
-            #              a.reshape(indices[2][0], self.knn, a.shape[1]), 
+            # k = torch.einsum('kio,kjo->iko',
+            #              a.reshape(indices[2][0], self.knn, a.shape[1]),
             #              b[indices[1]]).reshape(indices[2][0]*self.knn, b.shape[1])
-            k = torch.einsum('ik,ijk->ik', a, b[indices[1]])
+            k = torch.einsum("ik,ijk->ik", a, b[indices[1]])
         # k = F.pad(k.T, (1, 0), "constant", 0).T
 
         return torch.sigmoid(self.gate_o(x)) * self.linear_o(self.norm_o(k))

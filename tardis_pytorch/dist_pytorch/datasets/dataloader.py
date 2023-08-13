@@ -144,6 +144,46 @@ class BasicDataset(Dataset):
         pass
 
 
+class FilamentSimulateDataset(BasicDataset):
+    """
+    SIMULATED FILAMENT-TYPE DATASET CONSTRUCTION
+
+    Returns:
+        Tuple (list[np.ndarray]):
+        coords_idx: Numpy or Tensor list of coordinates (N, (2, 3)).
+
+        df_idx: Normalize zero-out output for standardized dummy.
+
+        graph_idx: Numpy or Tensor list of 2D GT graphs.
+
+        output_idx: Numpy or Tensor list (N, 1) of output index value.
+
+        df_idx: Normalize zero-out output for standardized dummy.
+    """
+
+    def __init__(self, **kwargs):
+        super(FilamentSimulateDataset, self).__init__(**kwargs)
+        self.VD = PatchDataSet(
+            max_number_of_points=self.max_point_in_patch,
+            overlap=0.1,
+            drop_rate=0.1,
+            graph=True,
+            tensor=False,
+        )
+
+    def __getitem__(self, i: int) -> Tuple[list, list, list, list, list]:
+        """Get list of all coordinates and image patches"""
+        idx = self.ids[i]
+
+        if self.train:
+            self.temp = "temp_train"
+        else:
+            self.temp = "temp_test"
+
+        # Simulate filament dataset
+        coord_file = join(self.coord_dir, str(idx))
+
+
 class FilamentDataset(BasicDataset):
     """
     FILAMENT-TYPE DATASET CONSTRUCTION

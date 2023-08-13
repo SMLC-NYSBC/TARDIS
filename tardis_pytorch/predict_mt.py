@@ -31,7 +31,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-ch",
     "--checkpoint",
-    default='None|None',
+    default="None|None",
     type=str,
     help="Optional list of pre-trained weights",
     show_default=True,
@@ -238,7 +238,7 @@ def main(
     else:
         instances = True
 
-    checkpoint = checkpoint.split('|')
+    checkpoint = checkpoint.split("|")
     if len(checkpoint) != 2:
         TardisError(
             id="00",
@@ -246,9 +246,9 @@ def main(
             desc=f"Two checkpoint are expected!",
         )
     elif len(checkpoint) == 2:
-        if checkpoint[0] == 'None':
+        if checkpoint[0] == "None":
             checkpoint[0] = None
-        if checkpoint[1] == 'None':
+        if checkpoint[1] == "None":
             checkpoint[1] = None
 
     predictor = DataSetPredictor(

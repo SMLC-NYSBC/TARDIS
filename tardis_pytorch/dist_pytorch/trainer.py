@@ -158,13 +158,16 @@ class SparseDistTrainer(BasicTrainer):
                 self.optimizer.zero_grad()
 
                 if self.node_input > 0:
-                    edge, indices = self.model(coords=edge, node_features=node.to(self.device))
+                    edge, indices = self.model(
+                        coords=edge, node_features=node.to(self.device)
+                    )
                 else:
                     edge, indices = self.model(coords=edge)
 
                 # Back-propagate
                 loss = self.criterion(
-                    edge[:, 0], graph[0, indices[3][:, 0], indices[3][:, 1]].type(torch.float32)
+                    edge[:, 0],
+                    graph[0, indices[3][:, 0], indices[3][:, 1]].type(torch.float32),
                 )  # Calc. loss
                 loss.backward()  # One backward pass
                 self.optimizer.step()  # Update the parameters
@@ -212,12 +215,17 @@ class SparseDistTrainer(BasicTrainer):
 
                     # Calcu late validation loss
                     loss = self.criterion(
-                        edge[:, 0], graph[0, indices[3][:, 0], indices[3][:, 1]].type(torch.float32)
+                        edge[:, 0],
+                        graph[0, indices[3][:, 0], indices[3][:, 1]].type(
+                            torch.float32
+                        ),
                     )  # Calc. loss
 
                     # Calculate F1 metric
                     pred_edge = np.zeros(indices[2])
-                    pred_edge[indices[3][:, 0], indices[3][:, 1]] = edge[:, 0].cpu().detach().numpy()
+                    pred_edge[indices[3][:, 0], indices[3][:, 1]] = (
+                        edge[:, 0].cpu().detach().numpy()
+                    )
                     acc, prec, recall, f1, th = eval_graph_f1(
                         logits=torch.from_numpy(pred_edge),
                         targets=graph[0, ...].cpu().detach(),

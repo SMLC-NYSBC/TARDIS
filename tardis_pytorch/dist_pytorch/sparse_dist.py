@@ -36,7 +36,7 @@ class SparseDIST(nn.Module):
         knn=8,
         coord_embed_sigma=1.0,
         predict=False,
-        device='cpu'
+        device="cpu",
     ):
         """
         Initializes the SparseDIST.
@@ -58,14 +58,17 @@ class SparseDIST(nn.Module):
         self.predict = predict
 
         self.coord_embed = SparseEdgeEmbeddingV4(
-            n_out=self.edge_dim, sigma=self.edge_sigma, knn=self.knn, _device=device,
+            n_out=self.edge_dim,
+            sigma=self.edge_sigma,
+            knn=self.knn,
+            _device=device,
         )
 
         self.layers = SparseDistStack(
             pairs_dim=self.edge_dim,
             num_layers=self.num_layers,
             ff_factor=4,
-            knn=self.knn
+            knn=self.knn,
         )
 
         self.decoder = nn.Linear(in_features=self.edge_dim, out_features=self.n_out)
@@ -98,7 +101,9 @@ class SparseDIST(nn.Module):
         # edge, idx = self.embed_input(coords=coords)  # List[Indices, Values, Shape]
 
         # Encode throughout the transformer layers
-        edge = self.layers(edge_features=edge, indices=idx)  # List[Indices, Values, Shape]
+        edge = self.layers(
+            edge_features=edge, indices=idx
+        )  # List[Indices, Values, Shape]
 
         # Predict the graph edges
         # edge = self.decoder(edge + edge[:, np.concatenate(idx[2][1]), :])

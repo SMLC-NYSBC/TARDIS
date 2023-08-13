@@ -40,7 +40,9 @@ class SparseDistStack(nn.Module):
         super().__init__()
         self.layers = nn.ModuleList()
         for _ in range(num_layers):
-            self.layers.append(SparseDistLayer(pairs_dim=pairs_dim, ff_factor=ff_factor, knn=knn))
+            self.layers.append(
+                SparseDistLayer(pairs_dim=pairs_dim, ff_factor=ff_factor, knn=knn)
+            )
 
     def __len__(self) -> int:
         """
@@ -60,7 +62,9 @@ class SparseDistStack(nn.Module):
         """
         return self.layers[i]
 
-    def forward(self, edge_features: torch.tensor, indices: list) -> Union[torch.tensor, list]:
+    def forward(
+        self, edge_features: torch.tensor, indices: list
+    ) -> Union[torch.tensor, list]:
         """
         Forward pass for the SparseDistStack.
 
@@ -125,7 +129,9 @@ class SparseDistLayer(nn.Module):
         """
         pass
 
-    def update_edges(self, h_pairs: torch.tensor, indices: list) -> Union[torch.tensor, list]:
+    def update_edges(
+        self, h_pairs: torch.tensor, indices: list
+    ) -> Union[torch.tensor, list]:
         """
         Updates edge features by applying row and column updates, then applying a feed-forward network.
 
@@ -139,11 +145,17 @@ class SparseDistLayer(nn.Module):
         # ToDo Convert node features to edge shape
 
         # Update edge features
-        h_pairs = h_pairs + self.row_update(x=h_pairs, indices=indices) + self.col_update(x=h_pairs, indices=indices)
+        h_pairs = (
+            h_pairs
+            + self.row_update(x=h_pairs, indices=indices)
+            + self.col_update(x=h_pairs, indices=indices)
+        )
 
         return h_pairs + self.pair_ffn(x=h_pairs)
 
-    def forward(self, h_pairs: torch.tensor, indices: list) -> Union[torch.tensor, list]:
+    def forward(
+        self, h_pairs: torch.tensor, indices: list
+    ) -> Union[torch.tensor, list]:
         """
         Forward pass for the SparseDistLayer.
 
