@@ -246,7 +246,7 @@ def main(
     COORD_FORMAT = ".txt"
     if dataset_type not in ["stanford", "stanford_rgb"]:
         COORD_FORMAT = (".CorrelationLines.am", ".npy", ".csv", ".ply")
-    if dataset_type.startswith('simulate_filament'):
+    if dataset_type.startswith("simulate_filament"):
         COORD_FORMAT = None
 
     """Check if dir has train/test folder and if f  older have compatible data"""
@@ -290,12 +290,14 @@ def main(
             # Build train and test dataset
             move_train_dataset(dir=dir, coord_format=COORD_FORMAT, with_img=False)
 
-            no_dataset = int(len([f for f in listdir(dir) if f.endswith(COORD_FORMAT)]) / 2)
+            no_dataset = int(
+                len([f for f in listdir(dir) if f.endswith(COORD_FORMAT)]) / 2
+            )
 
         if dataset_type in ["stanford", "stanford_rgb"]:
             build_test_dataset(dataset_dir=dir, dataset_no=no_dataset, stanford=True)
-        if dataset_type.startswith('simulate_filament'):
-            dataset_type = dataset_type.split('_')
+        if dataset_type.startswith("simulate_filament"):
+            dataset_type = dataset_type.split("_")
         else:
             build_test_dataset(dataset_dir=dir, dataset_no=no_dataset)
 
