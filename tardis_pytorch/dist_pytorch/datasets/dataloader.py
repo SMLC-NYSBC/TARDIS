@@ -11,7 +11,7 @@ import time
 from os import getcwd, listdir, mkdir
 from os.path import isdir, join
 from shutil import rmtree
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 import numpy as np
 import torch
@@ -24,6 +24,10 @@ from tardis_pytorch.utils.load_data import (
     load_ply_partnet,
     load_ply_scannet,
     load_s3dis_scene,
+)
+from tardis_pytorch.dist_pytorch.utils.utils import (
+    RandomDownSampling,
+    VoxelDownSampling,
 )
 from tardis_pytorch.dist_pytorch.utils.utils import pc_median_dist
 from tardis_pytorch.dist_pytorch.utils.build_point_cloud import (
@@ -44,7 +48,7 @@ class BasicDataset(Dataset):
 
     def __init__(
         self,
-        coord_dir: str,
+        coord_dir=None,
         coord_format=".csv",
         patch_if=500,
         downscale=None,
@@ -78,15 +82,15 @@ class BasicDataset(Dataset):
         # List of detected coordinates files
         if isinstance(coord_dir, str):
             self.ids = [f for f in listdir(coord_dir) if f.endswith(self.coord_format)]
+
+            # Save patch size value for speed-up
+            self.patch_size = np.zeros((len(self.ids), 1))
+            self.VD = None
         else:
-            self.ids = ["" for f in range(coord_dir)]
+            self.ids = []
 
         # Patch build setting
         self.max_point_in_patch = patch_if
-
-        # Save patch size value for speed-up
-        self.patch_size = np.zeros((len(self.ids), 1))
-        self.VD = None
 
     def __len__(self):
         return len(self.ids)
@@ -181,7 +185,7 @@ class FilamentSimulateDataset(BasicDataset):
         """Get list of all coordinates and image patches"""
         # Random 2D/3D
         flatten_ = False
-        if np.random.randint(0, 100) > 50:
+        if np.random.randint(0, 100) > 75:
             flatten_ = True
 
         if self.train:
@@ -196,6 +200,15 @@ class FilamentSimulateDataset(BasicDataset):
         coord, _ = preprocess_data(coord=coord_file)
         if flatten_:
             coord[:, -1] = 0
+
+        # Optional Down-sampling of simulated dataset
+        if self.downscale is not None:
+            scale = self.downscale.split("_")
+            if scale[0] == "v":
+                down_scale = VoxelDownSampling(voxel=float(scale[1]), labels=True)
+            else:
+                down_scale = RandomDownSampling(threshold=float(scale[1]), labels=True)
+            coord = down_scale(coord)
 
         coords_idx, df_idx, graph_idx, output_idx, _ = self.VD.patched_dataset(
             coord=coord, mesh=2
@@ -712,7 +725,7 @@ class Stanford3DDataset(BasicDataset):
 
 
 def build_dataset(
-    dataset_type: str,
+    dataset_type: Union[str, list],
     dirs: list,
     max_points_per_patch: int,
     downscale=None,
@@ -736,124 +749,141 @@ def build_dataset(
         the specified dataset for training and evaluation.
     """
 
-    if dataset_type in ["filament", "MT", "Mem"]:
-        if not benchmark:
-            dl_train = FilamentDataset(
-                coord_dir=dirs[0],
+    if isinstance(dataset_type, list):
+        if dataset_type[0] == "simulate":
+            if dataset_type[1] == "filament":
+                if not benchmark:
+                    dl_train = FilamentSimulateDataset(
+                        sample_count=dataset_type[2],
+                        patch_if=max_points_per_patch,
+                        train=True,
+                        downscale=downscale,
+                    )
+                dl_test = FilamentSimulateDataset(
+                    sample_count=dataset_type[3],
+                    patch_if=max_points_per_patch,
+                    train=False,
+                    downscale=downscale,
+                )
+    else:
+        if dataset_type in ["filament", "MT", "Mem"]:
+            if not benchmark:
+                dl_train = FilamentDataset(
+                    coord_dir=dirs[0],
+                    coord_format=(".CorrelationLines.am", ".csv"),
+                    patch_if=max_points_per_patch,
+                    train=True,
+                    downscale=downscale,
+                )
+            dl_test = FilamentDataset(
+                coord_dir=dirs[1],
                 coord_format=(".CorrelationLines.am", ".csv"),
                 patch_if=max_points_per_patch,
-                train=True,
+                benchmark=benchmark,
+                train=False,
                 downscale=downscale,
             )
-        dl_test = FilamentDataset(
-            coord_dir=dirs[1],
-            coord_format=(".CorrelationLines.am", ".csv"),
-            patch_if=max_points_per_patch,
-            benchmark=benchmark,
-            train=False,
-            downscale=downscale,
-        )
-    elif dataset_type in ["partnet", "PartNet"]:
-        if not benchmark:
-            dl_train = PartnetDataset(
-                coord_dir=dirs[0],
+        elif dataset_type in ["partnet", "PartNet"]:
+            if not benchmark:
+                dl_train = PartnetDataset(
+                    coord_dir=dirs[0],
+                    coord_format=".ply",
+                    patch_if=max_points_per_patch,
+                    train=True,
+                    downscale=downscale,
+                )
+            dl_test = PartnetDataset(
+                coord_dir=dirs[1],
                 coord_format=".ply",
                 patch_if=max_points_per_patch,
-                train=True,
+                benchmark=benchmark,
+                train=False,
                 downscale=downscale,
             )
-        dl_test = PartnetDataset(
-            coord_dir=dirs[1],
-            coord_format=".ply",
-            patch_if=max_points_per_patch,
-            benchmark=benchmark,
-            train=False,
-            downscale=downscale,
-        )
-    elif dataset_type in ["scannet", "ScanNetV2"]:
-        if not benchmark:
-            dl_train = ScannetDataset(
-                coord_dir=dirs[0],
+        elif dataset_type in ["scannet", "ScanNetV2"]:
+            if not benchmark:
+                dl_train = ScannetDataset(
+                    coord_dir=dirs[0],
+                    coord_format=".ply",
+                    patch_if=max_points_per_patch,
+                    train=True,
+                    downscale=downscale,
+                )
+            dl_test = ScannetDataset(
+                coord_dir=dirs[1],
                 coord_format=".ply",
                 patch_if=max_points_per_patch,
-                train=True,
+                benchmark=benchmark,
+                train=False,
                 downscale=downscale,
             )
-        dl_test = ScannetDataset(
-            coord_dir=dirs[1],
-            coord_format=".ply",
-            patch_if=max_points_per_patch,
-            benchmark=benchmark,
-            train=False,
-            downscale=downscale,
-        )
-    elif dataset_type == "scannet_rgb":
-        if not benchmark:
-            dl_train = ScannetColorDataset(
-                coord_dir=dirs[0],
+        elif dataset_type == "scannet_rgb":
+            if not benchmark:
+                dl_train = ScannetColorDataset(
+                    coord_dir=dirs[0],
+                    coord_format=".ply",
+                    patch_if=max_points_per_patch,
+                    train=True,
+                    downscale=downscale,
+                )
+            dl_test = ScannetColorDataset(
+                coord_dir=dirs[1],
                 coord_format=".ply",
                 patch_if=max_points_per_patch,
-                train=True,
+                benchmark=benchmark,
+                train=False,
                 downscale=downscale,
             )
-        dl_test = ScannetColorDataset(
-            coord_dir=dirs[1],
-            coord_format=".ply",
-            patch_if=max_points_per_patch,
-            benchmark=benchmark,
-            train=False,
-            downscale=downscale,
-        )
-    elif dataset_type in ["stanford", "S3DIS"]:
-        if not benchmark:
-            dl_train = Stanford3DDataset(
-                coord_dir=dirs[0],
+        elif dataset_type in ["stanford", "S3DIS"]:
+            if not benchmark:
+                dl_train = Stanford3DDataset(
+                    coord_dir=dirs[0],
+                    coord_format=".txt",
+                    patch_if=max_points_per_patch,
+                    train=True,
+                    downscale=downscale,
+                )
+            dl_test = Stanford3DDataset(
+                coord_dir=dirs[1],
                 coord_format=".txt",
                 patch_if=max_points_per_patch,
-                train=True,
+                benchmark=benchmark,
+                train=False,
                 downscale=downscale,
             )
-        dl_test = Stanford3DDataset(
-            coord_dir=dirs[1],
-            coord_format=".txt",
-            patch_if=max_points_per_patch,
-            benchmark=benchmark,
-            train=False,
-            downscale=downscale,
-        )
-    elif dataset_type in ["stanford_rgb", "S3DIS_rgb"]:
-        if not benchmark:
-            dl_train = Stanford3DDataset(
-                coord_dir=dirs[0],
+        elif dataset_type in ["stanford_rgb", "S3DIS_rgb"]:
+            if not benchmark:
+                dl_train = Stanford3DDataset(
+                    coord_dir=dirs[0],
+                    coord_format=".txt",
+                    rgb=True,
+                    patch_if=max_points_per_patch,
+                    train=True,
+                    downscale=downscale,
+                )
+            dl_test = Stanford3DDataset(
+                coord_dir=dirs[1],
                 coord_format=".txt",
                 rgb=True,
                 patch_if=max_points_per_patch,
-                train=True,
+                benchmark=benchmark,
+                train=False,
                 downscale=downscale,
             )
-        dl_test = Stanford3DDataset(
-            coord_dir=dirs[1],
-            coord_format=".txt",
-            rgb=True,
-            patch_if=max_points_per_patch,
-            benchmark=benchmark,
-            train=False,
-            downscale=downscale,
-        )
-    else:
-        # TODO General dataloader
-        # if not benchmark:
-        #     dl_train = GeneralDataset(coord_dir=dirs[1],
-        #                               coord_format=('.ply'),
-        #                               downsampling_if=downsampling_if,
-        #                               downsampling_rate=downsampling_rate,
-        #                               train=True)
-        # dl_test = GeneralDataset(coord_dir=dirs[1],
-        #                          coord_format=('.ply'),
-        #                          downsampling_if=downsampling_if,
-        #                          downsampling_rate=downsampling_rate,
-        #                          train=False)
-        pass
+        else:
+            # TODO General dataloader
+            # if not benchmark:
+            #     dl_train = GeneralDataset(coord_dir=dirs[1],
+            #                               coord_format=('.ply'),
+            #                               downsampling_if=downsampling_if,
+            #                               downsampling_rate=downsampling_rate,
+            #                               train=True)
+            # dl_test = GeneralDataset(coord_dir=dirs[1],
+            #                          coord_format=('.ply'),
+            #                          downsampling_if=downsampling_if,
+            #                          downsampling_rate=downsampling_rate,
+            #                          train=False)
+            pass
 
     if not benchmark:
         return DataLoader(dataset=dl_train, shuffle=True, pin_memory=True), DataLoader(

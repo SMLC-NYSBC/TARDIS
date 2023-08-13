@@ -246,6 +246,8 @@ def main(
     COORD_FORMAT = ".txt"
     if dataset_type not in ["stanford", "stanford_rgb"]:
         COORD_FORMAT = (".CorrelationLines.am", ".npy", ".csv", ".ply")
+    if dataset_type.startswith('simulate_filament'):
+        COORD_FORMAT = None
 
     """Check if dir has train/test folder and if f  older have compatible data"""
     DATASET_TEST = check_dir(
@@ -261,35 +263,39 @@ def main(
 
     """Optionally: Set-up environment if not existing"""
     if not DATASET_TEST:
-        # Check and set-up environment
-        if not len([f for f in listdir(dir) if f.endswith(COORD_FORMAT)]) > 0:
-            if dataset_type not in ["stanford", "stanford_rgb"]:
-                TardisError(
-                    "12",
-                    "tardis_pytorch/train_DIST.py",
-                    "Indicated folder for training do not have any compatible "
-                    "data or one of the following folders: "
-                    "test/imgs; test/masks; train/imgs; train/masks",
-                )
+        if COORD_FORMAT is not None:
+            # Check and set-up environment
+            if not len([f for f in listdir(dir) if f.endswith(COORD_FORMAT)]) > 0:
+                if dataset_type not in ["stanford", "stanford_rgb"]:
+                    TardisError(
+                        "12",
+                        "tardis_pytorch/train_DIST.py",
+                        "Indicated folder for training do not have any compatible "
+                        "data or one of the following folders: "
+                        "test/imgs; test/masks; train/imgs; train/masks",
+                    )
 
-        if isdir(join(dir, "train")):
-            rmtree(join(dir, "train"))
-        mkdir(join(dir, "train"))
-        mkdir(TRAIN_IMAGE_DIR)
-        mkdir(TRAIN_COORD_DIR)
+            if isdir(join(dir, "train")):
+                rmtree(join(dir, "train"))
+            mkdir(join(dir, "train"))
+            mkdir(TRAIN_IMAGE_DIR)
+            mkdir(TRAIN_COORD_DIR)
 
-        if isdir(join(dir, "test")):
-            rmtree(join(dir, "test"))
-        mkdir(join(dir, "test"))
-        mkdir(TEST_IMAGE_DIR)
-        mkdir(TEST_COORD_DIR)
+            if isdir(join(dir, "test")):
+                rmtree(join(dir, "test"))
+            mkdir(join(dir, "test"))
+            mkdir(TEST_IMAGE_DIR)
+            mkdir(TEST_COORD_DIR)
 
-        # Build train and test dataset
-        move_train_dataset(dir=dir, coord_format=COORD_FORMAT, with_img=False)
+            # Build train and test dataset
+            move_train_dataset(dir=dir, coord_format=COORD_FORMAT, with_img=False)
 
-        no_dataset = int(len([f for f in listdir(dir) if f.endswith(COORD_FORMAT)]) / 2)
+            no_dataset = int(len([f for f in listdir(dir) if f.endswith(COORD_FORMAT)]) / 2)
+
         if dataset_type in ["stanford", "stanford_rgb"]:
             build_test_dataset(dataset_dir=dir, dataset_no=no_dataset, stanford=True)
+        if dataset_type.startswith('simulate_filament'):
+            dataset_type = dataset_type.split('_')
         else:
             build_test_dataset(dataset_dir=dir, dataset_no=no_dataset)
 

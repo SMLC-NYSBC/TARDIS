@@ -115,6 +115,9 @@ def check_dir(
     Returns:
         bool: Bool value indicating detection of the correct structure dataset
     """
+    if mask_format == None:
+        return True
+
     dataset_test = False
     if isdir(join(dir, "train")) and isdir(join(dir, "test")):
         dataset_test = True
