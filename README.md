@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="resources/Tardis_logo_2.png" width="256"/>
+  <img src="resources/Tardis_logo_2.png" width="512"/>
 </p>
 
 [![Python PyTest](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_package.yml/badge.svg?branch=main)](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_package.yml)
