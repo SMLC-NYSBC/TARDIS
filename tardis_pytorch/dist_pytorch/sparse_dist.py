@@ -103,10 +103,11 @@ class SparseDIST(nn.Module):
         # Encode throughout the transformer layers
         edge = self.layers(edge_features=edge, indices=idx)[1:, :]
 
-        # Predict the graph edges
-        edge[idx[4][0], :] = edge[idx[4][0], :] + edge[idx[4][0], :]
-        idx[3] = np.concatenate((idx[3], idx[4][3]))
-        edge = torch.cat((edge, edge[idx[4][2], :]))
+        # Symmetrize and decode
+        # edge[idx[4][0], :] = edge[idx[4][0], :] + edge[idx[4][1], :]
+        # idx[3] = np.concatenate((idx[3], idx[4][3]))
+        # edge = torch.cat((edge, edge[idx[4][2], :]))
+
         edge = self.decoder(edge)
 
         if self.predict:

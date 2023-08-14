@@ -432,16 +432,15 @@ class SparseEdgeEmbeddingV4(nn.Module):
                 isnan, torch.zeros_like(k_dist_range), k_dist_range
             )
 
-        """symetry indexes"""
-        b = np.stack((all_ij_id[:, 1], all_ij_id[:, 0])).T
-        matching_rows, matching_cols = self._hashed_matching_row_indices(all_ij_id, b)
-        unique_id = self._get_unique_indices(len(M) - 1, matching_cols)
-        unique_idx = b[unique_id, :].astype(np.int32)
+        # """symetry indexes"""
+        # b = np.stack((all_ij_id[:, 1], all_ij_id[:, 0])).T
+        # matching_rows, matching_cols = self._hashed_matching_row_indices(all_ij_id, b)
+        # unique_id = self._get_unique_indices(len(M) - 1, matching_cols)
+        # unique_idx = b[unique_id, :].astype(np.int32)
 
         return k_dist_range.to(self._device), [
             row_idx.astype(np.int32),
             col_idx.astype(np.int32),
             (n, n),
             all_ij_id.astype(np.int32),
-            [matching_rows, matching_cols, unique_id, unique_idx],
         ]
