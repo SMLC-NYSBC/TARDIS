@@ -15,7 +15,6 @@ import numpy as np
 from typing import Union
 
 from scipy.spatial import KDTree
-import numpy as np
 
 
 class SparseEdgeEmbedding(nn.Module):
@@ -338,7 +337,7 @@ class SparseEdgeEmbeddingV4(nn.Module):
     the distances between input coordinates.
     """
 
-    def __init__(self, n_out: int, sigma: list, knn: int, _device):
+    def __init__(self, n_out: int, sigma: list, knn: int, _device="cpu"):
         """
         Initializes the SparseEdgeEmbedding.
 
@@ -353,6 +352,32 @@ class SparseEdgeEmbeddingV4(nn.Module):
         self.n_out = n_out
         self.sigma = sigma
         self._device = _device
+
+    @staticmethod
+    def _hashed_matching_row_indices(arr1, arr2) -> Union[tuple, tuple]:
+        # Convert rows to tuples and create a set for arr2
+        arr1_tuples = [tuple(row) for row in arr1]
+        arr2_dict = {tuple(row): idx for idx, row in enumerate(arr2)}
+
+        # Find matching indices
+        matching_indices_arr1 = [
+            idx for idx, row in enumerate(arr1_tuples) if row in arr2_dict
+        ]
+        matching_indices_arr2 = [
+            arr2_dict[row] for row in arr1_tuples if row in arr2_dict
+        ]
+
+        return matching_indices_arr1, matching_indices_arr2
+
+    @staticmethod
+    def _get_unique_indices(len_, matching_indices) -> list:
+        # Convert matching indices to a set for O(1) lookup
+        matching_indices_set = set(matching_indices)
+
+        # Get unique indices
+        unique_indices = [id_ for id_ in range(len_) if id not in matching_indices_set]
+
+        return unique_indices
 
     def forward(self, input_coord: torch.tensor) -> Union[torch.tensor, list]:
         with torch.no_grad():
@@ -407,22 +432,16 @@ class SparseEdgeEmbeddingV4(nn.Module):
                 isnan, torch.zeros_like(k_dist_range), k_dist_range
             )
 
-        # # symetry indexes
-        # # Convert to structured arrays
-        # b = np.stack((all_ij_id[:,1], all_ij_id[:, 0])).T
-
-        # a_structured = np.ascontiguousarray(all_ij_id).view(np.dtype((np.void, all_ij_id.dtype.itemsize * all_ij_id.shape[1])))
-        # b_structured = np.ascontiguousarray(b).view(np.dtype((np.void, b.dtype.itemsize * b.shape[1])))
-
-        # # Get the indices of duplicated rows
-        # sum_a_value = np.where(np.in1d(a_structured, b_structured))[0]
-        # sum_b_value = np.where(np.in1d(b_structured, a_structured))[0]
-
-        # add_value = np.setdiff1d(b_structured, a_structured).view(all_ij_id.dtype).reshape(-1, all_ij_id.shape[1])
+        """symetry indexes"""
+        b = np.stack((all_ij_id[:, 1], all_ij_id[:, 0])).T
+        matching_rows, matching_cols = self._hashed_matching_row_indices(all_ij_id, b)
+        unique_id = self._get_unique_indices(len(M) - 1, matching_cols)
+        unique_idx = b[unique_id, :].astype(np.int32)
 
         return k_dist_range.to(self._device), [
             row_idx.astype(np.int32),
             col_idx.astype(np.int32),
             (n, n),
             all_ij_id.astype(np.int32),
+            [matching_rows, matching_cols, unique_id, unique_idx],
         ]

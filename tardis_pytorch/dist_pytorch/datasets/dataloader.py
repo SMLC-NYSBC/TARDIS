@@ -94,7 +94,12 @@ class BasicDataset(Dataset):
         self.max_point_in_patch = patch_if
 
     def __len__(self):
-        return len(self.ids)
+        l_ = len(self.ids)
+
+        if l_ > 0:
+            return len(self.ids)
+        else:
+            return 1
 
     def save_temp(self, i: int, **kwargs):
         """
@@ -755,13 +760,13 @@ def build_dataset(
             if dataset_type[1] == "filament":
                 if not benchmark:
                     dl_train = FilamentSimulateDataset(
-                        sample_count=dataset_type[2],
+                        sample_count=int(dataset_type[2]),
                         patch_if=max_points_per_patch,
                         train=True,
                         downscale=downscale,
                     )
                 dl_test = FilamentSimulateDataset(
-                    sample_count=dataset_type[3],
+                    sample_count=int(dataset_type[3]),
                     patch_if=max_points_per_patch,
                     train=False,
                     downscale=downscale,

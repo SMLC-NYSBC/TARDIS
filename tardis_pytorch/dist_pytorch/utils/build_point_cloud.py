@@ -384,5 +384,5 @@ def generate_bezier_curve_dataset(n=50):
         ndarray: A concatenated set of 3D points representing the generated Bezier curves.
     """
     return np.concatenate(
-        [j for j in [generate_random_bezier_curve(i) for i in range(50)] if len(j) > 0]
+        [j for j in [generate_random_bezier_curve(i) for i in range(n)] if len(j) > 0]
     )

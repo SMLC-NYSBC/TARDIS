@@ -87,26 +87,26 @@ class SparseDIST(nn.Module):
 
         return x, idx
 
-    def forward(self, coords: torch.tensor) -> torch.tensor:
+    def forward(self, coord: torch.tensor) -> torch.tensor:
         """
         Forward pass for the SparseDIST.
 
         Args:
-            coords (torch.tensor): A sparse coordinate tensor containing the input data.
+            coord (torch.tensor): A sparse coordinate tensor containing the input data.
 
         Returns:
             torch.sparse_coo_tensor: A sparse coordinate tensor representing the output from the model.
         """
         # Embed coord [n, 3] coordinates into spares tensor
-        # edge, idx = self.embed_input(coords=coords)  # List[Indices, Values, Shape]
+        edge, idx = self.embed_input(coords=coord)  # List[Indices, Values, Shape]
 
         # Encode throughout the transformer layers
-        edge = self.layers(
-            edge_features=edge, indices=idx
-        )  # List[Indices, Values, Shape]
+        edge = self.layers(edge_features=edge, indices=idx)[1:, :]
 
         # Predict the graph edges
-        # edge = self.decoder(edge + edge[:, np.concatenate(idx[2][1]), :])
+        edge[idx[4][0], :] = edge[idx[4][0], :] + edge[idx[4][0], :]
+        idx[3] = np.concatenate((idx[3], idx[4][3]))
+        edge = torch.cat((edge, edge[idx[4][2], :]))
         edge = self.decoder(edge)
 
         if self.predict:
