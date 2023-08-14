@@ -154,7 +154,7 @@ class SparseDistTrainer(BasicTrainer):
 
             """Training"""
             for edge, node, graph in zip(e, n, g):
-                # edge, graph = edge.to(self.device), graph.to(self.device)
+                edge, graph = edge.to(self.device), graph.to(self.device)
                 self.optimizer.zero_grad()
 
                 edge, indices = self.model(coord=edge[0, :])

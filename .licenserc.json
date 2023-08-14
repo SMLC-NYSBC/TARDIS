@@ -4,6 +4,7 @@
     "**/__init__.py",
     "tardis_pytorch/__init__.py",
     "tardis_pytorch/tardis/__init__.py",
+    "tardis_pytorch/tardis_helper/__init__.py",
     "tardis_pytorch/utils/__init__.py",
     "tardis_pytorch/spindletorch/__init__.py",
     "tardis_pytorch/spindletorch/data_processing/__init__.py",
