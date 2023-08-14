@@ -109,3 +109,6 @@ ENV/
 .vscode/
 .DS_Store
 *.ipynb
+docs/source/resources/Tardis_logo_1.svg
+docs/source/resources/Tardis_logo_1.png
+docs/source/resources/Tardis_logo_2.svg
