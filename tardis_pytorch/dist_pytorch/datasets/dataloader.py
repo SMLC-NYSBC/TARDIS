@@ -93,11 +93,11 @@ class BasicDataset(Dataset):
         # Patch build setting
         self.max_point_in_patch = patch_if
 
-    def __len__(self):
-        l_ = len(self.ids)
+        self.l_ = len(self.ids)
 
-        if l_ > 0:
-            return len(self.ids)
+    def __len__(self):
+        if self.l_ > 0:
+            return self.l_
         else:
             return 1
 
@@ -179,6 +179,7 @@ class FilamentSimulateDataset(BasicDataset):
         super(FilamentSimulateDataset, self).__init__(**kwargs)
 
         self.sample_count = sample_count
+
         self.VD = PatchDataSet(
             max_number_of_points=self.max_point_in_patch,
             overlap=0.1,
@@ -186,6 +187,9 @@ class FilamentSimulateDataset(BasicDataset):
             graph=True,
             tensor=True,
         )
+
+    def __len__(self):
+        return self.sample_count
 
     def __getitem__(self, i: int) -> Tuple[list, list, list, list, list]:
         """Get list of all coordinates and image patches"""

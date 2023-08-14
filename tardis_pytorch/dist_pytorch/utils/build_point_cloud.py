@@ -356,7 +356,7 @@ def generate_random_bezier_curve(id=0):
 
     if np.random.randint(0, 10) > 5:
         np.random.shuffle(curve_points)
-        curve_points = curve_points[: len(curve_points) // 2, :]
+        curve_points = curve_points[: int(len(curve_points) / 1.2), :]
     points = np.zeros((len(curve_points), 4))
     points[:, 0] = id
     points[:, 1] = curve_points[:, 0]

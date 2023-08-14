@@ -102,7 +102,7 @@ def train_dist(
             coord_embed_sigma=model_structure["coord_embed_sigma"],
             dropout_rate=model_structure["dropout_rate"],
             structure=model_structure["structure"],
-            predict=False,
+            predict=True,
         )
     elif model_structure["dist_type"] == "instance-sparse":
         model = SparseDIST(
@@ -127,7 +127,7 @@ def train_dist(
             coord_embed_sigma=model_structure["coord_embed_sigma"],
             dropout_rate=model_structure["dropout_rate"],
             structure=model_structure["structure"],
-            predict=False,
+            predict=True,
         )
     else:
         tardis_logo = TardisLogo()
@@ -175,14 +175,11 @@ def train_dist(
     """Build training optimizer"""
     if lr_scheduler:
         optimizer = optim.Adam(params=model.parameters(), betas=(0.9, 0.98), eps=1e-9)
+        optimizer = ISR_LR(optimizer, lr_mul=learning_rate)
     else:
         optimizer = optim.Adam(
             params=model.parameters(), lr=learning_rate, betas=(0.9, 0.98), eps=1e-9
         )
-
-    """Optionally: Build learning rate scheduler"""
-    if lr_scheduler:
-        optimizer = ISR_LR(optimizer, lr_mul=learning_rate)
 
     """Optionally: Checkpoint model"""
     if checkpoint is not None:
@@ -190,7 +187,7 @@ def train_dist(
         del save_train
 
     """Build trainer"""
-    if dataset_type in ["filament", "MT", "Mem"]:
+    if dataset_type in ["filament", "MT", "Mem"] or dataset_type[1] == "filament":
         dataset_type = 2
     else:
         dataset_type = 4

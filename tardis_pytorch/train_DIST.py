@@ -296,10 +296,11 @@ def main(
 
         if dataset_type in ["stanford", "stanford_rgb"]:
             build_test_dataset(dataset_dir=dir, dataset_no=no_dataset, stanford=True)
-        if dataset_type.startswith("simulate_filament"):
-            dataset_type = dataset_type.split("_")
         else:
             build_test_dataset(dataset_dir=dir, dataset_no=no_dataset)
+    else:
+        if dataset_type.startswith("simulate_filament"):
+            dataset_type = dataset_type.split("_")
 
     """Pre-setting for building DataLoader"""
     # Check for general dataset
@@ -320,15 +321,16 @@ def main(
     """Setup training"""
     device = get_device(device)
 
-    if dataset_type.endswith("rgb"):
-        if node_dim == 0:
-            TardisError(
-                "161",
-                "tardis_pytorch/train_DIST.py",
-                "Model initiated with node feasters as RGB but "
-                f"node_dim is {node_dim}.",
-            )
-            sys.exit()
+    if not isinstance(dataset_type, list):
+        if dataset_type.endswith("rgb"):
+            if node_dim == 0:
+                TardisError(
+                    "161",
+                    "tardis_pytorch/train_DIST.py",
+                    "Model initiated with node feasters as RGB but "
+                    f"node_dim is {node_dim}.",
+                )
+                sys.exit()
     if node_dim > 0:
         node_input = 3
     else:
