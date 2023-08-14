@@ -137,7 +137,7 @@ class DownSampling:
         else:
             self.sample = voxel
 
-        # If true downs ample with class ids. expect [ID x X x Y x (Z)] [[N, 3] or [N, 4]]
+        # If true downs sample with class ids. expect [ID x X x Y x (Z)] [[N, 3] or [N, 4]]
         self.labels = labels
         self.KNN = KNN
 

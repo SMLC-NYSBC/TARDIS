@@ -16,6 +16,7 @@ from sklearn.neighbors import KDTree, NearestNeighbors
 from tardis_pytorch.utils.errors import TardisError
 from tardis_pytorch.utils.load_data import ImportDataFromAmira
 from tardis_pytorch.utils.normalization import RescaleNormalize, SimpleNormalize
+from tardis_pytorch.utils.spline_metric import sort_segment
 
 
 def preprocess_data(
@@ -196,16 +197,16 @@ class BuildGraph:
         class_id = coord[:, 0]
         xyz = coord[:, 1:]
 
-        # build a NearestNeighbors object for efficient nearest neighbor search
-        nn = NearestNeighbors(n_neighbors=self.K, algorithm="kd_tree").fit(xyz)
-
-        # find the indices of the K-nearest neighbors for each point
-        _, indices = nn.kneighbors(xyz)
-
         # build the connectivity matrix
         N = coord.shape[0]
         graph = np.zeros((N, N))
         if self.mesh:
+            # build a NearestNeighbors object for efficient nearest neighbor search
+            nn = NearestNeighbors(n_neighbors=self.K, algorithm="kd_tree").fit(xyz)
+
+            # find the indices of the K-nearest neighbors for each point
+            _, indices = nn.kneighbors(xyz)
+
             for i in range(N):
                 for j in indices[i]:
                     if class_id[i] == class_id[j]:  # check class ID before adding edges

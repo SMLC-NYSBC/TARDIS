@@ -393,7 +393,7 @@ class PatchDataSet:
         coord_patch = []
         graph_patch = []
         output_idx = []
-        self.mesh = mesh
+
         if voxel_size is not None:
             self.voxel = voxel_size
         else:
@@ -410,7 +410,10 @@ class PatchDataSet:
             segmented_coord = coord
             coord = coord[:, 1:]
 
-            graph_builder = BuildGraph(K=mesh)
+            if mesh > 2:
+                graph_builder = BuildGraph(K=mesh, mesh=True)
+            else:
+                graph_builder = BuildGraph(K=mesh, mesh=False)
         else:
             graph_builder = None
             if coord.shape[1] not in [2, 3]:
