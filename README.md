@@ -1,13 +1,14 @@
-# TARDIS
+<p align="center">
+  <img src="resources/Tardis_logo_2.png" width="256"/>
+</p>
 
 [![Python PyTest](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_package.yml/badge.svg?branch=main)](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_package.yml)
 [![Check License Lines](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/licensed.yml/badge.svg)](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/licensed.yml)
-
 ![Version](https://img.shields.io/badge/release-0.1.0_RC2_hotfix3-success)
 ![Documentation](https://readthedocs.org/projects/tardis-pytorch/badge/?version=latest)
 
-Python based software for generalized object instance segmentation from (cryo-)electron microscopy
-micrographs/tomograms. Software package is built on general workflow where predicted semantic segmentation
+Python-based software for generalized object instance segmentation from (cryo-)electron microscopy
+micrographs/tomograms. The software package is built on a general workflow where predicted semantic segmentation
 is used for instance segmentation of 2D/3D images.
 
 ![Tardis Workflow](resources/workflow.jpg)
@@ -22,7 +23,7 @@ is used for instance segmentation of 2D/3D images.
 <details>
     <summary><b>TARDIS v0.1.0 release candidate 2 (RC2) - (2023-03-22)</b></summary>
 
-    * General improvement form MT prediction
+    * General improvement from MT prediction
     * Added support for Cry-mem prediction
     * Added support for node (RGB) features in DIST
     * Pre-trained network for Cryo-mem, General-MT, S3DIS dataset
@@ -32,9 +33,9 @@ is used for instance segmentation of 2D/3D images.
 <details>
     <summary><b>TARDIS v0.1.0 release candidate 1 (RC1) - (2023-02-08)</b></summary>
 
-    * Overall clean-up for final release 
+    * Overall clean-up for the final release 
     * Added full code documentation
-    * Added full stable suport for MT prediction 
+    * Added full stable support for MT prediction 
     * Added support for ScanNetV2 dataset prediction with DIST 
     * Added costume TARDIS error and console logo outputs 
     * TARDIS error handling 
@@ -46,7 +47,7 @@ is used for instance segmentation of 2D/3D images.
 
     * Cryo-Membrane 2D support 
     * Stable training and prediction entries for spindletorch and DIST 
-    * Restructure and standardized naming iand versioning in TARDIS 
+    * Restructure and standardize naming and versioning in TARDIS 
     * Combined all side-code into TARDIS 
     * Full support for Amira formats, MRC/REC, TIF 
 
@@ -57,7 +58,7 @@ is used for instance segmentation of 2D/3D images.
 
     * Cryo-Membrane 2D support 
     * Stable training and prediction entries for spindletorch and DIST 
-    * Restructure and standardized naming iand versioning in TARDIS 
+    * Restructure and standardize naming and versioning in TARDIS 
 </details>
 
 # Requirements
@@ -75,7 +76,7 @@ is used for instance segmentation of 2D/3D images.
         imagecodecs>=2021.11.20
         mrcfile >= 1.4.3
     
-    # Image processign library 
+    # Image processing library 
         scikit-learn>=1.0.2
         scikit-image>=0.19.2
         opencv-python>=4.6.0.66
@@ -95,7 +96,7 @@ is used for instance segmentation of 2D/3D images.
 ## Installation
 **From Source**
 
-The sources for TARDIS-pytorch can be downloaded from the ***Available upon stable release***.
+The sources for TARDIS-Pytorch can be downloaded from the ***Available upon stable release***.
 
 You can either clone the public repository:
 
@@ -104,7 +105,7 @@ You can either clone the public repository:
     $ pip install -r requirements.txt
     $ pip install -r requirements-dev.txt
 
-Or install directly from pre-build python package:
+Or install directly from the pre-build python package:
 
 Install:
 * Python 3.7, 3.8, 3.9, 3.10
@@ -156,7 +157,7 @@ advance usage: tardis_mt [-dir str] [-out str] [-ps int] [-ct float] [-dt float]
 ```
 optional arguments:
   -h, --help            show this help message and exit
-  -v, --version         show current TARDIS version
+  -v, --version         shows the current TARDIS version
   
   
   -dir, --dir [str]     
@@ -164,8 +165,8 @@ optional arguments:
                         Default: getcwd()
   -out, --output_format [str]
                         Type of output files. The First optional output file is the binary mask 
-                        which can be of type None [no output], am [Amira], mrc or tif. 
-                        Second output is instance segmentation of objects, which can be 
+                        which can be of type None [no output], am [Amira], mrc, or tif. 
+                        The second output is instance segmentation of objects, which can be 
                         output as amSG [Amira], mrcM [mrc mask], tifM [tif mask],
                         csv coordinate file [ID, X, Y, Z] or None [no instance prediction].
                         Default: None_amSG
@@ -176,12 +177,12 @@ optional arguments:
                         with 25% overlap.
                         Default: 128
   -rt, --rotate [bool]
-                        If True, during CNN prediction image is rotate 4x by 90 degrees.
-                        This will increase prediction time 4x. However may lead to more 
+                        If True, during CNN prediction image is rotated 4x by 90 degrees.
+                        This will increase prediction time 4x. However, may lead to more 
                         cleaner output.
                         Default: True 
   -ct, --cnn_threshold [float]
-                        Threshold used for CNN prediction.
+                        The threshold is used for CNN prediction.
                         Default: 0.5
   -dt, --dist_threshold [float]
                         Threshold used for instance prediction.
@@ -192,15 +193,15 @@ optional arguments:
                         point cloud into smaller patches with overlap. 
                         Default: 1000
   -ap, --amira_prefix [str]
-                        If dir/amira folder exist, TARDIS will search for files with
+                        If dir/amira folder exists, TARDIS will search for files with
                         given prefix (e.g. file_name.CorrelationLines.am). If the correct
-                        file is found, TARDIS will use its instance segmentation with
+                        the file is found, TARDIS will use its instance segmentation with
                         ZiB Amira prediction, and output additional file called
                         file_name_AmiraCompare.am.
                         Default: .CorrelationLines  
   -fl, --filter_by_length [int]
                         Filtering parameters for microtubules, defining maximum microtubule 
-                        length in angstrom. All filaments shorter then this length 
+                        length in Angstrom. All filaments shorter than this length 
                         will be deleted.
                         Default: 500
   -cs, --connect_splines [int]
@@ -209,13 +210,13 @@ optional arguments:
                         during filtering for each spline, we determine the vector in which 
                         filament end is facing and we connect all filament that faces 
                         the same direction and are within the given connection 
-                        distance in angstrom.
+                        distance in Angstrom.
                         Default: 2500
   -cr, --connect_cylinder [int]
                         Filtering parameter for microtubules. To reduce false positive 
-                        from connecting filaments, we reduce the searching are to cylinder 
-                        radius given in angstrom. For each spline we determine vector 
-                        in which filament end is facing and we search for a filament 
+                        from connecting filaments, we reduce the searching area to the cylinder 
+                        radius is given in Angstrom. For each spline we determine vector 
+                        in which the filament end is facing and we search for a filament 
                         that faces the same direction and their end can be found 
                         within a cylinder.
                         Default: 250
@@ -264,7 +265,7 @@ advance usage: tardis_mem [-dir str] [-out str] [-ps int] ...
 ```
 optional arguments:
   -h, --help            show this help message and exit
-  -v, --version         show current TARDIS version
+  -v, --version         shows the current TARDIS version
   
   
   -dir, --dir [str]     
@@ -272,8 +273,8 @@ optional arguments:
                         Default: getcwd()
   -out, --output_format [str]
                         Type of output files. The First optional output file is the binary mask 
-                        which can be of type None [no output], am [Amira], mrc or tif. 
-                        Second output is instance segmentation of objects, which can be 
+                        which can be of type None [no output], am [Amira], mrc, or tif. 
+                        The second output is instance segmentation of objects, which can be 
                         output as amSG [Amira], mrcM [mrc mask], tifM [tif mask],
                         csv coordinate file [ID, X, Y, Z] or None [no instance prediction].
                         Default: mrc_None
@@ -284,12 +285,12 @@ optional arguments:
                         with 25% overlap.
                         Default: 128
 -rt, --rotate [bool]
-                        If True, during CNN prediction image is rotate 4x by 90 degrees.
-                        This will increase prediction time 4x. However may lead to more 
+                        If True, during CNN prediction image is rotated 4x by 90 degrees.
+                        This will increase prediction time 4x. However, may lead to more 
                         cleaner output. 
                         Default: True
   -ct, --cnn_threshold [float]
-                        Threshold used for CNN prediction.
+                        The threshold is used for CNN prediction.
                         Default: 0.15
 
   -dt, --dist_threshold [float]
@@ -331,7 +332,7 @@ advance usage: tardis_mem [-dir str] [-out str] [-ps int] ...
 ```
 optional arguments:
   -h, --help            show this help message and exit
-  -v, --version         show current TARDIS version
+  -v, --version         shows the current TARDIS version
   
   
   -dir, --dir [str]     
@@ -339,8 +340,8 @@ optional arguments:
                         Default: getcwd()
   -out, --output_format [str]
                         Type of output files. The First optional output file is the binary mask 
-                        which can be of type None [no output], am [Amira], mrc or tif. 
-                        Second output is instance segmentation of objects, which can be 
+                        which can be of type None [no output], am [Amira], mrc, or tif. 
+                        The second output is instance segmentation of objects, which can be 
                         output as amSG [Amira], mrcM [mrc mask], tifM [tif mask],
                         csv coordinate file [ID, X, Y, Z] or None [no instance prediction].
                         Default: mrc_None
@@ -351,12 +352,12 @@ optional arguments:
                         with 25% overlap.
                         Default: 128
   -rt, --rotate [bool]
-                        If True, during CNN prediction image is rotate 4x by 90 degrees.
-                        This will increase prediction time 4x. However may lead to more 
+                        If True, during CNN prediction image is rotated 4x by 90 degrees.
+                        This will increase prediction time 4x. However, may lead to more 
                         cleaner output. 
                         Default: True 
   -ct, --cnn_threshold [float]
-                        Threshold used for CNN prediction.
+                        The threshold is used for CNN prediction.
                         Default: 0.5
   -dt, --dist_threshold [float]
                         Threshold used for instance prediction.
