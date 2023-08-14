@@ -159,7 +159,7 @@ class SparseDistTrainer(BasicTrainer):
 
                 edge, indices = self.model(coord=edge[0, :])
                 graph = graph[0, indices[3][:, 0], indices[3][:, 1]].type(torch.float32)
-  
+
                 # Back-propagate
                 loss = self.criterion(
                     edge[:, 0],
@@ -219,7 +219,9 @@ class SparseDistTrainer(BasicTrainer):
 
                     # Calculate F1 metric
                     pred_edge = np.zeros(indices[2])
-                    pred_edge[indices[3][:, 0], indices[3][:, 1]] += edge.cpu().detach().numpy()[:, 0]
+                    pred_edge[indices[3][:, 0], indices[3][:, 1]] += (
+                        edge.cpu().detach().numpy()[:, 0]
+                    )
 
                     acc, prec, recall, f1, th = eval_graph_f1(
                         logits=torch.from_numpy(pred_edge),
