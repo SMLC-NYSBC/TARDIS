@@ -159,10 +159,10 @@ class SparseDistTrainer(BasicTrainer):
 
                 if self.node_input > 0:
                     edge, indices = self.model(
-                        coords=edge, node_features=node.to(self.device)
+                        coord=edge, node_features=node.to(self.device)
                     )
                 else:
-                    edge, indices = self.model(coords=edge)
+                    edge, indices = self.model(coord=edge)
 
                 # Back-propagate
                 loss = self.criterion(
@@ -208,10 +208,10 @@ class SparseDistTrainer(BasicTrainer):
                     # Predict graph
                     if self.node_input > 0:
                         edge, indices = self.model(
-                            coords=edge, node_features=node.to(self.device)
+                            coord=edge, node_features=node.to(self.device)
                         )
                     else:
-                        edge, indices = self.model(coords=edge)
+                        edge, indices = self.model(coord=edge)
 
                     # Calcu late validation loss
                     loss = self.criterion(
