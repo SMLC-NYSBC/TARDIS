@@ -286,50 +286,50 @@ class SparseDistTrainer(BasicTrainer):
                     f"mCov[0.5]: {df_05:.2f}; "
                     f"mCov[0.9]: {df_09:.2f}"
                 )
+                self._update_progress_bar(loss_desc=valid, idx=idx, train=False)
+
+            # Build GT instance point cloud
+            target = self.Graph_gt.patch_to_segment(
+                graph=graph_cpu, coord=coord, idx=out_cpu, prune=0, sort=False
+            )
+
+            # Threshold 0.25
+            try:
+                input0_1 = self.Graph0_25.patch_to_segment(
+                    graph=edge_cpu, coord=coord, idx=out_cpu, prune=5, sort=False
+                )
+                mcov_m, _ = mcov(input0_1, target)
+                mcov0_25.append(mcov_m)
+            except:
+                mcov0_25.append(0.0)
+
+            # Threshold 0.5
+            try:
+                input0_5 = self.Graph0_5.patch_to_segment(
+                    graph=edge_cpu, coord=coord, idx=out_cpu, prune=5, sort=False
+                )
+                mcov_m, _ = mcov(input0_5, target)
+                mcov0_5.append(mcov_m)
+            except:
+                mcov0_5.append(0.0)
+
+            # Threshold 0.9
+            try:
+                input0_9 = self.Graph0_9.patch_to_segment(
+                    graph=edge_cpu, coord=coord, idx=out_cpu, prune=5, sort=False
+                )
+                mcov_m, _ = mcov(input0_9, target)
+                mcov0_9.append(mcov_m)
+            except:
+                mcov0_9.append(0.0)
+
+            # Update progress bar
+            valid = (
+                f"Validation: (loss: {loss.item():.4f}; F1: {f1:.2f}) "
+                f"mCov[0.5]: {mcov0_5[-1:][0]:.2f}; "
+                f"mCov[0.9]: {mcov0_9[-1:][0]:.2f}"
+            )
             self._update_progress_bar(loss_desc=valid, idx=idx, train=False)
-
-        # Build GT instance point cloud
-        target = self.Graph_gt.patch_to_segment(
-            graph=graph_cpu, coord=coord, idx=out_cpu, prune=0, sort=False
-        )
-
-        # Threshold 0.25
-        try:
-            input0_1 = self.Graph0_25.patch_to_segment(
-                graph=edge_cpu, coord=coord, idx=out_cpu, prune=5, sort=False
-            )
-            mcov_m, _ = mcov(input0_1, target)
-            mcov0_25.append(mcov_m)
-        except:
-            mcov0_25.append(0.0)
-
-        # Threshold 0.5
-        try:
-            input0_5 = self.Graph0_5.patch_to_segment(
-                graph=edge_cpu, coord=coord, idx=out_cpu, prune=5, sort=False
-            )
-            mcov_m, _ = mcov(input0_5, target)
-            mcov0_5.append(mcov_m)
-        except:
-            mcov0_5.append(0.0)
-
-        # Threshold 0.9
-        try:
-            input0_9 = self.Graph0_9.patch_to_segment(
-                graph=edge_cpu, coord=coord, idx=out_cpu, prune=5, sort=False
-            )
-            mcov_m, _ = mcov(input0_9, target)
-            mcov0_9.append(mcov_m)
-        except:
-            mcov0_9.append(0.0)
-
-        # Update progress bar
-        valid = (
-            f"Validation: (loss: {loss.item():.4f}; F1: {f1:.2f}) "
-            f"mCov[0.5]: {mcov0_5[-1:][0]:.2f}; "
-            f"mCov[0.9]: {mcov0_9[-1:][0]:.2f}"
-        )
-        self._update_progress_bar(loss_desc=valid, idx=idx, train=False)
 
         # Reduce eval. metric with mean
         self.validation_loss.append(np.mean(valid_losses))
