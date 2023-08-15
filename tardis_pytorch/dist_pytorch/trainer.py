@@ -162,7 +162,7 @@ class SparseDistTrainer(BasicTrainer):
 
                 # Back-propagate
                 loss = self.criterion(
-                    edge[1:, 0],
+                    edge[:, 0],
                     graph,
                 )
                 loss.backward()  # One backward pass
@@ -206,7 +206,7 @@ class SparseDistTrainer(BasicTrainer):
 
                     # Calcu late validation loss
                     loss = self.criterion(
-                        edge[1:, 0],
+                        edge[:, 0],
                         graph[0, indices[3][:, 0], indices[3][:, 1]].type(
                             torch.float32
                         ),
