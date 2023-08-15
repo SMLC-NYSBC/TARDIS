@@ -29,6 +29,15 @@ class SparseDistTrainer(BasicTrainer):
 
         self.node_input = self.structure["node_input"]
 
+        self.Graph_gt = PropGreedyGraphCut(threshold=0.5, connection=1000)
+        self.Graph0_25 = PropGreedyGraphCut(
+            threshold=0.25, connection=self.instance_cov
+        )
+        self.Graph0_5 = PropGreedyGraphCut(threshold=0.5, connection=self.instance_cov)
+        self.Graph0_9 = PropGreedyGraphCut(threshold=0.9, connection=self.instance_cov)
+
+        self.mCov0_25, self.mCov0_5, self.mCov0_9 = [], [], []
+
     @staticmethod
     def _update_desc(stop_count: int, metric: list) -> str:
         """
@@ -43,7 +52,9 @@ class SparseDistTrainer(BasicTrainer):
         """
         desc = (
             f"Epochs: early_stop: {stop_count}; "
-            f"F1: [{metric[0]:.2f}; {metric[1]:.2f}]"
+            f"F1: [{metric[0]:.2f}; {metric[1]:.2f}]; "
+            f"mCov 0.5: [{metric[2]:.2f}; {metric[3]:.2f}]; "
+            f"mCov 0.9: [{metric[4]:.2f}; {metric[5]:.2f}]"
         )
         return desc
 
@@ -57,6 +68,10 @@ class SparseDistTrainer(BasicTrainer):
                 [
                     np.max(self.f1) if len(self.f1) > 0 else 0.0,
                     self.f1[-1:][0] if len(self.f1) > 0 else 0.0,
+                    np.max(self.mCov0_5) if len(self.mCov0_5) > 0 else 0.0,
+                    self.mCov0_5[-1:][0] if len(self.mCov0_5) > 0 else 0.0,
+                    np.max(self.mCov0_9) if len(self.mCov0_9) > 0 else 0.0,
+                    self.mCov0_9[-1:][0] if len(self.mCov0_9) > 0 else 0.0,
                 ],
             )
 
@@ -92,6 +107,9 @@ class SparseDistTrainer(BasicTrainer):
                         self.recall,
                         self.threshold,
                         self.f1,
+                        self.mCov0_25,
+                        self.mCov0_5,
+                        self.mCov0_9,
                     ]
                 ),
                 delimiter=",",
@@ -118,6 +136,21 @@ class SparseDistTrainer(BasicTrainer):
                     getcwd(),
                     f"{self.checkpoint_name}_checkpoint",
                     f"{self.checkpoint_name}_checkpoint_f1.pth",
+                ),
+            )
+
+        # If mean evaluation mcov score is higher than save checkpoint
+        if all(self.mCov0_9[-1:][0] >= i for i in self.mCov0_9[:-1]):
+            torch.save(
+                {
+                    "model_struct_dict": self.structure,
+                    "model_state_dict": self.model.state_dict(),
+                    "optimizer_state_dict": self.optimizer.state_dict(),
+                },
+                join(
+                    getcwd(),
+                    f"{self.checkpoint_name}_checkpoint",
+                    f"{self.checkpoint_name}_checkpoint_mcov.pth",
                 ),
             )
 
@@ -195,12 +228,18 @@ class SparseDistTrainer(BasicTrainer):
         recall_mean = []
         F1_mean = []
         threshold_mean = []
+        mcov0_25, mcov0_5, mcov0_9 = [], [], []
 
-        for idx, (e, n, g, _, _) in enumerate(self.validation_DataLoader):
-            for edge, node, graph in zip(e, n, g):
+        for idx, (e, n, g, o, _) in enumerate(self.validation_DataLoader):
+            coord = [x.cpu().detach().numpy()[0, :] for x in e]
+            edge_cpu, graph_cpu, out_cpu = [], [], []
+
+            for edge, node, graph, out in zip(e, n, g, o):
                 edge, graph = edge[0, :].to(self.device), graph.to(self.device)
 
                 with torch.no_grad():
+                    out_cpu.append(out.cpu().detach().numpy()[0, :])
+
                     # Predict graph
                     edge, indices = self.model(coord=edge)
 
@@ -217,6 +256,7 @@ class SparseDistTrainer(BasicTrainer):
                     pred_edge[indices[3][:, 0], indices[3][:, 1]] += (
                         edge.cpu().detach().numpy()[:, 0]
                     )
+                    graph_cpu.append(pred_edge)
 
                     acc, prec, recall, f1, th = eval_graph_f1(
                         logits=torch.from_numpy(pred_edge),
@@ -232,8 +272,62 @@ class SparseDistTrainer(BasicTrainer):
                 F1_mean.append(f1)
                 threshold_mean.append(th)
 
-                valid = f"Validation: (loss: {loss.item():.4f}; F1: {f1:.2f}) "
+                # Update progress bar
+                df_05, df_09 = 0.0, 0.0
+                if len(mcov0_5) > 0:
+                    df_05 = mcov0_5[-1:][0]
+                if len(mcov0_9) > 0:
+                    df_09 = mcov0_9[-1:][0]
+
+                valid = (
+                    f"Validation: (loss: {loss.item():.4f}; F1: {f1:.2f}) "
+                    f"mCov[0.5]: {df_05:.2f}; "
+                    f"mCov[0.9]: {df_09:.2f}"
+                )
             self._update_progress_bar(loss_desc=valid, idx=idx, train=False)
+
+        # Build GT instance point cloud
+        target = self.Graph_gt.patch_to_segment(
+            graph=graph_cpu, coord=coord, idx=out_cpu, prune=0, sort=False
+        )
+
+        # Threshold 0.25
+        try:
+            input0_1 = self.Graph0_25.patch_to_segment(
+                graph=edge_cpu, coord=coord, idx=out_cpu, prune=5, sort=False
+            )
+            mcov_m, _ = mcov(input0_1, target)
+            mcov0_25.append(mcov_m)
+        except:
+            mcov0_25.append(0.0)
+
+        # Threshold 0.5
+        try:
+            input0_5 = self.Graph0_5.patch_to_segment(
+                graph=edge_cpu, coord=coord, idx=out_cpu, prune=5, sort=False
+            )
+            mcov_m, _ = mcov(input0_5, target)
+            mcov0_5.append(mcov_m)
+        except:
+            mcov0_5.append(0.0)
+
+        # Threshold 0.9
+        try:
+            input0_9 = self.Graph0_9.patch_to_segment(
+                graph=edge_cpu, coord=coord, idx=out_cpu, prune=5, sort=False
+            )
+            mcov_m, _ = mcov(input0_9, target)
+            mcov0_9.append(mcov_m)
+        except:
+            mcov0_9.append(0.0)
+
+        # Update progress bar
+        valid = (
+            f"Validation: (loss: {loss.item():.4f}; F1: {f1:.2f}) "
+            f"mCov[0.5]: {mcov0_5[-1:][0]:.2f}; "
+            f"mCov[0.9]: {mcov0_9[-1:][0]:.2f}"
+        )
+        self._update_progress_bar(loss_desc=valid, idx=idx, train=False)
 
         # Reduce eval. metric with mean
         self.validation_loss.append(np.mean(valid_losses))
@@ -242,6 +336,10 @@ class SparseDistTrainer(BasicTrainer):
         self.recall.append(np.mean(recall_mean))
         self.threshold.append(np.mean(threshold_mean))
         self.f1.append(np.mean(F1_mean))
+
+        self.mCov0_25.append(np.mean(mcov0_25))
+        self.mCov0_5.append(np.mean(mcov0_5))
+        self.mCov0_9.append(np.mean(mcov0_9))
 
         # Check if average evaluation loss dropped
         self.early_stopping(f1_score=self.f1[-1:][0])
