@@ -256,7 +256,8 @@ class SparseDistTrainer(BasicTrainer):
                     pred_edge[indices[3][:, 0], indices[3][:, 1]] += (
                         edge.cpu().detach().numpy()[:, 0]
                     )
-                    graph_cpu.append(pred_edge)
+                    edge_cpu.append(pred_edge)
+                    graph_cpu.append(graph[0, :].cpu().detach().numpy())
 
                     acc, prec, recall, f1, th = eval_graph_f1(
                         logits=torch.from_numpy(pred_edge),

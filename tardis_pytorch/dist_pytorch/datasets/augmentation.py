@@ -225,16 +225,12 @@ class BuildGraph:
                     if j == points_in_contour[0]:  # First point
                         if (j + 1) <= (len(coord) - 1):
                             graph[j, j + 1] = 1
-                            graph[j + 1, j] = 1
                     # Last point
                     elif j == points_in_contour[len(points_in_contour) - 1]:
                         graph[j, j - 1] = 1
-                        graph[j - 1, j] = 1
                     else:  # Point in the middle
                         graph[j, j + 1] = 1
-                        graph[j + 1, j] = 1
                         graph[j, j - 1] = 1
-                        graph[j - 1, j] = 1
 
                 # Check euclidean distance between fist and last point
                 ends_distance = np.linalg.norm(
@@ -242,7 +238,7 @@ class BuildGraph:
                 )
 
                 # If < 2 nm pixel size, connect
-                if ends_distance < 2:
+                if ends_distance < 5:
                     graph[points_in_contour[0], points_in_contour[-1]] = 1
                     graph[points_in_contour[-1], points_in_contour[0]] = 1
 
