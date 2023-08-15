@@ -79,7 +79,7 @@ def train_dist(
         LaplacianEigenmapsLoss,
     ]
     losses_f = {
-        f.__name__: f(smooth=1e-16, reduction="mean", diagonal=False, sigmoid=False)
+        f.__name__: f(smooth=1e-16, reduction="mean", diagonal=True, sigmoid=False)
         for f in loss_functions
     }
 
@@ -105,6 +105,10 @@ def train_dist(
             predict=True,
         )
     elif model_structure["dist_type"] == "instance-sparse":
+        losses_f = {
+            f.__name__: f(smooth=1e-16, reduction="mean", diagonal=False, sigmoid=False)
+            for f in loss_functions
+        }
         model = SparseDIST(
             n_out=model_structure["n_out"],
             edge_dim=model_structure["edge_dim"],

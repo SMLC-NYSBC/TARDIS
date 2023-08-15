@@ -34,6 +34,7 @@ from tardis_pytorch.dist_pytorch.utils.utils import pc_median_dist
 from tardis_pytorch.dist_pytorch.utils.build_point_cloud import (
     generate_bezier_curve_dataset,
 )
+from tardis_pytorch.utils.spline_metric import sort_segment
 
 
 class BasicDataset(Dataset):
@@ -191,7 +192,7 @@ class FilamentSimulateDataset(BasicDataset):
     def __len__(self):
         return self.sample_count
 
-    def __getitem__(self, i: int) -> Tuple[list, list, list, list, list]:
+    def __getitem__(self, i: int) -> Tuple[list, list, list, list, list, list]:
         """Get list of all coordinates and image patches"""
         # Random 2D/3D
         flatten_ = False
@@ -220,7 +221,12 @@ class FilamentSimulateDataset(BasicDataset):
             else:
                 down_scale = RandomDownSampling(threshold=float(scale[1]), labels=True)
             coord = down_scale(coord)
+
             coord = coord[coord[:, 0].argsort()]
+            for i in np.unique(coord[:, 0]):
+                id_ = i
+                idx = np.where(coord[:, 0] == id_)[0]
+                coord[idx, 1:] = sort_segment(coord[idx, 1:])
 
         coords_idx, df_idx, graph_idx, output_idx, _ = self.VD.patched_dataset(
             coord=coord, mesh=2
