@@ -614,12 +614,12 @@ class DistTrainer(BasicTrainer):
                         edge = self.model(coords=edge, node_features=None)
 
                     # Calculate validation loss
-                    edge.fill_diagonal_(1)
                     loss = self.criterion(edge[0, :], graph)
 
                     # Calculate F1 metric
+                    edge[0, 0, :].fill_diagonal_(1)
                     acc, prec, recall, f1, th = eval_graph_f1(
-                        logits=edge[0, :], targets=graph, threshold=0.5
+                        logits=edge[0, :], targets=graph[0, :], threshold=0.5
                     )
                     edge_cpu.append(edge[0, 0, :].cpu().detach().numpy())
 
