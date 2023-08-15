@@ -101,7 +101,6 @@ class SparseEdgeEmbedding(nn.Module):
         ]
 
 
-
 class SparseEdgeEmbeddingV4(nn.Module):
     """
     Module for Sparse Edge Embedding.
@@ -127,42 +126,26 @@ class SparseEdgeEmbeddingV4(nn.Module):
         self.sigma = sigma
         self._device = _device
 
-    @staticmethod
-    def _hashed_matching_row_indices(arr1, arr2) -> Union[tuple, tuple]:
-        # Convert rows to tuples and create a set for arr2
-        arr1_tuples = [tuple(row) for row in arr1]
-        arr2_dict = {tuple(row): idx for idx, row in enumerate(arr2)}
-
-        # Find matching indices
-        matching_indices_arr1 = [
-            idx for idx, row in enumerate(arr1_tuples) if row in arr2_dict
-        ]
-        matching_indices_arr2 = [
-            arr2_dict[row] for row in arr1_tuples if row in arr2_dict
-        ]
-
-        return matching_indices_arr1, matching_indices_arr2
-
-    @staticmethod
-    def _get_unique_indices(len_, matching_indices) -> list:
-        # Convert matching indices to a set for O(1) lookup
-        matching_indices_set = set(matching_indices)
-
-        # Get unique indices
-        unique_indices = [id_ for id_ in range(len_) if id not in matching_indices_set]
-
-        return unique_indices
-
     def forward(self, input_coord: torch.tensor) -> Union[torch.tensor, list]:
         with torch.no_grad():
+            import sys
+            import scipy
+
+            print(sys.version)
+            print(scipy.__version__)
+
             # Get all ij element from row and col
+            print(input_coord.shape)
+            print(input_coord[:5, :])
+
             input_coord = input_coord.cpu().detach().numpy()
             tree = KDTree(input_coord)
             distances, indices = tree.query(input_coord, self.knn, p=2)
+            print(indices.shape, min(indices.flatten()), max(indices.flatten()))
 
             n = len(input_coord)
             M = distances.flatten()
-            
+
             all_ij_id = np.array(
                 (np.repeat(np.arange(n), self.knn), indices.flatten())
             ).T

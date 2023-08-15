@@ -100,14 +100,14 @@ class SparseDIST(nn.Module):
         """
         # Embed coord [n, 3] coordinates into spares tensor
         edge, idx = self.embed_input(coords=coord)  # List[Indices, Values, Shape]
-        
+
         # Encode throughout the transformer layers
-        edge = self.layers(edge_features=edge, indices=idx)[1:, :]
-        
+        edge = self.layers(edge_features=edge, indices=idx)
+
         # Decoder
         edge = self.decoder(edge)
 
         if self.predict:
             edge = torch.sigmoid(edge)
 
-        return edge, idx
+        return edge[1:, :], idx
