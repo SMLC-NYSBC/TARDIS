@@ -619,7 +619,7 @@ class DistTrainer(BasicTrainer):
                     acc, prec, recall, f1, th = eval_graph_f1(
                         logits=edge[0, :], targets=graph, threshold=0.5
                     )
-                    edge_cpu.append(edge[0, :].cpu().detach().numpy())
+                    edge_cpu.append(edge[0, 0, :].cpu().detach().numpy())
 
                 # Avg. precision score
                 valid_losses.append(loss.item())
