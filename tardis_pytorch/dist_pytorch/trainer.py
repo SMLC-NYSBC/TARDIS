@@ -256,6 +256,7 @@ class SparseDistTrainer(BasicTrainer):
                     pred_edge[indices[3][:, 0], indices[3][:, 1]] += (
                         edge.cpu().detach().numpy()[:, 0]
                     )
+                    np.fill_diagonal(pred_edge, 1)
                     edge_cpu.append(pred_edge)
                     graph_cpu.append(graph[0, :].cpu().detach().numpy())
 
@@ -613,6 +614,7 @@ class DistTrainer(BasicTrainer):
                         edge = self.model(coords=edge, node_features=None)
 
                     # Calculate validation loss
+                    edge.fill_diagonal_(1)
                     loss = self.criterion(edge[0, :], graph)
 
                     # Calculate F1 metric
