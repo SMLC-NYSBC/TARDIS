@@ -202,12 +202,7 @@ class SparseDistTrainer(BasicTrainer):
 
                 with torch.no_grad():
                     # Predict graph
-                    if self.node_input > 0:
-                        edge, indices = self.model(
-                            coord=edge, node_features=node.to(self.device)
-                        )
-                    else:
-                        edge, indices = self.model(coord=edge)
+                    edge, indices = self.model(coord=edge)
 
                     # Calcu late validation loss
                     loss = self.criterion(

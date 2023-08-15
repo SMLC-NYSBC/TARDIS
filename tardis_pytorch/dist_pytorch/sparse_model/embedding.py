@@ -162,7 +162,7 @@ class SparseEdgeEmbeddingV4(nn.Module):
 
             n = len(input_coord)
             M = distances.flatten()
-
+            
             all_ij_id = np.array(
                 (np.repeat(np.arange(n), self.knn), indices.flatten())
             ).T

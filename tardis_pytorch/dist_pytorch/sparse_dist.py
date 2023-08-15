@@ -9,6 +9,7 @@
 #######################################################################
 import torch
 import torch.nn as nn
+import copy
 
 import numpy as np
 from tardis_pytorch.dist_pytorch.sparse_model.embedding import SparseEdgeEmbeddingV4
@@ -99,10 +100,10 @@ class SparseDIST(nn.Module):
         """
         # Embed coord [n, 3] coordinates into spares tensor
         edge, idx = self.embed_input(coords=coord)  # List[Indices, Values, Shape]
-
+        
         # Encode throughout the transformer layers
         edge = self.layers(edge_features=edge, indices=idx)[1:, :]
-
+        
         # Decoder
         edge = self.decoder(edge)
 
