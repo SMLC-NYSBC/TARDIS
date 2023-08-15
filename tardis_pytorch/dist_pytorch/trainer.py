@@ -157,6 +157,7 @@ class SparseDistTrainer(BasicTrainer):
                 edge, graph = edge.to(self.device), graph.to(self.device)
                 self.optimizer.zero_grad()
 
+                print(graph.shape)
                 edge, indices = self.model(coord=edge[0, :])
                 graph = graph[0, indices[3][:, 0], indices[3][:, 1]].type(torch.float32)
 

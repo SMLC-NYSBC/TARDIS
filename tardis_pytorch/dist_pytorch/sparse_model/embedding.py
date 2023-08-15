@@ -122,26 +122,21 @@ class SparseEdgeEmbeddingV4(nn.Module):
         self._range = torch.linspace(sigma[0], sigma[1], n_out)
 
         self.knn = knn
+        self.df_knn = None
         self.n_out = n_out
         self.sigma = sigma
         self._device = _device
 
     def forward(self, input_coord: torch.tensor) -> Union[torch.tensor, list]:
         with torch.no_grad():
-            import sys
-            import scipy
-
-            print(sys.version)
-            print(scipy.__version__)
-
             # Get all ij element from row and col
-            print(input_coord.shape)
-            print(input_coord[:5, :])
-
             input_coord = input_coord.cpu().detach().numpy()
             tree = KDTree(input_coord)
+            if len(input_coord) < self.knn:
+                self.df_knn = int(self.knn)
+                self.knn = len(input_coord)
+
             distances, indices = tree.query(input_coord, self.knn, p=2)
-            print(indices.shape, min(indices.flatten()), max(indices.flatten()))
 
             n = len(input_coord)
             M = distances.flatten()
@@ -188,6 +183,10 @@ class SparseEdgeEmbeddingV4(nn.Module):
             k_dist_range = torch.where(
                 isnan, torch.zeros_like(k_dist_range), k_dist_range
             )
+
+        if self.df_knn is not None:
+            self.knn = int(self.df_knn)
+            self.df_knn = None
 
         return k_dist_range.to(self._device), [
             row_idx.astype(np.int32),
