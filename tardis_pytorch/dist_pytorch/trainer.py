@@ -616,9 +616,8 @@ class DistTrainer(BasicTrainer):
                     loss = self.criterion(edge[0, :], graph)
 
                     # Calculate F1 metric
-                    edge = torch.sigmoid(edge)[0, :]
                     acc, prec, recall, f1, th = eval_graph_f1(
-                        logits=edge, targets=graph, threshold=0.5
+                        logits=edge[0, :], targets=graph, threshold=0.5
                     )
                     edge_cpu.append(edge[0, :].cpu().detach().numpy())
 
