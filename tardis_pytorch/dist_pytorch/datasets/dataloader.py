@@ -192,7 +192,7 @@ class FilamentSimulateDataset(BasicDataset):
     def __len__(self):
         return self.sample_count
 
-    def __getitem__(self, i: int) -> Tuple[list, list, list, list, list, list]:
+    def __getitem__(self, i: int) -> Tuple[list, list, list, list, list]:
         """Get list of all coordinates and image patches"""
         # Random 2D/3D
         flatten_ = False
@@ -217,16 +217,27 @@ class FilamentSimulateDataset(BasicDataset):
             scale = self.downscale.split("_")
 
             if scale[0] == "v":
-                down_scale = VoxelDownSampling(voxel=float(scale[1]), labels=True)
+                down_scale = VoxelDownSampling(voxel=float(scale[1]), labels=True, KNN=True)
             else:
-                down_scale = RandomDownSampling(threshold=float(scale[1]), labels=True)
+                down_scale = RandomDownSampling(threshold=float(scale[1]), labels=True, KNN=True)
             coord = down_scale(coord)
 
             coord = coord[coord[:, 0].argsort()]
+            df_coord = []
             for i in np.unique(coord[:, 0]):
                 id_ = i
                 idx = np.where(coord[:, 0] == id_)[0]
-                coord[idx, 1:] = sort_segment(coord[idx, 1:])
+
+                if len(idx) > 3:
+                    df_coord.append(
+                        np.hstack(
+                            (
+                                np.repeat(id_, len(idx)).reshape(-1, 1),
+                                sort_segment(coord[idx, 1:]),
+                            )
+                        )
+                    )
+            coord = np.concatenate(df_coord)
 
         coords_idx, df_idx, graph_idx, output_idx, _ = self.VD.patched_dataset(
             coord=coord, mesh=2

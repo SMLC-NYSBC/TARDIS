@@ -179,7 +179,7 @@ def rotate_view(vis):
     return False
 
 
-def VisualizeFilaments(coord: np.ndarray, animate=True):
+def VisualizeFilaments(coord: np.ndarray, animate=True, with_node=True):
     """
     Visualized filaments.
 
@@ -187,10 +187,16 @@ def VisualizeFilaments(coord: np.ndarray, animate=True):
 
     Args:
         coord (np.ndarray): 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y].
+        animate (bool): Optional trigger to turn off animated rotation.
     """
     coord, check = _dataset_format(coord=coord, segmented=True)
 
     if check:
+        if with_node:
+            pcd = o3d.geometry.PointCloud()
+            pcd.points = o3d.utility.Vector3dVector(coord[:, 1:])
+            pcd.colors = o3d.utility.Vector3dVector(_rgb(coord[:, 1:], False))
+
         graph = segment_to_graph(coord=coord)
         line_set = o3d.geometry.LineSet()
 
@@ -198,11 +204,19 @@ def VisualizeFilaments(coord: np.ndarray, animate=True):
         line_set.lines = o3d.utility.Vector2iVector(graph)
 
         if animate:
-            o3d.visualization.draw_geometries_with_animation_callback(
-                [line_set], rotate_view
-            )
+            if with_node:
+                o3d.visualization.draw_geometries_with_animation_callback(
+                    [pcd, line_set], rotate_view
+                )
+            else:
+                o3d.visualization.draw_geometries_with_animation_callback(
+                    [line_set], rotate_view
+                )
         else:
-            o3d.visualization.draw_geometries([line_set])
+            if with_node:
+                o3d.visualization.draw_geometries([pcd, line_set])
+            else:
+                o3d.visualization.draw_geometries([line_set])
 
 
 def VisualizeScanNet(coord: np.ndarray, segmented: True):
