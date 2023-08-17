@@ -98,6 +98,9 @@ def draw_instances(
         # Pick coordinates for each point
         all_cz, all_cy, all_cx = [], [], []
 
+        if np.all(coordinate[:, 2] == 0):
+            coordinate = coordinate[:, :2]
+
         for c in coordinate:
             if len(c) == 3:
                 cz, cy, cx = draw_mask(
@@ -112,13 +115,18 @@ def draw_instances(
                 )
                 all_cy.append(cy)
                 all_cx.append(cx)
+                all_cz.append(np.repeat(0, len(cx)))
 
         all_cz, all_cy, all_cx = (
             np.concatenate(all_cz),
             np.concatenate(all_cy),
             np.concatenate(all_cx),
         )
-        label_mask[all_cz, all_cy, all_cx] = 1
+
+        if coordinate.ndim == 2:
+            label_mask[all_cy, all_cx] = 1
+        else:
+            label_mask[all_cz, all_cy, all_cx] = 1
 
     return np.where(label_mask == 1, 1, 0).astype(np.uint8)
 
@@ -176,7 +184,7 @@ def draw_mask(
     Returns:
         np.ndarray: Binary mask.
     """
-    if label_mask.ndim != 3:
+    if label_mask.ndim not in [2, 3]:
         TardisError(
             "113",
             "tardis_pytorch/spindletorch/data_processing/draw_mask.py"
@@ -205,7 +213,7 @@ def draw_mask(
             cz, cy, cx = draw_circle(r=r, c=(z, y, x), shape=label_mask.shape)
             return cz, cy, cx
         else:
-            cy, cx = draw_circle(r=r, c=(z, y, x), shape=label_mask.shape)
+            cy, cx = draw_circle(r=r, c=(y, x), shape=label_mask.shape)
             return cy, cx
 
 

@@ -41,11 +41,11 @@ def scale_image(
             if image.ndim == 3 and image.shape[2] != 3:  # 3D with Gray
                 image = area_scaling(img=image, scale=scale, dtype=type_i)
             else:
-                image = trilinear_scaling(img=image, scale=scale, dtype=type_i)
+                image = linear_scaling(img=image, scale=scale, dtype=type_i)
 
     if mask is not None:
         if not np.all(scale == mask.shape):
-            mask = trilinear_scaling(img=mask, scale=scale, dtype=type_m)
+            mask = linear_scaling(img=mask, scale=scale, dtype=type_m)
 
     if image is not None and mask is not None:
         return image, mask, dim
@@ -55,26 +55,36 @@ def scale_image(
         return image, dim
 
 
-def trilinear_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
+def linear_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
     """
-    Saling of 3D array using trilinear method from pytorch
+    Saling of 2D/3D array using trilinear method from pytorch
 
     Args:
-        img: 3D array.
+        img: image array.
         scale: Scale array size.
         dtype: Output dtype for scale array.
 
     Returns:
         no.ndarray: Up or Down scale 3D array.
     """
-    img = torch.from_numpy(img[None, None, :]).to("cpu").type(torch.float)
-    img = (
-        F.interpolate(img, size=scale, mode="trilinear")
-        .cpu()
-        .detach()
-        .numpy()[0, 0, :]
-        .astype(dtype)
-    )
+    if img.ndim == 3:
+        img = torch.from_numpy(img[None, None, :]).to("cpu").type(torch.float)
+        img = (
+            F.interpolate(img, size=scale, mode="trilinear")
+            .cpu()
+            .detach()
+            .numpy()[0, 0, :]
+            .astype(dtype)
+        )
+    else:
+        img = torch.from_numpy(img[None, None, :]).to("cpu").type(torch.float)
+        img = (
+            F.interpolate(img, size=scale, mode="bilinear")
+            .cpu()
+            .detach()
+            .numpy()[0, 0, :]
+            .astype(dtype)
+        )
     return img
 
 

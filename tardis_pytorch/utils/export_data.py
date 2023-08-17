@@ -371,12 +371,19 @@ def to_mrc(data: np.ndarray, pixel_size: float, file_dir: str):
         file_dir (str): Directory where the file should be saved.
     """
     mode = mrc_mode(mode=data.dtype, amin=data.min())
-    zlen, ylen, xlen = np.multiply(data.shape, pixel_size)
+
+    if data.shape[1] == 3:
+        dim_ = 3
+        zlen, ylen, xlen = np.multiply(data.shape, pixel_size)
+    else:
+        dim_ = 2
+        ylen, xlen = np.multiply(data.shape, pixel_size)
+        zlen = 1
 
     header = mrc_write_header(
-        data.shape[2],
-        data.shape[1],
-        data.shape[0],  # nx ny nz
+        data.shape[2] if dim_ == 3 else data.shape[1],
+        data.shape[1] if dim_ == 3 else data.shape[0],
+        data.shape[0] if dim_ == 3 else zlen,  # nx ny nz
         mode,  # mrc dtype mode
         0,
         0,
