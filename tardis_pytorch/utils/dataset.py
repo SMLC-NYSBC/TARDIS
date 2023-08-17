@@ -122,9 +122,10 @@ def build_test_dataset(dataset_dir: str, dataset_no: int, stanford=False):
 
     for i in images:
         list_move = []
-        for j in range(4):
-            list_move.append(i[random.randint(0, len(i) - 1)])
+        for j in random.sample(range(0, len(i) - 1), 4 if len(i) > 10 else 0):
+            list_move.append(i[j])
 
+        print(list_move)
         for j in list_move:
             shutil.move(
                 join(dataset_dir, "train", "imgs", j),

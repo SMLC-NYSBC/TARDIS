@@ -7,7 +7,7 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
-
+import sys
 from os import listdir
 from os.path import isfile, join
 from typing import Tuple
@@ -84,7 +84,7 @@ def build_train_dataset(
         "_mask.am",
         "_mask.mrc",
         "_mask.rec",
-        ".csv",
+        "_mask.csv",
         "_mask.tif",
     )
 
@@ -97,7 +97,7 @@ def build_train_dataset(
 
     """For each image find matching mask, pre-process, trim and save"""
     img_counter = 0
-    log_file = np.zeros((len(img_list), 4), dtype="|S50")
+    log_file = np.zeros((len(img_list), 10), dtype="|S50")
 
     for id, i in enumerate(img_list):
         """Update progress bar"""
@@ -112,14 +112,14 @@ def build_train_dataset(
         )
 
         log_file[id, 0] = id
-        np.savetxt(join(dataset_dir, "log.txt"), log_file, fmt="%s", delimiter=",")
+        np.savetxt(join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=",")
 
         """Get image directory and check if img is a file"""
         img_dir = join(dataset_dir, i)
         if not isfile(img_dir):
             # Store fail in the log file
             log_file = error_log_build_data(
-                dir=join(dataset_dir, "log.txt"), log_file=log_file, id=id, i=i
+                dir=join(dataset_dir, "log.csv"), log_file=log_file, id=id, i=i
             )
             continue
 
@@ -143,7 +143,7 @@ def build_train_dataset(
         if not isfile(mask_dir):
             # Store fail in the log file
             log_file = error_log_build_data(
-                dir=join(dataset_dir, "log.txt"),
+                dir=join(dataset_dir, "log.csv"),
                 log_file=log_file,
                 id=id,
                 i=i + "|" + mask_dir,
@@ -153,14 +153,14 @@ def build_train_dataset(
         """Load files"""
         image, mask, pixel_size = load_img_mask_data(img_dir, mask_dir)
         log_file[id, 1] = i + "||" + mask_name
-        np.savetxt(join(dataset_dir, "log.txt"), log_file, fmt="%s", delimiter=",")
+        np.savetxt(join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=",")
 
         if image is None:
             continue
 
         if pixel_size is None:
             log_file = error_log_build_data(
-                dir=join(dataset_dir, "log.txt"),
+                dir=join(dataset_dir, "log.csv"),
                 log_file=log_file,
                 id=id,
                 i=i + "||" + mask_dir,
@@ -172,7 +172,7 @@ def build_train_dataset(
 
         log_file[id, 2] = str(pixel_size)
         log_file[id, 3] = str(scale_factor)
-        np.savetxt(join(dataset_dir, "log.txt"), log_file, fmt="%s", delimiter=",")
+        np.savetxt(join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=",")
 
         """Update progress bar"""
         tardis_progress(
@@ -198,6 +198,8 @@ def build_train_dataset(
                 pixel_size=resize_pixel_size,
                 circle_size=circle_size,
             )
+            log_file[id, 4] = 'coord'
+            np.savetxt(join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=",")
         else:  # Detect image mask array
             # Convert to binary
             if mask.min() == 0 and mask.max() > 1:
@@ -211,10 +213,17 @@ def build_train_dataset(
                     "but expected min: 0 and max: >1",
                 )
 
-            # Flip mask if MRC/REC
-            if mask_dir.endswith(("_mask.mrc", "_mask.rec")):
-                mask = np.flip(mask, 1)
-
+            # mask borders 
+            if mask.ndim == 2:
+                mask[:5, :] = 0
+                mask[:, :5] = 0
+                mask[-5:, :] = 0
+                mask[:, -5:] = 0
+            else:
+                mask[:, 5, :] = 0
+                mask[: -5:, :] = 0
+                mask[..., :5] = 0
+                mask[..., -5:] = 0
             if scale_factor != 1.0:
                 pc = b_pc.build_point_cloud(image=mask, as_2d=True)
                 pc = pc * scale_factor
@@ -249,6 +258,9 @@ def build_train_dataset(
                     circle_size=circle_size,
                 )
 
+            log_file[id, 4] = 'mask'
+            np.savetxt(join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=",")
+
         """Update progress bar"""
         tardis_progress(
             title="Data pre-processing for CNN training",
@@ -264,6 +276,9 @@ def build_train_dataset(
         # Rescale image intensity
         image = normalize(meanstd(image)).astype(np.float32)
 
+        log_file[id, 5] = image.min()
+        log_file[id, 6] = image.max()
+        np.savetxt(join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=",")
         if (
             not image.min() >= -1 or not image.max() <= 1
         ):  # Image not between in -1 and 1
@@ -272,6 +287,10 @@ def build_train_dataset(
             elif image.min() >= 0 and image.max() <= 255:
                 image = image / 255  # move to 0 - 1
                 image = (image - 0.5) * 2
+
+        log_file[id, 7] = image.min()
+        log_file[id, 8] = image.max()
+        np.savetxt(join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=",")
 
         tardis_progress(
             title="Data pre-processing for CNN training",
@@ -284,7 +303,7 @@ def build_train_dataset(
         )
 
         """Voxelize Image and Mask"""
-        trim_with_stride(
+        count = trim_with_stride(
             image=image,
             mask=mask,
             scale=scale_shape,
@@ -294,8 +313,11 @@ def build_train_dataset(
             keep_if=keep_if,
             output=join(dataset_dir, "train"),
             image_counter=img_counter,
+            log=True
         )
         img_counter += 1
+        log_file[id, 9] = count
+        np.savetxt(join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=",")
 
 
 def load_img_mask_data(
@@ -355,6 +377,9 @@ def load_img_mask_data(
         coord[:, 1:] = coord[:, 1:] // mask_px
     elif mask.endswith("_mask.csv"):  # Mask is csv (coord)
         coord = np.genfromtxt(mask, delimiter=",")  # [ID x X x Y x (Z)]
+        if np.all(coord[0, :].astype(str) == "nan"):
+            coord = coord[1:, :]
+
         mask_px = img_px
     elif mask.endswith("_mask.tif"):
         mask, _ = load_image(mask)

@@ -31,14 +31,13 @@ def trim_with_stride(
     keep_if=0.01,
     stride=25,
     mask: Optional[np.ndarray] = None,
+    log=True,
 ):
     """
     Function to patch image and mask to specified patch size with overlying area
 
     Output images are saved as tiff with naming shame 1_1_1_25. Where
     number indicate grid position in xyz. Last number indicate stride.
-
-    ToDo: no padding strid only
 
     Args:
         image (np.ndarray): Corresponding image for the labels.
@@ -186,6 +185,7 @@ def trim_with_stride(
 
     """Trim image and mask with stride"""
     z_start, z_stop = 0 - (trim_size_z - stride), 0
+    count = len(range(x)) + len(range(y)) + len(range(z))
     if z == 0:
         z = 1
 
@@ -267,6 +267,9 @@ def trim_with_stride(
                             np.array(trim_mask, dtype=mask_dtype),
                             shape=trim_mask.shape,
                         )
+
+    if log:
+        return count
 
 
 def trim_label_mask(

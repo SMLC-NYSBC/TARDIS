@@ -217,9 +217,13 @@ class FilamentSimulateDataset(BasicDataset):
             scale = self.downscale.split("_")
 
             if scale[0] == "v":
-                down_scale = VoxelDownSampling(voxel=float(scale[1]), labels=True, KNN=True)
+                down_scale = VoxelDownSampling(
+                    voxel=float(scale[1]), labels=True, KNN=True
+                )
             else:
-                down_scale = RandomDownSampling(threshold=float(scale[1]), labels=True, KNN=True)
+                down_scale = RandomDownSampling(
+                    threshold=float(scale[1]), labels=True, KNN=True
+                )
             coord = down_scale(coord)
 
             coord = coord[coord[:, 0].argsort()]

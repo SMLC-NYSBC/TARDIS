@@ -66,6 +66,7 @@ def draw_instances(
         for i in segments:
             # Pick coordinates for each segment
             points = coordinate[np.where(coordinate[:, 0] == i)[0]][:, 1:]
+
             label = interpolation(points)
             all_cz, all_cy, all_cx = [], [], []
 
@@ -87,13 +88,19 @@ def draw_instances(
                     all_cy.append(cy)
                     all_cx.append(cx)
 
-            all_cz, all_cy, all_cx = (
-                np.concatenate(all_cz),
-                np.concatenate(all_cy),
-                np.concatenate(all_cx),
-            )
-
-            label_mask[all_cz, all_cy, all_cx] = 1
+            if len(c) == 3:
+                all_cz, all_cy, all_cx = (
+                    np.concatenate(all_cz),
+                    np.concatenate(all_cy),
+                    np.concatenate(all_cx),
+                )
+                label_mask[all_cz, all_cy, all_cx] = 1
+            else:
+                all_cy, all_cx = (
+                    np.concatenate(all_cy),
+                    np.concatenate(all_cx),
+                )
+                label_mask[all_cy, all_cx] = 1
     else:
         # Pick coordinates for each point
         all_cz, all_cy, all_cx = [], [], []
@@ -173,7 +180,7 @@ def draw_mask(
     r: int, c: np.ndarray, label_mask: np.ndarray, segment_shape: str
 ) -> Union[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray, np.ndarray]]:
     """
-    Module draw_label to construct sphere shape of a label
+    Module draw_mask to construct sphere shape of a label
 
     Args:
         r (int): radius of a circle in Angstrom.
