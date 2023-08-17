@@ -198,7 +198,7 @@ def build_train_dataset(
                 pixel_size=resize_pixel_size,
                 circle_size=circle_size,
             )
-            log_file[id, 4] = 'coord'
+            log_file[id, 4] = "coord"
             np.savetxt(join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=",")
         else:  # Detect image mask array
             # Convert to binary
@@ -213,7 +213,7 @@ def build_train_dataset(
                     "but expected min: 0 and max: >1",
                 )
 
-            # mask borders 
+            # mask borders
             if mask.ndim == 2:
                 mask[:5, :] = 0
                 mask[:, :5] = 0
@@ -221,7 +221,7 @@ def build_train_dataset(
                 mask[:, -5:] = 0
             else:
                 mask[:, 5, :] = 0
-                mask[: -5:, :] = 0
+                mask[:-5:, :] = 0
                 mask[..., :5] = 0
                 mask[..., -5:] = 0
             if scale_factor != 1.0:
@@ -258,7 +258,7 @@ def build_train_dataset(
                     circle_size=circle_size,
                 )
 
-            log_file[id, 4] = 'mask'
+            log_file[id, 4] = "mask"
             np.savetxt(join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=",")
 
         """Update progress bar"""
@@ -313,7 +313,7 @@ def build_train_dataset(
             keep_if=keep_if,
             output=join(dataset_dir, "train"),
             image_counter=img_counter,
-            log=True
+            log=True,
         )
         img_counter += 1
         log_file[id, 9] = count
