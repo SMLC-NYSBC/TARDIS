@@ -372,7 +372,7 @@ def to_mrc(data: np.ndarray, pixel_size: float, file_dir: str):
     """
     mode = mrc_mode(mode=data.dtype, amin=data.min())
 
-    if data.shape[1] == 3:
+    if data.ndim == 3:
         dim_ = 3
         zlen, ylen, xlen = np.multiply(data.shape, pixel_size)
     else:

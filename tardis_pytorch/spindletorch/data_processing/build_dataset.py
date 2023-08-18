@@ -7,7 +7,7 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
-import sys
+
 from os import listdir
 from os.path import isfile, join
 from typing import Tuple
@@ -212,18 +212,13 @@ def build_train_dataset(
                     desc=f"Mask min: {mask.min()}; max: {mask.max()} "
                     "but expected min: 0 and max: >1",
                 )
-
             # mask borders
             if mask.ndim == 2:
                 mask[:5, :] = 0
                 mask[:, :5] = 0
                 mask[-5:, :] = 0
                 mask[:, -5:] = 0
-            else:
-                mask[:, 5, :] = 0
-                mask[:-5:, :] = 0
-                mask[..., :5] = 0
-                mask[..., -5:] = 0
+
             if scale_factor != 1.0:
                 pc = b_pc.build_point_cloud(image=mask, as_2d=True)
                 pc = pc * scale_factor

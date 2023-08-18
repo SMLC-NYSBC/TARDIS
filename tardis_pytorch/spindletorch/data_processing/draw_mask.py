@@ -7,7 +7,7 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
-
+import sys
 from math import pow, sqrt
 from typing import Tuple, Union
 
@@ -130,7 +130,7 @@ def draw_instances(
             np.concatenate(all_cx),
         )
 
-        if coordinate.ndim == 2:
+        if coordinate.shape[1] == 2:
             label_mask[all_cy, all_cx] = 1
         else:
             label_mask[all_cz, all_cy, all_cx] = 1
