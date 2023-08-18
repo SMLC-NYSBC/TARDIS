@@ -94,7 +94,7 @@ def get_weights_aws(network: str, subtype: str, model: Optional[str] = None):
     ALL_MODELS = ["unet", "unet3plus", "fnet", "dist"]
     ALL_SUBTYPE = ["16", "32", "64", "96", "128", "triang", "full"]
     CNN = ["unet", "unet3plus", "fnet"]
-    CNN_DATASET = ["microtubules", "cryo_mem"]
+    CNN_DATASET = ["microtubules", "cryo_mem", "cryo_mem_2d"]
     DIST_DATASET = ["microtubules", "s3dis"]
 
     """Get weights for CNN"""

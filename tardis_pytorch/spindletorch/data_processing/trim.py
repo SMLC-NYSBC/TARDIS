@@ -61,7 +61,6 @@ def trim_with_stride(
     if mask is not None:
         mask_dtype = np.uint8
         image, mask, dim = scale_image(image=image, mask=mask, scale=scale)
-
         mask = mask.astype(np.uint8)
 
         if image.shape != mask.shape:
@@ -186,6 +185,7 @@ def trim_with_stride(
     """Trim image and mask with stride"""
     z_start, z_stop = 0 - (trim_size_z - stride), 0
     count = len(range(x)) + len(range(y)) + len(range(z))
+    count_save = 0
     if z == 0:
         z = 1
 
@@ -238,6 +238,8 @@ def trim_with_stride(
 
                 if clean_empty and mask is not None:
                     if np.sum(trim_mask) > min_px_count:
+                        count_save += 1
+
                         tif.imwrite(
                             join(output, "imgs", img_name),
                             trim_img,
@@ -249,6 +251,7 @@ def trim_with_stride(
                             shape=trim_mask.shape,
                         )
                 else:
+                    count_save += 1
                     if mask is None:
                         tif.imwrite(
                             join(output, "imgs", img_name),
@@ -269,7 +272,7 @@ def trim_with_stride(
                         )
 
     if log:
-        return count
+        return f"{str(count)}|{str(count_save)}"
 
 
 def trim_label_mask(

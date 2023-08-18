@@ -109,23 +109,23 @@ def build_test_dataset(dataset_dir: str, dataset_no: int, stanford=False):
         )
 
     image_list = listdir(join(dataset_dir, "train", "imgs"))
-    mask_list = listdir(join(dataset_dir, "train", "masks"))
 
     images = []
-    masks = []
     for i in range(dataset_no):
         df_imgs = [img for img in image_list if img.startswith(f"{i}")]
-        df_mask = [mask for mask in mask_list if mask.startswith(f"{i}")]
-
         images.append(df_imgs)
-        masks.append(df_mask)
+
+    images = [
+        i
+        for id_, i in enumerate(images)
+        if id_ in random.sample(range(0, len(images)), int(len(images) // 10))
+    ]
 
     for i in images:
         list_move = []
         for j in random.sample(range(0, len(i) - 1), 4 if len(i) > 10 else 0):
             list_move.append(i[j])
 
-        print(list_move)
         for j in list_move:
             shutil.move(
                 join(dataset_dir, "train", "imgs", j),

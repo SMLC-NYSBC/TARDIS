@@ -75,7 +75,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-ps",
     "--patch_size",
-    default=128,
+    default=256,
     type=int,
     help="Size of image patch used for prediction. This will break "
     "the tomogram volumes into 3D patches where each patch will be "
@@ -96,7 +96,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-ct",
     "--cnn_threshold",
-    default=0.15,
+    default=0.5,
     type=float,
     help="Threshold used for CNN prediction..",
     show_default=True,
@@ -175,7 +175,7 @@ def main(
             checkpoint[1] = None
 
     predictor = DataSetPredictor(
-        predict="Membrane",
+        predict="Membrane2D",
         dir_=dir,
         checkpoint=checkpoint,
         output_format=output_format,

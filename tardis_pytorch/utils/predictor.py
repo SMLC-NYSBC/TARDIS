@@ -104,6 +104,10 @@ class DataSetPredictor:
         self.dir = dir_
         self.output_format = output_format
         self.predict = predict
+        if self.predict == "Membrane2D":
+            self.expect_2d = True
+        else:
+            self.expect_2d = False
         self.amira_prefix = amira_prefix
         self.checkpoint = checkpoint
 
@@ -256,7 +260,7 @@ class DataSetPredictor:
             if NN == "Microtubule":
                 self.normalize_px = 25
             else:
-                self.normalize_px = 8
+                self.normalize_px = 10
 
             # Build CNN network with loaded pre-trained weights
             self.cnn = Predictor(
@@ -281,19 +285,41 @@ class DataSetPredictor:
             self.normalize_px = 15
 
             # Build CNN network with loaded pre-trained weights
-            self.cnn = Predictor(
-                network="fnet",
-                subtype="64",
-                model_type="cryo_mem",
-                img_size=self.patch_size,
-                sigmoid=False,
-                device=self.device,
-            )
+            if NN == "Membrane2D":
+                self.cnn = Predictor(
+                    network="fnet",
+                    subtype="32",
+                    model_type="cryo_mem_2d",
+                    img_size=self.patch_size,
+                    sigmoid=False,
+                    device=self.device,
+                    _2d=True,
+                )
 
-            # Build DIST network with loaded pre-trained weights
-            self.dist = Predictor(
-                network="dist", subtype="triang", model_type="s3dis", device=self.device
-            )
+                # Build DIST network with loaded pre-trained weights
+                self.dist = Predictor(
+                    network="dist",
+                    subtype="triang",
+                    model_type="microtubules",
+                    device=self.device,
+                )
+            else:
+                self.cnn = Predictor(
+                    network="fnet",
+                    subtype="32",
+                    model_type="cryo_mem",
+                    img_size=self.patch_size,
+                    sigmoid=False,
+                    device=self.device,
+                )
+
+                # Build DIST network with loaded pre-trained weights
+                self.dist = Predictor(
+                    network="dist",
+                    subtype="triang",
+                    model_type="s3dis",
+                    device=self.device,
+                )
 
     def load_data(self, id_name: str):
         # Build temp dir
@@ -350,15 +376,11 @@ class DataSetPredictor:
             sys.exit()
 
         # Calculate parameters for normalizing image pixel size
-        """
-        Image px is 26.8
-        feature is 9px 
-        to 7px
-        """
         if self.predict == "Filament":
             self.scale_factor = self.normalize_px / self.feature_size
         else:
             self.scale_factor = self.px / self.normalize_px
+
         self.org_shape = self.image.shape
         self.scale_shape = tuple(
             np.multiply(self.org_shape, self.scale_factor).astype(np.int16)
@@ -366,9 +388,14 @@ class DataSetPredictor:
 
     def postprocess_CNN(self, id_name: str):
         # Stitch predicted image patches
-        self.image = self.image_stitcher(
-            image_dir=self.output, mask=False, dtype=np.float32
-        )[: self.scale_shape[0], : self.scale_shape[1], : self.scale_shape[2]]
+        if self.expect_2d:
+            self.image = self.image_stitcher(
+                image_dir=self.output, mask=False, dtype=np.float32
+            )[: self.scale_shape[0], : self.scale_shape[1]]
+        else:
+            self.image = self.image_stitcher(
+                image_dir=self.output, mask=False, dtype=np.float32
+            )[: self.scale_shape[0], : self.scale_shape[1], : self.scale_shape[2]]
 
         # Threshold whole image
         self.image = self.sigmoid(torch.Tensor(self.image)).detach().numpy()
@@ -913,6 +940,7 @@ class Predictor:
         model_type: Optional[str] = None,
         sigma: Optional[float] = None,
         sigmoid=True,
+        _2d=False,
     ):
         self.device = device
         self.img_size = img_size
@@ -954,6 +982,7 @@ class Predictor:
             else:
                 self.network = "cnn"
 
+        self._2d = _2d
         self.model = self._build_model_from_checkpoint(
             structure=model_structure, sigmoid=sigmoid
         )
@@ -1030,14 +1059,22 @@ class Predictor:
                 return out
             else:
                 if rotate:
-                    out = np.zeros((dim_, dim_, dim_), dtype=np.float32)
+                    if self._2d:
+                        out = np.zeros((dim_, dim_), dtype=np.float32)
+                        for k in range(4):
+                            x_ = torch.rot90(x, k=k, dims=(2, 3))
+                            x_ = self.model(x_) / 4
+                            x_ = x_.cpu().detach().numpy()[0, 0, :]
 
-                    for k in range(4):
-                        x_ = torch.rot90(x, k=k, dims=(3, 4))
-                        x_ = self.model(x_) / 4
-                        x_ = x_.cpu().detach().numpy()[0, 0, :]
+                            out += np.rot90(x_, k=-k, axes=(0, 1))
+                    else:
+                        out = np.zeros((dim_, dim_, dim_), dtype=np.float32)
+                        for k in range(4):
+                            x_ = torch.rot90(x, k=k, dims=(3, 4))
+                            x_ = self.model(x_) / 4
+                            x_ = x_.cpu().detach().numpy()[0, 0, :]
 
-                        out += np.rot90(x_, k=-k, axes=(1, 2))
+                            out += np.rot90(x_, k=-k, axes=(1, 2))
                 else:
                     out = self.model(x).cpu().detach().numpy()[0, 0, :]
 

@@ -53,7 +53,7 @@ from tardis_pytorch._version import version
     "--pixel_size",
     default=23.2,
     type=float,
-    help="Pixel size to which all images are resize.",
+    help="Pixel size in [A] to which all images are resize.",
     show_default=True,
 )
 @click.option(
