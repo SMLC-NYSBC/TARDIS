@@ -118,7 +118,7 @@ def build_test_dataset(dataset_dir: str, dataset_no: int, stanford=False):
     images = [
         i
         for id_, i in enumerate(images)
-        if id_ in random.sample(range(0, len(images)), int(len(images) // 10))
+        if id_ in random.sample(range(0, len(images)), int(len(images) // 5))
     ]
 
     for i in images:
