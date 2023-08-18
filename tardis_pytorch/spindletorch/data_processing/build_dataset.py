@@ -218,7 +218,11 @@ def build_train_dataset(
                 mask[:, :5] = 0
                 mask[-5:, :] = 0
                 mask[:, -5:] = 0
-
+            else:
+                mask[:, 5, :] = 0
+                mask[:, -5:, :] = 0
+                mask[..., :5] = 0
+                mask[..., -5:] = 0
             if scale_factor != 1.0:
                 pc = b_pc.build_point_cloud(image=mask, as_2d=True)
                 pc = pc * scale_factor
