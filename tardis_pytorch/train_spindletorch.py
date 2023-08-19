@@ -7,7 +7,7 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
-
+import sys
 from os import getcwd, listdir, mkdir
 from os.path import isdir, join
 from shutil import rmtree
@@ -348,11 +348,10 @@ def main(
     """Model structure dictionary"""
     """Optionally: pre-load model structure from checkpoint"""
     if cnn_checkpoint is not None:
-        save_train = torch.load(join(cnn_checkpoint), map_location=device)
+        save_train = torch.load(cnn_checkpoint, map_location=device)
 
         if "model_struct_dict" in save_train.keys():
-            model_dict = save_train["model_struct_dict"]
-            globals().update(model_dict)
+            globals().update(save_train["model_struct_dict"])
     else:
         model_dict = {
             "cnn_type": cnn_type,
@@ -371,6 +370,9 @@ def main(
             "prediction": False,
         }
 
+    print(model_dict)
+    sys.exit()
+    
     """Run Training loop"""
     train_cnn(
         train_dataloader=train_DL,
