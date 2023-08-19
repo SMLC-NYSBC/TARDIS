@@ -77,10 +77,6 @@ def train_cnn(
 
     """Check input variable"""
     model_structure = check_model_dict(model_structure)
-
-    print(model_structure)
-    sys.exit()
-
     if not isinstance(device, torch.device) and isinstance(device, str):
         device = get_device(device)
 
