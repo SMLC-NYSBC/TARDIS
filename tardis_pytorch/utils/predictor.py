@@ -305,6 +305,7 @@ class DataSetPredictor:
                 )
             else:
                 self.cnn = Predictor(
+                    checkpoint=self.checkpoint[0],
                     network="fnet",
                     subtype="32",
                     model_type="cryo_mem",
@@ -315,6 +316,7 @@ class DataSetPredictor:
 
                 # Build DIST network with loaded pre-trained weights
                 self.dist = Predictor(
+                    checkpoint=self.checkpoint[0],
                     network="dist",
                     subtype="triang",
                     model_type="s3dis",
