@@ -316,7 +316,7 @@ class DataSetPredictor:
 
                 # Build DIST network with loaded pre-trained weights
                 self.dist = Predictor(
-                    checkpoint=self.checkpoint[0],
+                    checkpoint=self.checkpoint[1],
                     network="dist",
                     subtype="triang",
                     model_type="s3dis",
