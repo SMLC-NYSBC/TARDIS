@@ -351,7 +351,8 @@ def main(
         save_train = torch.load(cnn_checkpoint, map_location=device)
 
         if "model_struct_dict" in save_train.keys():
-            globals().update(save_train["model_struct_dict"])
+            model_dict = save_train["model_struct_dict"]
+            globals().update(model_dict)
     else:
         model_dict = {
             "cnn_type": cnn_type,
@@ -370,9 +371,6 @@ def main(
             "prediction": False,
         }
 
-    print(model_dict)
-    sys.exit()
-    
     """Run Training loop"""
     train_cnn(
         train_dataloader=train_DL,
