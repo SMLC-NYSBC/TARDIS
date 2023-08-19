@@ -130,7 +130,7 @@ def segment_to_graph(coord: np.ndarray) -> list:
 
 
 def VisualizePointCloud(
-    coord: np.ndarray, segmented: bool, rgb: Optional[np.ndarray] = None, animate=True
+    coord: np.ndarray, segmented: bool, rgb: Optional[np.ndarray] = None, animate=False
 ):
     """
     Visualized point cloud.

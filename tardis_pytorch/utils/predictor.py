@@ -281,8 +281,8 @@ class DataSetPredictor:
                 model_type="microtubules",
                 device=self.device,
             )
-        else:
-            self.normalize_px = 15
+        elif NN in ["Membrane2D", "Membrane"]:
+            self.normalize_px = 10
 
             # Build CNN network with loaded pre-trained weights
             if NN == "Membrane2D":
