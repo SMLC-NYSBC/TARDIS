@@ -140,10 +140,16 @@ class DataSetPredictor:
         # Initiate log output
         self.tardis_progress = TardisLogo()
         if self.predict_instance:
-            self.title = (
-                f"Fully-automatic Instance {self.predict} segmentation module "
-                f"{str_debug}"
-            )
+            if self.output_format.startswith('None'):
+                self.title = (
+                    f"Fully-automatic Instance {self.predict} segmentation module "
+                    f"{str_debug}"
+                )
+            else:
+                self.title = (
+                    f"Fully-automatic Semantic-Instance {self.predict} segmentation module "
+                    f"{str_debug}"
+                )
         else:
             self.title = (
                 f"Fully-automatic Semantic {self.predict} segmentation module "
@@ -257,72 +263,76 @@ class DataSetPredictor:
         self.build_NN(NN=self.predict)
 
     def build_NN(self, NN: str):
-        if NN in ["Filament", "Microtubule"]:
-            if NN == "Microtubule":
-                self.normalize_px = 25
-            else:
-                self.normalize_px = 10
-
-            # Build CNN network with loaded pre-trained weights
-            self.cnn = Predictor(
-                checkpoint=self.checkpoint[0],
-                network="fnet",
-                subtype="32",
-                model_type="microtubules",
-                img_size=self.patch_size,
-                sigmoid=False,
-                device=self.device,
-            )
-
-            # Build DIST network with loaded pre-trained weights
-            self.dist = Predictor(
-                checkpoint=self.checkpoint[1],
-                network="dist",
-                subtype="triang",
-                model_type="microtubules",
-                device=self.device,
-            )
-        elif NN in ["Membrane2D", "Membrane"]:
+        if NN == "Microtubule":
+            self.normalize_px = 25
+        else:
             self.normalize_px = 10
 
+        if NN in ["Filament", "Microtubule"]:
             # Build CNN network with loaded pre-trained weights
-            if NN == "Membrane2D":
+            if not self.output_format.startswith('None'):
                 self.cnn = Predictor(
+                    checkpoint=self.checkpoint[0],
                     network="fnet",
                     subtype="32",
-                    model_type="cryo_mem_2d",
+                    model_type="microtubules",
                     img_size=self.patch_size,
                     sigmoid=False,
                     device=self.device,
-                    _2d=True,
                 )
 
-                # Build DIST network with loaded pre-trained weights
+            # Build DIST network with loaded pre-trained weights
+            if not self.output_format.endswith('None'):
                 self.dist = Predictor(
+                    checkpoint=self.checkpoint[1],
                     network="dist",
                     subtype="triang",
                     model_type="microtubules",
                     device=self.device,
                 )
-            else:
-                self.cnn = Predictor(
-                    checkpoint=self.checkpoint[0],
-                    network="fnet",
-                    subtype="32",
-                    model_type="cryo_mem",
-                    img_size=self.patch_size,
-                    sigmoid=False,
-                    device=self.device,
-                )
+        elif NN in ["Membrane2D", "Membrane"]:
+            # Build CNN network with loaded pre-trained weights
+            if NN == "Membrane2D":
+                if not self.output_format.startswith('None'):
+                    self.cnn = Predictor(
+                        network="fnet",
+                        subtype="32",
+                        model_type="cryo_mem_2d",
+                        img_size=self.patch_size,
+                        sigmoid=False,
+                        device=self.device,
+                        _2d=True,
+                    )
 
                 # Build DIST network with loaded pre-trained weights
-                self.dist = Predictor(
-                    checkpoint=self.checkpoint[1],
-                    network="dist",
-                    subtype="triang",
-                    model_type="s3dis",
-                    device=self.device,
-                )
+                if not self.output_format.endswith('None'):
+                    self.dist = Predictor(
+                        network="dist",
+                        subtype="triang",
+                        model_type="microtubules",
+                        device=self.device,
+                    )
+            else:
+                if not self.output_format.startswith('None'):
+                    self.cnn = Predictor(
+                        checkpoint=self.checkpoint[0],
+                        network="fnet",
+                        subtype="32",
+                        model_type="cryo_mem",
+                        img_size=self.patch_size,
+                        sigmoid=False,
+                        device=self.device,
+                    )
+
+                # Build DIST network with loaded pre-trained weights
+                if not self.output_format.endswith('None'):
+                    self.dist = Predictor(
+                        checkpoint=self.checkpoint[1],
+                        network="dist",
+                        subtype="triang",
+                        model_type="s3dis",
+                        device=self.device,
+                    )
 
     def load_data(self, id_name: str):
         # Build temp dir
@@ -356,17 +366,21 @@ class DataSetPredictor:
             )
 
         # Normalize image histogram
-        self.image = self.normalize(self.mean_std(self.image)).astype(np.float32)
+        if not self.output_format.startswith('None'):
+            self.image = self.normalize(self.mean_std(self.image)).astype(np.float32)
 
-        # Check image structure
-        if (
-            not self.image.min() >= -1 or not self.image.max() <= 1
-        ):  # Image not between in -1 and 1
-            if self.image.min() >= 0 and self.image.max() <= 1:
-                self.image = (self.image - 0.5) * 2  # shift to -1 - 1
-            elif self.image.min() >= 0 and self.image.max() <= 255:
-                self.image = self.image / 255  # move to 0 - 1
-                self.image = (self.image - 0.5) * 2  # shift to -1 - 1
+            # Check image structure
+            if (
+                not self.image.min() >= -1 or not self.image.max() <= 1
+            ):  # Image not between in -1 and 1
+                if self.image.min() >= 0 and self.image.max() <= 1:
+                    self.image = (self.image - 0.5) * 2  # shift to -1 - 1
+                elif self.image.min() >= 0 and self.image.max() <= 255:
+                    self.image = self.image / 255  # move to 0 - 1
+                    self.image = (self.image - 0.5) * 2  # shift to -1 - 1
+        else:
+            # Check image structure
+            self.image = np.where(self.image > 0, 1, 0).astype(np.int8)
 
         if not self.image.dtype == np.float32:
             TardisError(
@@ -628,87 +642,89 @@ class DataSetPredictor:
                 text_7=f"Current Task: Sub-dividing images for {self.patch_size} size",
             )
 
-            # Cut image for fix patch size and normalizing image pixel size
-            trim_with_stride(
-                image=self.image,
-                scale=self.scale_shape,
-                trim_size_xy=self.patch_size,
-                trim_size_z=self.patch_size,
-                output=join(self.dir, "temp", "Patches"),
-                image_counter=0,
-                clean_empty=False,
-                stride=round(self.patch_size * 0.25),
-            )
-            self.image = None
-
-            """CNN prediction"""
-            self.predict_cnn(
-                id=id_,
-                id_name=i,
-                dataloader=PredictionDataset(join(self.dir, "temp", "Patches", "imgs")),
-            )
-
-            """CNN Post-Processing"""
-            # Tardis progress bar update
-            self.tardis_progress(
-                title=self.title,
-                text_1=f"Found {len(self.predict_list)} images to predict!",
-                text_2=f"Device: {self.device}",
-                text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
-                text_4=f"Original pixel size: {self.px} A",
-                text_7="Current Task: Stitching...",
-            )
-
-            self.postprocess_CNN(id_name=i)
-            if self.image is None:
-                continue
-
-            # Debug flag
-            self._debug(id_name=i, debug_id="cnn")
-
-            # Check if predicted image
-            if not self.image.shape == self.org_shape:
-                TardisError(
-                    id="116",
-                    py="tardis_pytorch/utils/predictor.py",
-                    desc="Last Task: Stitching/Scaling/Make correction..."
-                    f"Tardis Error: Error while converting to {self.px} A "
-                    f"Org. shape {self.org_shape} is not the same as "
-                    f"converted shape {self.image.shape}",
+            if not self.output_format.startswith('None'):
+                # Cut image for fix patch size and normalizing image pixel size
+                trim_with_stride(
+                    image=self.image,
+                    scale=self.scale_shape,
+                    trim_size_xy=self.patch_size,
+                    trim_size_z=self.patch_size,
+                    output=join(self.dir, "temp", "Patches"),
+                    image_counter=0,
+                    clean_empty=False,
+                    stride=round(self.patch_size * 0.25),
                 )
-                sys.exit()
+                self.image = None
 
-            # If prediction fail aka no prediction was produces continue with next image
-            if self.image is None:
-                continue
-
-            """Save predicted mask"""
-            if self.output_format.startswith("mrc"):
-                to_mrc(
-                    data=self.image,
-                    file_dir=join(
-                        self.am_output, f"{i[:-self.in_format]}_semantic.mrc"
-                    ),
-                    pixel_size=self.px,
-                )
-            elif self.output_format.startswith("tif"):
-                tif.imwrite(
-                    join(self.am_output, f"{i[:-self.in_format]}_semantic.tif"),
-                    np.flip(self.image, 1)
-                    if i.endswith((".mrc", ".rec"))
-                    else self.image,
-                )
-            elif self.output_format.startswith("am"):
-                to_am(
-                    data=self.image,
-                    file_dir=join(self.am_output, f"{i[:-self.in_format]}_semantic.am"),
-                    pixel_size=self.px,
+                """CNN prediction"""
+                self.predict_cnn(
+                    id=id_,
+                    id_name=i,
+                    dataloader=PredictionDataset(join(self.dir, "temp", "Patches", "imgs")),
                 )
 
-            if not self.image.min() == 0 and not self.image.max() == 1:
-                continue
-            if not self.predict_instance:
-                continue
+                """CNN Post-Processing"""
+                # Tardis progress bar update
+                self.tardis_progress(
+                    title=self.title,
+                    text_1=f"Found {len(self.predict_list)} images to predict!",
+                    text_2=f"Device: {self.device}",
+                    text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
+                    text_4=f"Original pixel size: {self.px} A",
+                    text_7="Current Task: Stitching...",
+                )
+
+                self.postprocess_CNN(id_name=i)
+
+                if self.image is None:
+                    continue
+
+                # Debug flag
+                self._debug(id_name=i, debug_id="cnn")
+
+                # Check if predicted image
+                if not self.image.shape == self.org_shape:
+                    TardisError(
+                        id="116",
+                        py="tardis_pytorch/utils/predictor.py",
+                        desc="Last Task: Stitching/Scaling/Make correction..."
+                        f"Tardis Error: Error while converting to {self.px} A "
+                        f"Org. shape {self.org_shape} is not the same as "
+                        f"converted shape {self.image.shape}",
+                    )
+                    sys.exit()
+
+                # If prediction fail aka no prediction was produces continue with next image
+                if self.image is None:
+                    continue
+
+                """Save predicted mask"""
+                if self.output_format.startswith("mrc"):
+                    to_mrc(
+                        data=self.image,
+                        file_dir=join(
+                            self.am_output, f"{i[:-self.in_format]}_semantic.mrc"
+                        ),
+                        pixel_size=self.px,
+                    )
+                elif self.output_format.startswith("tif"):
+                    tif.imwrite(
+                        join(self.am_output, f"{i[:-self.in_format]}_semantic.tif"),
+                        np.flip(self.image, 1)
+                        if i.endswith((".mrc", ".rec"))
+                        else self.image,
+                    )
+                elif self.output_format.startswith("am"):
+                    to_am(
+                        data=self.image,
+                        file_dir=join(self.am_output, f"{i[:-self.in_format]}_semantic.am"),
+                        pixel_size=self.px,
+                    )
+
+                if not self.image.min() == 0 and not self.image.max() == 1:
+                    continue
+                if not self.predict_instance:
+                    continue
 
             """DIST pre-processing"""
             # Tardis progress bar update
