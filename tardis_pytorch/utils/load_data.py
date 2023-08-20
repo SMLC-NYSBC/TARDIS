@@ -612,7 +612,7 @@ def import_am(am_file: str):
         pixel_size = (physical_size[0] - transformation[0]) / (nx - 1)
     pixel_size = round(pixel_size, 3)
 
-    if "Lattice { byte Data }" in am:
+    if "Lattice { byte Data }" in am or "Lattice { float Data }" in am:
         if asci:
             img = (
                 open("../../rand_sample/T216_grid3b.am", "r", encoding="iso-8859-1")
@@ -623,47 +623,44 @@ def import_am(am_file: str):
             img = np.asarray(img)
             return img
         else:
-            img = np.fromfile(am_file, dtype=np.uint8)
-
+            if "Lattice { byte Data }" in am:
+                dtype_ = np.uint8
+                img = np.fromfile(am_file, dtype=dtype_)
+            else:
+                dtype_ = np.float32
+                offset = str.find(am, "\n@1\n") + 4
+                img = np.fromfile(am_file, dtype=np.float32, offset=offset)
     elif "Lattice { sbyte Data }" in am:
-        img = np.fromfile(am_file, dtype=np.int8)
+        dtype_ = np.int8
+        img = np.fromfile(am_file, dtype=dtype_)
         img = img + 128
+    else:
+        TardisError(
+            "130",
+            "tardis_pytorch/utils/load_data.py",
+            f".am {am_file} not supported .am format!",
+        )
+        return None
 
-    # elif 'Lattice { byte Labels } @1(HxByteRLE' in am:
-    #     img = np.fromfile(am_file, dtype=np.uint8)
-
-    #     if nz == 1:
-    #         binary_start = nx * ny
-    #         img = img[-binary_start:-1].reshape((ny, nx))
-    #     else:
-    #         binary_start = nx * ny * nz
-    #         img = img[-binary_start:].reshape((nz, ny, nx))
-    # elif 'Lattice { byte Labels } @1 ' in am:
-    #     img = open(am_file, 'r', encoding="iso-8859-1").readlines()
-
-    #     if nz == 1:
-    #         binary_start = nx * ny
-    #         img = np.asarray(img[-binary_start:]).astype(np.uint8).reshape((ny, nx))
-    #     else:
-    #         binary_start = nx * ny * nz
-    #         img = np.asarray(img[-binary_start:]).astype(np.uint8).reshape((nz, ny, nx))
-
-    binary_start = str.find(am, "\n@1\n") + 4
-    img = img[binary_start:-1]
+    if dtype_ != np.float32:
+        binary_start = str.find(am, "\n@1\n") + 4
+        img = img[binary_start:-1]
     if nz == 1:
         if len(img) == ny * nx:
             img = img.reshape((ny, nx))
         else:
-            df_img = np.zeros((ny * nx), dtype=np.uint8)
+            df_img = np.zeros((ny * nx), dtype=dtype_)
             df_img[: len(img)] = img
             img = df_img.reshape((ny, nx))
     else:
         if len(img) == nz * ny * nx:
             img = img.reshape((nz, ny, nx))
+            if dtype_ == np.float32:
+                img = np.flip(img, 0)
         else:
-            df_img = np.zeros((nz * ny * nx), dtype=np.uint8)
+            df_img = np.zeros((nz * ny * nx), dtype=dtype_)
             df_img[: len(img)] = img
-            img = df_img.reshape((nz * ny * nx))
+            img = df_img.reshape((nz, ny, nx))
 
     return img, pixel_size, physical_size, transformation
 
