@@ -18,12 +18,25 @@ from tardis_pytorch.tardis_helper.helper_func import tardis_helper
     "-f",
     "--func",
     default=None,
+    type=click.Choice(
+        [
+            "csv_am",
+            "am_csv",
+        ]
+    ),
+    help="Function name.",
+    show_default=True,
+)
+@click.option(
+    "-dir",
+    "--dir_",
+    default=None,
     type=str,
-    help="Directory with images for prediction with CNN model.",
+    help="Directory to files.",
     show_default=True,
 )
 @click.version_option(version=version)
-def main(func=None):
+def main(func=None, dir_=None):
     if func is not None:
         tardis_helper(func)
     else:
