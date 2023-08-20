@@ -655,8 +655,8 @@ def import_am(am_file: str):
     else:
         if len(img) == nz * ny * nx:
             img = img.reshape((nz, ny, nx))
-            if dtype_ == np.float32:
-                img = np.flip(img, 0)
+            # if dtype_ == np.float32:
+            # img = np.flip(img, 0)
         else:
             df_img = np.zeros((nz * ny * nx), dtype=dtype_)
             df_img[: len(img)] = img
