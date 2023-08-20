@@ -17,6 +17,7 @@ import click
 import numpy as np
 import tifffile.tifffile as tif
 import torch
+from scipy.ndimage import gaussian_filter
 
 from tardis_pytorch.dist_pytorch.datasets.patches import PatchDataSet
 from tardis_pytorch.dist_pytorch.dist import build_dist_network
@@ -405,6 +406,8 @@ class DataSetPredictor:
             self.image = np.where(self.image >= self.cnn_threshold, 1, 0).astype(
                 np.uint8
             )
+            self.image = gaussian_filter(self.image.astype(float), sigma=2)
+            self.image = (self.image > 0.5).astype(np.uint8)
         else:
             tif.imwrite(
                 join(self.am_output, f"{id_name[:-self.in_format]}_CNN.tif"), self.image
@@ -691,7 +694,9 @@ class DataSetPredictor:
             elif self.output_format.startswith("tif"):
                 tif.imwrite(
                     join(self.am_output, f"{i[:-self.in_format]}_semantic.tif"),
-                    self.image,
+                    np.flip(self.image, 1)
+                    if i.endswith((".mrc", ".rec"))
+                    else self.image,
                 )
             elif self.output_format.startswith("am"):
                 to_am(
