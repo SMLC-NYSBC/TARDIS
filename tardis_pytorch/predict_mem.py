@@ -96,7 +96,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-ct",
     "--cnn_threshold",
-    default=0.15,
+    default=0.1,
     type=float,
     help="Threshold used for CNN prediction..",
     show_default=True,
@@ -104,7 +104,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-dt",
     "--dist_threshold",
-    default=0.95,
+    default=0.9,
     type=float,
     help="Threshold used for instance prediction.",
     show_default=True,
