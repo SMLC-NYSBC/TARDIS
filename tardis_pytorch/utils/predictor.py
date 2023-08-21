@@ -1084,7 +1084,7 @@ class Predictor:
                 return out
             else:
                 if rotate:
-                    if self._2d:
+                    if not self._2d:
                         out = np.zeros((dim_, dim_), dtype=np.float32)
                         for k in range(4):
                             x_ = torch.rot90(x, k=k, dims=(2, 3))
