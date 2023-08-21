@@ -19,6 +19,7 @@ import tifffile.tifffile as tif
 import torch
 from scipy.ndimage import gaussian_filter
 
+from dist_pytorch.utils.utils import pc_median_dist
 from tardis_pytorch.dist_pytorch.datasets.patches import PatchDataSet
 from tardis_pytorch.dist_pytorch.dist import build_dist_network
 from tardis_pytorch.dist_pytorch.utils.build_point_cloud import BuildPointCloud
@@ -177,13 +178,14 @@ class DataSetPredictor:
             )
             sys.exit()
         # Searching for available images for prediction
-        available_format = (".tif", ".mrc", ".rec", ".am")
+        available_format = (".tif", ".mrc", ".rec", ".am", ".map")
         omit_format = (
             "mask.tif",
             "mask.mrc",
             "mask.rec",
             "Correlation_Lines.am",
             "mask.am",
+            "mask.map",
         )
         self.output = join(self.dir, "temp", "Predictions")
         self.am_output = join(self.dir, "Predictions")
@@ -758,7 +760,7 @@ class DataSetPredictor:
             # Build patches dataset
             if self.predict in ["Filament", "Microtubule"]:
                 self.coords_df, _, self.output_idx, _ = self.patch_pc.patched_dataset(
-                    coord=self.pc_ld
+                    coord=self.pc_ld / pc_median_dist(self.pc_ld, True)
                 )
             else:
                 self.coords_df, _, self.output_idx, _ = self.patch_pc.patched_dataset(
