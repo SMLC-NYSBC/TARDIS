@@ -614,7 +614,7 @@ class DataSetPredictor:
 
             # Find file format
             self.in_format = 0
-            if i.endswith((".tif", ".mrc", ".rec")):
+            if i.endswith((".tif", ".mrc", ".rec", ".map")):
                 self.in_format = 4
             elif i.endswith(".tiff"):
                 self.in_format = 5
