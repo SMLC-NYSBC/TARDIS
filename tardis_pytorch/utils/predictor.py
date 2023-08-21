@@ -1097,8 +1097,10 @@ class Predictor:
                         for k in range(1, 4):  # Rotate 1, 2, 3 times (90, 180, 270 degrees)
                             out.append(torch.rot90(x, k=k, dims=(3, 4)))
                         out = torch.cat(out, dim=0)
+                        x = None
 
-                        out = self.model(out).cpu().detach()
+                        out = self.model(out)
+                        out = out.cpu().detach()
 
                         rotate_x = []
                         for k in range(4):
