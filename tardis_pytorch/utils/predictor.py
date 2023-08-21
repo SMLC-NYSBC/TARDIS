@@ -1098,12 +1098,12 @@ class Predictor:
                             out.append(torch.rot90(x, k=k, dims=(3, 4)))
                         out = torch.cat(out, dim=0)
 
-                        out = self.model(out)
+                        out = self.model(out).cpu().detach()
 
                         rotate_x = []
                         for k in range(4):
                             rotate_x.append(torch.rot90(out[k, ...], k=-k, dims=(2, 3)))
-                        out = torch.mean(torch.stack(rotate_x, dim=0), dim=0, keepdim=True).cpu().detach().numpy()
+                        out = torch.mean(torch.stack(rotate_x, dim=0), dim=0, keepdim=True).numpy()
                 else:
                     out = self.model(x).cpu().detach().numpy()[0, 0, :]
 
