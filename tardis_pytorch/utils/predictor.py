@@ -1093,13 +1093,17 @@ class Predictor:
 
                             out += np.rot90(x_, k=-k, axes=(0, 1))
                     else:
-                        out = np.zeros((dim_, dim_, dim_), dtype=np.float32)
-                        for k in range(4):
-                            x_ = torch.rot90(x, k=k, dims=(3, 4))
-                            x_ = self.model(x_) / 4
-                            x_ = x_.cpu().detach().numpy()[0, 0, :]
+                        out = [x]
+                        for k in range(1, 4):  # Rotate 1, 2, 3 times (90, 180, 270 degrees)
+                            out.append(torch.rot90(x, k=k, dims=(3, 4)))
+                        out = torch.cat(out, dim=0)
 
-                            out += np.rot90(x_, k=-k, axes=(1, 2))
+                        out = self.model(out)
+
+                        rotate_x = []
+                        for k in range(4):
+                            rotate_x.append(torch.rot90(out[k, ...], k=-k, dims=(2, 3)))
+                        out = torch.mean(torch.stack(rotate_x, dim=0), dim=0, keepdim=True).cpu().detach().numpy()
                 else:
                     out = self.model(x).cpu().detach().numpy()[0, 0, :]
 
