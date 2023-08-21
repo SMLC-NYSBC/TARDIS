@@ -119,7 +119,7 @@ class StitchImages:
         Returns:
             Update global class values.
         """
-        if image.ndim == 3:
+        if image.shape[1] == 3:
             self.nz, self.ny, self.nx = image.shape
         else:
             self.ny, self.nx = image.shape
