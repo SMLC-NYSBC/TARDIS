@@ -19,7 +19,7 @@ import tifffile.tifffile as tif
 import torch
 from scipy.ndimage import gaussian_filter
 
-from dist_pytorch.utils.utils import pc_median_dist
+from tardis_pytorch.dist_pytorch.utils.utils import pc_median_dist
 from tardis_pytorch.dist_pytorch.datasets.patches import PatchDataSet
 from tardis_pytorch.dist_pytorch.dist import build_dist_network
 from tardis_pytorch.dist_pytorch.utils.build_point_cloud import BuildPointCloud
