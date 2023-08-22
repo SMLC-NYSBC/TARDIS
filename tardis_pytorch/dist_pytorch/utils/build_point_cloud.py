@@ -256,7 +256,7 @@ def bezier_curve(control_points, n_points=100):
     Returns:
         ndarray: A set of 3D points (shape: [n_points, 3]) on the Bezier curve.
     """
-    t_values = np.linspace(0, 1, n_points)
+    t_values = np.linspace(0, np.random.randint(10, 100) / 100, n_points)
     n = len(control_points) - 1
     curve_points = np.zeros((n_points, 3))
 
@@ -326,14 +326,13 @@ def generate_random_bezier_curve(id=0):
         dimension at the beginning indicating the curve id.
     """
     # Generate random control points
-    origin_range = np.random.randint(10, 100)
+    origin_range = np.random.randint(10, 1000)
     origin_range = (-origin_range, origin_range)
-    n_points = np.random.randint(2, 4)
 
     control_points = np.array(
         [
             generate_random_3d_point(origin_range[0], origin_range[1])
-            for _ in range(n_points)
+            for _ in range(3)
         ]
     )
 
@@ -344,7 +343,7 @@ def generate_random_bezier_curve(id=0):
     rotated_control_points = np.dot(control_points, rotation_matrix)
 
     # Generate a random origin
-    origin_range = np.random.randint(1, 5)
+    origin_range = np.random.randint(1, 1000)
     origin_range = (-origin_range, origin_range)
     origin = generate_random_3d_point(low=origin_range[0], high=origin_range[1])
 
@@ -352,7 +351,7 @@ def generate_random_bezier_curve(id=0):
     moved_control_points = rotated_control_points + origin
 
     # Calculate the points on the Bezier curve
-    curve_points = resample_curve(bezier_curve(moved_control_points, 1000), 1)
+    curve_points = bezier_curve(moved_control_points, 100)
 
     if np.random.randint(0, 10) > 5:
         np.random.shuffle(curve_points)

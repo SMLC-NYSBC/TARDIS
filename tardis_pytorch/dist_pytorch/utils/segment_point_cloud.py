@@ -417,8 +417,8 @@ class PropGreedyGraphCut:
                 )
 
             if visualize == "p":
-                VisualizePointCloud(segments, True)
+                VisualizePointCloud(segments, True, None, False)
             elif visualize == "f":
-                VisualizeFilaments(segments)
+                VisualizeFilaments(segments, False, False)
 
         return segments
