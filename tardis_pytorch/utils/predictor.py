@@ -422,8 +422,8 @@ class DataSetPredictor:
             self.image = np.where(self.image >= self.cnn_threshold, 1, 0).astype(
                 np.uint8
             )
-            self.image = gaussian_filter(self.image.astype(float), sigma=2)
-            self.image = (self.image > 0.5).astype(np.uint8)
+            # self.image = gaussian_filter(self.image.astype(float), sigma=2)
+            # self.image = (self.image > 0.5).astype(np.uint8)
         else:
             tif.imwrite(
                 join(self.am_output, f"{id_name[:-self.in_format]}_CNN.tif"), self.image
