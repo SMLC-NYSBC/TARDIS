@@ -239,7 +239,7 @@ class DataSetPredictor:
             self.patch_pc = PatchDataSet(
                 max_number_of_points=points_in_patch, graph=False
             )
-            if predict in ["Filament", "Microtubule"]:
+            if predict in ["Filament", "Microtubule", "Membrane2D"]:
                 self.GraphToSegment = PropGreedyGraphCut(
                     threshold=dist_threshold, smooth=True
                 )
@@ -448,7 +448,7 @@ class DataSetPredictor:
         # Post-process predicted image patches
         if self.predict in ["Filament", "Microtubule"]:
             self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
-                image=self.image, EDT=True, down_sampling=10
+                image=self.image, EDT=True, down_sampling=5
             )
         else:
             self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
