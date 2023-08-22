@@ -380,19 +380,29 @@ class DataSetPredictor:
                 elif self.image.min() >= 0 and self.image.max() <= 255:
                     self.image = self.image / 255  # move to 0 - 1
                     self.image = (self.image - 0.5) * 2  # shift to -1 - 1
+
+            if not self.image.dtype == np.float32:
+                TardisError(
+                    id="11",
+                    py="tardis_pytorch/utils/predictor.py",
+                    desc=f"Error while loading image {id_name}: "
+                         f"Image loaded correctly, but output format "
+                         f"{self.image.dtype} is not float32!",
+                )
+                sys.exit()
         else:
             # Check image structure
             self.image = np.where(self.image > 0, 1, 0).astype(np.int8)
 
-        if not self.image.dtype == np.float32:
-            TardisError(
-                id="11",
-                py="tardis_pytorch/utils/predictor.py",
-                desc=f"Error while loading image {id_name}: "
-                f"Image loaded correctly, but output format "
-                f"{self.image.dtype} is not float32!",
-            )
-            sys.exit()
+            if not self.image.dtype == np.int8 or self.image.dtype == np.uint8:
+                TardisError(
+                    id="11",
+                    py="tardis_pytorch/utils/predictor.py",
+                    desc=f"Error while loading image {id_name}: "
+                         f"Image loaded correctly, but output format "
+                         f"{self.image.dtype} is not int8!",
+                )
+                sys.exit()
 
         # Calculate parameters for normalizing image pixel size
         if self.predict == "Filament":
