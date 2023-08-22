@@ -326,7 +326,7 @@ def generate_random_bezier_curve(id=0):
         dimension at the beginning indicating the curve id.
     """
     # Generate random control points
-    origin_range = np.random.randint(10, 1000)
+    origin_range = np.random.randint(10, 500)
     origin_range = (-origin_range, origin_range)
 
     control_points = np.array(
@@ -343,7 +343,7 @@ def generate_random_bezier_curve(id=0):
     rotated_control_points = np.dot(control_points, rotation_matrix)
 
     # Generate a random origin
-    origin_range = np.random.randint(10, 1000)
+    origin_range = np.random.randint(10, 500)
     origin_range = (-origin_range, origin_range)
     origin = generate_random_3d_point(low=origin_range[0], high=origin_range[1])
 
