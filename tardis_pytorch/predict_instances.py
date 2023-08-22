@@ -30,6 +30,14 @@ warnings.simplefilter("ignore", UserWarning)
     show_default=True,
 )
 @click.option(
+    "-ch",
+    "--checkpoint",
+    default=None,
+    type=str,
+    help="Optional pre-trained weights",
+    show_default=True,
+)
+@click.option(
     "-st",
     "--structure_type",
     default="Filament",
@@ -139,6 +147,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.version_option(version=version)
 def main(
     dir: str,
+    checkpoint: str,
     structure_type: str,
     output_format: str,
     dist_threshold: float,
@@ -152,10 +161,15 @@ def main(
     """
     MAIN MODULE FOR PREDICTION GENERAL FILAMENT WITH TARDIS-PYTORCH
     """
+    if checkpoint is None:
+        checkpoint = [None, None]
+    else:
+        checkpoint = [None, checkpoint]
 
     predictor = DataSetPredictor(
         predict=structure_type,
         dir_=dir,
+        checkpoint=checkpoint,
         feature_size=0,
         output_format="None_"+output_format,
         patch_size=0,
