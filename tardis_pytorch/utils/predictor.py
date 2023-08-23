@@ -141,7 +141,7 @@ class DataSetPredictor:
         # Initiate log output
         self.tardis_progress = TardisLogo()
         if self.predict_instance:
-            if self.output_format.startswith('None'):
+            if self.output_format.startswith("None"):
                 self.title = (
                     f"Fully-automatic Instance {self.predict} segmentation module "
                     f"{str_debug}"
@@ -273,7 +273,7 @@ class DataSetPredictor:
 
         if NN in ["Filament", "Microtubule"]:
             # Build CNN network with loaded pre-trained weights
-            if not self.output_format.startswith('None'):
+            if not self.output_format.startswith("None"):
                 self.cnn = Predictor(
                     checkpoint=self.checkpoint[0],
                     network="fnet",
@@ -285,7 +285,7 @@ class DataSetPredictor:
                 )
 
             # Build DIST network with loaded pre-trained weights
-            if not self.output_format.endswith('None'):
+            if not self.output_format.endswith("None"):
                 self.dist = Predictor(
                     checkpoint=self.checkpoint[1],
                     network="dist",
@@ -296,7 +296,7 @@ class DataSetPredictor:
         elif NN in ["Membrane2D", "Membrane"]:
             # Build CNN network with loaded pre-trained weights
             if NN == "Membrane2D":
-                if not self.output_format.startswith('None'):
+                if not self.output_format.startswith("None"):
                     self.cnn = Predictor(
                         network="fnet",
                         subtype="32",
@@ -308,7 +308,7 @@ class DataSetPredictor:
                     )
 
                 # Build DIST network with loaded pre-trained weights
-                if not self.output_format.endswith('None'):
+                if not self.output_format.endswith("None"):
                     self.dist = Predictor(
                         network="dist",
                         subtype="triang",
@@ -316,7 +316,7 @@ class DataSetPredictor:
                         device=self.device,
                     )
             else:
-                if not self.output_format.startswith('None'):
+                if not self.output_format.startswith("None"):
                     self.cnn = Predictor(
                         checkpoint=self.checkpoint[0],
                         network="fnet",
@@ -328,7 +328,7 @@ class DataSetPredictor:
                     )
 
                 # Build DIST network with loaded pre-trained weights
-                if not self.output_format.endswith('None'):
+                if not self.output_format.endswith("None"):
                     self.dist = Predictor(
                         checkpoint=self.checkpoint[1],
                         network="dist",
@@ -369,7 +369,7 @@ class DataSetPredictor:
             )
 
         # Normalize image histogram
-        if not self.output_format.startswith('None'):
+        if not self.output_format.startswith("None"):
             self.image = self.normalize(self.mean_std(self.image)).astype(np.float32)
 
             # Check image structure
@@ -387,8 +387,8 @@ class DataSetPredictor:
                     id="11",
                     py="tardis_pytorch/utils/predictor.py",
                     desc=f"Error while loading image {id_name}: "
-                         f"Image loaded correctly, but output format "
-                         f"{self.image.dtype} is not float32!",
+                    f"Image loaded correctly, but output format "
+                    f"{self.image.dtype} is not float32!",
                 )
                 sys.exit()
         else:
@@ -400,8 +400,8 @@ class DataSetPredictor:
                     id="11",
                     py="tardis_pytorch/utils/predictor.py",
                     desc=f"Error while loading image {id_name}: "
-                         f"Image loaded correctly, but output format "
-                         f"{self.image.dtype} is not int8!",
+                    f"Image loaded correctly, but output format "
+                    f"{self.image.dtype} is not int8!",
                 )
                 sys.exit()
 
@@ -653,7 +653,7 @@ class DataSetPredictor:
                 text_7=f"Current Task: Sub-dividing images for {self.patch_size} size",
             )
 
-            if not self.output_format.startswith('None'):
+            if not self.output_format.startswith("None"):
                 # Cut image for fix patch size and normalizing image pixel size
                 trim_with_stride(
                     image=self.image,
@@ -671,7 +671,9 @@ class DataSetPredictor:
                 self.predict_cnn(
                     id=id_,
                     id_name=i,
-                    dataloader=PredictionDataset(join(self.dir, "temp", "Patches", "imgs")),
+                    dataloader=PredictionDataset(
+                        join(self.dir, "temp", "Patches", "imgs")
+                    ),
                 )
 
                 """CNN Post-Processing"""
@@ -728,7 +730,9 @@ class DataSetPredictor:
                 elif self.output_format.startswith("am"):
                     to_am(
                         data=self.image,
-                        file_dir=join(self.am_output, f"{i[:-self.in_format]}_semantic.am"),
+                        file_dir=join(
+                            self.am_output, f"{i[:-self.in_format]}_semantic.am"
+                        ),
                         pixel_size=self.px,
                     )
 

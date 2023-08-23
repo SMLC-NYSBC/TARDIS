@@ -49,8 +49,8 @@ warnings.simplefilter("ignore", UserWarning)
         ]
     ),
     help="Type of output files for instance segmentation of objects, which can be "
-         "output as amSG [Amira], mrcM [mrc mask], tifM [tif mask], "
-         "csv coordinate file [ID, X, Y, Z] or None [no instance prediction].",
+    "output as amSG [Amira], mrcM [mrc mask], tifM [tif mask], "
+    "csv coordinate file [ID, X, Y, Z] or None [no instance prediction].",
     show_default=True,
 )
 @click.option(
@@ -171,7 +171,7 @@ def main(
         dir_=dir,
         checkpoint=checkpoint,
         feature_size=0,
-        output_format="None_"+output_format,
+        output_format="None_" + output_format,
         patch_size=0,
         cnn_threshold=0,
         dist_threshold=dist_threshold,

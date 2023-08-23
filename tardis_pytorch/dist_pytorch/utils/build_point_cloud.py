@@ -330,10 +330,7 @@ def generate_random_bezier_curve(id=0):
     origin_range = (-origin_range, origin_range)
 
     control_points = np.array(
-        [
-            generate_random_3d_point(origin_range[0], origin_range[1])
-            for _ in range(3)
-        ]
+        [generate_random_3d_point(origin_range[0], origin_range[1]) for _ in range(3)]
     )
 
     # Generate a random rotation matrix
@@ -398,6 +395,4 @@ def generate_bezier_curve_dataset(n=50):
         n += 1
     c_2 = np.concatenate(c_2)
 
-    return np.vstack(
-        (c, c_2)
-    )
+    return np.vstack((c, c_2))

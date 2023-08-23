@@ -234,7 +234,7 @@ class FilamentSimulateDataset(BasicDataset):
                         )
                     )
             coord = np.concatenate(df_coord)
-            coord[:, 1:] = coord[:, 1:] / float(scale[1])
+            coord[:, 1:] = coord[:, 1:] / pc_median_dist(coord[:, 1:], True)
 
         coords_idx, df_idx, graph_idx, output_idx, _ = self.VD.patched_dataset(
             coord=coord, mesh=2
