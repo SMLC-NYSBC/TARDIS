@@ -269,7 +269,7 @@ class DataSetPredictor:
         if NN == "Microtubule":
             self.normalize_px = 25
         else:
-            self.normalize_px = 10
+            self.normalize_px = 15
 
         if NN in ["Filament", "Microtubule"]:
             # Build CNN network with loaded pre-trained weights
