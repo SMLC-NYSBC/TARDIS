@@ -194,11 +194,6 @@ class FilamentSimulateDataset(BasicDataset):
 
     def __getitem__(self, i: int) -> Tuple[list, list, list, list, list]:
         """Get list of all coordinates and image patches"""
-        # Random 2D/3D
-        flatten_ = False
-        if np.random.randint(0, 100) > 75:
-            flatten_ = True
-
         if self.train:
             self.temp = "temp_train"
         else:
@@ -209,8 +204,6 @@ class FilamentSimulateDataset(BasicDataset):
 
         # Pre-process coord and image data also, if exist remove duplicates
         coord, _ = preprocess_data(coord=coord_file)
-        if flatten_:
-            coord[:, -1] = 0
 
         # Optional Down-sampling of simulated dataset
         if self.downscale is not None:
