@@ -830,7 +830,7 @@ class DataSetPredictor:
                     coord=self.pc_ld,
                     idx=self.output_idx,
                     sort=sort,
-                    prune=5,
+                    prune=2,
                 )
             except:
                 self.segments = None
