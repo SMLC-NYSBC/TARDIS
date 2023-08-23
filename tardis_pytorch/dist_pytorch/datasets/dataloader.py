@@ -208,6 +208,7 @@ class FilamentSimulateDataset(BasicDataset):
         # Optional Down-sampling of simulated dataset
         if self.downscale is not None:
             scale = self.downscale.split("_")
+            coord[:, 1:] = coord[:, 1:] / scale
 
             if scale[0] == "v":
                 down_scale = VoxelDownSampling(
