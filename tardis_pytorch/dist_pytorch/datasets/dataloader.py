@@ -208,8 +208,6 @@ class FilamentSimulateDataset(BasicDataset):
         # Optional Down-sampling of simulated dataset
         if self.downscale is not None:
             scale = self.downscale.split("_")
-            coord[:, 1:] = coord[:, 1:] / float(scale[1])
-
             if scale[0] == "v":
                 down_scale = VoxelDownSampling(
                     voxel=float(scale[1]), labels=True, KNN=True
@@ -236,6 +234,7 @@ class FilamentSimulateDataset(BasicDataset):
                         )
                     )
             coord = np.concatenate(df_coord)
+            coord[:, 1:] = coord[:, 1:] / float(scale[1])
 
         coords_idx, df_idx, graph_idx, output_idx, _ = self.VD.patched_dataset(
             coord=coord, mesh=2
