@@ -236,9 +236,14 @@ class DataSetPredictor:
 
         # Build handler's for DIST input and output
         if self.predict_instance:
-            self.patch_pc = PatchDataSet(
-                max_number_of_points=points_in_patch, graph=False
-            )
+            if self.predict in ["Filament", "Microtubule", "Membrane2D"]:
+                self.patch_pc = PatchDataSet(
+                    max_number_of_points=points_in_patch, drop_rate=5, graph=False
+                )
+            else:
+                self.patch_pc = PatchDataSet(
+                    max_number_of_points=points_in_patch, graph=False
+                )
             if predict in ["Filament", "Microtubule", "Membrane2D"]:
                 self.GraphToSegment = PropGreedyGraphCut(
                     threshold=dist_threshold, smooth=True
@@ -833,7 +838,7 @@ class DataSetPredictor:
                     coord=self.pc_ld,
                     idx=self.output_idx,
                     sort=sort,
-                    prune=2,
+                    prune=5,
                 )
             except:
                 self.segments = None
