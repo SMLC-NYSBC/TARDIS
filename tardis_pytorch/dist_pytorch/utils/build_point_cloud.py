@@ -326,7 +326,7 @@ def generate_random_bezier_curve(id=0):
         dimension at the beginning indicating the curve id.
     """
     # Generate random control points
-    origin_range = np.random.randint(10, 500)
+    origin_range = np.random.randint(10, 250)
     origin_range = (-origin_range, origin_range)
 
     control_points = np.array(
@@ -340,7 +340,7 @@ def generate_random_bezier_curve(id=0):
     rotated_control_points = np.dot(control_points, rotation_matrix)
 
     # Generate a random origin
-    origin_range = np.random.randint(10, 500)
+    origin_range = np.random.randint(10, 250)
     origin_range = (-origin_range, origin_range)
     origin = generate_random_3d_point(low=origin_range[0], high=origin_range[1])
 
@@ -380,19 +380,26 @@ def generate_bezier_curve_dataset(n=50):
         ndarray: A concatenated set of 3D points representing the generated Bezier curves.
     """
     c = np.concatenate(
-        [j for j in [generate_random_bezier_curve(i) for i in range(n)] if len(j) > 2]
+        [j for j in [generate_random_bezier_curve(i) for i in range(n//2)] if len(j) > 2]
     )
 
-    c_2 = []
-    for _ in range(0, n // 10, 2):
-        n += 1
-        c_df = generate_random_bezier_curve(n)
-        c_2.append(c_df)
-        c_df = c_df.copy()
-        c_df[:, 0] = c_df[:, 0] + 1
-        c_df[:, 1:] += np.random.randint(10, 25)
-        c_2.append(c_df)
-        n += 1
-    c_2 = np.concatenate(c_2)
+    c_2 = c.copy()
+    c_2[:, 0] += 1
+    c_2[:, 1] += np.random.randint(10, 15)
 
-    return np.vstack((c, c_2))
+    c_3 = c.copy()
+    c_3[:, 0] += 2
+    c_3[:, 2] += np.random.randint(10, 15)
+    # c_2 = []
+    # for _ in range(0, n // 10, 2):
+    #     n += 1
+    #     c_df = generate_random_bezier_curve(n)
+    #     c_2.append(c_df)
+    #     c_df = c_df.copy()
+    #     c_df[:, 0] = c_df[:, 0] + 1
+    #     c_df[:, 1:] += np.random.randint(10, 12.5)
+    #     c_2.append(c_df)
+    #     n += 1
+    # c_2 = np.concatenate(c_2)
+
+    return np.vstack((c, c_2, c_3))
