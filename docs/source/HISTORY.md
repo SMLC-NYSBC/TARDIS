@@ -1,10 +1,74 @@
 # History
-## 0.1.0-RC2-HotFix (2023-03-28)
+<details open>
+    <summary><b>0.1.0-RC3 (2023-08-25)</b></summary>
+
+*This intends to be release submitted with Nature Method 2023*
+
+* **General changes:**
+    * *General*:
+        * Full support for 2D data
+        * Black
+        * Introduced TARDIS Logo and rebranding to Tardis-pytorch
+        * Remove Open3D library (conflict in CentOS7)
+        * Fixed MRC read-out during training that forcible rotated .mrc files
+
+    * *New_Feature*: 
+        * Added new output format .ply
+        * New general tardis call
+        * Added helper functions csv_am and am_csv
+        * Added instance prediction from semantic binary masks 
+
+    * *Optimize*: 
+        * Added optional checkpoint to all Tardis calls
+        * Improvements for training for CNN and DIST by users
+        * Amira possible output as raw point cloud
+
+    * *BugFix*:
+        * Fixed save for .mrc files
+
+* **SpindleTorch module changes:**
+    * *General*:
+        * Retrained FNet_32 model for membrane and microtubules
+        * Train FNet_32 for 2D membrane segmentation
+
+    * *New_Feature*: 
+        * Added Anti-Aliasing (AA) to smooth-out final output and remove small
+      false-positive predictions.
+
+    * *Optimize*: 
+        * 2D CNN network set-up
+
+* **DIST module changes:**
+    * *General*:
+        * Added simulated data for training on filament like structures
+        * Re-train model no simulated + real data
+        * Fine-tuned setting for predictions and post-processing
+
+    * *New_Feature*: 
+        * Experimental SparseDist model to offer more memory efficient performance,  
+      for instance segmentation
+
+    * *Optimize*: 
+        * Improved visualization outputs
+        * Mcov metric optimalization
+        * Rebuild Graph prediction function to be more robust
+        * Reverse-engineered Open3D voxal downsampling and added random downsampling
+        * Added distance embedding with range value
+
+</details>
+
+<details>
+    <summary><b>0.1.0-RC2-HotFix2 (2023-03-28)</b></summary>
+
 * **General changes:**
   * Fixed saving int8 semantic output as mrc
   * Added rotation for CNN prediction
 
-## 0.1.0-RC2-HotFix (2023-03-23)
+</details>
+
+<details>
+    <summary><b>0.1.0-RC2-HotFix1 (2023-03-23)</b></summary>
+
 * **General changes:**
   * Fixed loading for corrupted mrc files
   * Fixed for loading and saving mrc/rec files (fix for reading headers size)
@@ -12,81 +76,93 @@
   * Small fixed in general prediction loops
   * Fixed missing membrane instance prediction output
 
-## 0.1.0-RC2 (2023-03-22)
+</details>
+
+<details>
+    <summary><b>0.1.0-RC2 (2023-03-22)</b></summary>
+
 * **General changes:**
-    * *#General*: 
+    * *General*: 
       * Normalized all documentation to *.md
-    * *#New_Feature*: 
+    * *New_Feature*: 
       * Ensure support for PyTorch 2.0 
       * Added benchmark entry
       * Added ClBCE and ClDice loss functions
       * Added binary Amira image file export
       * Full membrane support (training and prediction of cryo-mem)
       * Added costume LR schedular (ISR - invert square root)
-    * *#Optimize*: 
+    * *Optimize*: 
       * Loss functions pytest and general cleanup
       * Formatting and missing TardisErrors
       * 20x Speed up for Tardis logo for Linux/OS X
-    * *#BugFix*:
+    * *BugFix*:
       * Fixed small bugs in metrics calculation
 
 * **SpindleTorch module changes:**
-    * *#New_Feature* 
+    * *New_Feature* 
       * Added and tested clDice and clBCE loss function
-    * *#Optimize* 
+    * *Optimize* 
       * Support for membrane training dataset
-    * *#General* 
+    * *General* 
       * Globally change normalization (0-1) to image standardization (-1-1)
       with mean and standard deviation
 
 * **DIST module changes:**
-  * *#New_Feature* 
+  * *New_Feature* 
         * Node embedding with furier random
         * Added calculation of mcov metric during training and save checkpoint based on it
-  * *#Optimize* 
+  * *Optimize* 
     * Point cloud visualization can be now with or without animation
 
-## 0.1.0-RC1 (2023-02-08)
+</details>
+
+<details>
+    <summary><b>0.1.0-RC1 (2023-02-08)</b></summary>
+
 * **Code restructure:**
-    * *#Optimize*:
+    * *Optimize*:
         * autonomization of tests for all python version
 
 * **SpindleTorch module changes:**
-    * *#Optimize*:
+    * *Optimize*:
       * Rebuild interpolation for images and mask
       * Simplified building training/testing of datasets
       * Redo mask building from coordinates
       * Build_Point_Cloud
       * New model train with optimize image normalization
-    * *#BugFix*:
+    * *BugFix*:
       * image normalization for few very specific cases
 
 * **DIST module changes:**
-    * *#Optimize*:
+    * *Optimize*:
       * Change how DIST distance embedding is computed for GT data.
       * Change normalization for point cloud
         - MT normalized by pixel size
         - All other by open3d downsampling value optional random downsamling
       * F1 eval metric and BCE loss without diagonal axis
-    * *#New_Feature*:
+    * *New_Feature*:
       * DataLoader for stanford data
       * spline filtering include geometric filtering and margin of spline
-    * *#BugFix*:
+    * *BugFix*:
       * in point cloud segmenter when feed with coord idx as float not int
 
 * **General changes:**
-    * *#General*:
+    * *General*:
       * Added data competition with Amira mesh output
       * Added license footnote
-    * *#General* code *#Optimize* for speed
-    * *#BugFix* and *#Optimize* for post-processing of spatial-graphs
-    * *#BugFix* and *#New_Feature* for amira export format (now build multi-label)
-    * *#BugFix*:
+    * *General* code *Optimize* for speed
+    * *BugFix* and *Optimize* for post-processing of spatial-graphs
+    * *BugFix* and *New_Feature* for amira export format (now build multi-label)
+    * *BugFix*:
       * AWS weight import when aws don't allow read access
-    * *#New_Feature*:
+    * *New_Feature*:
       * TardisError for all error handling
 
-## 0.1.0-beta2 (2022-09-14)
+</details>
+
+<details>
+    <summary><b>0.1.0-beta2 (2022-09-14)</b></summary>
+
 * **Code restructure:**
     * Finished documentation with Sphinx
     * Build testes for the whole tardis-pytorch
@@ -108,7 +184,11 @@
     * Support for python 3.11 (awaiting pytorch and open3d)
     * requirements.txt changes and include pytroch with support for different os
 
-## 0.1.0-pre_beta2 (2022-09-14)
+</details>
+
+<details>
+    <summary><b>0.1.0-pre_beta2 (2022-09-14)</b></summary>
+
 * **Code restructure:**
     * Clean-up
     * Restructure code organization
@@ -145,8 +225,11 @@
     * Added MRC export
     * Minor bugfixes from prebeta2 and new additions to beta2
 
+</details>
 
-## 0.1.0-beta1 (2022-09-14)
+<details>
+    <summary><b>0.1.0-beta1 (2022-09-14)</b></summary>
+
 * **DIST module changes:**
     * Added new classification model based on DIST
     * Simplified logic for patching big point cloud + reduction of number of patches
@@ -198,10 +281,14 @@
     * Flake8 and pyteset fixes
     * Global tunning for segmentation quality
 
-## 0.1.0-alpha6 (2022-07-12)
+</details>
+
+<details>
+    <summary><b>0.1.0-alpha6 (2022-07-12)</b></summary>
+
 * Check pipeline for image embedding (normalization to enhance features)
     * Introduce new normalization ResaleNormalize that spread histogram from 
-        2-98 projectile of intensity distribution
+    2-98 projectile of intensity distribution
 * Model retraining for MTs and membranes (generalization)
 * Redone PC normalization
 * Additional work on speed up training by optimizing DataLoader
@@ -216,7 +303,11 @@
 * Bumped version for DIST and slcpy
 * Cleaned code and documentation
 
-## 0.1.0-alpha5 (2022-04-25)
+</details>
+
+<details>
+    <summary><b>0.1.0-alpha5 (2022-04-25)</b></summary>
+
 * Rename GraphFormer to DIST (Dimensionless instance Segmentation Transformer)
 * Updates for DIST
     * SetUp metric evaluation
@@ -226,13 +317,21 @@
     * Dist version to 0.1.5
     * Added evaluation pipeline
 
-## 0.1.0a2-alpha4 (2022-04-25)
+</details>
+
+<details>
+    <summary><b>0.1.0a2-alpha4 (2022-04-25)</b></summary>
+
 * Fix for better handling graph prediction
 * Fix for #4-#6 issues
 * Small bugfixes for GraphFormer while training
 * Add point cloud normalization before training/prediction
 
-## 0.1.0-alpha1 (2022-04-13)
+</details>
+
+<details>
+    <summary><b>0.1.0-alpha1 (2022-04-13)</b></summary>
+
 * Rename tardis to tardis-pytorch
 * Build tests for all modules
 * Integrated slcpy, spindletorch and graphformer
@@ -243,12 +342,18 @@
         * Move Amira file output of point cloud from graphformer
         * SetUp workflows for data pre- and post-processing 
 
-    * SPINDLETORCH
-        * Included all spindletorch modules
-        * Build standard workflows for training and prediction of 2D and 3D images
+* SPINDLETORCH
+    * Included all spindletorch modules
+    * Build standard workflows for training and prediction of 2D and 3D images
 
-    * GRAPHFORMER
-        * Included all graphformer modules
+* GRAPHFORMER
+    * Included all graphformer modules
 
-## 0.0.1 (2022-03-24)
+</details>
+
+<details>
+    <summary><b>0.0.1 (2022-03-24)</b></summary>
+
 * Initial commit
+
+</details>
