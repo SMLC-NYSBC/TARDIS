@@ -499,7 +499,7 @@ def save_as_ply(filename, points):
     n = len(points)
 
     # Write header
-    with open(filename, 'w') as f:
+    with open(filename, "w") as f:
         f.write("ply\n")
         f.write("format ascii 1.0\n")
         f.write(f"comment Created by TARDIS {version}\n")

@@ -234,6 +234,12 @@ class FilamentSimulateDataset(BasicDataset):
                         )
                     )
             coord = np.concatenate(df_coord)
+
+            # Jiggling
+            coord[:, 1:] = coord[:, 1:] + np.random.normal(
+                0, np.random.random(len(coord)).reshape(-1, 1) * 0.5, (len(coord), 3)
+            )
+
             coord[:, 1:] = coord[:, 1:] / pc_median_dist(coord[:, 1:], True)
 
         if self.train:

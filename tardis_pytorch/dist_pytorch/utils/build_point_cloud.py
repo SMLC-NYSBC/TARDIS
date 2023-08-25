@@ -380,15 +380,19 @@ def generate_bezier_curve_dataset(n=50):
         ndarray: A concatenated set of 3D points representing the generated Bezier curves.
     """
     c = np.concatenate(
-        [j for j in [generate_random_bezier_curve(i) for i in range(n//2)] if len(j) > 2]
+        [
+            j
+            for j in [generate_random_bezier_curve(i) for i in range(n // 2)]
+            if len(j) > 2
+        ]
     )
 
     c_2 = c.copy()
-    c_2[:, 0] += 1
+    c_2[:, 0] += np.max(c[:, 0]) + 1
     c_2[:, 1] += np.random.randint(10, 15)
 
     c_3 = c.copy()
-    c_3[:, 0] += 2
+    c_3[:, 0] += np.max(c_2[:, 0]) + 1
     c_3[:, 2] += np.random.randint(10, 15)
     # c_2 = []
     # for _ in range(0, n // 10, 2):
