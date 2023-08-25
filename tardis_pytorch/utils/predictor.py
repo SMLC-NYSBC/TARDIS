@@ -449,7 +449,7 @@ class DataSetPredictor:
         # Post-process predicted image patches
         if self.predict in ["Filament", "Microtubule"]:
             self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
-                image=self.image, EDT=False, down_sampling=10
+                image=self.image, EDT=False, down_sampling=5
             )
         else:
             self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
@@ -773,7 +773,7 @@ class DataSetPredictor:
             # Build patches dataset
             if self.predict in ["Filament", "Microtubule"]:
                 self.coords_df, _, self.output_idx, _ = self.patch_pc.patched_dataset(
-                    coord=self.pc_ld / 10
+                    coord=self.pc_ld / pc_median_dist(self.pc_ld, True)
                 )
             else:
                 self.coords_df, _, self.output_idx, _ = self.patch_pc.patched_dataset(

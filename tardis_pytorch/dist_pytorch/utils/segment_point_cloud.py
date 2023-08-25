@@ -283,7 +283,7 @@ class PropGreedyGraphCut:
             x = coord[coord[:, 0] == int(i), :]
 
             if len(x) > 4:
-                splines.append(smooth_spline(x))
+                splines.append(smooth_spline(x, 0.5))
             else:
                 splines.append(x)
 
