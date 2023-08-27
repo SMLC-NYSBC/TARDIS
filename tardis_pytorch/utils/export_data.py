@@ -485,10 +485,7 @@ def to_am(data: np.ndarray, pixel_size: float, file_dir: str):
         f.write(BytesIO(bytes_data).getbuffer())
 
 
-from tardis_pytorch._version import version
-
-
-def save_as_ply(filename, points):
+def to_ply(data, file_dir):
     """
     Save a point cloud as a PLY file.
 
@@ -496,10 +493,10 @@ def save_as_ply(filename, points):
         filename (str): The name of the PLY file to create.
         points (np.ndarray): A numpy array of shape [n, 4], where each row is [ID, X, Y, Z].
     """
-    n = len(points)
+    n = len(data)
 
     # Write header
-    with open(filename, "w") as f:
+    with open(file_dir, "w") as f:
         f.write("ply\n")
         f.write("format ascii 1.0\n")
         f.write(f"comment Created by TARDIS {version}\n")
@@ -508,19 +505,19 @@ def save_as_ply(filename, points):
         f.write("property float x\n")
         f.write("property float y\n")
         f.write("property float z\n")
-        f.write(f"element edge {n - len(np.unique(points[:, 0])) + 1}\n")
+        f.write(f"element edge {n - len(np.unique(data[:, 0])) + 1}\n")
         f.write("property int vertex1\n")
         f.write("property int vertex2\n")
         f.write("end_header\n")
 
         # Write vertex elements
         for i in range(n):
-            f.write(f"{points[i, 1]} {points[i, 2]} {points[i, 3]}\n")
+            f.write(f"{data[i, 1]} {data[i, 2]} {data[i, 3]}\n")
 
         # Write edge elements (assuming points are connected in the order they appear)
         for i in range(n):
             try:
-                if points[i + 1, 0] == points[i, 0]:
+                if data[i + 1, 0] == data[i, 0]:
                     f.write(f"{i} {i + 1}\n")
             except IndexError:
                 pass

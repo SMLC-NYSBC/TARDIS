@@ -17,7 +17,6 @@ import click
 import numpy as np
 import tifffile.tifffile as tif
 import torch
-from scipy.ndimage import gaussian_filter
 
 from tardis_pytorch.dist_pytorch.utils.utils import pc_median_dist
 from tardis_pytorch.dist_pytorch.datasets.patches import PatchDataSet
@@ -33,7 +32,7 @@ from tardis_pytorch.spindletorch.utils.utils import scale_image
 from tardis_pytorch.utils.aws import get_weights_aws
 from tardis_pytorch.utils.device import get_device
 from tardis_pytorch.utils.errors import TardisError
-from tardis_pytorch.utils.export_data import NumpyToAmira, to_am, to_mrc
+from tardis_pytorch.utils.export_data import NumpyToAmira, to_am, to_mrc, to_ply
 from tardis_pytorch.utils.load_data import import_am, ImportDataFromAmira, load_image
 from tardis_pytorch.utils.logo import print_progress_bar, TardisLogo
 from tardis_pytorch.utils.normalization import MeanStdNormalize, RescaleNormalize
@@ -858,26 +857,44 @@ class DataSetPredictor:
             )
 
             """Save as .am"""
-            if self.output_format.endswith("amSG") and self.predict in [
+            if self.output_format.endswith(["amSG", "ply"]) and self.predict in [
                 "Filament",
                 "Microtubule",
             ]:
-                self.amira_file.export_amira(
-                    coords=self.segments,
-                    file_dir=join(
-                        self.am_output, f"{i[:-self.in_format]}_SpatialGraph.am"
-                    ),
-                    labels=["TardisPrediction"],
-                )
+                if self.output_format.endswith("amSG"):
+                    self.amira_file.export_amira(
+                        coords=self.segments,
+                        file_dir=join(
+                            self.am_output, f"{i[:-self.in_format]}_SpatialGraph.am"
+                        ),
+                        labels=["TardisPrediction"],
+                    )
+                else:
+                    to_ply(
+                        data=self.segments,
+                        file_dir=join(
+                            self.am_output, f"{i[:-self.in_format]}_SpatialGraph.ply"
+                        ),
+                    )
 
                 segments_filter = self.filter_splines(segments=self.segments)
-                self.amira_file.export_amira(
-                    coords=segments_filter,
-                    file_dir=join(
-                        self.am_output, f"{i[:-self.in_format]}_SpatialGraph_filter.am"
-                    ),
-                    labels=["TardisPrediction"],
-                )
+                if self.output_format.endswith("amSG"):
+                    self.amira_file.export_amira(
+                        coords=segments_filter,
+                        file_dir=join(
+                            self.am_output,
+                            f"{i[:-self.in_format]}_SpatialGraph_filter.am",
+                        ),
+                        labels=["TardisPrediction"],
+                    )
+                else:
+                    to_ply(
+                        data=segments_filter,
+                        file_dir=join(
+                            self.am_output,
+                            f"{i[:-self.in_format]}_SpatialGraph_filter.ply",
+                        ),
+                    )
 
                 if self.amira_check and self.predict == "Microtubule":
                     dir_amira_file = join(
@@ -893,14 +910,16 @@ class DataSetPredictor:
                                 amira_sg=amira_sg, tardis_sg=segments_filter
                             )
 
-                            self.amira_file.export_amira(
-                                file_dir=join(
-                                    self.am_output,
-                                    f"{i[:-self.in_format]}_AmiraCompare.am",
-                                ),
-                                coords=compare_sg,
-                                labels=label_sg,
-                            )
+                            if self.output_format.endswith("amSG"):
+                                self.amira_file.export_amira(
+                                    file_dir=join(
+                                        self.am_output,
+                                        f"{i[:-self.in_format]}_AmiraCompare.am",
+                                    ),
+                                    coords=compare_sg,
+                                    labels=label_sg,
+                                )
+
             elif self.output_format.endswith("csv"):
                 np.savetxt(
                     join(self.am_output, f"{i[:-self.in_format]}_Segments.csv"),
