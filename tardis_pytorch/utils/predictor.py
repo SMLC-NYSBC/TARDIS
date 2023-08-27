@@ -242,7 +242,7 @@ class DataSetPredictor:
 
             if predict in ["Filament", "Microtubule", "Membrane2D"]:
                 self.GraphToSegment = PropGreedyGraphCut(
-                    threshold=dist_threshold, smooth=True
+                    threshold=dist_threshold, connection=999999999, smooth=True
                 )
 
                 self.filter_splines = FilterSpatialGraph(
