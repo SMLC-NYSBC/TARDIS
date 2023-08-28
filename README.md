@@ -4,10 +4,10 @@
 
 [![Python PyTest](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_package.yml/badge.svg?branch=main)](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_package.yml)
 [![Check License Lines](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/licensed.yml/badge.svg)](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/licensed.yml)
-![Version](https://img.shields.io/badge/release-0.1.0_RC2_hotfix3-success)
+![Version](https://img.shields.io/badge/release-0.1.0_RC3-success)
 ![Documentation](https://readthedocs.org/projects/tardis-pytorch/badge/?version=latest)
 
-# TARDIS-pytorch
+# TARDIS-PyTorch
 Python-based software for generalized object instance segmentation from (cryo-)electron microscopy
 micrographs/tomograms. The software package is built on a general workflow where predicted semantic segmentation
 is used for instance segmentation of 2D/3D images.
@@ -25,7 +25,7 @@ is used for instance segmentation of 2D/3D images.
     <summary><b>TARDIS v0.1.0 - RC3 - (2023-08-28)</b></summary>
 
     * General improvement from MT prediction
-    * Improved accurace for semantic and instance segmentation of MT and Membrane
+    * Improved accuracy for semantic and instance segmentation of MT and Membrane
     * Added support for 2D membrane segmentation
     * Added experimental SparseDIST module
     * Support for ply export file
