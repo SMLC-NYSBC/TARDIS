@@ -2,15 +2,15 @@
 <details open>
     <summary><b>0.1.0-RC3 (2023-08-25)</b></summary>
 
-*This intends to be release submitted with Nature Method 2023*
+*This intends to be a release submitted with Nature Method 2023*
 
 * **General changes:**
     * *General*:
         * Full support for 2D data
         * Black
-        * Introduced TARDIS Logo and rebranding to Tardis-pytorch
+        * Introduced the TARDIS Logo and rebranding to Tardis-PyTorch
         * Remove Open3D library (conflict in CentOS7)
-        * Fixed MRC read-out during training that forcible rotated .mrc files
+        * Fixed MRC read-out during training that forcibly rotated .mrc files
 
     * *New_Feature*: 
         * Added new output format .ply
@@ -19,9 +19,9 @@
         * Added instance prediction from semantic binary masks 
 
     * *Optimize*: 
-        * Added optional checkpoint to all Tardis calls
-        * Improvements for training for CNN and DIST by users
-        * Amira possible output as raw point cloud
+        * Added an optional checkpoint to all Tardis calls
+        * Improvements in training for CNN and DIST by users
+        * Amira possible output as a raw point cloud
 
     * *BugFix*:
         * Fixed save for .mrc files
@@ -36,20 +36,20 @@
 
 * **DIST module changes:**
     * *General*:
-        * Added simulated data for training on filament like structures
+        * Added simulated data for training on filament-like structures
         * Re-train model no simulated + real data
         * Fine-tuned setting for predictions and post-processing
 
     * *New_Feature*: 
-        * Experimental SparseDist model to offer more memory efficient performance,  
+        * Experimental SparseDist model to offer more memory-efficient performance,  
       for instance segmentation
 
     * *Optimize*: 
         * Improved visualization outputs
-        * Mcov metric optimalization
+        * Mcov metric optimization
         * Rebuild Graph prediction function to be more robust
         * Reverse-engineered Open3D voxal downsampling and added random downsampling
-        * Added distance embedding with range value
+        * Added distance embedding with a range value
 
 </details>
 
