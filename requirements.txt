@@ -10,7 +10,6 @@ imagecodecs>2021.11.00
 # Image processing library
 scikit-learn>1.0.1
 scikit-image>0.19.2
-opencv-python>4.6.0.66
 scipy>1.9.0
 edt>=2.3.0
 

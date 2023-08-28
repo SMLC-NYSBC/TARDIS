@@ -21,8 +21,18 @@ is used for instance segmentation of 2D/3D images.
 * Point cloud instance segmentation by point cloud graph representation
 
 ## News
+<details open>
+    <summary><b>TARDIS v0.1.0 - RC3 - (2023-08-28)</b></summary>
+
+    * General improvement from MT prediction
+    * Improved accurace for semantic and instance segmentation of MT and Membrane
+    * Added support for 2D membrane segmentation
+    * Added experimental SparseDIST module
+    * Support for ply export file
+</details>
+
 <details>
-    <summary><b>TARDIS v0.1.0 release candidate 2 (RC2) - (2023-03-22)</b></summary>
+    <summary><b>TARDIS v0.1.0 - RC2 - (2023-03-22)</b></summary>
 
     * General improvement from MT prediction
     * Added support for Cry-mem prediction
@@ -32,7 +42,7 @@ is used for instance segmentation of 2D/3D images.
 </details>
 
 <details>
-    <summary><b>TARDIS v0.1.0 release candidate 1 (RC1) - (2023-02-08)</b></summary>
+    <summary><b>TARDIS v0.1.0 - RC1 - (2023-02-08)</b></summary>
 
     * Overall clean-up for the final release 
     * Added full code documentation
@@ -44,7 +54,7 @@ is used for instance segmentation of 2D/3D images.
 </details>
 
 <details>
-    <summary><b>TARDIS v0.1.0 beta 2 - (2022-09-14)</b></summary>
+    <summary><b>TARDIS v0.1.0 - beta 2 - (2022-09-14)</b></summary>
 
     * Cryo-Membrane 2D support 
     * Stable training and prediction entries for spindletorch and DIST 
@@ -55,7 +65,7 @@ is used for instance segmentation of 2D/3D images.
 </details>
 
 <details>
-    <summary><b>TARDIS v0.1.0 beta 1</b></summary>
+    <summary><b>TARDIS v0.1.0 - beta 1</b></summary>
 
     * Cryo-Membrane 2D support 
     * Stable training and prediction entries for spindletorch and DIST 
@@ -63,35 +73,34 @@ is used for instance segmentation of 2D/3D images.
 </details>
 
 # Requirements
-
     # Python
-        python 3.7, 3.8. 3.9, 3.10
+        python 3.7, 3.8. 3.9, 3.10, 3.11
 
     # ML library
-        torch>=1.13.1
-        numpy>=1.21.6
-        pandas>=1.3.5
+        torch>1.12.0
+        numpy>1.21.0
+        pandas>1.3.0
     
     # Image loading library
-        tifffile>=2021.11.2
-        imagecodecs>=2021.11.20
-        mrcfile >= 1.4.3
+        tifffile>2021.11.0
+        imagecodecs>2021.11.00
     
     # Image processing library 
-        scikit-learn>=1.0.2
-        scikit-image>=0.19.2
-        opencv-python>=4.6.0.66
-        scipy>=1.7.3
+        scikit-learn>1.0.1
+        scikit-image>0.19.2
+        scipy>1.9.0
         edt>=2.3.0
 
-    # Point cloud processing library
-        open3d==0.9.0
-    
+    # External file format reader
+        plyfile>=0.9
+
     # Other
-        requests>=2.28.2
-        ipython>=7.34.0
-        click>=8.0.4
-        nvidia-smi>=0.1.3
+        requests>2.28.0
+        chardet>5.0.0
+        ipython>7.33.0
+        click>8.0.4
+        nvidia-smi>=0.1.3; sys_platform != 'darwin'
+        setuptools>=67.6.0
 
 
 ## Installation

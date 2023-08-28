@@ -31,10 +31,6 @@
         * Retrained FNet_32 model for membrane and microtubules
         * Train FNet_32 for 2D membrane segmentation
 
-    * *New_Feature*: 
-        * Added Anti-Aliasing (AA) to smooth-out final output and remove small
-      false-positive predictions.
-
     * *Optimize*: 
         * 2D CNN network set-up
 
