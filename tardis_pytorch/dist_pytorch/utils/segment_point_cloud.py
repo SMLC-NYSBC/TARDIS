@@ -13,6 +13,7 @@ from typing import Optional, Union
 import numpy as np
 import torch
 
+from tardis_pytorch.dist_pytorch.utils.utils import VoxelDownSampling
 from tardis_pytorch.utils.errors import TardisError
 from tardis_pytorch.utils.spline_metric import smooth_spline, sort_segment
 from tardis_pytorch.utils.visualize_pc import VisualizeFilaments, VisualizePointCloud
@@ -405,6 +406,25 @@ class PropGreedyGraphCut:
 
         segments = np.vstack(coord_segment)
         if self.smooth:
+            voxel_ds = VoxelDownSampling(voxel=5, labels=True, KNN=True)
+            segments = voxel_ds(segments)
+            segments = segments[segments[:, 0].argsort()]
+            df_coord = []
+            for i in np.unique(segments[:, 0]):
+                id_ = i
+                idx = np.where(segments[:, 0] == id_)[0]
+
+                if len(idx) > 3:
+                    df_coord.append(
+                        np.hstack(
+                            (
+                                np.repeat(id_, len(idx)).reshape(-1, 1),
+                                sort_segment(segments[idx, 1:]),
+                            )
+                        )
+                    )
+            segments = np.concatenate(df_coord)
+
             segments = self._smooth_segments(segments)
 
         if visualize is not None:

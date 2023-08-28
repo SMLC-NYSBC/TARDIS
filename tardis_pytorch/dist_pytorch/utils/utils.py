@@ -242,7 +242,7 @@ class VoxelDownSampling(DownSampling):
 
         Returns:
             voxel_centers (np.ndarray): A numpy array of shape (M, 3) containing the centroids
-            of the voxels in which the points are located, where M is the number
+            of the voxels in which the points are located where M is the number
             of unique voxels.
         """
         if self.labels:
