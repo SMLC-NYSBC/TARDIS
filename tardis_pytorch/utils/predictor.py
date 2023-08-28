@@ -857,7 +857,7 @@ class DataSetPredictor:
             )
 
             """Save as .am"""
-            if self.output_format.endswith(["amSG", "ply"]) and self.predict in [
+            if self.output_format.endswith(("amSG", "ply")) and self.predict in [
                 "Filament",
                 "Microtubule",
             ]:
