@@ -178,6 +178,9 @@ class PatchDataSet:
             voxel = self.voxel + self.drop_rate
         else:
             voxel = abs(bbox[0, 0] - bbox[1, 0]) // 10 + self.drop_rate
+            if voxel == 0:
+                voxel = abs(bbox[0, 0] - bbox[1, 0]) + self.drop_rate
+
         all_patch = []
 
         """ Find points index in patches """
@@ -186,6 +189,8 @@ class PatchDataSet:
                 voxel = self.voxel + self.drop_rate
             else:
                 voxel = abs(bbox[0, 0] - bbox[1, 0]) // 10
+                if voxel == 0:
+                    voxel = abs(bbox[0, 0] - bbox[1, 0]) + self.drop_rate
 
             patch_grid = self.center_patch(bbox=bbox, voxel_size=voxel)
 

@@ -115,7 +115,7 @@ class TestDataLoader:
         # Build first time
         coords_v, _, graph_v, output_idx, clx_idx = train_dl.__getitem__(0)
 
-        assert len(coords_v) == 6
+        assert len(coords_v) == 4
         s = coords_v[0].shape[0]
         assert coords_v[0].shape == (s, 3)
         assert graph_v[0].shape == (s, s)
@@ -125,7 +125,7 @@ class TestDataLoader:
         # Load from memory
         coords_v, _, graph_v, output_idx, clx_idx = train_dl.__getitem__(0)
 
-        assert len(coords_v) == 6
+        assert len(coords_v) == 4
         s = coords_v[0].shape[0]
         assert coords_v[0].shape == (s, 3)
         assert graph_v[0].shape == (s, s)
@@ -144,7 +144,7 @@ class TestDataLoader:
         # Build first time
         coords_v, rgb_idx, graph_v, output_idx, clx_idx = train_dl.__getitem__(0)
 
-        assert len(coords_v) == 2
+        assert len(coords_v) == 4
         s = coords_v[0].shape[0]
         assert coords_v[0].shape == (s, 3)
         assert graph_v[0].shape == (s, s)
@@ -155,7 +155,7 @@ class TestDataLoader:
         # Load from memory
         coords_v, rgb_idx, graph_v, output_idx, clx_idx = train_dl.__getitem__(0)
 
-        assert len(coords_v) == 2
+        assert len(coords_v) == 4
         s = coords_v[0].shape[0]
         assert coords_v[0].shape == (s, 3)
         assert graph_v[0].shape == (s, s)
@@ -175,7 +175,7 @@ class TestDataLoader:
         # Build first time
         coords_v, _, graph_v, output_idx, _ = train_dl.__getitem__(0)
 
-        assert len(coords_v) == 6
+        assert len(coords_v) == 4
         s = coords_v[0].shape[0]
         assert coords_v[0].shape == (s, 3)
         assert graph_v[0].shape == (s, s)
@@ -184,7 +184,7 @@ class TestDataLoader:
         # Load from memory
         coords_v, _, graph_v, output_idx, _ = train_dl.__getitem__(0)
 
-        assert len(coords_v) == 6
+        assert len(coords_v) == 4
         s = coords_v[0].shape[0]
         assert coords_v[0].shape == (s, 3)
         assert graph_v[0].shape == (s, s)
@@ -202,7 +202,7 @@ class TestDataLoader:
         # Build first time
         coords_v, _, graph_v, output_idx, _ = train_dl.__getitem__(0)
 
-        assert len(coords_v) == 19
+        assert int(len(coords_v)) == 10
         s = coords_v[0].shape[0]
         assert coords_v[0].shape == (s, 3)
         assert graph_v[0].shape == (s, s)
@@ -211,7 +211,7 @@ class TestDataLoader:
         # Load from memory
         coords_v, _, graph_v, output_idx, _ = train_dl.__getitem__(0)
 
-        assert len(coords_v) == 19
+        assert int(len(coords_v)) == 10
         s = coords_v[0].shape[0]
         assert coords_v[0].shape == (s, 3)
         assert graph_v[0].shape == (s, s)

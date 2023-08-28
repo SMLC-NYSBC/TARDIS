@@ -919,7 +919,6 @@ class DataSetPredictor:
                                     coords=compare_sg,
                                     labels=label_sg,
                                 )
-
             elif self.output_format.endswith("csv"):
                 np.savetxt(
                     join(self.am_output, f"{i[:-self.in_format]}_Segments.csv"),
@@ -936,38 +935,46 @@ class DataSetPredictor:
                         delimiter=",",
                     )
             elif (
-                self.output_format.endswith(("mrcM", "tifM", "amM"))
+                self.output_format.endswith(("mrcM", "tifM", "amM", "ply"))
                 and self.predict == "Membrane"
             ):
-                self.mask_semantic = draw_semantic_membrane(
-                    mask_size=self.org_shape,
-                    coordinate=self.segments,
-                    pixel_size=self.px,
-                    spline_size=60,
-                )
-                self._debug(id_name=i, debug_id="instance_mask")
+                if self.output_format.endswith("ply"):
+                    to_ply(
+                        data=self.segments,
+                        file_dir=join(
+                            self.am_output, f"{i[:-self.in_format]}_instance.ply"
+                        ),
+                    )
+                else:
+                    self.mask_semantic = draw_semantic_membrane(
+                        mask_size=self.org_shape,
+                        coordinate=self.segments,
+                        pixel_size=self.px,
+                        spline_size=60,
+                    )
+                    self._debug(id_name=i, debug_id="instance_mask")
 
-                if self.output_format.endswith("mrcM"):
-                    to_mrc(
-                        data=self.mask_semantic,
-                        file_dir=join(
-                            self.am_output, f"{i[:-self.in_format]}_instance.mrc"
-                        ),
-                        pixel_size=self.px,
-                    )
-                elif self.output_format.endswith("tifM"):
-                    tif.imwrite(
-                        join(self.am_output, f"{i[:-self.in_format]}_instance.tif"),
-                        self.mask_semantic,
-                    )
-                elif self.output_format.endswith("amM"):
-                    to_am(
-                        data=self.mask_semantic,
-                        file_dir=join(
-                            self.am_output, f"{i[:-self.in_format]}_instance.am"
-                        ),
-                        pixel_size=self.px,
-                    )
+                    if self.output_format.endswith("mrcM"):
+                        to_mrc(
+                            data=self.mask_semantic,
+                            file_dir=join(
+                                self.am_output, f"{i[:-self.in_format]}_instance.mrc"
+                            ),
+                            pixel_size=self.px,
+                        )
+                    elif self.output_format.endswith("tifM"):
+                        tif.imwrite(
+                            join(self.am_output, f"{i[:-self.in_format]}_instance.tif"),
+                            self.mask_semantic,
+                        )
+                    elif self.output_format.endswith("amM"):
+                        to_am(
+                            data=self.mask_semantic,
+                            file_dir=join(
+                                self.am_output, f"{i[:-self.in_format]}_instance.am"
+                            ),
+                            pixel_size=self.px,
+                        )
 
             """Clean-up temp dir"""
             clean_up(dir=self.dir)

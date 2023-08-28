@@ -15,7 +15,6 @@ import torch
 from sklearn.metrics import auc, average_precision_score, roc_curve
 
 
-# AUPR not AUC!!!!
 def compare_dict_metrics(last_best_dict: dict, new_dict: dict) -> bool:
     """
     Compares two metric dictionaries and returns the one with the highest
