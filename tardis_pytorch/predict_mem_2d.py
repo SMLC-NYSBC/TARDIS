@@ -108,7 +108,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-dt",
     "--dist_threshold",
-    default=0.95,
+    default=0.5,
     type=float,
     help="Threshold used for instance prediction.",
     show_default=True,

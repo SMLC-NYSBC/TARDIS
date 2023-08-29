@@ -95,7 +95,7 @@ def get_weights_aws(network: str, subtype: str, model: Optional[str] = None):
     ALL_SUBTYPE = ["16", "32", "64", "96", "128", "triang", "full"]
     CNN = ["unet", "unet3plus", "fnet"]
     CNN_DATASET = ["microtubules", "cryo_mem", "cryo_mem_2d"]
-    DIST_DATASET = ["microtubules", "s3dis"]
+    DIST_DATASET = ["microtubules", "s3dis", "membrane_2d"]
 
     """Get weights for CNN"""
     dir_ = join(expanduser("~"), ".tardis_pytorch", f"{network}_{subtype}", f"{model}")

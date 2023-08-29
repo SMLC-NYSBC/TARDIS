@@ -311,7 +311,7 @@ class DataSetPredictor:
                     self.dist = Predictor(
                         network="dist",
                         subtype="triang",
-                        model_type="microtubules",
+                        model_type="membrane_2d",
                         device=self.device,
                     )
             else:
