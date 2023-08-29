@@ -23,7 +23,10 @@ from tardis_pytorch.dist_pytorch.datasets.patches import PatchDataSet
 from tardis_pytorch.dist_pytorch.dist import build_dist_network
 from tardis_pytorch.dist_pytorch.utils.build_point_cloud import BuildPointCloud
 from tardis_pytorch.dist_pytorch.utils.segment_point_cloud import PropGreedyGraphCut
-from tardis_pytorch.spindletorch.data_processing.draw_mask import draw_semantic_membrane, draw_instances
+from tardis_pytorch.spindletorch.data_processing.draw_mask import (
+    draw_semantic_membrane,
+    draw_instances,
+)
 from tardis_pytorch.spindletorch.data_processing.stitch import StitchImages
 from tardis_pytorch.spindletorch.data_processing.trim import trim_with_stride
 from tardis_pytorch.spindletorch.datasets.dataloader import PredictionDataset

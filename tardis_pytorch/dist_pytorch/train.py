@@ -191,7 +191,10 @@ def train_dist(
         del save_train
 
     """Build trainer"""
-    if dataset_type in ["filament", "MT", "Mem"] or dataset_type[1] in ["filament", "membrane2d"]:
+    if dataset_type in ["filament", "MT", "Mem"] or dataset_type[1] in [
+        "filament",
+        "membrane2d",
+    ]:
         dataset_type = 2
     else:
         dataset_type = 4

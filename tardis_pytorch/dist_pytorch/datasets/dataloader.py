@@ -202,9 +202,13 @@ class FilamentSimulateDataset(BasicDataset):
 
         # Simulate filament dataset
         if self.line:
-            coord_file = generate_bezier_curve_dataset(n=self.sample_count, ds_type="line")
+            coord_file = generate_bezier_curve_dataset(
+                n=self.sample_count, ds_type="line"
+            )
         else:
-            coord_file = generate_bezier_curve_dataset(n=self.sample_count, ds_type="curve")
+            coord_file = generate_bezier_curve_dataset(
+                n=self.sample_count, ds_type="curve"
+            )
 
         # Pre-process coord and image data also, if exist remove duplicates
         coord, _ = preprocess_data(coord=coord_file)
@@ -246,18 +250,17 @@ class FilamentSimulateDataset(BasicDataset):
 
         coord[:, 1:] = coord[:, 1:] / pc_median_dist(coord[:, 1:], True)
 
-        return coord
-        # if self.train:
-        #     coords_idx, df_idx, graph_idx, output_idx, _ = self.VD.patched_dataset(
-        #         coord=coord, mesh=2, random=True
-        #     )
-        # else:
-        #     coords_idx, df_idx, graph_idx, output_idx, _ = self.VD.patched_dataset(
-        #         coord=coord, mesh=2
-        #     )
-        #
-        # # Output edge_f,   node_f, graph,     node_idx,   node_class
-        # return coords_idx, df_idx, graph_idx, output_idx, df_idx
+        if self.train:
+            coords_idx, df_idx, graph_idx, output_idx, _ = self.VD.patched_dataset(
+                coord=coord, mesh=2, random=True
+            )
+        else:
+            coords_idx, df_idx, graph_idx, output_idx, _ = self.VD.patched_dataset(
+                coord=coord, mesh=2
+            )
+
+        # Output edge_f,   node_f, graph,     node_idx,   node_class
+        return coords_idx, df_idx, graph_idx, output_idx, df_idx
 
 
 class FilamentDataset(BasicDataset):

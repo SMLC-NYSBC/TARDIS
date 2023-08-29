@@ -242,7 +242,7 @@ def generate_random_rotation_matrix() -> np.ndarray:
     return rot_matrix
 
 
-def bezier_curve(control_points, n_points=100, curve_type='line'):
+def bezier_curve(control_points, n_points=100, curve_type="line"):
     """
     Evaluate a Bezier curve at a set of parameter values.
 
@@ -265,13 +265,13 @@ def bezier_curve(control_points, n_points=100, curve_type='line'):
         for i, t in enumerate(t_values):
             for j in range(n + 1):
                 curve_points[i] += (
-                        control_points[j]
-                        * (
-                                np.math.factorial(n)
-                                / (np.math.factorial(j) * np.math.factorial(n - j))
-                        )
-                        * ((1 - t) ** (n - j))
-                        * (t ** j)
+                    control_points[j]
+                    * (
+                        np.math.factorial(n)
+                        / (np.math.factorial(j) * np.math.factorial(n - j))
+                    )
+                    * ((1 - t) ** (n - j))
+                    * (t**j)
                 )
     else:
         # Generate random angles theta and phi
@@ -356,7 +356,7 @@ def generate_random_bezier_curve(id=0, curve_type="line"):
     rotated_control_points = np.dot(control_points, rotation_matrix)
 
     # Generate a random origin
-    if curve_type == 'line':
+    if curve_type == "line":
         origin_range = np.random.randint(10, 250)
     else:
         origin_range = np.random.randint(10, 25)
@@ -392,7 +392,7 @@ def generate_random_bezier_curve(id=0, curve_type="line"):
         return []
 
 
-def generate_bezier_curve_dataset(n=50, ds_type='line'):
+def generate_bezier_curve_dataset(n=50, ds_type="line"):
     """
     Generate a dataset of random 3D Bezier curves.
 
