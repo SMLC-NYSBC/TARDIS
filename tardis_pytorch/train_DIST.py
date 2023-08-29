@@ -299,7 +299,7 @@ def main(
         else:
             build_test_dataset(dataset_dir=dir, dataset_no=no_dataset)
     else:
-        if dataset_type.startswith("simulate_filament"):
+        if dataset_type.startswith("simulate_"):
             dataset_type = dataset_type.split("_")
 
     """Pre-setting for building DataLoader"""

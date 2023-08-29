@@ -242,7 +242,7 @@ def generate_random_rotation_matrix() -> np.ndarray:
     return rot_matrix
 
 
-def bezier_curve(control_points, n_points=100):
+def bezier_curve(control_points, n_points=100, curve_type='line'):
     """
     Evaluate a Bezier curve at a set of parameter values.
 
@@ -252,25 +252,40 @@ def bezier_curve(control_points, n_points=100):
     Args:
         control_points (List[ndarray]): List of 3D control points that define the Bezier curve.
         n_points (int): Number of points on the curve to compute.
+        curve_type (str): Type of drawn curve
 
     Returns:
         ndarray: A set of 3D points (shape: [n_points, 3]) on the Bezier curve.
     """
     t_values = np.linspace(0, np.random.randint(10, 50) / 100, n_points)
-    n = len(control_points) - 1
-    curve_points = np.zeros((n_points, 3))
+    if curve_type == "line":
+        n = len(control_points) - 1
+        curve_points = np.zeros((n_points, 3))
 
-    for i, t in enumerate(t_values):
-        for j in range(n + 1):
-            curve_points[i] += (
-                control_points[j]
-                * (
-                    np.math.factorial(n)
-                    / (np.math.factorial(j) * np.math.factorial(n - j))
+        for i, t in enumerate(t_values):
+            for j in range(n + 1):
+                curve_points[i] += (
+                        control_points[j]
+                        * (
+                                np.math.factorial(n)
+                                / (np.math.factorial(j) * np.math.factorial(n - j))
+                        )
+                        * ((1 - t) ** (n - j))
+                        * (t ** j)
                 )
-                * ((1 - t) ** (n - j))
-                * (t**j)
-            )
+    else:
+        # Generate random angles theta and phi
+        theta = np.linspace(0, 2 * np.pi, n_points)
+
+        curve_points = np.zeros((n_points, 3))
+
+        # Generate random radius
+        r = np.random.uniform(10, 25)
+
+        # Generate points using spherical coordinates
+        curve_points[:, 0] = r * np.cos(theta)
+        curve_points[:, 1] = r * np.sin(theta)
+        curve_points[:, 2] = 0
 
     return curve_points
 
@@ -308,7 +323,7 @@ def resample_curve(points, desired_distance=1.0):
     return np.array(resampled_points)
 
 
-def generate_random_bezier_curve(id=0):
+def generate_random_bezier_curve(id=0, curve_type="line"):
     """
     Generate a random 3D Bezier curve with a random origin.
 
@@ -319,6 +334,7 @@ def generate_random_bezier_curve(id=0):
 
     Args:
         id (int): An identifier for the curve. Default is 0.
+        curve_type (str): Type of drawn curve
 
     Returns:
         List[ndarray]: If the number of curve points is greater than 3, the function returns
@@ -340,15 +356,26 @@ def generate_random_bezier_curve(id=0):
     rotated_control_points = np.dot(control_points, rotation_matrix)
 
     # Generate a random origin
-    origin_range = np.random.randint(10, 250)
+    if curve_type == 'line':
+        origin_range = np.random.randint(10, 250)
+    else:
+        origin_range = np.random.randint(10, 25)
     origin_range = (-origin_range, origin_range)
     origin = generate_random_3d_point(low=origin_range[0], high=origin_range[1])
 
     # Move the control points to the new origin
-    moved_control_points = rotated_control_points + origin
+    if curve_type == "line":
+        moved_control_points = rotated_control_points + origin
+    else:
+        moved_control_points = rotated_control_points
 
     # Calculate the points on the Bezier curve
-    curve_points = bezier_curve(moved_control_points, 100)
+    curve_points = bezier_curve(moved_control_points, 100, curve_type)
+    if curve_type != "line":
+        curve_points = np.dot(curve_points, rotation_matrix)
+        curve_points[:, 0] = curve_points[:, 0] + origin[0] * 10
+        curve_points[:, 1] = curve_points[:, 1] + origin[1] * 10
+        curve_points[:, 2] = curve_points[:, 2] + origin[2] * 10
 
     if np.random.randint(0, 10) > 5:
         np.random.shuffle(curve_points)
@@ -365,7 +392,7 @@ def generate_random_bezier_curve(id=0):
         return []
 
 
-def generate_bezier_curve_dataset(n=50):
+def generate_bezier_curve_dataset(n=50, ds_type='line'):
     """
     Generate a dataset of random 3D Bezier curves.
 
@@ -375,6 +402,7 @@ def generate_bezier_curve_dataset(n=50):
 
     Args:
         n (int): The number of random Bezier curves to generate. Default is 50.
+        ds_type (str): Type of simulated dataset
 
     Returns:
         ndarray: A concatenated set of 3D points representing the generated Bezier curves.
@@ -382,28 +410,25 @@ def generate_bezier_curve_dataset(n=50):
     c = np.concatenate(
         [
             j
-            for j in [generate_random_bezier_curve(i) for i in range(n // 2)]
+            for j in [generate_random_bezier_curve(i, ds_type) for i in range(n // 2)]
             if len(j) > 2
         ]
     )
 
-    c_2 = c.copy()
-    c_2[:, 0] += np.max(c[:, 0]) + 1
-    c_2[:, 1] += np.random.randint(10, 15)
+    if ds_type == "line":
+        c_2 = c.copy()
+        c_2[:, 0] += np.max(c[:, 0]) + 1
+        c_2[:, 1] += np.random.randint(10, 15)
 
-    c_3 = c.copy()
-    c_3[:, 0] += np.max(c_2[:, 0]) + 1
-    c_3[:, 2] += np.random.randint(10, 15)
-    # c_2 = []
-    # for _ in range(0, n // 10, 2):
-    #     n += 1
-    #     c_df = generate_random_bezier_curve(n)
-    #     c_2.append(c_df)
-    #     c_df = c_df.copy()
-    #     c_df[:, 0] = c_df[:, 0] + 1
-    #     c_df[:, 1:] += np.random.randint(10, 12.5)
-    #     c_2.append(c_df)
-    #     n += 1
-    # c_2 = np.concatenate(c_2)
+        c_3 = c.copy()
+        c_3[:, 0] += np.max(c_2[:, 0]) + 1
+        c_3[:, 2] += np.random.randint(10, 15)
+        c = np.vstack((c, c_2, c_3))
+    else:
+        c_2 = c.copy()
+        c_2[:, 0] += np.max(c[:, 0]) + 1
+        c_2[:, 1] += np.random.randint(10, 25)
 
-    return np.vstack((c, c_2, c_3))
+        c = np.vstack((c, c_2))
+
+    return c

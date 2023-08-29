@@ -176,10 +176,11 @@ class FilamentSimulateDataset(BasicDataset):
         df_idx: Normalize zero-out output for standardized dummy.
     """
 
-    def __init__(self, sample_count=50, **kwargs):
+    def __init__(self, sample_count=50, line=True, **kwargs):
         super(FilamentSimulateDataset, self).__init__(**kwargs)
 
         self.sample_count = sample_count
+        self.line = line
 
         self.VD = PatchDataSet(
             max_number_of_points=self.max_point_in_patch,
@@ -200,7 +201,10 @@ class FilamentSimulateDataset(BasicDataset):
             self.temp = "temp_test"
 
         # Simulate filament dataset
-        coord_file = generate_bezier_curve_dataset(n=self.sample_count)
+        if self.line:
+            coord_file = generate_bezier_curve_dataset(n=self.sample_count, ds_type="line")
+        else:
+            coord_file = generate_bezier_curve_dataset(n=self.sample_count, ds_type="curve")
 
         # Pre-process coord and image data also, if exist remove duplicates
         coord, _ = preprocess_data(coord=coord_file)
@@ -235,24 +239,25 @@ class FilamentSimulateDataset(BasicDataset):
                     )
             coord = np.concatenate(df_coord)
 
-            # Jiggling
-            coord[:, 1:] = coord[:, 1:] + np.random.normal(
-                0, np.random.random(len(coord)).reshape(-1, 1) * 0.5, (len(coord), 3)
-            )
+        # Jiggling
+        coord[:, 1:] = coord[:, 1:] + np.random.normal(
+            0, np.random.random(len(coord)).reshape(-1, 1) * 0.25, (len(coord), 3)
+        )
 
-            coord[:, 1:] = coord[:, 1:] / pc_median_dist(coord[:, 1:], True)
+        coord[:, 1:] = coord[:, 1:] / pc_median_dist(coord[:, 1:], True)
 
-        if self.train:
-            coords_idx, df_idx, graph_idx, output_idx, _ = self.VD.patched_dataset(
-                coord=coord, mesh=2, random=True
-            )
-        else:
-            coords_idx, df_idx, graph_idx, output_idx, _ = self.VD.patched_dataset(
-                coord=coord, mesh=2
-            )
-
-        # Output edge_f,   node_f, graph,     node_idx,   node_class
-        return coords_idx, df_idx, graph_idx, output_idx, df_idx
+        return coord
+        # if self.train:
+        #     coords_idx, df_idx, graph_idx, output_idx, _ = self.VD.patched_dataset(
+        #         coord=coord, mesh=2, random=True
+        #     )
+        # else:
+        #     coords_idx, df_idx, graph_idx, output_idx, _ = self.VD.patched_dataset(
+        #         coord=coord, mesh=2
+        #     )
+        #
+        # # Output edge_f,   node_f, graph,     node_idx,   node_class
+        # return coords_idx, df_idx, graph_idx, output_idx, df_idx
 
 
 class FilamentDataset(BasicDataset):
@@ -771,15 +776,15 @@ def build_dataset(
     """
     Wrapper for DataLoader
 
-    Function that wraps all data loader and outputs only one asked for depending
+    Function that wraps all data loaders and outputs only one asked for depending
     on a dataset
 
     Args:
-        dataset_type (str):  Ask to recognize and process the dataset.
+        dataset_type (str): Ask to recognize and process the dataset.
         dirs (list): Ask for a list with the directory given as [train, test].
-        max_points_per_patch (int):  Max number of points per patch.
+        max_points_per_patch (int): Max number of points per patch.
         downscale (None, float): Overweight downscale factor
-        benchmark (bool): If True construct data for benchmark.er
+        benchmark (bool): If True construct data for benchmark
 
     Returns:
         Tuple[torch.DataLoader, torch.DataLoader]: Output DataLoader with
@@ -793,12 +798,30 @@ def build_dataset(
                     dl_train = FilamentSimulateDataset(
                         sample_count=int(dataset_type[2]),
                         patch_if=max_points_per_patch,
+                        line=True,
                         train=True,
                         downscale=downscale,
                     )
                 dl_test = FilamentSimulateDataset(
                     sample_count=int(dataset_type[3]),
                     patch_if=max_points_per_patch,
+                    line=True,
+                    train=False,
+                    downscale=downscale,
+                )
+            elif dataset_type[1] == "membrane2d":
+                if not benchmark:
+                    dl_train = FilamentSimulateDataset(
+                        sample_count=int(dataset_type[2]),
+                        patch_if=max_points_per_patch,
+                        line=False,
+                        train=True,
+                        downscale=downscale,
+                    )
+                dl_test = FilamentSimulateDataset(
+                    sample_count=int(dataset_type[3]),
+                    patch_if=max_points_per_patch,
+                    line=False,
                     train=False,
                     downscale=downscale,
                 )

@@ -52,7 +52,7 @@ def train_dist(
     Wrapper for DIST or C_DIST models.
 
     Args:
-        dataset_type (str):
+        dataset_type (str): Type of input dataset.
         train_dataloader (torch.DataLoader): DataLoader with train dataset.
         test_dataloader (torch.DataLoader): DataLoader with test dataset.
         model_structure (dict): Dictionary with model setting.
@@ -191,7 +191,7 @@ def train_dist(
         del save_train
 
     """Build trainer"""
-    if dataset_type in ["filament", "MT", "Mem"] or dataset_type[1] == "filament":
+    if dataset_type in ["filament", "MT", "Mem"] or dataset_type[1] in ["filament", "membrane2d"]:
         dataset_type = 2
     else:
         dataset_type = 4
