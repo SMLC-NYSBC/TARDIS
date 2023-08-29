@@ -23,7 +23,7 @@ from tardis_pytorch.dist_pytorch.datasets.patches import PatchDataSet
 from tardis_pytorch.dist_pytorch.dist import build_dist_network
 from tardis_pytorch.dist_pytorch.utils.build_point_cloud import BuildPointCloud
 from tardis_pytorch.dist_pytorch.utils.segment_point_cloud import PropGreedyGraphCut
-from tardis_pytorch.spindletorch.data_processing.draw_mask import draw_semantic_membrane
+from tardis_pytorch.spindletorch.data_processing.draw_mask import draw_semantic_membrane, draw_instances
 from tardis_pytorch.spindletorch.data_processing.stitch import StitchImages
 from tardis_pytorch.spindletorch.data_processing.trim import trim_with_stride
 from tardis_pytorch.spindletorch.datasets.dataloader import PredictionDataset
@@ -770,7 +770,7 @@ class DataSetPredictor:
             )
 
             # Build patches dataset
-            if self.predict in ["Filament", "Microtubule"]:
+            if self.predict in ["Filament", "Microtubule", "Membrane2D"]:
                 self.coords_df, _, self.output_idx, _ = self.patch_pc.patched_dataset(
                     coord=self.pc_ld / pc_median_dist(self.pc_ld, True)
                 )
@@ -825,16 +825,18 @@ class DataSetPredictor:
                 )
 
             try:
-                if self.predict in ["Filament", "Membrane2D", "Microtubule"]:
+                if self.predict in ["Filament", "Microtubule"]:
                     sort = True
+                    prune = 5
                 else:
                     sort = False
+                    prune = 10
                 self.segments = self.GraphToSegment.patch_to_segment(
                     graph=self.graphs,
                     coord=self.pc_ld,
                     idx=self.output_idx,
                     sort=sort,
-                    prune=5,
+                    prune=prune,
                 )
             except:
                 self.segments = None
@@ -934,10 +936,7 @@ class DataSetPredictor:
                         self.filter_splines(segments=self.segments),
                         delimiter=",",
                     )
-            elif (
-                self.output_format.endswith(("mrcM", "tifM", "amM", "ply"))
-                and self.predict == "Membrane"
-            ):
+            elif self.output_format.endswith(("mrcM", "tifM", "amM", "ply")):
                 if self.output_format.endswith("ply"):
                     to_ply(
                         data=self.segments,
@@ -946,12 +945,20 @@ class DataSetPredictor:
                         ),
                     )
                 else:
-                    self.mask_semantic = draw_semantic_membrane(
-                        mask_size=self.org_shape,
-                        coordinate=self.segments,
-                        pixel_size=self.px,
-                        spline_size=60,
-                    )
+                    if self.predict in ["Membrane", "Membrane2D"]:
+                        self.mask_semantic = draw_semantic_membrane(
+                            mask_size=self.org_shape,
+                            coordinate=self.segments,
+                            pixel_size=self.px,
+                            spline_size=60,
+                        )
+                    else:
+                        self.mask_semantic = draw_instances(
+                            mask_size=self.org_shape,
+                            coordinate=self.segments,
+                            pixel_size=self.px,
+                            circle_size=125,
+                        )
                     self._debug(id_name=i, debug_id="instance_mask")
 
                     if self.output_format.endswith("mrcM"):

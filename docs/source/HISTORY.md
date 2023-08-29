@@ -1,8 +1,24 @@
 # History
+
 <details open>
-    <summary><b>0.1.0-RC3 (2023-08-25)</b></summary>
+    <summary><b>0.1.0 (2023-08-XX)</b></summary>
 
 *This intends to be a release submitted with Nature Method 2023*
+
+* **General changes:**
+    * *General*:
+        * Documentation update
+
+* **DIST module changes:**
+    * *Optimize*:
+        * Update DIST model for 2D and 3D membrane
+    * *BugFix*:
+        * Fixed few issues in the membrane segmentation pipeline
+
+</details>
+
+<details>
+    <summary><b>0.1.0-RC3 (2023-08-25)</b></summary>
 
 * **General changes:**
     * *General*:
