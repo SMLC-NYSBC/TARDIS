@@ -18,6 +18,10 @@ from tardis_pytorch.utils.errors import TardisError
 from tardis_pytorch.utils.load_data import mrc_mode, mrc_write_header
 from tardis_pytorch.utils.spline_metric import reorder_segments_id
 from tardis_pytorch._version import version
+import shutil
+from io import StringIO
+import os
+import pyvista as pv
 
 
 class NumpyToAmira:
@@ -485,7 +489,7 @@ def to_am(data: np.ndarray, pixel_size: float, file_dir: str):
         f.write(BytesIO(bytes_data).getbuffer())
 
 
-def to_ply(data, file_dir):
+def to_stl(data, file_dir):
     """
     Save a point cloud as a PLY file.
 
@@ -493,32 +497,58 @@ def to_ply(data, file_dir):
         filename (str): The name of the PLY file to create.
         points (np.ndarray): A numpy array of shape [n, 4], where each row is [ID, X, Y, Z].
     """
-    n = len(data)
 
-    # Write header
-    with open(file_dir, "w") as f:
-        f.write("ply\n")
-        f.write("format ascii 1.0\n")
-        f.write(f"comment Created by TARDIS {version}\n")
-        f.write("comment Author by Robert Kiewisz & Tristan Bepler\n")
-        f.write(f"element vertex {n}\n")
-        f.write("property float x\n")
-        f.write("property float y\n")
-        f.write("property float z\n")
-        f.write(f"element edge {n - len(np.unique(data[:, 0])) + 1}\n")
-        f.write("property int vertex1\n")
-        f.write("property int vertex2\n")
-        f.write("end_header\n")
+    def save_multiblock_stl(multiblock, filename):
 
-        # Write vertex elements
-        for i in range(n):
-            f.write(f"{data[i, 1]} {data[i, 2]} {data[i, 3]}\n")
+        names = multiblock.keys()
+        oname, ext = os.path.splitext(filename)
+        assert ext == '.stl'
 
-        # Write edge elements (assuming points are connected in the order they appear)
-        for i in range(n):
-            try:
-                if data[i + 1, 0] == data[i, 0]:
-                    f.write(f"{i} {i + 1}\n")
-            except IndexError:
-                pass
-        f.write("\n")
+        # each individual stl file saved (output_filenames)
+        ofiles = [f'{oname}_{ii}' + '.stl' for ii in range(len(names))]
+
+        for ii, subpart in enumerate(multiblock):
+            subpart.save(ofiles[ii], binary=False)
+            change_first_line_of_file(ofiles[ii],
+                                      f'solid {names[ii]}')  # basically changes "solid" to "solid <solid_name>"
+
+        # merge files together
+        total_stl = ''
+        for fn in ofiles:
+            f = open(fn)
+            total_stl += f.read()
+            f.close()
+
+        # writes total stl file
+        with open(oname + '.stl', 'w') as f:
+            f.write(total_stl)
+
+        # deletes previously written stl files
+        for fn in ofiles:
+            os.remove(fn)
+
+        return
+
+    def change_first_line_of_file(filename, new_first_line):
+
+        fr = open(filename, 'r')
+        first_line = fr.readline()
+        fr.close()
+        first_line_len = len(first_line)
+
+        new_first_line_len = len(new_first_line)
+        spaces_num = first_line_len - new_first_line_len
+        new_first_line = new_first_line + ' ' * (spaces_num - 1) + '\n'
+        fw = StringIO(new_first_line)
+        fr = open(filename, 'r+')
+        shutil.copyfileobj(fw, fr)
+        fr.close()
+        fw.close()
+        return
+
+    cloud = pv.MultiBlock()
+    for i in np.unique(data[:, 0]):
+        cloud.append(pv.PolyData(data[np.where(data[:, 0] == i)[0], 1:]).delaunay_2d(alpha=25),
+                     f'{i}')
+
+    save_multiblock_stl(cloud, file_dir)

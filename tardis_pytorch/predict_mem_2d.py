@@ -63,10 +63,6 @@ warnings.simplefilter("ignore", UserWarning)
             "am_None",
             "mrc_None",
             "tif_None",
-            "am_ply",
-            "mrc_ply",
-            "tif_ply",
-            "None_ply",
         ]
     ),
     help="Type of output files. The First optional output file is the binary mask "

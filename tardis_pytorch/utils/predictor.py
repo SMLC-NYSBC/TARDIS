@@ -35,7 +35,7 @@ from tardis_pytorch.spindletorch.utils.utils import scale_image
 from tardis_pytorch.utils.aws import get_weights_aws
 from tardis_pytorch.utils.device import get_device
 from tardis_pytorch.utils.errors import TardisError
-from tardis_pytorch.utils.export_data import NumpyToAmira, to_am, to_mrc, to_ply
+from tardis_pytorch.utils.export_data import NumpyToAmira, to_am, to_mrc, to_stl
 from tardis_pytorch.utils.load_data import import_am, ImportDataFromAmira, load_image
 from tardis_pytorch.utils.logo import print_progress_bar, TardisLogo
 from tardis_pytorch.utils.normalization import MeanStdNormalize, RescaleNormalize
@@ -862,44 +862,27 @@ class DataSetPredictor:
             )
 
             """Save as .am"""
-            if self.output_format.endswith(("amSG", "ply")) and self.predict in [
+            if self.output_format.endswith("amSG") and self.predict in [
                 "Filament",
                 "Microtubule",
             ]:
-                if self.output_format.endswith("amSG"):
-                    self.amira_file.export_amira(
-                        coords=self.segments,
-                        file_dir=join(
-                            self.am_output, f"{i[:-self.in_format]}_SpatialGraph.am"
-                        ),
-                        labels=["TardisPrediction"],
-                    )
-                else:
-                    to_ply(
-                        data=self.segments,
-                        file_dir=join(
-                            self.am_output, f"{i[:-self.in_format]}_SpatialGraph.ply"
-                        ),
-                    )
+                self.amira_file.export_amira(
+                    coords=self.segments,
+                    file_dir=join(
+                        self.am_output, f"{i[:-self.in_format]}_SpatialGraph.am"
+                    ),
+                    labels=["TardisPrediction"],
+                )
 
                 segments_filter = self.filter_splines(segments=self.segments)
-                if self.output_format.endswith("amSG"):
-                    self.amira_file.export_amira(
-                        coords=segments_filter,
-                        file_dir=join(
-                            self.am_output,
-                            f"{i[:-self.in_format]}_SpatialGraph_filter.am",
-                        ),
-                        labels=["TardisPrediction"],
-                    )
-                else:
-                    to_ply(
-                        data=segments_filter,
-                        file_dir=join(
-                            self.am_output,
-                            f"{i[:-self.in_format]}_SpatialGraph_filter.ply",
-                        ),
-                    )
+                self.amira_file.export_amira(
+                    coords=segments_filter,
+                    file_dir=join(
+                        self.am_output,
+                        f"{i[:-self.in_format]}_SpatialGraph_filter.am",
+                    ),
+                    labels=["TardisPrediction"],
+                )
 
                 if self.amira_check and self.predict == "Microtubule":
                     dir_amira_file = join(
@@ -939,52 +922,50 @@ class DataSetPredictor:
                         self.filter_splines(segments=self.segments),
                         delimiter=",",
                     )
-            elif self.output_format.endswith(("mrcM", "tifM", "amM", "ply")):
-                if self.output_format.endswith("ply"):
-                    to_ply(
-                        data=self.segments,
-                        file_dir=join(
-                            self.am_output, f"{i[:-self.in_format]}_instance.ply"
-                        ),
+            elif self.output_format.endswith(("mrcM", "tifM", "amM")):
+                if self.predict in ["Membrane", "Membrane2D"]:
+                    self.mask_semantic = draw_semantic_membrane(
+                        mask_size=self.org_shape,
+                        coordinate=self.segments,
+                        pixel_size=self.px,
+                        spline_size=60,
                     )
                 else:
-                    if self.predict in ["Membrane", "Membrane2D"]:
-                        self.mask_semantic = draw_semantic_membrane(
-                            mask_size=self.org_shape,
-                            coordinate=self.segments,
-                            pixel_size=self.px,
-                            spline_size=60,
-                        )
-                    else:
-                        self.mask_semantic = draw_instances(
-                            mask_size=self.org_shape,
-                            coordinate=self.segments,
-                            pixel_size=self.px,
-                            circle_size=125,
-                        )
-                    self._debug(id_name=i, debug_id="instance_mask")
+                    self.mask_semantic = draw_instances(
+                        mask_size=self.org_shape,
+                        coordinate=self.segments,
+                        pixel_size=self.px,
+                        circle_size=125,
+                    )
+                self._debug(id_name=i, debug_id="instance_mask")
 
-                    if self.output_format.endswith("mrcM"):
-                        to_mrc(
-                            data=self.mask_semantic,
-                            file_dir=join(
-                                self.am_output, f"{i[:-self.in_format]}_instance.mrc"
-                            ),
-                            pixel_size=self.px,
-                        )
-                    elif self.output_format.endswith("tifM"):
-                        tif.imwrite(
-                            join(self.am_output, f"{i[:-self.in_format]}_instance.tif"),
-                            self.mask_semantic,
-                        )
-                    elif self.output_format.endswith("amM"):
-                        to_am(
-                            data=self.mask_semantic,
-                            file_dir=join(
-                                self.am_output, f"{i[:-self.in_format]}_instance.am"
-                            ),
-                            pixel_size=self.px,
-                        )
+                if self.output_format.endswith("mrcM"):
+                    to_mrc(
+                        data=self.mask_semantic,
+                        file_dir=join(
+                            self.am_output, f"{i[:-self.in_format]}_instance.mrc"
+                        ),
+                        pixel_size=self.px,
+                    )
+                elif self.output_format.endswith("tifM"):
+                    tif.imwrite(
+                        join(self.am_output, f"{i[:-self.in_format]}_instance.tif"),
+                        self.mask_semantic,
+                    )
+                elif self.output_format.endswith("amM"):
+                    to_am(
+                        data=self.mask_semantic,
+                        file_dir=join(
+                            self.am_output, f"{i[:-self.in_format]}_instance.am"
+                        ),
+                        pixel_size=self.px,
+                    )
+            elif self.output_format.endswith("stl"):
+                if self.predict == "Membrane":
+                    to_stl(data=self.segments,
+                           file_dir=join(
+                            self.am_output, f"{i[:-self.in_format]}.stl"
+                        ))
 
             """Clean-up temp dir"""
             clean_up(dir=self.dir)
