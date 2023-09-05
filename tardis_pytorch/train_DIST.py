@@ -298,9 +298,9 @@ def main(
             build_test_dataset(dataset_dir=dir, dataset_no=no_dataset, stanford=True)
         else:
             build_test_dataset(dataset_dir=dir, dataset_no=no_dataset)
-    else:
-        if dataset_type.startswith("simulate_"):
-            dataset_type = dataset_type.split("_")
+
+    if dataset_type.startswith("simulate_"):
+        dataset_type = dataset_type.split("_")
     print(dataset_type)
     sys.exit()
 
