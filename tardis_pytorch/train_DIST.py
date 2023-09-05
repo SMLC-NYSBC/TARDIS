@@ -301,6 +301,8 @@ def main(
     else:
         if dataset_type.startswith("simulate_"):
             dataset_type = dataset_type.split("_")
+    print(dataset_type)
+    sys.exit()
 
     """Pre-setting for building DataLoader"""
     # Check for general dataset
