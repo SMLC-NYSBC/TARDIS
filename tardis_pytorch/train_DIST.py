@@ -16,6 +16,7 @@ from typing import Union
 
 import click
 import torch
+from tardis_pytorch.utils.ota_update import ota_update
 
 from tardis_pytorch.dist_pytorch.datasets.dataloader import build_dataset
 from tardis_pytorch.dist_pytorch.train import train_dist
@@ -233,6 +234,8 @@ def main(
     epochs: int,
     early_stop: int,
 ):
+    ota_update()  # Run OTA-Update
+
     """Initialize TARDIS progress bar"""
     tardis_logo = TardisLogo()
     tardis_logo(title="DIST training module")

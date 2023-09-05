@@ -30,7 +30,7 @@ def get_benchmark_aws() -> dict:
         dict: Dictionary with keys[network name] and values[list of scores]
     """
     network_benchmark = requests.get(
-        "https://tardis-weigths.s3.amazonaws.com/" "benchmark/best_scores.json"
+        "https://tardis-weigths.s3.amazonaws.com/benchmark/best_scores.json"
     )
 
     if network_benchmark.status_code == 200:
@@ -232,6 +232,83 @@ def aws_check_with_temp(model_name: list) -> bool:
             aws = dict(weight.headers)
         except:
             print("Network cannot be checked! Connect to the internet next time!")
+            return True  # Found saved weight but cannot connect to aws
+
+    try:
+        aws_data = aws["Last-Modified"]
+    except KeyError:
+        aws_data = aws["Date"]
+
+    try:
+        save_data = save["Last-Modified"]
+    except KeyError:
+        save_data = save["Date"]
+
+    if save_data == aws_data:
+        return True  # Up-to data weight, load from local dir
+    else:
+        return False  # There is new version on aws, download from aws
+
+
+def aws_check_pkg_with_temp() -> bool:
+    """
+    Module to check aws up-to data status for OTA-Update.
+
+    Quick check if local pkg file exist and is up-to data with aws server.
+
+    Returns:
+        bool: If True, local file is up-to-date.
+    """
+    """Check if temp dir exist"""
+    if not isdir(join(expanduser("~"), ".tardis_pytorch")):
+        return False  # No pkg, first Tardis run, download from aws
+
+    """Check for stored file header in ~/.tardis_pytorch/pkg_header.json."""
+    if not isfile(
+        join(
+            expanduser("~"),
+            ".tardis_pytorch/tardis_pytorch-x.x.x-py3-none-any.whl",
+        )
+    ):
+        return False  # PKG was never download, download from aws
+    else:
+        if not isfile(
+            join(
+                expanduser("~"),
+                ".tardis_pytorch/pkg_header.json",
+            )
+        ):
+            return False  # PKG found but no header, download from aws
+        else:
+            try:
+                save = json.load(
+                    open(
+                        join(
+                            expanduser("~"),
+                            ".tardis_pytorch/pkg_header.json",
+                        )
+                    )
+                )
+            except:
+                save = None
+
+    """Compare stored file with file stored on aws"""
+    if save is None:
+        print(
+            "Tardis_pytorch pkg cannot be checked! Connect to the internet next time!"
+        )
+        return False  # Error loading json, download from aws
+    else:
+        try:
+            pkg = requests.get(
+                "https://tardis-weigths.s3.amazonaws.com/"
+                "tardis_pytorch/tardis_pytorch-x.x.x-py3-none-any.whl"
+            )
+            aws = dict(pkg.headers)
+        except:
+            print(
+                "Tardis_pytorch pkg cannot be checked! Connect to the internet next time!"
+            )
             return True  # Found saved weight but cannot connect to aws
 
     try:

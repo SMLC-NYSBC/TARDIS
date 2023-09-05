@@ -7,44 +7,57 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
-import click
-from tardis_pytorch._version import version
+
+import json
+from os.path import expanduser, join
+import subprocess
+import requests
 from tardis_pytorch.utils.logo import TardisLogo
-from tardis_pytorch.tardis_helper.helper_func import tardis_helper
+
+from tardis_pytorch.utils.aws import aws_check_pkg_with_temp
+import sys
 
 
-@click.command()
-@click.option(
-    "-f",
-    "--func",
-    default=None,
-    type=click.Choice(
-        [
-            "csv_am",
-            "am_csv",
-        ]
-    ),
-    help="Function name.",
-    show_default=True,
-)
-@click.option(
-    "-dir",
-    "--dir_",
-    default=None,
-    type=str,
-    help="Directory to files.",
-    show_default=True,
-)
-@click.version_option(version=version)
-def main(func=None, dir_=None):
-    if func is not None and dir_ is not None:
-        tardis_helper(func, dir_)
-    else:
+def ota_update():
+    # Check OTA-Update
+    ota_status = aws_check_pkg_with_temp()
+
+    if not ota_status:
+        # Download OTA-Update
+        py_pkg = requests.get(
+            "https://tardis-weigths.s3.amazonaws.com/"
+            "tardis_pytorch/tardis_pytorch-x.x.x-py3-none-any.whl"
+        )
+
+        # Save OTA-Update
+        with open(
+            join(
+                expanduser("~"), ".tardis_pytorch/tardis_pytorch-x.x.x-py3-none-any.whl"
+            ),
+            "wb",
+        ) as f:
+            f.write(py_pkg.content)
+
+        with open(join(expanduser("~"), ".tardis_pytorch/pkg_header.json"), "w") as f:
+            json.dump(dict(py_pkg.headers), f)
+
+        # Installed, uninstall old package version
+        subprocess.run(["pip", "uninstall", "-y", "tardis_pytorch"])
+        subprocess.run(
+            [
+                "pip",
+                "install",
+                join(
+                    expanduser("~"),
+                    ".tardis_pytorch/" "tardis_pytorch-x.x.x-py3-none-any.whl",
+                ),
+            ]
+        )
         main_logo = TardisLogo()
         main_logo(
             title="| Transforms And Rapid Dimensionless Instance Segmentation",
-            text_0="WELCOME to TARDIS!",
-            text_1="TARDIS is fully automatic segmentation software no need for model training!",
+            text_0="TARDIS_pytorch was updated via OTA-Update!",
+            text_1="Please restart your previous operation.",
             text_3="Contact developers if segmentation of your organelle is not supported! "
             "(rkiewisz@nysbc.org | tbepler@nysbc.org).",
             text_4="Join Slack community: https://bit.ly/41hTCaP",
@@ -54,7 +67,4 @@ def main(func=None, dir_=None):
             text_10="To predict 3D membrane semantic and instances:",
             text_11="    tardis_mem . | OR | tardis_mem --help       tardis_mem2d . | OR | tardis_mem2d --help",
         )
-
-
-if __name__ == "__main__":
-    main()
+        sys.exit()

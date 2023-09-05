@@ -15,6 +15,7 @@ from typing import Optional
 
 import click
 import numpy as np
+from tardis_pytorch.utils.ota_update import ota_update
 
 from tardis_pytorch.utils.errors import TardisError
 from tardis_pytorch.utils.export_data import NumpyToAmira
@@ -96,6 +97,8 @@ def main(
     """
     MAIN MODULE FOR COMPARING SPLINES (AKA MTS) WITH AMIRA OUTPUT
     """
+    ota_update()  # Run OTA-Update
+
     """Initial Setup"""
     if debug:
         str_debug = "<Debugging Mode>"

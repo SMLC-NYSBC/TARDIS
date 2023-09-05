@@ -12,6 +12,7 @@ import warnings
 from os import getcwd
 
 import click
+from tardis_pytorch.utils.ota_update import ota_update
 
 from tardis_pytorch.utils.predictor import DataSetPredictor
 from tardis_pytorch._version import version
@@ -161,6 +162,8 @@ def main(
     """
     MAIN MODULE FOR PREDICTION GENERAL FILAMENT WITH TARDIS-PYTORCH
     """
+    ota_update()  # Run OTA-Update
+
     if checkpoint is None:
         checkpoint = [None, None]
     else:
@@ -169,6 +172,7 @@ def main(
     predictor = DataSetPredictor(
         predict=structure_type,
         dir_=dir,
+        binary_mask=True,
         checkpoint=checkpoint,
         feature_size=0,
         output_format="None_" + output_format,
