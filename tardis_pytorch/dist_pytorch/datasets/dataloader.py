@@ -246,9 +246,10 @@ class FilamentSimulateDataset(BasicDataset):
             0, np.random.random(len(coord)).reshape(-1, 1) * 0.25, (len(coord), 3)
         )
 
-        print(scale[1], pc_median_dist(coord[:, 1:], True))
+        # Normalize distance
         coord[:, 1:] = coord[:, 1:] / pc_median_dist(coord[:, 1:], True)
-        print(pc_median_dist(coord[:, 1:], True))
+
+        # Patch dataset
         if self.train:
             coords_idx, df_idx, graph_idx, output_idx, _ = self.VD.patched_dataset(
                 coord=coord, mesh=2, random=True
