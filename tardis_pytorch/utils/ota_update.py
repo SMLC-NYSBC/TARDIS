@@ -24,10 +24,13 @@ def ota_update():
 
     if not ota_status:
         # Download OTA-Update
-        py_pkg = requests.get(
-            "https://tardis-weigths.s3.amazonaws.com/"
-            "tardis_pytorch/tardis_pytorch-x.x.x-py3-none-any.whl"
-        )
+        try:
+            py_pkg = requests.get(
+                "https://tardis-weigths.s3.amazonaws.com/"
+                "tardis_pytorch/tardis_pytorch-x.x.x-py3-none-any.whl"
+            )
+        except:
+            return
 
         # Save OTA-Update
         with open(
