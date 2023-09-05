@@ -78,6 +78,7 @@ class DataSetPredictor:
         self,
         predict: str,
         dir_: str,
+        binary_mask: bool,
         output_format: str,
         patch_size: int,
         cnn_threshold: float,
@@ -126,6 +127,8 @@ class DataSetPredictor:
         self.rotate = predict_with_rotation
 
         # Global flags
+        self.binary_mask = binary_mask
+        self.predict_instance = instances
         self.device = get_device(device_)
         self.debug = debug
 
@@ -134,11 +137,6 @@ class DataSetPredictor:
             str_debug = " <Debugging Mode>"
         else:
             str_debug = ""
-
-        if instances:
-            self.predict_instance = True
-        else:
-            self.predict_instance = False
 
         # Initiate log output
         self.tardis_progress = TardisLogo()
@@ -275,7 +273,7 @@ class DataSetPredictor:
 
         if NN in ["Filament", "Microtubule"]:
             # Build CNN network with loaded pre-trained weights
-            if not self.output_format.startswith("None"):
+            if not self.output_format.startswith("None") or not self.binary_mask:
                 self.cnn = Predictor(
                     checkpoint=self.checkpoint[0],
                     network="fnet",
@@ -298,7 +296,7 @@ class DataSetPredictor:
         elif NN in ["Membrane2D", "Membrane"]:
             # Build CNN network with loaded pre-trained weights
             if NN == "Membrane2D":
-                if not self.output_format.startswith("None"):
+                if not self.output_format.startswith("None") or not self.binary_mask:
                     self.cnn = Predictor(
                         network="fnet",
                         subtype="32",
@@ -318,7 +316,7 @@ class DataSetPredictor:
                         device=self.device,
                     )
             else:
-                if not self.output_format.startswith("None"):
+                if not self.output_format.startswith("None") or self.binary_mask:
                     self.cnn = Predictor(
                         checkpoint=self.checkpoint[0],
                         network="fnet",
@@ -371,7 +369,7 @@ class DataSetPredictor:
             )
 
         # Normalize image histogram
-        if not self.output_format.startswith("None"):
+        if not self.output_format.startswith("None") or not self.binary_mask:
             self.image = self.normalize(self.mean_std(self.image)).astype(np.float32)
 
             # Check image structure
@@ -655,7 +653,7 @@ class DataSetPredictor:
                 text_7=f"Current Task: Sub-dividing images for {self.patch_size} size",
             )
 
-            if not self.output_format.startswith("None"):
+            if not self.output_format.startswith("None") or not self.binary_mask:
                 # Cut image for fix patch size and normalizing image pixel size
                 trim_with_stride(
                     image=self.image,

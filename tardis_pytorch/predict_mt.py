@@ -29,6 +29,14 @@ warnings.simplefilter("ignore", UserWarning)
     show_default=True,
 )
 @click.option(
+    "-ms",
+    "--mask",
+    default=False,
+    type=bool,
+    help="Define if you input tomograms images or binary mask with pre segmented microtubules.",
+    show_default=True,
+)
+@click.option(
     "-ch",
     "--checkpoint",
     default="None|None",
@@ -217,6 +225,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.version_option(version=version)
 def main(
     dir: str,
+    mask: bool,
     checkpoint: str,
     output_format: str,
     patch_size: int,
@@ -236,8 +245,7 @@ def main(
     """
     MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
     """
-    out = output_format.split("_")
-    if out[1] == "None":
+    if output_format.split("_")[1] == "None":
         instances = False
     else:
         instances = True
@@ -258,6 +266,7 @@ def main(
     predictor = DataSetPredictor(
         predict="Microtubule",
         dir_=dir,
+        binary_mask=mask,
         feature_size=None,
         checkpoint=checkpoint,
         output_format=output_format,
