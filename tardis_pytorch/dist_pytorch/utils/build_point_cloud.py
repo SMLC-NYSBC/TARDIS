@@ -407,28 +407,36 @@ def generate_bezier_curve_dataset(n=50, ds_type="line"):
     Returns:
         ndarray: A concatenated set of 3D points representing the generated Bezier curves.
     """
-    c = np.concatenate(
+    # Generate lines
+    c_line = np.concatenate(
         [
             j
-            for j in [generate_random_bezier_curve(i, ds_type) for i in range(n // 2)]
+            for j in [generate_random_bezier_curve(i, "line") for i in range(n // 4)]
             if len(j) > 2
         ]
     )
 
-    if ds_type == "line":
-        c_2 = c.copy()
-        c_2[:, 0] += np.max(c[:, 0]) + 1
-        c_2[:, 1] += np.random.randint(10, 15)
+    c_2 = c_line.copy()
+    c_2[:, 0] += np.max(c_line[:, 0]) + 1
+    c_2[:, 1] += np.random.randint(10, 15)
 
-        c_3 = c.copy()
-        c_3[:, 0] += np.max(c_2[:, 0]) + 1
-        c_3[:, 2] += np.random.randint(10, 15)
-        c = np.vstack((c, c_2, c_3))
-    else:
-        c_2 = c.copy()
-        c_2[:, 0] += np.max(c[:, 0]) + 1
-        c_2[:, 1] += np.random.randint(10, 25)
+    c_3 = c_line.copy()
+    c_3[:, 0] += np.max(c_2[:, 0]) + 1
+    c_3[:, 2] += np.random.randint(10, 15)
+    c_line = np.vstack((c_line, c_2, c_3))
 
-        c = np.vstack((c, c_2))
+    c_circle = np.concatenate(
+        [
+            j
+            for j in [generate_random_bezier_curve(i, "curve") for i in range(n // 4)]
+            if len(j) > 2
+        ]
+    )
 
-    return c
+    c_2 = c_circle.copy()
+    c_2[:, 0] += np.max(c_circle[:, 0]) + 1
+    c_2[:, 1] += np.random.randint(10, 25)
+
+    c_circle = np.vstack((c_circle, c_2))
+
+    return np.vstack((c_line, c_circle))

@@ -242,7 +242,7 @@ class DataSetPredictor:
                 max_number_of_points=points_in_patch, graph=False
             )
 
-            if predict in ["Filament", "Microtubule", "Membrane2D"]:
+            if predict in ["Filament", "Microtubule"]:
                 self.GraphToSegment = PropGreedyGraphCut(
                     threshold=dist_threshold, connection=999999999, smooth=True
                 )
@@ -256,7 +256,7 @@ class DataSetPredictor:
                     distance_threshold=amira_compare_distance,
                     interaction_threshold=amira_inter_probability,
                 )
-            else:
+            elif predict in ["Membrane2D", "Membrane"]:
                 self.GraphToSegment = PropGreedyGraphCut(
                     threshold=dist_threshold, connection=999999999
                 )
@@ -962,10 +962,10 @@ class DataSetPredictor:
                     )
             elif self.output_format.endswith("stl"):
                 if self.predict == "Membrane":
-                    to_stl(data=self.segments,
-                           file_dir=join(
-                            self.am_output, f"{i[:-self.in_format]}.stl"
-                        ))
+                    to_stl(
+                        data=self.segments,
+                        file_dir=join(self.am_output, f"{i[:-self.in_format]}.stl"),
+                    )
 
             """Clean-up temp dir"""
             clean_up(dir=self.dir)

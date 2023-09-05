@@ -176,11 +176,10 @@ class FilamentSimulateDataset(BasicDataset):
         df_idx: Normalize zero-out output for standardized dummy.
     """
 
-    def __init__(self, sample_count=50, line=True, **kwargs):
+    def __init__(self, sample_count=50, **kwargs):
         super(FilamentSimulateDataset, self).__init__(**kwargs)
 
         self.sample_count = sample_count
-        self.line = line
 
         self.VD = PatchDataSet(
             max_number_of_points=self.max_point_in_patch,
@@ -201,14 +200,7 @@ class FilamentSimulateDataset(BasicDataset):
             self.temp = "temp_test"
 
         # Simulate filament dataset
-        if self.line:
-            coord_file = generate_bezier_curve_dataset(
-                n=self.sample_count, ds_type="line"
-            )
-        else:
-            coord_file = generate_bezier_curve_dataset(
-                n=self.sample_count, ds_type="curve"
-            )
+        coord_file = generate_bezier_curve_dataset(n=self.sample_count)
 
         # Pre-process coord and image data also, if exist remove duplicates
         coord, _ = preprocess_data(coord=coord_file)
@@ -216,13 +208,19 @@ class FilamentSimulateDataset(BasicDataset):
         # Optional Down-sampling of simulated dataset
         if self.downscale is not None:
             scale = self.downscale.split("_")
+            if scale[1] == "random":
+                if scale[0] == "v":
+                    scale[1] = np.random.randint(1, 15)
+                else:
+                    scale[1] = np.random.randint(25, 100) / 100
+            else:
+                scale[1] = float(scale[1])
+
             if scale[0] == "v":
-                down_scale = VoxelDownSampling(
-                    voxel=float(scale[1]), labels=True, KNN=True
-                )
+                down_scale = VoxelDownSampling(voxel=scale[1], labels=True, KNN=True)
             else:
                 down_scale = RandomDownSampling(
-                    threshold=float(scale[1]), labels=True, KNN=True
+                    threshold=scale[1], labels=True, KNN=True
                 )
             coord = down_scale(coord)
 
@@ -248,8 +246,9 @@ class FilamentSimulateDataset(BasicDataset):
             0, np.random.random(len(coord)).reshape(-1, 1) * 0.25, (len(coord), 3)
         )
 
+        print(scale[1], pc_median_dist(coord[:, 1:], True))
         coord[:, 1:] = coord[:, 1:] / pc_median_dist(coord[:, 1:], True)
-
+        print(pc_median_dist(coord[:, 1:], True))
         if self.train:
             coords_idx, df_idx, graph_idx, output_idx, _ = self.VD.patched_dataset(
                 coord=coord, mesh=2, random=True
@@ -796,38 +795,19 @@ def build_dataset(
 
     if isinstance(dataset_type, list):
         if dataset_type[0] == "simulate":
-            if dataset_type[1] == "filament":
-                if not benchmark:
-                    dl_train = FilamentSimulateDataset(
-                        sample_count=int(dataset_type[2]),
-                        patch_if=max_points_per_patch,
-                        line=True,
-                        train=True,
-                        downscale=downscale,
-                    )
-                dl_test = FilamentSimulateDataset(
-                    sample_count=int(dataset_type[3]),
+            if not benchmark:
+                dl_train = FilamentSimulateDataset(
+                    sample_count=int(dataset_type[1]),
                     patch_if=max_points_per_patch,
-                    line=True,
-                    train=False,
+                    train=True,
                     downscale=downscale,
                 )
-            elif dataset_type[1] == "membrane2d":
-                if not benchmark:
-                    dl_train = FilamentSimulateDataset(
-                        sample_count=int(dataset_type[2]),
-                        patch_if=max_points_per_patch,
-                        line=False,
-                        train=True,
-                        downscale=downscale,
-                    )
-                dl_test = FilamentSimulateDataset(
-                    sample_count=int(dataset_type[3]),
-                    patch_if=max_points_per_patch,
-                    line=False,
-                    train=False,
-                    downscale=downscale,
-                )
+            dl_test = FilamentSimulateDataset(
+                sample_count=int(dataset_type[2]),
+                patch_if=max_points_per_patch,
+                train=False,
+                downscale=downscale,
+            )
     else:
         if dataset_type in ["filament", "MT", "Mem"]:
             if not benchmark:
