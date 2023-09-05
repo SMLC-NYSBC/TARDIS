@@ -185,6 +185,10 @@ Options:
                                   CNN model.
                                   [default: /local/dir/]
                                   
+  -ms, --mask BOOL                Define if you input tomograms images or binary 
+                                  mask with pre segmented microtubules.
+                                  [default: False]
+                                  
   -ch, --checkpoint TEXT          Optional list of pre-trained weights
                                   [default: None|None]
                                   
@@ -311,10 +315,14 @@ optional arguments:
   -dir, --dir TEXT                Directory with images for prediction with
                                   CNN model.  
                                   [default: /local/dir/]
-                                  
+
+  -ms, --mask BOOL                Define if you input tomograms images or binary 
+                                  mask with pre segmented microtubules.
+                                  [default: False]
+                                                      
   -ch, --checkpoint TEXT          Optional list of pre-trained weights
                                   [default: None|None]
-                                  
+                                   
   -out, --output_format [None_amSG|am_amSG|mrc_amSG|tif_amSG|None_mrcM|am_mrcM|
                          mrc_mrcM|tif_mrcM|None_tifM|am_tifM|mrc_tifM|tif_tifM|
                          None_mrcM|am_csv|mrc_csv|tif_csv|None_csv|am_None|mrc_None|
