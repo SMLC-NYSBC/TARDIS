@@ -499,28 +499,28 @@ def to_stl(data, file_dir):
     """
 
     def save_multiblock_stl(multiblock, filename):
-
         names = multiblock.keys()
         oname, ext = os.path.splitext(filename)
-        assert ext == '.stl'
+        assert ext == ".stl"
 
         # each individual stl file saved (output_filenames)
-        ofiles = [f'{oname}_{ii}' + '.stl' for ii in range(len(names))]
+        ofiles = [f"{oname}_{ii}" + ".stl" for ii in range(len(names))]
 
         for ii, subpart in enumerate(multiblock):
             subpart.save(ofiles[ii], binary=False)
-            change_first_line_of_file(ofiles[ii],
-                                      f'solid {names[ii]}')  # basically changes "solid" to "solid <solid_name>"
+            change_first_line_of_file(
+                ofiles[ii], f"solid {names[ii]}"
+            )  # basically changes "solid" to "solid <solid_name>"
 
         # merge files together
-        total_stl = ''
+        total_stl = ""
         for fn in ofiles:
             f = open(fn)
             total_stl += f.read()
             f.close()
 
         # writes total stl file
-        with open(oname + '.stl', 'w') as f:
+        with open(oname + ".stl", "w") as f:
             f.write(total_stl)
 
         # deletes previously written stl files
@@ -530,17 +530,16 @@ def to_stl(data, file_dir):
         return
 
     def change_first_line_of_file(filename, new_first_line):
-
-        fr = open(filename, 'r')
+        fr = open(filename, "r")
         first_line = fr.readline()
         fr.close()
         first_line_len = len(first_line)
 
         new_first_line_len = len(new_first_line)
         spaces_num = first_line_len - new_first_line_len
-        new_first_line = new_first_line + ' ' * (spaces_num - 1) + '\n'
+        new_first_line = new_first_line + " " * (spaces_num - 1) + "\n"
         fw = StringIO(new_first_line)
-        fr = open(filename, 'r+')
+        fr = open(filename, "r+")
         shutil.copyfileobj(fw, fr)
         fr.close()
         fw.close()
@@ -548,7 +547,9 @@ def to_stl(data, file_dir):
 
     cloud = pv.MultiBlock()
     for i in np.unique(data[:, 0]):
-        cloud.append(pv.PolyData(data[np.where(data[:, 0] == i)[0], 1:]).delaunay_2d(alpha=25),
-                     f'{i}')
+        cloud.append(
+            pv.PolyData(data[np.where(data[:, 0] == i)[0], 1:]).delaunay_2d(alpha=25),
+            f"{i}",
+        )
 
     save_multiblock_stl(cloud, file_dir)
