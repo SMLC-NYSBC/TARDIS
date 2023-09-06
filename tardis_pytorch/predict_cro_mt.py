@@ -18,7 +18,6 @@ from typing import Optional
 import click
 import numpy as np
 import tifffile.tifffile as tif
-from tardis_pytorch.utils.ota_update import ota_update
 
 from tardis_pytorch.dist_pytorch.datasets.patches import PatchDataSet
 from tardis_pytorch.dist_pytorch.utils.build_point_cloud import BuildPointCloud
@@ -175,7 +174,6 @@ def main(
     """
     !DEPRECIATED! MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
     """
-    ota_update()  # Run OTA-Update
 
     """Initial Setup"""
     if debug:

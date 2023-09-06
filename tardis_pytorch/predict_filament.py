@@ -12,7 +12,6 @@ import warnings
 from os import getcwd
 
 import click
-from tardis_pytorch.utils.ota_update import ota_update
 
 from tardis_pytorch.utils.predictor import DataSetPredictor
 from tardis_pytorch._version import version
@@ -197,8 +196,6 @@ def main(
     """
     MAIN MODULE FOR PREDICTION GENERAL FILAMENT WITH TARDIS-PYTORCH
     """
-    ota_update()  # Run OTA-Update
-
     out = output_format.split("_")
     if out[1] == "None":
         instances = False

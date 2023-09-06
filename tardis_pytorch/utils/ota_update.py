@@ -30,7 +30,7 @@ def ota_update():
                 "tardis_pytorch/tardis_pytorch-x.x.x-py3-none-any.whl"
             )
         except:
-            return
+            return "OTA-Up-to-Data"
 
         # Save OTA-Update
         with open(
@@ -71,3 +71,5 @@ def ota_update():
             text_11="    tardis_mem . | OR | tardis_mem --help       tardis_mem2d . | OR | tardis_mem2d --help",
         )
         sys.exit()
+    else:
+        return "OTA-Up-to-Data"

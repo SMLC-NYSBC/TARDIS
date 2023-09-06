@@ -42,6 +42,7 @@ from tardis_pytorch.utils.normalization import MeanStdNormalize, RescaleNormaliz
 from tardis_pytorch.utils.setup_envir import build_temp_dir, clean_up
 from tardis_pytorch.utils.spline_metric import FilterSpatialGraph, SpatialGraphCompare
 from tardis_pytorch._version import version
+from tardis_pytorch import ota
 
 # Pytorch CUDA optimization
 torch.backends.cudnn.benchmark = True
@@ -143,17 +144,17 @@ class DataSetPredictor:
         if self.predict_instance:
             if self.output_format.startswith("None"):
                 self.title = (
-                    f"Fully-automatic Instance {self.predict} segmentation module "
+                    f"Fully-automatic Instance {self.predict} segmentation module | {ota} "
                     f"{str_debug}"
                 )
             else:
                 self.title = (
-                    f"Fully-automatic Semantic-Instance {self.predict} segmentation module "
+                    f"Fully-automatic Semantic-Instance {self.predict} segmentation module | {ota} "
                     f"{str_debug}"
                 )
         else:
             self.title = (
-                f"Fully-automatic Semantic {self.predict} segmentation module "
+                f"Fully-automatic Semantic {self.predict} segmentation module | {ota} "
                 f"{str_debug}"
             )
 

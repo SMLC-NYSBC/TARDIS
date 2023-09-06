@@ -7,16 +7,13 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
-import sys
 import warnings
 from os import getcwd
 
 import click
-from tardis_pytorch.utils.ota_update import ota_update
 
 from tardis_pytorch.utils.predictor import DataSetPredictor
 from tardis_pytorch._version import version
-from tardis_pytorch.utils.errors import TardisError
 
 warnings.simplefilter("ignore", UserWarning)
 
@@ -162,8 +159,6 @@ def main(
     """
     MAIN MODULE FOR PREDICTION GENERAL FILAMENT WITH TARDIS-PYTORCH
     """
-    ota_update()  # Run OTA-Update
-
     if checkpoint is None:
         checkpoint = [None, None]
     else:

@@ -11,6 +11,7 @@ import click
 from tardis_pytorch._version import version
 from tardis_pytorch.utils.logo import TardisLogo
 from tardis_pytorch.tardis_helper.helper_func import tardis_helper
+from tardis_pytorch import ota
 
 
 @click.command()
@@ -42,7 +43,7 @@ def main(func=None, dir_=None):
     else:
         main_logo = TardisLogo()
         main_logo(
-            title="| Transforms And Rapid Dimensionless Instance Segmentation",
+            title=f"| Transforms And Rapid Dimensionless Instance Segmentation | {ota}",
             text_0="WELCOME to TARDIS!",
             text_1="TARDIS is fully automatic segmentation software no need for model training!",
             text_3="Contact developers if segmentation of your organelle is not supported! "

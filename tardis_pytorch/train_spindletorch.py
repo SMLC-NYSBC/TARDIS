@@ -15,7 +15,6 @@ from typing import Optional
 
 import click
 import torch
-from tardis_pytorch.utils.ota_update import ota_update
 from torch.utils.data import DataLoader
 
 from tardis_pytorch.spindletorch.data_processing.build_dataset import (
@@ -249,8 +248,6 @@ def main(
     """
     MAIN MODULE FOR TRAINING CNN UNET/RESUNET/UNET3PLUS MODELS
     """
-    ota_update()  # Run OTA-Update
-
     """Initialize TARDIS progress bar"""
     tardis_logo = TardisLogo()
     tardis_logo(title="CNN training module")

@@ -15,7 +15,6 @@ import click
 from tardis_pytorch.utils.predictor import DataSetPredictor
 from tardis_pytorch.utils.errors import TardisError
 from tardis_pytorch._version import version
-from tardis_pytorch.utils.ota_update import ota_update
 
 warnings.simplefilter("ignore", UserWarning)
 
@@ -246,8 +245,6 @@ def main(
     """
     MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
     """
-    ota_update()  # Run OTA-Update
-
     if output_format.split("_")[1] == "None":
         instances = False
     else:
