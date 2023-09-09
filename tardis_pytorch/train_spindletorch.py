@@ -258,7 +258,7 @@ def main(
     TEST_IMAGE_DIR = join(dir, "test", "imgs")
     TEST_MASK_DIR = join(dir, "test", "masks")
 
-    IMG_FORMAT = (".tif", ".am", ".mrc", ".rec")
+    IMG_FORMAT = (".tif", ".am", ".mrc", ".rec", ".map")
 
     """Check if dir has train/test folder and if folder have compatible data"""
     DATASET_TEST = check_dir(
