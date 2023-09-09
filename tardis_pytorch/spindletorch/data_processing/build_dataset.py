@@ -78,7 +78,7 @@ def build_train_dataset(
     clean_empty = not benchmark
 
     # All expected formats
-    IMG_FORMATS = (".am", ".mrc", ".rec")
+    IMG_FORMATS = (".am", ".mrc", ".rec", ".map")
     MASK_FORMATS = (
         ".CorrelationLines.am",
         "_mask.am",
