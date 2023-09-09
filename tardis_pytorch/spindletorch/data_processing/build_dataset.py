@@ -200,7 +200,7 @@ def build_train_dataset(
             )
             log_file[id, 4] = "coord"
             np.savetxt(join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=",")
-        else:  # Detect image mask array
+        else:  # Detect an image mask array
             # Convert to binary
             if mask.min() == 0 and mask.max() > 1:
                 mask = np.where(mask > 0, 1, 0).astype(np.uint8)
@@ -212,6 +212,7 @@ def build_train_dataset(
                     desc=f"Mask min: {mask.min()}; max: {mask.max()} "
                     "but expected min: 0 and max: >1",
                 )
+
             # mask borders
             if mask.ndim == 2:
                 mask[:5, :] = 0
@@ -347,7 +348,7 @@ def load_img_mask_data(
     img_px, mask_px = 1, 1
 
     """Load Amira or MRC/REC image"""
-    if image.endswith((".mrc", ".rec")):  # Image is MRC/REC(image)
+    if image.endswith((".mrc", ".rec", ".map")):  # Image is MRC/REC(image)
         # Load image
         image, img_px = load_image(image)
     elif image.endswith(".am"):  # Image is Amira (image)
