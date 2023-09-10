@@ -196,8 +196,7 @@ def main(
     """
     MAIN MODULE FOR PREDICTION GENERAL FILAMENT WITH TARDIS-PYTORCH
     """
-    out = output_format.split("_")
-    if out[1] == "None":
+    if output_format.split("_")[1] == "None":
         instances = False
     else:
         instances = True

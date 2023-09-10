@@ -164,7 +164,7 @@ def main(
     """
     MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
     """
-    if output_format.split("_") == "None":
+    if output_format.split("_")[1] == "None":
         instances = False
     else:
         instances = True
