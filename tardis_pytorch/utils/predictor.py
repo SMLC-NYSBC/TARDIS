@@ -42,7 +42,11 @@ from tardis_pytorch.utils.normalization import MeanStdNormalize, RescaleNormaliz
 from tardis_pytorch.utils.setup_envir import build_temp_dir, clean_up
 from tardis_pytorch.utils.spline_metric import FilterSpatialGraph, SpatialGraphCompare
 from tardis_pytorch._version import version
-from tardis_pytorch import ota
+
+try:
+    from tardis_pytorch import ota
+except ImportError:
+    ota = ""
 
 # Pytorch CUDA optimization
 torch.backends.cudnn.benchmark = True
