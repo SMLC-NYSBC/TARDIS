@@ -1,13 +1,19 @@
 # History
 
 <details open>
-    <summary><b>0.1.0 (2023-08-XX)</b></summary>
+    <summary><b>0.1.0-RC3 OTA (2023-08-10)</b></summary>
 
 *This intends to be a release submitted with Nature Method 2023*
 
 * **General changes:**
     * *General*:
         * Documentation update
+        * Added full support for OTA updates of the entire pacakge
+        * Few bug fixes
+
+* **SpindleTorch module changes:**
+    * *General*:
+        * Update for FNet CNN model for membrane 3D
 
 * **DIST module changes:**
     * *Optimize*:
