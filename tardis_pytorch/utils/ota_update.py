@@ -9,7 +9,8 @@
 #######################################################################
 
 import json
-from os.path import expanduser, join
+from os import mkdir
+from os.path import expanduser, join, isdir
 import subprocess
 import requests
 from tardis_pytorch.utils.logo import TardisLogo
@@ -20,6 +21,9 @@ import sys
 
 def ota_update():
     # Check OTA-Update
+    if not isdir(join(expanduser("~"), ".tardis_pytorch")):
+        mkdir(join(expanduser("~"), ".tardis_pytorch"))
+
     ota_status = aws_check_pkg_with_temp()
 
     if not ota_status:
