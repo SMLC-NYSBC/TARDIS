@@ -50,7 +50,7 @@ def ota_update():
             json.dump(dict(py_pkg.headers), f)
 
         # Installed, uninstall old package version
-        subprocess.run(["pip", "uninstall", "-y", "tardis_pytorch"])
+        # subprocess.run(["pip", "uninstall", "-y", "tardis_pytorch"])
         subprocess.run(
             [
                 "pip",
@@ -59,6 +59,7 @@ def ota_update():
                     expanduser("~"),
                     ".tardis_pytorch/" "tardis_pytorch-x.x.x-py3-none-any.whl",
                 ),
+                "--force-reinstall"
             ]
         )
         main_logo = TardisLogo()
