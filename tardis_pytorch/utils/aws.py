@@ -30,7 +30,7 @@ def get_benchmark_aws() -> dict:
         dict: Dictionary with keys[network name] and values[list of scores]
     """
     network_benchmark = requests.get(
-        "https://tardis-weigths.s3.amazonaws.com/benchmark/best_scores.json",
+        "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/benchmark/best_scores.json",
         timeout=(5, None),
     )
 
@@ -53,7 +53,7 @@ def put_benchmark_aws(data: dict, network: Optional[str] = "", model=None) -> bo
         bool: True if save correctly
     """
     r = requests.put(
-        "https://tardis-weigths.s3.amazonaws.com/" "benchmark/best_scores.json",
+        "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/" "benchmark/best_scores.json",
         json.dumps(data, indent=2, default=str),
         timeout=(5, None),
     )
@@ -61,7 +61,7 @@ def put_benchmark_aws(data: dict, network: Optional[str] = "", model=None) -> bo
     if model is not None and r.status_code == 200:
         with open(model, "rb") as data:
             r_m = requests.put(
-                "https://tardis-weigths.s3.amazonaws.com/"
+                "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/"
                 f"benchmark/models/{network}.pth",
                 data=data,
                 timeout=(5, None),
@@ -142,7 +142,7 @@ def get_weights_aws(network: str, subtype: str, model: Optional[str] = None):
             TardisError("19", "tardis_pytorch/utils/aws.py", "No weights found")
     else:
         weight = get_model_aws(
-            "https://tardis-weigths.s3.amazonaws.com/"
+            "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/"
             f"{network}_{subtype}/"
             f"{model}/model_weights.pth"
         )
@@ -230,7 +230,7 @@ def aws_check_with_temp(model_name: list) -> bool:
     else:
         try:
             weight = requests.get(
-                "https://tardis-weigths.s3.amazonaws.com/"
+                "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/"
                 f"{model_name[0]}_{model_name[1]}/"
                 f"{model_name[2]}/model_weights.pth",
                 stream=True,
@@ -308,7 +308,7 @@ def aws_check_pkg_with_temp() -> bool:
     else:
         try:
             pkg = requests.get(
-                "https://tardis-weigths.s3.amazonaws.com/"
+                "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/"
                 "tardis_pytorch/tardis_pytorch-x.x.x-py3-none-any.whl",
                 timeout=(5, None),
             )
