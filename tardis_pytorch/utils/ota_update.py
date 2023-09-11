@@ -27,7 +27,8 @@ def ota_update():
         try:
             py_pkg = requests.get(
                 "https://tardis-weigths.s3.amazonaws.com/"
-                "tardis_pytorch/tardis_pytorch-x.x.x-py3-none-any.whl"
+                "tardis_pytorch/tardis_pytorch-x.x.x-py3-none-any.whl",
+                timeout=(5, None),
             )
         except:
             return "OTA-Up-to-Data"

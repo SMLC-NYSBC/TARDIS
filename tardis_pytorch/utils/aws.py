@@ -30,7 +30,8 @@ def get_benchmark_aws() -> dict:
         dict: Dictionary with keys[network name] and values[list of scores]
     """
     network_benchmark = requests.get(
-        "https://tardis-weigths.s3.amazonaws.com/benchmark/best_scores.json"
+        "https://tardis-weigths.s3.amazonaws.com/benchmark/best_scores.json",
+        timeout=(5, None),
     )
 
     if network_benchmark.status_code == 200:
@@ -54,6 +55,7 @@ def put_benchmark_aws(data: dict, network: Optional[str] = "", model=None) -> bo
     r = requests.put(
         "https://tardis-weigths.s3.amazonaws.com/" "benchmark/best_scores.json",
         json.dumps(data, indent=2, default=str),
+        timeout=(5, None),
     )
 
     if model is not None and r.status_code == 200:
@@ -62,6 +64,7 @@ def put_benchmark_aws(data: dict, network: Optional[str] = "", model=None) -> bo
                 "https://tardis-weigths.s3.amazonaws.com/"
                 f"benchmark/models/{network}.pth",
                 data=data,
+                timeout=(5, None),
             )
 
         return r_m.status_code == 200
@@ -69,7 +72,10 @@ def put_benchmark_aws(data: dict, network: Optional[str] = "", model=None) -> bo
 
 
 def get_model_aws(https: str):
-    return requests.get(https)
+    return requests.get(
+        https,
+        timeout=(5, None),
+    )
 
 
 def get_weights_aws(network: str, subtype: str, model: Optional[str] = None):
@@ -228,6 +234,7 @@ def aws_check_with_temp(model_name: list) -> bool:
                 f"{model_name[0]}_{model_name[1]}/"
                 f"{model_name[2]}/model_weights.pth",
                 stream=True,
+                timeout=(5, None),
             )
             aws = dict(weight.headers)
         except:
@@ -302,7 +309,8 @@ def aws_check_pkg_with_temp() -> bool:
         try:
             pkg = requests.get(
                 "https://tardis-weigths.s3.amazonaws.com/"
-                "tardis_pytorch/tardis_pytorch-x.x.x-py3-none-any.whl"
+                "tardis_pytorch/tardis_pytorch-x.x.x-py3-none-any.whl",
+                timeout=(5, None),
             )
             aws = dict(pkg.headers)
         except:
