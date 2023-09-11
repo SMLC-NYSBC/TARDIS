@@ -441,12 +441,19 @@ class FilterSpatialGraph:
         Returns:
             np.ndarray: Filtered array of connected MTs
         """
-        """Connect segments with ends close to each other"""
+        """Do iterative optimization split 150 degree connection / marge"""
+        # Split 150 degree connections
+        loop_ = True
+        while loop_:
+            loop_, segments = cut_150_degree(segments)
+
+        # Connect segments with ends close to each other
         border = [np.min(segments[:, 3]), np.max(segments[:, 3])]
         border = (border[1] - border[0]) / 50
 
         if self.connect_seg_if_closer_then > 0:
             segments = self.marge_splines(point_cloud=segments, omit_border=border)
+            segments = reorder_segments_id(segments)
 
         """Remove too short splines"""
         if self.filter_short_segments > 0:
@@ -457,7 +464,7 @@ class FilterSpatialGraph:
                 )
 
             length = [
-                id for id, i in enumerate(length) if i > self.filter_short_segments
+                id_ for id_, i in enumerate(length) if i > self.filter_short_segments
             ]
 
             new_seg = []
@@ -465,18 +472,7 @@ class FilterSpatialGraph:
                 new_seg.append(segments[np.where(segments[:, 0] == i), :])
 
             segments = np.hstack(new_seg)[0, :]
-
-        """Remove splines with tortuous higher than 1.5"""
-        tortuosity_list = []
-        for i in np.unique(segments[:, 0]):
-            x = segments[np.where(segments[:, 0] == int(i))[0], 1:]
-            tortuosity_list.append(tortuosity(x))
-
-        tortuosity_list = [id for id, i in enumerate(tortuosity_list) if i < 1.5]
-        new_seg = []
-        for i in tortuosity_list:
-            new_seg.append(segments[np.where(segments[:, 0] == i), :])
-        segments = np.hstack(new_seg)[0, :]
+            segments = reorder_segments_id(segments)
 
         return reorder_segments_id(segments)
 
@@ -638,7 +634,7 @@ def compare_splines_probability(
     if sum(m_s1) == 0:
         return 0.0
 
-    # Calculating intersection using % of the matching point below threshold
+    # Calculating intersection using % of the matching point below a threshold
     probability = sum(m_s1) / len(spline_1)
 
     return probability
@@ -797,3 +793,87 @@ def total_length(coord: np.ndarray) -> float:
         )
 
     return length
+
+
+def angle_between_vectors(v1, v2):
+    """
+    Calculate the angle in degrees between two vectors.
+
+    This function uses the dot product and the magnitudes of the vectors
+    to calculate the angle between them according to the formula:
+
+        cos(theta) = (A . B) / (||A|| ||B||)
+
+    Args:
+        v1(np.ndarray): First input vector.
+        v2(np.ndarray): Second input vector.
+
+    Returns:
+        float The angle in degrees between vector 'v1' and 'v2'.
+    """
+    # Calculate the dot product of vectors v1 and v2
+    dot_product = np.dot(v1, v2)
+
+    # Calculate the magnitude (norm) of vectors
+    magnitude_v1 = np.linalg.norm(v1)
+    magnitude_v2 = np.linalg.norm(v2)
+
+    # Calculate angle
+    cos_theta = dot_product / (magnitude_v1 * magnitude_v2)
+    angle = np.arccos(np.clip(cos_theta, -1.0, 1.0))
+
+    return np.degrees(angle)
+
+
+def cut_150_degree(segments_array: np.ndarray):
+    """
+    Cut segments based on angles between adjacent vectors.
+
+    Given an array of line segments, this function calculates angles between
+    adjacent vectors in each line. If the angle is less than or equal to 150
+    degrees, the segment is cut into two new segments.
+
+    Args:
+    segments_array(np. ndarray): Array of line segments where the first column
+    indicates the segment id and the remaining columns represent
+    the coordinates of points.
+
+    Returns:
+    tuple
+        - bool: Indicates whether any segment was cut.
+        - np.ndarray: New array of cut segments.
+
+    """
+
+    cut_segments = []
+    loop_ = False
+
+    # Loop through unique segment IDs
+    for i in np.unique(segments_array[:, 0]):
+        pc_ = segments_array[np.where(segments_array[:, 0] == i)[0], 1:]
+
+        angles_ = [180]
+
+        # Calculate angles for each line segment
+        for j in range(len(pc_) - 2):
+            angles_.append(angle_between_vectors(np.array(pc_[j]) - np.array(pc_[j + 1]),
+                                                 np.array(pc_[j + 2]) - np.array(pc_[j + 1])))
+        angles_.append(180)
+
+        # Check if any angle is less than or equal to 150 degrees
+        if len([id_ for id_, k in enumerate(angles_) if k <= 150]) > 0:
+            loop_ = True
+
+            # Find the minimum angle and cut the segment
+            min_angle_idx = np.where(angles_ == np.min(angles_))[0][0]
+            cut_segments.append(pc_[:min_angle_idx + 1, :])
+            cut_segments.append(pc_[min_angle_idx + 1:, :])
+        else:
+            cut_segments.append(pc_)
+
+    # Filter out single-point segments
+    cut_segments = [c for c in cut_segments if len(c) > 1]
+
+    # Create the output array
+    return loop_, np.vstack(
+        [np.hstack((np.repeat(id_, len(c)).reshape(-1, 1), c)) for id_, c in enumerate(cut_segments)])
