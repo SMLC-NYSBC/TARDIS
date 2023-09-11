@@ -59,7 +59,6 @@ def ota_update():
                     expanduser("~"),
                     ".tardis_pytorch/" "tardis_pytorch-x.x.x-py3-none-any.whl",
                 ),
-                "--force-reinstall"
             ]
         )
         main_logo = TardisLogo()
