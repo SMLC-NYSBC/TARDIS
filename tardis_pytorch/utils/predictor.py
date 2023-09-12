@@ -438,17 +438,20 @@ class DataSetPredictor:
             self.image = np.where(self.image >= self.cnn_threshold, 1, 0).astype(
                 np.uint8
             )
+
+            # Restored original image pixel size
+            self.image, _ = scale_image(image=self.image, scale=self.org_shape)
         else:
+            # Restored original image pixel size
+            self.image, _ = scale_image(image=self.image, scale=self.org_shape)
+
             tif.imwrite(
                 join(self.am_output, f"{id_name[:-self.in_format]}_CNN.tif"), self.image
             )
+            self.image = None
 
             """Clean-up temp dir"""
             clean_up(dir=self.dir)
-            return None
-
-        # Restored original image pixel size
-        self.image, _ = scale_image(image=self.image, scale=self.org_shape)
 
     def preprocess_DIST(self, id_name: str):
         # Post-process predicted image patches
