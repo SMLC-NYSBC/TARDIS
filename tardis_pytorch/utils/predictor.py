@@ -371,9 +371,10 @@ class DataSetPredictor:
             self.px = click.prompt(
                 f"Image file has pixel size {self.px}, that's obviously wrong... "
                 "What is the correct value:",
+                default=self.normalize_px,
                 type=float,
             )
-        if self.px == 1:
+        elif self.px == 1:
             self.px = click.prompt(
                 f"Image file has pixel size {self.px}, that's maybe wrong... "
                 "What is the correct value:",
