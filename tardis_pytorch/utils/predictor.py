@@ -196,11 +196,19 @@ class DataSetPredictor:
         self.am_output = join(self.dir, "Predictions")
 
         # Pickup files for the prediction
-        self.predict_list = [
-            f
-            for f in listdir(dir_)
-            if f.endswith(available_format) and not f.endswith(omit_format)
-        ]
+        if isdir(dir_):
+            self.predict_list = [
+                f
+                for f in listdir(dir_)
+                if f.endswith(available_format) and not f.endswith(omit_format)
+            ]
+        else:
+            if dir_.endswith(available_format) and not dir_.endswith(omit_format):
+                self.predict_list = [
+                    dir_
+                ]
+            else:
+                self.predict_list = []
 
         # Tardis progress bar update
         if len(self.predict_list) == 0:

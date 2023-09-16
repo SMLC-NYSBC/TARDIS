@@ -145,7 +145,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-fl",
     "--filter_by_length",
-    default=500,
+    default=1000,
     type=int,
     help="Filtering parameters for microtubules, defining maximum microtubule "
     "length in angstrom. All filaments shorter then this length "
