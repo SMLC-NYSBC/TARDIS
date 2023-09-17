@@ -444,12 +444,12 @@ class DataSetPredictor:
         # Threshold whole image
         self.image = self.sigmoid(torch.Tensor(self.image)).detach().numpy()
         if self.cnn_threshold != 0:
+            # Restored original image pixel size
+            self.image, _ = scale_image(image=self.image, scale=self.org_shape)
+
             self.image = np.where(self.image >= self.cnn_threshold, 1, 0).astype(
                 np.uint8
             )
-
-            # Restored original image pixel size
-            self.image, _ = scale_image(image=self.image, scale=self.org_shape)
         else:
             # Restored original image pixel size
             self.image, _ = scale_image(image=self.image, scale=self.org_shape)
