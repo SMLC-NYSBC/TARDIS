@@ -354,7 +354,7 @@ class DataSetPredictor:
             default=self.normalize_px,
             type=float,
         )
-        if self.click_px_overwrite is not None:
+        if self.click_px_overwrite is None:
             self.click_px_overwrite = click.prompt(
                 f"Is the pixel size {self.px} correct for all data: ",
                 default=True,
