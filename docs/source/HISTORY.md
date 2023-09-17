@@ -9,6 +9,7 @@
     * *General*:
         * Documentation update
         * Added full support for OTA updates of the entire pacakge
+        * Fixed AWS access denied error on some networks
         * Few bug fixes
         * Fixed Bugs in final filament filtering algorithms
         * Added filament filtering for removing false-positive rapid 150 degree connections
@@ -16,10 +17,14 @@
 * **SpindleTorch module changes:**
     * *General*:
         * Update for FNet CNN model for membrane 3D
+    * *Optimize*:
+        * Improved handling of the pixel size, prompts, and normalization   
 
 * **DIST module changes:**
     * *Optimize*:
         * Update DIST model for 2D and 3D membrane
+        * Improved filtering for filament
+        * Added confidence value for each filament instance based on filament length and shape
     * *BugFix*:
         * Fixed few issues in the membrane segmentation pipeline
 

@@ -11,11 +11,12 @@ from math import sqrt
 from typing import Optional, Tuple
 
 import numpy as np
-from scipy.interpolate import splev, splprep
+from scipy.interpolate import splev, splprep, UnivariateSpline
 from scipy.spatial.distance import cdist
 from sklearn.neighbors import KDTree
 
 from tardis_pytorch.dist_pytorch.utils.utils import pc_median_dist
+from tardis_pytorch.utils.errors import TardisError
 
 
 class FilterConnectedNearSegments:
@@ -885,3 +886,72 @@ def cut_150_degree(segments_array: np.ndarray):
             for id_, c in enumerate(cut_segments)
         ]
     )
+
+
+class ComputeConfidenceScore:
+    @staticmethod
+    def _pre_compute(points: np.ndarray):
+        tangents = np.diff(points, axis=0)
+        normalized_tangents = tangents / np.linalg.norm(tangents, axis=1)[:, np.newaxis]
+
+        return tangents, normalized_tangents
+
+    @staticmethod
+    def _curvature_smoothness(normalized_tangents):
+        delta_tangents = np.diff(normalized_tangents, axis=0)
+        curvature = np.linalg.norm(delta_tangents, axis=1)
+        smoothness = 1 - np.std(curvature)
+        return smoothness
+
+    @staticmethod
+    def _spline_smoothness(points: np.ndarray):
+        x = np.linspace(0, 1, len(points))
+        splines = [UnivariateSpline(x, coords, k=3) for coords in points.T]
+        residuals = np.column_stack(
+            [spline(x) - coords for spline, coords in zip(splines, points.T)]
+        )
+        smoothness = 1 - np.mean(np.linalg.norm(residuals, axis=1))
+        return smoothness
+
+    @staticmethod
+    def _angle_smoothness(tangents):
+        angles = np.arccos(
+            np.einsum("ij,ij->i", tangents[:-1], tangents[1:])
+            / (
+                np.linalg.norm(tangents[:-1], axis=1)
+                * np.linalg.norm(tangents[1:], axis=1)
+            )
+        )
+        smoothness = 1 - np.std(angles)
+        return smoothness
+
+    def combined_smoothness(self, points: np.ndarray):
+        tangents, normalized_tangents = self._pre_compute(points)
+
+        scores = [
+            self._curvature_smoothness(normalized_tangents),
+            self._spline_smoothness(points),
+            self._angle_smoothness(tangents),
+        ]
+
+        mean_score = np.mean(scores)
+        std_score = np.std(scores)
+        filtered_scores = [s for s in scores if abs(s - mean_score) <= std_score]
+
+        return np.mean(filtered_scores)
+
+    def __call__(self, segments: np.ndarray):
+        if segments.shape[1] != 4:
+            TardisError(
+                "145",
+                "tardis_pytorch.utils.spline_metric.py",
+                f"Not segmented array. Expected shape 4 got {segments.shape[1]}",
+            )
+        unique_ids = np.unique(segments[:, 0])
+
+        scores = []
+        for i in unique_ids:
+            points = segments[np.where(segments[:, 0] == i)[0], 1:]
+            scores.append(self.combined_smoothness(points))
+
+        return scores
