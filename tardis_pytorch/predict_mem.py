@@ -108,7 +108,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-ct",
     "--cnn_threshold",
-    default=0.1,
+    default=0.5,
     type=float,
     help="Threshold used for CNN prediction..",
     show_default=True,
