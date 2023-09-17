@@ -236,7 +236,10 @@ def main(
         id_save = f"{m_name}_{data_set}_{model_id}"
     else:
         id_save = f"{m_name}_{data_set}_0"
-    link = "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/benchmark/models/" f"{id_save}"
+    link = (
+        "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/benchmark/models/"
+        f"{id_save}"
+    )
 
     if save:
         if m_name in BEST_SCORE:

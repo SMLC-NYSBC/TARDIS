@@ -53,7 +53,8 @@ def put_benchmark_aws(data: dict, network: Optional[str] = "", model=None) -> bo
         bool: True if save correctly
     """
     r = requests.put(
-        "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/" "benchmark/best_scores.json",
+        "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/"
+        "benchmark/best_scores.json",
         json.dumps(data, indent=2, default=str),
         timeout=(5, None),
     )

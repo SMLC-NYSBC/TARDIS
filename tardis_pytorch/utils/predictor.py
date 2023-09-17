@@ -204,9 +204,7 @@ class DataSetPredictor:
             ]
         else:
             if dir_.endswith(available_format) and not dir_.endswith(omit_format):
-                self.predict_list = [
-                    dir_
-                ]
+                self.predict_list = [dir_]
             else:
                 self.predict_list = []
 
@@ -227,7 +225,7 @@ class DataSetPredictor:
             )
 
         # Hard fix for dealing with tif file lack of pixel sizes...
-        self.tif_px = None
+        self.tif_px, self.click_px_overwrite, self.click_stored_px = None, None, None
         if np.any([True for x in self.predict_list if x.endswith((".tif", ".tiff"))]):
             self.tif_px = click.prompt(
                 "Detected .tif files, please provide pixel size "
@@ -350,6 +348,21 @@ class DataSetPredictor:
                         device=self.device,
                     )
 
+    def handle_pixel_prompt(self, prompt_message):
+        self.px = click.prompt(
+            prompt_message,
+            default=self.normalize_px,
+            type=float,
+        )
+        if self.click_px_overwrite is not None:
+            self.click_px_overwrite = click.prompt(
+                f"Is the pixel size {self.px} correct for all data: ",
+                default=True,
+                type=bool,
+            )
+            if self.click_px_overwrite:
+                self.click_stored_px = self.px
+
     def load_data(self, id_name: str):
         # Build temp dir
         build_temp_dir(dir=self.dir)
@@ -366,20 +379,17 @@ class DataSetPredictor:
         if self.tif_px is not None:
             self.px = self.tif_px
 
-        # In case of unreadable pixel size ask user
+        # In case of unreadable pixel size, ask user
+        if self.click_stored_px is not None and self.click_px_overwrite is not None:
+            self.px = self.click_stored_px
+
         if self.px == 0:
-            self.px = click.prompt(
-                f"Image file has pixel size {self.px}, that's obviously wrong... "
-                "What is the correct value:",
-                default=self.normalize_px,
-                type=float,
+            self.handle_pixel_prompt(
+                f"Image file has pixel size {self.px}, that's obviously wrong... What is the correct value:",
             )
         elif self.px == 1:
-            self.px = click.prompt(
-                f"Image file has pixel size {self.px}, that's maybe wrong... "
-                "What is the correct value:",
-                default=self.px,
-                type=float,
+            self.handle_pixel_prompt(
+                f"Image file has pixel size {self.px}, that's maybe wrong... What is the correct value:",
             )
 
         # Normalize image histogram

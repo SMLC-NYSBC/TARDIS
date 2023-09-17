@@ -856,8 +856,12 @@ def cut_150_degree(segments_array: np.ndarray):
 
         # Calculate angles for each line segment
         for j in range(len(pc_) - 2):
-            angles_.append(angle_between_vectors(np.array(pc_[j]) - np.array(pc_[j + 1]),
-                                                 np.array(pc_[j + 2]) - np.array(pc_[j + 1])))
+            angles_.append(
+                angle_between_vectors(
+                    np.array(pc_[j]) - np.array(pc_[j + 1]),
+                    np.array(pc_[j + 2]) - np.array(pc_[j + 1]),
+                )
+            )
         angles_.append(180)
 
         # Check if any angle is less than or equal to 150 degrees
@@ -866,8 +870,8 @@ def cut_150_degree(segments_array: np.ndarray):
 
             # Find the minimum angle and cut the segment
             min_angle_idx = np.where(angles_ == np.min(angles_))[0][0]
-            cut_segments.append(pc_[:min_angle_idx + 1, :])
-            cut_segments.append(pc_[min_angle_idx + 1:, :])
+            cut_segments.append(pc_[: min_angle_idx + 1, :])
+            cut_segments.append(pc_[min_angle_idx + 1 :, :])
         else:
             cut_segments.append(pc_)
 
@@ -876,4 +880,8 @@ def cut_150_degree(segments_array: np.ndarray):
 
     # Create the output array
     return loop_, np.vstack(
-        [np.hstack((np.repeat(id_, len(c)).reshape(-1, 1), c)) for id_, c in enumerate(cut_segments)])
+        [
+            np.hstack((np.repeat(id_, len(c)).reshape(-1, 1), c))
+            for id_, c in enumerate(cut_segments)
+        ]
+    )
