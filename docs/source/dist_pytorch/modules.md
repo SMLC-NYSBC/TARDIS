@@ -1,14 +1,14 @@
 # DIST -> Modules
 ## DIST layer wrapper
 ```{eval-rst}
-.. automodule:: tardis_pytorch.dist_pytorch.model.layers
+.. automodule:: tardis_em.dist_pytorch.model.layers
 ```
 
 ## DIST graph update-modules
 Collection of all modules wrapped around 'torch.nn.Module' used in the DIST model.
 
 ```{eval-rst}
-.. automodule:: tardis_pytorch.dist_pytorch.model.modules
+.. automodule:: tardis_em.dist_pytorch.model.modules
 ```
 
 ## Feature embedding
@@ -27,5 +27,5 @@ Collection of classes used for Node and Edge embedding.
 	embed distance preserving SO(n) invariance for translation and rotation.
 
 ```{eval-rst}
-.. automodule:: tardis_pytorch.dist_pytorch.model.embedding
+.. automodule:: tardis_em.dist_pytorch.model.embedding
 ```

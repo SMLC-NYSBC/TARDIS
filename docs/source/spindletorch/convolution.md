@@ -1,4 +1,4 @@
 # SpindleTorch -> Convolutions
 ```{eval-rst}
-.. automodule:: tardis_pytorch.spindletorch.model.convolution
+.. automodule:: tardis_em.spindletorch.model.convolution
 ```

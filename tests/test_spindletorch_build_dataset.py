@@ -14,10 +14,10 @@ from shutil import copy, rmtree
 
 import numpy as np
 
-from tardis_pytorch.spindletorch.data_processing.build_dataset import (
+from tardis_em.spindletorch.data_processing.build_dataset import (
     build_train_dataset,
 )
-from tardis_pytorch.utils.load_data import load_image
+from tardis_em.utils.load_data import load_image
 
 
 def test_build_datasets():

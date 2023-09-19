@@ -10,7 +10,7 @@
 
 import torch
 
-from tardis_pytorch.dist_pytorch.model.modules import (
+from tardis_em.dist_pytorch.model.modules import (
     ComparisonLayer,
     gelu,
     GeluFeedForward,

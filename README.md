@@ -125,12 +125,12 @@ Install:
 Windows x64 and Linux:
 
     $ conda install pytorch pytorch-cuda=11.8 -c pytorch -c nvidia
-    $ pip install ./tardis_pytorch-0.1.0rc3-py3-none-any.whl
+    $ pip install ./tardis_em-0.1.0rc3-py3-none-any.whl
 
 MacOS:
     
     $ conda install pytorch -c pytorch
-    $ pip install ./tardis_pytorch-0.1.0rc3-py3-none-any.whl
+    $ pip install ./tardis_em-0.1.0rc3-py3-none-any.whl
 
 <details><summary><b>Known issues with installation:</b></summary>
 

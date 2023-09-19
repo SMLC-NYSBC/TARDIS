@@ -1,34 +1,34 @@
 # Global - > Utils
 ## AWS
 ```{eval-rst}
-.. automodule:: tardis_pytorch.utils.aws
+.. automodule:: tardis_em.utils.aws
 ```
 
 ## Device
 ```{eval-rst}
-.. automodule:: tardis_pytorch.utils.device
+.. automodule:: tardis_em.utils.device
 ```
 
 ## TARDIS log
 ```{eval-rst}
-.. automodule:: tardis_pytorch.utils.errors
-.. automodule:: tardis_pytorch.utils.logo
+.. automodule:: tardis_em.utils.errors
+.. automodule:: tardis_em.utils.logo
 ```
 
 ## Environment setting
 ```{eval-rst}
-.. automodule:: tardis_pytorch.utils.setup_envir
+.. automodule:: tardis_em.utils.setup_envir
 ```
 
 ## Loss functions
 ```{eval-rst}
-.. automodule:: tardis_pytorch.utils.losses
-.. automodule:: tardis_pytorch.utils.metrics
-.. automodule:: tardis_pytorch.utils.spline_metric
+.. automodule:: tardis_em.utils.losses
+.. automodule:: tardis_em.utils.metrics
+.. automodule:: tardis_em.utils.spline_metric
 ```
 
 ## Utils
 ```{eval-rst}
-.. automodule:: tardis_pytorch.utils.utils
-.. automodule:: tardis_pytorch.utils.normalization
+.. automodule:: tardis_em.utils.utils
+.. automodule:: tardis_em.utils.normalization
 ```

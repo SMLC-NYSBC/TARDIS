@@ -12,8 +12,8 @@ from math import sqrt
 
 import numpy as np
 
-from tardis_pytorch.utils.load_data import ImportDataFromAmira
-from tardis_pytorch.utils.spline_metric import (
+from tardis_em.utils.load_data import ImportDataFromAmira
+from tardis_em.utils.spline_metric import (
     FilterSpatialGraph,
     reorder_segments_id,
     sort_segment,

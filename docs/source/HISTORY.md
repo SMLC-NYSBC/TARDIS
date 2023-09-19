@@ -190,7 +190,7 @@
 
 * **Code restructure:**
     * Finished documentation with Sphinx
-    * Build testes for the whole tardis-pytorch
+    * Build testes for the whole tardis-EM
     * Push to RC branch
 
 * **SpindleTorch module changes:**
@@ -243,7 +243,7 @@
       have different structures when loading mask data which can be binary or ascii.
     * Overall stability improvements
     * Tardis logo was integrated with all TARDIS modules
-    * Build tests for the whole tardis-pytorch
+    * Build tests for the whole tardis-EM
     * Introduced tardis_dev and divided stable and developmental branches
     * Fixed image normalization and ensure correct normalized output for training
       and prediction
@@ -357,7 +357,7 @@
 <details>
     <summary><b>0.1.0-alpha1 (2022-04-13)</b></summary>
 
-* Rename tardis to tardis-pytorch
+* Rename tardis to tardis-EM
 * Build tests for all modules
 * Integrated slcpy, spindletorch and graphformer
 * Added general workflow for MT prediction

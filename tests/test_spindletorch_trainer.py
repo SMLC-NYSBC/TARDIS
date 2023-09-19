@@ -15,10 +15,10 @@ import torch.nn as nn
 from torch import optim
 from torch.utils.data import DataLoader
 
-from tardis_pytorch.spindletorch.datasets.dataloader import CNNDataset
-from tardis_pytorch.spindletorch.train import train_cnn
-from tardis_pytorch.spindletorch.trainer import CNNTrainer
-from tardis_pytorch.utils.device import get_device
+from tardis_em.spindletorch.datasets.dataloader import CNNDataset
+from tardis_em.spindletorch.train import train_cnn
+from tardis_em.spindletorch.trainer import CNNTrainer
+from tardis_em.utils.device import get_device
 
 
 def test_init_spindletorch_train():

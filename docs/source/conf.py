@@ -1,6 +1,6 @@
 import os
 import sys
-from tardis_pytorch import version
+from tardis_em import version
 
 project = "TARDIS-pytorch"
 copyright = "2021, Robert Kiewisz, Tristan Bepler"

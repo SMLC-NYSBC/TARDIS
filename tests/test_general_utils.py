@@ -14,19 +14,19 @@ import os
 import numpy as np
 import torch
 
-from tardis_pytorch.utils.aws import get_weights_aws
-from tardis_pytorch.utils.device import get_device
-from tardis_pytorch.utils.errors import TardisError
-from tardis_pytorch.utils.export_data import NumpyToAmira
-from tardis_pytorch.utils.load_data import (
+from tardis_em.utils.aws import get_weights_aws
+from tardis_em.utils.device import get_device
+from tardis_em.utils.errors import TardisError
+from tardis_em.utils.export_data import NumpyToAmira
+from tardis_em.utils.load_data import (
     import_am,
     import_tiff,
     ImportDataFromAmira,
     load_mrc_file,
 )
-from tardis_pytorch.utils.logo import TardisLogo
-from tardis_pytorch.utils.spline_metric import compare_splines_probability
-from tardis_pytorch.utils.utils import EarlyStopping
+from tardis_em.utils.logo import TardisLogo
+from tardis_em.utils.spline_metric import compare_splines_probability
+from tardis_em.utils.utils import EarlyStopping
 
 
 def test_early_stop():
@@ -204,7 +204,7 @@ def test_logo():
 
 
 def test_error():
-    TardisError(id="20", py="tests/test_general_utils.py", desc="PyTest Failed!")
+    TardisError(id_="20", py="tests/test_general_utils.py", desc="PyTest Failed!")
 
 
 def test_compare_splines_probability():

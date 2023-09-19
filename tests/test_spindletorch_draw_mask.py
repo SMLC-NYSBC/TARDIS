@@ -10,7 +10,7 @@
 
 import numpy as np
 
-from tardis_pytorch.spindletorch.data_processing.draw_mask import (
+from tardis_em.spindletorch.data_processing.draw_mask import (
     draw_circle,
     draw_sphere,
 )

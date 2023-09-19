@@ -13,9 +13,9 @@ import subprocess
 import subprocess as subp
 import sys
 
-from tardis_pytorch.utils.errors import TardisError
-from tardis_pytorch.utils.logo import TardisLogo
-from tardis_pytorch._version import version
+from tardis_em.utils.errors import TardisError
+from tardis_em.utils.logo import TardisLogo
+from tardis_em._version import version
 
 
 def env_exists(env_name: str) -> bool:
@@ -71,7 +71,7 @@ def py(python: str):
     subp.run("conda run -n PythonEnvTest conda clean -a -y", shell=True)
     subp.run("conda run -n PythonEnvTest pip cache purge", shell=True)
 
-    # Install tardis_pytorch-pytorch
+    # Install tardis_em-pytorch
     subp.run("conda run -n PythonEnvTest pip install -e .", shell=True)
 
     # Test on Python 3.X.*

@@ -38,5 +38,5 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
           AWS_BUCKET_NAME: tardis-pytorch
-          BUCKET_PATH: "/tardis_pytorch/"
-          DIST_LOCATION_CODE: ./dist/tardis_pytorch-x.x.x-py3-none-any.whl
+          BUCKET_PATH: "/tardis_em/"
+          DIST_LOCATION_CODE: ./dist/tardis_em-x.x.x-py3-none-any.whl

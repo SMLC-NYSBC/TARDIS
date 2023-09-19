@@ -13,8 +13,8 @@ from shutil import rmtree
 
 import numpy as np
 
-from tardis_pytorch.spindletorch.data_processing.stitch import StitchImages
-from tardis_pytorch.spindletorch.data_processing.trim import trim_with_stride
+from tardis_em.spindletorch.data_processing.stitch import StitchImages
+from tardis_em.spindletorch.data_processing.trim import trim_with_stride
 
 
 def test_trim_stitch_3d():

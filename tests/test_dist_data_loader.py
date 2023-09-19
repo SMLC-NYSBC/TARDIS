@@ -13,8 +13,8 @@ from os.path import join
 
 import numpy as np
 
-from tardis_pytorch.dist_pytorch.datasets.augmentation import preprocess_data
-from tardis_pytorch.dist_pytorch.datasets.dataloader import (
+from tardis_em.dist_pytorch.datasets.augmentation import preprocess_data
+from tardis_em.dist_pytorch.datasets.dataloader import (
     FilamentDataset,
     PartnetDataset,
     ScannetColorDataset,

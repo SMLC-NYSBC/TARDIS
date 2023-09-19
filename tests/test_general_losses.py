@@ -9,7 +9,7 @@
 #######################################################################
 import torch
 
-from tardis_pytorch.utils.losses import *
+from tardis_em.utils.losses import *
 
 logits = torch.rand((1, 64, 64, 64))
 targets = torch.softmax(logits, 0)

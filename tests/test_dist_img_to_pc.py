@@ -10,7 +10,7 @@
 
 import numpy as np
 
-from tardis_pytorch.dist_pytorch.utils.build_point_cloud import BuildPointCloud
+from tardis_em.dist_pytorch.utils.build_point_cloud import BuildPointCloud
 
 
 def test_BuildPointCloud():

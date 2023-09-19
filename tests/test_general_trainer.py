@@ -11,9 +11,9 @@
 import torch.nn as nn
 from torch import optim
 
-from tardis_pytorch.dist_pytorch.trainer import CDistTrainer, DistTrainer
-from tardis_pytorch.spindletorch.trainer import CNNTrainer
-from tardis_pytorch.utils.trainer import BasicTrainer
+from tardis_em.dist_pytorch.trainer import CDistTrainer, DistTrainer
+from tardis_em.spindletorch.trainer import CNNTrainer
+from tardis_em.utils.trainer import BasicTrainer
 
 
 def test_trainer_init():

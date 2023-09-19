@@ -15,13 +15,13 @@ import torch.nn as nn
 from torch import optim
 from torch.utils.data import DataLoader
 
-from tardis_pytorch.dist_pytorch.datasets.dataloader import (
+from tardis_em.dist_pytorch.datasets.dataloader import (
     FilamentDataset,
     ScannetColorDataset,
 )
-from tardis_pytorch.dist_pytorch.train import train_dist
-from tardis_pytorch.dist_pytorch.trainer import CDistTrainer, DistTrainer
-from tardis_pytorch.utils.device import get_device
+from tardis_em.dist_pytorch.train import train_dist
+from tardis_em.dist_pytorch.trainer import CDistTrainer, DistTrainer
+from tardis_em.utils.device import get_device
 
 
 def test_init_dist_train():

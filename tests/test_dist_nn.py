@@ -10,7 +10,7 @@
 
 import torch
 
-from tardis_pytorch.dist_pytorch.dist import CDIST, DIST
+from tardis_em.dist_pytorch.dist import CDIST, DIST
 
 
 def rand_tensor(shape: tuple):
