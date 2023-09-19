@@ -7,7 +7,7 @@
 ![Version](https://img.shields.io/badge/release-0.1.0_RC3-success)
 ![Documentation](https://readthedocs.org/projects/tardis-pytorch/badge/?version=latest)
 
-# TARDIS-PyTorch
+# TARDIS-EM
 Python-based software for generalized object instance segmentation from (cryo-)electron microscopy
 micrographs/tomograms. The software package is built on a general workflow where predicted semantic segmentation
 is used for instance segmentation of 2D/3D images.
