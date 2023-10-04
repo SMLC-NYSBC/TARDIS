@@ -101,6 +101,7 @@ class DataSetPredictor:
         debug: bool,
         checkpoint: Optional[list] = None,
         feature_size: Optional[float] = None,
+        correct_px: bool = False,
     ):
         if predict not in ["Filament", "Membrane2D", "Membrane", "Microtubule"]:
             TardisError(
@@ -120,6 +121,7 @@ class DataSetPredictor:
             self.expect_2d = False
         self.amira_prefix = amira_prefix
         self.checkpoint = checkpoint
+        self.correct_px = correct_px
 
         # Pre-processing setting
         self.feature_size = feature_size
@@ -390,6 +392,11 @@ class DataSetPredictor:
         elif self.px == 1:
             self.handle_pixel_prompt(
                 f"Image file has pixel size {self.px}, that's maybe wrong... What is the correct value:",
+            )
+        elif self.correct_px:
+            self.correct_px = False
+            self.handle_pixel_prompt(
+                f"Image file has pixel size {self.px}. What is the correct value: ",
             )
 
         # Normalize image histogram

@@ -163,7 +163,7 @@ class FFTNormalize:
         split=None,
         alpha=0.5,
         beta_=0.5,
-        scale=1.,
+        scale=1.0,
         tol=1e-3,
         num_iters=100,
         share_var=True,

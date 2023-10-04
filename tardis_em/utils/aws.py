@@ -101,6 +101,16 @@ def get_weights_aws(network: str, subtype: str, model: Optional[str] = None):
     CNN_DATASET = ["microtubules", "cryo_mem", "cryo_mem_2d"]
     DIST_DATASET = ["microtubules", "s3dis", "membrane_2d"]
 
+    """Chech dir"""
+    if not isdir(join(expanduser("~"), ".tardis_em")):
+        mkdir(join(expanduser("~"), ".tardis_em"))
+    if not isdir(join(expanduser("~"), ".tardis_em", f"{network}_{subtype}")):
+        mkdir(join(expanduser("~"), ".tardis_em", f"{network}_{subtype}"))
+    if not isdir(
+        join(expanduser("~"), ".tardis_em", f"{network}_{subtype}", f"{model}")
+    ):
+        mkdir(join(expanduser("~"), ".tardis_em", f"{network}_{subtype}", f"{model}"))
+
     """Get weights for CNN"""
     dir_ = join(expanduser("~"), ".tardis_em", f"{network}_{subtype}", f"{model}")
 
@@ -298,9 +308,7 @@ def aws_check_pkg_with_temp() -> bool:
 
     """Compare stored file with file stored on aws"""
     if save is None:
-        print(
-            "Tardis_pytorch pkg cannot be checked! Connect to the internet next time!"
-        )
+        print("Tardis_e pkg cannot be checked! Connect to the internet next time!")
         return False  # Error loading json, download from aws
     else:
         try:
@@ -311,9 +319,7 @@ def aws_check_pkg_with_temp() -> bool:
             )
             aws = dict(pkg.headers)
         except:
-            print(
-                "Tardis_pytorch pkg cannot be checked! Connect to the internet next time!"
-            )
+            print("Tardis_em pkg cannot be checked! Connect to the internet next time!")
             return True  # Found saved weight but cannot connect to aws
 
     try:

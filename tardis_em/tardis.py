@@ -46,12 +46,12 @@ def main(func=None, dir_=None):
             title=f"| Transforms And Rapid Dimensionless Instance Segmentation | {ota}",
             text_0="WELCOME to TARDIS!",
             text_1="TARDIS is fully automatic segmentation software no need for model training!",
-            text_3="Contact developers if segmentation of your organelle is not supported! "
-            "(rkiewisz@nysbc.org | tbepler@nysbc.org).",
-            text_4="Join Slack community: https://bit.ly/41hTCaP",
-            text_6="FUNCTIONALITY:",
-            text_7="To predict microtubule and filament instances:",
-            text_8="    tardis_mt . | OR | tardis_mt --help          tardis_filament . | OR | tardis_filament --help",
+            text_3="Contact developers if segmentation of your organelle is not supported! ",
+            text_4="rkiewisz@nysbc.org | tbepler@nysbc.org",
+            text_5="Join Slack community: https://bit.ly/41hTCaP",
+            text_7="FUNCTIONALITY:",
+            text_8="To predict microtubule and filament instances:",
+            text_9="    tardis_mt . | OR | tardis_mt --help          tardis_filament . | OR | tardis_filament --help",
             text_10="To predict 3D membrane semantic and instances:",
             text_11="    tardis_mem . | OR | tardis_mem --help       tardis_mem2d . | OR | tardis_mem2d --help",
         )

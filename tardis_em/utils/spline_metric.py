@@ -94,7 +94,7 @@ class FilterConnectedNearSegments:
     def splines_direction(self, spline1: list, spline2: list) -> bool:
         """
         Check if two splines facing the same direction. Knowing that spline1 facing
-        direction of spline2, check if spline2 also face direction of spline1.
+        a direction of spline2, check if spline2 also face a direction of spline1.
 
         Args:
             spline1 (list): Sorted array of point with 3D coordinates.
@@ -171,7 +171,7 @@ class FilterConnectedNearSegments:
 
         Args:
             point_cloud (np.ndarray): Array with segmented and sorted point cloud
-                of a  shape [ID, X, Y, Z].
+                of a shape [ID, X, Y, Z].
             omit_border (int): In A, distance from the border as a limit not to
                 connect splines.
             initial (bool): Initial run for the operation.
