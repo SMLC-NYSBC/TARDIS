@@ -54,7 +54,7 @@ class PatchDataSet:
         self.DOWNSAMPLING_TH = max_number_of_points
 
         # Patch setting
-        self.drop_rate = drop_rate
+        self.drop_rate = None
         self.TORCH_OUTPUT = tensor
         self.GRAPH_OUTPUT = graph
         self.EXPAND = 0.1  # Expand boundary box by 10%
@@ -70,7 +70,8 @@ class PatchDataSet:
         Returns:
             np.ndarray: Boundary box dimensions
         """
-        # Define x,y and (z) min and max sizes
+        # Define x,y and (z) min and m
+        # ax sizes
         if coord.shape[1] == 3:
             min_x, min_y, min_z = np.min(coord, axis=0)
             max_x, max_y, max_z = np.max(coord, axis=0)
@@ -91,6 +92,11 @@ class PatchDataSet:
         dz = ((min_z + max_z) / 2) - min_z
         min_z, max_z = min_z - dz * self.EXPAND, max_z + dz * self.EXPAND
 
+        dx, dy = abs(min_x - max_x), abs(min_y - max_y)
+        d = dx if max(dx, dy) == 0 else dy
+
+        self.drop_rate = d * 0.01
+        print(self.drop_rate)
         return np.array([(min_x, min_y, min_z), (max_x, max_y, max_z)])
 
     @staticmethod
