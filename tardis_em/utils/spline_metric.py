@@ -7,7 +7,6 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
-from math import sqrt
 from typing import Optional, Tuple
 
 import numpy as np
@@ -105,10 +104,10 @@ class FilterConnectedNearSegments:
         """
         # Check 01 - 01 & Check 01 - 10
         ax = [
-            (np.array(spline2[1]), np.array(spline2[0])),
-            (np.array(spline2[1]), np.array(spline2[0])),
+            (np.array(spline2[3]), np.array(spline2[2])),
+            (np.array(spline2[3]), np.array(spline2[2])),
         ]
-        points = [np.array(spline1[0]), np.array(spline1[-1])]
+        points = [np.array(spline1[2]), np.array(spline1[-2])]
         s201_s101, s201_s110 = [
             self._in_cylinder(
                 point=p, axis=a, r=self.cylinder_radius, h=self.distance_th
@@ -118,10 +117,10 @@ class FilterConnectedNearSegments:
 
         # Check 10 - 01 and Check 10 - 10
         ax = [
-            (np.array(spline2[-2]), np.array(spline2[-1])),
-            (np.array(spline2[-2]), np.array(spline2[-1])),
+            (np.array(spline2[-3]), np.array(spline2[-2])),
+            (np.array(spline2[-3]), np.array(spline2[-2])),
         ]
-        points = [np.array(spline1[0]), np.array(spline1[-1])]
+        points = [np.array(spline1[2]), np.array(spline1[-2])]
         s210_s101, s210_s110 = [
             self._in_cylinder(
                 point=p, axis=a, r=self.cylinder_radius, h=self.distance_th
@@ -188,23 +187,23 @@ class FilterConnectedNearSegments:
         if initial:
             splines_list_df = {}
             for point in point_cloud:
-                id, x, y, z = point
-                if id not in splines_list_df:
-                    splines_list_df[id] = []
-                splines_list_df[id].append([x, y, z])
+                id_, x, y, z = point
+                if id_ not in splines_list_df:
+                    splines_list_df[id_] = []
+                splines_list_df[id_].append([x, y, z])
 
             splines_list = {}
             for i in splines_list_df:
                 value = splines_list_df[i]
                 if len(value) > 5:
-                    splines_list[i] = value[2:-2]
+                    splines_list[i] = value
         else:
             splines_list = {}
             for point in point_cloud:
-                id, x, y, z = point
-                if id not in splines_list:
-                    splines_list[id] = []
-                splines_list[id].append([x, y, z])
+                id_, x, y, z = point
+                if id_ not in splines_list:
+                    splines_list[id_] = []
+                splines_list[id_].append([x, y, z])
 
         # Iterate throw every spline in the list
         merge_splines = {}
@@ -212,44 +211,44 @@ class FilterConnectedNearSegments:
         while len(splines_list) > 1:
             key = list(splines_list.keys())[0]
             value = splines_list[key]  # Pick first spline in the dictionary
-            end01 = value[0]
-            end10 = value[-1]
+            end01 = value[2]
+            end10 = value[-2]
 
-            end01_list = [list(x)[1][0] for x in splines_list.items()]
-            end10_list = [list(x)[1][-1] for x in splines_list.items()]
+            end01_list = [list(x)[1][2] for x in splines_list.items()]
+            end10_list = [list(x)[1][-2] for x in splines_list.items()]
 
             # Check if any ends is within threshold distance
             end01_list01 = np.sqrt(
                 np.sum((np.asarray(end01_list) - np.asarray(end01)) ** 2, axis=1)
             )
             end01_list01 = [
-                {id: dist}
-                for id, dist in zip(list(splines_list.keys()), end01_list01)
-                if dist <= 1000 and id != key
+                {id_: dist}
+                for id_, dist in zip(list(splines_list.keys()), end01_list01)
+                if dist <= 1000 and id_ != key
             ]
             end01_list10 = np.sqrt(
                 np.sum((np.asarray(end10_list) - np.asarray(end01)) ** 2, axis=1)
             )
             end01_list10 = [
-                {id: dist}
-                for id, dist in zip(list(splines_list.keys()), end01_list10)
-                if dist <= self.distance_th and id != key
+                {id_: dist}
+                for id_, dist in zip(list(splines_list.keys()), end01_list10)
+                if dist <= self.distance_th and id_ != key
             ]
             end10_list01 = np.sqrt(
                 np.sum((np.asarray(end01_list) - np.asarray(end10)) ** 2, axis=1)
             )
             end10_list01 = [
-                {id: dist}
-                for id, dist in zip(list(splines_list.keys()), end10_list01)
-                if dist <= self.distance_th and id != key
+                {id_: dist}
+                for id_, dist in zip(list(splines_list.keys()), end10_list01)
+                if dist <= self.distance_th and id_ != key
             ]
             end10_list10 = np.sqrt(
                 np.sum((np.asarray(end10_list) - np.asarray(end10)) ** 2, axis=1)
             )
             end10_list10 = [
-                {id: dist}
-                for id, dist in zip(list(splines_list.keys()), end10_list10)
-                if dist <= self.distance_th and id != key
+                {id_: dist}
+                for id_, dist in zip(list(splines_list.keys()), end10_list10)
+                if dist <= self.distance_th and id_ != key
             ]
 
             # Check if any of the point is within the cylinder and get the closest one
@@ -258,29 +257,17 @@ class FilterConnectedNearSegments:
 
             for end_list in end_lists:
                 for i in end_list:
-                    m_id = list(i.keys())[
-                        -1 if end_list in [end10_list01, end10_list10] else 0
-                    ]
+                    m_id = list(i.keys())[-2 if end_list in [end10_list01, end10_list10] else 2]
                     m_end = list(splines_list[m_id])
 
                     not_at_the_border = np.all(
                         [
                             (
-                                m_end[
-                                    -1
-                                    if end_list in [end10_list01, end10_list10]
-                                    else 0
-                                ][2]
-                                - MIN_Z
+                                m_end[-2 if end_list in [end10_list01, end10_list10] else 2][2] - MIN_Z
                             )
                             >= omit_border,
                             (
-                                MAX_Z
-                                - m_end[
-                                    -1
-                                    if end_list in [end10_list01, end10_list10]
-                                    else 0
-                                ][2]
+                                MAX_Z - m_end[-2 if end_list in [end10_list01, end10_list10] else 2][2]
                             )
                             >= omit_border,
                         ]
@@ -288,22 +275,14 @@ class FilterConnectedNearSegments:
 
                     if not_at_the_border:
                         points = np.array(
-                            m_end[-1 if end_list in [end10_list01, end10_list10] else 0]
+                            m_end[-2 if end_list in [end10_list01, end10_list10] else 2]
                         )
                         axis = (
                             np.array(
-                                value[
-                                    -2
-                                    if end_list in [end10_list01, end10_list10]
-                                    else 1
-                                ]
+                                value[-2 if end_list in [end10_list01, end10_list10] else 2]
                             ),
                             np.array(
-                                value[
-                                    -1
-                                    if end_list in [end10_list01, end10_list10]
-                                    else 0
-                                ]
+                                value[-2 if end_list in [end10_list01, end10_list10] else 2]
                             ),
                         )
 
@@ -385,8 +364,8 @@ class FilterConnectedNearSegments:
 
         return np.concatenate(
             [
-                np.hstack((np.repeat(id, len(array)).reshape(-1, 1), array))
-                for id, array in merge_splines.items()
+                np.hstack((np.repeat(id_, len(array)).reshape(-1, 1), array))
+                for id_, array in merge_splines.items()
             ]
         )
 
@@ -474,6 +453,11 @@ class FilterSpatialGraph:
 
             segments = np.hstack(new_seg)[0, :]
             segments = reorder_segments_id(segments)
+
+        # Split 150 degree connections
+        loop_ = True
+        while loop_:
+            loop_, segments = cut_150_degree(segments)
 
         return reorder_segments_id(segments)
 
@@ -716,7 +700,9 @@ def sort_segment(coord: np.ndarray) -> np.ndarray:
 
 
 def reorder_segments_id(
-    coord: np.ndarray, order_range: Optional[list] = None
+    coord: np.ndarray,
+    order_range: Optional[list] = None,
+    order_list: Optional[list, np.ndarray] = None,
 ) -> np.ndarray:
     """
     Reorder list of segments to remove missing IDs
@@ -726,6 +712,7 @@ def reorder_segments_id(
     Args:
         coord: Array of points in 3D or 3D with their segment ID
         order_range: Costume id range for reordering
+        order_list: List of reorder IDs to match to coord.
 
     Returns:
         np.ndarray: Array of points with reordered IDs values
@@ -737,8 +724,17 @@ def reorder_segments_id(
     else:
         df_range = np.asarray(range(order_range[0], order_range[1]), dtype=df.dtype)
 
-    for id, i in enumerate(coord[:, 0]):
-        coord[id, 0] = df_range[np.where(df == i)[0][0]]
+    if order_list is None:
+        for id, i in enumerate(coord[:, 0]):
+            coord[id, 0] = df_range[np.where(df == i)[0][0]]
+    else:
+        ordered_coord = []
+        for i, new_id in zip(df, order_list):
+            line = coord[np.where(coord[:, 0] == i)[0], :]
+            line[:, 0] = new_id
+            ordered_coord.append(line)
+        coord = np.concatenate(ordered_coord)
+        coord = reorder_segments_id(coord)
 
     return coord
 
@@ -757,14 +753,7 @@ def tortuosity(coord: np.ndarray) -> float:
         return 1.0
 
     length = total_length(coord) + 1e-16
-    end_length = (
-        sqrt(
-            (coord[0][0] - coord[-1][0]) ** 2
-            + (coord[0][1] - coord[-1][1]) ** 2
-            + (coord[0][2] - coord[-1][2]) ** 2
-        )
-        + 1e-16
-    )
+    end_length = np.sqrt(np.sum((coord[0] - coord[-1]) ** 2) + 1e-16)
 
     return length / end_length
 
@@ -787,11 +776,7 @@ def total_length(coord: np.ndarray) -> float:
             break
 
         # sqrt((x2 - x1)2 + (y2 - y1)2 + (z2 - z1)2)
-        length += sqrt(
-            (coord[id][0] - coord[id + 1][0]) ** 2
-            + (coord[id][1] - coord[id + 1][1]) ** 2
-            + (coord[id][2] - coord[id + 1][2]) ** 2
-        )
+        length += np.sqrt(np.sum((coord[id] - coord[id + 1]) ** 2))
 
     return length
 
@@ -838,6 +823,9 @@ def cut_150_degree(segments_array: np.ndarray):
     segments_array(np. ndarray): Array of line segments where the first column
     indicates the segment id and the remaining columns represent
     the coordinates of points.
+
+    Args:
+        segments_array:
 
     Returns:
     tuple
@@ -886,6 +874,24 @@ def cut_150_degree(segments_array: np.ndarray):
             for id_, c in enumerate(cut_segments)
         ]
     )
+
+
+def sort_by_length(coord):
+    """
+    Sort all splines by their length.
+
+    Args:
+        coord: Array of coordinates.
+
+    Returns:
+        np.ndarray: sorted and reorder splines.
+    """
+    length_list = []
+    for i in np.unique(coord[:, 0]):
+        length_list.append(total_length(coord[np.where(coord[:, 0] == i)[0], 1:]))
+
+    sorted_id = np.argsort(length_list)
+    return reorder_segments_id(coord, order_list=sorted_id)
 
 
 class ComputeConfidenceScore:

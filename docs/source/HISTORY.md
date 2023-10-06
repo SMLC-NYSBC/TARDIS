@@ -13,6 +13,8 @@
         * Few bug fixes
         * Fixed Bugs in final filament filtering algorithms
         * Added filament filtering for removing false-positive rapid 150 degree connections
+        * Microtubule output is now sorted by the length
+        * Each instance receive segmentation confidence score by which user can filter out predictions
 
 * **SpindleTorch module changes:**
     * *General*:
