@@ -36,9 +36,6 @@ def scale_image(
     if mask is not None:
         type_m = mask.dtype
 
-    print(image.shape)
-    print(image.dtype, type_i)
-    print(scale, scale[0].dtype)
     if image is not None:
         if not np.all(scale == image.shape):
             if image.ndim == 3 and image.shape[2] != 3:  # 3D with Gray
@@ -104,7 +101,7 @@ def area_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
         no.ndarray: Up or Down scale 3D array.
     """
 
-    size_Z = [scale[0], img.shape[1], img.shape[2]]
+    size_Z = [int(scale[0]), int(img.shape[1]), int(img.shape[2])]
     image_scale_Z = np.zeros(size_Z, dtype=dtype)
 
     # Scale Z axis
