@@ -40,7 +40,11 @@ from tardis_em.utils.load_data import import_am, ImportDataFromAmira, load_image
 from tardis_em.utils.logo import print_progress_bar, TardisLogo
 from tardis_em.utils.normalization import MeanStdNormalize, RescaleNormalize
 from tardis_em.utils.setup_envir import build_temp_dir, clean_up
-from tardis_em.utils.spline_metric import FilterSpatialGraph, SpatialGraphCompare, sort_by_length
+from tardis_em.utils.spline_metric import (
+    FilterSpatialGraph,
+    SpatialGraphCompare,
+    sort_by_length,
+)
 from tardis_em._version import version
 
 try:

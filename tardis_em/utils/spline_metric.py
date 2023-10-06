@@ -257,17 +257,29 @@ class FilterConnectedNearSegments:
 
             for end_list in end_lists:
                 for i in end_list:
-                    m_id = list(i.keys())[-2 if end_list in [end10_list01, end10_list10] else 2]
+                    m_id = list(i.keys())[
+                        -2 if end_list in [end10_list01, end10_list10] else 2
+                    ]
                     m_end = list(splines_list[m_id])
 
                     not_at_the_border = np.all(
                         [
                             (
-                                m_end[-2 if end_list in [end10_list01, end10_list10] else 2][2] - MIN_Z
+                                m_end[
+                                    -2
+                                    if end_list in [end10_list01, end10_list10]
+                                    else 2
+                                ][2]
+                                - MIN_Z
                             )
                             >= omit_border,
                             (
-                                MAX_Z - m_end[-2 if end_list in [end10_list01, end10_list10] else 2][2]
+                                MAX_Z
+                                - m_end[
+                                    -2
+                                    if end_list in [end10_list01, end10_list10]
+                                    else 2
+                                ][2]
                             )
                             >= omit_border,
                         ]
@@ -279,10 +291,18 @@ class FilterConnectedNearSegments:
                         )
                         axis = (
                             np.array(
-                                value[-2 if end_list in [end10_list01, end10_list10] else 2]
+                                value[
+                                    -2
+                                    if end_list in [end10_list01, end10_list10]
+                                    else 2
+                                ]
                             ),
                             np.array(
-                                value[-2 if end_list in [end10_list01, end10_list10] else 2]
+                                value[
+                                    -2
+                                    if end_list in [end10_list01, end10_list10]
+                                    else 2
+                                ]
                             ),
                         )
 
