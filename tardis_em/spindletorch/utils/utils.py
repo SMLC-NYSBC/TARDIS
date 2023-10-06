@@ -108,12 +108,6 @@ def area_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
     for i in range(img.shape[2]):
         df_img = torch.from_numpy(img[:, :, i]).to("cpu").type(torch.float)
 
-        print(
-            df_img[None, None, :].shape,
-            size_Z[:2],
-            size_Z[:2][0].dtype,
-            size_Z[:2][1].dtype,
-        )
         image_scale_Z[:, :, i] = (
             F.interpolate(df_img[None, None, :], size=size_Z[:2], mode="area")
             .cpu()
