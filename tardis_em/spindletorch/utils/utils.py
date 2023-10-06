@@ -101,7 +101,7 @@ def area_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
         no.ndarray: Up or Down scale 3D array.
     """
 
-    size_Z = [int(scale[0]), int(img.shape[1]), int(img.shape[2])]
+    size_Z = [scale[0], img.shape[1], img.shape[2]]
     image_scale_Z = np.zeros(size_Z, dtype=dtype)
 
     # Scale Z axis
@@ -109,7 +109,9 @@ def area_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
         df_img = torch.from_numpy(img[:, :, i]).to("cpu").type(torch.float)
 
         image_scale_Z[:, :, i] = (
-            F.interpolate(df_img[None, None, :], size=size_Z[:2], mode="area")
+            F.interpolate(
+                df_img[None, None, :], size=[int(s) for s in size_Z[:2]], mode="area"
+            )
             .cpu()
             .detach()
             .numpy()[0, 0, :]
@@ -121,7 +123,9 @@ def area_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
     for i in range(scale[0]):
         df_img = torch.from_numpy(image_scale_Z[i, :]).to("cpu").type(torch.float)
         img[i, :] = (
-            F.interpolate(df_img[None, None, :], size=scale[1:], mode="area")
+            F.interpolate(
+                df_img[None, None, :], size=[int(s) for s in scale[1:]], mode="area"
+            )
             .cpu()
             .detach()
             .numpy()[0, 0, :]
