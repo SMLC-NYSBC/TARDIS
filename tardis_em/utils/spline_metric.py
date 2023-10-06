@@ -7,7 +7,7 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 import numpy as np
 from scipy.interpolate import splev, splprep, UnivariateSpline
@@ -722,7 +722,7 @@ def sort_segment(coord: np.ndarray) -> np.ndarray:
 def reorder_segments_id(
     coord: np.ndarray,
     order_range: Optional[list] = None,
-    order_list: Optional[list, np.ndarray] = None,
+    order_list: Optional[Union[list, np.ndarray]] = None,
 ) -> np.ndarray:
     """
     Reorder list of segments to remove missing IDs
