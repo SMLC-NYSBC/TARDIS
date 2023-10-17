@@ -25,10 +25,15 @@ is used for instance segmentation of 2D/3D images.
     <summary><b>TARDIS v0.1.0 - RC3 - (2023-08-28)</b></summary>
 
     * General improvement from MT prediction
+    * Added full support for OTA updates of the entire pacakge
     * Improved accuracy for semantic and instance segmentation of MT and Membrane
-    * Added support for 2D membrane segmentation
+    * Added support for 2D membrane segmentation and update to MT and membrane 3D models
     * Added experimental SparseDIST module
     * Support for ply export file
+    * Fixed AWS access denied error on some networks
+    * Added filament filtering for removing false-positive rapid 150 degree connections
+    * Microtubule output is now sorted by the length
+    * Each instance receive segmentation confidence score by which user can filter out predictions
 </details>
 
 <details>
