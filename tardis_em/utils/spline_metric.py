@@ -849,9 +849,7 @@ def cut_150_degree(segments_array: np.ndarray):
         segments_array:
 
     Returns:
-    tuple
-        - bool: Indicates whether any segment was cut.
-        - np.ndarray: New array of cut segments.
+        Tuple[bool, np.ndarray]: Indicates whether any segment was cut, and New array of cut segments.
 
     """
 

@@ -77,7 +77,7 @@ is used for instance segmentation of 2D/3D images.
     * Restructure and standardize naming and versioning in TARDIS 
 </details>
 
-# Requirements
+## Requirements
     # Python
         python 3.7, 3.8. 3.9, 3.10, 3.11
 

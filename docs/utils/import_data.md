@@ -1,4 +1,4 @@
-# Global -> Utils
+# Global -> Import Data
 # Import data formats
 ```{eval-rst}
 .. automodule:: tardis_em.utils.load_data

@@ -295,9 +295,7 @@ def mcov(
     targets,
 ):
     """
-    mcov(G, P) = 1/|G| * Σ maxIoU(g, p)
-    mwcov(G, P) = Σ w_g * maxIoU(g, p); where w_g = |g| / Σ|g'|
-
+    Mean Coverage metric
 
     Args:
         input_ (np.ndarray, torch.Tensor): _description_

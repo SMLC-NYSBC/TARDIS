@@ -27,7 +27,7 @@ pygments_style = "sphinx"
 
 # -- Options for HTML output -------------------------------------------------]
 
-html_theme = "furo"
+html_theme = "sphinx_rtd_theme"
 
 autodoc_default_options = {
     "members": True,
