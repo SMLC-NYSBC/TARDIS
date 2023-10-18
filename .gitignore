@@ -16,7 +16,7 @@ cnn_checkpoint/
 data/
 env/
 build
-doc/build
+docs/build
 develop-eggs/
 dist/
 downloads/
@@ -110,6 +110,6 @@ ENV/
 .vscode/
 .DS_Store
 *.ipynb
-doc/source/resources/Tardis_logo_1.svg
-doc/source/resources/Tardis_logo_1.png
-doc/source/resources/Tardis_logo_2.svg
+docs/source/resources/Tardis_logo_1.svg
+docs/source/resources/Tardis_logo_1.png
+docs/source/resources/Tardis_logo_2.svg
