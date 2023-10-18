@@ -1,6 +1,6 @@
 # Welcome to TARDIS-pytorch's documentation!
 <p align="center">
-  <img src="resources/Tardis_logo_2.png" width="512"/>
+  <img src="resources/Tardis_logo_2.svg" width="512"/>
 </p>
 
 # Main

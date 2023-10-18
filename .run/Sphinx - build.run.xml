@@ -17,7 +17,6 @@
     <option name="docutils_open_in_browser" value="false" />
     <method v="2">
       <option name="FwBeforeLaunchTask" enabled="true" />
-      <option name="RunConfigurationTask" enabled="true" run_configuration_name="pytest - Python 3.7" run_configuration_type="tests" />
       <option name="RunConfigurationTask" enabled="true" run_configuration_name="pytest - Python 3.8" run_configuration_type="tests" />
       <option name="RunConfigurationTask" enabled="true" run_configuration_name="pytest - Python 3.9" run_configuration_type="tests" />
       <option name="RunConfigurationTask" enabled="true" run_configuration_name="pytest - Python 3.10" run_configuration_type="tests" />

@@ -2,12 +2,12 @@ import os
 import sys
 from tardis_em import version
 
-project = "TARDIS-pytorch"
+project = "TARDIS-em"
 copyright = "2021, Robert Kiewisz, Tristan Bepler"
 author = "Robert Kiewisz, Tristan Bepler"
 release = version
 
-sys.path.insert(0, os.path.abspath(".."))
+sys.path.insert(0, os.path.abspath(""))
 
 # -- General configuration ---------------------------------------------------
 
