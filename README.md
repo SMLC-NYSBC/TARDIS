@@ -2,11 +2,10 @@
   <img src="resources/Tardis_logo_2.png" width="512"/>
 </p>
 
-[![TARDIS_documentation](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/sphinx_documentation.yml/badge.svg)](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/sphinx_documentation.yml)
-[![Python PyTest](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_package.yml/badge.svg?branch=main)](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_package.yml)
+![Version](https://img.shields.io/badge/release-0.1.0-success)
+[![Python PyTest](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_pytest.yml/badge.svg)](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_pytest.yml)
 [![Check License Lines](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/licensed.yml/badge.svg)](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/licensed.yml)
-![Version](https://img.shields.io/badge/release-0.1.0_RC3-success)
-![Documentation](https://readthedocs.org/projects/tardis/badge/?version=latest)
+[![Documentation](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/sphinx_documentation.yml/badge.svg)](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/sphinx_documentation.yml)
 
 # TARDIS-EM
 Python-based software for generalized object instance segmentation from (cryo-)electron microscopy
