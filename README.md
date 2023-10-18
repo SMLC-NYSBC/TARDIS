@@ -2,10 +2,11 @@
   <img src="resources/Tardis_logo_2.png" width="512"/>
 </p>
 
+[![TARDIS_documentation](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/sphinx_documentation.yml/badge.svg)](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/sphinx_documentation.yml)
 [![Python PyTest](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_package.yml/badge.svg?branch=main)](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_package.yml)
 [![Check License Lines](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/licensed.yml/badge.svg)](https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/licensed.yml)
 ![Version](https://img.shields.io/badge/release-0.1.0_RC3-success)
-![Documentation](https://readthedocs.org/projects/tardis-em/badge/?version=latest)
+![Documentation](https://readthedocs.org/projects/tardis/badge/?version=latest)
 
 # TARDIS-EM
 Python-based software for generalized object instance segmentation from (cryo-)electron microscopy
@@ -25,15 +26,15 @@ is used for instance segmentation of 2D/3D images.
     <summary><b>TARDIS v0.1.0 - RC3 - (2023-08-28)</b></summary>
 
     * General improvement from MT prediction
-    * Added full support for OTA updates of the entire pacakge
+    * Added full support for OTA updates of the entire package
     * Improved accuracy for semantic and instance segmentation of MT and Membrane
     * Added support for 2D membrane segmentation and update to MT and membrane 3D models
     * Added experimental SparseDIST module
     * Support for ply export file
     * Fixed AWS access denied error on some networks
-    * Added filament filtering for removing false-positive rapid 150 degree connections
+    * Added filament filtering for removing false-positive rapid 150-degree connections
     * Microtubule output is now sorted by the length
-    * Each instance receive segmentation confidence score by which user can filter out predictions
+    * Each instance receives a segmentation confidence score by which the user can filter out predictions
 </details>
 
 <details>
@@ -111,11 +112,11 @@ is used for instance segmentation of 2D/3D images.
 ## Installation
 **From Source**
 
-The sources for TARDIS-Pytorch can be downloaded from the ***Available upon stable release***.
+The sources for TARDIS-em can be downloaded from the ***Available upon stable release***.
 
 You can either clone the public repository:
 
-    $ git clone git://github.com/SMLC-NYSBC/TARDIS-pytorch
+    $ git clone git://github.com/SMLC-NYSBC/TARDIS
     $ python setup.py install
     $ pip install -r requirements.txt
 
@@ -190,8 +191,8 @@ Options:
                                   CNN model.
                                   [default: /local/dir/]
                                   
-  -ms, --mask BOOL                Define if you input tomograms images or binary 
-                                  mask with pre segmented microtubules.
+  -ms, --mask BOOL                Define if you input tomogram images or binary 
+                                  mask with pre-segmented microtubules.
                                   [default: False]
                                   
   -ch, --checkpoint TEXT          Optional list of pre-trained weights
@@ -204,7 +205,7 @@ Options:
                                   Type of output files. The First optional
                                   output file is the binary mask which can be
                                   of type None [no output], am [Amira], mrc or
-                                  tif. Second output is instance segmentation
+                                  tif. The second output is instance segmentation
                                   of objects, which can be output as amSG
                                   [Amira], mrcM [mrc mask], tifM [tif mask],
                                   csv coordinate file [ID, X, Y, Z] or None
@@ -219,9 +220,9 @@ Options:
                                   [default: 128]
                                   
   -rt, --rotate BOOLEAN           If True, during CNN prediction image is
-                                  rotate 4x by 90 degrees.This will increase
-                                  prediction time 4x. However may lead to more
-                                  cleaneroutput.  
+                                  rotated 4x by 90 degrees. This will increase
+                                  prediction time 4x. However, may lead to more
+                                  cleaner output.  
                                   [default: True]
                                   
   -ct, --cnn_threshold FLOAT      Threshold used for CNN prediction.
@@ -236,10 +237,10 @@ Options:
                                   cloud into smaller patches with overlap.
                                   [default: 1000]
                                   
-  -ap, --amira_prefix TEXT        If dir/amira foldr exist, TARDIS will search
-                                  for files with given prefix (e.g.
+  -ap, --amira_prefix TEXT        If dir/amira folder exists, TARDIS will search
+                                  for files with a given prefix (e.g.
                                   file_name.CorrelationLines.am). If the
-                                  correct file is found, TARDIS will use its
+                                  the correct file is found, TARDIS will use its
                                   instance segmentation with ZiB Amira
                                   prediction, and output additional file
                                   called file_name_AmiraCompare.am.  
@@ -247,7 +248,7 @@ Options:
   -fl, --filter_by_length INTEGER
                                   Filtering parameters for microtubules,
                                   defining maximum microtubule length in
-                                  angstrom. All filaments shorter then this
+                                  angstrom. All filaments shorter than this
                                   length will be deleted.
                                   [default: 500]
                                   
@@ -255,18 +256,18 @@ Options:
                                   microtubules may be predicted incorrectly as
                                   two separate filaments. To overcome this
                                   during filtering for each spline, we
-                                  determine the vector in which filament end
-                                  is facing and we connect all filament that
+                                  determine the vector in which the filament end
+                                  is facing and we connect all filaments that
                                   faces the same direction and are within the
-                                  given connection distance in angstrom.
+                                  given connection distance in Angstrom.
                                   [default: 2500]
                                   
   -cr, --connect_cylinder INTEGER
                                   Filtering parameter for microtubules. To
-                                  reduce false positive from connecting
-                                  filaments, we reduce the searching are to
-                                  cylinder radius given in angstrom. For each
-                                  spline we determine vector in which filament
+                                  reduce false positives from connecting
+                                  filaments, we reduce the search area to
+                                  cylinder radius is given in Angstrom. For each
+                                  spline we determine the vector in which the filament
                                   end is facing and we search for a filament
                                   that faces the same direction and their end
                                   can be found within a cylinder.
@@ -279,7 +280,7 @@ Options:
                                   prediction. The comparison is done by
                                   evaluating the distance of two filaments
                                   from each other. This parameter defines the
-                                  maximum distance used to evaluate the
+                                  the maximum distance used to evaluate the
                                   similarity between two splines based on
                                   their coordinates [A].
                                   [default: 175]
@@ -321,8 +322,8 @@ optional arguments:
                                   CNN model.  
                                   [default: /local/dir/]
 
-  -ms, --mask BOOL                Define if you input tomograms images or binary 
-                                  mask with pre segmented microtubules.
+  -ms, --mask BOOL                Define if you input tomogram images or binary 
+                                  mask with pre-segmented microtubules.
                                   [default: False]
                                                       
   -ch, --checkpoint TEXT          Optional list of pre-trained weights
@@ -351,11 +352,11 @@ optional arguments:
                                   
   -rt, --rotate BOOLEAN           If True, during CNN prediction image is
                                   rotate 4x by 90 degrees.This will increase
-                                  prediction time 4x. However may lead to more
-                                  cleaneroutput.  
+                                  prediction time 4x. However, may lead to more
+                                  cleaner output.  
                                   [default: True]
                                   
-  -ct, --cnn_threshold FLOAT      Threshold used for CNN prediction..
+  -ct, --cnn_threshold FLOAT      Threshold used for CNN prediction.
                                   [default: 0.5]
                                   
   -dt, --dist_threshold FLOAT     Threshold used for instance prediction.
