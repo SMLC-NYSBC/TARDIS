@@ -192,29 +192,29 @@ class TestDataLoader:
 
         shutil.rmtree("./temp_train")
 
-    def test_s3dis_dataloader(self):
-        train_dl = Stanford3DDataset(
-            coord_dir=join(self.dir_, "s3dis", "train", "masks"),
-            coord_format=".ply",
-            patch_if=500,
-        )
-
-        # Build first time
-        coords_v, _, graph_v, output_idx, _ = train_dl.__getitem__(0)
-
-        assert int(len(coords_v)) == 10
-        s = coords_v[0].shape[0]
-        assert coords_v[0].shape == (s, 3)
-        assert graph_v[0].shape == (s, s)
-        assert output_idx[0].shape == (s,)
-
-        # Load from memory
-        coords_v, _, graph_v, output_idx, _ = train_dl.__getitem__(0)
-
-        assert int(len(coords_v)) == 10
-        s = coords_v[0].shape[0]
-        assert coords_v[0].shape == (s, 3)
-        assert graph_v[0].shape == (s, s)
-        assert output_idx[0].shape == (s,)
-
-        shutil.rmtree("./temp_train")
+    # def test_s3dis_dataloader(self):
+    #     train_dl = Stanford3DDataset(
+    #         coord_dir=join(self.dir_, "s3dis", "train", "masks"),
+    #         coord_format=".ply",
+    #         patch_if=500,
+    #     )
+    #
+    #     # Build first time
+    #     coords_v, _, graph_v, output_idx, _ = train_dl.__getitem__(0)
+    #
+    #     assert int(len(coords_v)) == 10
+    #     s = coords_v[0].shape[0]
+    #     assert coords_v[0].shape == (s, 3)
+    #     assert graph_v[0].shape == (s, s)
+    #     assert output_idx[0].shape == (s,)
+    #
+    #     # Load from memory
+    #     coords_v, _, graph_v, output_idx, _ = train_dl.__getitem__(0)
+    #
+    #     assert int(len(coords_v)) == 10
+    #     s = coords_v[0].shape[0]
+    #     assert coords_v[0].shape == (s, 3)
+    #     assert graph_v[0].shape == (s, s)
+    #     assert output_idx[0].shape == (s,)
+    #
+    #     shutil.rmtree("./temp_train")

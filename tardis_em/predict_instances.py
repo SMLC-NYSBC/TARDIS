@@ -14,7 +14,9 @@ import click
 
 from tardis_em.utils.predictor import DataSetPredictor
 from tardis_em._version import version
+from tardis_em.utils.ota_update import ota_update
 
+ota = ota_update()
 warnings.simplefilter("ignore", UserWarning)
 
 """DEPRECIATED in TARDIS-em v0.1.0"""

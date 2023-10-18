@@ -21,24 +21,47 @@ import time
 
 
 def ota_update():
-    # Check OTA-Update
-    if not isdir(join(expanduser("~"), ".tardis_em")):
-        mkdir(join(expanduser("~"), ".tardis_em"))
+    timestamp = time.time()
+    try:
+        save = json.load(
+            open(
+                join(
+                    expanduser("~"),
+                    ".tardis_em",
+                    "last_check.json",
+                )
+            )
+        )["timestamp"]
+    except:
+        save = time.time()
+        with open(
+            join(join(expanduser("~"), ".tardis_em"), "last_check.json"), "w"
+        ) as f:
+            json.dump({"timestamp": timestamp}, f)
 
-    ota_status = aws_check_pkg_with_temp()
+    if timestamp - save > 86400:
+        # Check OTA-Update
+        if not isdir(join(expanduser("~"), ".tardis_em")):
+            mkdir(join(expanduser("~"), ".tardis_em"))
 
-    if not ota_status:
-        main_logo = TardisLogo()
-        main_logo(
-            title="| Transforms And Rapid Dimensionless Instance Segmentation",
-            text_0="TARDIS_pytorch has new update avaiable via OTA-Update!",
-            text_1="Please in run this command to update tardis",
-            text_3="tardis_ota",
-            text_5="Contact developers if segmentation of your organelle is not supported! "
-            "(rkiewisz@nysbc.org | tbepler@nysbc.org).",
-            text_6="Join Slack community: https://bit.ly/41hTCaP",
-        )
-        time.sleep(10)
+        ota_status = aws_check_pkg_with_temp()
+
+        if not ota_status:
+            main_logo = TardisLogo()
+            main_logo(
+                title="| Transforms And Rapid Dimensionless Instance Segmentation",
+                text_0="TARDIS_pytorch has new update avaiable via OTA-Update!",
+                text_1="Please in run this command to update tardis",
+                text_3="tardis_ota",
+                text_5="Contact developers if segmentation of your organelle is not supported! "
+                "(rkiewisz@nysbc.org | tbepler@nysbc.org).",
+                text_6="Join Slack community: https://bit.ly/41hTCaP",
+            )
+            time.sleep(10)
+        with open(
+            join(join(expanduser("~"), ".tardis_em"), "last_check.json"), "w"
+        ) as f:
+            json.dump({"timestamp": timestamp}, f)
 
 
 def main():

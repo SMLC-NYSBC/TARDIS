@@ -471,8 +471,9 @@ class FilterSpatialGraph:
             for i in length:
                 new_seg.append(segments[np.where(segments[:, 0] == i), :])
 
-            segments = np.hstack(new_seg)[0, :]
-            segments = reorder_segments_id(segments)
+            if len(new_seg) > 0:
+                segments = np.hstack(new_seg)[0, :]
+                segments = reorder_segments_id(segments)
 
         # Split 150 degree connections
         loop_ = True
@@ -769,7 +770,7 @@ def tortuosity(coord: np.ndarray) -> float:
     Returns:
         float: Spline curvature measured with tortuosity.
     """
-    if len(coord) == 0:
+    if len(coord) <= 1:
         return 1.0
 
     length = total_length(coord) + 1e-16

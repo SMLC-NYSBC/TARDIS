@@ -63,6 +63,19 @@ def test_check_device():
     assert dev == torch.device(type="cuda", index=1)
 
 
+def test_device():
+    assert get_device("cpu") == torch.device("cpu")
+
+    assert get_device(0) == torch.device("cpu") or get_device(0) == torch.device(
+        "cuda:0"
+    )
+
+    assert get_device("mps") == torch.device("cpu") or get_device(
+        "mps"
+    ) == torch.device("mps")
+
+
+# Test file readers
 def test_tif():
     tif, px = import_tiff(tiff="./tests/test_data/data_type/tif2D.tif")
     assert tif.shape == (64, 32)
@@ -124,23 +137,13 @@ def test_am_sg():
 
 
 def test_aws():
+    # Get weights
     aws = get_weights_aws(network="dist", subtype="triang", model="microtubules")
     assert isinstance(aws, str) or isinstance(aws, io.BytesIO)
 
+    # Check if pass check
     aws = get_weights_aws(network="dist", subtype="triang", model="microtubules")
     assert isinstance(aws, str)
-
-
-def test_device():
-    assert get_device("cpu") == torch.device("cpu")
-
-    assert get_device(0) == torch.device("cpu") or get_device(0) == torch.device(
-        "cuda:0"
-    )
-
-    assert get_device("mps") == torch.device("cpu") or get_device(
-        "mps"
-    ) == torch.device("mps")
 
 
 def test_am_single_export():
@@ -204,7 +207,7 @@ def test_logo():
 
 
 def test_error():
-    TardisError(id_="20", py="tests/test_general_utils.py", desc="PyTest Failed!")
+    TardisError(id_="20", py="tests/test_utils.py", desc="PyTest Failed!")
 
 
 def test_compare_splines_probability():

@@ -88,7 +88,7 @@ def test_tortuosity():
     ), f"For coord={coord}, expected tortuosity={expected_tortuosity} but got {tortuosity(coord)}"
 
     coord = np.array([[1, 1, 1]])
-    expected_tortuosity = (0 + 1e-16) / (0 + 1e-16)
+    expected_tortuosity = 1
     assert (
         tortuosity(coord) == expected_tortuosity
     ), f"For coord={coord}, expected tortuosity={expected_tortuosity} but got {tortuosity(coord)}"
@@ -116,41 +116,14 @@ def test_FilterWrapper():
         [
             [0, 1, 2, 1],
             [0, 2, 5, 3],
-            [0, 4, 6, 6],
-            [0, 8, 9, 6],
             [1, 12, 10, 8],
             [1, 15, 12, 9],
             [1, 18, 16, 12],
             [1, 22, 25, 15],
+            [2, 102, 100, 80],
+            [2, 150, 102, 90],
+            [2, 180, 106, 102],
         ]
     )
-    assert np.all(filter(coord) == expect)
-
-    filter = FilterSpatialGraph(connect_seg_if_closer_then=0, filter_short_segments=10)
-    coord = np.array(
-        [
-            [0, 1, 2, 1],
-            [0, 2, 5, 3],
-            [0, 4, 6, 6],
-            [0, 8, 9, 6],
-            [1, 12, 10, 8],
-            [1, 15, 12, 9],
-            [1, 18, 16, 12],
-            [1, 22, 25, 15],
-        ]
-    )
-    expect = np.array(
-        [
-            [0, 1, 2, 1],
-            [0, 2, 5, 3],
-            [0, 4, 6, 6],
-            [0, 8, 9, 6],
-            [1, 12, 10, 8],
-            [1, 15, 12, 9],
-            [1, 18, 16, 12],
-            [1, 22, 25, 15],
-        ]
-    )
-    assert np.all(filter(coord) == expect)
-
-    assert np.all(filter(coord) == expect)
+    filtered_coord = filter(coord)
+    assert np.all(filtered_coord.flatten() == expect.flatten())

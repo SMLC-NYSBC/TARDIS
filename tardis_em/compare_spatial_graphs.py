@@ -22,6 +22,9 @@ from tardis_em.utils.load_data import ImportDataFromAmira
 from tardis_em.utils.logo import print_progress_bar, TardisLogo
 from tardis_em.utils.spline_metric import SpatialGraphCompare
 from tardis_em._version import version
+from tardis_em.utils.ota_update import ota_update
+
+ota = ota_update()
 
 
 @click.command()

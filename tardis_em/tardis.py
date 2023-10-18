@@ -11,7 +11,9 @@ import click
 from tardis_em._version import version
 from tardis_em.utils.logo import TardisLogo
 from tardis_em.tardis_helper.helper_func import tardis_helper
-from tardis_em import ota
+from tardis_em.utils.ota_update import ota_update
+
+ota = ota_update()
 
 
 @click.command()
