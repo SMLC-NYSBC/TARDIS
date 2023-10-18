@@ -1,28 +1,27 @@
-name: Sphinx docs to gh-pages
+name: documentation
 
-on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
+on: [push, pull_request, workflow_dispatch]
+
+permissions:
+  contents: write
 
 jobs:
-  sphinx_docs_to_gh-pages:
+  docs:
     runs-on: ubuntu-latest
-    name: Sphinx docs to gh-pages
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Installing the library
-        shell: bash -l {0}
+      - uses: actions/setup-python@v3
+      - name: Install dependencies
         run: |
-          pip install -e .
-      - name: Running the Sphinx to gh-pages Action
-        uses: uibcdf/action-sphinx-docs-to-gh-pages@v1.1.0
+          pip install sphinx sphinx_rtd_theme myst_parser
+      - name: Sphinx build
+        run: |
+          sphinx-build docs _build
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         with:
-          branch: main
-          dir_docs: docs
-          sphinxapiopts: '--separate -o . ../'
-          sphinxapiexclude: '../*setup* ../*.ipynb'
-          sphinxopts: ''
+          publish_branch: gh-pages
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: _build/
+          force_orphan: true
