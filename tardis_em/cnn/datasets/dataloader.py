@@ -17,7 +17,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
-from tardis_em.spindletorch.datasets.augmentation import preprocess
+from tardis_em.cnn.datasets.augmentation import preprocess
 from tardis_em.utils.errors import TardisError
 from tardis_em.utils.load_data import load_image
 from tardis_em.utils.normalization import MinMaxNormalize
@@ -82,7 +82,7 @@ class CNNDataset(Dataset):
         if mask.dtype != np.uint8:
             TardisError(
                 "147",
-                "tardis_em/spindletorch/dataset/dataloader.py",
+                "tardis_em/cnn/dataset/dataloader.py",
                 f"Mask should be of np.uint8 dtype but is {mask.dtype}!",
             )
 
@@ -98,13 +98,13 @@ class CNNDataset(Dataset):
         if img.dtype != np.float32 and mask.dtype != np.uint8:
             TardisError(
                 "147",
-                "tardis_em/spindletorch/dataset/dataloader.py",
+                "tardis_em/cnn/dataset/dataloader.py",
                 f"Mask {mask.dtype} and image  {img.dtype} has wrong dtype!",
             )
         if not img.min() >= -1 and not img.max() <= 1:
             TardisError(
                 "147",
-                "tardis_em/spindletorch/dataset/dataloader.py",
+                "tardis_em/cnn/dataset/dataloader.py",
                 "Image file is not binary!",
             )
 

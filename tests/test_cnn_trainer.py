@@ -15,13 +15,13 @@ import torch.nn as nn
 from torch import optim
 from torch.utils.data import DataLoader
 
-from tardis_em.spindletorch.datasets.dataloader import CNNDataset
-from tardis_em.spindletorch.train import train_cnn
-from tardis_em.spindletorch.trainer import CNNTrainer
+from tardis_em.cnn.datasets.dataloader import CNNDataset
+from tardis_em.cnn.train import train_cnn
+from tardis_em.cnn.trainer import CNNTrainer
 from tardis_em.utils.device import get_device
 
 
-def test_init_spindletorch_train():
+def test_init_cnn_train():
     CNNTrainer(
         model=nn.Conv1d(1, 2, 3),
         structure={"cnn_type": "unet"},

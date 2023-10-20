@@ -8,7 +8,7 @@
 #  MIT License 2021 - 2023                                            #
 #######################################################################
 
-from tardis_em.spindletorch.utils.build_cnn import FNet, ResUNet, UNet, UNet3Plus
+from tardis_em.cnn.utils.build_cnn import FNet, ResUNet, UNet, UNet3Plus
 from tardis_em.utils.errors import TardisError
 
 
@@ -22,7 +22,7 @@ def build_cnn_network(
     and build CNN model.
 
     Args:
-        network_type (str): Name of network [unet, resunet, unet3plus, big_unet, fnet].
+        network_type (str): Name of network [unet, resunet, unet3plus, fnet].
         structure (dict): Dictionary with all setting to build CNN.
         img_size (int): Image patch size used for CNN.
         prediction (bool): If true, build CNN in prediction patch.
@@ -30,7 +30,7 @@ def build_cnn_network(
     if network_type not in ["unet", "resunet", "unet3plus", "fnet"]:
         TardisError(
             "141",
-            "tardis_em/spindletorch/spindletorch.py",
+            "tardis_em/cnn/cnn.py",
             f"Wrong CNN network name {network_type}",
         )
 

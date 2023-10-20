@@ -7,7 +7,6 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
-import torch
 
 from tardis_em.utils.losses import *
 

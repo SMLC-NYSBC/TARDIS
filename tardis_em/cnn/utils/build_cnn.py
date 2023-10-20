@@ -12,13 +12,13 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from tardis_em.spindletorch.model.convolution import (
+from tardis_em.cnn.model.convolution import (
     DoubleConvolution,
     RecurrentDoubleConvolution,
 )
-from tardis_em.spindletorch.model.decoder_blocks import build_decoder
-from tardis_em.spindletorch.model.encoder_blocks import build_encoder
-from tardis_em.spindletorch.utils.utils import number_of_features_per_level
+from tardis_em.cnn.model.decoder_blocks import build_decoder
+from tardis_em.cnn.model.encoder_blocks import build_encoder
+from tardis_em.cnn.utils.utils import number_of_features_per_level
 
 
 class BasicCNN(nn.Module):

@@ -12,7 +12,7 @@ import torch.nn as nn
 from torch import optim
 
 from tardis_em.dist_pytorch.trainer import CDistTrainer, DistTrainer
-from tardis_em.spindletorch.trainer import CNNTrainer
+from tardis_em.cnn.trainer import CNNTrainer
 from tardis_em.utils.trainer import BasicTrainer
 
 

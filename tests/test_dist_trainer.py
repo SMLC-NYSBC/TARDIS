@@ -8,20 +8,10 @@
 #  MIT License 2021 - 2023                                            #
 #######################################################################
 
-import os
-import shutil
-
 import torch.nn as nn
 from torch import optim
-from torch.utils.data import DataLoader
 
-from tardis_em.dist_pytorch.datasets.dataloader import (
-    FilamentDataset,
-    ScannetColorDataset,
-)
-from tardis_em.dist_pytorch.train import train_dist
 from tardis_em.dist_pytorch.trainer import CDistTrainer, DistTrainer
-from tardis_em.utils.device import get_device
 
 
 def test_init_dist_train():

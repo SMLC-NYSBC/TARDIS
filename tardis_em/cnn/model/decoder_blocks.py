@@ -13,12 +13,12 @@ from typing import Optional
 import torch
 import torch.nn as nn
 
-from tardis_em.spindletorch.model.convolution import (
+from tardis_em.cnn.model.convolution import (
     DoubleConvolution,
     RecurrentDoubleConvolution,
 )
-from tardis_em.spindletorch.model.init_weights import init_weights
-from tardis_em.spindletorch.utils.utils import number_of_features_per_level
+from tardis_em.cnn.model.init_weights import init_weights
+from tardis_em.cnn.utils.utils import number_of_features_per_level
 
 
 class DecoderBlockCNN(nn.Module):

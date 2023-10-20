@@ -207,7 +207,7 @@ class StitchImages:
                             if img.shape != (self.ny, self.nx):
                                 TardisError(
                                     id_="",
-                                    py="tardis_em/spindletorch/data_processing/stitch.py",
+                                    py="tardis_em/cnn/data_processing.md/stitch.py",
                                     desc=f"Stitch image size does not match. {img.shape} "
                                     f"doesnt match ({self.ny}, {self.nx})",
                                 )
@@ -216,7 +216,7 @@ class StitchImages:
                             if img.shape != (self.nz, self.ny, self.nx):
                                 TardisError(
                                     id_="",
-                                    py="tardis_em/spindletorch/data_processing/stitch.py",
+                                    py="tardis_em/cnn/data_processing.md/stitch.py",
                                     desc=f"Stitch image size does not match. {img.shape} "
                                     f"doesnt match ({self.nz}, {self.ny}, {self.nx})",
                                 )

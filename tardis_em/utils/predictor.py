@@ -23,15 +23,15 @@ from tardis_em.dist_pytorch.datasets.patches import PatchDataSet
 from tardis_em.dist_pytorch.dist import build_dist_network
 from tardis_em.dist_pytorch.utils.build_point_cloud import BuildPointCloud
 from tardis_em.dist_pytorch.utils.segment_point_cloud import PropGreedyGraphCut
-from tardis_em.spindletorch.data_processing.draw_mask import (
+from tardis_em.cnn.data_processing.draw_mask import (
     draw_semantic_membrane,
     draw_instances,
 )
-from tardis_em.spindletorch.data_processing.stitch import StitchImages
-from tardis_em.spindletorch.data_processing.trim import trim_with_stride
-from tardis_em.spindletorch.datasets.dataloader import PredictionDataset
-from tardis_em.spindletorch.spindletorch import build_cnn_network
-from tardis_em.spindletorch.utils.utils import scale_image
+from tardis_em.cnn.data_processing.stitch import StitchImages
+from tardis_em.cnn.data_processing.trim import trim_with_stride
+from tardis_em.cnn.datasets.dataloader import PredictionDataset
+from tardis_em.cnn.cnn import build_cnn_network
+from tardis_em.cnn.utils.utils import scale_image
 from tardis_em.utils.aws import get_weights_aws
 from tardis_em.utils.device import get_device
 from tardis_em.utils.errors import TardisError
@@ -1063,7 +1063,7 @@ class Predictor:
         if "dist_type" in weights["model_struct_dict"]:
             from tardis_em.dist_pytorch.utils.utils import check_model_dict
         else:
-            from tardis_em.spindletorch.utils.utils import check_model_dict
+            from tardis_em.cnn.utils.utils import check_model_dict
         model_structure = check_model_dict(weights["model_struct_dict"])
 
         if network is not None:

@@ -10,7 +10,7 @@
 
 import numpy as np
 
-from tardis_em.spindletorch.data_processing.interpolation import interpolation
+from tardis_em.cnn.data_processing.interpolation import interpolation
 
 
 def test_interpolation_spline_x():

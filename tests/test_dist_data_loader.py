@@ -19,7 +19,6 @@ from tardis_em.dist_pytorch.datasets.dataloader import (
     PartnetDataset,
     ScannetColorDataset,
     ScannetDataset,
-    Stanford3DDataset,
 )
 
 

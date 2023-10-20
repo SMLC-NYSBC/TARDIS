@@ -14,7 +14,7 @@ from typing import Tuple, Union
 import numpy as np
 from skimage import draw
 
-from tardis_em.spindletorch.data_processing.interpolation import interpolation
+from tardis_em.cnn.data_processing.interpolation import interpolation
 from tardis_em.utils.errors import TardisError
 
 
@@ -42,7 +42,7 @@ def draw_instances(
         if coordinate.ndim != 2 and coordinate.shape[1] not in [3, 4]:
             TardisError(
                 "113",
-                "tardis_em/spindletorch/data_processing/draw_mask.py",
+                "tardis_em/cnn/data_processing.md/draw_mask.py",
                 "Coordinates are of not correct shape, expected: "
                 f"shape [Label x X x Y x (Z)] but {coordinate.shape} given!",
             )
@@ -194,7 +194,7 @@ def draw_mask(
     if label_mask.ndim not in [2, 3]:
         TardisError(
             "113",
-            "tardis_em/spindletorch/data_processing/draw_mask.py"
+            "tardis_em/cnn/data_processing.md/draw_mask.py"
             f"Unsupported dimensions given {label_mask.ndim} expected 2!",
         )
 
@@ -208,7 +208,7 @@ def draw_mask(
     if segment_shape not in ["s", "c"]:
         TardisError(
             "123",
-            "tardis_em/spindletorch/data_processing/draw_mask.py"
+            "tardis_em/cnn/data_processing.md/draw_mask.py"
             f"Unsupported shape type to draw given {segment_shape} but "
             'expected "c" - circle or "s" - sphere',
         )

@@ -141,7 +141,7 @@ def convolution(
             if num_group is None:
                 TardisError(
                     "142",
-                    "tardis_em/spindletorch/model/convolution.py",
+                    "tardis_em/cnn/model/convolution.py",
                     "Number of group is required if nn.GroupNorm is used.",
                 )
 
@@ -276,7 +276,7 @@ class DoubleConvolution(nn.Sequential):
         if block_type not in ["encoder", "decoder"]:
             TardisError(
                 "143",
-                "tardis_em/spindletorch/model/convolution.py",
+                "tardis_em/cnn/model/convolution.py",
                 'Only "encoder", decoder block type is supported.',
             )
 
@@ -348,7 +348,7 @@ class RecurrentDoubleConvolution(nn.Module):
         if block_type not in ["encoder", "decoder"]:
             TardisError(
                 "143",
-                "tardis_em/spindletorch/model/convolution.py",
+                "tardis_em/cnn/model/convolution.py",
                 'Only "encoder", decoder block type is supported.',
             )
 

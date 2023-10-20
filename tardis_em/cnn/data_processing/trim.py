@@ -16,7 +16,7 @@ from typing import Optional, Tuple
 import numpy as np
 from tifffile import tifffile as tif
 
-from tardis_em.spindletorch.utils.utils import scale_image
+from tardis_em.cnn.utils.utils import scale_image
 from tardis_em.utils.errors import TardisError
 
 
@@ -66,7 +66,7 @@ def trim_with_stride(
         if image.shape != mask.shape:
             TardisError(
                 "111",
-                "tardis_em/spindletorch/data_processing/trim.py",
+                "tardis_em/cnn/data_processing.md/trim.py",
                 f"Image {image.shape} has different shape from mask {mask.shape}",
             )
     else:
@@ -75,7 +75,7 @@ def trim_with_stride(
     if img_dtype != image.dtype:
         TardisError(
             "111",
-            "tardis_em/spindletorch/data_processing/trim.py",
+            "tardis_em/cnn/data_processing.md/trim.py",
             f"Image {img_dtype} has different dtype after interpolation {image.dtype}",
         )
 
@@ -104,20 +104,20 @@ def trim_with_stride(
         if not nx >= trim_size_xy:
             TardisError(
                 "112",
-                "tardis_em/spindletorch/data_processing",
+                "tardis_em/cnn/data_processing.md",
                 "trim_size_xy should be equal or greater then X dimension!",
             )
         if not ny >= trim_size_xy:
             TardisError(
                 "112",
-                "tardis_em/spindletorch/data_processing",
+                "tardis_em/cnn/data_processing.md",
                 "trim_size_xy should be equal or greater then Y dimension!",
             )
     else:
         if stride is None:
             TardisError(
                 "112",
-                "tardis_em/spindletorch/data_processing",
+                "tardis_em/cnn/data_processing.md",
                 "Trim sizes or stride has to be indicated!",
             )
         trim_size_xy = 64

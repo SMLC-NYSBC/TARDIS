@@ -15,9 +15,9 @@ from typing import Optional
 import torch
 from torch import optim
 
-from tardis_em.spindletorch.spindletorch import build_cnn_network
-from tardis_em.spindletorch.trainer import CNNTrainer
-from tardis_em.spindletorch.utils.utils import check_model_dict
+from tardis_em.cnn.cnn import build_cnn_network
+from tardis_em.cnn.trainer import CNNTrainer
+from tardis_em.cnn.utils.utils import check_model_dict
 from tardis_em.utils.device import get_device
 from tardis_em.utils.errors import TardisError
 from tardis_em.utils.losses import *
@@ -91,7 +91,7 @@ def train_cnn(
     except:
         TardisError(
             "14",
-            "tardis_em/spindletorch/train.py",
+            "tardis_em/cnn/train.py",
             f"CNNModelError: Model type: {type} was not build correctly!",
         )
         sys.exit()

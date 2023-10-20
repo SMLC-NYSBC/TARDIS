@@ -30,7 +30,7 @@ class CenterCrop:
         if len(size) not in [2, 3]:
             TardisError(
                 "146",
-                "tardis_em/spindletorch/dataset/augmentation.py",
+                "tardis_em/cnn/dataset/augmentation.py",
                 "Image crop supported only for 3D and 2D! " f"But {size} was given.",
             )
         self.size = size
@@ -54,14 +54,14 @@ class CenterCrop:
         if x.ndim not in [2, 3]:
             TardisError(
                 "146",
-                "tardis_em/spindletorch/dataset/augmentation.py",
+                "tardis_em/cnn/dataset/augmentation.py",
                 "Image crop supported only for 3D and 2D!",
             )
         if y is not None:
             if y.ndim not in [2, 3]:
                 TardisError(
                     "146",
-                    "tardis_em/spindletorch/dataset/augmentation.py",
+                    "tardis_em/cnn/dataset/augmentation.py",
                     "Image crop supported only for 3D and 2D!",
                 )
 
@@ -247,7 +247,7 @@ def preprocess(
     if image.ndim not in [2, 3]:
         TardisError(
             "146",
-            "tardis_em/spindletorch/dataset/augmentation.py",
+            "tardis_em/cnn/dataset/augmentation.py",
             "Image crop supported only for 3D and 2D!",
         )
 

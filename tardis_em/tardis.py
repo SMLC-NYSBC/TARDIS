@@ -7,6 +7,8 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2023                                            #
 #######################################################################
+import time
+
 import click
 from tardis_em._version import version
 from tardis_em.utils.logo import TardisLogo
@@ -40,20 +42,37 @@ ota = ota_update()
 )
 @click.version_option(version=version)
 def main(func=None, dir_=None):
+    main_logo = TardisLogo()
+
+    # Check if PyTorch was installed correctly with GPU support
+    import torch
+
+    res = torch.cuda.is_available()
+    if not res:
+        main_logo(
+            title=f"| Transforms And Rapid Dimensionless Instance Segmentation | {ota}",
+            text_0="WELCOME to TARDIS!",
+            text_1="TARDIS detected no GPU support :(",
+            text_3="Do not panic! Please uninstall pytorch,",
+            text_4="and follow official instruction from https://pytorch.org",
+            text_7="rkiewisz@nysbc.org | tbepler@nysbc.org",
+            text_8="Join Slack community: https://tardis-em.slack.com",
+        )
+        time.sleep(10)
+
     if func is not None and dir_ is not None:
         tardis_helper(func, dir_)
     else:
-        main_logo = TardisLogo()
         main_logo(
             title=f"| Transforms And Rapid Dimensionless Instance Segmentation | {ota}",
             text_0="WELCOME to TARDIS!",
             text_1="TARDIS is fully automatic segmentation software no need for model training!",
             text_3="Contact developers if segmentation of your organelle is not supported! ",
             text_4="rkiewisz@nysbc.org | tbepler@nysbc.org",
-            text_5="Join Slack community: https://bit.ly/41hTCaP",
+            text_5="Join Slack community: https://tardis-em.slack.com",
             text_7="FUNCTIONALITY:",
             text_8="To predict microtubule and filament instances:",
-            text_9="    tardis_mt . | OR | tardis_mt --help          tardis_filament . | OR | tardis_filament --help",
+            text_9="    tardis_mt . | OR | tardis_mt --help",
             text_10="To predict 3D membrane semantic and instances:",
             text_11="    tardis_mem . | OR | tardis_mem --help       tardis_mem2d . | OR | tardis_mem2d --help",
         )

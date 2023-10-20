@@ -55,7 +55,7 @@ def ota_update():
                 text_3="tardis_ota",
                 text_5="Contact developers if segmentation of your organelle is not supported! "
                 "(rkiewisz@nysbc.org | tbepler@nysbc.org).",
-                text_6="Join Slack community: https://bit.ly/41hTCaP",
+                text_6="Join Slack community: https://tardis-em.slack.com",
             )
             time.sleep(10)
         with open(
@@ -104,7 +104,7 @@ def main():
         text_1="Please restart your previous operation.",
         text_3="Contact developers if segmentation of your organelle is not supported! "
         "(rkiewisz@nysbc.org | tbepler@nysbc.org).",
-        text_4="Join Slack community: https://bit.ly/41hTCaP",
+        text_4="Join Slack community: https://tardis-em.slack.com",
         text_6="FUNCTIONALITY:",
         text_7="To predict microtubule and filament instances:",
         text_8="    tardis_mt . | OR | tardis_mt --help          tardis_filament . | OR | tardis_filament --help",

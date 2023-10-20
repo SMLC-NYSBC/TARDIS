@@ -15,8 +15,8 @@ from typing import Tuple
 import numpy as np
 
 from tardis_em.dist_pytorch.utils.build_point_cloud import BuildPointCloud
-from tardis_em.spindletorch.data_processing.draw_mask import draw_instances
-from tardis_em.spindletorch.data_processing.trim import trim_with_stride
+from tardis_em.cnn.data_processing.draw_mask import draw_instances
+from tardis_em.cnn.data_processing.trim import trim_with_stride
 from tardis_em.utils.errors import TardisError
 from tardis_em.utils.load_data import ImportDataFromAmira, load_image
 from tardis_em.utils.logo import print_progress_bar, TardisLogo
@@ -208,7 +208,7 @@ def build_train_dataset(
             if mask.min() != 0 and mask.max() != 1:
                 TardisError(
                     id_="115",
-                    py="tardis_em/spindletorch/data_processing/build_training_dataset",
+                    py="tardis_em/cnn/data_processing.md/build_training_dataset",
                     desc=f"Mask min: {mask.min()}; max: {mask.max()} "
                     "but expected min: 0 and max: >1",
                 )

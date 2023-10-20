@@ -12,7 +12,7 @@ from typing import Optional
 
 import torch
 
-from tardis_em.spindletorch.spindletorch import build_cnn_network
+from tardis_em.cnn.cnn import build_cnn_network
 
 structure = {
     "in_channel": 1,

@@ -17,11 +17,11 @@ import click
 import torch
 from torch.utils.data import DataLoader
 
-from tardis_em.spindletorch.data_processing.build_dataset import (
+from cnn.datasets.build_dataset import (
     build_train_dataset,
 )
-from tardis_em.spindletorch.datasets.dataloader import CNNDataset
-from tardis_em.spindletorch.train import train_cnn
+from tardis_em.cnn.datasets.dataloader import CNNDataset
+from tardis_em.cnn.train import train_cnn
 from tardis_em.utils.dataset import build_test_dataset
 from tardis_em.utils.device import get_device
 from tardis_em.utils.errors import TardisError
@@ -281,7 +281,7 @@ def main(
         if not len([f for f in listdir(path) if f.endswith(IMG_FORMAT)]) > 0:
             TardisError(
                 "100",
-                "tardis_em/train_spindletorch.py",
+                "tardis_em/train_cnn.py",
                 "Indicated folder for training do not have any compatible "
                 "data or one of the following folders: "
                 "test/imgs; test/masks; train/imgs; train/masks",

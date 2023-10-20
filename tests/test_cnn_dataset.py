@@ -13,8 +13,8 @@ from os.path import join
 import numpy as np
 import torch
 
-from tardis_em.spindletorch.datasets.augmentation import preprocess
-from tardis_em.spindletorch.datasets.dataloader import (
+from tardis_em.cnn.datasets.augmentation import preprocess
+from tardis_em.cnn.datasets.dataloader import (
     CNNDataset,
     PredictionDataset,
 )

@@ -29,7 +29,7 @@ def interpolate_generator(points: np.ndarray) -> Iterable:
     if points.shape not in [(2, 3), (2, 2)]:
         TardisError(
             "134",
-            "tardis_em/spindletorch/data_processing/interpolation.py",
+            "tardis_em/cnn/data_processing.md/interpolation.py",
             "Interpolation supports only 2D/3D for 2 points at a time; "
             f"But {points.shape} was given!",
         )

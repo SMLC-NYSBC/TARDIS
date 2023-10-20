@@ -23,12 +23,12 @@ from tardis_em.dist_pytorch.datasets.patches import PatchDataSet
 from tardis_em.dist_pytorch.utils.build_point_cloud import BuildPointCloud
 from tardis_em.dist_pytorch.utils.segment_point_cloud import PropGreedyGraphCut
 from tardis_em.dist_pytorch.utils.utils import pc_median_dist
-from tardis_em.spindletorch.data_processing.stitch import StitchImages
-from tardis_em.spindletorch.data_processing.trim import (
+from tardis_em.cnn.data_processing.stitch import StitchImages
+from tardis_em.cnn.data_processing.trim import (
     scale_image,
     trim_with_stride,
 )
-from tardis_em.spindletorch.datasets.dataloader import PredictionDataset
+from tardis_em.cnn.datasets.dataloader import PredictionDataset
 from tardis_em.utils.device import get_device
 from tardis_em.utils.export_data import NumpyToAmira, to_mrc
 from tardis_em.utils.load_data import import_am, load_image

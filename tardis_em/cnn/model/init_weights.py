@@ -50,6 +50,6 @@ def init_weights(net, init_type="kaiming"):
     else:
         TardisError(
             "140",
-            "tardis_em/spindletorch/ini_weights.py",
+            "tardis_em/cnn/ini_weights.py",
             f"initialization method {init_type} is not implemented!",
         )

@@ -18,14 +18,14 @@ import torch
 
 from tardis_em.dist_pytorch.datasets.dataloader import build_dataset
 from tardis_em.dist_pytorch.utils.segment_point_cloud import PropGreedyGraphCut
-from tardis_em.spindletorch.data_processing.build_dataset import (
+from cnn.datasets.build_dataset import (
     build_train_dataset,
 )
-from tardis_em.spindletorch.datasets.dataloader import PredictionDataset
+from tardis_em.cnn.datasets.dataloader import PredictionDataset
 from tardis_em.utils.errors import TardisError
 from tardis_em.utils.load_data import load_image
 from tardis_em.utils.logo import print_progress_bar, TardisLogo
-from tardis_em.utils.metrics import AP, AUC, calculate_f1, IoU, mcov, mwcov
+from tardis_em.utils.metrics import AP, AUC, calculate_f1, IoU, mwcov
 from tardis_em.utils.predictor import Predictor
 
 
