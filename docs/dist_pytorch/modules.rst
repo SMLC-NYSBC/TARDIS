@@ -1,18 +1,25 @@
-# DIST -> Modules
-## DIST layer wrapper
-```{eval-rst}
-.. automodule:: tardis_em.dist_pytorch.model.layers
-```
+=============
+DIST -> Model
+=============
 
-## DIST graph update-modules
+DIST layer wrapper
+==================
+
+.. automodule:: tardis_em.dist_pytorch.model.layers
+
+
+DIST graph update-modules
+=========================
+
 Collection of all modules wrapped around 'torch.nn.Module' used in the DIST model.
 
-```{eval-rst}
 .. automodule:: tardis_em.dist_pytorch.model.modules
-```
 
-## Feature embedding
-Collection of classes used for Node and Edge embedding. 
+
+Feature embedding
+==================
+
+Collection of classes used for Node and Edge embedding.
 
 * **Node embedding** is composed of RGB value or optionally flattened image patches.
 	The node embedding use only 'nn.Linear' to embedding (n) dimensional feature object.
@@ -26,6 +33,4 @@ Collection of classes used for Node and Edge embedding.
 	the lower distance value (threshold with sigma). This allows the network to 
 	embed distance preserving SO(n) invariance for translation and rotation.
 
-```{eval-rst}
 .. automodule:: tardis_em.dist_pytorch.model.embedding
-```

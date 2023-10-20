@@ -6,6 +6,8 @@ project = "TARDIS-em"
 copyright = "2021, Robert Kiewisz, Tristan Bepler"
 author = "Robert Kiewisz, Tristan Bepler"
 release = version
+source_suffix = [".rst", ".md"]
+
 
 sys.path.insert(0, os.path.abspath(""))
 
@@ -13,12 +15,17 @@ sys.path.insert(0, os.path.abspath(""))
 
 extensions = [
     "myst_parser",
+    "sphinx_design",
     "sphinx.ext.autodoc",
     "sphinx.ext.todo",
     "sphinx.ext.mathjax",
     "sphinx.ext.githubpages",
     "sphinx.ext.napoleon",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.autosectionlabel",
 ]
+
+myst_enable_extensions = ["colon_fence"]
 
 templates_path = ["_templates"]
 exclude_patterns = []

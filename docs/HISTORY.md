@@ -1,7 +1,7 @@
 # History
 
 <details open>
-    <summary><b>0.1.0-RC3 OTA (2023-08-10)</b></summary>
+    <summary><b>0.1.0 (2023-08-10)</b></summary>
 
 *This intends to be a release submitted with Nature Method 2023*
 
