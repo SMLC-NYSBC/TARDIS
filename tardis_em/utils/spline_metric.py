@@ -910,7 +910,14 @@ def sort_by_length(coord):
         length_list.append(total_length(coord[np.where(coord[:, 0] == i)[0], 1:]))
 
     sorted_id = np.argsort(length_list)
-    return reorder_segments_id(coord, order_list=sorted_id)
+
+    sorted_list = [coord[np.where(coord[:, 0] == i)[0], 1:] for i in sorted_id]
+    sorted_list = [
+        np.hstack((np.repeat(i, len(sorted_list[i])).reshape(-1, 1), sorted_list[i]))
+        for i in range(len(sorted_list))
+    ]
+
+    return np.concatenate(sorted_list)
 
 
 class ComputeConfidenceScore:
@@ -954,7 +961,7 @@ class ComputeConfidenceScore:
         tangents, normalized_tangents = self._pre_compute(points)
 
         scores = [
-            self._curvature_smoothness(normalized_tangents),
+            # self._curvature_smoothness(normalized_tangents),
             self._spline_smoothness(points),
             self._angle_smoothness(tangents),
         ]

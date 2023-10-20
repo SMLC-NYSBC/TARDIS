@@ -1,5 +1,4 @@
-Main
-====
+.. include:: ../README.rst
 
 .. toctree::
    :caption: Main:

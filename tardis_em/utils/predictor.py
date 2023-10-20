@@ -898,6 +898,9 @@ class DataSetPredictor:
                 text_7="Current Task: Segmentation finished!",
             )
 
+            if self.predict in ["Filament", "Microtubule"]:
+                self.segments = sort_by_length(self.segments)
+
             """Save as .am"""
             if self.output_format.endswith("amSG") and self.predict in [
                 "Filament",
@@ -911,7 +914,10 @@ class DataSetPredictor:
                     labels=["TardisPrediction"],
                 )
 
-                segments_filter = self.filter_splines(segments=self.segments)
+                segments_filter = sort_by_length(
+                    self.filter_splines(segments=self.segments)
+                )
+
                 self.amira_file.export_amira(
                     coords=segments_filter,
                     file_dir=join(
