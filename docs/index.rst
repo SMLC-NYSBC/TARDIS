@@ -1,11 +1,10 @@
-.. include:: ../README.rst
-
 Main
 ====
 
 .. toctree::
    :caption: Main:
 
+   Start <README>
    History <HISTORY>
    Instructions <instructions>
    Tutorials <tutorials>
