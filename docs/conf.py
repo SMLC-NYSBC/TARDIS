@@ -15,7 +15,6 @@ sys.path.insert(0, os.path.abspath(""))
 
 extensions = [
     "myst_parser",
-    "sphinx_design",
     "sphinx.ext.autodoc",
     "sphinx.ext.todo",
     "sphinx.ext.mathjax",

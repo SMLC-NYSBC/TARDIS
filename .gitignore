@@ -16,6 +16,7 @@ cnn_checkpoint/
 data/
 env/
 build
+_build
 docs/build
 develop-eggs/
 dist/
