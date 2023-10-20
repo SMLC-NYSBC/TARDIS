@@ -1,9 +1,9 @@
 name: Deployment to S3 OTA-Update
 
 on:
-  push:
-    branches:
-      - 'releases/**'
+  workflow_dispatch:
+  release:
+    types: [published, prereleased, released]
 
 jobs:
   deploy:
