@@ -3,15 +3,20 @@
     :align: center
     :target: https://smlc-nysbc.github.io/TARDIS/
 
-
-.. image:: https://img.shields.io/badge/Release-0.1.0-success
-.. image:: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_pytest.yml/badge.svg
-.. image:: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/licensed.yml/badge.svg
-.. image:: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/sphinx_documentation.yml/badge.svg
-
 =========
 TARDIS-EM
 =========
+.. image:: https://img.shields.io/badge/Release-0.1.0-success
+    :target: https://shields.io
+
+.. image:: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_pytest.yml/badge.svg
+        :target: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_pytest.yml
+
+.. image:: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/licensed.yml/badge.svg
+        :target: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/licensed.yml
+
+.. image:: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/sphinx_documentation.yml/badge.svg
+        :target: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/sphinx_documentation.yml
 
 Python-based software for generalized object instance segmentation from (cryo-)electron microscopy
 micrographs/tomograms. The software package is built on a general workflow where predicted semantic segmentation
