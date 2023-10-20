@@ -3,6 +3,7 @@
     :align: center
     :target: https://smlc-nysbc.github.io/TARDIS/
 
+========
 
 .. image:: https://img.shields.io/badge/Release-0.1.0-success
     :target: https://shields.io
