@@ -12,6 +12,7 @@ import io
 import os
 
 import numpy as np
+import pytest
 import torch
 
 from tardis_em.utils.aws import get_weights_aws
@@ -25,36 +26,31 @@ from tardis_em.utils.load_data import (
     load_mrc_file,
 )
 from tardis_em.utils.logo import TardisLogo
-from tardis_em.utils.spline_metric import compare_splines_probability
+from tardis_em.utils.spline_metric import (
+    compare_splines_probability,
+    FilterConnectedNearSegments,
+    sort_segment,
+    tortuosity,
+    total_length,
+    angle_between_vectors,
+    cut_150_degree,
+    sort_by_length,
+)
 from tardis_em.utils.utils import EarlyStopping
 
 
-def test_early_stop():
-    er_stop = EarlyStopping()
-    assert er_stop.counter == 0
+# TEST aws.py
+def test_aws():
+    # Get weights
+    aws = get_weights_aws(network="dist", subtype="triang", model="microtubules")
+    assert isinstance(aws, str) or isinstance(aws, io.BytesIO)
 
-    er_stop(val_loss=0.1)
-    assert er_stop.counter == 0
-
-    er_stop(val_loss=0.09)
-    assert er_stop.counter == 0
-
-    er_stop(val_loss=0.1)
-    assert er_stop.counter == 1
-
-    er_stop = EarlyStopping()
-    assert er_stop.counter == 0
-
-    er_stop(f1_score=0.1)
-    assert er_stop.counter == 0
-
-    er_stop(f1_score=0.15)
-    assert er_stop.counter == 0
-
-    er_stop(f1_score=0.1)
-    assert er_stop.counter == 1
+    # Check if pass check
+    aws = get_weights_aws(network="dist", subtype="triang", model="microtubules")
+    assert isinstance(aws, str)
 
 
+# TEST device.py
 def test_check_device():
     dev = get_device("cpu")
     assert dev == torch.device("cpu")
@@ -63,19 +59,73 @@ def test_check_device():
     assert dev == torch.device(type="cuda", index=1)
 
 
-def test_device():
-    assert get_device("cpu") == torch.device("cpu")
+# TEST error.py and logo.py
+def test_logo():
+    logo = TardisLogo()
+    # Test short
+    logo(title="Test_pytest")
 
-    assert get_device(0) == torch.device("cpu") or get_device(0) == torch.device(
-        "cuda:0"
+    # Test long
+    logo(
+        title="Test_pytest",
+        text_1="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        + "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
     )
 
-    assert get_device("mps") == torch.device("cpu") or get_device(
-        "mps"
-    ) == torch.device("mps")
+
+def test_error():
+    TardisError(id_="20", py="tests/test_utils.py", desc="PyTest Failed!")
 
 
-# Test file readers
+# TEST export fiels
+def test_am_single_export():
+    df = np.zeros((25, 4))
+    df_line = np.linspace(0, 5, 25)
+    df_line = np.round(df_line)
+    df[:, 0] = df_line
+
+    exporter = NumpyToAmira()
+    exporter.export_amira(coords=df, file_dir="./test.am")
+
+    assert os.path.isfile("./test.am")
+    os.remove("./test.am")
+
+
+def test_am_multi_export():
+    df = np.zeros((25, 4))
+    df_line = np.linspace(0, 5, 25)
+    df_line = np.round(df_line)
+    df[:, 0] = df_line
+
+    df_1 = np.array(df)
+    df_2 = np.array(df_1)
+
+    exporter = NumpyToAmira()
+    exporter.export_amira(coords=(df_1, df_2), file_dir="./test.am")
+
+    assert os.path.isfile("./test.am")
+    os.remove("./test.am")
+
+
+def test_am_label_export():
+    df = np.zeros((25, 4))
+    df_line = np.linspace(0, 5, 25)
+    df_line = np.round(df_line)
+    df[:, 0] = df_line
+
+    df_1 = np.array(df)
+    df_2 = np.array(df_1)
+
+    exporter = NumpyToAmira()
+    exporter.export_amira(
+        coords=(df_1, df_2), file_dir="./test.am", labels=["test1", "test2"]
+    )
+
+    assert os.path.isfile("./test.am")
+    os.remove("./test.am")
+
+
+# TEST file readers
 def test_tif():
     tif, px = import_tiff(tiff="./tests/test_data/data_type/tif2D.tif")
     assert tif.shape == (64, 32)
@@ -136,78 +186,31 @@ def test_am_sg():
     assert px == 92.8
 
 
-def test_aws():
-    # Get weights
-    aws = get_weights_aws(network="dist", subtype="triang", model="microtubules")
-    assert isinstance(aws, str) or isinstance(aws, io.BytesIO)
+# TEST utils.py
+def test_early_stop():
+    er_stop = EarlyStopping()
+    assert er_stop.counter == 0
 
-    # Check if pass check
-    aws = get_weights_aws(network="dist", subtype="triang", model="microtubules")
-    assert isinstance(aws, str)
+    er_stop(val_loss=0.1)
+    assert er_stop.counter == 0
 
+    er_stop(val_loss=0.09)
+    assert er_stop.counter == 0
 
-def test_am_single_export():
-    df = np.zeros((25, 4))
-    df_line = np.linspace(0, 5, 25)
-    df_line = np.round(df_line)
-    df[:, 0] = df_line
+    er_stop(val_loss=0.1)
+    assert er_stop.counter == 1
 
-    exporter = NumpyToAmira()
-    exporter.export_amira(coords=df, file_dir="./test.am")
+    er_stop = EarlyStopping()
+    assert er_stop.counter == 0
 
-    assert os.path.isfile("./test.am")
-    os.remove("./test.am")
+    er_stop(f1_score=0.1)
+    assert er_stop.counter == 0
 
+    er_stop(f1_score=0.15)
+    assert er_stop.counter == 0
 
-def test_am_multi_export():
-    df = np.zeros((25, 4))
-    df_line = np.linspace(0, 5, 25)
-    df_line = np.round(df_line)
-    df[:, 0] = df_line
-
-    df_1 = np.array(df)
-    df_2 = np.array(df_1)
-
-    exporter = NumpyToAmira()
-    exporter.export_amira(coords=(df_1, df_2), file_dir="./test.am")
-
-    assert os.path.isfile("./test.am")
-    os.remove("./test.am")
-
-
-def test_am_label_export():
-    df = np.zeros((25, 4))
-    df_line = np.linspace(0, 5, 25)
-    df_line = np.round(df_line)
-    df[:, 0] = df_line
-
-    df_1 = np.array(df)
-    df_2 = np.array(df_1)
-
-    exporter = NumpyToAmira()
-    exporter.export_amira(
-        coords=(df_1, df_2), file_dir="./test.am", labels=["test1", "test2"]
-    )
-
-    assert os.path.isfile("./test.am")
-    os.remove("./test.am")
-
-
-def test_logo():
-    logo = TardisLogo()
-    # Test short
-    logo(title="Test_pytest")
-
-    # Test long
-    logo(
-        title="Test_pytest",
-        text_1="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-        + "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    )
-
-
-def test_error():
-    TardisError(id_="20", py="tests/test_utils.py", desc="PyTest Failed!")
+    er_stop(f1_score=0.1)
+    assert er_stop.counter == 1
 
 
 def test_compare_splines_probability():
@@ -259,3 +262,166 @@ def test_compare_splines_probability():
     spline_amira = np.array([])
     threshold = 1
     assert compare_splines_probability(spline_tardis, spline_amira, threshold) == 0.0
+
+
+# TEST spline_metric.py
+def test_sort_segment():
+    # Define an example point cloud with unsorted points
+    unsorted_points = np.array([[1, 2, 3], [4, 5, 6], [2, 3, 4], [3, 4, 5]])
+
+    # Call the sort_segment function
+    sorted_points = sort_segment(unsorted_points)
+
+    # Define what the expected output should be for the given input
+    expected_output = np.array([[1, 2, 3], [2, 3, 4], [3, 4, 5], [4, 5, 6]])
+
+    # Assert that the output from the function matches the expected output
+    np.testing.assert_array_equal(sorted_points, expected_output)
+
+
+def test_tortuosity():
+    # Define an example set of coordinates representing a straight line
+    straight_line = np.array([[0, 0, 0], [1, 0, 0], [2, 0, 0]])
+    # Tortuosity of a straight line should be 1
+    assert tortuosity(straight_line) == pytest.approx(1.0, abs=1e-6)
+
+    # Define an example set of coordinates representing a curved path
+    curved_path = np.array([[0, 0, 0], [1, 1, 0], [2, 0, 0]])
+    # Tortuosity of a curved path should be greater than 1
+    assert tortuosity(curved_path) > 1.0
+
+    # Test with only one point (should return 1.0)
+    one_point = np.array([[0, 0, 0]])
+    assert tortuosity(one_point) == 1.0
+
+    # Test with no points (should return 1.0)
+    no_points = np.array([])
+    assert tortuosity(no_points) == 1.0
+
+
+def test_total_length():
+    # Define an example set of coordinates representing a straight line
+    straight_line = np.array([[0, 0, 0], [1, 0, 0], [2, 0, 0]])
+    # Total length of a straight line should be equal to the distance between the first and last point
+    assert total_length(straight_line) == pytest.approx(2.0, abs=1e-6)
+
+    # Define an example set of coordinates representing a curved path
+    curved_path = np.array([[0, 0, 0], [1, 1, 0], [2, 0, 0]])
+    # Total length of a curved path should be greater than the distance between the first and last point
+    assert total_length(curved_path) > 2.0
+
+    # Test with only one point (should return 0.0)
+    one_point = np.array([[0, 0, 0]])
+    assert total_length(one_point) == 0.0
+
+    # Test with no points (should return 0.0)
+    no_points = np.array([])
+    assert total_length(no_points) == 0.0
+
+
+def test_angle_between_vectors():
+    # Test with perpendicular vectors
+    v1 = np.array([1, 0, 0])
+    v2 = np.array([0, 1, 0])
+    assert angle_between_vectors(v1, v2) == 90.0
+
+    # Test with parallel vectors
+    v1 = np.array([1, 0, 0])
+    v2 = np.array([2, 0, 0])
+    assert angle_between_vectors(v1, v2) == 0.0
+
+    # Test with anti-parallel vectors
+    v1 = np.array([1, 0, 0])
+    v2 = np.array([-1, 0, 0])
+    assert angle_between_vectors(v1, v2) == 180.0
+
+    # Test with vectors at 45 degrees
+    v1 = np.array([1, 0, 0])
+    v2 = np.array([1, 1, 0])
+    assert angle_between_vectors(v1, v2) == pytest.approx(45.0, abs=1e-6)
+
+    # Test with negative values
+    v1 = np.array([-1, 0, 0])
+    v2 = np.array([0, -1, 0])
+    assert angle_between_vectors(v1, v2) == 90.0
+
+
+def test_cut_150_degree():
+    # Define a segment with a sharp angle that should be cut
+    segments = np.array(
+        [
+            [0, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 1, 1, 0],
+            [0, 2, 1, 0],
+        ]
+    )
+
+    was_cut, cut_segments = cut_150_degree(segments)
+    assert was_cut
+    assert cut_segments.shape == (4, 4)
+    assert np.all(cut_segments[0, :] == [0, 0, 0, 0])
+    assert np.all(cut_segments[1, :] == [0, 1, 0, 0])
+    assert np.all(cut_segments[2, :] == [1, 1, 1, 0])
+    assert np.all(cut_segments[3, :] == [1, 2, 1, 0])
+
+    # Define a segment with all angles greater than 150 degrees
+    segments = np.array(
+        [
+            [0, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 2, 0, 0],
+            [0, 3, 0, 0],
+        ]
+    )
+
+    was_cut, cut_segments = cut_150_degree(segments)
+    assert not was_cut
+    assert cut_segments.shape == segments.shape
+    assert np.all(cut_segments == segments)
+
+
+def test_sort_by_length():
+    # Define an example set of coordinates representing three splines
+    splines = np.array(
+        [
+            [0, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 2, 0, 0],
+            [1, 0, 0, 0],
+            [1, 1, 0, 0],
+            [2, 0, 0, 0],
+            [2, 1, 0, 0],
+            [2, 2, 0, 0],
+            [2, 3, 0, 0],
+        ]
+    )
+
+    # Sort the splines by length
+    sorted_splines = sort_by_length(splines)
+
+    # Check that the splines are sorted by length
+    lengths = [
+        total_length(sorted_splines[np.where(sorted_splines[:, 0] == i)[0], 1:])
+        for i in np.unique(sorted_splines[:, 0])
+    ]
+    assert lengths == sorted(lengths)
+
+    # Check that the spline IDs are reordered
+    assert np.all(sorted_splines[:, 0] == [1, 1, 1, 0, 0, 2, 2, 2, 2])
+
+    # Check that the coordinates are correct
+    expected_splines = np.array(
+        [
+            [1, 0, 0, 0],
+            [1, 1, 0, 0],
+            [1, 2, 0, 0],
+            [0, 0, 0, 0],
+            [0, 1, 0, 0],
+            [2, 0, 0, 0],
+            [2, 1, 0, 0],
+            [2, 2, 0, 0],
+            [2, 3, 0, 0],
+        ]
+    )
+    assert np.all(sorted_splines[:, 1:] == expected_splines[:, 1:])

@@ -822,8 +822,8 @@ def angle_between_vectors(v1, v2):
     dot_product = np.dot(v1, v2)
 
     # Calculate the magnitude (norm) of vectors
-    magnitude_v1 = np.linalg.norm(v1)
-    magnitude_v2 = np.linalg.norm(v2)
+    magnitude_v1 = np.linalg.norm(v1) + 1e-16
+    magnitude_v2 = np.linalg.norm(v2) + 1e-16
 
     # Calculate angle
     cos_theta = dot_product / (magnitude_v1 * magnitude_v2)
@@ -850,7 +850,6 @@ def cut_150_degree(segments_array: np.ndarray):
 
     Returns:
         Tuple[bool, np.ndarray]: Indicates whether any segment was cut, and New array of cut segments.
-
     """
 
     cut_segments = []
