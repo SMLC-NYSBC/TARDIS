@@ -44,6 +44,7 @@ from tardis_em.utils.spline_metric import (
     FilterSpatialGraph,
     SpatialGraphCompare,
     sort_by_length,
+    ComputeConfidenceScore,
 )
 from tardis_em._version import version
 
@@ -271,6 +272,7 @@ class DataSetPredictor:
                     distance_threshold=amira_compare_distance,
                     interaction_threshold=amira_inter_probability,
                 )
+                self.score_splines = ComputeConfidenceScore()
             elif predict in ["Membrane2D", "Membrane"]:
                 self.GraphToSegment = PropGreedyGraphCut(
                     threshold=dist_threshold, connection=999999999
@@ -912,11 +914,11 @@ class DataSetPredictor:
                         self.am_output, f"{i[:-self.in_format]}_SpatialGraph.am"
                     ),
                     labels=["TardisPrediction"],
+                    scores=self.score_splines(self.segments),
                 )
 
-                segments_filter = sort_by_length(
-                    self.filter_splines(segments=self.segments)
-                )
+                segments_filter = self.filter_splines(segments=self.segments)
+                segments_filter = sort_by_length(segments_filter)
 
                 self.amira_file.export_amira(
                     coords=segments_filter,
@@ -925,6 +927,7 @@ class DataSetPredictor:
                         f"{i[:-self.in_format]}_SpatialGraph_filter.am",
                     ),
                     labels=["TardisPrediction"],
+                    scores=self.score_splines(segments_filter),
                 )
 
                 if self.amira_check and self.predict == "Microtubule":
@@ -962,7 +965,7 @@ class DataSetPredictor:
                         join(
                             self.am_output, f"{i[:-self.in_format]}_Segments_filter.csv"
                         ),
-                        self.filter_splines(segments=self.segments),
+                        sort_by_length(self.filter_splines(segments=self.segments)),
                         delimiter=",",
                     )
             elif self.output_format.endswith(("mrcM", "tifM", "amM")):

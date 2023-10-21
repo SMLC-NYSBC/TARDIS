@@ -129,7 +129,11 @@ class NumpyToAmira:
         return label
 
     def _build_header(
-        self, coord: np.ndarray, file_dir: str, label: Optional[list] = None
+        self,
+        coord: np.ndarray,
+        file_dir: str,
+        label: Optional[list] = None,
+        score=False,
     ):
         """
         Standard Amira header builder
@@ -145,9 +149,9 @@ class NumpyToAmira:
             edge = 0
             point = 0
         else:
-            vertex = int(np.max(coord[:, 0]) + 1) * 2
-            edge = int(vertex / 2)
-            point = int(coord.shape[0])
+            vertex = int(np.max(coord[:, 0]) + 1) * 2  # Number of splines ends
+            edge = int(vertex / 2)  # Number of splines
+            point = int(coord.shape[0])  # Total number of points
 
         # Save header
         with codecs.open(file_dir, mode="w", encoding="utf-8") as f:
@@ -210,8 +214,13 @@ class NumpyToAmira:
                     f.write("EDGE { int " + f"{i}" + "} " + f"@{label_id + 1} \n")
                     label_id += 2
 
+            if score:
+                f.write("EDGE { int EdgeConfidenceScore } " + f"@{label_id} \n")
+
             f.write("\n")
             f.write("# Data section follows")
+
+            return label_id
 
     @staticmethod
     def _write_to_amira(data: list, file_dir: str):
@@ -240,6 +249,7 @@ class NumpyToAmira:
         file_dir: str,
         coords: Optional[Union[tuple, list, np.ndarray]] = np.ndarray,
         labels: Optional[Union[tuple, list, None]] = None,
+        scores: Optional[list] = None,
     ):
         """
         Save Amira file with all filaments without any labels
@@ -247,7 +257,8 @@ class NumpyToAmira:
         Args:
             file_dir (str): Directory where the file should be saved.
             coords (np.ndarray, tuple): 3D coordinate file.
-            labels: Labels names.
+            labels (tuple, list, None): Labels names.
+            scores (list, None): List of confidence scores for each instance.
         """
         coord_list = self.check_3d(coord=coords)
 
@@ -266,8 +277,16 @@ class NumpyToAmira:
                 )
 
         # Build Amira header
-        self._build_header(
-            coord=coords, file_dir=file_dir, label=self._build_labels(labels)
+        if scores is not None:
+            score = True
+        else:
+            score = False
+
+        label_id = self._build_header(
+            coord=coords,
+            file_dir=file_dir,
+            label=self._build_labels(labels),
+            score=score,
         )
 
         # Save only as a point cloud
@@ -363,6 +382,14 @@ class NumpyToAmira:
 
                 self._write_to_amira(data=vertex_label, file_dir=file_dir)
                 self._write_to_amira(data=edge_label, file_dir=file_dir)
+
+            if score:
+                edge_score = [f"@{label_id}"]
+
+                for i in range(segments_idx):
+                    edge_score.append(f"{scores[i]:.15e}")
+
+                self._write_to_amira(data=edge_score, file_dir=file_dir)
 
 
 def to_mrc(data: np.ndarray, pixel_size: float, file_dir: str):

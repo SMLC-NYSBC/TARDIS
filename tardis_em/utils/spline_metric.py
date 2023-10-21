@@ -922,30 +922,6 @@ def sort_by_length(coord):
 
 class ComputeConfidenceScore:
     @staticmethod
-    def _pre_compute(points: np.ndarray):
-        tangents = np.diff(points, axis=0)
-        normalized_tangents = tangents / np.linalg.norm(tangents, axis=1)[:, np.newaxis]
-
-        return tangents, normalized_tangents
-
-    @staticmethod
-    def _curvature_smoothness(normalized_tangents):
-        delta_tangents = np.diff(normalized_tangents, axis=0)
-        curvature = np.linalg.norm(delta_tangents, axis=1)
-        smoothness = 1 - np.std(curvature)
-        return smoothness
-
-    @staticmethod
-    def _spline_smoothness(points: np.ndarray):
-        x = np.linspace(0, 1, len(points))
-        splines = [UnivariateSpline(x, coords, k=3) for coords in points.T]
-        residuals = np.column_stack(
-            [spline(x) - coords for spline, coords in zip(splines, points.T)]
-        )
-        smoothness = 1 - np.mean(np.linalg.norm(residuals, axis=1))
-        return smoothness
-
-    @staticmethod
     def _angle_smoothness(tangents):
         angles = np.arccos(
             np.einsum("ij,ij->i", tangents[:-1], tangents[1:])
@@ -957,20 +933,22 @@ class ComputeConfidenceScore:
         smoothness = 1 - np.std(angles)
         return smoothness
 
-    def combined_smoothness(self, points: np.ndarray):
-        tangents, normalized_tangents = self._pre_compute(points)
+    @staticmethod
+    def normalized_length(points: np.ndarray, min_l: float, max_l: float):
+        length = total_length(points)
+        return (length - min_l) / (max_l - min_l)
+
+    def combined_smoothness(self, points: np.ndarray, min_l: float, max_l: float):
+        tangents = np.diff(points, axis=0)
 
         scores = [
-            # self._curvature_smoothness(normalized_tangents),
-            self._spline_smoothness(points),
             self._angle_smoothness(tangents),
+            self.normalized_length(points, min_l, max_l),
         ]
 
         mean_score = np.mean(scores)
-        std_score = np.std(scores)
-        filtered_scores = [s for s in scores if abs(s - mean_score) <= std_score]
 
-        return np.mean(filtered_scores)
+        return mean_score
 
     def __call__(self, segments: np.ndarray):
         if segments.shape[1] != 4:
@@ -980,10 +958,14 @@ class ComputeConfidenceScore:
                 f"Not segmented array. Expected shape 4 got {segments.shape[1]}",
             )
         unique_ids = np.unique(segments[:, 0])
+        min_l = total_length(segments[np.where(segments[:, 0] == 0)[0], 1:])
+        max_l = total_length(
+            segments[np.where(segments[:, 0] == segments[-1, 0])[0], 1:]
+        )
 
         scores = []
         for i in unique_ids:
             points = segments[np.where(segments[:, 0] == i)[0], 1:]
-            scores.append(self.combined_smoothness(points))
+            scores.append(self.combined_smoothness(points, min_l, max_l))
 
         return scores
