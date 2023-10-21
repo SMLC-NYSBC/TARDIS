@@ -104,10 +104,10 @@ class FilterConnectedNearSegments:
         """
         # Check 01 - 01 & Check 01 - 10
         ax = [
-            (np.array(spline2[3]), np.array(spline2[2])),
-            (np.array(spline2[3]), np.array(spline2[2])),
+            (np.array(spline2[1]), np.array(spline2[0])),
+            (np.array(spline2[1]), np.array(spline2[0])),
         ]
-        points = [np.array(spline1[2]), np.array(spline1[-2])]
+        points = [np.array(spline1[0]), np.array(spline1[-1])]
         s201_s101, s201_s110 = [
             self._in_cylinder(
                 point=p, axis=a, r=self.cylinder_radius, h=self.distance_th
@@ -117,10 +117,10 @@ class FilterConnectedNearSegments:
 
         # Check 10 - 01 and Check 10 - 10
         ax = [
-            (np.array(spline2[-3]), np.array(spline2[-2])),
-            (np.array(spline2[-3]), np.array(spline2[-2])),
+            (np.array(spline2[-2]), np.array(spline2[-1])),
+            (np.array(spline2[-2]), np.array(spline2[-1])),
         ]
-        points = [np.array(spline1[2]), np.array(spline1[-2])]
+        points = [np.array(spline1[0]), np.array(spline1[-1])]
         s210_s101, s210_s110 = [
             self._in_cylinder(
                 point=p, axis=a, r=self.cylinder_radius, h=self.distance_th
@@ -211,11 +211,11 @@ class FilterConnectedNearSegments:
         while len(splines_list) > 1:
             key = list(splines_list.keys())[0]
             value = splines_list[key]  # Pick first spline in the dictionary
-            end01 = value[2]
-            end10 = value[-2]
+            end01 = value[0]
+            end10 = value[-1]
 
-            end01_list = [list(x)[1][2] for x in splines_list.items()]
-            end10_list = [list(x)[1][-2] for x in splines_list.items()]
+            end01_list = [list(x)[1][0] for x in splines_list.items()]
+            end10_list = [list(x)[1][-1] for x in splines_list.items()]
 
             # Check if any ends is within threshold distance
             end01_list01 = np.sqrt(
@@ -258,7 +258,7 @@ class FilterConnectedNearSegments:
             for end_list in end_lists:
                 for i in end_list:
                     m_id = list(i.keys())[
-                        -2 if end_list in [end10_list01, end10_list10] else 2
+                        -1 if end_list in [end10_list01, end10_list10] else 0
                     ]
                     m_end = list(splines_list[m_id])
 
@@ -266,9 +266,9 @@ class FilterConnectedNearSegments:
                         [
                             (
                                 m_end[
-                                    -2
+                                    -1
                                     if end_list in [end10_list01, end10_list10]
-                                    else 2
+                                    else 0
                                 ][2]
                                 - MIN_Z
                             )
@@ -276,9 +276,9 @@ class FilterConnectedNearSegments:
                             (
                                 MAX_Z
                                 - m_end[
-                                    -2
+                                    -1
                                     if end_list in [end10_list01, end10_list10]
-                                    else 2
+                                    else 0
                                 ][2]
                             )
                             >= omit_border,
@@ -287,21 +287,21 @@ class FilterConnectedNearSegments:
 
                     if not_at_the_border:
                         points = np.array(
-                            m_end[-2 if end_list in [end10_list01, end10_list10] else 2]
+                            m_end[-1 if end_list in [end10_list01, end10_list10] else 0]
                         )
                         axis = (
                             np.array(
                                 value[
                                     -2
                                     if end_list in [end10_list01, end10_list10]
-                                    else 2
+                                    else 1
                                 ]
                             ),
                             np.array(
                                 value[
-                                    -2
+                                    -1
                                     if end_list in [end10_list01, end10_list10]
-                                    else 2
+                                    else 0
                                 ]
                             ),
                         )
@@ -923,6 +923,39 @@ def sort_by_length(coord):
 class ComputeConfidenceScore:
     @staticmethod
     def _angle_smoothness(tangents):
+        """
+        Calculate the smoothness of a sequence of vectors based on the angles between consecutive vectors.
+
+        The smoothness is computed as 1 minus the standard deviation of the angles between consecutive vectors.
+        The angles are calculated using the dot product and magnitude of the vectors. A higher smoothness value
+        indicates a more consistent alignment between consecutive vectors, whereas a lower smoothness value
+        indicates more variability in the alignment.
+
+        Args:
+            tangents (np.ndarray): A 2D numpy array of shape (n, m), where n is
+            the number of vectors and m is the dimension of each vector.
+            Each row in the array represents a vector.
+
+        Returns:
+            float: A scalar value representing the smoothness of the sequence of vectors.
+                Ranges from 0 to 1, with higher values indicating a smoother sequence.
+        """
+        if (
+            not isinstance(tangents, np.ndarray)
+            or tangents.ndim != 2
+            or tangents.shape[0] < 2
+        ):
+            raise ValueError(
+                "Input must be a 2D numpy array with at least two vectors."
+            )
+
+        magnitudes = np.linalg.norm(tangents, axis=1)
+        non_zero_vectors = tangents[magnitudes > 0]
+
+        # All vectors are approximately zero or there's only one non-zero vector
+        if non_zero_vectors.shape[0] < 2:
+            return 1.0
+
         angles = np.arccos(
             np.einsum("ij,ij->i", tangents[:-1], tangents[1:])
             / (
@@ -935,8 +968,19 @@ class ComputeConfidenceScore:
 
     @staticmethod
     def normalized_length(points: np.ndarray, min_l: float, max_l: float):
+        """
+        Calculate and normalize the total length of a sequence of points.
+        The total length is calculated using the `total_length` function.
+        The result is then normalized to a value between 0 and 1 based on the provided
+        minimum and maximum length values.
+
+        Args:
+            points (np.ndarray):
+            min_l (float): The minimum length value.
+            max_l (float): The maximum length value.
+        """
         length = total_length(points)
-        return (length - min_l) / (max_l - min_l)
+        return (length - min_l) / (max_l - min_l + 1e-16)
 
     def combined_smoothness(self, points: np.ndarray, min_l: float, max_l: float):
         tangents = np.diff(points, axis=0)
@@ -946,9 +990,7 @@ class ComputeConfidenceScore:
             self.normalized_length(points, min_l, max_l),
         ]
 
-        mean_score = np.mean(scores)
-
-        return mean_score
+        return np.mean(scores)
 
     def __call__(self, segments: np.ndarray):
         if segments.shape[1] != 4:
