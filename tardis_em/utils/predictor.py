@@ -45,11 +45,14 @@ from tardis_em.utils.spline_metric import (
     SpatialGraphCompare,
     sort_by_length,
     ComputeConfidenceScore,
+    length_list,
 )
 from tardis_em._version import version
 
 try:
-    from tardis_em import ota
+    from tardis_em.utils.ota_update import ota_update as ota
+
+    ota = ota
 except ImportError:
     ota = ""
 
@@ -914,7 +917,10 @@ class DataSetPredictor:
                         self.am_output, f"{i[:-self.in_format]}_SpatialGraph.am"
                     ),
                     labels=["TardisPrediction"],
-                    scores=self.score_splines(self.segments),
+                    scores=[
+                        ["EdgeLength", "EdgeConfidenceScore"],
+                        [length_list(self.segments), self.score_splines(self.segments)],
+                    ],
                 )
 
                 segments_filter = self.filter_splines(segments=self.segments)
@@ -927,7 +933,13 @@ class DataSetPredictor:
                         f"{i[:-self.in_format]}_SpatialGraph_filter.am",
                     ),
                     labels=["TardisPrediction"],
-                    scores=self.score_splines(segments_filter),
+                    scores=[
+                        ["EdgeLength", "EdgeConfidenceScore"],
+                        [
+                            length_list(segments_filter),
+                            self.score_splines(segments_filter),
+                        ],
+                    ],
                 )
 
                 if self.amira_check and self.predict == "Microtubule":
@@ -952,6 +964,7 @@ class DataSetPredictor:
                                     ),
                                     coords=compare_sg,
                                     labels=label_sg,
+                                    scores=None,
                                 )
             elif self.output_format.endswith("csv"):
                 np.savetxt(

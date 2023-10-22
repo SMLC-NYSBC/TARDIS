@@ -133,7 +133,7 @@ class NumpyToAmira:
         coord: np.ndarray,
         file_dir: str,
         label: Optional[list] = None,
-        score=False,
+        score: Optional[list] = False,
     ):
         """
         Standard Amira header builder
@@ -214,13 +214,14 @@ class NumpyToAmira:
                     f.write("EDGE { int " + f"{i}" + "} " + f"@{label_id + 1} \n")
                     label_id += 2
 
-            if score:
-                f.write("EDGE { int EdgeConfidenceScore } " + f"@{label_id} \n")
+            if score is not None:
+                for i in range(score[0]):
+                    name_ = score[i]
+                    label_id = label_id + i
+                    f.write("EDGE { float " + f"{name_}" + " } " + f"@{label_id} \n")
 
             f.write("\n")
             f.write("# Data section follows")
-
-            return label_id
 
     @staticmethod
     def _write_to_amira(data: list, file_dir: str):
@@ -278,15 +279,15 @@ class NumpyToAmira:
 
         # Build Amira header
         if scores is not None:
-            score = True
+            score = len(scores[0])
         else:
             score = False
 
-        label_id = self._build_header(
+        self._build_header(
             coord=coords,
             file_dir=file_dir,
             label=self._build_labels(labels),
-            score=score,
+            score=[score, scores[0]],
         )
 
         # Save only as a point cloud
@@ -383,13 +384,15 @@ class NumpyToAmira:
                 self._write_to_amira(data=vertex_label, file_dir=file_dir)
                 self._write_to_amira(data=edge_label, file_dir=file_dir)
 
-            if score:
-                edge_score = [f"@{label_id}"]
+            if isinstance(score, int):
+                for i, s in enumerate(scores[1]):
+                    label_id = label_id + i
+                    edge_score = [f"@{label_id}"]
 
-                for i in range(segments_idx):
-                    edge_score.append(f"{scores[i]:.15e}")
+                    for j in range(segments_idx):
+                        edge_score.append(f"{s[j]:.15e}")
 
-                self._write_to_amira(data=edge_score, file_dir=file_dir)
+                    self._write_to_amira(data=edge_score, file_dir=file_dir)
 
 
 def to_mrc(data: np.ndarray, pixel_size: float, file_dir: str):

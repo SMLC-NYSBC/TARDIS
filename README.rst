@@ -78,7 +78,7 @@ TBD
 Example:
 """"""""
 
-.. image:: resources/tardis_instance_mt.jpg
+TBD
 
 Usage:
 """"""

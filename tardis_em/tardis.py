@@ -72,9 +72,9 @@ def main(func=None, dir_=None):
             text_5="Join Slack community: https://tardis-em.slack.com",
             text_7="FUNCTIONALITY:",
             text_8="To predict microtubule and filament instances:",
-            text_9="    tardis_mt . | OR | tardis_mt --help",
+            text_9="  tardis_mt --help",
             text_10="To predict 3D membrane semantic and instances:",
-            text_11="    tardis_mem . | OR | tardis_mem --help       tardis_mem2d . | OR | tardis_mem2d --help",
+            text_11=" tardis_mem --help |OR| tardis_mem2d --help",
         )
 
 

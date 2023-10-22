@@ -802,6 +802,25 @@ def total_length(coord: np.ndarray) -> float:
     return length
 
 
+def length_list(coord: np.ndarray) -> list:
+    """
+    Calculate total length of all splines and return it as a list.
+
+    Args:
+        coord (np.ndarray): Coordinates for each unsorted point idx.
+
+    Returns:
+        list: Spline length list.
+    """
+    spline_length_list = []
+
+    for i in np.unique(coord[:, 0]):
+        points = coord[np.where(coord[:, 0] == i)[0], 1:]
+        spline_length_list.append(total_length(points))
+
+    return spline_length_list
+
+
 def angle_between_vectors(v1, v2):
     """
     Calculate the angle in degrees between two vectors.

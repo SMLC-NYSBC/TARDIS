@@ -20,7 +20,7 @@ import sys
 import time
 
 
-def ota_update():
+def ota_update(status=False):
     timestamp = time.time()
     try:
         save = json.load(
@@ -46,22 +46,28 @@ def ota_update():
 
         ota_status = aws_check_pkg_with_temp()
 
-        if not ota_status:
-            main_logo = TardisLogo()
-            main_logo(
-                title="| Transforms And Rapid Dimensionless Instance Segmentation",
-                text_0="TARDIS_pytorch has new update avaiable via OTA-Update!",
-                text_1="Please in run this command to update tardis",
-                text_3="tardis_ota",
-                text_5="Contact developers if segmentation of your organelle is not supported! "
-                "(rkiewisz@nysbc.org | tbepler@nysbc.org).",
-                text_6="Join Slack community: https://tardis-em.slack.com",
-            )
-            time.sleep(10)
-        with open(
-            join(join(expanduser("~"), ".tardis_em"), "last_check.json"), "w"
-        ) as f:
-            json.dump({"timestamp": timestamp}, f)
+        if status:
+            if not ota_status:
+                return "New version is available"
+            else:
+                return ""
+        else:
+            if not ota_status:
+                main_logo = TardisLogo()
+                main_logo(
+                    title="| Transforms And Rapid Dimensionless Instance Segmentation",
+                    text_0="TARDIS_pytorch has new update available via OTA-Update!",
+                    text_1="Please in run this command to update tardis",
+                    text_3="tardis_ota",
+                    text_5="Contact developers if segmentation of your organelle is not supported! "
+                    "(rkiewisz@nysbc.org | tbepler@nysbc.org).",
+                    text_6="Join Slack community: https://tardis-em.slack.com",
+                )
+                time.sleep(10)
+            with open(
+                join(join(expanduser("~"), ".tardis_em"), "last_check.json"), "w"
+            ) as f:
+                json.dump({"timestamp": timestamp}, f)
 
 
 def main():
@@ -102,14 +108,13 @@ def main():
         title="| Transforms And Rapid Dimensionless Instance Segmentation",
         text_0="TARDIS_pytorch was updated via OTA-Update!",
         text_1="Please restart your previous operation.",
-        text_3="Contact developers if segmentation of your organelle is not supported! "
-        "(rkiewisz@nysbc.org | tbepler@nysbc.org).",
+        text_3="(rkiewisz@nysbc.org | tbepler@nysbc.org).",
         text_4="Join Slack community: https://tardis-em.slack.com",
         text_6="FUNCTIONALITY:",
         text_7="To predict microtubule and filament instances:",
-        text_8="    tardis_mt . | OR | tardis_mt --help          tardis_filament . | OR | tardis_filament --help",
-        text_10="To predict 3D membrane semantic and instances:",
-        text_11="    tardis_mem . | OR | tardis_mem --help       tardis_mem2d . | OR | tardis_mem2d --help",
+        text_8="  tardis_mt --help",
+        text_10="To predict membrane semantic and instances:",
+        text_11=" tardis_mem --help |OR| tardis_mem2d --help",
     )
     sys.exit()
 
