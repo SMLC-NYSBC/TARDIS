@@ -17,7 +17,7 @@ import click
 import torch
 from torch.utils.data import DataLoader
 
-from cnn.datasets.build_dataset import (
+from tardis_em.cnn.datasets.build_dataset import (
     build_train_dataset,
 )
 from tardis_em.cnn.datasets.dataloader import CNNDataset

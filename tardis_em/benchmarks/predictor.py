@@ -18,14 +18,14 @@ import torch
 
 from tardis_em.dist_pytorch.datasets.dataloader import build_dataset
 from tardis_em.dist_pytorch.utils.segment_point_cloud import PropGreedyGraphCut
-from cnn.datasets.build_dataset import (
+from tardis_em.cnn.datasets.build_dataset import (
     build_train_dataset,
 )
 from tardis_em.cnn.datasets.dataloader import PredictionDataset
 from tardis_em.utils.errors import TardisError
 from tardis_em.utils.load_data import load_image
 from tardis_em.utils.logo import print_progress_bar, TardisLogo
-from tardis_em.utils.metrics import AP, AUC, calculate_f1, IoU, mwcov
+from tardis_em.utils.metrics import AP, AUC, calculate_f1, IoU, mcov
 from tardis_em.utils.predictor import Predictor
 
 
@@ -264,7 +264,7 @@ class DISTBenchmark:
         )
 
         # mCov and mWCov
-        mCov, mwCov = mwcov(input_IS, coords)
+        mCov, mwCov = mcov(input_IS, coords)
         self.metric["mCov"].append(mCov)
         self.metric["mWCov"].append(mwCov)
 
