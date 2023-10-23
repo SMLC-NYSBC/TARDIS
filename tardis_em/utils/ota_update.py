@@ -10,7 +10,7 @@
 
 import json
 from os import mkdir
-from os.path import expanduser, join, isdir
+from os.path import expanduser, join, isdir, isfile
 import subprocess
 import requests
 from tardis_em.utils.logo import TardisLogo
@@ -22,55 +22,67 @@ import time
 
 def ota_update(status=False):
     timestamp = time.time()
-    try:
-        save = json.load(
-            open(
-                join(
-                    expanduser("~"),
-                    ".tardis_em",
-                    "last_check.json",
+    if isfile(
+        join(
+            expanduser("~"),
+            ".tardis_em",
+            "last_check.json",
+        )
+    ):
+        try:
+            save = json.load(
+                open(
+                    join(
+                        expanduser("~"),
+                        ".tardis_em",
+                        "last_check.json",
+                    )
                 )
-            )
-        )["timestamp"]
-    except:
-        save = time.time()
-        with open(
-            join(join(expanduser("~"), ".tardis_em"), "last_check.json"), "w"
-        ) as f:
-            json.dump({"timestamp": timestamp}, f)
-
-    if timestamp - save > 86400:
-        # Check OTA-Update
-        if not isdir(join(expanduser("~"), ".tardis_em")):
-            mkdir(join(expanduser("~"), ".tardis_em"))
-
-        ota_status = aws_check_pkg_with_temp()
-
-        if status:
-            if not ota_status:
-                return "New version is available"
-            else:
-                return ""
-        else:
-            if not ota_status:
-                main_logo = TardisLogo()
-                main_logo(
-                    title="| Transforms And Rapid Dimensionless Instance Segmentation",
-                    text_0="TARDIS_pytorch has new update available via OTA-Update!",
-                    text_1="Please in run this command to update tardis",
-                    text_3="tardis_ota",
-                    text_5="Contact developers if segmentation of your organelle is not supported! "
-                    "(rkiewisz@nysbc.org | tbepler@nysbc.org).",
-                    text_6="Join Slack community: https://tardis-em.slack.com",
-                )
-                time.sleep(10)
+            )["timestamp"]
+        except:
+            save = time.time()
             with open(
                 join(join(expanduser("~"), ".tardis_em"), "last_check.json"), "w"
             ) as f:
                 json.dump({"timestamp": timestamp}, f)
 
+        if timestamp - save > 86400:
+            # Check OTA-Update
+            ota_status = aws_check_pkg_with_temp()
+        else:
+            ota_status = True
+    else:
+        # Check OTA-Update
+        ota_status = aws_check_pkg_with_temp()
+
+    if status:
+        if not ota_status:
+            return "New version is available"
+        else:
+            return ""
+    else:
+        if not ota_status:
+            main_logo = TardisLogo()
+            main_logo(
+                title="| Transforms And Rapid Dimensionless Instance Segmentation",
+                text_0="TARDIS_pytorch has new update available via OTA-Update!",
+                text_1="Please in run this command to update tardis",
+                text_3="tardis_ota",
+                text_5="Contact developers if segmentation of your organelle is not supported! "
+                "(rkiewisz@nysbc.org | tbepler@nysbc.org).",
+                text_6="Join Slack community: https://tardis-em.slack.com",
+            )
+            time.sleep(10)
+        with open(
+            join(join(expanduser("~"), ".tardis_em"), "last_check.json"), "w"
+        ) as f:
+            json.dump({"timestamp": timestamp}, f)
+
 
 def main():
+    if not isdir(join(expanduser("~"), ".tardis_em")):
+        mkdir(join(expanduser("~"), ".tardis_em"))
+
     # Download OTA-Update
     try:
         py_pkg = requests.get(
@@ -92,7 +104,14 @@ def main():
         json.dump(dict(py_pkg.headers), f)
 
     # Installed, uninstall old package version
-    # subprocess.run(["pip", "uninstall", "-y", "tardis_em"])
+    # Make sure to remove legacy files
+    try:
+        subprocess.run(["pip", "uninstall", "-y", "tardis-pytorch"])
+    except:
+        pass
+
+    subprocess.run(["pip", "uninstall", "-y", "tardis_em"])
+
     subprocess.run(
         [
             "pip",
@@ -103,6 +122,7 @@ def main():
             ),
         ]
     )
+
     main_logo = TardisLogo()
     main_logo(
         title="| Transforms And Rapid Dimensionless Instance Segmentation",
