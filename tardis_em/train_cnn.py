@@ -36,7 +36,7 @@ ota = ota_update()
 @click.command()
 @click.option(
     "-dir",
-    "--patch",
+    "--path",
     default=getcwd(),
     type=str,
     help="Directory with train, test folder or folder with dataset "
