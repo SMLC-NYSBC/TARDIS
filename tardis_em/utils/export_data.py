@@ -216,7 +216,7 @@ class NumpyToAmira:
 
             if score is not None:
                 for i in range(score[0]):
-                    name_ = score[i]
+                    name_ = score[1][i]
                     label_id = label_id + i
                     f.write("EDGE { float " + f"{name_}" + " } " + f"@{label_id} \n")
 
