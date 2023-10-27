@@ -24,7 +24,7 @@ from tardis_em.utils.spline_metric import SpatialGraphCompare
 from tardis_em._version import version
 from tardis_em.utils.ota_update import ota_update
 
-ota = ota_update()
+ota = ota_update(status=True)
 
 
 @click.command()

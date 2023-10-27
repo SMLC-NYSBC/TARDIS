@@ -18,7 +18,7 @@ from tardis_em._version import version
 from tardis_em.utils.errors import TardisError
 from tardis_em.utils.ota_update import ota_update
 
-ota = ota_update()
+ota = ota_update(status=True)
 warnings.simplefilter("ignore", UserWarning)
 
 

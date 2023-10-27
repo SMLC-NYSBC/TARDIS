@@ -963,26 +963,24 @@ class ComputeConfidenceScore:
             or tangents.ndim != 2
             or tangents.shape[0] < 2
         ):
-            raise ValueError(
-                "Input must be a 2D numpy array with at least two vectors."
-            )
-
-        magnitudes = np.linalg.norm(tangents, axis=1)
-        non_zero_vectors = tangents[magnitudes > 0]
-
-        # All vectors are approximately zero or there's only one non-zero vector
-        if non_zero_vectors.shape[0] < 2:
             return 1.0
+        else:
+            magnitudes = np.linalg.norm(tangents, axis=1)
+            non_zero_vectors = tangents[magnitudes > 0]
 
-        angles = np.arccos(
-            np.einsum("ij,ij->i", tangents[:-1], tangents[1:])
-            / (
-                np.linalg.norm(tangents[:-1], axis=1)
-                * np.linalg.norm(tangents[1:], axis=1)
+            # All vectors are approximately zero or there's only one non-zero vector
+            if non_zero_vectors.shape[0] < 2:
+                return 1.0
+
+            angles = np.arccos(
+                np.einsum("ij,ij->i", tangents[:-1], tangents[1:])
+                / (
+                    np.linalg.norm(tangents[:-1], axis=1)
+                    * np.linalg.norm(tangents[1:], axis=1)
+                )
             )
-        )
-        smoothness = 1 - np.std(angles)
-        return smoothness
+            smoothness = 1 - np.std(angles)
+            return smoothness
 
     @staticmethod
     def normalized_length(points: np.ndarray, min_l: float, max_l: float):
