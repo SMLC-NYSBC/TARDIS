@@ -9,8 +9,8 @@
 #######################################################################
 import sys
 import time
-from os import listdir
-from os.path import isdir, isfile, join
+from os import listdir, getcwd
+from os.path import isdir, isfile, join, dirname
 from typing import Optional
 
 import click
@@ -213,10 +213,16 @@ class DataSetPredictor:
                 if f.endswith(available_format) and not f.endswith(omit_format)
             ]
         else:
-            if dir_.endswith(available_format) and not dir_.endswith(omit_format):
-                self.predict_list = [dir_]
-            else:
-                self.predict_list = []
+            dir_ = dirname(self.dir)
+            if dir_ == "":
+                dir_ = getcwd()
+
+            self.predict_list = [
+                f
+                for f in listdir(dir_)
+                if f.endswith(available_format) and not f.endswith(omit_format)
+            ]
+            self.predict_list = [f for f in self.predict_list if self.dir.endswith(f)]
 
         # Tardis progress bar update
         if len(self.predict_list) == 0:
