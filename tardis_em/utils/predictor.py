@@ -224,7 +224,8 @@ class DataSetPredictor:
             ]
             self.predict_list = [f for f in self.predict_list if self.dir.endswith(f)]
             self.dir = dir_
-
+            self.output = join(self.dir, "temp", "Predictions")
+        
         # Tardis progress bar update
         if len(self.predict_list) == 0:
             TardisError(
