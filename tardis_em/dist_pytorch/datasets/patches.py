@@ -96,7 +96,6 @@ class PatchDataSet:
         d = dx if max(dx, dy) == 0 else dy
 
         self.drop_rate = d * 0.01
-        print(self.drop_rate)
         return np.array([(min_x, min_y, min_z), (max_x, max_y, max_z)])
 
     @staticmethod
