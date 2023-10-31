@@ -696,7 +696,7 @@ def load_mrc_file(mrc: str) -> Union[Tuple[np.ndarray, float], Tuple[None, float
             image = np.fromfile(mrc, dtype=dtype)[-bit_len:].reshape((ny, nx))
         else:
             image = np.fromfile(mrc, dtype=dtype)[-bit_len:].reshape((nz, ny, nx))
-    except ValueError:  # File is corrupted
+    except ValueError:  # File is corrupted try to load as much as possible
         if nz > 1:
             if mrc.endswith(".rec"):
                 header_len = 512
@@ -724,12 +724,12 @@ def load_mrc_file(mrc: str) -> Union[Tuple[np.ndarray, float], Tuple[None, float
         image = image + 32768
         image = image.astype(np.uint16)
 
-    if nz > ny:
+    # Detect wrongly saved cryo-EM mrc files
+    if nz > int(ny * 2):
         image = image.transpose((1, 0, 2))  # YZX to ZYX
-    elif nz > nx:
+    elif nz > int(ny * 2):
         image = image.transpose((2, 1, 0))  # XYZ to ZYX
 
-    # image = np.flip(image, 1)
     return image, pixel_size
 
 
