@@ -50,9 +50,9 @@ from tardis_em.utils.spline_metric import (
 from tardis_em._version import version
 
 try:
-    from tardis_em.utils.ota_update import ota_update as ota
+    from tardis_em.utils.ota_update import ota_update
 
-    ota = ota
+    ota = ota_update(status=True)
 except ImportError:
     ota = ""
 
@@ -457,10 +457,14 @@ class DataSetPredictor:
                 sys.exit()
 
         # Calculate parameters for normalizing image pixel size
+        """Note: Do not scale images of too big or small pixel size"""
         if self.predict == "Filament":
             self.scale_factor = self.normalize_px / self.feature_size
         else:
-            self.scale_factor = self.px / self.normalize_px
+            if self.px > (self.normalize_px * 3) or self.px < (self.normalize_px / 4):
+                self.scale_factor = self.normalize_px
+            else:
+                self.scale_factor = self.px / self.normalize_px
 
         self.org_shape = self.image.shape
         self.scale_shape = tuple(
