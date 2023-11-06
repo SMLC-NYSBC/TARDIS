@@ -133,7 +133,7 @@ class NumpyToAmira:
         coord: np.ndarray,
         file_dir: str,
         label: Optional[list] = None,
-        score: Optional[list] = False,
+        score: Optional[list] = None,
     ):
         """
         Standard Amira header builder
@@ -280,15 +280,20 @@ class NumpyToAmira:
         # Build Amira header
         if scores is not None:
             score = len(scores[0])
+            self._build_header(
+                coord=coords,
+                file_dir=file_dir,
+                label=self._build_labels(labels),
+                score=[score, scores[0]],
+            )
         else:
             score = False
-
-        self._build_header(
-            coord=coords,
-            file_dir=file_dir,
-            label=self._build_labels(labels),
-            score=[score, scores[0]],
-        )
+            self._build_header(
+                coord=coords,
+                file_dir=file_dir,
+                label=self._build_labels(labels),
+                score=None,
+            )
 
         # Save only as a point cloud
         if self.as_point_cloud:

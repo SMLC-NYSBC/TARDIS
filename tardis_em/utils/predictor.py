@@ -831,11 +831,21 @@ class DataSetPredictor:
             # Build patches dataset
             if self.predict in ["Filament", "Microtubule", "Membrane2D"]:
                 try:
-                    self.coords_df, _, self.output_idx, _ = self.patch_pc.patched_dataset(
+                    (
+                        self.coords_df,
+                        _,
+                        self.output_idx,
+                        _,
+                    ) = self.patch_pc.patched_dataset(
                         coord=self.pc_ld / pc_median_dist(self.pc_ld, True)
                     )
                 except ValueError:
-                    self.coords_df, _, self.output_idx, _ = self.patch_pc.patched_dataset(
+                    (
+                        self.coords_df,
+                        _,
+                        self.output_idx,
+                        _,
+                    ) = self.patch_pc.patched_dataset(
                         coord=self.pc_ld / pc_median_dist(self.pc_ld, False)
                     )
             else:

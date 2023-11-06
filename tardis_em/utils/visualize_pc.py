@@ -55,7 +55,7 @@ def _dataset_format(coord: np.ndarray, segmented: bool) -> Tuple[np.ndarray, boo
     return coord, check
 
 
-def _rgb(coord: np.ndarray, segmented: bool, ScanNet=False) -> np.ndarray:
+def _rgb(coord: np.ndarray, segmented: bool, ScanNet=False, color=False) -> np.ndarray:
     """
     Convert float to RGB classes.
 
@@ -78,10 +78,13 @@ def _rgb(coord: np.ndarray, segmented: bool, ScanNet=False) -> np.ndarray:
                 rgb[id_, :] = [x / 255 for x in color]
         else:
             unique_ids = np.unique(coord[:, 0])
-            rgb_list = [
-                np.array((np.random.rand(), np.random.rand(), np.random.rand()))
-                for _ in unique_ids
-            ]
+            if color:
+                rgb_list = [np.array((0, 0, 0)) for _ in unique_ids]
+            else:
+                rgb_list = [
+                    np.array((np.random.rand(), np.random.rand(), np.random.rand()))
+                    for _ in unique_ids
+                ]
             id_to_rgb = {idx: color for idx, color in zip(unique_ids, rgb_list)}
 
             for id_, i in enumerate(coord[:, 0]):
@@ -162,10 +165,10 @@ def VisualizePointCloud(
 
         if animate:
             o3d.visualization.draw_geometries_with_animation_callback(
-                [pcd], rotate_view
+                [pcd], [rotate_view, background_view]
             )
         else:
-            o3d.visualization.draw_geometries([pcd])
+            o3d.visualization.draw_geometries([pcd], background_view)
 
 
 def rotate_view(vis):
@@ -175,7 +178,19 @@ def rotate_view(vis):
         vis: Open3D view control setting.
     """
     ctr = vis.get_view_control()
-    ctr.rotate(1.0, 0.0)
+    ctr.rotate(2.0, 0.0)
+
+    return False
+
+
+def background_view(vis):
+    """
+    Optional viewing parameter for open3D to constantly rotate scene.
+    Args:
+        vis: Open3D view control setting.
+    """
+    opt = vis.get_render_option()
+    opt.background_color = np.asarray([0, 0, 0])
     return False
 
 
@@ -196,13 +211,14 @@ def VisualizeFilaments(coord: np.ndarray, animate=True, with_node=True):
         if with_node:
             pcd = o3d.geometry.PointCloud()
             pcd.points = o3d.utility.Vector3dVector(coord[:, 1:])
-            pcd.colors = o3d.utility.Vector3dVector(_rgb(coord[:, 1:], False))
+            pcd.colors = o3d.utility.Vector3dVector(_rgb(coord, True))
 
         graph = segment_to_graph(coord=coord)
         line_set = o3d.geometry.LineSet()
 
         line_set.points = o3d.utility.Vector3dVector(coord[:, 1:])
         line_set.lines = o3d.utility.Vector2iVector(graph)
+        line_set.colors = o3d.utility.Vector3dVector(_rgb(coord, True, True))
 
         if animate:
             if with_node:
@@ -215,9 +231,9 @@ def VisualizeFilaments(coord: np.ndarray, animate=True, with_node=True):
                 )
         else:
             if with_node:
-                o3d.visualization.draw_geometries([pcd, line_set])
+                o3d.visualization.draw_geometries([pcd, line_set], background_view)
             else:
-                o3d.visualization.draw_geometries([line_set])
+                o3d.visualization.draw_geometries([line_set], background_view)
 
 
 def VisualizeScanNet(coord: np.ndarray, segmented: True):
