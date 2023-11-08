@@ -463,6 +463,7 @@ class DataSetPredictor:
         else:
             if self.px > (self.normalize_px * 3) or self.px < (self.normalize_px / 4):
                 self.scale_factor = 1.0
+                self.px = self.normalize_px
             else:
                 self.scale_factor = self.px / self.normalize_px
 
