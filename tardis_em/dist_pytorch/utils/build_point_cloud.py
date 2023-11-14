@@ -35,7 +35,7 @@ class BuildPointCloud:
     """
 
     @staticmethod
-    def check_data(image: Union[str, np.ndarray]) -> np.ndarray:
+    def check_data(image: Union[str, np.ndarray]) -> Union[np.ndarray, None]:
         """
         Check image data and correct it if needed to uint8 type.
 
@@ -66,6 +66,14 @@ class BuildPointCloud:
 
         """Check for binary"""
         unique_val = np.sort(pd.unique(image.flatten()))  # Use panda for speed
+        if len(unique_val) == 1:
+            TardisError(
+                "115",
+                "tardis_em/dist/utils",
+                f"Not binary image. Expected 0-1 value but got: {unique_val}",
+            )
+            return None
+
         if len(unique_val) != 2:
             TardisError(
                 "115",
@@ -115,6 +123,10 @@ class BuildPointCloud:
             semantic objects.
         """
         image = self.check_data(image)
+        if image is None:
+            e = np.empty(0, dtype=np.int8)
+
+            return e, e
 
         if EDT:
             import edt

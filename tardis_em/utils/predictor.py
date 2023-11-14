@@ -818,60 +818,9 @@ class DataSetPredictor:
             if len(self.pc_ld) < 100 and len(self.pc_hd) > 0:
                 self.pc_ld = self.pc_hd
 
-            # Tardis progress bar update
-            self.tardis_progress(
-                title=self.title,
-                text_1=f"Found {len(self.predict_list)} images to predict!",
-                text_2=f"Device: {self.device}",
-                text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
-                text_4=f"Original pixel size: {self.px} A",
-                text_5=f"Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments",
-                text_7="Current Task: Preparing for instance segmentation...",
-            )
-
-            # Build patches dataset
-            if self.predict in ["Filament", "Microtubule", "Membrane2D"]:
-                try:
-                    (
-                        self.coords_df,
-                        _,
-                        self.output_idx,
-                        _,
-                    ) = self.patch_pc.patched_dataset(
-                        coord=self.pc_ld / pc_median_dist(self.pc_ld, True)
-                    )
-                except ValueError:
-                    (
-                        self.coords_df,
-                        _,
-                        self.output_idx,
-                        _,
-                    ) = self.patch_pc.patched_dataset(
-                        coord=self.pc_ld / pc_median_dist(self.pc_ld, False)
-                    )
-            else:
-                self.coords_df, _, self.output_idx, _ = self.patch_pc.patched_dataset(
-                    coord=self.pc_ld / 5
-                )
-
-            # Predict point cloud
-            self.tardis_progress(
-                title=self.title,
-                text_1=f"Found {len(self.predict_list)} images to predict!",
-                text_2=f"Device: {self.device}",
-                text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
-                text_4=f"Original pixel size: {self.px} A",
-                text_5=f"Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments",
-                text_7="Current Task: DIST prediction...",
-                text_8=print_progress_bar(0, len(self.coords_df)),
-            )
-
-            """DIST prediction"""
-            self.graphs = self.predict_DIST(id=id_, id_name=i)
-            self._debug(id_name=i, debug_id="graph")
-
             self.segments = None
-            if self.predict in ["Filament", "Microtubule"]:
+            if len(self.pc_ld) > 0:
+                # Tardis progress bar update
                 self.tardis_progress(
                     title=self.title,
                     text_1=f"Found {len(self.predict_list)} images to predict!",
@@ -879,183 +828,243 @@ class DataSetPredictor:
                     text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
                     text_4=f"Original pixel size: {self.px} A",
                     text_5=f"Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments",
-                    text_7="Current Task: Instance Segmentation...",
-                    text_8="MTs segmentation is fitted to:",
-                    text_9=f"pixel size: {self.px}; transformation: {self.transformation}",
+                    text_7="Current Task: Preparing for instance segmentation...",
                 )
 
-                self.pc_ld = self.pc_ld * self.px
-                self.pc_ld[:, 0] = self.pc_ld[:, 0] + self.transformation[0]
-                self.pc_ld[:, 1] = self.pc_ld[:, 1] + self.transformation[1]
-                self.pc_ld[:, 2] = self.pc_ld[:, 2] + self.transformation[2]
-            else:
+                # Build patches dataset
+                if self.predict in ["Filament", "Microtubule", "Membrane2D"]:
+                    try:
+                        (
+                            self.coords_df,
+                            _,
+                            self.output_idx,
+                            _,
+                        ) = self.patch_pc.patched_dataset(
+                            coord=self.pc_ld / pc_median_dist(self.pc_ld, True)
+                        )
+                    except ValueError:
+                        (
+                            self.coords_df,
+                            _,
+                            self.output_idx,
+                            _,
+                        ) = self.patch_pc.patched_dataset(
+                            coord=self.pc_ld / pc_median_dist(self.pc_ld, False)
+                        )
+                else:
+                    (
+                        self.coords_df,
+                        _,
+                        self.output_idx,
+                        _,
+                    ) = self.patch_pc.patched_dataset(coord=self.pc_ld / 5)
+
+                # Predict point cloud
                 self.tardis_progress(
                     title=self.title,
                     text_1=f"Found {len(self.predict_list)} images to predict!",
                     text_2=f"Device: {self.device}",
                     text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
                     text_4=f"Original pixel size: {self.px} A",
-                    text_5=f"Point Cloud: {self.pc_ld.shape[0]}; NaN Segments",
-                    text_7="Current Task: Instance segmentation...",
+                    text_5=f"Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments",
+                    text_7="Current Task: DIST prediction...",
+                    text_8=print_progress_bar(0, len(self.coords_df)),
                 )
 
-            try:
+                """DIST prediction"""
+                self.graphs = self.predict_DIST(id=id_, id_name=i)
+                self._debug(id_name=i, debug_id="graph")
+
                 if self.predict in ["Filament", "Microtubule"]:
-                    sort = True
-                    prune = 5
-                else:
-                    sort = False
-                    prune = 10
-                self.segments = self.GraphToSegment.patch_to_segment(
-                    graph=self.graphs,
-                    coord=self.pc_ld,
-                    idx=self.output_idx,
-                    sort=sort,
-                    prune=prune,
-                )
-                self.segments = sort_by_length(self.segments)
-            except:
-                self.segments = None
-
-            if self.segments is None:
-                continue
-
-            # Save debugging check point
-            self._debug(id_name=i, debug_id="segment")
-
-            self.tardis_progress(
-                title=self.title,
-                text_1=f"Found {len(self.predict_list)} images to predict!",
-                text_2=f"Device: {self.device}",
-                text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
-                text_4=f"Original pixel size: {self.px} A",
-                text_5=f"Point Cloud: {self.pc_ld.shape[0]} Nodes;"
-                f" {np.max(self.segments[:, 0])} Segments",
-                text_7="Current Task: Segmentation finished!",
-            )
-
-            if self.predict in ["Filament", "Microtubule"]:
-                self.segments = sort_by_length(self.segments)
-
-            """Save as .am"""
-            if self.output_format.endswith("amSG") and self.predict in [
-                "Filament",
-                "Microtubule",
-            ]:
-                self.amira_file.export_amira(
-                    coords=self.segments,
-                    file_dir=join(
-                        self.am_output, f"{i[:-self.in_format]}_SpatialGraph.am"
-                    ),
-                    labels=["TardisPrediction"],
-                    scores=[
-                        ["EdgeLength", "EdgeConfidenceScore"],
-                        [length_list(self.segments), self.score_splines(self.segments)],
-                    ],
-                )
-
-                segments_filter = self.filter_splines(segments=self.segments)
-                segments_filter = sort_by_length(segments_filter)
-
-                self.amira_file.export_amira(
-                    coords=segments_filter,
-                    file_dir=join(
-                        self.am_output,
-                        f"{i[:-self.in_format]}_SpatialGraph_filter.am",
-                    ),
-                    labels=["TardisPrediction"],
-                    scores=[
-                        ["EdgeLength", "EdgeConfidenceScore"],
-                        [
-                            length_list(segments_filter),
-                            self.score_splines(segments_filter),
-                        ],
-                    ],
-                )
-
-                if self.amira_check and self.predict == "Microtubule":
-                    dir_amira_file = join(
-                        self.dir_amira, i[: -self.in_format] + self.amira_prefix + ".am"
+                    self.tardis_progress(
+                        title=self.title,
+                        text_1=f"Found {len(self.predict_list)} images to predict!",
+                        text_2=f"Device: {self.device}",
+                        text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
+                        text_4=f"Original pixel size: {self.px} A",
+                        text_5=f"Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments",
+                        text_7="Current Task: Instance Segmentation...",
+                        text_8="MTs segmentation is fitted to:",
+                        text_9=f"pixel size: {self.px}; transformation: {self.transformation}",
                     )
 
-                    if isfile(dir_amira_file):
-                        amira_sg = ImportDataFromAmira(src_am=dir_amira_file)
-                        amira_sg = amira_sg.get_segmented_points()
+                    self.pc_ld = self.pc_ld * self.px
+                    self.pc_ld[:, 0] = self.pc_ld[:, 0] + self.transformation[0]
+                    self.pc_ld[:, 1] = self.pc_ld[:, 1] + self.transformation[1]
+                    self.pc_ld[:, 2] = self.pc_ld[:, 2] + self.transformation[2]
+                else:
+                    self.tardis_progress(
+                        title=self.title,
+                        text_1=f"Found {len(self.predict_list)} images to predict!",
+                        text_2=f"Device: {self.device}",
+                        text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
+                        text_4=f"Original pixel size: {self.px} A",
+                        text_5=f"Point Cloud: {self.pc_ld.shape[0]}; NaN Segments",
+                        text_7="Current Task: Instance segmentation...",
+                    )
 
-                        if amira_sg is not None:
-                            compare_sg, label_sg = self.compare_spline(
-                                amira_sg=amira_sg, tardis_sg=segments_filter
-                            )
+                try:
+                    if self.predict in ["Filament", "Microtubule"]:
+                        sort = True
+                        prune = 5
+                    else:
+                        sort = False
+                        prune = 10
+                    self.segments = self.GraphToSegment.patch_to_segment(
+                        graph=self.graphs,
+                        coord=self.pc_ld,
+                        idx=self.output_idx,
+                        sort=sort,
+                        prune=prune,
+                    )
+                    self.segments = sort_by_length(self.segments)
+                except:
+                    self.segments = None
 
-                            if self.output_format.endswith("amSG"):
-                                self.amira_file.export_amira(
-                                    file_dir=join(
-                                        self.am_output,
-                                        f"{i[:-self.in_format]}_AmiraCompare.am",
-                                    ),
-                                    coords=compare_sg,
-                                    labels=label_sg,
-                                    scores=None,
-                                )
-            elif self.output_format.endswith("csv"):
-                np.savetxt(
-                    join(self.am_output, f"{i[:-self.in_format]}_Segments.csv"),
-                    self.segments,
-                    delimiter=",",
+                if self.segments is None:
+                    continue
+
+                # Save debugging check point
+                self._debug(id_name=i, debug_id="segment")
+
+                self.tardis_progress(
+                    title=self.title,
+                    text_1=f"Found {len(self.predict_list)} images to predict!",
+                    text_2=f"Device: {self.device}",
+                    text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
+                    text_4=f"Original pixel size: {self.px} A",
+                    text_5=f"Point Cloud: {self.pc_ld.shape[0]} Nodes;"
+                    f" {np.max(self.segments[:, 0])} Segments",
+                    text_7="Current Task: Segmentation finished!",
                 )
 
                 if self.predict in ["Filament", "Microtubule"]:
-                    np.savetxt(
-                        join(
-                            self.am_output, f"{i[:-self.in_format]}_Segments_filter.csv"
+                    self.segments = sort_by_length(self.segments)
+
+                """Save as .am"""
+                if self.output_format.endswith("amSG") and self.predict in [
+                    "Filament",
+                    "Microtubule",
+                ]:
+                    self.amira_file.export_amira(
+                        coords=self.segments,
+                        file_dir=join(
+                            self.am_output, f"{i[:-self.in_format]}_SpatialGraph.am"
                         ),
-                        sort_by_length(self.filter_splines(segments=self.segments)),
+                        labels=["TardisPrediction"],
+                        scores=[
+                            ["EdgeLength", "EdgeConfidenceScore"],
+                            [
+                                length_list(self.segments),
+                                self.score_splines(self.segments),
+                            ],
+                        ],
+                    )
+
+                    segments_filter = self.filter_splines(segments=self.segments)
+                    segments_filter = sort_by_length(segments_filter)
+
+                    self.amira_file.export_amira(
+                        coords=segments_filter,
+                        file_dir=join(
+                            self.am_output,
+                            f"{i[:-self.in_format]}_SpatialGraph_filter.am",
+                        ),
+                        labels=["TardisPrediction"],
+                        scores=[
+                            ["EdgeLength", "EdgeConfidenceScore"],
+                            [
+                                length_list(segments_filter),
+                                self.score_splines(segments_filter),
+                            ],
+                        ],
+                    )
+
+                    if self.amira_check and self.predict == "Microtubule":
+                        dir_amira_file = join(
+                            self.dir_amira,
+                            i[: -self.in_format] + self.amira_prefix + ".am",
+                        )
+
+                        if isfile(dir_amira_file):
+                            amira_sg = ImportDataFromAmira(src_am=dir_amira_file)
+                            amira_sg = amira_sg.get_segmented_points()
+
+                            if amira_sg is not None:
+                                compare_sg, label_sg = self.compare_spline(
+                                    amira_sg=amira_sg, tardis_sg=segments_filter
+                                )
+
+                                if self.output_format.endswith("amSG"):
+                                    self.amira_file.export_amira(
+                                        file_dir=join(
+                                            self.am_output,
+                                            f"{i[:-self.in_format]}_AmiraCompare.am",
+                                        ),
+                                        coords=compare_sg,
+                                        labels=label_sg,
+                                        scores=None,
+                                    )
+                elif self.output_format.endswith("csv"):
+                    np.savetxt(
+                        join(self.am_output, f"{i[:-self.in_format]}_Segments.csv"),
+                        self.segments,
                         delimiter=",",
                     )
-            elif self.output_format.endswith(("mrcM", "tifM", "amM")):
-                if self.predict in ["Membrane", "Membrane2D"]:
-                    self.mask_semantic = draw_semantic_membrane(
-                        mask_size=self.org_shape,
-                        coordinate=self.segments,
-                        pixel_size=self.px,
-                        spline_size=60,
-                    )
-                else:
-                    self.mask_semantic = draw_instances(
-                        mask_size=self.org_shape,
-                        coordinate=self.segments,
-                        pixel_size=self.px,
-                        circle_size=125,
-                    )
-                self._debug(id_name=i, debug_id="instance_mask")
 
-                if self.output_format.endswith("mrcM"):
-                    to_mrc(
-                        data=self.mask_semantic,
-                        file_dir=join(
-                            self.am_output, f"{i[:-self.in_format]}_instance.mrc"
-                        ),
-                        pixel_size=self.px,
-                    )
-                elif self.output_format.endswith("tifM"):
-                    tif.imwrite(
-                        join(self.am_output, f"{i[:-self.in_format]}_instance.tif"),
-                        self.mask_semantic,
-                    )
-                elif self.output_format.endswith("amM"):
-                    to_am(
-                        data=self.mask_semantic,
-                        file_dir=join(
-                            self.am_output, f"{i[:-self.in_format]}_instance.am"
-                        ),
-                        pixel_size=self.px,
-                    )
-            elif self.output_format.endswith("stl"):
-                if self.predict == "Membrane":
-                    to_stl(
-                        data=self.segments,
-                        file_dir=join(self.am_output, f"{i[:-self.in_format]}.stl"),
-                    )
+                    if self.predict in ["Filament", "Microtubule"]:
+                        np.savetxt(
+                            join(
+                                self.am_output,
+                                f"{i[:-self.in_format]}_Segments_filter.csv",
+                            ),
+                            sort_by_length(self.filter_splines(segments=self.segments)),
+                            delimiter=",",
+                        )
+                elif self.output_format.endswith(("mrcM", "tifM", "amM")):
+                    if self.predict in ["Membrane", "Membrane2D"]:
+                        self.mask_semantic = draw_semantic_membrane(
+                            mask_size=self.org_shape,
+                            coordinate=self.segments,
+                            pixel_size=self.px,
+                            spline_size=60,
+                        )
+                    else:
+                        self.mask_semantic = draw_instances(
+                            mask_size=self.org_shape,
+                            coordinate=self.segments,
+                            pixel_size=self.px,
+                            circle_size=125,
+                        )
+                    self._debug(id_name=i, debug_id="instance_mask")
+
+                    if self.output_format.endswith("mrcM"):
+                        to_mrc(
+                            data=self.mask_semantic,
+                            file_dir=join(
+                                self.am_output, f"{i[:-self.in_format]}_instance.mrc"
+                            ),
+                            pixel_size=self.px,
+                        )
+                    elif self.output_format.endswith("tifM"):
+                        tif.imwrite(
+                            join(self.am_output, f"{i[:-self.in_format]}_instance.tif"),
+                            self.mask_semantic,
+                        )
+                    elif self.output_format.endswith("amM"):
+                        to_am(
+                            data=self.mask_semantic,
+                            file_dir=join(
+                                self.am_output, f"{i[:-self.in_format]}_instance.am"
+                            ),
+                            pixel_size=self.px,
+                        )
+                elif self.output_format.endswith("stl"):
+                    if self.predict == "Membrane":
+                        to_stl(
+                            data=self.segments,
+                            file_dir=join(self.am_output, f"{i[:-self.in_format]}.stl"),
+                        )
 
             """Clean-up temp dir"""
             clean_up(dir_=self.dir)
