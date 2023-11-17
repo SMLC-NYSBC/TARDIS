@@ -15,6 +15,7 @@ from typing import Optional
 
 import click
 import numpy as np
+import pandas as pd
 import tifffile.tifffile as tif
 import torch
 
@@ -501,8 +502,11 @@ class DataSetPredictor:
             )
             self.image = None
 
-            """Clean-up temp dir"""
-            clean_up(dir_=self.dir)
+        if len(pd.unique(self.image.flatten())) == 1:
+            self.image = None
+
+        """Clean-up temp dir"""
+        clean_up(dir_=self.dir)
 
     def preprocess_DIST(self, id_name: str):
         # Post-process predicted image patches
@@ -747,7 +751,6 @@ class DataSetPredictor:
                 )
 
                 self.postprocess_CNN(id_name=i)
-
                 if self.image is None:
                     continue
 

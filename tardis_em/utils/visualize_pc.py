@@ -231,9 +231,11 @@ def VisualizeFilaments(coord: np.ndarray, animate=True, with_node=True):
                 )
         else:
             if with_node:
-                o3d.visualization.draw_geometries([pcd, line_set], background_view)
+                o3d.visualization.draw_geometries_with_animation_callback(
+                    [pcd, line_set], background_view
+                )
             else:
-                o3d.visualization.draw_geometries([line_set], background_view)
+                o3d.visualization.draw_geometries([line_set])
 
 
 def VisualizeScanNet(coord: np.ndarray, segmented: True):
