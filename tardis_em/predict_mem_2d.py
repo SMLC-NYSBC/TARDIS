@@ -40,6 +40,14 @@ warnings.simplefilter("ignore", UserWarning)
     show_default=True,
 )
 @click.option(
+    "-px",
+    "--correct_px",
+    default=False,
+    type=bool,
+    help="If True correct pixel size values.",
+    show_default=True,
+)
+@click.option(
     "-ch",
     "--checkpoint",
     default="None|None",
@@ -153,6 +161,7 @@ warnings.simplefilter("ignore", UserWarning)
 def main(
     path: str,
     mask: bool,
+    correct_px: bool,
     checkpoint: str,
     output_format: str,
     patch_size: int,
@@ -188,6 +197,7 @@ def main(
         predict="Membrane2D",
         dir_=path,
         binary_mask=mask,
+        correct_px=correct_px,
         checkpoint=checkpoint,
         output_format=output_format,
         patch_size=patch_size,
