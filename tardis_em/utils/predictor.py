@@ -469,9 +469,10 @@ class DataSetPredictor:
                 self.scale_factor = self.px / self.normalize_px
 
         self.org_shape = self.image.shape
-        self.scale_shape = tuple(
-            np.multiply(self.org_shape, self.scale_factor).astype(np.int16)
+        self.scale_shape = np.multiply(self.org_shape, self.scale_factor).astype(
+            np.int16
         )
+        self.scale_shape = [int(i) for i in self.scale_shape]
 
     def postprocess_CNN(self, id_name: str):
         # Stitch predicted image patches

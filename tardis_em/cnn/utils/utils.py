@@ -67,7 +67,6 @@ def linear_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray
     Returns:
         no.ndarray: Up or Down scale 3D array.
     """
-    scale = tuple(scale)
     if img.ndim == 3:
         img = torch.from_numpy(img[None, None, :]).to("cpu").type(torch.float)
         img = (
