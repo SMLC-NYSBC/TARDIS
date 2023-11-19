@@ -57,7 +57,7 @@ def scale_image(
 
 def linear_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
     """
-    Saling of 2D/3D array using trilinear method from pytorch
+    Scaling of 2D/3D array using trilinear method from pytorch
 
     Args:
         img: image array.
@@ -67,6 +67,7 @@ def linear_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray
     Returns:
         no.ndarray: Up or Down scale 3D array.
     """
+    scale = tuple(scale)
     if img.ndim == 3:
         img = torch.from_numpy(img[None, None, :]).to("cpu").type(torch.float)
         img = (

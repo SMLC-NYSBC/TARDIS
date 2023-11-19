@@ -165,10 +165,12 @@ def VisualizePointCloud(
 
         if animate:
             o3d.visualization.draw_geometries_with_animation_callback(
-                [pcd], [rotate_view, background_view]
+                [pcd], rotate_view
             )
         else:
-            o3d.visualization.draw_geometries([pcd], background_view)
+            o3d.visualization.draw_geometries_with_animation_callback(
+                [pcd], background_view
+            )
 
 
 def rotate_view(vis):
