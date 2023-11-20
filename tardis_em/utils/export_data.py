@@ -389,7 +389,7 @@ class NumpyToAmira:
                 self._write_to_amira(data=vertex_label, file_dir=file_dir)
                 self._write_to_amira(data=edge_label, file_dir=file_dir)
 
-            if isinstance(score, int):
+            if isinstance(score, int) and score:
                 for i, s in enumerate(scores[1]):
                     label_id = label_id + i
                     edge_score = [f"@{label_id}"]

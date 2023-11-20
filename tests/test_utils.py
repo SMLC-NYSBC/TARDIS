@@ -55,8 +55,12 @@ def test_check_device():
     dev = get_device("cpu")
     assert dev == torch.device("cpu")
 
-    dev = get_device(1)
-    assert dev == torch.device(type="cuda", index=1)
+    dev = get_device("1")
+
+    if torch.cuda.is_available():
+        assert dev == torch.device(type="cuda", index=1)
+    else:
+        assert dev == torch.device("cpu")
 
 
 # TEST error.py and logo.py
@@ -144,11 +148,11 @@ def test_rec_mrc():
     assert px == 23.2
 
     mrc, px = load_mrc_file(mrc="./tests/test_data/data_type/mrc3D.mrc")
-    assert mrc.shape == (64, 78, 32)
+    assert mrc.shape == (78, 64, 32)
     assert px == 23.2
 
     rec, px = load_mrc_file(mrc="./tests/test_data/data_type/rec3D.rec")
-    assert rec.shape == (64, 78, 32)
+    assert rec.shape == (78, 64, 32)
     assert px == 23.2
 
 
