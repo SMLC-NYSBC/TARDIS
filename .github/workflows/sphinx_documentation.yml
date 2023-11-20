@@ -3,7 +3,7 @@ name: Documentation
 on:
   workflow_dispatch:
   release:
-    types: [published, prereleased, released]
+    types: [released]
     
 permissions:
   contents: write
@@ -17,7 +17,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install sphinx sphinx_rtd_theme myst_parser furo
-          pip install -e .
+          pip install .
       - name: Sphinx build
         run: |
           sphinx-build docs _build
