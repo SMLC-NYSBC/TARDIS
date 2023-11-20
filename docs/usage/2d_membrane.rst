@@ -15,6 +15,8 @@ instances [track, labels, point cloud].
 
 .. image:: ../resources/2d_mem.jpg
 
+Data source: Dr. Victor Kostyuchenko and Prof. Dr. Shee-Mei Lok
+
 Example of segmented micrograph with indicated predicted semantic binary segmentation
 and individual instances represented as a tracks of different colours.
 
@@ -47,6 +49,7 @@ __________
 This will display the TARDIS interface and show available option or available updates.
 
 .. image:: ../resources/main_tardis.jpg
+  :width: 512
 
 Semantic/Instance segmentation:
 ```````````````````````````````

@@ -95,11 +95,13 @@ Membrane Prediction
 
 2D prediction
 ^^^^^^^^^^^^^
+Full tutorial: Full tutorial: `3D Membrane Prediction <https://smlc-nysbc.github.io/TARDIS/usage/3d_membrane.html>`__
 
 Example:
 """"""""
 
 .. image:: resources/2d_mem.jpg
+Data source: Dr. Victor Kostyuchenko and Prof. Dr. Shee-Mei Lok
 
 Usage:
 """"""
@@ -111,11 +113,13 @@ Usage:
 
 3D prediction
 ^^^^^^^^^^^^^
+Full tutorial: `3D Membrane Prediction <https://smlc-nysbc.github.io/TARDIS/usage/3d_membrane.html>`__
 
 Example:
 """"""""
 
-TBD
+.. image:: resources/3d_mem.jpg
+Data source: EMPIRE-10236, DOI: 10.1038/s41586-019-1089-3
 
 Usage:
 """"""

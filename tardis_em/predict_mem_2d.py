@@ -95,7 +95,7 @@ warnings.simplefilter("ignore", UserWarning)
     "which can be of type None [no output], am [Amira], mrc or tif. "
     "Second output is instance segmentation of objects, which can be "
     "output as amSG [Amira], mrcM [mrc mask], tifM [tif mask], "
-    "csv coordinate file [ID, X, Y, Z] or None [no instance prediction].",
+    "csv coordinate file [ID, X, Y] or None [no instance prediction].",
     show_default=True,
 )
 @click.option(
