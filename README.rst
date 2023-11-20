@@ -81,7 +81,7 @@ TBD
 Example:
 """"""""
 
-TBD
+.. image:: resources/3d_mt.jpg
 
 Usage:
 """"""
