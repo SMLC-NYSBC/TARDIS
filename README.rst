@@ -107,7 +107,7 @@ Membrane Prediction
 
 2D prediction
 ^^^^^^^^^^^^^
-Full tutorial: Full tutorial: `3D Membrane Prediction <https://smlc-nysbc.github.io/TARDIS/usage/3d_membrane.html>`__
+Full tutorial: Full tutorial: `2D Membrane Prediction <https://smlc-nysbc.github.io/TARDIS/usage/2d_membrane.html>`__
 
 Example:
 """"""""
