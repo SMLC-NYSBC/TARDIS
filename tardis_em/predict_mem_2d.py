@@ -58,7 +58,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-out",
     "--output_format",
-    default="mrc_None",
+    default="mrc_csv",
     type=click.Choice(
         [
             "None_am",

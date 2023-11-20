@@ -1,6 +1,6 @@
 # History
 
-<details open>
+<details>
     <summary><b>0.1.0 (2023-08-10)</b></summary>
 
 *This intends to be a release submitted with Nature Method 2023*
@@ -8,13 +8,23 @@
 * **General changes:**
     * *General*:
         * Documentation update
-        * Added full support for OTA updates of the entire pacakge
+        * General bugfixes
+
+</details>
+
+<details>
+    <summary><b>0.1.0 (2023-08-10)</b></summary>
+
+* **General changes:**
+    * *General*:
+        * Documentation update
+        * Added full support for OTA updates of the entire package
         * Fixed AWS access denied error on some networks
-        * Few bug fixes
+        * A few bug fixes
         * Fixed Bugs in final filament filtering algorithms
-        * Added filament filtering for removing false-positive rapid 150 degree connections
+        * Added filament filtering for removing false-positive rapid 150-degree connections
         * Microtubule output is now sorted by the length
-        * Each instance receive segmentation confidence score by which user can filter out predictions
+        * Each instance receives a segmentation confidence score by which the user can filter out predictions
 
 * **SpindleTorch module changes:**
     * *General*:
@@ -28,7 +38,7 @@
         * Improved filtering for filament
         * Added confidence value for each filament instance based on filament length and shape
     * *BugFix*:
-        * Fixed few issues in the membrane segmentation pipeline
+        * Fixed a few issues in the membrane segmentation pipeline
 
 </details>
 
@@ -79,7 +89,7 @@
         * Improved visualization outputs
         * Mcov metric optimization
         * Rebuild Graph prediction function to be more robust
-        * Reverse-engineered Open3D voxal downsampling and added random downsampling
+        * Reverse-engineered Open3D voxel downsampling and added random downsampling
         * Added distance embedding with a range value
 
 </details>
@@ -129,15 +139,15 @@
     * *New_Feature* 
       * Added and tested clDice and clBCE loss function
     * *Optimize* 
-      * Support for membrane training dataset
+      * Support for the membrane training dataset
     * *General* 
       * Globally change normalization (0-1) to image standardization (-1-1)
       with mean and standard deviation
 
 * **DIST module changes:**
   * *New_Feature* 
-        * Node embedding with furier random
-        * Added calculation of mcov metric during training and save checkpoint based on it
+        * Node embedding with furrier random
+        * Added calculation of mcov metric during training and saved checkpoint based on it
   * *Optimize* 
     * Point cloud visualization can be now with or without animation
 
@@ -148,17 +158,16 @@
 
 * **Code restructure:**
     * *Optimize*:
-        * autonomization of tests for all python version
+        * Autonomization of tests for all Python version
 
-* **SpindleTorch module changes:**
-    * *Optimize*:
+* **SpindleTorch module changesimize*:
       * Rebuild interpolation for images and mask
       * Simplified building training/testing of datasets
       * Redo mask building from coordinates
       * Build_Point_Cloud
       * New model train with optimize image normalization
     * *BugFix*:
-      * image normalization for few very specific cases
+      * image normalization for a few very specific cases
 
 * **DIST module changes:**
     * *Optimize*:
@@ -168,10 +177,10 @@
         - All other by open3d downsampling value optional random downsamling
       * F1 eval metric and BCE loss without diagonal axis
     * *New_Feature*:
-      * DataLoader for stanford data
-      * spline filtering include geometric filtering and margin of spline
+      * DataLoader for Stanford data
+      * spline filtering includes geometric filtering and margin of spline
     * *BugFix*:
-      * in point cloud segmenter when feed with coord idx as float not int
+      * in a point cloud segmenter when feed with coord idx as float not int
 
 * **General changes:**
     * *General*:
@@ -179,9 +188,9 @@
       * Added license footnote
     * *General* code *Optimize* for speed
     * *BugFix* and *Optimize* for post-processing of spatial-graphs
-    * *BugFix* and *New_Feature* for amira export format (now build multi-label)
+    * *BugFix* and *New_Feature* for Amira export format (now build multi-label)
     * *BugFix*:
-      * AWS weight import when aws don't allow read access
+      * AWS weight import when AWS doesn't allow read access
     * *New_Feature*:
       * TardisError for all error handling
 
@@ -192,13 +201,13 @@
 
 * **Code restructure:**
     * Finished documentation with Sphinx
-    * Build testes for the whole tardis-EM
+    * Build tests for the whole tardis-EM
     * Push to RC branch
 
 * **SpindleTorch module changes:**
     * Cryo-membrane model support 
     * Build prediction module for Cryo-membrane
-    * Removed scaling module (after extensive testes it shows not benefits)
+    * Removed scaling module (after extensive tests it shows no benefits)
     * Fixes in building train data set and small restructure (more in documentation)
     * Added more support for 2D images while building test/train dataset
     * Added support for pure probability prediction output in float32
@@ -208,7 +217,7 @@
 
 * **General changes:**
     * Added support for mrc and csv file outputs
-    * Support for python 3.11 (awaiting pytorch and open3d)
+    * Support for Python 3.11 (awaiting pytorch and open3d)
     * requirements.txt changes and include pytroch with support for different os
 
 </details>
@@ -224,10 +233,10 @@
     * Simplified overall structure
     * Full documentation with Sphinx
     * Separate dev. requirements
-    * Cleaned S3 aws loading and removed old models from S3 bucket
+    * Cleaned S3 AWS loading and removed old models from the S3 bucket
 
 * **SLCPY module changes:**
-    * Removed and marge with SpindleTorch and DIST
+    * Removed and managed with SpindleTorch and DIST
 
 * **SpindleTorch module changes:**
     * Retrained FNet_16, FNet_32 and UNet_16, UNet_32
@@ -265,40 +274,40 @@
     * Small bugfixes:
         * Fixe initial_scale in model nn.Modules
         * Fixed graph builder for ScanNet and PartNet
-    * Speed improved dataloader during training
+    * Speed improved data loader during training
     * Added support for .ply file format and meshes
-    * Re-train model on different DIST structure for the paper and for searching 
+    * Re-train model on different DIST structures for the paper and searching 
       of the best approach
     * Bugfixes for segmentation of point cloud from graph probabilities
-        * Speed-up boost with simplifying the building and reading adjacency matrix
+        * Speed-up boost by simplifying the building and reading adjacency matrix
         * Fix in masking adjacency matrix for points already connected
         * Moved from greedy segmentation to 1-step-back segmentation
 
 * **SpindleTorch changes:**
-    * Quick retrained model on hand-curated dataset
+    * Quick retrained model on a hand-curated dataset
     * Added and trained new FNet
-    * Standardized pixel size input. Now all data are reshaped to the pixel size of 2.32
+    * Standardized pixel size input. Now all data are reshaping pixel size of 2.32
     * Change up-sampling from align_corners=True to align_corners=False
     * Added new data for training from @Stefanie_Redemann and @Gunar
     * Ground-up rebuild spindletorch model
         * New Big UNet model combining both UNet and UNet3Plus
         * Unet/Unet3Plus re-trained <- rejected big_unet is better
         * Train Big UNet
-    * Speed-up prediction with new Big UNet model
+    * Speed-up prediction with the new Big UNet model
 
 * **SLCPY module changes:**
     * Fix interpolation handling for up-sampled datasets
     * Post-processing improvements and speeds-up
-    * MRC2014 file format expand readable formats
-    * Processing image data with standardized pixel size of 25 A
+    * MRC2014 file format expands readable formats
+    * Processing image data with a standardized pixel size of 25 A
     * Bugfixes for floating point precision in Amira output
         * Change floating point from 3 to 15
     * Improvements from importing data from binary Amira file format
         * Change how pixel size is calculated. Amira has weird behavior whenever ET 
-          is trimmed. Include this in pixel size calculation
+          is trimmed. Include this in the pixel size calculation
     * Improvements in .rec, .mrc file loader
-        * .rec and .mrc file are format with uint8 (value from -128 to 128) or 
-          int8 (value from 0 to 255). Fix reading of these files
+        * .rec and .mrc files are format with uint8 (value from -128 to 128) or 
+          int8 (value from 0 to 255). Fix the reading of these files
 
 * **TARDIS**
     * Cleaned log output for easier reading
@@ -315,12 +324,12 @@
 
 * Check pipeline for image embedding (normalization to enhance features)
     * Introduce new normalization ResaleNormalize that spread histogram from 
-    2-98 projectile of intensity distribution
+    2-98 projectile of the intensity distribution
 * Model retraining for MTs and membranes (generalization)
 * Redone PC normalization
-* Additional work on speed up training by optimizing DataLoader
+* Additional work on speeding up training by optimizing DataLoader
 * TODO: Model retraining for MTs with real image data
-* Closed #7 an #9 issue
+* Closed #7 and #9 issue
 * Added removal of dist_embedding as an input
 * SpindleTorch rebuild to work on 2D and 3D datasets
 * DIST training progress bar update (simplified output and removed prints)
@@ -337,7 +346,7 @@
 
 * Rename GraphFormer to DIST (Dimensionless instance Segmentation Transformer)
 * Updates for DIST
-    * SetUp metric evaluation
+    * Setup metric evaluation
     * Changes in handling point cloud
         * Normalization based on K-NN distance
     * Setup for easy dissection of the model
@@ -361,7 +370,7 @@
 
 * Rename tardis to tardis-EM
 * Build tests for all modules
-* Integrated slcpy, spindletorch and graphformer
+* Integrated slcpy, spindletorch and graph former
 * Added general workflow for MT prediction
     * SLCPY:
         * Loading of data types: .tif, .am, .mrc, .rec for 2D and 3D

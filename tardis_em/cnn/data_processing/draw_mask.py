@@ -47,7 +47,11 @@ def draw_instances(
                 f"shape [Label x X x Y x (Z)] but {coordinate.shape} given!",
             )
 
-    label_mask = np.zeros(mask_size, dtype=np.uint8)
+    if label:
+        label_mask = np.zeros(mask_size, dtype=np.uint16)
+    else:
+        label_mask = np.zeros(mask_size, dtype=np.uint8)
+
     if pixel_size == 0:
         pixel_size = 1
 
@@ -94,13 +98,15 @@ def draw_instances(
                     np.concatenate(all_cy),
                     np.concatenate(all_cx),
                 )
-                label_mask[all_cz, all_cy, all_cx] = 1
+                label_mask[all_cz, all_cy, all_cx] = i + 1
             else:
                 all_cy, all_cx = (
                     np.concatenate(all_cy),
                     np.concatenate(all_cx),
                 )
-                label_mask[all_cy, all_cx] = 1
+                label_mask[all_cy, all_cx] = i + 1
+
+        return label_mask
     else:
         # Pick coordinates for each point
         all_cz, all_cy, all_cx = [], [], []
@@ -135,7 +141,7 @@ def draw_instances(
         else:
             label_mask[all_cz, all_cy, all_cx] = 1
 
-    return np.where(label_mask == 1, 1, 0).astype(np.uint8)
+        return np.where(label_mask == 1, 1, 0).astype(np.uint8)
 
 
 def draw_semantic_membrane(

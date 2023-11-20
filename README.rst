@@ -52,29 +52,20 @@ Kiewisz R., Fabig G., Müller-Reichert T. Bepler T. 2023. Automated Segmentation
 
 Kiewisz R., Bepler T. 2022. Membrane and microtubule rapid instance segmentation with dimensionless instance segmentation by learning graph representations of point clouds. Neurips 2022 - Machine Learning for Structural Biology Workshop.
 
-
-
 What's new?
 ===========
 
 `Full History <https://smlc-nysbc.github.io/TARDIS/HISTORY.html>`__
 
-TARDIS-em v0.1.0 (2023-08-10):
-    * General improvement from MT prediction
-    * Added full support for OTA updates of the entire package
-    * Improved accuracy for semantic and instance segmentation of MT and Membrane
-    * Added support for 2D membrane segmentation and update to MT and membrane 3D models
-    * Added experimental SparseDIST module
-    * Support for ply export file
-    * Fixed AWS access denied error on some networks
-    * Added filament filtering for removing false-positive rapid 150-degree connections
-    * Microtubule output is now sorted by the length
-    * Each instance receives a segmentation confidence score by which the user can filter out predictions
+TARDIS-em v0.1.1 (2023-08-10):
+    * General improvement from Microtubule and Membrane prediction
+    * Bug fixes
+    * Documentation tutorials
 
 Quick Start
 ===========
 
-For more examples and an advance usage please fine more details in our `Documentation <https://smlc-nysbc.github.io/TARDIS/>`__
+For more examples and advanced usage please find more details in our `Documentation <https://smlc-nysbc.github.io/TARDIS/>`__
 
 Microtubule Prediction
 ----------------------
@@ -113,7 +104,8 @@ Example:
 """"""""
 
 .. image:: resources/2d_mem.jpg
-Data source: Dr. Victor Kostyuchenko and Prof. Dr. Shee-Mei Lok
+
+Data source: Dr. Victor Kostyuchenko and Prof. Dr. Shee-Mei Lok, DUKE-NUS Medical School Singapore
 
 Usage:
 """"""
@@ -131,6 +123,7 @@ Example:
 """"""""
 
 .. image:: resources/3d_mem.jpg
+
 Data source: EMPIRE-10236, DOI: 10.1038/s41586-019-1089-3
 
 Usage:

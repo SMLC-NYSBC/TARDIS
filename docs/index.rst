@@ -5,12 +5,13 @@
 
    Start <README>
    History <HISTORY>
+   Citation <citation>
 
 
 .. toctree::
    :caption: Usage:
 
-   Instructions <instructions>
+   Installation <instructions>
    Tutorials <tutorials>
    -  3D Microtubules Prediction <usage/3d_mt>
    -  2D Microtubules Prediction <usage/2d_mt>

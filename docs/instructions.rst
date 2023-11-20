@@ -1,15 +1,15 @@
-Instructions
+Installation
 ============
 
 This is a preliminary installation instruction. This may not work on all systems.
 If any problems come up, do not hesitate to contact us `rkiewisz@nysbc.org <mailto:rkiewisz@nysbc.org>`__,
 or contact us on our `Slack Channel <https://tardis-em.slack.com>`__.
 
-We are working on more intuitive installation of our software. In the meantime please use following options.
+We are working on a more intuitive installation of our software. In the meantime please use the following options.
 
 Option 1:
 ---------
-Install Tardis-em using newest released package on `Github <https://github.com/SMLC-NYSBC/TARDIS/releases>`__
+Install TARDIS using the newest released package on `Github <https://github.com/SMLC-NYSBC/TARDIS/releases>`__
 
 .. code-block:: bash
 
@@ -20,7 +20,7 @@ And jump to `Validate`_.
 
 Option 2:
 ---------
-Build package from source
+Build a package from the source
 
 Step 1: Clone repository
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -30,13 +30,13 @@ Step 1: Clone repository
     git clone https://github.com/SMLC-NYSBC/TARDIS.git
 
 
-Step 2: Create conda environment
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 2: Create a conda environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Before starting, it is beneficial to create a virtual Python environment.
-In these case, we use Miniconda.
+In these cases, we use Miniconda.
 
-If yoy don't know if you have installed Miniconda on your machine, please run:
+If you don't know if you have installed Miniconda on your machine, please run:
 
 .. code-block:: bash
 
@@ -59,10 +59,10 @@ And to use it, you need to active it:
     conda activate <env_name>
 
 
-Step 3: Install Tardis-em
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 3: Install TARDIS
+~~~~~~~~~~~~~~~~~~~~~~
 
-Following command will install TARDIS-em and all its dependencies
+The following command will install TARDIS and all its dependencies
 
 .. code-block:: bash
 
@@ -75,47 +75,41 @@ Following command will install TARDIS-em and all its dependencies
 Validate installation
 ---------------------
 
-To check if installation was successful and check for any new OTA updates, you can run:
+To check if the installation was successful and check for any new OTA updates, you can run:
 
 .. code-block:: bash
 
     tardis
 
-This should display the TARDIS-em home-screen, similar to the screenshot below:
+This should display the TARDIS home screen, similar to the screenshot below:
 
-.. image:: resources/main_tardis.jpg
-  :width: 512
+    .. image:: resources/main_tardis.jpg
+      :width: 512
 
 
 Run automatic segmentation
 --------------------------
 
-- Advance Tutorial - Predict Microtubules in 3D [:ref:`tutorials`].
+- Advance Tutorial - Predict Microtubules in 3D [`Tutorial <usage/3d_mt.html>`__].
 
 .. code-block:: bash
 
     tardis_mt -dir path/to/folder/with/your/tomograms
 
-- Advance Tutorial - Predict Microtubules in 2D [Coming soon] [:ref:`tutorials`]
+- Advance Tutorial - Predict Microtubules in 2D [Coming soon] [`Tutorial <usage/2d_mt.html>`__]
 
 .. code-block:: bash
 
     TBD
 
-- Advance Tutorial - Predict Membrane in 3D [:ref:`tutorials`]
+- Advance Tutorial - Predict Membrane in 3D [`Tutorial <usage/3d_membrane.html>`__]
 
 .. code-block:: bash
 
     tardis_mem -dir path/to/folder/with/your/tomograms
 
-- Advance Tutorial - Predict Membrane in 2D [:ref:`tutorials`]
+- Advance Tutorial - Predict Membrane in 2D [`Tutorial <usage/2d_membrane.html>`__]
 
 .. code-block:: bash
 
     tardis_mem2d -dir path/to/folder/with/your/tomograms
-
-Citation
---------
-
-    Kiewisz, R., and Bepler, T. Membrane and microtubule rapid instance segmentation with dimensionless instance segmentation by learning graph representations of point clouds. NeurIPS Machine Learning in Structural Biology Workshop (2022).
-    `Link <https://www.mlsb.io/papers_2022/Membrane_and_microtubule_rapid_instance_segmentation_with_dimensionless_instance_segmentation_by_learning_graph_representations_of_point_clouds.pdf>`__

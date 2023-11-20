@@ -1034,6 +1034,7 @@ class DataSetPredictor:
                             spline_size=60,
                         )
                     else:
+                        self.segments[:, 1:] = self.segments[:, 1:] / self.px
                         self.mask_semantic = draw_instances(
                             mask_size=self.org_shape,
                             coordinate=self.segments,

@@ -52,30 +52,34 @@ warnings.simplefilter("ignore", UserWarning)
     default="None_amSG",
     type=click.Choice(
         [
+            "None_am",
+            "am_am",
+            "mrc_am",
+            "tif_am",
             "None_amSG",
             "am_amSG",
             "mrc_amSG",
             "tif_amSG",
-            "None_mrcM",
-            "am_mrcM",
-            "mrc_mrcM",
-            "tif_mrcM",
-            "None_tifM",
-            "am_tifM",
-            "mrc_tifM",
-            "tif_tifM",
-            "None_mrcM",
+            "None_mrc",
+            "am_mrc",
+            "mrc_mrc",
+            "tif_mrc",
+            "None_tif",
+            "am_tif",
+            "mrc_tif",
+            "tif_tif",
+            "None_csv",
             "am_csv",
             "mrc_csv",
             "tif_csv",
-            "None_csv",
+            "None_stl",
+            "am_stl",
+            "mrc_stl",
+            "tif_stl",
+            "None_stl",
             "am_None",
             "mrc_None",
             "tif_None",
-            "am_ply",
-            "mrc_ply",
-            "tif_ply",
-            "None_ply",
         ]
     ),
     help="Type of output files. The First optional output file is the binary mask "
@@ -145,6 +149,26 @@ warnings.simplefilter("ignore", UserWarning)
     show_default=True,
 )
 @click.option(
+    "-acd",
+    "--amira_compare_distance",
+    default=175,
+    type=int,
+    help="The comparison with Amira prediction is done by evaluating"
+    "filaments distance between Amira and TARDIS. This parameter defines the maximum"
+    "distance to the similarity between two splines. Value given in Angstrom [A].",
+    show_default=True,
+)
+@click.option(
+    "-aip",
+    "--amira_inter_probability",
+    default=0.25,
+    type=float,
+    help="This parameter define normalize between 0 and 1 overlap"
+    "between filament from TARDIS na Amira sufficient to identifies microtubule as "
+    "a match between both software.",
+    show_default=True,
+)
+@click.option(
     "-fl",
     "--filter_by_length",
     default=1000,
@@ -159,49 +183,26 @@ warnings.simplefilter("ignore", UserWarning)
     "--connect_splines",
     default=2500,
     type=int,
-    help="Filtering parameter for microtubules. Some microtubules may be "
-    "predicted incorrectly as two separate filaments. To overcome this "
-    "during filtering for each spline, we determine the vector in which "
-    "filament end is facing and we connect all filament that faces "
-    "the same direction and are within the given connection "
-    "distance in angstrom.",
+    help="To address the issue where microtubules are mistakenly "
+    "identified as two different filaments, we use a filtering technique. "
+    "This involves identifying the direction each filament end points towards and then "
+    "linking any filaments that are facing the same direction and are within "
+    "a certain distance from each other, measured in angstroms. This distance threshold "
+    "determines how far apart two microtubules can be, while still being considered "
+    "as a single unit if they are oriented in the same direction.",
     show_default=True,
 )
 @click.option(
-    "-cr",
+    "-cc",
     "--connect_cylinder",
     default=250,
     type=int,
-    help="Filtering parameter for microtubules. To reduce false positive "
-    "from connecting filaments, we reduce the searching are to cylinder "
-    "radius given in angstrom. For each spline we determine vector "
-    "in which filament end is facing and we search for a filament "
-    "that faces the same direction and their end can be found "
-    "within a cylinder.",
-    show_default=True,
-)
-@click.option(
-    "-acd",
-    "--amira_compare_distance",
-    default=175,
-    type=int,
-    help="If dir/amira/file_amira_prefix.am is recognized, TARDIS runs "
-    "a comparison between its instance segmentation and ZiB Amira prediction. "
-    "The comparison is done by evaluating the distance of two filaments from "
-    "each other. This parameter defines the maximum distance used to "
-    "evaluate the similarity between two splines based on their "
-    "coordinates [A].",
-    show_default=True,
-)
-@click.option(
-    "-aip",
-    "--amira_inter_probability",
-    default=0.25,
-    type=float,
-    help="If dir/amira/file_amira_prefix.am is recognized, TARDIS runs "
-    "a comparison between its instance segmentation and ZiB Amira prediction. "
-    "This parameter defines the interaction threshold used to identify splines "
-    "that are similar overlaps between TARDIS and ZiB Amira.",
+    help="To minimize false positives when linking microtubules, we limit "
+    "the search area to a cylindrical radius specified in angstroms. "
+    "For each spline, we find the direction the filament end is pointing in "
+    "and look for another filament that is oriented in the same direction. "
+    "The ends of these filaments must be located within this cylinder "
+    "to be considered connected.",
     show_default=True,
 )
 @click.option(
