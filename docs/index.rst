@@ -5,8 +5,21 @@
 
    Start <README>
    History <HISTORY>
+
+
+.. toctree::
+   :caption: Usage:
+
    Instructions <instructions>
    Tutorials <tutorials>
+   -  3D Microtubules Prediction <usage/3d_mt>
+   -  2D Microtubules Prediction <usage/2d_mt>
+
+   -  3D Membrane Prediction <usage/3d_membrane>
+   -  2D Membrane Prediction <usage/2d_membrane>
+
+   Fine-Tune TARDIS models <usage/fine_tune_model>
+   Troubleshooting <usage/troubleshooting>
 
 .. toctree::
    :caption: Documentation:

@@ -186,7 +186,7 @@ class DataSetPredictor:
         self.tardis_progress(title=self.title, text_2=f"Device: {self.device}")
 
         # Early stop if not semantic of instance was specified
-        if output_format == "None_None":
+        if self.output_format == "None_None":
             TardisError(
                 id_="151",
                 py="tardis_em/utils/predictor.py",
@@ -307,7 +307,7 @@ class DataSetPredictor:
 
         if NN in ["Filament", "Microtubule"]:
             # Build CNN network with loaded pre-trained weights
-            if not self.output_format.startswith("None") or not self.binary_mask:
+            if not self.output_format.startswith("None") and not self.binary_mask:
                 self.cnn = Predictor(
                     checkpoint=self.checkpoint[0],
                     network="fnet",
@@ -330,7 +330,7 @@ class DataSetPredictor:
         elif NN in ["Membrane2D", "Membrane"]:
             # Build CNN network with loaded pre-trained weights
             if NN == "Membrane2D":
-                if not self.output_format.startswith("None") or not self.binary_mask:
+                if not self.output_format.startswith("None") and not self.binary_mask:
                     self.cnn = Predictor(
                         network="fnet",
                         subtype="32",
@@ -350,7 +350,7 @@ class DataSetPredictor:
                         device=self.device,
                     )
             else:
-                if not self.output_format.startswith("None") or self.binary_mask:
+                if not self.output_format.startswith("None") and self.binary_mask:
                     self.cnn = Predictor(
                         checkpoint=self.checkpoint[0],
                         network="fnet",
@@ -1025,7 +1025,7 @@ class DataSetPredictor:
                             sort_by_length(self.filter_splines(segments=self.segments)),
                             delimiter=",",
                         )
-                elif self.output_format.endswith(("mrcM", "tifM", "amM")):
+                elif self.output_format.endswith(("mrc", "tif", "am")):
                     if self.predict in ["Membrane", "Membrane2D"]:
                         self.mask_semantic = draw_semantic_membrane(
                             mask_size=self.org_shape,
@@ -1042,7 +1042,7 @@ class DataSetPredictor:
                         )
                     self._debug(id_name=i, debug_id="instance_mask")
 
-                    if self.output_format.endswith("mrcM"):
+                    if self.output_format.endswith("mrc"):
                         to_mrc(
                             data=self.mask_semantic,
                             file_dir=join(
@@ -1050,12 +1050,12 @@ class DataSetPredictor:
                             ),
                             pixel_size=self.px,
                         )
-                    elif self.output_format.endswith("tifM"):
+                    elif self.output_format.endswith("tif"):
                         tif.imwrite(
                             join(self.am_output, f"{i[:-self.in_format]}_instance.tif"),
                             self.mask_semantic,
                         )
-                    elif self.output_format.endswith("amM"):
+                    elif self.output_format.endswith("am"):
                         to_am(
                             data=self.mask_semantic,
                             file_dir=join(

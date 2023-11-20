@@ -99,7 +99,7 @@ Membrane Prediction
 Example:
 """"""""
 
-TBD
+.. image:: resources/2d_mem.jpg
 
 Usage:
 """"""

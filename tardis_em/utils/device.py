@@ -31,13 +31,16 @@ def get_device(device: Optional[str] = 0) -> torch.device:
     elif device == "cpu":  # Load CPU
         device = torch.device("cpu")
     elif device_is_str(device):  # Load specific GPU ID
-        if int(device) == -1:
-            device = torch.device("cpu")
+        if torch.cuda.is_available():
+            if int(device) == -1:
+                device = torch.device("cpu")
+            else:
+                device = torch.device(f"cuda:{int(device)}")
         else:
-            device = torch.device(f"cuda:{int(device)}")
+            device = torch.device("cpu")
     elif device == "mps":  # Load Apple silicon
         if torch.backends.mps.is_available():
-            device = torch.device("mps")
+            device = torch.device("cpu")  # So far pytorch don't support CNN on MPS
         else:
             device = torch.device("cpu")
     return device

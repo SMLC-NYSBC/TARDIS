@@ -1,29 +1,14 @@
 Tutorials
 =========
 
-.. _mt3D:
+`1. 3D Microtubule Prediction <usage/3d_mt.html>`__
+---------------------------------------------------
 
-Prediction of 3D MT semantics/instances
----------------------------------------
+`2. 2D Microtubule Prediction <usage/2d_mt.html>`__
+---------------------------------------------------
 
-.. _MT 2D:
+`3. 3D Membrane Prediction <usage/3d_membrane.html>`__
+------------------------------------------------------
 
-Prediction of 2D MT semantics/instances
----------------------------------------
-
-TBD
-
-.. _Mem 3D:
-
-Prediction of 3D Membrane semantics/instances
----------------------------------------------
-
-.. _Mem 2D:
-
-Prediction of 2D Membrane semantics/instances
----------------------------------------------
-
-.. _Train:
-
-Fine tuning CNN module for specific dataset
--------------------------------------------
+`4. 2D Membrane Prediction <usage/2d_membrane.html>`__
+------------------------------------------------------
