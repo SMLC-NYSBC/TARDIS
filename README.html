@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Features &mdash; TARDIS-em 0.1.1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=87f11076"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="History" href="HISTORY.html" />
+    <link rel="prev" title="Features" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            TARDIS-em
+          </a>
+              <div class="version">
+                0.1.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#quick-start">Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#microtubule-prediction">Microtubule Prediction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#d-prediction">2D prediction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id1">3D prediction</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#example">Example:</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usage">Usage:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#membrane-prediction">Membrane Prediction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">2D prediction</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id3">Example:</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id4">Usage:</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">3D prediction</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id6">Example:</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id7">Usage:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="HISTORY.html">History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">Citation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/3d_membrane.html">-  3D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/fine_tune_model.html">Fine-Tune TARDIS models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="code_doc.html">CNN Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code_doc.html#dist-module">DIST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code_doc.html#global-functions">Global Functions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Features</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/README.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <a class="reference external image-reference" href="https://smlc-nysbc.github.io/TARDIS/"><img alt="_images/Tardis_logo_2.png" class="align-center" src="_images/Tardis_logo_2.png" style="width: 512px;" /></a>
+<hr class="docutils" />
+<a class="reference external image-reference" href="https://shields.io"><img alt="https://img.shields.io/badge/Release-0.1.1-success" src="https://img.shields.io/badge/Release-0.1.1-success" /></a>
+<a class="reference external image-reference" href="https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_pytest.yml"><img alt="https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_pytest.yml/badge.svg" src="https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_pytest.yml/badge.svg" /></a>
+<a class="reference external image-reference" href="https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/licensed.yml"><img alt="https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/licensed.yml/badge.svg" src="https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/licensed.yml/badge.svg" /></a>
+<a class="reference external image-reference" href="https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/sphinx_documentation.yml"><img alt="https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/sphinx_documentation.yml/badge.svg" src="https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/sphinx_documentation.yml/badge.svg" /></a>
+<p>Python-based software for generalized object instance segmentation from (cryo-)electron microscopy
+micrographs/tomograms. The software package is built on a general workflow where predicted semantic segmentation
+is used for instance segmentation of 2D/3D images.</p>
+<img alt="_images/workflow.jpg" src="_images/workflow.jpg" />
+<section id="features">
+<h1>Features<a class="headerlink" href="#features" title="Permalink to this heading"></a></h1>
+<ul class="simple">
+<li><dl class="simple">
+<dt>Robust and high-throughput semantic/instance segmentation of all microtubules:</dt><dd><ul>
+<li><p>Supported file formats: [.tif, .mrc, .rec, .am]</p></li>
+<li><p>Supported modality: [ET, Cryo-ET]</p></li>
+<li><p>Supported Å resolution: [all]</p></li>
+<li><p>2D micrograph modality microtubule segmentation will come soon!</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Robust and high-throughput semantic/instance segmentation of membranes:</dt><dd><ul>
+<li><p>Supported file formats: [.tif, .mrc, .rec, .am]</p></li>
+<li><p>Supported modality: [EM, ET, Cryo-EM, Cryo-ET]</p></li>
+<li><p>Supported Å resolution: [all]</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>Fully automatic segmentation solution!</p></li>
+<li><p>Napari plugin [Coming soon]</p></li>
+<li><p>Cloud computing [Coming soon]</p></li>
+</ul>
+</section>
+<section id="citation">
+<h1>Citation<a class="headerlink" href="#citation" title="Permalink to this heading"></a></h1>
+<p><a class="reference external" href="http://dx.doi.org/10.1093/micmic/ozad067.485">DOI: 10.1093/micmic/ozad067.485</a></p>
+<p>Kiewisz R., Fabig G., Müller-Reichert T. Bepler T. 2023. Automated Segmentation of 3D Cytoskeletal Filaments from Electron Micrographs with TARDIS. Microscopy and Microanalysis 29(Supplement_1):970-972.</p>
+<p><a class="reference external" href="https://www.mlsb.io/papers_2022/Membrane_and_microtubule_rapid_instance_segmentation_with_dimensionless_instance_segmentation_by_learning_graph_representations_of_point_clouds.pdf">Link: NeurIPS 2022 MLSB Workshop</a></p>
+<p>Kiewisz R., Bepler T. 2022. Membrane and microtubule rapid instance segmentation with dimensionless instance segmentation by learning graph representations of point clouds. Neurips 2022 - Machine Learning for Structural Biology Workshop.</p>
+</section>
+<section id="what-s-new">
+<h1>What’s new?<a class="headerlink" href="#what-s-new" title="Permalink to this heading"></a></h1>
+<p><a class="reference external" href="https://smlc-nysbc.github.io/TARDIS/HISTORY.html">Full History</a></p>
+<dl class="simple">
+<dt>TARDIS-em v0.1.1 (2023-08-10):</dt><dd><ul class="simple">
+<li><p>General improvement from Microtubule and Membrane prediction</p></li>
+<li><p>Bug fixes</p></li>
+<li><p>Documentation tutorials</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="quick-start">
+<h1>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this heading"></a></h1>
+<p>For more examples and advanced usage please find more details in our <a class="reference external" href="https://smlc-nysbc.github.io/TARDIS/">Documentation</a></p>
+<section id="microtubule-prediction">
+<h2>Microtubule Prediction<a class="headerlink" href="#microtubule-prediction" title="Permalink to this heading"></a></h2>
+<section id="d-prediction">
+<h3>2D prediction<a class="headerlink" href="#d-prediction" title="Permalink to this heading"></a></h3>
+<p>TBD</p>
+</section>
+<section id="id1">
+<h3>3D prediction<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h3>
+<section id="example">
+<h4>Example:<a class="headerlink" href="#example" title="Permalink to this heading"></a></h4>
+<img alt="_images/3d_mt.jpg" src="_images/3d_mt.jpg" />
+</section>
+<section id="usage">
+<h4>Usage:<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h4>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>recommended<span class="w"> </span>usage:<span class="w"> </span>tardis_mt<span class="w"> </span><span class="o">[</span>-dir<span class="w"> </span>path/to/folder/with/input/tomogram<span class="o">]</span>
+advance<span class="w"> </span>usage:<span class="w"> </span>tardis_mt<span class="w"> </span><span class="o">[</span>-dir<span class="w"> </span>str<span class="o">]</span><span class="w"> </span><span class="o">[</span>-out<span class="w"> </span>str<span class="o">]</span><span class="w"> </span><span class="o">[</span>-ps<span class="w"> </span>int<span class="o">]</span><span class="w"> </span><span class="o">[</span>-ct<span class="w"> </span>float<span class="o">]</span><span class="w"> </span><span class="o">[</span>-dt<span class="w"> </span>float<span class="o">]</span>
+<span class="w">                         </span><span class="o">[</span>-pv<span class="w"> </span>int<span class="o">]</span><span class="w"> </span><span class="o">[</span>-ap<span class="w"> </span>str<span class="o">]</span><span class="w"> </span>...
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="membrane-prediction">
+<h2>Membrane Prediction<a class="headerlink" href="#membrane-prediction" title="Permalink to this heading"></a></h2>
+<section id="id2">
+<h3>2D prediction<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h3>
+<p>Full tutorial: Full tutorial: <a class="reference external" href="https://smlc-nysbc.github.io/TARDIS/usage/2d_membrane.html">2D Membrane Prediction</a></p>
+<section id="id3">
+<h4>Example:<a class="headerlink" href="#id3" title="Permalink to this heading"></a></h4>
+<img alt="_images/2d_mem.jpg" src="_images/2d_mem.jpg" />
+<p>Data source: Dr. Victor Kostyuchenko and Prof. Dr. Shee-Mei Lok, DUKE-NUS Medical School Singapore</p>
+</section>
+<section id="id4">
+<h4>Usage:<a class="headerlink" href="#id4" title="Permalink to this heading"></a></h4>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>recommended<span class="w"> </span>usage:<span class="w"> </span>tardis_mem2d<span class="w"> </span><span class="o">[</span>-dir<span class="w"> </span>path/to/folder/with/input/tomogram<span class="o">]</span><span class="w"> </span>-out<span class="w"> </span>mrc_csv
+advance<span class="w"> </span>usage:<span class="w"> </span>tardis_mem<span class="w"> </span><span class="o">[</span>-dir<span class="w"> </span>str<span class="o">]</span><span class="w"> </span><span class="o">[</span>-out<span class="w"> </span>str<span class="o">]</span><span class="w"> </span><span class="o">[</span>-ps<span class="w"> </span>int<span class="o">]</span><span class="w"> </span>...
+</pre></div>
+</div>
+</section>
+</section>
+<section id="id5">
+<h3>3D prediction<a class="headerlink" href="#id5" title="Permalink to this heading"></a></h3>
+<p>Full tutorial: <a class="reference external" href="https://smlc-nysbc.github.io/TARDIS/usage/3d_membrane.html">3D Membrane Prediction</a></p>
+<section id="id6">
+<h4>Example:<a class="headerlink" href="#id6" title="Permalink to this heading"></a></h4>
+<img alt="_images/3d_mem.jpg" src="_images/3d_mem.jpg" />
+<p>Data source: EMPIRE-10236, DOI: 10.1038/s41586-019-1089-3</p>
+</section>
+<section id="id7">
+<h4>Usage:<a class="headerlink" href="#id7" title="Permalink to this heading"></a></h4>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>recommended<span class="w"> </span>usage:<span class="w"> </span>tardis_mem<span class="w"> </span><span class="o">[</span>-dir<span class="w"> </span>path/to/folder/with/input/tomogram<span class="o">]</span><span class="w"> </span>-out<span class="w"> </span>mrc_csv
+advance<span class="w"> </span>usage:<span class="w"> </span>tardis_mem<span class="w"> </span><span class="o">[</span>-dir<span class="w"> </span>str<span class="o">]</span><span class="w"> </span><span class="o">[</span>-out<span class="w"> </span>str<span class="o">]</span><span class="w"> </span><span class="o">[</span>-ps<span class="w"> </span>int<span class="o">]</span><span class="w"> </span>...
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Features" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="HISTORY.html" class="btn btn-neutral float-right" title="History" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
