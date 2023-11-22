@@ -21,6 +21,9 @@ import time
 
 
 def ota_update(status=False):
+    if not isdir(join(expanduser("~"), ".tardis_em")):
+        mkdir(join(expanduser("~"), ".tardis_em"))
+
     timestamp = time.time()
     if isfile(
         join(
@@ -68,9 +71,9 @@ def ota_update(status=False):
                 text_0="TARDIS_pytorch has new update available via OTA-Update!",
                 text_1="Please in run this command to update tardis",
                 text_3="tardis_ota",
-                text_5="Contact developers if segmentation of your organelle is not supported! "
-                "(rkiewisz@nysbc.org | tbepler@nysbc.org).",
-                text_6="Join Slack community: https://tardis-em.slack.com",
+                text_5="Contact developers if segmentation of your organelle is not supported!",
+                text_6="rkiewisz@nysbc.org | tbepler@nysbc.org",
+                text_8="Join Slack community: https://tardis-em.slack.com",
             )
             time.sleep(10)
         with open(

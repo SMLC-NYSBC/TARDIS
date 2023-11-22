@@ -1,4 +1,4 @@
-include doc/source/HISTORY.rst
+include docs/source/HISTORY.rst
 include LICENSE
-include doc/source/README.rst
+include docs/source/README.rst
 include requirements.txt

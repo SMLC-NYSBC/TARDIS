@@ -21,7 +21,12 @@ from tardis_em._version import version
 import shutil
 from io import StringIO
 import os
-import pyvista as pv
+
+# STL save exception for Arm64 machines
+try:
+    import pyvista as pv
+except ImportError:
+    pass
 
 
 class NumpyToAmira:

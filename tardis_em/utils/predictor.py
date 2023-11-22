@@ -193,6 +193,18 @@ class DataSetPredictor:
                 desc=f"Require that at lest one output format is not None but {output_format} was given!",
             )
             sys.exit()
+
+        if self.output_format.endswith("stl"):  # Check if not ARM64 machine
+            import platform
+
+            if platform.machine() == "aarch64":
+                TardisError(
+                    id_="151",
+                    py="tardis_em/utils/predictor.py",
+                    desc=f"STL output is not allowed on {platform.machine()} machine type!",
+                )
+                sys.exit()
+
         # Searching for available images for prediction
         available_format = (".tif", ".mrc", ".rec", ".am", ".map")
         omit_format = (

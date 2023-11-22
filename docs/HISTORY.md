@@ -1,9 +1,18 @@
 # History
 
-<details>
-    <summary><b>0.1.0 (2023-08-10)</b></summary>
+<details open>
+    <summary><b>0.1.2 (2023-08-10)</b></summary>
 
 *This intends to be a release submitted with Nature Method 2023*
+
+* **General changes:**
+    * *General*:
+        * Fix installation for ARM64/aarch64 machine
+
+</details>
+
+<details>
+    <summary><b>0.1.1 (2023-08-10)</b></summary>
 
 * **General changes:**
     * *General*:
