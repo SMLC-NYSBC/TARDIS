@@ -258,15 +258,6 @@ class DataSetPredictor:
                 text_7="Current Task: Setting-up environment...",
             )
 
-        # Hard fix for dealing with tif file lack of pixel sizes...
-        self.tif_px, self.click_px_overwrite, self.click_stored_px = None, None, None
-        if np.any([True for x in self.predict_list if x.endswith((".tif", ".tiff"))]):
-            self.tif_px = click.prompt(
-                "Detected .tif files, please provide pixel size "
-                "(It will be used for all .tif images):",
-                type=float,
-            )
-
         """Build handler's"""
         # Build handler's for reading data to correct format
         self.normalize = RescaleNormalize(clip_range=(1, 99))  # Normalize histogram
@@ -410,9 +401,6 @@ class DataSetPredictor:
         else:
             self.image, self.px = load_image(join(self.dir, id_name))
             self.transformation = [0, 0, 0]
-
-        if self.tif_px is not None:
-            self.px = self.tif_px
 
         # In case of unreadable pixel size, ask user
         if self.click_stored_px is not None and self.click_px_overwrite is not None:
