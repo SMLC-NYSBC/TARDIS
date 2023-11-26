@@ -259,6 +259,8 @@ class DataSetPredictor:
             )
 
         """Build handler's"""
+        self.click_px_overwrite, self.click_stored_px = None, None
+
         # Build handler's for reading data to correct format
         self.normalize = RescaleNormalize(clip_range=(1, 99))  # Normalize histogram
         self.mean_std = MeanStdNormalize()  # Standardize with mean and std

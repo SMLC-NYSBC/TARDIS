@@ -21,7 +21,7 @@ Python-based software for generalized object instance segmentation from (cryo-)e
 micrographs/tomograms. The software package is built on a general workflow where predicted semantic segmentation
 is used for instance segmentation of 2D/3D images.
 
-.. image:: resources/workflow.jpg
+.. image:: resources/workflow.png
 
 Features
 ========
