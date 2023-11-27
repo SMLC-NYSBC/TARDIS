@@ -498,6 +498,9 @@ class DataSetPredictor:
             )
         else:
             # Restored original image pixel size
+            tif.imwrite(
+                join(self.am_output, f"{id_name[:-self.in_format]}_CNN_pp.tif"), self.image
+            )
             self.image, _ = scale_image(image=self.image, scale=self.org_shape)
 
             tif.imwrite(
@@ -505,8 +508,9 @@ class DataSetPredictor:
             )
             self.image = None
 
-        if len(pd.unique(self.image.flatten())) == 1:
-            self.image = None
+        if self.image is not None:
+            if len(pd.unique(self.image.flatten())) == 1:
+                self.image = None
 
         """Clean-up temp dir"""
         clean_up(dir_=self.dir)
