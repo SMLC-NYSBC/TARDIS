@@ -85,6 +85,7 @@ def build_cnn_network(
             in_channels=structure["in_channel"],
             out_channels=structure["out_channel"],
             img_patch_size=img_size,
+            dropout=structure["dropout"],
             conv_kernel=structure["conv_kernel"],
             padding=structure["conv_padding"],
             pool_kernel=structure["maxpool_kernel"],
