@@ -127,6 +127,14 @@ warnings.simplefilter("ignore", UserWarning)
     show_default=True,
 )
 @click.option(
+    "-px",
+    "--correct_px",
+    default=False,
+    type=bool,
+    help="If True correct pixel size values.",
+    show_default=True,
+)
+@click.option(
     "-pv",
     "--points_in_patch",
     default=1000,
@@ -233,6 +241,7 @@ def main(
     output_format: str,
     patch_size: int,
     rotate: bool,
+    correct_px: bool,
     cnn_threshold: float,
     dist_threshold: float,
     points_in_patch: int,
@@ -271,6 +280,7 @@ def main(
         dir_=path,
         binary_mask=mask,
         feature_size=None,
+        correct_px=correct_px,
         checkpoint=checkpoint,
         output_format=output_format,
         patch_size=patch_size,

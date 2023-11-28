@@ -206,9 +206,10 @@ class DataSetPredictor:
                 sys.exit()
 
         # Searching for available images for prediction
-        available_format = (".tif", ".mrc", ".rec", ".am", ".map")
+        available_format = (".tif", ".tiff", ".mrc", ".rec", ".am", ".map")
         omit_format = (
             "mask.tif",
+            "mask.tiff",
             "mask.mrc",
             "mask.rec",
             "Correlation_Lines.am",
