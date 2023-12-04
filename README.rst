@@ -17,6 +17,9 @@
 .. image:: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/sphinx_documentation.yml/badge.svg
         :target: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/sphinx_documentation.yml
 
+.. image:: https://img.shields.io/badge/Join%20Our%20Community-Slack-blue
+        :target: https://join.slack.com/t/tardis-em/shared_invite/zt-27jznfn9j-OplbV70KdKjkHsz5FcQQGg
+
 Python-based software for generalized object instance segmentation from (cryo-)electron microscopy
 micrographs/tomograms. The software package is built on a general workflow where predicted semantic segmentation
 is used for instance segmentation of 2D/3D images.
