@@ -465,6 +465,7 @@ class DataSetPredictor:
         if self.predict == "Filament":
             self.scale_factor = self.normalize_px / self.feature_size
         else:
+            # Trip scaling for extreme cases
             if self.px > (self.normalize_px * 3) or self.px < (self.normalize_px / 4):
                 self.scale_factor = 1.0
                 self.px = self.normalize_px
@@ -490,20 +491,15 @@ class DataSetPredictor:
 
         # Threshold whole image
         self.image = self.sigmoid(torch.Tensor(self.image)).detach().numpy()
-        if self.cnn_threshold != 0:
-            # Restored original image pixel size
-            self.image, _ = scale_image(image=self.image, scale=self.org_shape)
 
+        # Restored original image pixel size
+        self.image, _ = scale_image(image=self.image, scale=self.org_shape)
+
+        if self.cnn_threshold != 0:
             self.image = np.where(self.image >= self.cnn_threshold, 1, 0).astype(
                 np.uint8
             )
         else:
-            # Restored original image pixel size
-            tif.imwrite(
-                join(self.am_output, f"{id_name[:-self.in_format]}_CNN_pp.tif"), self.image
-            )
-            self.image, _ = scale_image(image=self.image, scale=self.org_shape)
-
             tif.imwrite(
                 join(self.am_output, f"{id_name[:-self.in_format]}_CNN.tif"), self.image
             )

@@ -10,7 +10,7 @@
 
 from os import listdir
 from os.path import isfile, join
-from typing import Tuple
+from typing import Tuple, Union
 
 import numpy as np
 
@@ -26,7 +26,7 @@ from tardis_em.utils.normalization import MeanStdNormalize, RescaleNormalize
 def build_train_dataset(
     dataset_dir: str,
     circle_size: int,
-    resize_pixel_size: float,
+    resize_pixel_size: Union[float, None],
     trim_xy: int,
     trim_z: int,
     keep_if=0.01,
@@ -57,10 +57,10 @@ def build_train_dataset(
     Args:
         dataset_dir (str): Directory with train test folders.
         circle_size (int): Size of the segmented object in A.
-        resize_pixel_size (float): Pixel size for image resizing.
+        resize_pixel_size (float, None): Pixel size for image resizing.
         trim_xy (int): Voxel size of output image in x and y dimension.
         trim_z (int): Voxel size of output image in z dimension.
-        keep_if (float):
+        keep_if (float): Min percentage of occupation on the mask to keep for training.
         benchmark (bool): If True construct data for benchmark.
     """
     """Setup"""
@@ -97,9 +97,21 @@ def build_train_dataset(
 
     """For each image find matching mask, pre-process, trim and save"""
     img_counter = 0
-    log_file = np.zeros((len(img_list), 10), dtype="|S50")
+    log_file = np.zeros((len(img_list) + 1, 8), dtype="|S50")
+    log_file[0, :] = np.array(
+        (
+            "ID",
+            "File_Name",
+            "Pixel_Size",
+            "Scale_Factor",
+            "Mask_Type",
+            "Image_Min",
+            "Image_Max",
+            "Patches_No",
+        )
+    )
 
-    for id, i in enumerate(img_list):
+    for id_, i in enumerate(img_list):
         """Update progress bar"""
         tardis_progress(
             title="Data pre-processing for CNN training",
@@ -108,10 +120,10 @@ def build_train_dataset(
             text_3="px: NaN",
             text_4="Scale: NaN",
             text_6="Image dtype: NaN",
-            text_7=print_progress_bar(id, len(img_list)),
+            text_7=print_progress_bar(id_, len(img_list)),
         )
 
-        log_file[id, 0] = id
+        log_file[id_ + 1, 0] = id_
         np.savetxt(join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=",")
 
         """Get image directory and check if img is a file"""
@@ -119,7 +131,7 @@ def build_train_dataset(
         if not isfile(img_dir):
             # Store fail in the log file
             log_file = error_log_build_data(
-                dir=join(dataset_dir, "log.csv"), log_file=log_file, id=id, i=i
+                dir=join(dataset_dir, "log.csv"), log_file=log_file, id=id_, i=i
             )
             continue
 
@@ -145,14 +157,14 @@ def build_train_dataset(
             log_file = error_log_build_data(
                 dir=join(dataset_dir, "log.csv"),
                 log_file=log_file,
-                id=id,
+                id=id_,
                 i=i + "|" + mask_dir,
             )
             continue
 
         """Load files"""
         image, mask, pixel_size = load_img_mask_data(img_dir, mask_dir)
-        log_file[id, 1] = i + "||" + mask_name
+        log_file[id_, 1] = i + "||" + mask_name
         np.savetxt(join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=",")
 
         if image is None:
@@ -162,16 +174,20 @@ def build_train_dataset(
             log_file = error_log_build_data(
                 dir=join(dataset_dir, "log.csv"),
                 log_file=log_file,
-                id=id,
+                id=id_,
                 i=i + "||" + mask_dir,
             )
 
         """Calculate scale factor"""
-        scale_factor = pixel_size / resize_pixel_size
+        if pixel_size is not None:
+            scale_factor = pixel_size / resize_pixel_size
+        else:
+            scale_factor = 1.0
+
         scale_shape = tuple(np.multiply(image.shape, scale_factor).astype(np.int16))
 
-        log_file[id, 2] = str(pixel_size)
-        log_file[id, 3] = str(scale_factor)
+        log_file[id_, 2] = str(pixel_size)
+        log_file[id_, 3] = str(scale_factor)
         np.savetxt(join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=",")
 
         """Update progress bar"""
@@ -182,7 +198,7 @@ def build_train_dataset(
             text_3=f"px: {pixel_size}",
             text_4=f"Scale: {round(scale_factor, 2)}",
             text_6=f"Image dtype: {image.dtype} min: {image.min()} max: {image.max()}",
-            text_7=print_progress_bar(id, len(img_list)),
+            text_7=print_progress_bar(id_, len(img_list)),
         )
 
         """Draw mask for coord or process mask if needed"""
@@ -198,7 +214,7 @@ def build_train_dataset(
                 pixel_size=resize_pixel_size,
                 circle_size=circle_size,
             )
-            log_file[id, 4] = "coord"
+            log_file[id_, 4] = "coord"
             np.savetxt(join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=",")
         else:  # Detect an image mask array
             # Convert to binary
@@ -215,15 +231,16 @@ def build_train_dataset(
 
             # mask borders
             if mask.ndim == 2:
-                mask[:5, :] = 0
-                mask[:, :5] = 0
-                mask[-5:, :] = 0
-                mask[:, -5:] = 0
+                mask[:1, :] = 0
+                mask[:, :1] = 0
+                mask[-1:, :] = 0
+                mask[:, -1:] = 0
             else:
-                mask[:, 5, :] = 0
-                mask[:, -5:, :] = 0
-                mask[..., :5] = 0
-                mask[..., -5:] = 0
+                mask[:, 1, :] = 0
+                mask[:, -1:, :] = 0
+                mask[..., :1] = 0
+                mask[..., -1:] = 0
+
             if scale_factor != 1.0:
                 pc = b_pc.build_point_cloud(image=mask, as_2d=True)
                 pc = pc * scale_factor
@@ -258,7 +275,7 @@ def build_train_dataset(
                     circle_size=circle_size,
                 )
 
-            log_file[id, 4] = "mask"
+            log_file[id_, 4] = "mask"
             np.savetxt(join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=",")
 
         """Update progress bar"""
@@ -269,16 +286,12 @@ def build_train_dataset(
             text_3=f"px: {pixel_size}",
             text_4=f"Scale: {round(scale_factor, 2)}",
             text_6=f"Image dtype: {image.dtype} min: {image.min()} max: {image.max()}",
-            text_7=print_progress_bar(id, len(img_list)),
+            text_7=print_progress_bar(id_, len(img_list)),
         )
 
         """Normalize image histogram"""
         # Rescale image intensity
         image = normalize(meanstd(image)).astype(np.float32)
-
-        log_file[id, 5] = image.min()
-        log_file[id, 6] = image.max()
-        np.savetxt(join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=",")
         if (
             not image.min() >= -1 or not image.max() <= 1
         ):  # Image not between in -1 and 1
@@ -288,8 +301,8 @@ def build_train_dataset(
                 image = image / 255  # move to 0 - 1
                 image = (image - 0.5) * 2
 
-        log_file[id, 7] = image.min()
-        log_file[id, 8] = image.max()
+        log_file[id_, 5] = image.min()
+        log_file[id_, 6] = image.max()
         np.savetxt(join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=",")
 
         tardis_progress(
@@ -299,7 +312,7 @@ def build_train_dataset(
             text_3=f"px: {pixel_size}",
             text_4=f"Scale: {round(scale_factor, 2)}",
             text_6=f"Image dtype: {image.dtype} min: {image.min()} max: {image.max()}",
-            text_7=print_progress_bar(id, len(img_list)),
+            text_7=print_progress_bar(id_, len(img_list)),
         )
 
         """Voxelize Image and Mask"""
@@ -316,7 +329,7 @@ def build_train_dataset(
             log=True,
         )
         img_counter += 1
-        log_file[id, 9] = count
+        log_file[id_, 7] = count
         np.savetxt(join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=",")
 
 
@@ -409,10 +422,10 @@ def error_log_build_data(dir: str, log_file: np.ndarray, id: int, i: str) -> np.
     """
 
     # Store fail in the log file
-    log_file[id, 0] = str(id)
-    log_file[id, 1] = i
-    log_file[id, 2] = "NA"
-    log_file[id, 3] = "NA"
+    log_file[id + 1, 0] = str(id)
+    log_file[id + 1, 1] = i
+    log_file[id + 1, 2] = "NA"
+    log_file[id + 1, 3] = "NA"
     np.savetxt(dir, log_file, fmt="%s", delimiter=",")
 
     return log_file
