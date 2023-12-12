@@ -228,7 +228,7 @@ ota = ota_update()
 def main(
     path: str,
     patch_size: int,
-    pixel_size: Union[float, None],
+    pixel_size,
     mask_size: int,
     cnn_type: str,
     cnn_out_channel: int,
