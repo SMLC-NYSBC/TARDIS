@@ -55,7 +55,7 @@ ota = ota_update()
     "-px",
     "--pixel_size",
     default=None,
-    type=25.0,
+    type=float,
     help="Pixel size in [A] to which all images are resize.",
     show_default=True,
 )
