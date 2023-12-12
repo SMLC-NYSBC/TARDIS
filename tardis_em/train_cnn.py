@@ -54,8 +54,8 @@ ota = ota_update()
 @click.option(
     "-px",
     "--pixel_size",
-    default=25,
-    type=Union[float, None],
+    default=None,
+    type=25.0,
     help="Pixel size in [A] to which all images are resize.",
     show_default=True,
 )
@@ -228,7 +228,7 @@ ota = ota_update()
 def main(
     path: str,
     patch_size: int,
-    pixel_size,
+    pixel_size: Union[float, None],
     mask_size: int,
     cnn_type: str,
     cnn_out_channel: int,
