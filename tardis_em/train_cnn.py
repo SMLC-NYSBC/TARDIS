@@ -11,7 +11,7 @@
 from os import getcwd, listdir, mkdir
 from os.path import isdir, join
 from shutil import rmtree
-from typing import Optional
+from typing import Optional, Union
 
 import click
 import torch
