@@ -129,12 +129,20 @@ def train_cnn(
 
     """Build training optimizer"""
     if learning_rate_scheduler:
-        optimizer = optim.Adam(
-            params=model.parameters(), betas=(0.9, 0.98), lr=learning_rate, eps=1e-9
+        optimizer = optim.NAdam(
+            params=model.parameters(),
+            betas=(0.9, 0.999),
+            lr=learning_rate,
+            eps=1e-8,
+            momentum_decay=4e-3,
         )
     else:
-        optimizer = optim.Adam(
-            params=model.parameters(), lr=learning_rate, betas=(0.9, 0.98), eps=1e-9
+        optimizer = optim.NAdam(
+            params=model.parameters(),
+            lr=learning_rate,
+            betas=(0.9, 0.999),
+            eps=1e-8,
+            momentum_decay=4e-3,
         )
 
     """Optionally: Build learning rate scheduler"""

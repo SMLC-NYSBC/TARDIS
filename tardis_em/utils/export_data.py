@@ -538,6 +538,22 @@ def to_stl(data: np.ndarray, file_dir: str):
         file_dir (str): Output file location.
     """
 
+    def change_first_line_of_file(filename, new_first_line):
+        fr = open(filename, "r")
+        first_line = fr.readline()
+        fr.close()
+        first_line_len = len(first_line)
+
+        new_first_line_len = len(new_first_line)
+        spaces_num = first_line_len - new_first_line_len
+        new_first_line = new_first_line + " " * (spaces_num - 1) + "\n"
+        fw = StringIO(new_first_line)
+        fr = open(filename, "r+")
+        shutil.copyfileobj(fw, fr)
+        fr.close()
+        fw.close()
+        return
+
     def save_multiblock_stl(multiblock, filename):
         names = multiblock.keys()
         oname, ext = os.path.splitext(filename)
@@ -567,22 +583,6 @@ def to_stl(data: np.ndarray, file_dir: str):
         for fn in ofiles:
             os.remove(fn)
 
-        return
-
-    def change_first_line_of_file(filename, new_first_line):
-        fr = open(filename, "r")
-        first_line = fr.readline()
-        fr.close()
-        first_line_len = len(first_line)
-
-        new_first_line_len = len(new_first_line)
-        spaces_num = first_line_len - new_first_line_len
-        new_first_line = new_first_line + " " * (spaces_num - 1) + "\n"
-        fw = StringIO(new_first_line)
-        fr = open(filename, "r+")
-        shutil.copyfileobj(fw, fr)
-        fr.close()
-        fw.close()
         return
 
     cloud = pv.MultiBlock()

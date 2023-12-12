@@ -58,7 +58,8 @@ def convolution(
     Customizable convolution block builder.
 
     Build an convolution block with a specified components and order:
-    dimension (2 or 3), conv (c), ReLu (r), LeakyReLu (l), GeLu (e),
+    dimension (2 or 3), conv (c),
+    ReLu (r), LeakyReLu (l), GeLu (e), PReLu (p),
     GroupNorm (g), BatchNorm (b).
 
     Args:
@@ -136,7 +137,7 @@ def convolution(
                             ),
                         )
                     )
-        "Add GroupNorm"
+        """Add GroupNorm"""
         if "g" == letter:
             if num_group is None:
                 TardisError(
@@ -182,6 +183,8 @@ def convolution(
         """Add GeLu"""
         if "e" in letter:
             modules.append(("GeLU", GeLU()))
+        if "p" in letter:
+            modules.append(("PReLU", nn.PReLU()))
 
     return modules
 

@@ -716,18 +716,18 @@ def load_mrc_file(mrc: str) -> Union[Tuple[np.ndarray, float], Tuple[None, float
     if image is None:
         return None, 1.0
 
-    if image.min() < 0 and image.dtype == np.int8:
-        image = image + 128
-        image = image.astype(np.uint8)
-
-    if image.min() < 0 and image.dtype == np.int16:
-        image = image + 32768
-        image = image.astype(np.uint16)
+    # if image.min() < 0 and image.dtype == np.int8:
+    #     image = image + 128
+    #     image = image.astype(np.uint8)
+    #
+    # if image.min() < 0 and image.dtype == np.int16:
+    #     image = image + 32768
+    #     image = image.astype(np.uint16)
 
     # Detect wrongly saved cryo-EM mrc files
     if nz > int(ny * 2):
         image = image.transpose((1, 0, 2))  # YZX to ZYX
-    elif nz > int(ny * 2):
+    elif nz > int(nx * 2):
         image = image.transpose((2, 1, 0))  # XYZ to ZYX
 
     return image, pixel_size

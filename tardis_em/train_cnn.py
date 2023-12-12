@@ -110,7 +110,7 @@ ota = ota_update()
 @click.option(
     "-cs",
     "--cnn_structure",
-    default="3gcl",
+    default="3gcp",
     type=str,
     help="Define structure of the convolution layer."
     "2 or 3 - dimension in 2D or 3D"
@@ -119,7 +119,8 @@ ota = ota_update()
     "b - batch normalization"
     "r - ReLU"
     "l - LeakyReLU"
-    "e - GeLu",
+    "e - GeLu"
+    "p - PReLu",
     show_default=True,
 )
 @click.option(
@@ -157,7 +158,7 @@ ota = ota_update()
 @click.option(
     "-lr",
     "--loss_lr_rate",
-    default=1.0,
+    default=0.0005,
     type=float,
     help="Learning rate for NN.",
     show_default=True,

@@ -427,7 +427,7 @@ class DataSetPredictor:
         if not self.output_format.startswith("None") or not self.binary_mask:
             self.image = self.normalize(self.mean_std(self.image)).astype(np.float32)
 
-            # Check image structure
+            # Sanity check image histogram
             if (
                 not self.image.min() >= -1 or not self.image.max() <= 1
             ):  # Image not between in -1 and 1
