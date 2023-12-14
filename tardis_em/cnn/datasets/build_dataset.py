@@ -179,10 +179,11 @@ def build_train_dataset(
             )
 
         """Calculate scale factor"""
-        if pixel_size is not None:
+        if resize_pixel_size is not None:
             scale_factor = pixel_size / resize_pixel_size
         else:
             scale_factor = 1.0
+            resize_pixel_size = pixel_size
 
         scale_shape = tuple(np.multiply(image.shape, scale_factor).astype(np.int16))
 

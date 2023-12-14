@@ -205,7 +205,7 @@ ota = ota_update()
     default=10,
     type=int,
     help="Number of epoches without improvement after which early stop "
-    "is initiated.",
+    "is initiated. Default should is 10% of the total number of epochs.",
     show_default=True,
 )
 @click.option(
