@@ -183,7 +183,6 @@ def build_train_dataset(
             scale_factor = pixel_size / resize_pixel_size
         else:
             scale_factor = 1.0
-            resize_pixel_size = pixel_size
 
         scale_shape = tuple(np.multiply(image.shape, scale_factor).astype(np.int16))
 
@@ -212,7 +211,7 @@ def build_train_dataset(
             mask = draw_instances(
                 mask_size=scale_shape,
                 coordinate=mask,
-                pixel_size=resize_pixel_size,
+                pixel_size=resize_pixel_size if resize_pixel_size is not None else pixel_size,
                 circle_size=circle_size,
             )
             log_file[id_, 4] = "coord"
@@ -272,7 +271,7 @@ def build_train_dataset(
                     mask_size=scale_shape,
                     coordinate=pc,
                     label=False,
-                    pixel_size=resize_pixel_size,
+                    pixel_size=resize_pixel_size if resize_pixel_size is not None else pixel_size,
                     circle_size=circle_size,
                 )
 
