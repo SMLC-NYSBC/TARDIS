@@ -211,7 +211,9 @@ def build_train_dataset(
             mask = draw_instances(
                 mask_size=scale_shape,
                 coordinate=mask,
-                pixel_size=resize_pixel_size if resize_pixel_size is not None else pixel_size,
+                pixel_size=resize_pixel_size
+                if resize_pixel_size is not None
+                else pixel_size,
                 circle_size=circle_size,
             )
             log_file[id_, 4] = "coord"
@@ -271,7 +273,9 @@ def build_train_dataset(
                     mask_size=scale_shape,
                     coordinate=pc,
                     label=False,
-                    pixel_size=resize_pixel_size if resize_pixel_size is not None else pixel_size,
+                    pixel_size=resize_pixel_size
+                    if resize_pixel_size is not None
+                    else pixel_size,
                     circle_size=circle_size,
                 )
 

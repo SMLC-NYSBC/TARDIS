@@ -72,6 +72,7 @@ def train_cnn(
         ClBCELoss,
         SigmoidFocalLoss,
         LaplacianEigenmapsLoss,
+        BCEMSELoss,
     ]
     losses_f = {f.__name__: f() for f in loss_functions}
 

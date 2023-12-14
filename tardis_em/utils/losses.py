@@ -552,3 +552,33 @@ class WBCELoss(AbstractLoss):
             return torch.mean(bce_loss)
         else:
             return bce_loss
+
+
+class BCEMSELoss(AbstractLoss):
+    """
+    Implements the Binary Cross-Entropy over MSE loss function with an option to ignore the diagonal elements.
+
+    The BCELoss class can be used for training where pixel-level accuracy is important.
+    The MSE loos is used over continues Z slices to ensure smooth segmentation accuracy.
+    """
+
+    def __init__(self, **kwargs):
+        """
+        Initializes the BCELoss with the given parameters.
+        """
+        super(BCEMSELoss, self).__init__(**kwargs)
+
+        self.bce_loss = nn.BCELoss(reduction=self.reduction)
+        self.mse_loss = nn.MSELoss(reduction=self.reduction)
+
+    def forward(
+        self, logits: torch.Tensor, targets: torch.Tensor, mask=True
+    ) -> torch.Tensor:
+        """
+        Computes the BCE loss between the logits and targets.
+        """
+        logits, targets = self.initialize_tensors(logits, targets, mask)
+
+        mse = self.mse_loss(logits[:, :, :-1, ...], logits[:, :, 1:, ...])
+
+        return self.bce_loss(logits, targets) + (mse * 0.1)
