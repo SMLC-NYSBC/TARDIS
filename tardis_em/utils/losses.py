@@ -562,11 +562,13 @@ class BCEMSELoss(AbstractLoss):
     The MSE loos is used over continues Z slices to ensure smooth segmentation accuracy.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, mse_weight=0.1, **kwargs):
         """
         Initializes the BCELoss with the given parameters.
         """
         super(BCEMSELoss, self).__init__(**kwargs)
+
+        self.mse_weight = mse_weight
 
         self.bce_loss = nn.BCELoss(reduction=self.reduction)
         self.mse_loss = nn.MSELoss(reduction=self.reduction)
@@ -579,6 +581,13 @@ class BCEMSELoss(AbstractLoss):
         """
         logits, targets = self.initialize_tensors(logits, targets, mask)
 
-        mse = self.mse_loss(logits[:, :, :-1, ...], logits[:, :, 1:, ...])
+        # Avg. MSE to past and future frame
+        mse = (
+            self.mse_loss(logits[:, :, :-1, ...], targets[:, :, 1:, ...])
+            + self.mse_loss(logits[:, :, 1:, ...], targets[:, :, :-1])
+        ) / 2
 
-        return self.bce_loss(logits, targets) + (mse * 0.1)
+        # Regular BCE
+        bce = self.bce_loss(logits, targets)
+
+        return bce + (mse * self.mse_weight)
