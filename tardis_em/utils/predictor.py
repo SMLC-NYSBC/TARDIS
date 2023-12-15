@@ -541,10 +541,11 @@ class DataSetPredictor:
         data[-1, :] = data[-2, :]
 
         # Mask border's
-        data[:, 0, :] = 0
-        data[:, -1, :] = 0
-        data[:, :, 0] = 0
-        data[:, :, -1] = 0
+        min_ = np.min(data)
+        data[:, 0, :] = min_
+        data[:, -1, :] = min_
+        data[:, :, 0] = min_
+        data[:, :, -1] = min_
 
         return data
 
