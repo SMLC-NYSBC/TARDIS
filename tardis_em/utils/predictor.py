@@ -525,6 +525,29 @@ class DataSetPredictor:
         del self.image
         self._debug(id_name=id_name, debug_id="pc")
 
+    @staticmethod
+    def mask_borders(data: np.ndarray) -> np.ndarray:
+        """
+        Mask borders in predicted mask
+
+        Args:
+            data (np.ndarray): Predicted probabilities [ZYX or YX]
+
+        Return:
+            np.ndarray: Masked probabilities [ZYX or YX]
+        """
+        # Mask z = [0, -1]
+        data[0, :] = data[1, :]
+        data[-1, :] = data[-2, :]
+
+        # Mask border's
+        data[:, 0, :] = 0
+        data[:, -1, :] = 0
+        data[:, :, 0] = 0
+        data[:, :, -1] = 0
+
+        return data
+
     def predict_cnn(self, id: int, id_name: str, dataloader):
         iter_time = 1
         if self.rotate:
@@ -563,9 +586,10 @@ class DataSetPredictor:
                 # Predict
                 input_ = self.cnn.predict(input_[None, :], rotate=self.rotate)
 
-            tif.imwrite(
-                join(self.output, f"{name}.tif"), np.array(input_, dtype=input_.dtype)
-            )
+            # Mask z = 0 with z = 1 and z =-1 with z = -2, as well as borders with 0's
+            input_ = self.mask_borders(np.array(input_, dtype=input_.dtype))
+
+            tif.imwrite(join(self.output, f"{name}.tif"), input_)
 
     def predict_DIST(self, id: int, id_name: str):
         iter_time = int(round(len(self.coords_df) / 10))
