@@ -1,9 +1,27 @@
 # History
 
 <details open>
-    <summary><b>0.1.2 (2023-08-10)</b></summary>
+    <summary><b>0.1.5 (2023-12-NA)</b></summary>
 
 *This intends to be a release submitted with Nature Method 2023*
+
+* **General changes:**
+    * *General*:
+        * Improve prediction handling
+        * Update Membrane and Microtubule modules predictions
+        * Include usage tutorials
+    
+* **SpindleTorch module changes:**
+  * *General*: 
+    * New BCE_MSE loss function to improve false-positive prediction and 
+      smooth out labels.
+    * Improved model generalizability and removed scaling optimization to ensure
+      stable prediction regardless the pixel size
+      
+</details>
+
+<details>
+    <summary><b>0.1.2 (2023-08-10)</b></summary>
 
 * **General changes:**
     * *General*:

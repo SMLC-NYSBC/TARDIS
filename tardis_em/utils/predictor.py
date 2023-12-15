@@ -540,13 +540,6 @@ class DataSetPredictor:
         data[0, :] = data[1, :]
         data[-1, :] = data[-2, :]
 
-        # Mask border's
-        min_ = np.min(data)
-        data[:, 0, :] = min_
-        data[:, -1, :] = min_
-        data[:, :, 0] = min_
-        data[:, :, -1] = min_
-
         return data
 
     def predict_cnn(self, id: int, id_name: str, dataloader):
