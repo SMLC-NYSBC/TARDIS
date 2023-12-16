@@ -17,7 +17,9 @@
       smooth out labels.
     * Improved model generalizability and removed scaling optimization to ensure
       stable prediction regardless the pixel size
-      
+  * *Optimize*:
+    * New CNN module structure
+
 </details>
 
 <details>
