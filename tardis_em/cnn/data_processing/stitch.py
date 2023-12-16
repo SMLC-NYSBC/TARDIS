@@ -295,7 +295,7 @@ def generate_grid(image_size: tuple, patch_size: list, grid_size: list, strid: i
 
     # Unpack the dimensions based on whether the image is 2D or 3D
     if D2:
-        z_dim = 0
+        z_dim, nz, gz = 0, 0, 0
         y_dim, x_dim = image_size
         ny, nx = patch_size
         gy, gx = grid_size
@@ -325,6 +325,14 @@ def generate_grid(image_size: tuple, patch_size: list, grid_size: list, strid: i
         zz, xx = np.meshgrid(z_coords, x_coords, indexing="ij")
         coordinates_yy = np.vstack([zz.ravel(), yy.ravel()]).T
         coordinates_xx = np.vstack([zz.ravel(), xx.ravel()]).T
-        return coordinates_yy, coordinates_xx, y_coords
+
+        z_coords = np.concatenate(
+            [
+                np.arange((nz * g - strid * g), nz * g - (strid * (g - 1)))
+                for g in range(1, gz)
+            ]
+        )
+
+        return coordinates_yy, coordinates_xx, z_coords
     else:
         return y_coords, x_coords
