@@ -581,7 +581,7 @@ class DataSetPredictor:
                 input_ = self.cnn.predict(input_[None, :], rotate=self.rotate)
 
             # Mask z = 0 with z = 1 and z =-1 with z = -2, as well as borders with 0's
-            # input_ = self.mask_borders(np.array(input_, dtype=input_.dtype))
+            input_ = self.mask_borders(np.array(input_, dtype=input_.dtype))
 
             tif.imwrite(join(self.output, f"{name}.tif"), input_)
 

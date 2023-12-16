@@ -229,14 +229,41 @@ class StitchImages:
                                 z_start:z_stop, y_start:y_stop, x_start:x_stop
                             ] += img
                         elif not mask and self.nz == 0:
-                            stitched_image[y_start:y_stop, x_start:x_stop] = img
+                            stitched_image[y_start:y_stop, x_start:x_stop] += img
                         else:
                             stitched_image[
                                 z_start:z_stop, y_start:y_stop, x_start:x_stop
-                            ] = img
+                            ] += img
 
             if mask:
                 stitched_image = np.where(stitched_image > 0, 1, 0).astype(np.uint8)
+            else:
+                if self.nz == 0:
+                    grid_y, grid_x = generate_grid(
+                        stitched_image.shape,
+                        [self.ny, self.nx],
+                        [self.y, self.x],
+                        self.stride,
+                    )
+                    stitched_image[grid_y[:,], :] = stitched_image[grid_y[:,], :] / 2
+                    stitched_image[:, grid_x[:,]] = stitched_image[:, grid_x[:,]] / 2
+                else:
+                    grid_y, grid_x, grid_z = generate_grid(
+                        stitched_image.shape,
+                        [self.nz, self.ny, self.nx],
+                        [self.z, self.y, self.x],
+                        self.stride,
+                    )
+
+                    stitched_image[grid_y[:, 0], grid_y[:, 1], :] = (
+                        stitched_image[grid_y[:, 0], grid_y[:, 1], :] / 2
+                    )
+                    stitched_image[grid_x[:, 0], :, grid_x[:, 1]] = (
+                        stitched_image[grid_x[:, 0], :, grid_x[:, 1]] / 2
+                    )
+                    stitched_image[grid_z[:,], ...] = (
+                        stitched_image[grid_z[:,], ...] / 2
+                    )
 
             if output is None:
                 return np.array(stitched_image, dtype=dtype)
@@ -245,3 +272,59 @@ class StitchImages:
                     join(output, f"Stitched_Image_idx_{idx}.tif"),
                     np.array(stitched_image, dtype=dtype),
                 )
+
+
+def generate_grid(image_size: tuple, patch_size: list, grid_size: list, strid: int):
+    """
+    Generates grid coordinates for either 2D or 3D images.
+
+    Args:
+        image_size (list): The dimensions of the image.
+            For 3D, it should be [z, y, x], and for 2D, [y, x].
+        patch_size (list): The dimensions of each patch.
+            For 3D, [nz, ny, nx], and for 2D, [ny, nx].
+        grid_size (list): The grid size.
+            For 3D, [gz, gy, gx], and for 2D, [gy, gx].
+        strid (int): The stride for grid generation.
+
+    Returns:
+        Tuple[list]: A tuple of numpy arrays with coordinates of the grid.
+    """
+    # Determine if the image is 2D based on the length of image_size
+    D2 = len(image_size) == 2
+
+    # Unpack the dimensions based on whether the image is 2D or 3D
+    if D2:
+        z_dim = 0
+        y_dim, x_dim = image_size
+        ny, nx = patch_size
+        gy, gx = grid_size
+    else:
+        z_dim, y_dim, x_dim = image_size
+        nz, ny, nx = patch_size
+        gz, gy, gx = grid_size
+
+    # Generate y and x coordinates
+    y_coords = np.concatenate(
+        [
+            np.arange((ny * g - strid * g), ny * g - (strid * (g - 1)))
+            for g in range(1, gy)
+        ]
+    )
+    x_coords = np.concatenate(
+        [
+            np.arange((nx * g - strid * g), nx * g - (strid * (g - 1)))
+            for g in range(1, gx)
+        ]
+    )
+
+    # Generate z coordinates and meshgrids if the image is 3D
+    if not D2:
+        z_coords = np.arange(z_dim)
+        zz, yy = np.meshgrid(z_coords, y_coords, indexing="ij")
+        zz, xx = np.meshgrid(z_coords, x_coords, indexing="ij")
+        coordinates_yy = np.vstack([zz.ravel(), yy.ravel()]).T
+        coordinates_xx = np.vstack([zz.ravel(), xx.ravel()]).T
+        return coordinates_yy, coordinates_xx, y_coords
+    else:
+        return y_coords, x_coords
