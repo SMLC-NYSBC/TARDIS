@@ -490,7 +490,7 @@ class DataSetPredictor:
             )[: self.scale_shape[0], : self.scale_shape[1], : self.scale_shape[2]]
 
         # Threshold whole image
-        self.image = self.sigmoid(torch.from_numpy(self.image)).detach().numpy()
+        # self.image = self.sigmoid(torch.from_numpy(self.image)).detach().numpy()
 
         # Restored original image pixel size
         self.image, _ = scale_image(image=self.image, scale=self.org_shape)
@@ -1258,6 +1258,7 @@ class Predictor:
                 else:
                     out = self.model(x).cpu().detach().numpy()[0, 0, :]
 
+                # return out
                 return torch.sigmoid(torch.from_numpy(out)).cpu().detach().numpy()
 
 
