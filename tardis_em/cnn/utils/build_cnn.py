@@ -379,9 +379,8 @@ class UNet3Plus(nn.Module):
             x_cls_max = x_cls_max[:, np.newaxis].float()
 
         """ Decoder """
+        decoder_features = [x.clone()]
         for decoder in self.decoder:
-            decoder_features = [x]
-
             x = decoder(
                 x=x,
                 encoder_features=encoder_features,
@@ -555,16 +554,14 @@ class FNet(nn.Module):
                 encoder_features.insert(0, x)
 
         """ Decoder UNet """
-        x_unet = x
-        for decoder, features in zip(self.decoder_unet, encoder_features):
-            x_unet = decoder(features, x_unet)
+        x_3plus = x.clone()
+        decoder_features = [x.clone()]
+        for decoder, decoder_2, features in zip(
+            self.decoder_unet, self.decoder_3plus, encoder_features
+        ):
+            x = decoder(features, x)
 
-        """ Decoder UNet_3Plus """
-        x_3plus = x
-        for decoder in self.decoder_3plus:
-            decoder_features = [x_3plus]
-
-            x_3plus = decoder(
+            x_3plus = decoder_2(
                 x=x_3plus,
                 encoder_features=encoder_features,
                 decoder_features=decoder_features[2:],
@@ -575,9 +572,9 @@ class FNet(nn.Module):
             encoder_features = encoder_features[1:]
 
         """ Final Layer/Prediction """
-        x_unet = self.unet_conv_layer(x_unet)
+        x = self.unet_conv_layer(x)
         x_3plus = self.unet3plus_conv_layer(x_3plus)
-        x = self.final_conv_layer(x_unet + x_3plus)
+        x = self.final_conv_layer(x + x_3plus)
 
         if self.prediction:
             return self.activation(x)
@@ -733,12 +730,12 @@ class FNetAttn(nn.Module):
 
         """ Decoder UNet """
         x_3plus = x.clone()
+        decoder_features = [x.clone()]
         for decoder, decoder_2, features in zip(
             self.decoder_unet, self.decoder_3plus, encoder_features
         ):
             x = decoder(features, x)
 
-            decoder_features = [x_3plus]
             x_3plus = decoder_2(
                 x=x_3plus,
                 encoder_features=encoder_features,
@@ -751,9 +748,9 @@ class FNetAttn(nn.Module):
             encoder_features = encoder_features[1:]
 
         """ Final Layer/Prediction """
-        x_unet = self.unet_conv_layer(x)
+        x = self.unet_conv_layer(x)
         x_3plus = self.unet3plus_conv_layer(x_3plus)
-        x = self.final_conv_layer(x_unet + x_3plus)
+        x = self.final_conv_layer(x + x_3plus)
 
         if self.prediction:
             return self.activation(x)
