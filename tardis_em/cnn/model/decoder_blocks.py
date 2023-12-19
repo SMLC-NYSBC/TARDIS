@@ -16,6 +16,7 @@ import torch.nn as nn
 from tardis_em.cnn.model.convolution import (
     DoubleConvolution,
     RecurrentDoubleConvolution,
+    SingleConvolution,
 )
 from tardis_em.cnn.model.init_weights import init_weights
 from tardis_em.cnn.utils.utils import number_of_features_per_level
@@ -48,6 +49,7 @@ class DecoderBlockCNN(nn.Module):
         dropout: Optional[float] = None,
         components="3gcr",
         num_group=8,
+        single=False,
     ):
         super(DecoderBlockCNN, self).__init__()
 
@@ -59,15 +61,26 @@ class DecoderBlockCNN(nn.Module):
         elif "2" in components:
             self.upscale = nn.Upsample(size=size, mode="bilinear", align_corners=False)
 
-        self.deconv_module = DoubleConvolution(
-            in_ch=in_ch,
-            out_ch=out_ch,
-            block_type="decoder",
-            kernel=conv_kernel,
-            padding=padding,
-            components=components,
-            num_group=num_group,
-        )
+        if single:
+            self.deconv_module = SingleConvolution(
+                in_ch=in_ch,
+                out_ch=out_ch,
+                block_type="decoder",
+                kernel=conv_kernel,
+                padding=padding,
+                components=components,
+                num_group=num_group,
+            )
+        else:
+            self.deconv_module = DoubleConvolution(
+                in_ch=in_ch,
+                out_ch=out_ch,
+                block_type="decoder",
+                kernel=conv_kernel,
+                padding=padding,
+                components=components,
+                num_group=num_group,
+            )
 
         """Optional Dropout"""
         if dropout is not None:
@@ -234,7 +247,9 @@ class DecoderBlockUnet3Plus(nn.Module):
         num_layer: int,
         decoder_feature_ch: list,
         encoder_feature_ch: list,
+        unet_features=False,
         dropout: Optional[float] = None,
+        single=False,
     ):
         super(DecoderBlockUnet3Plus, self).__init__()
 
@@ -245,15 +260,27 @@ class DecoderBlockUnet3Plus(nn.Module):
             self.upscale = nn.Upsample(size=size, mode="trilinear", align_corners=False)
         elif "2" in components:
             self.upscale = nn.Upsample(size=size, mode="bilinear", align_corners=False)
-        self.deconv = DoubleConvolution(
-            in_ch=in_ch,
-            out_ch=out_ch,
-            block_type="decoder",
-            kernel=conv_kernel,
-            padding=padding,
-            components=components,
-            num_group=num_group,
-        )
+
+        if single:
+            self.deconv = SingleConvolution(
+                in_ch=in_ch,
+                out_ch=out_ch,
+                block_type="decoder",
+                kernel=conv_kernel,
+                padding=padding,
+                components=components,
+                num_group=num_group,
+            )
+        else:
+            self.deconv = DoubleConvolution(
+                in_ch=in_ch,
+                out_ch=out_ch,
+                block_type="decoder",
+                kernel=conv_kernel,
+                padding=padding,
+                components=components,
+                num_group=num_group,
+            )
 
         """Skip-Connection Encoders"""
         num_layer = num_layer - 1
@@ -276,15 +303,26 @@ class DecoderBlockUnet3Plus(nn.Module):
             else:
                 max_pool = None
 
-            conv = DoubleConvolution(
-                in_ch=en_in_channel,
-                out_ch=out_ch,
-                block_type="decoder",
-                kernel=conv_kernel,
-                padding=padding,
-                components=components,
-                num_group=num_group,
-            )
+            if single:
+                conv = SingleConvolution(
+                    in_ch=en_in_channel,
+                    out_ch=out_ch,
+                    block_type="decoder",
+                    kernel=conv_kernel,
+                    padding=padding,
+                    components=components,
+                    num_group=num_group,
+                )
+            else:
+                conv = DoubleConvolution(
+                    in_ch=en_in_channel,
+                    out_ch=out_ch,
+                    block_type="decoder",
+                    kernel=conv_kernel,
+                    padding=padding,
+                    components=components,
+                    num_group=num_group,
+                )
 
             self.encoder_max_pool.append(max_pool)
             self.encoder_feature_conv.append(conv)
@@ -292,21 +330,36 @@ class DecoderBlockUnet3Plus(nn.Module):
         """Skip-Connection Decoders"""
         self.decoder_feature_upscale = nn.ModuleList([])
         self.decoder_feature_conv = nn.ModuleList([])
+
+        if unet_features:
+            self.unet_attn = nn.Linear(out_ch, out_ch)
+
         for de_in_channel in decoder_feature_ch:
             if "2" in components:
                 upscale = nn.Upsample(size=size, mode="bilinear", align_corners=False)
             else:
                 upscale = nn.Upsample(size=size, mode="trilinear", align_corners=False)
 
-            deconv_module = DoubleConvolution(
-                in_ch=de_in_channel,
-                out_ch=out_ch,
-                block_type="decoder",
-                kernel=conv_kernel,
-                padding=padding,
-                components=components,
-                num_group=num_group,
-            )
+            if single:
+                deconv_module = SingleConvolution(
+                    in_ch=de_in_channel,
+                    out_ch=out_ch,
+                    block_type="decoder",
+                    kernel=conv_kernel,
+                    padding=padding,
+                    components=components,
+                    num_group=num_group,
+                )
+            else:
+                deconv_module = DoubleConvolution(
+                    in_ch=de_in_channel,
+                    out_ch=out_ch,
+                    block_type="decoder",
+                    kernel=conv_kernel,
+                    padding=padding,
+                    components=components,
+                    num_group=num_group,
+                )
             self.decoder_feature_upscale.append(upscale)
             self.decoder_feature_conv.append(deconv_module)
 
@@ -326,7 +379,11 @@ class DecoderBlockUnet3Plus(nn.Module):
             init_weights(m)
 
     def forward(
-        self, x: torch.Tensor, decoder_features: list, encoder_features: list
+        self,
+        x: torch.Tensor,
+        decoder_features: list,
+        encoder_features: list,
+        unet_features: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         """
         Forward CNN decoder block for Unet3Plus
@@ -372,12 +429,20 @@ class DecoderBlockUnet3Plus(nn.Module):
 
         """Sum list of tensors"""
         if x_en_features is not None:
-            for encoder in x_en_features:
-                x = x + encoder
+            x = x + torch.stack(x_en_features, dim=0).sum(dim=0).sum(dim=0)
+            # for encoder in x_en_features:
+            #     x = x + encoder
 
         if x_de_features is not None:
-            for decoder in x_de_features:
-                x = x + decoder
+            x = x + torch.stack(x_de_features, dim=0).sum(dim=0).sum(dim=0)
+            # for decoder in x_de_features:
+            #     x = x + decoder
+
+        """Add Unet attention"""
+        if unet_features is not None:
+            x = x + self.unet_attn(unet_features.permute(0, 2, 3, 4, 1)).permute(
+                0, 4, 1, 2, 3
+            )
 
         # Additional Dropout
         if self.dropout is not None:
@@ -396,6 +461,8 @@ def build_decoder(
     sizes: list,
     dropout: Optional[float] = None,
     deconv_module="CNN",
+    single=False,
+    unet_features=False,
 ):
     """
     Decoder wrapper for entire CNN model.
@@ -415,6 +482,8 @@ def build_decoder(
             None -> if nn.GroupNorm is not used.
         dropout (float, Optional): Dropout value.
         deconv_module: Module of the deconvolution for decoder.
+        single (bool): Whether to use single or double convolution
+        unet_features (bool): Whether to use unet decoder feature as attention
 
     Returns:
         nn.ModuleList: List of decoders blocks.
@@ -442,6 +511,7 @@ def build_decoder(
                 dropout=dropout,
                 components=components,
                 num_group=num_group,
+                single=single,
             )
             decoders.append(decoder)
     elif deconv_module == "RCNN":
@@ -493,7 +563,9 @@ def build_decoder(
                 num_layer=conv_layers,
                 encoder_feature_ch=encoder_feature_ch,
                 decoder_feature_ch=decoder_feature_ch,
+                unet_features=unet_features,
                 dropout=dropout,
+                single=single,
             )
             decoders.append(decoder)
 

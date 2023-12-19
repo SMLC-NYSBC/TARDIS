@@ -15,6 +15,16 @@ import numpy as np
 from tardis_em.utils.errors import TardisError
 
 
+def get_n_params(model):
+    pp = 0
+    for p in list(model.parameters()):
+        nn = 1
+        for s in list(p.size()):
+            nn = nn * s
+        pp += nn
+    return pp
+
+
 class EarlyStopping:
     """
     Early stopping to stop the training when the loss does not improve after

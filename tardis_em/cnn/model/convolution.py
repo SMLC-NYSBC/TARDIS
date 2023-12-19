@@ -199,6 +199,9 @@ class SingleConvolution(nn.Sequential):
     Args:
         in_ch (int): Number of input channels.
         out_ch (int): Number of output channels.
+        block_type (str): Define encode or decoder path e.g.
+            - 'encoder': Encoder convolution path
+            - 'decoder': Decoder convolution path
         components (str): Components that are used for conv. block.
         kernel (int, tuple): Kernel size for the convolution.
         padding (int, tuple): Padding size for the convolution.
@@ -214,6 +217,7 @@ class SingleConvolution(nn.Sequential):
         kernel: int or tuple,
         padding: int or tuple,
         num_group=None,
+        block_type="any",
     ):
         super(SingleConvolution, self).__init__()
 
@@ -287,8 +291,7 @@ class DoubleConvolution(nn.Sequential):
         if block_type == "encoder":
             conv1_in_ch, conv1_out_ch = in_ch, out_ch // 2
             conv2_in_ch, conv2_out_ch = conv1_out_ch, out_ch
-
-        if block_type == "decoder":
+        else:
             conv1_in_ch, conv1_out_ch = in_ch, out_ch
             conv2_in_ch, conv2_out_ch = out_ch, out_ch
 
@@ -359,8 +362,7 @@ class RecurrentDoubleConvolution(nn.Module):
         if block_type == "encoder":
             conv1_in_ch, conv1_out_ch = in_ch, out_ch // 2
             conv2_in_ch, conv2_out_ch = conv1_out_ch, out_ch
-
-        if block_type == "decoder":
+        else:
             conv1_in_ch, conv1_out_ch = in_ch, out_ch
             conv2_in_ch, conv2_out_ch = out_ch, out_ch
 
@@ -395,6 +397,8 @@ class RecurrentDoubleConvolution(nn.Module):
             self.non_linearity = nn.LeakyReLU(negative_slope=0.1, inplace=True)
         elif "r" in components:
             self.non_linearity = nn.ReLU(inplace=True)
+        elif "p" in components:
+            self.non_linearity = nn.PReLU()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
