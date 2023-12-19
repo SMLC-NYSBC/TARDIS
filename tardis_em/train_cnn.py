@@ -71,13 +71,15 @@ ota = ota_update()
     "-cnn",
     "--cnn_type",
     default="unet",
-    type=click.Choice(["unet", "resunet", "unet3plus", "big_unet", "fnet", "fnet_attn"]),
+    type=click.Choice(
+        ["unet", "resunet", "unet3plus", "big_unet", "fnet", "fnet_attn"]
+    ),
     help="Type of NN used for training.",
     show_default=True,
 )
 @click.option(
     "-cb",
-    "--conv_block",
+    "--conv_block_single",
     default=True,
     type=bool,
     help="If True, use single convolution block at decoder.",
@@ -239,7 +241,7 @@ def main(
     pixel_size: Union[float, None],
     mask_size: int,
     cnn_type: str,
-    conv_block: bool,
+    conv_block_single: bool,
     cnn_out_channel: int,
     training_batch_size: int,
     cnn_layers: int,
@@ -370,7 +372,7 @@ def main(
     if model_dict is None:
         model_dict = {
             "cnn_type": cnn_type,
-            "conv_block": conv_block,
+            "conv_block": conv_block_single,
             "classification": False,
             "in_channel": 1,
             "out_channel": cnn_out_channel,

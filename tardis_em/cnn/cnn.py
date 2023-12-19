@@ -48,7 +48,7 @@ def build_cnn_network(
             conv_layer_scaler=structure["conv_scaler"],
             layer_components=structure["layer_components"],
             prediction=prediction,
-            single=structure["conv_block"]
+            single=structure["conv_block"],
         )
     elif network_type == "resunet":
         return ResUNet(
@@ -95,7 +95,7 @@ def build_cnn_network(
             layer_components=structure["layer_components"],
             num_group=structure["num_group"],
             prediction=prediction,
-            single=structure["conv_block"]
+            single=structure["conv_block"],
         )
     elif network_type == "fnet_attn":
         return FNetAttn(
@@ -111,7 +111,7 @@ def build_cnn_network(
             layer_components=structure["layer_components"],
             num_group=structure["num_group"],
             prediction=prediction,
-            single=structure["conv_block"]
+            single=structure["conv_block"],
         )
     else:
         return None
