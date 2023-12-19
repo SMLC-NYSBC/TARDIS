@@ -732,21 +732,18 @@ class FNetAttn(nn.Module):
                 encoder_features.insert(0, x)
 
         """ Decoder UNet """
-        x_unet = x.clone()
         x_3plus = x.clone()
-        unet_features = []
-
         for decoder, decoder_2, features in zip(
             self.decoder_unet, self.decoder_3plus, encoder_features
         ):
-            x_unet = decoder(features, x_unet)
+            x = decoder(features, x)
 
             decoder_features = [x_3plus]
             x_3plus = decoder_2(
                 x=x_3plus,
                 encoder_features=encoder_features,
                 decoder_features=decoder_features[2:],
-                unet_features=x_unet,
+                unet_features=x,
             )
 
             # add/remove layer at each iter
@@ -754,7 +751,7 @@ class FNetAttn(nn.Module):
             encoder_features = encoder_features[1:]
 
         """ Final Layer/Prediction """
-        x_unet = self.unet_conv_layer(x_unet)
+        x_unet = self.unet_conv_layer(x)
         x_3plus = self.unet3plus_conv_layer(x_3plus)
         x = self.final_conv_layer(x_unet + x_3plus)
 
