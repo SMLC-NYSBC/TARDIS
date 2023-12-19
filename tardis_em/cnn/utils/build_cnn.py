@@ -27,11 +27,11 @@ class BasicCNN(nn.Module):
     Basic CNN MODEL
 
     Args:
-        in_channels (int): Number of input channels for first convolution.
-        out_channels (int): Number of output channels for last deconvolution.
+        in_channels (int): Number of input channels for the first convolution.
+        out_channels (int): Number of output channels for the last deconvolution.
         sigmoid (bool): If True, use nn.Sigmoid or nn.Softmax if False. Use True if
-            nn.BCELoss is used as loss function for (two-class segmentation).
-        num_conv_layer (int): Number of convolution and deconvolution steps. Number of
+            nn.BCELoss is used as a loss function for (two-class segmentation).
+        num_conv_layer (int): Number of convolution and deconvolution steps. A number of
             input channels for convolution is calculated as a linear progression.
             E.g. [64, 128, 256, 512].
         conv_layer_scaler (int): Scaler for the output feature channels.
@@ -39,9 +39,9 @@ class BasicCNN(nn.Module):
         padding (int): Padding size for convolution.
         pool_kernel (int): kernel size for max_pooling.
         img_patch_size (int): Image patch size used for calculation network structure.
-        layer_components (str): Convolution module used for build network.
-        dropout (float, optional): If float, dropout layer is build with given drop out rate.
-        num_group (int): Number of group for nn.GroupNorm.
+        layer_components (str): Convolution module used for building network.
+        dropout (float, optional): If float, the dropout layer is built with a given drop out rate.
+        num_group (int): Number of groups for nn.GroupNorm.
         prediction (bool): If True, prediction mode is on.
 
     Returns if Training:
@@ -70,6 +70,7 @@ class BasicCNN(nn.Module):
         dropout=None,
         num_group=8,
         prediction=False,
+        single=False
     ):
         super(BasicCNN, self).__init__()
         self.prediction = prediction
@@ -118,6 +119,7 @@ class BasicCNN(nn.Module):
             sizes=patch_sizes,
             num_group=num_group,
             deconv_module=model,
+            single=single
         )
 
         """ Final Layer """
@@ -409,25 +411,26 @@ class UNet3Plus(nn.Module):
 class FNet(nn.Module):
     """
     New Unet model combining Unet and Unet3Plus
-    Model shares encoder path which is splitted for decoding patch Unet and Unet3Plus
-    style. Final layers from each are summed and sigmoid
+    The model shares encoder path which is split for decoding patch Unet and Unet3Plus
+    style. The final layers from each are summed and sigmoid
 
     Args:
-        in_channels: Number of input channels for first convolution
-        out_channels: Number of output channels for last deconvolution
+        in_channels: Number of input channels for the first convolution.
+        out_channels: Number of output channels for the last deconvolution.
         sigmoid: If True, use nn.Sigmoid or nn.Softmax if False. Use True if
-            nn.BCELoss is used as loss function for (two-class segmentation)
-        num_conv_layer: Number of convolution and deconvolution steps. Number of
+            nn.BCELoss is used as a loss function for (two-class segmentation).
+        num_conv_layer: Number of convolution and deconvolution steps. A number of
             input channels for convolution is calculated as a linear progression.
-            E.g. [64, 128, 256, 512]
-        conv_layer_scaler: Feature output of first layer
-        conv_kernel: Kernel size for the convolution
-        padding: Padding size for convolution
-        pool_kernel: kernel size for max_pooling
-        img_patch_size: Image patch size used for calculation network structure
-        layer_components: Convolution module used for build network
-        num_group: Number of group for nn.GroupNorm
-        prediction: If True, prediction mode is on
+            E.g. [64, 128, 256, 512].
+        conv_layer_scaler: Feature output of the first layer.
+        conv_kernel: Kernel size for the convolution.
+        padding: Padding size for convolution.
+        pool_kernel: kernel size for max_pooling.
+        img_patch_size: Image patch size used for calculation of network structure.
+        layer_components: Convolution module used for building network.
+        num_group: Number of groups for nn.GroupNorm.
+        prediction: If True, prediction mode is on.
+        single: If True, use a single convolution block.
     """
 
     def __init__(
@@ -445,6 +448,7 @@ class FNet(nn.Module):
         layer_components="3gcl",
         num_group=8,
         prediction=False,
+        single=False
     ):
         super(FNet, self).__init__()
         self.prediction = prediction
@@ -478,6 +482,7 @@ class FNet(nn.Module):
             padding=padding,
             sizes=patch_sizes,
             num_group=num_group,
+            single=single
         )
         self.decoder_3plus = build_decoder(
             conv_layers=num_conv_layer,
@@ -488,6 +493,7 @@ class FNet(nn.Module):
             sizes=patch_sizes,
             num_group=num_group,
             deconv_module="unet3plus",
+            single=single
         )
 
         """ Final Layer """
@@ -578,28 +584,29 @@ class FNet(nn.Module):
             return x
 
 
-class Small_FNet(nn.Module):
+class FNetAttn(nn.Module):
     """
     New Unet model combining Unet and Unet3Plus
-    Model shares encoder path which is splitted for decoding patch Unet and Unet3Plus
-    style. Final layers from each are summed and sigmoid
+    Model shares encoder path which is split for decoding patch Unet and Unet3Plus
+    style. The final layers from each are summed and sigmoid
 
     Args:
-        in_channels: Number of input channels for first convolution
-        out_channels: Number of output channels for last deconvolution
+        in_channels: Number of input channels for first convolution.
+        out_channels: Number of output channels for last deconvolution.
         sigmoid: If True, use nn.Sigmoid or nn.Softmax if False. Use True if
-            nn.BCELoss is used as loss function for (two-class segmentation)
-        num_conv_layer: Number of convolution and deconvolution steps. Number of
-            input channels for convolution is calculated as a linear progression.
+            nn.BCELoss is used as a loss function for (two-class segmentation).
+        num_conv_layer: Number of convolution and deconvolution steps. Some input 
+            channels for convolution is calculated as a linear progression.
             E.g. [64, 128, 256, 512]
-        conv_layer_scaler: Feature output of first layer
-        conv_kernel: Kernel size for the convolution
-        padding: Padding size for convolution
-        pool_kernel: kernel size for max_pooling
-        img_patch_size: Image patch size used for calculation network structure
-        layer_components: Convolution module used for build network
-        num_group: Number of group for nn.GroupNorm
-        prediction: If True, prediction mode is on
+        conv_layer_scaler: Feature output of the first layer.
+        conv_kernel: Kernel size for the convolution.
+        padding: Padding size for convolution.
+        pool_kernel: kernel size for max_pooling.
+        img_patch_size: Image patch size used for calculation of network structure.
+        layer_components: Convolution module used for building network.
+        num_group: Number of groups for nn.GroupNorm.
+        prediction: If True, prediction mode is on.
+        single: If True, use a single convolution block.
     """
 
     def __init__(
@@ -617,8 +624,9 @@ class Small_FNet(nn.Module):
         layer_components="3gcl",
         num_group=8,
         prediction=False,
+        single=True,
     ):
-        super(Small_FNet, self).__init__()
+        super(FNetAttn, self).__init__()
         self.prediction = prediction
 
         patch_sizes = [img_patch_size]
@@ -650,7 +658,7 @@ class Small_FNet(nn.Module):
             padding=padding,
             sizes=patch_sizes,
             num_group=num_group,
-            single=False,
+            single=single,
         )
         self.decoder_3plus = build_decoder(
             conv_layers=num_conv_layer,
@@ -661,7 +669,7 @@ class Small_FNet(nn.Module):
             sizes=patch_sizes,
             num_group=num_group,
             deconv_module="unet3plus",
-            single=True,
+            single=single,
             unet_features=True,
         )
 

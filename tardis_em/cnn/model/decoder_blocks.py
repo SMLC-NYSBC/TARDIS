@@ -332,6 +332,7 @@ class DecoderBlockUnet3Plus(nn.Module):
         self.decoder_feature_conv = nn.ModuleList([])
 
         if unet_features:
+            self.unet_norm = nn.LayerNorm(out_ch)
             self.unet_attn = nn.Linear(out_ch, out_ch)
 
         for de_in_channel in decoder_feature_ch:
