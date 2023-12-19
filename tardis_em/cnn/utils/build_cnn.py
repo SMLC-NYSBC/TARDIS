@@ -17,6 +17,7 @@ from tardis_em.cnn.model.convolution import (
     DoubleConvolution,
     RecurrentDoubleConvolution,
 )
+from copy import deepcopy
 from tardis_em.cnn.model.decoder_blocks import build_decoder
 from tardis_em.cnn.model.encoder_blocks import build_encoder
 from tardis_em.cnn.utils.utils import number_of_features_per_level
@@ -70,7 +71,7 @@ class BasicCNN(nn.Module):
         dropout=None,
         num_group=8,
         prediction=False,
-        single=False
+        single=False,
     ):
         super(BasicCNN, self).__init__()
         self.prediction = prediction
@@ -119,7 +120,7 @@ class BasicCNN(nn.Module):
             sizes=patch_sizes,
             num_group=num_group,
             deconv_module=model,
-            single=single
+            single=single,
         )
 
         """ Final Layer """
@@ -448,7 +449,7 @@ class FNet(nn.Module):
         layer_components="3gcl",
         num_group=8,
         prediction=False,
-        single=False
+        single=False,
     ):
         super(FNet, self).__init__()
         self.prediction = prediction
@@ -482,7 +483,7 @@ class FNet(nn.Module):
             padding=padding,
             sizes=patch_sizes,
             num_group=num_group,
-            single=single
+            single=single,
         )
         self.decoder_3plus = build_decoder(
             conv_layers=num_conv_layer,
@@ -493,7 +494,7 @@ class FNet(nn.Module):
             sizes=patch_sizes,
             num_group=num_group,
             deconv_module="unet3plus",
-            single=single
+            single=single,
         )
 
         """ Final Layer """
@@ -595,7 +596,7 @@ class FNetAttn(nn.Module):
         out_channels: Number of output channels for last deconvolution.
         sigmoid: If True, use nn.Sigmoid or nn.Softmax if False. Use True if
             nn.BCELoss is used as a loss function for (two-class segmentation).
-        num_conv_layer: Number of convolution and deconvolution steps. Some input 
+        num_conv_layer: Number of convolution and deconvolution steps. Some input
             channels for convolution is calculated as a linear progression.
             E.g. [64, 128, 256, 512]
         conv_layer_scaler: Feature output of the first layer.
@@ -731,28 +732,26 @@ class FNetAttn(nn.Module):
                 encoder_features.insert(0, x)
 
         """ Decoder UNet """
-        x_unet = x
+        x_unet = x.clone()
+        x_3plus = x.clone()
         unet_features = []
-        for decoder, features in zip(self.decoder_unet, encoder_features):
+
+        for decoder, decoder_2, features in zip(
+            self.decoder_unet, self.decoder_3plus, encoder_features
+        ):
             x_unet = decoder(features, x_unet)
-            unet_features.append(x_unet)
 
-        """ Decoder UNet_3Plus """
-        x_3plus = x
-        for decoder in self.decoder_3plus:
             decoder_features = [x_3plus]
-
-            x_3plus = decoder(
+            x_3plus = decoder_2(
                 x=x_3plus,
                 encoder_features=encoder_features,
                 decoder_features=decoder_features[2:],
-                unet_features=unet_features[0],
+                unet_features=x_unet,
             )
 
             # add/remove layer at each iter
             decoder_features.insert(0, x_3plus)
             encoder_features = encoder_features[1:]
-            unet_features = unet_features[1:]
 
         """ Final Layer/Prediction """
         x_unet = self.unet_conv_layer(x_unet)
