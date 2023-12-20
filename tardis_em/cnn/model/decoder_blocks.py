@@ -26,7 +26,7 @@ class DecoderBlockCNN(nn.Module):
     """
     CNN DECODER BUILDER FOR UNET
 
-    Create decoder block consist of indicated number of deconvolution followed
+    Create a decoder block consisting of indicated number of deconvolutions followed
     by up-sampling and concatenation.
 
     Args:
@@ -122,7 +122,7 @@ class DecoderBlockRCNN(nn.Module):
     """
     RCNN DECODER BUILDER
 
-    Create decoder block consist of indicated number of deconvolution followed
+    Create a decoder block consisting of indicated number of deconvolutions followed
     by upscale and connection with torch.cat().
 
     Args:
@@ -218,7 +218,7 @@ class DecoderBlockUnet3Plus(nn.Module):
     """
     CNN DECODER BUILDER FOR UNET3PLUS
 
-    Create decoder block consist of indicated number of deconvolution followed
+    Create a decoder block consisting of the indicated number of deconvolutions followed
     by upscale and connection with torch.cat().
 
     Args:
@@ -228,7 +228,7 @@ class DecoderBlockUnet3Plus(nn.Module):
         dropout (float, optional): Optional, dropout rate.
         components (str): String list of components from which convolution block
             is composed.
-        num_group (int): Number ofr groups inc CNN block.
+        num_group (int): Number of groups inc CNN block.
         num_layer (int): Number of CNN layers.
         decoder_feature_ch (list): List of decoder outputs.
         encoder_feature_ch (list): List of encode outputs.
@@ -245,7 +245,6 @@ class DecoderBlockUnet3Plus(nn.Module):
         components: str,
         num_group: int,
         num_layer: int,
-        decoder_feature_ch: list,
         encoder_feature_ch: list,
         unet_features=False,
         dropout: Optional[float] = None,
@@ -289,6 +288,7 @@ class DecoderBlockUnet3Plus(nn.Module):
 
         self.encoder_max_pool = nn.ModuleList([])
         self.encoder_feature_conv = nn.ModuleList([])
+        self.encoder_feature_linear = nn.ModuleList([])
         for i, en_in_channel in enumerate(encoder_feature_ch):
             pool_kernel = pool_kernels[i]
 
@@ -323,46 +323,14 @@ class DecoderBlockUnet3Plus(nn.Module):
                     components=components,
                     num_group=num_group,
                 )
-
+            linear = nn.Linear(out_ch, out_ch)
+            
             self.encoder_max_pool.append(max_pool)
             self.encoder_feature_conv.append(conv)
-
-        """Skip-Connection Decoders"""
-        self.decoder_feature_upscale = nn.ModuleList([])
-        self.decoder_feature_conv = nn.ModuleList([])
-
+            self.encoder_feature_linear.append(linear)
         if unet_features:
             self.unet_norm = nn.LayerNorm(out_ch)
             self.unet_attn = nn.Linear(out_ch, out_ch)
-
-        for de_in_channel in decoder_feature_ch:
-            if "2" in components:
-                upscale = nn.Upsample(size=size, mode="bilinear", align_corners=False)
-            else:
-                upscale = nn.Upsample(size=size, mode="trilinear", align_corners=False)
-
-            if single:
-                deconv_module = SingleConvolution(
-                    in_ch=de_in_channel,
-                    out_ch=out_ch,
-                    block_type="decoder",
-                    kernel=conv_kernel,
-                    padding=padding,
-                    components=components,
-                    num_group=num_group,
-                )
-            else:
-                deconv_module = DoubleConvolution(
-                    in_ch=de_in_channel,
-                    out_ch=out_ch,
-                    block_type="decoder",
-                    kernel=conv_kernel,
-                    padding=padding,
-                    components=components,
-                    num_group=num_group,
-                )
-            self.decoder_feature_upscale.append(upscale)
-            self.decoder_feature_conv.append(deconv_module)
 
         """Optional Dropout"""
         if dropout is not None:
@@ -382,7 +350,6 @@ class DecoderBlockUnet3Plus(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        decoder_features: list,
         encoder_features: list,
         unet_features: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
@@ -391,8 +358,8 @@ class DecoderBlockUnet3Plus(nn.Module):
 
         Args:
             x (torch.Tensor): Image tensor before convolution.
-            decoder_features (list): Residual connection from decoder.
-            encoder_features (list): Residual connection from encoder.
+            decoder_features (list): Residual connection from the decoder.
+            encoder_features (list): Residual connection from the encoder.
 
         Returns:
             torch.Tensor: Image tensor after convolution.
@@ -413,37 +380,19 @@ class DecoderBlockUnet3Plus(nn.Module):
             else:
                 x_en = self.encoder_feature_conv[i](encoder)
 
+            x_en = self.encoder_feature_linear[i](x_en.permute(0, 2, 3, 4, 1)).permute(0, 4, 1, 2, 3)
             x_en_features.insert(0, x_en)
 
         if len(x_en_features) == 0:
             x_en_features = None
 
-        """Skip-Connections Decoder"""
-        x_de_features = []
-        for i, decoder in enumerate(decoder_features):
-            x_de = self.decoder_feature_upscale[i](decoder)
-            x_de = self.decoder_feature_conv[i](x_de)
-            x_de_features.insert(0, x_de)
-
-        if len(x_de_features) == 0:
-            x_de_features = None
-
         """Sum list of tensors"""
         if x_en_features is not None:
             x = x + torch.stack(x_en_features, dim=0).sum(dim=0).sum(dim=0)
-            # for encoder in x_en_features:
-            #     x = x + encoder
-
-        if x_de_features is not None:
-            x = x + torch.stack(x_de_features, dim=0).sum(dim=0).sum(dim=0)
-            # for decoder in x_de_features:
-            #     x = x + decoder
 
         """Add Unet attention"""
         if unet_features is not None:
-            x = x + self.unet_attn(unet_features.permute(0, 2, 3, 4, 1)).permute(
-                0, 4, 1, 2, 3
-            )
+            x = x + self.unet_attn(unet_features.permute(0, 2, 3, 4, 1)).permute(0, 4, 1, 2, 3)
 
         # Additional Dropout
         if self.dropout is not None:
@@ -466,15 +415,15 @@ def build_decoder(
     unet_features=False,
 ):
     """
-    Decoder wrapper for entire CNN model.
+    Decoder wrapper for the entire CNN model.
 
-    Create decoder block from number of convolution and convolution modules.
-    Decoder block is followed by upscale(interpolation) and joining with
+    Create a decoder block from a number of convolution and convolution modules.
+    The Decoder block is followed by upscale(interpolation) and joining with
     torch.cat()
 
     Args:
         conv_layers (int): Number of deconvolution layers.
-        conv_layer_scaler (int): Number of channel by which each CNN block is scaled up.
+        conv_layer_scaler (int): Number of channels by which each CNN block is scaled up.
         components (str): Components that are used for deconvolution block.
         conv_kernel (int): Convolution kernel size.
         padding (int): Padding size for the convolution.
@@ -482,12 +431,12 @@ def build_decoder(
         num_group (int): Num. of groups for the nn.GroupNorm.
             None -> if nn.GroupNorm is not used.
         dropout (float, Optional): Dropout value.
-        deconv_module: Module of the deconvolution for decoder.
+        deconv_module: Module of the deconvolution for the decoder.
         single (bool): Whether to use single or double convolution
         unet_features (bool): Whether to use unet decoder feature as attention
 
     Returns:
-        nn.ModuleList: List of decoders blocks.
+        nn.ModuleList: List of decoder blocks.
     """
     decoders = []
     feature_map = number_of_features_per_level(
@@ -536,22 +485,18 @@ def build_decoder(
             decoders.append(decoder)
     elif deconv_module == "unet3plus":
         # Unet3Plus decoder
-        idx_de = len(feature_map) + 1
+        idx_de = len(feature_map)-1
         idx_en = 1
-
+        
         for i in range(len(feature_map) - 1):
             # Main Module features
             in_ch = feature_map[i]
             out_ch = feature_map[i + 1]
             size = sizes[i]
-
+        
             # Encoder De Convolution
             encoder_feature_ch = feature_map[idx_en:]
             idx_en += 1
-
-            # Decoder Up Convolution
-            decoder_feature_ch = feature_map[idx_de:]
-            idx_de -= 1
 
             decoder = DecoderBlockUnet3Plus(
                 in_ch=in_ch,
@@ -563,7 +508,6 @@ def build_decoder(
                 num_group=num_group,
                 num_layer=conv_layers,
                 encoder_feature_ch=encoder_feature_ch,
-                decoder_feature_ch=decoder_feature_ch,
                 unet_features=unet_features,
                 dropout=dropout,
                 single=single,

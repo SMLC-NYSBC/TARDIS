@@ -379,12 +379,12 @@ class UNet3Plus(nn.Module):
             x_cls_max = x_cls_max[:, np.newaxis].float()
 
         """ Decoder """
-        decoder_features = [x.clone()]
+        decoder_features = []
         for decoder in self.decoder:
             x = decoder(
                 x=x,
                 encoder_features=encoder_features,
-                decoder_features=decoder_features[2:],
+                decoder_features=decoder_features,
             )
 
             # add/remove layer at each iter
@@ -554,21 +554,17 @@ class FNet(nn.Module):
                 encoder_features.insert(0, x)
 
         """ Decoder UNet """
-        x_3plus = x.clone()
-        decoder_features = [x.clone()]
-        for decoder, decoder_2, features in zip(
-            self.decoder_unet, self.decoder_3plus, encoder_features
-        ):
-            x = decoder(features, x)
+        x_3plus = x
+
+        for decoder, decoder_2 in zip(self.decoder_unet, self.decoder_3plus):
+            x = decoder(encoder_features[0], x)
 
             x_3plus = decoder_2(
                 x=x_3plus,
                 encoder_features=encoder_features,
-                decoder_features=decoder_features[2:],
             )
 
-            # add/remove layer at each iter
-            decoder_features.insert(0, x_3plus)
+            # Remove layer at each iter
             encoder_features = encoder_features[1:]
 
         """ Final Layer/Prediction """
@@ -729,22 +725,18 @@ class FNetAttn(nn.Module):
                 encoder_features.insert(0, x)
 
         """ Decoder UNet """
-        x_3plus = x.clone()
-        decoder_features = [x.clone()]
-        for decoder, decoder_2, features in zip(
-            self.decoder_unet, self.decoder_3plus, encoder_features
-        ):
-            x = decoder(features, x)
+        x_3plus = x
+
+        for decoder, decoder_2 in zip(self.decoder_unet, self.decoder_3plus):
+            x = decoder(encoder_features[0], x)    
 
             x_3plus = decoder_2(
                 x=x_3plus,
                 encoder_features=encoder_features,
-                decoder_features=decoder_features[2:],
                 unet_features=x,
             )
 
             # add/remove layer at each iter
-            decoder_features.insert(0, x_3plus)
             encoder_features = encoder_features[1:]
 
         """ Final Layer/Prediction """
