@@ -13,7 +13,6 @@ from typing import Optional
 import torch
 import torch.nn as nn
 
-from tardis_em.cnn.model.dropout import LearnableDropout
 from tardis_em.cnn.model.init_weights import init_weights
 from tardis_em.cnn.utils.utils import number_of_features_per_level
 
