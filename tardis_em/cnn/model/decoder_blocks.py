@@ -13,7 +13,6 @@ from typing import Optional
 import torch
 import torch.nn as nn
 
-from tardis_em.cnn.model.dropout import LearnableDropout
 from tardis_em.cnn.model.convolution import (
     DoubleConvolution,
     RecurrentDoubleConvolution,
@@ -85,8 +84,7 @@ class DecoderBlockCNN(nn.Module):
 
         """Optional Dropout"""
         if dropout is not None:
-            self.dropout_layer = LearnableDropout()
-            # self.dropout_layer = nn.Dropout(dropout)
+            self.dropout_layer = nn.Dropout(dropout)
 
         """Initialise the blocks"""
         for m in self.children():
@@ -180,8 +178,7 @@ class DecoderBlockRCNN(nn.Module):
 
         """Optional Dropout"""
         if dropout is not None:
-            self.dropout_layer = LearnableDropout()
-            # self.dropout_layer = nn.Dropout(dropout)
+            self.dropout_layer = nn.Dropout(dropout)
 
         """Initialise the blocks"""
         for m in self.children():
@@ -337,8 +334,7 @@ class DecoderBlockUnet3Plus(nn.Module):
 
         """Optional Dropout"""
         if dropout is not None:
-            self.dropout_layer = LearnableDropout()
-            # self.dropout_layer = nn.Dropout(dropout)
+            self.dropout_layer = nn.Dropout(dropout)
 
         """Initialise the blocks"""
         for m in self.children():
@@ -493,7 +489,6 @@ def build_decoder(
             decoders.append(decoder)
     elif deconv_module == "unet3plus":
         # Unet3Plus decoder
-        idx_de = len(feature_map) - 1
         idx_en = 1
 
         for i in range(len(feature_map) - 1):

@@ -65,8 +65,7 @@ class EncoderBlock(nn.Module):
 
         """Optionally, add dropout layer"""
         if dropout is not None:
-            self.dropout_layer = LearnableDropout()
-            # self.dropout_layer = nn.Dropout(p=dropout)
+            self.dropout_layer = nn.Dropout(p=dropout)
 
         """Build CNN block"""
         self.conv_module = conv_module(
