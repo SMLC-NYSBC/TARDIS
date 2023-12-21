@@ -1198,7 +1198,7 @@ class Predictor:
         else:
             model = None
 
-        return model.to(self.device)
+        return torch.compile(model).to(self.device)
 
     def predict(
         self, x: torch.Tensor, y: Optional[torch.Tensor] = None, rotate=False

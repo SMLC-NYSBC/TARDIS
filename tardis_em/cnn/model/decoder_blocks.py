@@ -13,6 +13,7 @@ from typing import Optional
 import torch
 import torch.nn as nn
 
+from tardis_em.cnn.model.dropout import LearnableDropout
 from tardis_em.cnn.model.convolution import (
     DoubleConvolution,
     RecurrentDoubleConvolution,
@@ -84,7 +85,8 @@ class DecoderBlockCNN(nn.Module):
 
         """Optional Dropout"""
         if dropout is not None:
-            self.dropout_layer = nn.Dropout(dropout)
+            self.dropout_layer = LearnableDropout()
+            # self.dropout_layer = nn.Dropout(dropout)
 
         """Initialise the blocks"""
         for m in self.children():
@@ -178,7 +180,8 @@ class DecoderBlockRCNN(nn.Module):
 
         """Optional Dropout"""
         if dropout is not None:
-            self.dropout_layer = nn.Dropout(dropout)
+            self.dropout_layer = LearnableDropout()
+            # self.dropout_layer = nn.Dropout(dropout)
 
         """Initialise the blocks"""
         for m in self.children():
@@ -324,7 +327,7 @@ class DecoderBlockUnet3Plus(nn.Module):
                     num_group=num_group,
                 )
             linear = nn.Linear(out_ch, out_ch)
-            
+
             self.encoder_max_pool.append(max_pool)
             self.encoder_feature_conv.append(conv)
             self.encoder_feature_linear.append(linear)
@@ -334,7 +337,8 @@ class DecoderBlockUnet3Plus(nn.Module):
 
         """Optional Dropout"""
         if dropout is not None:
-            self.dropout_layer = nn.Dropout(dropout)
+            self.dropout_layer = LearnableDropout()
+            # self.dropout_layer = nn.Dropout(dropout)
 
         """Initialise the blocks"""
         for m in self.children():
@@ -380,7 +384,9 @@ class DecoderBlockUnet3Plus(nn.Module):
             else:
                 x_en = self.encoder_feature_conv[i](encoder)
 
-            x_en = self.encoder_feature_linear[i](x_en.permute(0, 2, 3, 4, 1)).permute(0, 4, 1, 2, 3)
+            x_en = self.encoder_feature_linear[i](x_en.permute(0, 2, 3, 4, 1)).permute(
+                0, 4, 1, 2, 3
+            )
             x_en_features.insert(0, x_en)
 
         if len(x_en_features) == 0:
@@ -392,7 +398,9 @@ class DecoderBlockUnet3Plus(nn.Module):
 
         """Add Unet attention"""
         if unet_features is not None:
-            x = x + self.unet_attn(unet_features.permute(0, 2, 3, 4, 1)).permute(0, 4, 1, 2, 3)
+            x = x + self.unet_attn(unet_features.permute(0, 2, 3, 4, 1)).permute(
+                0, 4, 1, 2, 3
+            )
 
         # Additional Dropout
         if self.dropout is not None:
@@ -485,15 +493,15 @@ def build_decoder(
             decoders.append(decoder)
     elif deconv_module == "unet3plus":
         # Unet3Plus decoder
-        idx_de = len(feature_map)-1
+        idx_de = len(feature_map) - 1
         idx_en = 1
-        
+
         for i in range(len(feature_map) - 1):
             # Main Module features
             in_ch = feature_map[i]
             out_ch = feature_map[i + 1]
             size = sizes[i]
-        
+
             # Encoder De Convolution
             encoder_feature_ch = feature_map[idx_en:]
             idx_en += 1
