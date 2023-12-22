@@ -59,6 +59,7 @@ except ImportError:
 
 # Pytorch CUDA optimization
 torch.backends.cudnn.benchmark = True
+torch.set_float32_matmul_precision("high")
 
 
 class DataSetPredictor:
@@ -1168,6 +1169,7 @@ class Predictor:
         )
 
         self.model.load_state_dict(weights["model_state_dict"])
+        self.model = torch.compile(self.model).to(device)
 
         del weights  # Cleanup weight file from memory
 
@@ -1198,7 +1200,7 @@ class Predictor:
         else:
             model = None
 
-        return torch.compile(model).to(self.device)
+        return model.to(self.device)
 
     def predict(
         self, x: torch.Tensor, y: Optional[torch.Tensor] = None, rotate=False

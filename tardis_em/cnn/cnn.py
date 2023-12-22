@@ -27,7 +27,7 @@ def build_cnn_network(
         img_size (int): Image patch size used for CNN.
         prediction (bool): If true, build CNN in prediction patch.
     """
-    if network_type not in ["unet", "resunet", "unet3plus", "fnet"]:
+    if network_type not in ["unet", "resunet", "unet3plus", "fnet", "fnet_attn"]:
         TardisError(
             "141",
             "tardis_em/cnn/cnn.py",
