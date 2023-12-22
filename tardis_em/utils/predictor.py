@@ -1169,7 +1169,6 @@ class Predictor:
         )
 
         self.model.load_state_dict(weights["model_state_dict"])
-        self.model = torch.compile(self.model).to(device)
 
         del weights  # Cleanup weight file from memory
 
