@@ -67,17 +67,9 @@ class MinMaxNormalize:
         MIN = np.min(x)
         MAX = np.max(x)
 
-        if MIN >= 0:
-            if MAX <= 1:
-                return x.astype(np.float32)
-            elif MAX <= 255:
-                x = (x - 0) / 255
-            elif MAX <= 65535:
-                x = (x - 0) / 65535
-            elif MAX <= 4294967295:
-                x = (x - 0) / 4294967295
-        elif 0 > MIN >= -1 and MAX <= 1:
-            x = (x + 1) / 2
+        if MAX <= 0:
+            x = x + abs(MIN)
+        x = (x - MIN) / (MAX - MIN)
 
         return x.astype(np.float32)
 
