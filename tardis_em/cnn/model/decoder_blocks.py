@@ -12,7 +12,6 @@ from typing import Optional
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from tardis_em.cnn.model.convolution import (
     DoubleConvolution,
@@ -50,7 +49,6 @@ class DecoderBlockCNN(nn.Module):
         dropout: Optional[float] = None,
         components="3gcr",
         num_group=8,
-        single=False,
     ):
         super(DecoderBlockCNN, self).__init__()
 
@@ -62,26 +60,15 @@ class DecoderBlockCNN(nn.Module):
         elif "2" in components:
             self.upscale = nn.Upsample(size=size, mode="bilinear", align_corners=False)
 
-        if single:
-            self.deconv_module = SingleConvolution(
-                in_ch=in_ch,
-                out_ch=out_ch,
-                block_type="decoder",
-                kernel=conv_kernel,
-                padding=padding,
-                components=components,
-                num_group=num_group,
-            )
-        else:
-            self.deconv_module = DoubleConvolution(
-                in_ch=in_ch,
-                out_ch=out_ch,
-                block_type="decoder",
-                kernel=conv_kernel,
-                padding=padding,
-                components=components,
-                num_group=num_group,
-            )
+        self.deconv_module = DoubleConvolution(
+            in_ch=in_ch,
+            out_ch=out_ch,
+            block_type="decoder",
+            kernel=conv_kernel,
+            padding=padding,
+            components=components,
+            num_group=num_group,
+        )
 
         """Optional Dropout"""
         if dropout is not None:
@@ -109,9 +96,8 @@ class DecoderBlockCNN(nn.Module):
         Returns:
             torch.Tensor: Image tensor after convolution.
         """
-        x = self.upscale(x)
-        x = self.deconv_module(x)
-        x = encoder_features + x
+
+        x = encoder_features + self.deconv_module(self.upscale(x))
 
         if self.dropout is not None:
             x = self.dropout_layer(x)
@@ -231,7 +217,6 @@ class DecoderBlockUnet3Plus(nn.Module):
             is composed.
         num_group (int): Number of groups inc CNN block.
         num_layer (int): Number of CNN layers.
-        decoder_feature_ch (list): List of decoder outputs.
         encoder_feature_ch (list): List of encode outputs.
         num_group (int): No. of groups for nn.GroupNorm()
     """
@@ -247,9 +232,7 @@ class DecoderBlockUnet3Plus(nn.Module):
         num_group: int,
         num_layer: int,
         encoder_feature_ch: list,
-        unet_features=False,
         dropout: Optional[float] = None,
-        single=False,
     ):
         super(DecoderBlockUnet3Plus, self).__init__()
 
@@ -261,26 +244,15 @@ class DecoderBlockUnet3Plus(nn.Module):
         elif "2" in components:
             self.upscale = nn.Upsample(size=size, mode="bilinear", align_corners=False)
 
-        if single:
-            self.deconv = SingleConvolution(
-                in_ch=in_ch,
-                out_ch=out_ch,
-                block_type="decoder",
-                kernel=conv_kernel,
-                padding=padding,
-                components=components,
-                num_group=num_group,
-            )
-        else:
-            self.deconv = DoubleConvolution(
-                in_ch=in_ch,
-                out_ch=out_ch,
-                block_type="decoder",
-                kernel=conv_kernel,
-                padding=padding,
-                components=components,
-                num_group=num_group,
-            )
+        self.deconv = DoubleConvolution(
+            in_ch=in_ch,
+            out_ch=out_ch,
+            block_type="decoder",
+            kernel=conv_kernel,
+            padding=padding,
+            components=components,
+            num_group=num_group,
+        )
 
         """Skip-Connection Encoders"""
         num_layer = num_layer - 1
@@ -289,7 +261,7 @@ class DecoderBlockUnet3Plus(nn.Module):
 
         self.encoder_max_pool = nn.ModuleList([])
         self.encoder_feature_conv = nn.ModuleList([])
-        self.encoder_feature_linear = nn.ModuleList([])
+
         for i, en_in_channel in enumerate(encoder_feature_ch):
             pool_kernel = pool_kernels[i]
 
@@ -304,34 +276,17 @@ class DecoderBlockUnet3Plus(nn.Module):
             else:
                 max_pool = None
 
-            if single:
-                conv = SingleConvolution(
-                    in_ch=en_in_channel,
-                    out_ch=out_ch,
-                    block_type="decoder",
-                    kernel=conv_kernel,
-                    padding=padding,
-                    components=components,
-                    num_group=num_group,
-                )
-            else:
-                conv = DoubleConvolution(
-                    in_ch=en_in_channel,
-                    out_ch=out_ch,
-                    block_type="decoder",
-                    kernel=conv_kernel,
-                    padding=padding,
-                    components=components,
-                    num_group=num_group,
-                )
+            conv = DoubleConvolution(
+                in_ch=en_in_channel,
+                out_ch=out_ch,
+                block_type="decoder",
+                kernel=conv_kernel,
+                padding=padding,
+                components=components,
+                num_group=num_group,
+            )
             self.encoder_max_pool.append(max_pool)
             self.encoder_feature_conv.append(conv)
-            
-            linear = nn.Linear(out_ch, out_ch)
-            self.encoder_feature_linear.append(linear)
-
-        if unet_features:
-            self.unet_linear = nn.Linear(out_ch, out_ch)
 
         """Optional Dropout"""
         if dropout is not None:
@@ -352,14 +307,12 @@ class DecoderBlockUnet3Plus(nn.Module):
         self,
         x: torch.Tensor,
         encoder_features: list,
-        unet_features: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         """
         Forward CNN decoder block for Unet3Plus
 
         Args:
             x (torch.Tensor): Image tensor before convolution.
-            decoder_features (list): Residual connection from the decoder.
             encoder_features (list): Residual connection from the encoder.
 
         Returns:
@@ -379,15 +332,7 @@ class DecoderBlockUnet3Plus(nn.Module):
                 x_en = self.encoder_feature_conv[i](x_en)
             else:
                 x_en = self.encoder_feature_conv[i](encoder)
-
-            x_en = x_en * self.encoder_feature_linear[i](x_en.permute(0, 2, 3, 4, 1)).permute(
-                    0, 4, 1, 2, 3
-                )
             x = x + x_en
-
-        if unet_features is not None:
-            unet_features = unet_features * self.unet_linear(unet_features.permute(0, 2, 3, 4, 1)).permute(0, 4, 1, 2, 3)
-            x = x + unet_features
 
         # Additional Dropout
         if self.dropout is not None:
@@ -406,8 +351,6 @@ def build_decoder(
     sizes: list,
     dropout: Optional[float] = None,
     deconv_module="CNN",
-    single=False,
-    unet_features=False,
 ):
     """
     Decoder wrapper for the entire CNN model.
@@ -427,8 +370,6 @@ def build_decoder(
             None -> if nn.GroupNorm is not used.
         dropout (float, Optional): Dropout value.
         deconv_module: Module of the deconvolution for the decoder.
-        single (bool): Whether to use single or double convolution
-        unet_features (bool): Whether to use unet decoder feature as attention
 
     Returns:
         nn.ModuleList: List of decoder blocks.
@@ -456,7 +397,6 @@ def build_decoder(
                 dropout=dropout,
                 components=components,
                 num_group=num_group,
-                single=single,
             )
             decoders.append(decoder)
     elif deconv_module == "RCNN":
@@ -502,9 +442,7 @@ def build_decoder(
                 num_group=num_group,
                 num_layer=conv_layers,
                 encoder_feature_ch=encoder_feature_ch,
-                unet_features=unet_features,
                 dropout=dropout,
-                single=single,
             )
             decoders.append(decoder)
 

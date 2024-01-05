@@ -13,11 +13,10 @@ import torch
 import torch.nn as nn
 
 from tardis_em.cnn.model.convolution import (
-    SingleConvolution,
     DoubleConvolution,
     RecurrentDoubleConvolution,
 )
-from copy import deepcopy
+
 from tardis_em.cnn.model.decoder_blocks import build_decoder
 from tardis_em.cnn.model.encoder_blocks import build_encoder
 from tardis_em.cnn.utils.utils import number_of_features_per_level
@@ -120,7 +119,6 @@ class BasicCNN(nn.Module):
             sizes=patch_sizes,
             num_group=num_group,
             deconv_module=model,
-            single=single,
         )
 
         """ Final Layer """
@@ -448,16 +446,9 @@ class FNet(nn.Module):
         layer_components="3gcl",
         num_group=8,
         prediction=False,
-        single=False,
-        decoder_attn=False,
-        encoder_embedding=False,
-        encoder_skip_connections=False,
     ):
         super(FNet, self).__init__()
         self.prediction = prediction
-
-        self.decoder_attn = decoder_attn
-        self.encoder_embedding = encoder_embedding
 
         patch_sizes = [img_patch_size]
         for _ in range(num_conv_layer):
@@ -477,8 +468,6 @@ class FNet(nn.Module):
             components=layer_components,
             pool_kernel=pool_kernel,
             conv_module=DoubleConvolution,
-            multi_res=encoder_embedding,
-            skip_connections=encoder_skip_connections,
         )
 
         """ Decoder """
@@ -490,7 +479,6 @@ class FNet(nn.Module):
             padding=padding,
             sizes=patch_sizes,
             num_group=num_group,
-            single=single,
         )
         self.decoder_3plus = build_decoder(
             conv_layers=num_conv_layer,
@@ -501,8 +489,6 @@ class FNet(nn.Module):
             sizes=patch_sizes,
             num_group=num_group,
             deconv_module="unet3plus",
-            single=single,
-            unet_features=self.decoder_attn
         )
 
         """ Final Layer """
@@ -571,16 +557,15 @@ class FNet(nn.Module):
             x_3plus = decoder_2(
                 x=x_3plus,
                 encoder_features=encoder_features,
-                unet_features=x if self.decoder_attn else None
             )
 
             # Remove layer at each iter
             encoder_features = encoder_features[1:]
 
         """ Final Layer/Prediction """
-        x = self.unet_conv_layer(x)
-        x_3plus = self.unet3plus_conv_layer(x_3plus)
-        x = self.final_conv_layer(x + x_3plus)
+        x = self.final_conv_layer(
+            self.unet_conv_layer(x) + self.unet3plus_conv_layer(x_3plus)
+        )
 
         if self.prediction:
             return self.activation(x)
