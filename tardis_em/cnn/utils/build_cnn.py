@@ -449,9 +449,15 @@ class FNet(nn.Module):
         num_group=8,
         prediction=False,
         single=False,
+        decoder_attn=False,
+        encoder_embedding=False,
+        encoder_skip_connections=False,
     ):
         super(FNet, self).__init__()
         self.prediction = prediction
+
+        self.decoder_attn = decoder_attn
+        self.encoder_embedding = encoder_embedding
 
         patch_sizes = [img_patch_size]
         for _ in range(num_conv_layer):
@@ -471,6 +477,8 @@ class FNet(nn.Module):
             components=layer_components,
             pool_kernel=pool_kernel,
             conv_module=DoubleConvolution,
+            multi_res=encoder_embedding,
+            skip_connections=encoder_skip_connections,
         )
 
         """ Decoder """
@@ -494,6 +502,7 @@ class FNet(nn.Module):
             num_group=num_group,
             deconv_module="unet3plus",
             single=single,
+            unet_features=self.decoder_attn
         )
 
         """ Final Layer """
@@ -562,181 +571,10 @@ class FNet(nn.Module):
             x_3plus = decoder_2(
                 x=x_3plus,
                 encoder_features=encoder_features,
+                unet_features=x if self.decoder_attn else None
             )
 
             # Remove layer at each iter
-            encoder_features = encoder_features[1:]
-
-        """ Final Layer/Prediction """
-        x = self.unet_conv_layer(x)
-        x_3plus = self.unet3plus_conv_layer(x_3plus)
-        x = self.final_conv_layer(x + x_3plus)
-
-        if self.prediction:
-            return self.activation(x)
-        else:
-            return x
-
-
-class FNetAttn(nn.Module):
-    """
-    New Unet model combining Unet and Unet3Plus
-    Model shares encoder path which is split for decoding patch Unet and Unet3Plus
-    style. The final layers from each are summed and sigmoid
-
-    Args:
-        in_channels: Number of input channels for first convolution.
-        out_channels: Number of output channels for last deconvolution.
-        sigmoid: If True, use nn.Sigmoid or nn.Softmax if False. Use True if
-            nn.BCELoss is used as a loss function for (two-class segmentation).
-        num_conv_layer: Number of convolution and deconvolution steps. Some input
-            channels for convolution is calculated as a linear progression.
-            E.g. [64, 128, 256, 512]
-        conv_layer_scaler: Feature output of the first layer.
-        conv_kernel: Kernel size for the convolution.
-        padding: Padding size for convolution.
-        pool_kernel: kernel size for max_pooling.
-        img_patch_size: Image patch size used for calculation of network structure.
-        layer_components: Convolution module used for building network.
-        num_group: Number of groups for nn.GroupNorm.
-        prediction: If True, prediction mode is on.
-        single: If True, use a single convolution block.
-    """
-
-    def __init__(
-        self,
-        in_channels=1,
-        out_channels=1,
-        sigmoid=True,
-        num_conv_layer=5,
-        conv_layer_scaler=64,
-        conv_kernel=3,
-        padding=1,
-        pool_kernel=2,
-        dropout=None,
-        img_patch_size=64,
-        layer_components="3gcl",
-        num_group=8,
-        prediction=False,
-        single=True,
-    ):
-        super(FNetAttn, self).__init__()
-        self.prediction = prediction
-
-        patch_sizes = [img_patch_size]
-        for _ in range(num_conv_layer):
-            img_patch_size = int(img_patch_size / 2)
-            patch_sizes.append(img_patch_size)
-        patch_sizes = list(reversed(patch_sizes))[2:]
-
-        """ Encoder """
-        self.encoder = build_encoder(
-            in_ch=in_channels,
-            conv_layers=num_conv_layer,
-            conv_layer_scaler=conv_layer_scaler,
-            conv_kernel=conv_kernel,
-            padding=padding,
-            dropout=dropout,
-            num_group=num_group,
-            components=layer_components,
-            pool_kernel=pool_kernel,
-            conv_module=DoubleConvolution,
-        )
-
-        """ Decoder """
-        self.decoder_unet = build_decoder(
-            conv_layers=num_conv_layer,
-            conv_layer_scaler=conv_layer_scaler,
-            components=layer_components,
-            conv_kernel=conv_kernel,
-            padding=padding,
-            sizes=patch_sizes,
-            num_group=num_group,
-            single=single,
-        )
-        self.decoder_3plus = build_decoder(
-            conv_layers=num_conv_layer,
-            conv_layer_scaler=conv_layer_scaler,
-            components=layer_components,
-            conv_kernel=conv_kernel,
-            padding=padding,
-            sizes=patch_sizes,
-            num_group=num_group,
-            deconv_module="unet3plus",
-            single=single,
-            unet_features=True,
-        )
-
-        """ Final Layer """
-        if "3" in layer_components:
-            self.unet_conv_layer = nn.Conv3d(
-                in_channels=conv_layer_scaler,
-                out_channels=conv_layer_scaler,
-                kernel_size=1,
-            )
-            self.unet3plus_conv_layer = nn.Conv3d(
-                in_channels=conv_layer_scaler,
-                out_channels=conv_layer_scaler,
-                kernel_size=1,
-            )
-
-            self.final_conv_layer = nn.Conv3d(
-                in_channels=conv_layer_scaler, out_channels=out_channels, kernel_size=1
-            )
-        elif "2" in layer_components:
-            self.unet_conv_layer = nn.Conv2d(
-                in_channels=conv_layer_scaler,
-                out_channels=conv_layer_scaler,
-                kernel_size=1,
-            )
-            self.unet3plus_conv_layer = nn.Conv2d(
-                in_channels=conv_layer_scaler,
-                out_channels=conv_layer_scaler,
-                kernel_size=1,
-            )
-
-            self.final_conv_layer = nn.Conv2d(
-                in_channels=conv_layer_scaler, out_channels=out_channels, kernel_size=1
-            )
-
-        """ Prediction """
-        if sigmoid:
-            self.activation = nn.Sigmoid()
-        else:
-            self.activation = nn.Softmax(dim=1)
-
-    def forward(self, x: torch.Tensor):
-        """
-        Forward for FNet model.
-
-            Args:
-                x (torch.Tensor): Input image features.
-
-            Returns:
-                torch.Tensor: Probability mask of predicted image.
-        """
-        encoder_features = []
-
-        """ Encoder """
-        for i, encoder in enumerate(self.encoder):
-            x = encoder(x)
-
-            if (len(self.encoder) - 1) != i:
-                encoder_features.insert(0, x)
-
-        """ Decoder UNet """
-        x_3plus = x
-
-        for decoder, decoder_2 in zip(self.decoder_unet, self.decoder_3plus):
-            x = decoder(encoder_features[0], x)    
-
-            x_3plus = decoder_2(
-                x=x_3plus,
-                encoder_features=encoder_features,
-                unet_features=x,
-            )
-
-            # add/remove layer at each iter
             encoder_features = encoder_features[1:]
 
         """ Final Layer/Prediction """

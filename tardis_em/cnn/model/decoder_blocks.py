@@ -12,6 +12,7 @@ from typing import Optional
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from tardis_em.cnn.model.convolution import (
     DoubleConvolution,
@@ -323,14 +324,14 @@ class DecoderBlockUnet3Plus(nn.Module):
                     components=components,
                     num_group=num_group,
                 )
-            linear = nn.Linear(out_ch, out_ch)
-
             self.encoder_max_pool.append(max_pool)
             self.encoder_feature_conv.append(conv)
+            
+            linear = nn.Linear(out_ch, out_ch)
             self.encoder_feature_linear.append(linear)
+
         if unet_features:
-            self.unet_norm = nn.LayerNorm(out_ch)
-            self.unet_attn = nn.Linear(out_ch, out_ch)
+            self.unet_linear = nn.Linear(out_ch, out_ch)
 
         """Optional Dropout"""
         if dropout is not None:
@@ -370,7 +371,6 @@ class DecoderBlockUnet3Plus(nn.Module):
         x = self.deconv(x)
 
         """Skip-Connections Encoder"""
-        x_en_features = []
         for i, encoder in enumerate(encoder_features):
             max_pool_layer = self.encoder_max_pool[i]
 
@@ -380,23 +380,14 @@ class DecoderBlockUnet3Plus(nn.Module):
             else:
                 x_en = self.encoder_feature_conv[i](encoder)
 
-            x_en = self.encoder_feature_linear[i](x_en.permute(0, 2, 3, 4, 1)).permute(
-                0, 4, 1, 2, 3
-            )
-            x_en_features.insert(0, x_en)
+            x_en = x_en * self.encoder_feature_linear[i](x_en.permute(0, 2, 3, 4, 1)).permute(
+                    0, 4, 1, 2, 3
+                )
+            x = x + x_en
 
-        if len(x_en_features) == 0:
-            x_en_features = None
-
-        """Sum list of tensors"""
-        if x_en_features is not None:
-            x = x + torch.stack(x_en_features, dim=0).sum(dim=0).sum(dim=0)
-
-        """Add Unet attention"""
         if unet_features is not None:
-            x = x + self.unet_attn(unet_features.permute(0, 2, 3, 4, 1)).permute(
-                0, 4, 1, 2, 3
-            )
+            unet_features = unet_features * self.unet_linear(unet_features.permute(0, 2, 3, 4, 1)).permute(0, 4, 1, 2, 3)
+            x = x + unet_features
 
         # Additional Dropout
         if self.dropout is not None:

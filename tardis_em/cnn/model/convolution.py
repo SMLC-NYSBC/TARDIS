@@ -184,7 +184,7 @@ def convolution(
         if "e" in letter:
             modules.append(("GeLU", GeLU()))
         if "p" in letter:
-            modules.append(("PReLU", nn.PReLU()))
+            modules.append(("PReLU", nn.PReLU(num_parameters=out_ch)))
 
     return modules
 

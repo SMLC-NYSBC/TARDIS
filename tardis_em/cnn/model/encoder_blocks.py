@@ -12,9 +12,11 @@ from typing import Optional
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from tardis_em.cnn.model.init_weights import init_weights
 from tardis_em.cnn.utils.utils import number_of_features_per_level
+from tardis_em.cnn.model.convolution import SingleConvolution
 
 
 class EncoderBlock(nn.Module):
@@ -49,6 +51,8 @@ class EncoderBlock(nn.Module):
         padding=1,
         components="3gcr",
         num_group=8,
+        multi_res=False,
+        skip_connections=False,
     ):
         super(EncoderBlock, self).__init__()
         self.dropout = dropout
@@ -77,6 +81,14 @@ class EncoderBlock(nn.Module):
             num_group=num_group,
         )
 
+        if multi_res:
+            if "3" in components:
+                self.init_embedding = EncoderEmbedding(components='3gc')
+            else:
+                self.init_embedding = EncoderEmbedding(components='2gc')
+        else:
+            self.init_embedding = None
+
         """Initialise the blocks"""
         for m in self.children():
             init_weights(m)
@@ -91,6 +103,9 @@ class EncoderBlock(nn.Module):
         Returns:
             torch.Tensor: Image after convolution.
         """
+        if self.init_embedding is not None:
+            x = self.init_embedding(x)
+
         if self.maxpool is not None:
             x = self.maxpool(x)
 
@@ -113,6 +128,8 @@ def build_encoder(
     pool_kernel: int or tuple,
     conv_module,
     dropout: Optional[float] = None,
+    multi_res = False,
+    skip_connections=False,
 ) -> nn.ModuleList:
     """
     Encoder wrapper for entire CNN model.
@@ -136,6 +153,9 @@ def build_encoder(
     Returns:
         nn.ModuleList: Encoder block.
     """
+    if multi_res:
+        in_ch = 5
+
     encoders = []
     feature_map = number_of_features_per_level(
         channel_scaler=conv_layer_scaler, num_levels=conv_layers
@@ -153,6 +173,8 @@ def build_encoder(
                 padding=padding,
                 components=components,
                 num_group=num_group,
+                multi_res=multi_res,
+                skip_connections=False,
             )
         else:
             encoder = EncoderBlock(
@@ -165,7 +187,42 @@ def build_encoder(
                 padding=padding,
                 components=components,
                 num_group=num_group,
+                skip_connections=skip_connections,
             )
         encoders.append(encoder)
 
     return nn.ModuleList(encoders)
+
+
+class EncoderEmbedding(nn.Module):
+    def __init__(self,
+                 components='3gc'):
+        super(EncoderEmbedding, self).__init__()
+        
+        """Resolution embedding"""
+        self.conv_2x = SingleConvolution(1, 1, components, 3, 1, 8, 'encoder')
+        self.conv_1x = SingleConvolution(1, 1, components, 3, 1, 8, 'encoder')
+        self.conv_05x = SingleConvolution(1, 1, components, 3, 1, 8, 'encoder')
+        self.fc = SingleConvolution(1, 1, components, 3, 1, 8, 'encoder')
+        
+        """Initialise the blocks"""
+        for m in self.children():
+            init_weights(m)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:        
+        """2x - Resolution"""
+        x2 = F.interpolate(x, scale_factor=2, mode='trilinear')
+        x2 = self.conv_2x(x2)
+        x2 = F.interpolate(x2, scale_factor=0.5, mode='trilinear')
+        
+        """1x - Resolution"""
+        x1 = self.conv_1x(x)
+    
+        """1/2x - Resolution"""
+        x05 = F.interpolate(x, scale_factor=2, mode='trilinear')
+        x05 = self.conv_2x(x05)
+        x05 = F.interpolate(x05, scale_factor=0.5, mode='trilinear')
+    
+        x_embed = self.fc(x2 + x1 + x05)
+
+        return torch.cat([x, x2, x1, x05, x_embed], dim=1)
