@@ -5,7 +5,7 @@
 #  Simons Machine Learning Center                                     #
 #                                                                     #
 #  Robert Kiewisz, Tristan Bepler                                     #
-#  MIT License 2021 - 2023                                            #
+#  MIT License 2021 - 2024                                            #
 #######################################################################
 
 from os import getcwd, listdir, mkdir
