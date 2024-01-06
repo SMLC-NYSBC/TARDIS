@@ -98,7 +98,7 @@ def build_train_dataset(
     """For each image find matching mask, pre-process, trim and save"""
     img_counter = 0
     if resize_pixel_size is None:
-        log_file = np.zeros(8*((len(img_list) + 1), 8), dtype="|S50")
+        log_file = np.zeros((8 * (len(img_list) + 1), 8), dtype="|S50")
     else:
         log_file = np.zeros((len(img_list) + 1, 8), dtype="|S50")
     log_file[0, :] = np.array(
