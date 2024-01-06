@@ -233,7 +233,6 @@ def main(
     pixel_size: Union[float, None],
     mask_size: int,
     cnn_type: str,
-    conv_block_single: bool,
     cnn_out_channel: int,
     training_batch_size: int,
     cnn_layers: int,
