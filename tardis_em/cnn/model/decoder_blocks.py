@@ -40,15 +40,15 @@ class DecoderBlockCNN(nn.Module):
     """
 
     def __init__(
-            self,
-            in_ch: int,
-            out_ch: int,
-            conv_kernel: int,
-            padding: int,
-            size: int,
-            dropout: Optional[float] = None,
-            components="3gcr",
-            num_group=8,
+        self,
+        in_ch: int,
+        out_ch: int,
+        conv_kernel: int,
+        padding: int,
+        size: int,
+        dropout: Optional[float] = None,
+        components="3gcr",
+        num_group=8,
     ):
         super(DecoderBlockCNN, self).__init__()
 
@@ -123,15 +123,15 @@ class DecoderBlockRCNN(nn.Module):
     """
 
     def __init__(
-            self,
-            in_ch: int,
-            out_ch: int,
-            conv_kernel: int,
-            padding: int,
-            size: int,
-            dropout: Optional[float] = None,
-            components="3gcr",
-            num_group=8,
+        self,
+        in_ch: int,
+        out_ch: int,
+        conv_kernel: int,
+        padding: int,
+        size: int,
+        dropout: Optional[float] = None,
+        components="3gcr",
+        num_group=8,
     ):
         super(DecoderBlockRCNN, self).__init__()
 
@@ -222,18 +222,18 @@ class DecoderBlockUnet3Plus(nn.Module):
     """
 
     def __init__(
-            self,
-            in_ch: int,
-            out_ch: int,
-            conv_kernel: int,
-            padding: int,
-            size: int,
-            components: str,
-            num_group: int,
-            num_layer: int,
-            encoder_feature_ch: list,
-            decoder_feature_ch: list = None,
-            dropout: Optional[float] = None,
+        self,
+        in_ch: int,
+        out_ch: int,
+        conv_kernel: int,
+        padding: int,
+        size: int,
+        components: str,
+        num_group: int,
+        num_layer: int,
+        encoder_feature_ch: list,
+        decoder_feature_ch: list = None,
+        dropout: Optional[float] = None,
     ):
         super(DecoderBlockUnet3Plus, self).__init__()
 
@@ -321,10 +321,10 @@ class DecoderBlockUnet3Plus(nn.Module):
             init_weights(m)
 
     def forward(
-            self,
-            x: torch.Tensor,
-            encoder_features: list,
-            decoder_features: list = None,
+        self,
+        x: torch.Tensor,
+        encoder_features: list,
+        decoder_features: list = None,
     ) -> torch.Tensor:
         """
         Forward CNN decoder block for Unet3Plus
@@ -344,7 +344,9 @@ class DecoderBlockUnet3Plus(nn.Module):
         """Skip-Connections Encoder"""
         for i, encoder in enumerate(encoder_features):
             if self.encoder_max_pool[i] is not None:
-                encoder = self.encoder_feature_conv[i](self.encoder_max_pool[i](encoder))
+                encoder = self.encoder_feature_conv[i](
+                    self.encoder_max_pool[i](encoder)
+                )
             else:
                 encoder = self.encoder_feature_conv[i](encoder)
             x = x + encoder
@@ -361,16 +363,16 @@ class DecoderBlockUnet3Plus(nn.Module):
 
 
 def build_decoder(
-        conv_layers: int,
-        conv_layer_scaler: int,
-        components: str,
-        num_group: int,
-        conv_kernel: int,
-        padding: int,
-        sizes: list,
-        dropout: Optional[float] = None,
-        deconv_module="CNN",
-        decoder_features=False
+    conv_layers: int,
+    conv_layer_scaler: int,
+    components: str,
+    num_group: int,
+    conv_kernel: int,
+    padding: int,
+    sizes: list,
+    dropout: Optional[float] = None,
+    deconv_module="CNN",
+    decoder_features=False,
 ):
     """
     Decoder wrapper for the entire CNN model.
