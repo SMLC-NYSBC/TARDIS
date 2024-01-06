@@ -8,7 +8,7 @@
 #  MIT License 2021 - 2024                                            #
 #######################################################################
 
-from tardis_em.cnn.utils.build_cnn import FNet, ResUNet, UNet, UNet3Plus, FNetAttn
+from tardis_em.cnn.utils.build_cnn import FNet, ResUNet, UNet, UNet3Plus
 from tardis_em.utils.errors import TardisError
 
 
@@ -95,10 +95,10 @@ def build_cnn_network(
             layer_components=structure["layer_components"],
             num_group=structure["num_group"],
             prediction=prediction,
-            single=structure["conv_block"],
+            decoder_features=False,
         )
     elif network_type == "fnet_attn":
-        return FNetAttn(
+        return FNet(
             in_channels=structure["in_channel"],
             out_channels=structure["out_channel"],
             img_patch_size=img_size,
@@ -111,7 +111,7 @@ def build_cnn_network(
             layer_components=structure["layer_components"],
             num_group=structure["num_group"],
             prediction=prediction,
-            single=structure["conv_block"],
+            decoder_features=True,
         )
     else:
         return None

@@ -257,8 +257,6 @@ def check_model_dict(model_dict: dict) -> dict:
     for key, value in model_dict.items():
         if key.endswith("type"):
             new_dict["cnn_type"] = value
-        if key.endswith("block"):
-            new_dict["conv_block"] = value
         if key.endswith("cation"):
             new_dict["classification"] = value
         if key.endswith("_in") or key.startswith("in_"):

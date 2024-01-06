@@ -78,14 +78,6 @@ ota = ota_update()
     show_default=True,
 )
 @click.option(
-    "-cb",
-    "--conv_block_single",
-    default=True,
-    type=bool,
-    help="If True, use single convolution block at decoder.",
-    show_default=True,
-)
-@click.option(
     "-co",
     "--cnn_out_channel",
     default=1,
@@ -372,7 +364,6 @@ def main(
     if model_dict is None:
         model_dict = {
             "cnn_type": cnn_type,
-            "conv_block": conv_block_single,
             "classification": False,
             "in_channel": 1,
             "out_channel": cnn_out_channel,
