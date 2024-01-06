@@ -197,7 +197,6 @@ def build_train_dataset(
             else:
                 if x == 0:
                     scale_factor = 1.0
-                    pixel_size = pixel_size_org
                 else:
                     mask = np.array(mask_org)
                     image = np.array(image_org)
