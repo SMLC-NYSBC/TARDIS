@@ -56,8 +56,7 @@ def draw_instances(
         pixel_size = 1
 
     r = (circle_size // 2) // pixel_size
-    print(r)
-    
+
     if coordinate.shape[1] == 3 or not label:  # Draw 2D mask
         mask_shape = "c"
     else:  # Draw 3D mask
