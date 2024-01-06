@@ -198,7 +198,7 @@ def build_train_dataset(
                 else:
                     mask = np.array(mask_org)
                     image = np.array(image_org)
-                    scale_factor = pixel_size / 15 if x == 1 else pixel_size / 5
+                    scale_factor = 0.5 if x == 1 else 1.5
 
             scale_shape = tuple(np.multiply(image.shape, scale_factor).astype(np.int16))
 
