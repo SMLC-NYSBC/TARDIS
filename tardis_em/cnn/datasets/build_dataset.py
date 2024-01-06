@@ -207,7 +207,7 @@ def build_train_dataset(
                         pixel_size_org / 0.5 if x == 1 else pixel_size_org / 1.5
                     )
                     circle_size_org = (
-                        circle_size // 0.5 if x == 1 else circle_size_org // 1.5
+                        circle_size * 0.5 if x == 1 else circle_size_org * 1.5
                     )
 
             scale_shape = [int(i * scale_factor) for i in image.shape]
