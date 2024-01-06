@@ -183,9 +183,9 @@ def build_train_dataset(
 
         """Calculate scale factor"""
         if resize_pixel_size is None:
-            iter_ = 1
-        else:
             iter_ = 3
+        else:
+            iter_ = 1
 
         for x in range(iter_):
             if resize_pixel_size is not None:
