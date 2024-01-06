@@ -186,6 +186,7 @@ def build_train_dataset(
             iter_ = 3
             mask_org = np.array(mask)
             image_org = np.array(image)
+            circle_size_org = circle_size
         else:
             iter_ = 1
 
@@ -195,10 +196,14 @@ def build_train_dataset(
             else:
                 if x == 0:
                     scale_factor = 1.0
+                    circle_size = circle_size_org
                 else:
                     mask = np.array(mask_org)
                     image = np.array(image_org)
                     scale_factor = 0.5 if x == 1 else 1.5
+                    circle_size_org = (
+                        circle_size_org // 2 if x == 1 else circle_size_org * 2
+                    )
 
             scale_shape = [int(i * scale_factor) for i in image.shape]
 
@@ -230,7 +235,7 @@ def build_train_dataset(
                     pixel_size=resize_pixel_size
                     if resize_pixel_size is not None
                     else pixel_size,
-                    circle_size=circle_size * scale_factor,
+                    circle_size=circle_size,
                 )
                 log_file[id_, 4] = "coord"
                 np.savetxt(
