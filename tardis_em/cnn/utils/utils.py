@@ -36,6 +36,11 @@ def scale_image(
     if mask is not None:
         type_m = mask.dtype
 
+    if len(scale) == 3:
+        scale = tuple([scale[0], scale[1], scale[2]])
+    else:
+        scale = tuple([scale[0], scale[1]])
+
     if image is not None:
         if not np.all(scale == image.shape):
             if image.ndim == 3 and image.shape[2] != 3:  # 3D with Gray
