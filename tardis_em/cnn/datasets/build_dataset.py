@@ -187,7 +187,7 @@ def build_train_dataset(
             mask_org = np.array(mask)
             image_org = np.array(image)
             pixel_size_org = pixel_size
-            circle_size_org = circle_size
+
         else:
             iter_ = 1
 
@@ -198,16 +198,12 @@ def build_train_dataset(
                 if x == 0:
                     scale_factor = 1.0
                     pixel_size = pixel_size_org
-                    circle_size = circle_size_org
                 else:
                     mask = np.array(mask_org)
                     image = np.array(image_org)
                     scale_factor = 0.5 if x == 1 else 1.5
                     pixel_size = (
                         pixel_size_org / 0.5 if x == 1 else pixel_size_org / 1.5
-                    )
-                    circle_size_org = (
-                        circle_size * 0.5 if x == 1 else circle_size_org * 1.5
                     )
 
             scale_shape = [int(i * scale_factor) for i in image.shape]
