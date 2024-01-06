@@ -200,7 +200,7 @@ def build_train_dataset(
                     image = np.array(image_org)
                     scale_factor = 0.5 if x == 1 else 1.5
 
-            scale_shape = tuple(np.multiply(image.shape, scale_factor).astype(np.int16))
+            scale_shape = [i * scale_factor for i in image.shape]
 
             log_file[id_, 2] = str(pixel_size)
             log_file[id_, 3] = str(scale_factor)
