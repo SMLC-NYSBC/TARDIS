@@ -248,9 +248,11 @@ class UNet3Plus(nn.Module):
         num_group=8,
         prediction=False,
         classifies=False,
+        decoder_features=None,
     ):
         super(UNet3Plus, self).__init__()
         self.prediction = prediction
+        self.decoder_features = decoder_features
 
         patch_sizes = [img_patch_size]
         for _ in range(num_conv_layer):
@@ -445,10 +447,12 @@ class FNet(nn.Module):
         img_patch_size=64,
         layer_components="3gcl",
         num_group=8,
+        decoder_features=False,
         prediction=False,
     ):
         super(FNet, self).__init__()
         self.prediction = prediction
+        self.decoder_features = decoder_features
 
         patch_sizes = [img_patch_size]
         for _ in range(num_conv_layer):
@@ -489,6 +493,7 @@ class FNet(nn.Module):
             sizes=patch_sizes,
             num_group=num_group,
             deconv_module="unet3plus",
+            decoder_features=self.decoder_features,
         )
 
         """ Final Layer """
@@ -548,15 +553,28 @@ class FNet(nn.Module):
             if (len(self.encoder) - 1) != i:
                 encoder_features.insert(0, x)
 
-        """ Decoder UNet """
+        """ Decoders """
         x_3plus = x
+        decoder_features = []
+        idx_de = 1
 
-        for decoder, decoder_2 in zip(self.decoder_unet, self.decoder_3plus):
+        for i, (decoder, decoder_2) in enumerate(
+            zip(self.decoder_unet, self.decoder_3plus)
+        ):
+            # Add Decoder layer
+            if self.decoder_features:
+                decoder_features.insert(0, x_3plus)
+            else:
+                decoder_features = None
+
             x = decoder(encoder_features[0], x)
 
             x_3plus = decoder_2(
                 x=x_3plus,
                 encoder_features=encoder_features,
+                decoder_features=decoder_features[:idx_de][:-1]
+                if self.decoder_features
+                else None,
             )
 
             # Remove layer at each iter
