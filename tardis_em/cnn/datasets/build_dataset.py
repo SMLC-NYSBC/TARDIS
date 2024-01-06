@@ -201,6 +201,10 @@ def build_train_dataset(
                     scale_factor = 0.5 if x == 1 else 1.5
 
             scale_shape = tuple(np.multiply(image.shape, scale_factor).astype(np.int16))
+            if len(scale_shape) == 3:
+                scale_shape = tuple((scale_shape[0], scale_shape[1], scale_shape[2]))
+            else:
+                scale_shape = tuple((scale_shape[0], scale_shape[1]))
 
             log_file[id_, 2] = str(pixel_size)
             log_file[id_, 3] = str(scale_factor)
