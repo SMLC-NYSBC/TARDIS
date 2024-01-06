@@ -564,11 +564,8 @@ class FNet(nn.Module):
             # Add Decoder layer
             if self.decoder_features:
                 decoder_features.insert(0, x_3plus)
-            else:
-                decoder_features = None
 
             x = decoder(encoder_features[0], x)
-
             x_3plus = decoder_2(
                 x=x_3plus,
                 encoder_features=encoder_features,
