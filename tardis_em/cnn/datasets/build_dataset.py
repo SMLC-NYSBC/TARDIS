@@ -114,7 +114,8 @@ def build_train_dataset(
         )
     )
 
-    for id_, i in enumerate(img_list):
+    id_ = 0
+    for i in img_list:
         """Update progress bar"""
         tardis_progress(
             title="Data pre-processing for CNN training",
@@ -358,6 +359,7 @@ def build_train_dataset(
             img_counter += 1
             log_file[id_, 7] = count
             np.savetxt(join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=",")
+            id_ += 1
 
 
 def load_img_mask_data(
