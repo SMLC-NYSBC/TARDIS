@@ -202,7 +202,7 @@ def build_train_dataset(
                     image = np.array(image_org)
                     scale_factor = 0.5 if x == 1 else 1.5
                     circle_size_org = (
-                        circle_size_org // 2 if x == 1 else circle_size_org * 2
+                        circle_size_org * 2 if x == 1 else circle_size_org // 2
                     )
 
             scale_shape = [int(i * scale_factor) for i in image.shape]
