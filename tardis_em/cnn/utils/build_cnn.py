@@ -548,6 +548,7 @@ class FNet(nn.Module):
 
         """ Encoder """
         for i, encoder in enumerate(self.encoder):
+            print(f"{i} Encoder: {x.shape}")
             x = encoder(x)
 
             if (len(self.encoder) - 1) != i:
@@ -565,7 +566,9 @@ class FNet(nn.Module):
             if self.decoder_features:
                 decoder_features.insert(0, x_3plus)
 
+            print(f"{i} Decoder_I: {x.shape}")
             x = decoder(encoder_features[0], x)
+            print(f"{i} Decoder_II: {x_3plus.shape}")
             x_3plus = decoder_2(
                 x=x_3plus,
                 encoder_features=encoder_features,

@@ -230,7 +230,7 @@ def build_train_dataset(
                     pixel_size=resize_pixel_size
                     if resize_pixel_size is not None
                     else pixel_size,
-                    circle_size=circle_size,
+                    circle_size=circle_size * scale_factor,
                 )
                 log_file[id_, 4] = "coord"
                 np.savetxt(
