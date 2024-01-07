@@ -242,8 +242,7 @@ def build_train_dataset(
                 )
             else:  # Detect an image mask array
                 # Convert to binary
-                if mask.min() == 0 and mask.max() > 1:
-                    mask = np.where(mask > 0, 1, 0).astype(np.uint8)
+                mask = np.where(mask > 0, 1, 0).astype(np.uint8)
 
                 if mask.min() != 0 and mask.max() != 1:
                     TardisError(

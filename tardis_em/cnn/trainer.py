@@ -46,7 +46,6 @@ class CNNTrainer(BasicTrainer):
                 i = self.model(i)  # one forward pass
 
             # Back-propagate
-            print([torch.unique(m[z, :]) for z in range(m.size(0))])
             loss = self.criterion(i, m)
 
             loss.backward()  # one backward pass
