@@ -7,6 +7,7 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2024                                            #
 #######################################################################
+import sys
 
 import numpy as np
 import torch
@@ -46,8 +47,9 @@ class CNNTrainer(BasicTrainer):
 
             # Back-propagate
             loss = self.criterion(i, m)
-            print(i.shape, m.shape)
-            print(torch.unique(m))
+            import tifffile.tifffile as tif
+            tif.imwrite('./i.tif', i.cpu().detach().numpy())
+            tif.imwrite('./m.tif', m.cpu().detach().numpy())
 
             loss.backward()  # one backward pass
             self.optimizer.step()  # update the parameters
