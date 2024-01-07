@@ -339,6 +339,7 @@ class DataSetPredictor:
             if NN == "Membrane2D":
                 if not self.output_format.startswith("None") or not self.binary_mask:
                     self.cnn = Predictor(
+                        checkpoint=self.checkpoint[0],
                         network="fnet",
                         subtype="32",
                         model_type="cryo_mem_2d",
@@ -351,6 +352,7 @@ class DataSetPredictor:
                 # Build DIST network with loaded pre-trained weights
                 if not self.output_format.endswith("None"):
                     self.dist = Predictor(
+                        checkpoint=self.checkpoint[1],
                         network="dist",
                         subtype="triang",
                         model_type="membrane_2d",
@@ -1138,7 +1140,6 @@ class Predictor:
             weights = torch.load(
                 get_weights_aws(network, subtype, model_type), map_location=device
             )
-
         elif isinstance(checkpoint, dict):
             weights = checkpoint
         else:
