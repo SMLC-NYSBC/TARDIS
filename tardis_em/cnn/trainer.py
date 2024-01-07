@@ -46,10 +46,8 @@ class CNNTrainer(BasicTrainer):
                 i = self.model(i)  # one forward pass
 
             # Back-propagate
+            print([torch.unique(m[z, :]) for z in range(m.size(0))])
             loss = self.criterion(i, m)
-            import tifffile.tifffile as tif
-            tif.imwrite('./i.tif', i.cpu().detach().numpy())
-            tif.imwrite('./m.tif', m.cpu().detach().numpy())
 
             loss.backward()  # one backward pass
             self.optimizer.step()  # update the parameters
