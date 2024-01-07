@@ -548,7 +548,6 @@ class FNet(nn.Module):
 
         """ Encoder """
         for i, encoder in enumerate(self.encoder):
-            print(f"{i} Encoder: {x.shape}")
             x = encoder(x)
 
             if (len(self.encoder) - 1) != i:
