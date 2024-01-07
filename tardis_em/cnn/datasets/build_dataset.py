@@ -299,6 +299,8 @@ def build_train_dataset(
                         else pixel_size,
                         circle_size=circle_size,
                     )
+                    # Convert to binary
+                    mask = np.where(mask > 0, 1, 0).astype(np.uint8)
 
                 log_file[id_, 4] = "mask"
                 np.savetxt(

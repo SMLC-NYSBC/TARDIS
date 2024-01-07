@@ -61,7 +61,7 @@ def trim_with_stride(
     if mask is not None:
         mask_dtype = np.uint8
         image, mask, dim = scale_image(image=image, mask=mask, scale=scale)
-        mask = mask.astype(np.uint8)
+        mask = np.where(mask > 0, 1, 0).astype(np.uint8)
 
         if image.shape != mask.shape:
             TardisError(
