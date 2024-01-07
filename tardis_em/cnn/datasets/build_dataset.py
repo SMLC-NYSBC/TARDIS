@@ -30,7 +30,7 @@ def build_train_dataset(
     trim_xy: int,
     trim_z: int,
     keep_if=0.01,
-    benchmark: object = False,
+    benchmark=False,
 ):
     """
     Module for building train datasets from compatible files.
@@ -127,7 +127,7 @@ def build_train_dataset(
             text_7=print_progress_bar(id_, len(img_list)),
         )
 
-        log_file[id_ + 1, 0] = id_
+        log_file[id_, 0] = id_
         np.savetxt(join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=",")
 
         """Get image directory and check if img is a file"""
@@ -188,6 +188,7 @@ def build_train_dataset(
             mask_org = np.array(mask)
             image_org = np.array(image)
             pixel_size_org = pixel_size
+            circle_size_org = circle_size
 
         else:
             iter_ = 1
@@ -203,6 +204,7 @@ def build_train_dataset(
                     image = np.array(image_org)
                     scale_factor = 0.5 if x == 1 else 2
                     pixel_size = pixel_size_org / 0.5 if x == 1 else pixel_size_org / 2
+                    circle_size = circle_size_org // 2 if x == 2 else circle_size_org
 
             scale_shape = [int(i * scale_factor) for i in image.shape]
 
