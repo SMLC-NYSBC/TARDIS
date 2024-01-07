@@ -46,6 +46,9 @@ class CNNTrainer(BasicTrainer):
 
             # Back-propagate
             loss = self.criterion(i, m)
+            print(i.shape, m.shape)
+            print(torch.unique(m))
+
             loss.backward()  # one backward pass
             self.optimizer.step()  # update the parameters
 
