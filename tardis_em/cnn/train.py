@@ -77,6 +77,11 @@ def train_cnn(
     losses_f = {f.__name__: f() for f in loss_functions}
 
     """Check input variable"""
+    if checkpoint is not None:
+        save_train = torch.load(checkpoint, map_location=device)
+        if "model_struct_dict" in save_train.keys():
+            model_structure = save_train["model_struct_dict"]
+
     model_structure = check_model_dict(model_structure)
     if not isinstance(device, torch.device) and isinstance(device, str):
         device = get_device(device)
@@ -113,14 +118,7 @@ def train_cnn(
 
     """Optionally: Load checkpoint for retraining"""
     if checkpoint is not None:
-        save_train = torch.load(checkpoint, map_location=device)
-
-        if "model_struct_dict" in save_train.keys():
-            model_dict = save_train["model_struct_dict"]
-            globals().update(model_dict)
-
         model.load_state_dict(save_train["model_state_dict"])
-
     model = model.to(device)
 
     """Define loss function for training"""
