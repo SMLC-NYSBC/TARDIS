@@ -183,12 +183,11 @@ def build_train_dataset(
             )
 
         """Calculate scale factor"""
-        if resize_pixel_size is None and pixel_size > 8:
+        if resize_pixel_size is None and pixel_size > 15:
             iter_ = 3
             mask_org = np.array(mask)
             image_org = np.array(image)
             pixel_size_org = pixel_size
-            circle_size_org = circle_size
 
         else:
             iter_ = 1
@@ -202,9 +201,8 @@ def build_train_dataset(
                 else:
                     mask = np.array(mask_org)
                     image = np.array(image_org)
-                    scale_factor = 0.5 if x == 1 else 2
-                    pixel_size = pixel_size_org / 0.5 if x == 1 else pixel_size_org / 2
-                    circle_size = circle_size_org // 2 if x == 2 else circle_size_org
+                    scale_factor = 0.75 if x == 1 else 1.5
+                    pixel_size = pixel_size_org / scale_factor
 
             scale_shape = [int(i * scale_factor) for i in image.shape]
 

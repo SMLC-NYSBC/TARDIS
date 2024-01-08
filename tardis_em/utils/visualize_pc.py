@@ -27,7 +27,7 @@ def img_is_color(img):
     if len(img.shape) == 3:
         # Check the color channels to see if they're all the same.
         c1, c2, c3 = img[:, :, 0], img[:, :, 1], img[:, :, 2]
-        if (c1 == c2).all() and (c2 == c3).all():
+        if np.all(c1 == c2) and np.all(c2 == c3):
             return True
 
     return False
@@ -47,7 +47,7 @@ def show_image_list(
     RGB or grayscale.
 
     Args:
-        images(list): List of the images to be displayed.
+        list_images (list): List of the images to be displayed.
         list_titles (list or None): Optional list of titles to be shown for each image.
         list_cmaps (list or None): Optional list of cmap values for each image.
             If None, then cmap will be automatically inferred.
@@ -90,7 +90,7 @@ def show_image_list(
 
     for i in range(num_images):
         img = list_images[i]
-        title = list_titles[i] if list_titles is not None else "Image %d" % (i)
+
         cmap = (
             list_cmaps[i]
             if list_cmaps is not None
@@ -98,14 +98,18 @@ def show_image_list(
         )
 
         list_axes[i].imshow(img, cmap=cmap)
-        list_axes[i].set_title(title, fontsize=title_fontsize)
+        if title_fontsize is not None:
+            list_axes[i].set_title(
+                list_titles[i] if list_titles is not None else "Image %d" % i,
+                fontsize=title_fontsize,
+            )
         list_axes[i].grid(grid)
 
     for i in range(num_images, len(list_axes)):
         list_axes[i].set_visible(False)
 
     fig.tight_layout()
-    _ = plt.show()
+    plt.show()
 
 
 def _dataset_format(coord: np.ndarray, segmented: bool) -> Tuple[np.ndarray, bool]:
