@@ -109,9 +109,8 @@ class EncoderBlock(nn.Module):
         """
         if self.maxpool is not None:
             x = self.maxpool(x)
-            x_attn = x
 
-        x = self.conv_module(x)
+        x_attn = self.conv_module(x)
 
         if self.attn_features:
             x = self.attn_conv(torch.cat((x, x_attn), dim=1))
