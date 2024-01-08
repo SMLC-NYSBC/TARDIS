@@ -555,23 +555,14 @@ class FNet(nn.Module):
 
         """ Decoders """
         x_3plus = x
-        decoder_features = []
-        idx_de = 1
-
         for i, (decoder, decoder_2) in enumerate(
             zip(self.decoder_unet, self.decoder_3plus)
         ):
             # Add Decoder layer
-            if self.decoder_features:
-                decoder_features.insert(0, x_3plus)
-
             x = decoder(encoder_features[0], x)
             x_3plus = decoder_2(
                 x=x_3plus,
                 encoder_features=encoder_features,
-                decoder_features=decoder_features[:idx_de][:-1]
-                if self.decoder_features
-                else None,
             )
 
             # Remove layer at each iter

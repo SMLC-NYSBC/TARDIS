@@ -459,7 +459,7 @@ def build_decoder(
                 num_group=num_group,
                 num_layer=conv_layers,
                 encoder_feature_ch=encoder_feature_ch,
-                decoder_features=attn_features,
+                attn_features=attn_features,
                 dropout=dropout,
             )
             decoders.append(decoder)
