@@ -113,12 +113,12 @@ class EncoderBlock(nn.Module):
         x_attn = self.conv_module(x)
 
         if self.attn_features:
-            x = self.attn_conv(torch.cat((x, x_attn), dim=1))
+            x_attn = self.attn_conv(torch.cat((x, x_attn), dim=1))
 
         if self.dropout is not None:
-            x = self.dropout_layer(x)
+            x_attn = self.dropout_layer(x_attn)
 
-        return x
+        return x_attn
 
 
 def build_encoder(
