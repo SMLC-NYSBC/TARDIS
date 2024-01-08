@@ -95,7 +95,7 @@ def build_cnn_network(
             layer_components=structure["layer_components"],
             num_group=structure["num_group"],
             prediction=prediction,
-            decoder_features=False,
+            attn_features=False,
         )
     elif network_type == "fnet_attn":
         return FNet(
@@ -111,7 +111,7 @@ def build_cnn_network(
             layer_components=structure["layer_components"],
             num_group=structure["num_group"],
             prediction=prediction,
-            decoder_features=True,
+            attn_features=True,
         )
     else:
         return None

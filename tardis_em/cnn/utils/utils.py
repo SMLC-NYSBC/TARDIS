@@ -284,6 +284,8 @@ def check_model_dict(model_dict: dict) -> dict:
             new_dict["maxpool_kernel"] = value
         if key.endswith("components"):
             new_dict["layer_components"] = value
+        if key.endswith("features"):
+            new_dict["attn_features"] = value
         if key.endswith("group"):
             new_dict["num_group"] = value
 

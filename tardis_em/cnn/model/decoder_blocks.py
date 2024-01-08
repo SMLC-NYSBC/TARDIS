@@ -232,11 +232,12 @@ class DecoderBlockUnet3Plus(nn.Module):
         num_group: int,
         num_layer: int,
         encoder_feature_ch: list,
-        decoder_feature_ch: list = None,
+        attn_features=False,
         dropout: Optional[float] = None,
     ):
         super(DecoderBlockUnet3Plus, self).__init__()
 
+        self.attn_features = attn_features
         self.dropout = dropout
 
         """Main Block Up-Convolution"""
@@ -289,21 +290,16 @@ class DecoderBlockUnet3Plus(nn.Module):
             self.encoder_max_pool.append(max_pool)
             self.encoder_feature_conv.append(conv)
 
-        if decoder_feature_ch is not None:
-            self.decoder_feature_conv = nn.ModuleList([])
-
-            for i, de_in_channels in enumerate(decoder_feature_ch):
-                conv = DoubleConvolution(
-                    in_ch=de_in_channels,
-                    out_ch=out_ch,
-                    block_type="decoder",
-                    kernel=conv_kernel,
-                    padding=padding,
-                    components=components,
-                    num_group=num_group,
-                )
-
-                self.decoder_feature_conv.append(conv)
+        if attn_features is not None:
+            self.attn_conv = DoubleConvolution(
+                in_ch=out_ch + in_ch,
+                out_ch=out_ch,
+                block_type="decoder",
+                kernel=conv_kernel,
+                padding=padding,
+                components=components,
+                num_group=num_group,
+            )
 
         """Optional Dropout"""
         if dropout is not None:
@@ -320,12 +316,7 @@ class DecoderBlockUnet3Plus(nn.Module):
 
             init_weights(m)
 
-    def forward(
-        self,
-        x: torch.Tensor,
-        encoder_features: list,
-        decoder_features: list = None,
-    ) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, encoder_features: list) -> torch.Tensor:
         """
         Forward CNN decoder block for Unet3Plus
 
@@ -338,8 +329,11 @@ class DecoderBlockUnet3Plus(nn.Module):
         """
 
         """Main Block"""
-        x = self.upscale(x)
-        x = self.deconv(x)
+        if self.attn_features:
+            x_attn = self.upscale(x)
+            x = self.deconv(x_attn)
+        else:
+            x = self.deconv(self.upscale(x))
 
         """Skip-Connections Encoder"""
         for i, encoder in enumerate(encoder_features):
@@ -351,9 +345,8 @@ class DecoderBlockUnet3Plus(nn.Module):
                 encoder = self.encoder_feature_conv[i](encoder)
             x = x + encoder
 
-        if decoder_features is not None:
-            for i, decoder in enumerate(decoder_features):
-                x = x + self.decoder_feature_conv[i](self.upscale(decoder))
+        if self.attn_features:
+            x = self.attn_conv(torch.cat((x, x_attn), dim=1))
 
         # Additional Dropout
         if self.dropout is not None:
@@ -372,7 +365,7 @@ def build_decoder(
     sizes: list,
     dropout: Optional[float] = None,
     deconv_module="CNN",
-    decoder_features=False,
+    attn_features=False,
 ):
     """
     Decoder wrapper for the entire CNN model.
@@ -392,6 +385,7 @@ def build_decoder(
             None -> if nn.GroupNorm is not used.
         dropout (float, Optional): Dropout value.
         deconv_module: Module of the deconvolution for the decoder.
+        attn_features:
 
     Returns:
         nn.ModuleList: List of decoder blocks.
@@ -455,12 +449,6 @@ def build_decoder(
             encoder_feature_ch = feature_map[idx_en:]
             idx_en += 1
 
-            if decoder_features:
-                decoder_feature_ch = feature_map[:idx_de][:-1]
-                idx_de += 1
-            else:
-                decoder_feature_ch = None
-
             decoder = DecoderBlockUnet3Plus(
                 in_ch=in_ch,
                 out_ch=out_ch,
@@ -471,7 +459,7 @@ def build_decoder(
                 num_group=num_group,
                 num_layer=conv_layers,
                 encoder_feature_ch=encoder_feature_ch,
-                decoder_feature_ch=decoder_feature_ch,
+                decoder_features=attn_features,
                 dropout=dropout,
             )
             decoders.append(decoder)

@@ -430,7 +430,6 @@ class FNet(nn.Module):
         layer_components: Convolution module used for building network.
         num_group: Number of groups for nn.GroupNorm.
         prediction: If True, prediction mode is on.
-        single: If True, use a single convolution block.
     """
 
     def __init__(
@@ -447,12 +446,12 @@ class FNet(nn.Module):
         img_patch_size=64,
         layer_components="3gcl",
         num_group=8,
-        decoder_features=False,
+        attn_features=False,
         prediction=False,
     ):
         super(FNet, self).__init__()
         self.prediction = prediction
-        self.decoder_features = decoder_features
+        self.attn_features = attn_features
 
         patch_sizes = [img_patch_size]
         for _ in range(num_conv_layer):
@@ -472,6 +471,7 @@ class FNet(nn.Module):
             components=layer_components,
             pool_kernel=pool_kernel,
             conv_module=DoubleConvolution,
+            attn_features=self.attn_features,
         )
 
         """ Decoder """
@@ -493,7 +493,7 @@ class FNet(nn.Module):
             sizes=patch_sizes,
             num_group=num_group,
             deconv_module="unet3plus",
-            decoder_features=self.decoder_features,
+            attn_features=self.attn_features,
         )
 
         """ Final Layer """

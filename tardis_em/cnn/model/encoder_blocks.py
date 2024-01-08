@@ -51,8 +51,11 @@ class EncoderBlock(nn.Module):
         padding=1,
         components="3gcr",
         num_group=8,
+        attn_features=False,
     ):
         super(EncoderBlock, self).__init__()
+
+        self.attn_features = attn_features
         self.dropout = dropout
 
         """Optionally, add maxpool"""
@@ -79,6 +82,16 @@ class EncoderBlock(nn.Module):
             num_group=num_group,
         )
 
+        if attn_features:
+            self.attn_conv = conv_module(
+                in_ch=in_ch + out_ch,
+                out_ch=out_ch,
+                block_type="encoder",
+                kernel=conv_kernel,
+                padding=padding,
+                components=components,
+                num_group=num_group,
+            )
         """Initialise the blocks"""
         for m in self.children():
             init_weights(m)
@@ -93,10 +106,19 @@ class EncoderBlock(nn.Module):
         Returns:
             torch.Tensor: Image after convolution.
         """
-        if self.maxpool is not None:
-            x = self.maxpool(x)
+        if self.attn_features:
+            if self.maxpool is not None:
+                x = self.maxpool(x)
 
-        x = self.conv_module(x)
+            x = self.conv_module(x)
+        else:
+            if self.maxpool is not None:
+                x_attn = self.maxpool(x)
+            else:
+                x_attn = x
+
+            x = self.conv_module(x_attn)
+            x = self.attn_conv(torch.cat((x, x_attn), dim=1))
 
         if self.dropout is not None:
             x = self.dropout_layer(x)
@@ -115,6 +137,7 @@ def build_encoder(
     pool_kernel: int or tuple,
     conv_module,
     dropout: Optional[float] = None,
+    attn_features=False,
 ) -> nn.ModuleList:
     """
     Encoder wrapper for entire CNN model.
@@ -134,6 +157,7 @@ def build_encoder(
         components (str): Components that are used for conv. block.
         num_group (int): Num. of groups for the nn.GroupNorm.
             None -> if nn.GroupNorm is not used.
+        attn_features (bool):
 
     Returns:
         nn.ModuleList: Encoder block.
@@ -155,6 +179,7 @@ def build_encoder(
                 padding=padding,
                 components=components,
                 num_group=num_group,
+                attn_features=attn_features,
             )
         else:
             encoder = EncoderBlock(
@@ -167,6 +192,7 @@ def build_encoder(
                 padding=padding,
                 components=components,
                 num_group=num_group,
+                attn_features=attn_features,
             )
         encoders.append(encoder)
 

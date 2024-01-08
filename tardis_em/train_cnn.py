@@ -374,6 +374,7 @@ def main(
             "conv_padding": conv_padding,
             "maxpool_kernel": pool_kernel,
             "layer_components": cnn_structure,
+            "attn_features": True if cnn_type == "fnet_attn" else False,
             "num_group": 8,
             "prediction": False,
         }
