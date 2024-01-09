@@ -109,24 +109,42 @@ def build_test_dataset(dataset_dir: str, dataset_no: int, stanford=False):
         )
 
     image_list = listdir(join(dataset_dir, "train", "imgs"))
+    image_list = [i for i in image_list if i.endswith(".tif")]
 
-    images = []
-    for i in range(dataset_no):
-        df_imgs = [img for img in image_list if img.startswith(f"{i}")]
-        images.append(df_imgs)
+    if len(image_list) < 1000:
+        # Get list of dataset
+        images = []
+        for i in range(dataset_no):
+            df_imgs = [img for img in image_list if img.startswith(f"{i}")]
+            images.append(df_imgs)
 
-    images = [
-        i
-        for id_, i in enumerate(images)
-        if id_ in random.sample(range(0, len(images)), int(len(images) // 5))
-    ]
+        # For each image select 20% random patches
+        images = [
+            i
+            for id_, i in enumerate(images)
+            if id_ in random.sample(range(0, len(images)), int(len(images) // 5))
+        ]
 
-    for i in images:
-        list_move = []
-        for j in random.sample(range(0, len(i) - 1), 4 if len(i) > 10 else 0):
-            list_move.append(i[j])
+        for i in images:
+            list_move = []
+            for j in random.sample(range(0, len(i) - 1), 4 if len(i) > 10 else 0):
+                list_move.append(i[j])
 
-        for j in list_move:
+            for j in list_move:
+                shutil.move(
+                    join(dataset_dir, "train", "imgs", j),
+                    join(dataset_dir, "test", "imgs", j),
+                )
+                shutil.move(
+                    join(dataset_dir, "train", "masks", j[:-4] + "_mask.tif"),
+                    join(dataset_dir, "test", "masks", j[:-4] + "_mask.tif"),
+                )
+    else:
+        images = random.sample(range(0, len(image_list)), int(len(image_list) // 25))
+
+        for i in images:
+            j = image_list[i]
+
             shutil.move(
                 join(dataset_dir, "train", "imgs", j),
                 join(dataset_dir, "test", "imgs", j),
