@@ -69,7 +69,12 @@ class ImportDataFromAmira:
 
             try:
                 # Image file [Z x Y x X]
-                self.image, self.pixel_size, _, self.transformation = import_am(src_img)
+                (
+                    self.image,
+                    self.pixel_size,
+                    self.physical_size,
+                    self.transformation,
+                ) = import_am(src_img)
             except RuntimeWarning:
                 TardisError(
                     "130",
@@ -238,23 +243,7 @@ class ImportDataFromAmira:
         points_coord[:, 1] = points_coord[:, 1] - self.transformation[1]
         points_coord[:, 2] = points_coord[:, 2] - self.transformation[2]
 
-        # New Amira. Check spatial graph unit!!!
-        try:
-            coordinate = str(
-                [
-                    word
-                    for word in self.spatial_graph
-                    if word.startswith("        Coordinates")
-                ]
-            ).split(" ")[9][1:-3]
-        except IndexError:
-            coordinate = None
-
-        if coordinate is not None:
-            if coordinate == "nm":
-                return points_coord / (self.pixel_size / 10)
-
-        return points_coord / self.pixel_size
+        return points_coord / self.physical_size
 
     def get_segmented_points(self) -> Union[np.ndarray, None]:
         """
@@ -628,6 +617,8 @@ def import_am(am_file: str):
         pixel_size = ((physical_size[0] - transformation[0]) / (nx - 1)) * 10
     else:
         pixel_size = (physical_size[0] - transformation[0]) / (nx - 1)
+
+    physical_size = (physical_size[0] - transformation[0]) / (nx - 1)
     pixel_size = np.round(pixel_size, 3)
 
     if "Lattice { byte Data }" in am or "Lattice { float Data }" in am:
