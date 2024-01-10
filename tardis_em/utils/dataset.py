@@ -143,7 +143,9 @@ def build_test_dataset(dataset_dir: str, dataset_no: int, stanford=False):
         if len(image_list) > 62500:
             images = random.sample(range(0, len(image_list)), 2500)
         else:
-            images = random.sample(range(0, len(image_list)), int(len(image_list) // 25))
+            images = random.sample(
+                range(0, len(image_list)), int(len(image_list) // 25)
+            )
 
         for i in images:
             j = image_list[i]

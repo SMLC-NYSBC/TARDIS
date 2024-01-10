@@ -48,7 +48,6 @@ def build_cnn_network(
             conv_layer_scaler=structure["conv_scaler"],
             layer_components=structure["layer_components"],
             prediction=prediction,
-            single=structure["conv_block"],
         )
     elif network_type == "resunet":
         return ResUNet(
