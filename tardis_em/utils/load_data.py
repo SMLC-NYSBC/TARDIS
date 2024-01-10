@@ -251,7 +251,7 @@ class ImportDataFromAmira:
             coordinate = None
 
         if coordinate is not None:
-            if coordinate == "mn":
+            if coordinate == "nm":
                 return points_coord / (self.pixel_size / 10)
 
         return points_coord / self.pixel_size
