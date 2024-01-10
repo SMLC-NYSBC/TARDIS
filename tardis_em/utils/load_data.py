@@ -608,6 +608,8 @@ def import_am(am_file: str):
 
     if coordinate == "m":  # Bring meter to angstrom
         pixel_size = ((physical_size[0] - transformation[0]) / (nx - 1)) * 10000000000
+    if coordinate == "nm":  # Bring nm to angstrom
+        pixel_size = ((physical_size[0] - transformation[0]) / (nx - 1)) * 10
     else:
         pixel_size = (physical_size[0] - transformation[0]) / (nx - 1)
     pixel_size = np.round(pixel_size, 3)
