@@ -602,13 +602,13 @@ def import_am(am_file: str):
     try:
         coordinate = str(
             [word for word in am.split("\n") if word.startswith("        Coordinates")]
-        ).split(" ")[9][1:2]
+        ).split(" ")[9][1:-3]
     except IndexError:
         coordinate = None
 
     if coordinate == "m":  # Bring meter to angstrom
         pixel_size = ((physical_size[0] - transformation[0]) / (nx - 1)) * 10000000000
-    if coordinate == "nm":  # Bring nm to angstrom
+    elif coordinate == "nm":  # Bring nm to angstrom
         pixel_size = ((physical_size[0] - transformation[0]) / (nx - 1)) * 10
     else:
         pixel_size = (physical_size[0] - transformation[0]) / (nx - 1)
