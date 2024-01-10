@@ -243,7 +243,21 @@ class ImportDataFromAmira:
         points_coord[:, 1] = points_coord[:, 1] - self.transformation[1]
         points_coord[:, 2] = points_coord[:, 2] - self.transformation[2]
 
-        return points_coord / self.physical_size
+        try:
+            coordinate = str(
+                [
+                    word
+                    for word in self.spatial_graph
+                    if word.startswith("        Coordinates")
+                ]
+            ).split(" ")[9][1:-3]
+
+            if coordinate == "nm":
+                return points_coord / (self.pixel_size / 10)
+        except IndexError:
+            pass
+
+        return points_coord / self.pixel_size
 
     def get_segmented_points(self) -> Union[np.ndarray, None]:
         """
