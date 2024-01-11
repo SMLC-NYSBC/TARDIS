@@ -26,7 +26,7 @@ from tardis_em.utils.normalization import MeanStdNormalize, RescaleNormalize
 def build_train_dataset(
     dataset_dir: str,
     circle_size: int,
-    resize_pixel_size: Union[float, None],
+    resize_pixel_size: Union[str, None],
     trim_xy: int,
     trim_z: int,
     keep_if=0.01,
@@ -97,7 +97,7 @@ def build_train_dataset(
 
     """For each image find matching mask, pre-process, trim and save"""
     img_counter = 0
-    if resize_pixel_size is None:
+    if resize_pixel_size == "multi":
         log_file = np.zeros((8 * (len(img_list) + 1), 8), dtype="|S50")
     else:
         log_file = np.zeros((len(img_list) + 1, 8), dtype="|S50")
@@ -183,7 +183,7 @@ def build_train_dataset(
             )
 
         """Calculate scale factor"""
-        if resize_pixel_size is None and pixel_size > 15:
+        if resize_pixel_size == "multi" and pixel_size > 15:
             iter_ = 3
             mask_org = np.array(mask)
             image_org = np.array(image)
@@ -193,8 +193,11 @@ def build_train_dataset(
             iter_ = 1
 
         for x in range(iter_):
-            if resize_pixel_size is not None:
-                scale_factor = pixel_size / resize_pixel_size
+            if resize_pixel_size != "multi":
+                if resize_pixel_size is None:
+                    scale_factor = 1.0
+                else:
+                    scale_factor = pixel_size / resize_pixel_size
             else:
                 if x == 0:
                     scale_factor = 1.0

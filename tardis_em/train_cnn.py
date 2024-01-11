@@ -55,7 +55,7 @@ ota = ota_update()
     "-px",
     "--pixel_size",
     default=None,
-    type=float,
+    type=str,
     help="Pixel size in [A] to which all images are resize.",
     show_default=True,
 )
@@ -230,7 +230,7 @@ ota = ota_update()
 def main(
     path: str,
     patch_size: int,
-    pixel_size: Union[float, None],
+    pixel_size: Union[str, None],
     mask_size: int,
     cnn_type: str,
     cnn_out_channel: int,
