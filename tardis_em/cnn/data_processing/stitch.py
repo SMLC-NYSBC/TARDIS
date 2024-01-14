@@ -236,6 +236,7 @@ class StitchImages:
                                 z_start:z_stop, y_start:y_stop, x_start:x_stop
                             ] += img
 
+            # Reduce overlapping areas by averaging
             if mask:
                 stitched_image = np.where(stitched_image > 0, 1, 0).astype(np.uint8)
             else:
@@ -262,9 +263,11 @@ class StitchImages:
                     stitched_image[grid_x[:, 0], :, grid_x[:, 1]] = (
                         stitched_image[grid_x[:, 0], :, grid_x[:, 1]] / 2
                     )
-                    stitched_image[grid_z[:,], ...] = (
-                        stitched_image[grid_z[:,], ...] / 2
-                    )
+
+                    if len(grid_z) > 0:
+                        stitched_image[grid_z[:,], ...] = (
+                            stitched_image[grid_z[:,], ...] / 2
+                        )
 
             if output is None:
                 return np.array(stitched_image, dtype=dtype)
@@ -286,7 +289,7 @@ def generate_grid(image_size: tuple, patch_size: list, grid_size: list, stride: 
             For 3D, [nz, ny, nx], and for 2D, [ny, nx].
         grid_size (list): The grid size.
             For 3D, [gz, gy, gx], and for 2D, [gy, gx].
-        strid (int): The stride for grid generation.
+        stride (int): The stride for grid generation.
 
     Returns:
         Tuple[list]: A tuple of numpy arrays with coordinates of the grid.
@@ -328,12 +331,12 @@ def generate_grid(image_size: tuple, patch_size: list, grid_size: list, stride: 
         zz, xx = np.meshgrid(z_coords, x_coords, indexing="ij")
         coordinates_xx = np.vstack([zz.ravel(), xx.ravel()]).T
 
-        z_coords = np.concatenate(
-            [
-                np.arange((nz * g - stride * g), nz * g - (stride * (g - 1)))
-                for g in range(1, gz)
-            ]
-        )
+        z_coords = [
+            np.arange((nz * g - stride * g), nz * g - (stride * (g - 1)))
+            for g in range(1, gz)
+        ]
+        if len(z_coords) > 0:
+            z_coords = np.concatenate(z_coords)
 
         return coordinates_yy, coordinates_xx, z_coords
     else:
