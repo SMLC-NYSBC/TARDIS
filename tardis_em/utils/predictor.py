@@ -1260,7 +1260,6 @@ class Predictor:
                 else:
                     out = self.model(x).cpu().detach().numpy()[0, 0, :]
 
-                # return out
                 return torch.sigmoid(torch.from_numpy(out)).cpu().detach().numpy()
 
 

@@ -152,6 +152,7 @@ class StitchImages:
         file_list = [f for f in listdir(image_dir) if isfile(join(image_dir, f))]
         file_list = [f for f in file_list if f.endswith(".tif")]
 
+        # Number of images to stitch
         self.idx = (
             max(list(map(int, [str.split(f[:-4], "_")[0] for f in file_list]))) + 1
         )
@@ -274,7 +275,7 @@ class StitchImages:
                 )
 
 
-def generate_grid(image_size: tuple, patch_size: list, grid_size: list, strid: int):
+def generate_grid(image_size: tuple, patch_size: list, grid_size: list, stride: int):
     """
     Generates grid coordinates for either 2D or 3D images.
 
@@ -307,13 +308,13 @@ def generate_grid(image_size: tuple, patch_size: list, grid_size: list, strid: i
     # Generate y and x coordinates
     y_coords = np.concatenate(
         [
-            np.arange((ny * g - strid * g), ny * g - (strid * (g - 1)))
+            np.arange((ny * g - stride * g), ny * g - (stride * (g - 1)))
             for g in range(1, gy)
         ]
     )
     x_coords = np.concatenate(
         [
-            np.arange((nx * g - strid * g), nx * g - (strid * (g - 1)))
+            np.arange((nx * g - stride * g), nx * g - (stride * (g - 1)))
             for g in range(1, gx)
         ]
     )
@@ -322,13 +323,14 @@ def generate_grid(image_size: tuple, patch_size: list, grid_size: list, strid: i
     if not D2:
         z_coords = np.arange(z_dim)
         zz, yy = np.meshgrid(z_coords, y_coords, indexing="ij")
-        zz, xx = np.meshgrid(z_coords, x_coords, indexing="ij")
         coordinates_yy = np.vstack([zz.ravel(), yy.ravel()]).T
+
+        zz, xx = np.meshgrid(z_coords, x_coords, indexing="ij")
         coordinates_xx = np.vstack([zz.ravel(), xx.ravel()]).T
 
         z_coords = np.concatenate(
             [
-                np.arange((nz * g - strid * g), nz * g - (strid * (g - 1)))
+                np.arange((nz * g - stride * g), nz * g - (stride * (g - 1)))
                 for g in range(1, gz)
             ]
         )
