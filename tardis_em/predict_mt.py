@@ -39,11 +39,35 @@ warnings.simplefilter("ignore", UserWarning)
     show_default=True,
 )
 @click.option(
+    "-px",
+    "--correct_px",
+    default=None,
+    type=float,
+    help="Correct pixel size values.",
+    show_default=True,
+)
+@click.option(
+    "-sf",
+    "--scale_factor",
+    default=1.0,
+    type=float,
+    help="Optional scaling factor to scale image up- or down-.",
+    show_default=True,
+)
+@click.option(
     "-ch",
     "--checkpoint",
     default="None|None",
     type=str,
     help="Optional list of pre-trained weights",
+    show_default=True,
+)
+@click.option(
+    "-cnn",
+    "--convolution_nn",
+    default="fnet",
+    type=str,
+    help="Select CNN used for semantic segmentation.",
     show_default=True,
 )
 @click.option(
@@ -124,14 +148,6 @@ warnings.simplefilter("ignore", UserWarning)
     default=0.5,
     type=float,
     help="Threshold used for instance prediction.",
-    show_default=True,
-)
-@click.option(
-    "-px",
-    "--correct_px",
-    default=None,
-    type=float,
-    help="Correct pixel size values.",
     show_default=True,
 )
 @click.option(
@@ -242,6 +258,8 @@ def main(
     patch_size: int,
     rotate: bool,
     correct_px: float,
+    scale_factor: float,
+    convolution_nn: str,
     cnn_threshold: float,
     dist_threshold: float,
     points_in_patch: int,
@@ -280,6 +298,8 @@ def main(
         dir_=path,
         binary_mask=mask,
         correct_px=correct_px,
+        scale_factor=scale_factor,
+        convolution_nn=convolution_nn,
         checkpoint=checkpoint,
         output_format=output_format,
         patch_size=patch_size,

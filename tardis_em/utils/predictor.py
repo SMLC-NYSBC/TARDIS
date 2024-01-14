@@ -13,7 +13,6 @@ from os import listdir, getcwd
 from os.path import isdir, isfile, join, dirname
 from typing import Optional
 
-import click
 import numpy as np
 import pandas as pd
 import tifffile.tifffile as tif
@@ -69,7 +68,6 @@ class DataSetPredictor:
     Args:
         predict (str): Dataset type name.
         dir_ (str): Dataset directory.
-        feature_size (float): Optional size of the filament use to scale image.
         output_format (str): Two output format for semantic and instance prediction.
         patch_size (int): Image 3D crop size.
         cnn_threshold (float): Threshold for CNN model.
@@ -96,21 +94,23 @@ class DataSetPredictor:
         binary_mask: bool,
         output_format: str,
         patch_size: int,
+        convolution_nn: str,
         cnn_threshold: float,
         dist_threshold: float,
         points_in_patch: int,
         predict_with_rotation: bool,
-        amira_prefix: Optional[str],
-        filter_by_length: Optional[float],
-        connect_splines: Optional[int],
-        connect_cylinder: Optional[int],
-        amira_compare_distance: Optional[int],
-        amira_inter_probability: Optional[float],
         instances: bool,
         device_: str,
         debug: bool,
         checkpoint: Optional[list] = None,
         correct_px: float = False,
+        scale_factor: float = 1.0,
+        amira_prefix: str = None,
+        filter_by_length: float = None,
+        connect_splines: int = None,
+        connect_cylinder: int = None,
+        amira_compare_distance: int = None,
+        amira_inter_probability: float = None,
     ):
         if predict not in ["Filament", "Membrane2D", "Membrane", "Microtubule"]:
             TardisError(
@@ -131,12 +131,14 @@ class DataSetPredictor:
         self.amira_prefix = amira_prefix
         self.checkpoint = checkpoint
         self.correct_px = correct_px
+        self.scale_factor = scale_factor
 
         # Pre-processing setting
         self.patch_size = patch_size
         self.points_in_patch = points_in_patch
 
         # Prediction setting
+        self.convolution_nn = convolution_nn
         self.cnn_threshold = cnn_threshold
         self.dist_threshold = dist_threshold
         self.rotate = predict_with_rotation
@@ -259,8 +261,6 @@ class DataSetPredictor:
             )
 
         """Build handler's"""
-        self.click_px_overwrite, self.click_stored_px = None, None
-
         # Build handler's for reading data to correct format
         self.normalize = RescaleNormalize(clip_range=(1, 99))  # Normalize histogram
         self.mean_std = MeanStdNormalize()  # Standardize with mean and std
@@ -305,17 +305,12 @@ class DataSetPredictor:
         self.build_NN(NN=self.predict)
 
     def build_NN(self, NN: str):
-        if NN == "Microtubule":
-            self.normalize_px = 25
-        else:
-            self.normalize_px = 15
-
         if NN in ["Filament", "Microtubule"]:
             # Build CNN network with loaded pre-trained weights
             if not self.output_format.startswith("None") or not self.binary_mask:
                 self.cnn = Predictor(
                     checkpoint=self.checkpoint[0],
-                    network="fnet",
+                    network=self.convolution_nn,
                     subtype="32",
                     model_type="microtubules",
                     img_size=self.patch_size,
@@ -338,7 +333,7 @@ class DataSetPredictor:
                 if not self.output_format.startswith("None") or not self.binary_mask:
                     self.cnn = Predictor(
                         checkpoint=self.checkpoint[0],
-                        network="fnet",
+                        network=self.convolution_nn,
                         subtype="32",
                         model_type="cryo_mem_2d",
                         img_size=self.patch_size,
@@ -360,7 +355,7 @@ class DataSetPredictor:
                 if not self.output_format.startswith("None") or self.binary_mask:
                     self.cnn = Predictor(
                         checkpoint=self.checkpoint[0],
-                        network="fnet",
+                        network=self.convolution_nn,
                         subtype="32",
                         model_type="cryo_mem",
                         img_size=self.patch_size,
@@ -428,15 +423,10 @@ class DataSetPredictor:
                 )
                 sys.exit()
 
-        # Calculate parameters for normalizing image pixel size
-        """Note: Do not scale images of too big or small pixel size"""
+        # Calculate parameters for image pixel size with optional scaleing
         if self.correct_px is not None:
-            if self.predict == "Filament":
-                self.scale_factor = self.correct_px / 25
-            else:
-                self.scale_factor = self.correct_px / 15
-        else:
-            self.scale_factor = 1.0
+            self.px = self.correct_px
+        self.px = self.px * self.scale_factor
 
         self.org_shape = self.image.shape
         self.scale_shape = np.multiply(self.org_shape, self.scale_factor).astype(
@@ -508,7 +498,7 @@ class DataSetPredictor:
 
         return data
 
-    def predict_cnn(self, id: int, id_name: str, dataloader):
+    def predict_cnn(self, id_: int, id_name: str, dataloader):
         iter_time = 1
         if self.rotate:
             pred_title = "CNN prediction with four 90 degree rotations."
@@ -521,8 +511,8 @@ class DataSetPredictor:
                 self.tardis_progress(
                     title=self.title,
                     text_1=f"Found {len(self.predict_list)} images to predict!",
-                    text_3=f"Image {id + 1}/{len(self.predict_list)}: {id_name}",
-                    text_4=f"Original Pixel size: {self.px if self.correct_px is None else self.correct_px} A",
+                    text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {id_name}",
+                    text_4=f"Original Pixel size: {self.px} A",
                     text_5=pred_title,
                     text_7="Current Task: CNN prediction...",
                     text_8=print_progress_bar(j, len(dataloader)),
@@ -551,7 +541,7 @@ class DataSetPredictor:
 
             tif.imwrite(join(self.output, f"{name}.tif"), input_)
 
-    def predict_DIST(self, id: int, id_name: str):
+    def predict_DIST(self, id_: int, id_name: str):
         iter_time = int(round(len(self.coords_df) / 10))
         if iter_time == 0:
             iter_time = 1
@@ -566,8 +556,8 @@ class DataSetPredictor:
                     title=self.title,
                     text_1=f"Found {len(self.predict_list)} images to predict!",
                     text_2=f"Device: {self.device}",
-                    text_3=f"Image {id + 1}/{len(self.predict_list)}: {id_name}",
-                    text_4=f"Original pixel size: {self.px if self.correct_px is None else self.correct_px} A",
+                    text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {id_name}",
+                    text_4=f"Original pixel size: {self.px} A",
                     text_5=f"Point Cloud: {pc[0]} Nodes; NaN Segments",
                     text_7="Current Task: DIST prediction...",
                     text_8=print_progress_bar(id_dist, len(self.coords_df)),
@@ -581,8 +571,8 @@ class DataSetPredictor:
             title=self.title,
             text_1=f"Found {len(self.predict_list)} images to predict!",
             text_2=f"Device: {self.device}",
-            text_3=f"Image {id + 1}/{len(self.predict_list)}: {id_name}",
-            text_4=f"Original pixel size: {self.px if self.correct_px is None else self.correct_px} A",
+            text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {id_name}",
+            text_4=f"Original pixel size: {self.px} A",
             text_5=f"Point Cloud: {pc[0]}; NaN Segments",
             text_7=f"Current Task: {self.predict} segmentation...",
         )
@@ -700,7 +690,7 @@ class DataSetPredictor:
                 text_1=f"Found {len(self.predict_list)} images to predict!",
                 text_2=f"Device: {self.device}",
                 text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
-                text_4=f"Original Pixel size: {self.px if self.correct_px is None else self.correct_px} A",
+                text_4=f"Original Pixel size: {self.px} A",
                 text_7=f"Current Task: Sub-dividing images for {self.patch_size} size",
             )
 
@@ -720,7 +710,7 @@ class DataSetPredictor:
 
                 """CNN prediction"""
                 self.predict_cnn(
-                    id=id_,
+                    id_=id_,
                     id_name=i,
                     dataloader=PredictionDataset(
                         join(self.dir, "temp", "Patches", "imgs")
@@ -734,7 +724,7 @@ class DataSetPredictor:
                     text_1=f"Found {len(self.predict_list)} images to predict!",
                     text_2=f"Device: {self.device}",
                     text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
-                    text_4=f"Original pixel size: {self.px if self.correct_px is None else self.correct_px} A",
+                    text_4=f"Original pixel size: {self.px} A",
                     text_7="Current Task: Stitching...",
                 )
 
@@ -751,7 +741,7 @@ class DataSetPredictor:
                         id_="116",
                         py="tardis_em/utils/predictor.py",
                         desc="Last Task: Stitching/Scaling/Make correction..."
-                        f"Tardis Error: Error while converting to {self.px if self.correct_px is None else self.correct_px} A "
+                        f"Tardis Error: Error while converting to {self.px} A "
                         f"Org. shape {self.org_shape} is not the same as "
                         f"converted shape {self.image.shape}",
                     )
@@ -760,6 +750,9 @@ class DataSetPredictor:
                 # If prediction fail aka no prediction was produces continue with next image
                 if self.image is None:
                     continue
+
+                # Restore pixel size value based on scale factor
+                self.px = self.px / self.scale_factor
 
                 """Save predicted mask"""
                 if self.output_format.startswith("mrc"):
@@ -802,7 +795,7 @@ class DataSetPredictor:
                 text_1=f"Found {len(self.predict_list)} images to predict!",
                 text_2=f"Device: {self.device}",
                 text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
-                text_4=f"Original pixel size: {self.px if self.correct_px is None else self.correct_px} A",
+                text_4=f"Original pixel size: {self.px} A",
                 text_5="Point Cloud: In processing...",
                 text_7="Current Task: Image Postprocessing...",
             )
@@ -821,7 +814,7 @@ class DataSetPredictor:
                     text_1=f"Found {len(self.predict_list)} images to predict!",
                     text_2=f"Device: {self.device}",
                     text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
-                    text_4=f"Original pixel size: {self.px if self.correct_px is None else self.correct_px} A",
+                    text_4=f"Original pixel size: {self.px} A",
                     text_5=f"Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments",
                     text_7="Current Task: Preparing for instance segmentation...",
                 )
@@ -860,14 +853,14 @@ class DataSetPredictor:
                     text_1=f"Found {len(self.predict_list)} images to predict!",
                     text_2=f"Device: {self.device}",
                     text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
-                    text_4=f"Original pixel size: {self.px if self.correct_px is None else self.correct_px} A",
+                    text_4=f"Original pixel size: {self.px} A",
                     text_5=f"Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments",
                     text_7="Current Task: DIST prediction...",
                     text_8=print_progress_bar(0, len(self.coords_df)),
                 )
 
                 """DIST prediction"""
-                self.graphs = self.predict_DIST(id=id_, id_name=i)
+                self.graphs = self.predict_DIST(id_=id_, id_name=i)
                 self._debug(id_name=i, debug_id="graph")
 
                 if self.predict in ["Filament", "Microtubule"]:
@@ -876,11 +869,11 @@ class DataSetPredictor:
                         text_1=f"Found {len(self.predict_list)} images to predict!",
                         text_2=f"Device: {self.device}",
                         text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
-                        text_4=f"Original pixel size: {self.px if self.correct_px is None else self.correct_px} A",
+                        text_4=f"Original pixel size: {self.px} A",
                         text_5=f"Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments",
                         text_7="Current Task: Instance Segmentation...",
                         text_8="MTs segmentation is fitted to:",
-                        text_9=f"pixel size: {self.px if self.correct_px is None else self.correct_px}; transformation: {self.transformation}",
+                        text_9=f"pixel size: {self.px}; transformation: {self.transformation}",
                     )
 
                     self.pc_ld = (
@@ -897,7 +890,7 @@ class DataSetPredictor:
                         text_1=f"Found {len(self.predict_list)} images to predict!",
                         text_2=f"Device: {self.device}",
                         text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
-                        text_4=f"Original pixel size: {self.px if self.correct_px is None else self.correct_px} A",
+                        text_4=f"Original pixel size: {self.px} A",
                         text_5=f"Point Cloud: {self.pc_ld.shape[0]}; NaN Segments",
                         text_7="Current Task: Instance segmentation...",
                     )
@@ -931,7 +924,7 @@ class DataSetPredictor:
                     text_1=f"Found {len(self.predict_list)} images to predict!",
                     text_2=f"Device: {self.device}",
                     text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
-                    text_4=f"Original pixel size: {self.px if self.correct_px is None else self.correct_px} A",
+                    text_4=f"Original pixel size: {self.px} A",
                     text_5=f"Point Cloud: {self.pc_ld.shape[0]} Nodes;"
                     f" {np.max(self.segments[:, 0])} Segments",
                     text_7="Current Task: Segmentation finished!",

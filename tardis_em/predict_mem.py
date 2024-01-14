@@ -48,11 +48,27 @@ warnings.simplefilter("ignore", UserWarning)
     show_default=True,
 )
 @click.option(
+    "-sf",
+    "--scale_factor",
+    default=1.0,
+    type=float,
+    help="Optional scaling factor to scale image up- or down-.",
+    show_default=True,
+)
+@click.option(
     "-ch",
     "--checkpoint",
     default="None|None",
     type=str,
     help="Optional list of pre-trained weights",
+    show_default=True,
+)
+@click.option(
+    "-cnn",
+    "--convolution_nn",
+    default="fnet",
+    type=str,
+    help="Select CNN used for semantic segmentation.",
     show_default=True,
 )
 @click.option(
@@ -169,7 +185,9 @@ warnings.simplefilter("ignore", UserWarning)
 def main(
     path: str,
     mask: bool,
+    convolution_nn: str,
     correct_px: float,
+    scale_factor: float,
     checkpoint: str,
     output_format: str,
     patch_size: int,
@@ -206,6 +224,8 @@ def main(
         dir_=path,
         binary_mask=mask,
         correct_px=correct_px,
+        scale_factor=scale_factor,
+        convolution_nn=convolution_nn,
         checkpoint=checkpoint,
         output_format=output_format,
         patch_size=patch_size,
@@ -213,12 +233,6 @@ def main(
         dist_threshold=dist_threshold,
         points_in_patch=points_in_patch,
         predict_with_rotation=rotate,
-        amira_prefix=None,
-        filter_by_length=None,
-        connect_splines=None,
-        connect_cylinder=None,
-        amira_compare_distance=None,
-        amira_inter_probability=None,
         instances=instances,
         device_=str(device),
         debug=debug,
