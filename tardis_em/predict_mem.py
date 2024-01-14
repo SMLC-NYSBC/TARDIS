@@ -42,9 +42,9 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-px",
     "--correct_px",
-    default=False,
-    type=bool,
-    help="If True correct pixel size values.",
+    default=None,
+    type=float,
+    help="Correct pixel size values.",
     show_default=True,
 )
 @click.option(
@@ -169,7 +169,7 @@ warnings.simplefilter("ignore", UserWarning)
 def main(
     path: str,
     mask: bool,
-    correct_px: bool,
+    correct_px: float,
     checkpoint: str,
     output_format: str,
     patch_size: int,

@@ -129,9 +129,9 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-px",
     "--correct_px",
-    default=False,
-    type=bool,
-    help="If True correct pixel size values.",
+    default=None,
+    type=float,
+    help="Correct pixel size values.",
     show_default=True,
 )
 @click.option(
@@ -241,7 +241,7 @@ def main(
     output_format: str,
     patch_size: int,
     rotate: bool,
-    correct_px: bool,
+    correct_px: float,
     cnn_threshold: float,
     dist_threshold: float,
     points_in_patch: int,
@@ -279,7 +279,6 @@ def main(
         predict="Microtubule",
         dir_=path,
         binary_mask=mask,
-        feature_size=None,
         correct_px=correct_px,
         checkpoint=checkpoint,
         output_format=output_format,
