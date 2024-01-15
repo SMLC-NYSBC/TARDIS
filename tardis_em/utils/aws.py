@@ -95,10 +95,10 @@ def get_weights_aws(network: str, subtype: str, model: Optional[str] = None):
         subtype (str): Sub-name of the network or sub-parameter for the network.
         model (str): Additional dataset name used for the DIST.
     """
-    ALL_MODELS = ["unet", "unet3plus", "fnet", "dist"]
+    ALL_MODELS = ["unet", "unet3plus", "fnet", "fnet_attn", "dist"]
     ALL_SUBTYPE = ["16", "32", "64", "96", "128", "triang", "full"]
-    CNN = ["unet", "unet3plus", "fnet"]
-    CNN_DATASET = ["microtubules", "cryo_mem", "cryo_mem_2d"]
+    CNN = ["unet", "unet3plus", "fnet", "fnet_attn"]
+    CNN_DATASET = ["microtubules_3d", "microtubules_2d", "membrane_3d", "membrane_2d"]
     DIST_DATASET = ["microtubules", "s3dis", "membrane_2d"]
 
     """Chech dir"""
@@ -150,7 +150,7 @@ def get_weights_aws(network: str, subtype: str, model: Optional[str] = None):
             TardisError("19", "tardis_em/utils/aws.py", "No weights found")
     else:
         weight = get_model_aws(
-            "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/"
+            "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/tardis_em/"
             f"{network}_{subtype}/"
             f"{model}/model_weights.pth"
         )
@@ -237,7 +237,7 @@ def aws_check_with_temp(model_name: list) -> bool:
     else:
         try:
             weight = requests.get(
-                "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/"
+                "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/tardis_em/"
                 f"{model_name[0]}_{model_name[1]}/"
                 f"{model_name[2]}/model_weights.pth",
                 stream=True,

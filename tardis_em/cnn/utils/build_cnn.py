@@ -70,7 +70,6 @@ class BasicCNN(nn.Module):
         dropout=None,
         num_group=8,
         prediction=False,
-        single=False,
     ):
         super(BasicCNN, self).__init__()
         self.prediction = prediction
