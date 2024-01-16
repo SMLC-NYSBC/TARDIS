@@ -83,8 +83,8 @@ def get_weights_aws(network: str, subtype: str, model: Optional[str] = None):
     Model weight stored on S3 bucket with the naming convention
     network_subtype/model/model_weights.pth
     References.:
-    - fnet_32/microtubules/model_weights.pth
-    - dist_triang/microtubules/model_weights.pth
+    - fnet_32/microtubules_3d/model_weights.pth
+    - dist_triang/microtubules_3d/model_weights.pth
 
     Weights are stored in ~/.tardis_em with the same convention and .txt
     file with file header information to identified update status for local file

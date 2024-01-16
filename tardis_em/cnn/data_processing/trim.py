@@ -17,6 +17,7 @@ import numpy as np
 from tifffile import tifffile as tif
 
 from tardis_em.cnn.utils.utils import scale_image
+from tardis_em.utils.export_data import to_mrc
 from tardis_em.utils.errors import TardisError
 
 
@@ -26,12 +27,13 @@ def trim_with_stride(
     trim_size_z: int,
     output: str,
     image_counter: int,
-    scale: tuple,
+    scale: list,
     clean_empty=True,
     keep_if=0.01,
     stride=25,
     mask: Optional[np.ndarray] = None,
     log=True,
+    pixel_size=None,
 ):
     """
     Function to patch image and mask to specified patch size with overlying area
@@ -50,6 +52,8 @@ def trim_with_stride(
         keep_if (float):
         stride (int): Trimming step size.
         mask (np.ndarray, None): Label mask.
+        log (bool):
+        pixel_size (None, float):
     """
     img_dtype = np.float32
 
@@ -184,7 +188,7 @@ def trim_with_stride(
 
     """Trim image and mask with stride"""
     z_start, z_stop = 0 - (trim_size_z - stride), 0
-    count = len(range(x)) + len(range(y)) + len(range(z))
+    count = len(range(x)) * len(range(y)) * len(range(z))
     count_save = 0
     if z == 0:
         z = 1
@@ -203,7 +207,12 @@ def trim_with_stride(
                 x_start = x_start + trim_size_xy - stride
                 x_stop = x_start + trim_size_xy
 
-                img_name = str(f"{image_counter}_{i}_{j}_{k}_{stride}.tif")
+                if pixel_size is None:
+                    img_name = str(f"{image_counter}_{i}_{j}_{k}_{stride}.tif")
+                    mask_name = str(f"{image_counter}_{i}_{j}_{k}_{stride}_mask.tif")
+                else:
+                    img_name = str(f"{image_counter}_{i}_{j}_{k}_{stride}.mrc")
+                    mask_name = str(f"{image_counter}_{i}_{j}_{k}_{stride}_mask.mrc")
 
                 if nc is None:
                     if nz > 0:
@@ -240,36 +249,51 @@ def trim_with_stride(
                     if np.sum(trim_mask) > min_px_count:
                         count_save += 1
 
-                        tif.imwrite(
-                            join(output, "imgs", img_name),
-                            trim_img,
-                            shape=trim_img.shape,
-                        )
-                        tif.imwrite(
-                            join(output, "masks", f"{img_name[:-4]}_mask.tif"),
-                            np.array(trim_mask, dtype=mask_dtype),
-                            shape=trim_mask.shape,
-                        )
+                        if pixel_size is None:
+                            tif.imwrite(
+                                join(output, "imgs", img_name),
+                                trim_img,
+                                shape=trim_img.shape,
+                            )
+                            tif.imwrite(
+                                join(output, "masks", mask_name),
+                                np.array(trim_mask, dtype=mask_dtype),
+                                shape=trim_mask.shape,
+                            )
+                        else:
+                            to_mrc(trim_img, pixel_size, join(output, "imgs", img_name))
+                            to_mrc(
+                                np.array(trim_mask, mask_dtype), pixel_size, mask_name
+                            )
                 else:
                     count_save += 1
                     if mask is None:
-                        tif.imwrite(
-                            join(output, "imgs", img_name),
-                            trim_img,
-                            shape=trim_img.shape,
-                        )
+                        if pixel_size is None:
+                            tif.imwrite(
+                                join(output, "imgs", img_name),
+                                trim_img,
+                                shape=trim_img.shape,
+                            )
+                        else:
+                            to_mrc(trim_img, pixel_size, join(output, "imgs", img_name))
 
                     else:
-                        tif.imwrite(
-                            join(output, "imgs", img_name),
-                            trim_img,
-                            shape=trim_img.shape,
-                        )
-                        tif.imwrite(
-                            join(output, "masks", f"{img_name[:-4]}_mask.tif"),
-                            np.array(trim_mask, dtype=mask_dtype),
-                            shape=trim_mask.shape,
-                        )
+                        if pixel_size is None:
+                            tif.imwrite(
+                                join(output, "imgs", img_name),
+                                trim_img,
+                                shape=trim_img.shape,
+                            )
+                            tif.imwrite(
+                                join(output, "masks", mask_name),
+                                np.array(trim_mask, dtype=mask_dtype),
+                                shape=trim_mask.shape,
+                            )
+                        else:
+                            to_mrc(trim_img, pixel_size, join(output, "imgs", img_name))
+                            to_mrc(
+                                np.array(trim_mask, mask_dtype), pixel_size, mask_name
+                            )
 
     if log:
         return f"{str(count)}|{str(count_save)}"

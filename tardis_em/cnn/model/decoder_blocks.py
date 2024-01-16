@@ -338,8 +338,8 @@ class DecoderBlockUnet3Plus(nn.Module):
         """Skip-Connections Encoder"""
         for i, encoder in enumerate(encoder_features):
             if self.encoder_max_pool[i] is not None:
-                encoder = self.encoder_feature_conv[i](
-                    self.encoder_max_pool[i](encoder)
+                encoder = self.encoder_max_pool[i](
+                    self.encoder_feature_conv[i](encoder)
                 )
             else:
                 encoder = self.encoder_feature_conv[i](encoder)

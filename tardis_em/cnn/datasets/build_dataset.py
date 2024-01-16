@@ -98,9 +98,9 @@ def build_train_dataset(
     """For each image find matching mask, pre-process, trim and save"""
     img_counter = 0
     if resize_pixel_size == "multi":
-        log_file = np.zeros((8 * (len(img_list) + 1), 8), dtype="|S50")
+        log_file = np.zeros((8 * (len(img_list) + 1), 8))
     else:
-        log_file = np.zeros((len(img_list) + 1, 8), dtype="|S50")
+        log_file = np.zeros((len(img_list) + 1, 8))
     log_file[0, :] = np.array(
         (
             "ID",
@@ -127,15 +127,15 @@ def build_train_dataset(
             text_7=print_progress_bar(id_, len(img_list)),
         )
 
-        log_file[id_, 0] = id_
-        np.savetxt(join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=",")
+        log_file[id_, 0] = str(id_)
+        np.savetxt(join(dataset_dir, "log.csv"), log_file, delimiter=",")
 
         """Get image directory and check if img is a file"""
         img_dir = join(dataset_dir, i)
         if not isfile(img_dir):
             # Store fail in the log file
             log_file = error_log_build_data(
-                dir=join(dataset_dir, "log.csv"), log_file=log_file, id=id_, i=i
+                dir_=join(dataset_dir, "log.csv"), log_file=log_file, id_=id_, i=i
             )
             continue
 
@@ -159,211 +159,186 @@ def build_train_dataset(
         if not isfile(mask_dir):
             # Store fail in the log file
             log_file = error_log_build_data(
-                dir=join(dataset_dir, "log.csv"),
+                dir_=join(dataset_dir, "log.csv"),
                 log_file=log_file,
-                id=id_,
+                id_=id_,
                 i=i + "|" + mask_dir,
             )
             continue
 
         """Load files"""
         image, mask, pixel_size = load_img_mask_data(img_dir, mask_dir)
-        log_file[id_, 1] = i + "||" + mask_name
-        np.savetxt(join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=",")
+        log_file[id_, 1] = str(i + "||" + mask_name)
+        np.savetxt(join(dataset_dir, "log.csv"), log_file, delimiter=",")
 
         if image is None:
             continue
 
         if pixel_size is None:
             log_file = error_log_build_data(
-                dir=join(dataset_dir, "log.csv"),
+                dir_=join(dataset_dir, "log.csv"),
                 log_file=log_file,
-                id=id_,
+                id_=id_,
                 i=i + "||" + mask_dir,
             )
 
         """Calculate scale factor"""
-        if resize_pixel_size == "multi" and pixel_size > 15:
-            iter_ = 3
-            mask_org = np.array(mask)
-            image_org = np.array(image)
-            pixel_size_org = pixel_size
-
+        if resize_pixel_size is None:
+            scale_factor = 1.0
         else:
-            iter_ = 1
+            scale_factor = pixel_size / resize_pixel_size
+            pixel_size = pixel_size * scale_factor
 
-        for x in range(iter_):
-            if resize_pixel_size != "multi":
-                if resize_pixel_size is None:
-                    scale_factor = 1.0
-                else:
-                    scale_factor = pixel_size / resize_pixel_size
-            else:
-                if x == 0:
-                    scale_factor = 1.0
-                else:
-                    mask = np.array(mask_org)
-                    image = np.array(image_org)
-                    scale_factor = 0.75 if x == 1 else 1.5
-                    pixel_size = pixel_size_org / scale_factor
+        scale_shape = [int(i * scale_factor) for i in image.shape]
 
-            scale_shape = [int(i * scale_factor) for i in image.shape]
+        log_file[id_, 2] = str(pixel_size)
+        log_file[id_, 3] = str(scale_factor)
+        np.savetxt(join(dataset_dir, "log.csv"), log_file, delimiter=",")
 
-            log_file[id_, 2] = str(pixel_size)
-            log_file[id_, 3] = str(scale_factor)
-            np.savetxt(join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=",")
+        """Update progress bar"""
+        tardis_progress(
+            title="Data pre-processing for CNN training",
+            text_1="Building Training dataset:",
+            text_2=f"Files: {i} {mask_name}",
+            text_3=f"px: {pixel_size}",
+            text_4=f"Scale: {round(scale_factor, 2)}",
+            text_6=f"Image dtype: {image.dtype} min: {image.min()} max: {image.max()}",
+            text_7=print_progress_bar(id_, len(img_list)),
+        )
 
-            """Update progress bar"""
-            tardis_progress(
-                title="Data pre-processing for CNN training",
-                text_1="Building Training dataset:",
-                text_2=f"Files: {i} {mask_name}",
-                text_3=f"px: {pixel_size}",
-                text_4=f"Scale: {round(scale_factor, 2)}",
-                text_6=f"Image dtype: {image.dtype} min: {image.min()} max: {image.max()}",
-                text_7=print_progress_bar(id_, len(img_list)),
+        """Draw mask for coord or process mask if needed"""
+        # Detect coordinate mask array
+        if mask.ndim == 2 and mask.shape[1] in [3, 4]:
+            # Scale mask to correct pixel size
+            mask[:, 1:] = mask[:, 1:] * scale_factor
+
+            # Draw mask from coordinates
+            mask = draw_instances(
+                mask_size=scale_shape,
+                coordinate=mask,
+                pixel_size=pixel_size,
+                circle_size=circle_size,
             )
+            log_file[id_, 4] = "coord"
+            np.savetxt(join(dataset_dir, "log.csv"), log_file, delimiter=",")
+        else:  # Detect an image mask array
+            # Convert to binary
+            mask = np.where(mask > 0, 1, 0).astype(np.uint8)
 
-            """Draw mask for coord or process mask if needed"""
-            # Detect coordinate mask array
-            if mask.ndim == 2 and mask.shape[1] in [3, 4]:
-                # Scale mask to correct pixel size
-                mask[:, 1:] = mask[:, 1:] * scale_factor
+            if mask.min() != 0 and mask.max() != 1:
+                TardisError(
+                    id_="115",
+                    py="tardis_em/cnn/data_processing.md/build_training_dataset",
+                    desc=f"Mask min: {mask.min()}; max: {mask.max()} "
+                    "but expected min: 0 and max: >1",
+                )
+
+            # mask borders
+            if mask.ndim == 2:
+                mask[:1, :] = 0
+                mask[:, :1] = 0
+                mask[-1:, :] = 0
+                mask[:, -1:] = 0
+            else:
+                mask[:, 1, :] = 0
+                mask[:, -1:, :] = 0
+                mask[..., :1] = 0
+                mask[..., -1:] = 0
+
+            if scale_factor != 1.0:
+                pc = b_pc.build_point_cloud(image=mask, as_2d=True)
+                pc = pc * scale_factor
+                pc = pc.astype(np.uint32)
+
+                # Remove gaps from conversion to int
+                gaps = [
+                    i
+                    for i in list(range(min(pc[:, 2]), max(pc[:, 2]) + 1))
+                    if i not in np.unique(pc[:, 2])
+                ]
+
+                gaps_pc = []
+                for j in gaps:
+                    pick_coord = pc[np.where(pc[:, 2] == j + 1)[0], :]
+                    if len(pick_coord) == 0:
+                        pick_coord = pc[np.where(pc[:, 2] == j - 1)[0], :]
+
+                    if len(pick_coord) > 0:
+                        pick_coord[:, 2] = j
+                        gaps_pc.append(pick_coord)
+                if len(gaps_pc) > 0:
+                    gaps_pc = np.concatenate(gaps_pc)
+                    pc = np.concatenate((pc, gaps_pc))
 
                 # Draw mask from coordinates
                 mask = draw_instances(
                     mask_size=scale_shape,
-                    coordinate=mask,
-                    pixel_size=resize_pixel_size
-                    if resize_pixel_size is not None
-                    else pixel_size,
+                    coordinate=pc,
+                    label=False,
+                    pixel_size=pixel_size,
                     circle_size=circle_size,
                 )
-                log_file[id_, 4] = "coord"
-                np.savetxt(
-                    join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=","
-                )
-            else:  # Detect an image mask array
                 # Convert to binary
                 mask = np.where(mask > 0, 1, 0).astype(np.uint8)
 
-                if mask.min() != 0 and mask.max() != 1:
-                    TardisError(
-                        id_="115",
-                        py="tardis_em/cnn/data_processing.md/build_training_dataset",
-                        desc=f"Mask min: {mask.min()}; max: {mask.max()} "
-                        "but expected min: 0 and max: >1",
-                    )
+            log_file[id_, 4] = "mask"
+            np.savetxt(join(dataset_dir, "log.csv"), log_file, delimiter=",")
 
-                # mask borders
-                if mask.ndim == 2:
-                    mask[:1, :] = 0
-                    mask[:, :1] = 0
-                    mask[-1:, :] = 0
-                    mask[:, -1:] = 0
-                else:
-                    mask[:, 1, :] = 0
-                    mask[:, -1:, :] = 0
-                    mask[..., :1] = 0
-                    mask[..., -1:] = 0
+        """Update progress bar"""
+        tardis_progress(
+            title="Data pre-processing for CNN training",
+            text_1="Building Training dataset:",
+            text_2=f"Files: {i} {mask_name}",
+            text_3=f"px: {pixel_size}",
+            text_4=f"Scale: {round(scale_factor, 2)}",
+            text_6=f"Image dtype: {image.dtype} min: {image.min()} max: {image.max()}",
+            text_7=print_progress_bar(id_, len(img_list)),
+        )
 
-                if scale_factor != 1.0:
-                    pc = b_pc.build_point_cloud(image=mask, as_2d=True)
-                    pc = pc * scale_factor
-                    pc = pc.astype(np.uint32)
+        """Normalize image histogram"""
+        # Rescale image intensity
+        image = normalize(meanstd(image)).astype(np.float32)
+        if (
+            not image.min() >= -1 or not image.max() <= 1
+        ):  # Image not between in -1 and 1
+            if image.min() >= 0 and image.max() <= 1:
+                image = (image - 0.5) * 2
+            elif image.min() >= 0 and image.max() <= 255:
+                image = image / 255  # move to 0 - 1
+                image = (image - 0.5) * 2
 
-                    # Remove gaps from conversion to int
-                    gaps = [
-                        i
-                        for i in list(range(min(pc[:, 2]), max(pc[:, 2]) + 1))
-                        if i not in np.unique(pc[:, 2])
-                    ]
+        log_file[id_, 5] = str(image.min())
+        log_file[id_, 6] = str(image.max())
+        np.savetxt(join(dataset_dir, "log.csv"), log_file, delimiter=",")
 
-                    gaps_pc = []
-                    for j in gaps:
-                        pick_coord = pc[np.where(pc[:, 2] == j + 1)[0], :]
-                        if len(pick_coord) == 0:
-                            pick_coord = pc[np.where(pc[:, 2] == j - 1)[0], :]
+        tardis_progress(
+            title="Data pre-processing for CNN training",
+            text_1="Building Training dataset:",
+            text_2=f"Files: {i} {mask_name}",
+            text_3=f"px: {pixel_size}",
+            text_4=f"Scale: {round(scale_factor, 2)}",
+            text_6=f"Image dtype: {image.dtype} min: {image.min()} max: {image.max()}",
+            text_7=print_progress_bar(id_, len(img_list)),
+        )
 
-                        if len(pick_coord) > 0:
-                            pick_coord[:, 2] = j
-                            gaps_pc.append(pick_coord)
-                    if len(gaps_pc) > 0:
-                        gaps_pc = np.concatenate(gaps_pc)
-                        pc = np.concatenate((pc, gaps_pc))
-
-                    # Draw mask from coordinates
-                    mask = draw_instances(
-                        mask_size=scale_shape,
-                        coordinate=pc,
-                        label=False,
-                        pixel_size=resize_pixel_size
-                        if resize_pixel_size is not None
-                        else pixel_size,
-                        circle_size=circle_size,
-                    )
-                    # Convert to binary
-                    mask = np.where(mask > 0, 1, 0).astype(np.uint8)
-
-                log_file[id_, 4] = "mask"
-                np.savetxt(
-                    join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=","
-                )
-
-            """Update progress bar"""
-            tardis_progress(
-                title="Data pre-processing for CNN training",
-                text_1="Building Training dataset:",
-                text_2=f"Files: {i} {mask_name}",
-                text_3=f"px: {pixel_size}",
-                text_4=f"Scale: {round(scale_factor, 2)}",
-                text_6=f"Image dtype: {image.dtype} min: {image.min()} max: {image.max()}",
-                text_7=print_progress_bar(id_, len(img_list)),
-            )
-
-            """Normalize image histogram"""
-            # Rescale image intensity
-            image = normalize(meanstd(image)).astype(np.float32)
-            if (
-                not image.min() >= -1 or not image.max() <= 1
-            ):  # Image not between in -1 and 1
-                if image.min() >= 0 and image.max() <= 1:
-                    image = (image - 0.5) * 2
-                elif image.min() >= 0 and image.max() <= 255:
-                    image = image / 255  # move to 0 - 1
-                    image = (image - 0.5) * 2
-
-            log_file[id_, 5] = image.min()
-            log_file[id_, 6] = image.max()
-            np.savetxt(join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=",")
-
-            tardis_progress(
-                title="Data pre-processing for CNN training",
-                text_1="Building Training dataset:",
-                text_2=f"Files: {i} {mask_name}",
-                text_3=f"px: {pixel_size}",
-                text_4=f"Scale: {round(scale_factor, 2)}",
-                text_6=f"Image dtype: {image.dtype} min: {image.min()} max: {image.max()}",
-                text_7=print_progress_bar(id_, len(img_list)),
-            )
-
-            """Voxelize Image and Mask"""
-            count = trim_with_stride(
-                image=image,
-                mask=mask,
-                scale=scale_shape,
-                trim_size_xy=trim_xy,
-                trim_size_z=trim_z,
-                clean_empty=clean_empty,
-                keep_if=keep_if,
-                output=join(dataset_dir, "train"),
-                image_counter=img_counter,
-                log=True,
-            )
-            img_counter += 1
-            log_file[id_, 7] = count
-            np.savetxt(join(dataset_dir, "log.csv"), log_file, fmt="%s", delimiter=",")
-            id_ += 1
+        """Voxelize Image and Mask"""
+        count = trim_with_stride(
+            image=image,
+            mask=mask,
+            scale=scale_shape,
+            trim_size_xy=trim_xy,
+            trim_size_z=trim_z,
+            clean_empty=clean_empty,
+            keep_if=keep_if,
+            output=join(dataset_dir, "train"),
+            image_counter=img_counter,
+            log=True,
+            pixel_size=pixel_size,
+        )
+        img_counter += 1
+        log_file[id_, 7] = str(count)
+        np.savetxt(join(dataset_dir, "log.csv"), log_file, delimiter=",")
+        id_ += 1
 
 
 def load_img_mask_data(
@@ -440,14 +415,16 @@ def load_img_mask_data(
         return image, mask, img_px
 
 
-def error_log_build_data(dir: str, log_file: np.ndarray, id: int, i: str) -> np.ndarray:
+def error_log_build_data(
+    dir_: str, log_file: np.ndarray, id_: int, i: str
+) -> np.ndarray:
     """
     Update log file with error for data that could not be loaded
 
     Args:
-        dir (str): Save directory.
+        dir_ (str): Save directory.
         log_file (np.ndarray): Current log file list.
-        id (int): Data id.
+        id_ (int): Data id.
         i (Str): Data name.
 
     Returns:
@@ -455,10 +432,10 @@ def error_log_build_data(dir: str, log_file: np.ndarray, id: int, i: str) -> np.
     """
 
     # Store fail in the log file
-    log_file[id + 1, 0] = str(id)
-    log_file[id + 1, 1] = i
-    log_file[id + 1, 2] = "NA"
-    log_file[id + 1, 3] = "NA"
-    np.savetxt(dir, log_file, fmt="%s", delimiter=",")
+    log_file[id_ + 1, 0] = str(id)
+    log_file[id_ + 1, 1] = str(i)
+    log_file[id_ + 1, 2] = "NA"
+    log_file[id_ + 1, 3] = "NA"
+    np.savetxt(dir_, log_file, delimiter=",")
 
     return log_file

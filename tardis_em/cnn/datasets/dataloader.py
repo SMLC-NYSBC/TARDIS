@@ -72,8 +72,8 @@ class CNNDataset(Dataset):
         """
         # Find next image and corresponding label mask image
         idx = self.ids[i]
-        mask_file = os.path.join(self.mask_dir, str(idx) + "_mask" + ".tif")
-        img_file = os.path.join(self.img_dir, str(idx) + ".tif")
+        mask_file = os.path.join(self.mask_dir, str(idx) + "_mask" + ".mrc")
+        img_file = os.path.join(self.img_dir, str(idx) + ".mrc")
 
         # Load image and corresponding label mask
         img, _ = load_image(img_file)

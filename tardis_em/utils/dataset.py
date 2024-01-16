@@ -109,7 +109,7 @@ def build_test_dataset(dataset_dir: str, dataset_no: int, stanford=False):
         )
 
     image_list = listdir(join(dataset_dir, "train", "imgs"))
-    image_list = [i for i in image_list if i.endswith(".tif")]
+    image_list = [i for i in image_list if i.endswith((".tif", ".mrc"))]
 
     if len(image_list) < 1000:
         # Get list of dataset
@@ -135,9 +135,10 @@ def build_test_dataset(dataset_dir: str, dataset_no: int, stanford=False):
                     join(dataset_dir, "train", "imgs", j),
                     join(dataset_dir, "test", "imgs", j),
                 )
+
                 shutil.move(
-                    join(dataset_dir, "train", "masks", j[:-4] + "_mask.tif"),
-                    join(dataset_dir, "test", "masks", j[:-4] + "_mask.tif"),
+                    join(dataset_dir, "train", "masks", j[:-4] + "_mask" + j[-4:]),
+                    join(dataset_dir, "test", "masks", j[:-4] + "_mask" + j[-4:]),
                 )
     else:
         if len(image_list) > 62500:
@@ -155,6 +156,6 @@ def build_test_dataset(dataset_dir: str, dataset_no: int, stanford=False):
                 join(dataset_dir, "test", "imgs", j),
             )
             shutil.move(
-                join(dataset_dir, "train", "masks", j[:-4] + "_mask.tif"),
-                join(dataset_dir, "test", "masks", j[:-4] + "_mask.tif"),
+                join(dataset_dir, "train", "masks", j[:-4] + "_mask" + j[-4:]),
+                join(dataset_dir, "test", "masks", j[:-4] + "_mask" + j[-4:]),
             )

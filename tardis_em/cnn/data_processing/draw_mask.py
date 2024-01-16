@@ -19,7 +19,7 @@ from tardis_em.utils.errors import TardisError
 
 
 def draw_instances(
-    mask_size: tuple,
+    mask_size: list,
     coordinate: np.ndarray,
     pixel_size: float,
     circle_size=250,
