@@ -87,22 +87,17 @@ def trim_with_stride(
     nz, ny, nx, nc = 0, 0, 0, None
     if image.ndim == 4 and dim == 3:  # 3D RGB
         nz, ny, nx, nc = image.shape
-        min_px_count = trim_size_xy * trim_size_xy * trim_size_z
     elif image.ndim == 3 and dim == 3:  # 2D RGB
         ny, nx, nc = image.shape
         nz = 0  # 2D
-        min_px_count = trim_size_xy * trim_size_xy
     elif image.ndim == 3 and dim == 1:  # 3D gray
         nz, ny, nx = image.shape
 
         nc = None  # Gray
-        min_px_count = trim_size_xy * trim_size_xy * trim_size_z
     elif image.ndim == 2:  # 2D gray
         ny, nx = image.shape
         nc = None  # 2D
         nz = 0  # Gray
-        min_px_count = trim_size_xy * trim_size_xy
-    min_px_count = min_px_count * keep_if  # 0.01% of pixels must be occupied
 
     if trim_size_xy is not None or trim_size_z is not None:
         if not nx >= trim_size_xy:
@@ -246,7 +241,7 @@ def trim_with_stride(
                 trim_img = np.array(trim_img, dtype=img_dtype)
 
                 if clean_empty and mask is not None:
-                    if np.sum(trim_mask) > min_px_count:
+                    if np.sum(trim_mask) > keep_if:
                         count_save += 1
 
                         if pixel_size is None:

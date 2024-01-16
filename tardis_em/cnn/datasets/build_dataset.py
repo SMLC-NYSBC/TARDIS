@@ -29,7 +29,6 @@ def build_train_dataset(
     resize_pixel_size: Union[float, None],
     trim_xy: int,
     trim_z: int,
-    keep_if=0.01,
     benchmark=False,
 ):
     """
@@ -60,7 +59,6 @@ def build_train_dataset(
         resize_pixel_size (float, None): Pixel size for image resizing.
         trim_xy (int): Voxel size of output image in x and y dimension.
         trim_z (int): Voxel size of output image in z dimension.
-        keep_if (float): Min percentage of occupation on the mask to keep for training.
         benchmark (bool): If True construct data for benchmark.
     """
     """Setup"""
@@ -344,7 +342,7 @@ def build_train_dataset(
             trim_size_xy=trim_xy,
             trim_size_z=trim_z,
             clean_empty=clean_empty,
-            keep_if=keep_if,
+            keep_if=100,
             output=join(dataset_dir, "train"),
             image_counter=img_counter,
             log=True,
