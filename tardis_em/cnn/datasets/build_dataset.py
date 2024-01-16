@@ -128,7 +128,9 @@ def build_train_dataset(
         )
 
         log_file[id_, 0] = str(id_)
-        np.savetxt(join(dataset_dir, "log.csv"), log_file.astype(str), delimiter=",")
+        np.savetxt(
+            join(dataset_dir, "log.csv"), log_file.astype(str), fmt="%s", delimiter=","
+        )
 
         """Get image directory and check if img is a file"""
         img_dir = join(dataset_dir, i)
@@ -169,7 +171,9 @@ def build_train_dataset(
         """Load files"""
         image, mask, pixel_size = load_img_mask_data(img_dir, mask_dir)
         log_file[id_, 1] = str(i + "||" + mask_name)
-        np.savetxt(join(dataset_dir, "log.csv"), log_file.astype(str), delimiter=",")
+        np.savetxt(
+            join(dataset_dir, "log.csv"), log_file.astype(str), fmt="%s", delimiter=","
+        )
 
         if image is None:
             continue
@@ -193,7 +197,9 @@ def build_train_dataset(
 
         log_file[id_, 2] = str(pixel_size)
         log_file[id_, 3] = str(scale_factor)
-        np.savetxt(join(dataset_dir, "log.csv"), log_file.astype(str), delimiter=",")
+        np.savetxt(
+            join(dataset_dir, "log.csv"), log_file.astype(str), fmt="%s", delimiter=","
+        )
 
         """Update progress bar"""
         tardis_progress(
@@ -220,7 +226,12 @@ def build_train_dataset(
                 circle_size=circle_size,
             )
             log_file[id_, 4] = "coord"
-            np.savetxt(join(dataset_dir, "log.csv"), log_file.astype(str), delimiter=",")
+            np.savetxt(
+                join(dataset_dir, "log.csv"),
+                log_file.astype(str),
+                fmt="%s",
+                delimiter=",",
+            )
         else:  # Detect an image mask array
             # Convert to binary
             mask = np.where(mask > 0, 1, 0).astype(np.uint8)
@@ -282,7 +293,12 @@ def build_train_dataset(
                 mask = np.where(mask > 0, 1, 0).astype(np.uint8)
 
             log_file[id_, 4] = "mask"
-            np.savetxt(join(dataset_dir, "log.csv"), log_file.astype(str), delimiter=",")
+            np.savetxt(
+                join(dataset_dir, "log.csv"),
+                log_file.astype(str),
+                fmt="%s",
+                delimiter=",",
+            )
 
         """Update progress bar"""
         tardis_progress(
@@ -309,7 +325,9 @@ def build_train_dataset(
 
         log_file[id_, 5] = str(image.min())
         log_file[id_, 6] = str(image.max())
-        np.savetxt(join(dataset_dir, "log.csv"), log_file.astype(str), delimiter=",")
+        np.savetxt(
+            join(dataset_dir, "log.csv"), log_file.astype(str), fmt="%s", delimiter=","
+        )
 
         tardis_progress(
             title="Data pre-processing for CNN training",
@@ -337,7 +355,9 @@ def build_train_dataset(
         )
         img_counter += 1
         log_file[id_, 7] = str(count)
-        np.savetxt(join(dataset_dir, "log.csv"), log_file.astype(str), delimiter=",")
+        np.savetxt(
+            join(dataset_dir, "log.csv"), log_file.astype(str), fmt="%s", delimiter=","
+        )
         id_ += 1
 
 
