@@ -965,7 +965,7 @@ def load_image(image: str, normalize=False) -> Tuple[np.ndarray, float]:
         norm = RescaleNormalize(clip_range=(1, 99))
         image = norm(image)
 
-    if image.dtype == str:
+    if isinstance(image, str):
         TardisError(
             "130",
             "tardis_em/utils/load_data.py",
