@@ -57,7 +57,7 @@ class CNNDataset(Dataset):
             splitext(file)[0] for file in listdir(img_dir) if not file.startswith(".")
         ]
         self.format = [
-            splitext(file)[0]
+            splitext(file)[1]
             for file in listdir(img_dir)[:5]
             if not file.startswith(".")
         ][1]
