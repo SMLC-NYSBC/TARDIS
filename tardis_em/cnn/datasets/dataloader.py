@@ -56,7 +56,11 @@ class CNNDataset(Dataset):
         self.ids = [
             splitext(file)[0] for file in listdir(img_dir) if not file.startswith(".")
         ]
-        self.format = self.ids[0][-4:]
+        self.format = [
+            splitext(file)[0]
+            for file in listdir(img_dir)[:5]
+            if not file.startswith(".")
+        ][1]
 
     def __len__(self):
         return len(self.ids)
