@@ -56,6 +56,7 @@ class CNNDataset(Dataset):
         self.ids = [
             splitext(file)[0] for file in listdir(img_dir) if not file.startswith(".")
         ]
+        self.format = self.ids[0][-4:]
 
     def __len__(self):
         return len(self.ids)
@@ -72,8 +73,8 @@ class CNNDataset(Dataset):
         """
         # Find next image and corresponding label mask image
         idx = self.ids[i]
-        mask_file = os.path.join(self.mask_dir, str(idx) + "_mask" + ".mrc")
-        img_file = os.path.join(self.img_dir, str(idx) + ".mrc")
+        mask_file = os.path.join(self.mask_dir, str(idx) + "_mask" + self.format)
+        img_file = os.path.join(self.img_dir, str(idx) + self.format)
 
         # Load image and corresponding label mask
         img, _ = load_image(img_file)
