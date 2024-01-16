@@ -50,8 +50,8 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-sf",
     "--scale_factor",
-    default=1.0,
-    type=float,
+    default=False,
+    type=bool,
     help="Optional scaling factor to scale image up- or down-.",
     show_default=True,
 )
