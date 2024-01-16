@@ -265,7 +265,7 @@ def trim_with_stride(
                             to_mrc(
                                 np.array(trim_mask, mask_dtype),
                                 pixel_size,
-                                join(output, "imgs", mask_name),
+                                join(output, "masks", mask_name),
                             )
                 else:
                     count_save += 1
@@ -296,7 +296,7 @@ def trim_with_stride(
                             to_mrc(
                                 np.array(trim_mask, mask_dtype),
                                 pixel_size,
-                                join(output, "imgs", mask_name),
+                                join(output, "masks", mask_name),
                             )
 
     if log:
