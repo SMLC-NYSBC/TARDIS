@@ -188,7 +188,7 @@ def build_train_dataset(
             scale_factor = 1.0
         else:
             scale_factor = pixel_size / resize_pixel_size
-            pixel_size = pixel_size * scale_factor
+            pixel_size = resize_pixel_size
 
         scale_shape = [int(i * scale_factor) for i in image.shape]
 
