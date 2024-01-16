@@ -965,4 +965,10 @@ def load_image(image: str, normalize=False) -> Tuple[np.ndarray, float]:
         norm = RescaleNormalize(clip_range=(1, 99))
         image = norm(image)
 
+    if image.dtype == str:
+        TardisError(
+            "130",
+            "tardis_em/utils/load_data.py",
+            f"Indicated .mrc {image} file does not exist...",
+        )
     return image, px
