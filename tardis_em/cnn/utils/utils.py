@@ -73,29 +73,100 @@ def linear_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray
         no.ndarray: Up or Down scale 3D array.
     """
     if img.ndim == 3:
-        img = torch.from_numpy(img[None, None, :]).to("cpu").type(torch.float)
-        img = (
-            F.interpolate(img, size=scale, mode="trilinear")
-            .cpu()
-            .detach()
-            .numpy()[0, 0, :]
-            .astype(dtype)
+        current_depth, current_height, current_width = (
+            img.shape[0],
+            img.shape[1],
+            img.shape[2],
         )
+        final_depth, final_height, final_width = scale
+
+        img = torch.from_numpy(img[None, None, :]).to("cpu").type(torch.float)
+
+        # Calculate the number of steps required to reach the final scale by halving/doubling
+        # Use logarithm base 2 since scaling is done by 2x at each step
+        height_steps = int(abs(torch.log2(torch.tensor(final_height / current_height))))
+        width_steps = int(abs(torch.log2(torch.tensor(final_width / current_width))))
+        depth_steps = int(abs(torch.log2(torch.tensor(final_depth / current_depth))))
+
+        # Perform scaling in steps
+        for _ in range(max(height_steps, width_steps, depth_steps)):
+            # Calculate intermediate scale
+            new_height = int(
+                current_height * (2 if current_height < final_height else 0.5)
+            )
+            new_width = int(current_width * (2 if current_width < final_width else 0.5))
+            new_depth = int(current_depth * (2 if current_depth < final_depth else 0.5))
+
+            # Stop if the desired scale is reached or exceeded
+            if (
+                new_height >= final_height
+                and new_width >= final_width
+                and new_depth >= final_depth
+            ):
+                break
+
+            # Resize image
+            img = F.interpolate(
+                img,
+                size=(new_height, new_width, new_depth),
+                mode="trilinear",
+                align_corners=False,
+            )
+
+            # Update current dimensions
+            current_depth, current_height, current_width = (
+                new_depth,
+                new_height,
+                new_width,
+            )
+
+            # Stop if the desired scale is reached or exceeded
+            if (
+                current_height >= final_height
+                and current_width >= final_width
+                and current_depth >= final_depth
+            ):
+                break
+
+        # Final resize to match the exact requested dimensions
+        img = F.interpolate(img, size=scale, mode="trilinear", align_corners=False)
     else:
+        current_height, current_width = img.shape[0], img.shape[1]
+        final_height, final_width = scale
+
         img = torch.from_numpy(img[None, None, :]).to("cpu").type(torch.float)
-        img = (
-            F.interpolate(img, size=scale, mode="bilinear")
-            .cpu()
-            .detach()
-            .numpy()[0, 0, :]
-            .astype(dtype)
-        )
-    return img
+
+        # Calculate the number of steps required to reach the final scale by halving/doubling
+        # Use logarithm base 2 since scaling is done by 2x at each step
+        height_steps = int(abs(torch.log2(torch.tensor(final_height / current_height))))
+        width_steps = int(abs(torch.log2(torch.tensor(final_width / current_width))))
+
+        # Perform scaling in steps
+        for _ in range(max(height_steps, width_steps)):
+            # Calculate intermediate scale
+            new_height = int(
+                current_height * (2 if current_height < final_height else 0.5)
+            )
+            new_width = int(current_width * (2 if current_width < final_width else 0.5))
+
+            # Stop if the desired scale is reached or exceeded
+            if new_height >= final_height and new_width >= final_width:
+                break
+
+            # Resize image
+            img = F.interpolate(
+                img, size=(new_height, new_width), mode="bilinear", align_corners=False
+            )
+            current_height, current_width = new_height, new_width
+
+        # Final resize to match the exact requested dimensions
+        img = F.interpolate(img, size=scale, mode="bilinear", align_corners=False)
+    return img.detach().numpy()[0, 0, :].astype(dtype)
 
 
 def area_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
     """
-    Saling of 3D array using area method from pytorch
+    Scaling of 3D array using area method from pytorch
 
     Args:
         img: 3D array.
@@ -105,37 +176,62 @@ def area_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
     Returns:
         no.ndarray: Up or Down scale 3D array.
     """
+    # Scale XY axis
+    current_height, current_width = img.shape[1], img.shape[2]
+    _, final_height, final_width = scale
 
-    size_Z = [scale[0], img.shape[1], img.shape[2]]
-    image_scale_Z = np.zeros(size_Z, dtype=dtype)
+    height_steps = int(abs(torch.log2(torch.tensor(final_height / current_height))))
+    width_steps = int(abs(torch.log2(torch.tensor(final_width / current_width))))
+
+    img_xy = np.zeros(scale, dtype=dtype)
+    for _ in range(max(height_steps, width_steps)):
+        # Calculate intermediate scale
+        new_height = int(current_height * (2 if current_height < final_height else 0.5))
+        new_width = int(current_width * (2 if current_width < final_width else 0.5))
+
+        if new_height >= final_height and new_width >= final_width:
+            break
+
+        for i in range(scale[0]):
+            df_img = torch.from_numpy(img[i, :]).to("cpu").type(torch.float)
+            img_xy[i, :] = (
+                F.interpolate(
+                    df_img[None, None, :], size=(new_height, new_width), mode="area"
+                )
+                .cpu()
+                .detach()
+                .numpy()[0, 0, :]
+                .astype(dtype)
+            )
+        current_height, current_width = new_height, new_width
+
+    size_Z = [scale[0], img_xy.shape[1], img_xy.shape[2]]
+    img = np.zeros(size_Z, dtype=dtype)
 
     # Scale Z axis
-    for i in range(img.shape[2]):
-        df_img = torch.from_numpy(img[:, :, i]).to("cpu").type(torch.float)
+    current_depth = img.shape[0]
+    final_depth = scale[0]
 
-        image_scale_Z[:, :, i] = (
-            F.interpolate(
-                df_img[None, None, :], size=[int(s) for s in size_Z[:2]], mode="area"
-            )
-            .cpu()
-            .detach()
-            .numpy()[0, 0, :]
-            .astype(dtype)
-        )
+    depth_steps = int(abs(torch.log2(torch.tensor(final_depth / current_depth))))
+    for _ in range(depth_steps):
+        # Calculate intermediate scale
+        new_depth = int(current_depth * (2 if current_depth < final_depth else 0.5))
 
-    # Scale XY axis
-    img = np.zeros(scale, dtype=dtype)
-    for i in range(scale[0]):
-        df_img = torch.from_numpy(image_scale_Z[i, :]).to("cpu").type(torch.float)
-        img[i, :] = (
-            F.interpolate(
-                df_img[None, None, :], size=[int(s) for s in scale[1:]], mode="area"
+        if new_depth >= final_depth:
+            break
+
+        for i in range(img_xy.shape[2]):
+            df_img = torch.from_numpy(img_xy[:, :, i]).to("cpu").type(torch.float)
+
+            img[:, :, i] = (
+                F.interpolate(
+                    df_img[None, None, :], size=(new_depth, final_height), mode="area"
+                )
+                .cpu()
+                .detach()
+                .numpy()[0, 0, :]
+                .astype(dtype)
             )
-            .cpu()
-            .detach()
-            .numpy()[0, 0, :]
-            .astype(dtype)
-        )
 
     return img
 

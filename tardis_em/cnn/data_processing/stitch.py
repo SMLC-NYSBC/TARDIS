@@ -257,7 +257,7 @@ class StitchImages:
                         self.stride,
                     )
 
-                    if len(grid_y)> 0:
+                    if len(grid_y) > 0:
                         stitched_image[grid_y[:, 0], grid_y[:, 1], :] = (
                             stitched_image[grid_y[:, 0], grid_y[:, 1], :] / 2
                         )
@@ -311,9 +311,9 @@ def generate_grid(image_size: tuple, patch_size: list, grid_size: list, stride: 
 
     # Generate y and x coordinates
     y_coords = [
-            np.arange((ny * g - stride * g), ny * g - (stride * (g - 1)))
-            for g in range(1, gy)
-        ]
+        np.arange((ny * g - stride * g), ny * g - (stride * (g - 1)))
+        for g in range(1, gy)
+    ]
     if len(y_coords) > 0:
         y_coords = np.concatenate(
             [
@@ -323,9 +323,9 @@ def generate_grid(image_size: tuple, patch_size: list, grid_size: list, stride: 
         )
 
     x_coords = [
-            np.arange((nx * g - stride * g), nx * g - (stride * (g - 1)))
-            for g in range(1, gx)
-        ]
+        np.arange((nx * g - stride * g), nx * g - (stride * (g - 1)))
+        for g in range(1, gx)
+    ]
     if len(x_coords) > 0:
         x_coords = np.concatenate(
             [
