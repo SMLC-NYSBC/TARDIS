@@ -83,15 +83,20 @@ class EncoderBlock(nn.Module):
         )
 
         if self.attn_features:
-            self.attn_conv = conv_module(
-                in_ch=in_ch + out_ch,
-                out_ch=out_ch,
-                block_type="encoder",
-                kernel=conv_kernel,
-                padding=padding,
-                components=components,
-                num_group=1 if (in_ch + out_ch) % num_group != 0 else num_group,
-            )
+            if "3" in components:
+                self.attn_conv = nn.Conv3d(
+                    in_channels=in_ch + out_ch,
+                    out_channels=out_ch,
+                    kernel_size=conv_kernel,
+                    padding=padding,
+                )
+            else:
+                self.attn_conv = nn.Conv2d(
+                    in_channels=in_ch + out_ch,
+                    out_channels=out_ch,
+                    kernel_size=conv_kernel,
+                    padding=padding,
+                )
 
         """Initialise the blocks"""
         for m in self.children():
