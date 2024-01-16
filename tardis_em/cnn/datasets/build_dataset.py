@@ -26,7 +26,7 @@ from tardis_em.utils.normalization import MeanStdNormalize, RescaleNormalize
 def build_train_dataset(
     dataset_dir: str,
     circle_size: int,
-    resize_pixel_size: Union[str, None],
+    resize_pixel_size: Union[float, None],
     trim_xy: int,
     trim_z: int,
     keep_if=0.01,
@@ -97,10 +97,7 @@ def build_train_dataset(
 
     """For each image find matching mask, pre-process, trim and save"""
     img_counter = 0
-    if resize_pixel_size == "multi":
-        log_file = np.zeros((8 * (len(img_list) + 1), 8), dtype=object)
-    else:
-        log_file = np.zeros((len(img_list) + 1, 8), dtype=object)
+    log_file = np.zeros((len(img_list) + 1, 8), dtype=object)
     log_file[0, :] = np.array(
         (
             "ID",
