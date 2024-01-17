@@ -203,25 +203,28 @@ def linear_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray
         width_steps = int(abs(torch.log2(torch.tensor(final_width / current_width))))
 
         # Perform scaling in steps
-        for _ in range(max(height_steps, width_steps)):
-            # Calculate intermediate scale
-            new_height = int(
-                current_height * (2 if current_height < final_height else 0.5)
-            )
-            new_width = int(current_width * (2 if current_width < final_width else 0.5))
+        if max(height_steps, width_steps) > 0:
+            for _ in range(max(height_steps, width_steps)):
+                # Calculate intermediate scale
+                new_height = int(
+                    current_height * (2 if current_height < final_height else 0.5)
+                )
+                new_width = int(current_width * (2 if current_width < final_width else 0.5))
 
-            # Stop if the desired scale is reached or exceeded
-            if new_height >= final_height and new_width >= final_width:
-                break
+                # Stop if the desired scale is reached or exceeded
+                if new_height >= final_height and new_width >= final_width:
+                    break
 
-            # Resize image
-            img = F.interpolate(
-                img, size=(new_height, new_width), mode="bilinear", align_corners=False
-            )
-            current_height, current_width = new_height, new_width
+                # Resize image
+                img = F.interpolate(
+                    img, size=(new_height, new_width), mode="bilinear", align_corners=False
+                )
+                current_height, current_width = new_height, new_width
 
-        # Final resize to match the exact requested dimensions
-        if new_height != final_height and new_width != final_width:
+            # Final resize to match the exact requested dimensions
+            if new_height != final_height and new_width != final_width:
+                img = F.interpolate(img, size=scale, mode="bilinear", align_corners=False)
+        else:
             img = F.interpolate(img, size=scale, mode="bilinear", align_corners=False)
     return img.detach().numpy()[0, 0, :].astype(dtype)
 
