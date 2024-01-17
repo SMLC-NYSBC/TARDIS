@@ -13,6 +13,7 @@ from typing import Optional, Tuple, Union
 import numpy as np
 import torch
 import torch.nn.functional as F
+from PIL import Image
 
 
 def scale_image(
@@ -43,14 +44,20 @@ def scale_image(
 
     if image is not None:
         if not np.all(scale == image.shape):
-            if image.ndim == 3 and image.shape[2] != 3:  # 3D with Gray
-                image = area_scaling(img=image, scale=scale, dtype=type_i)
+            if scale[0] > image.shape[0]:
+                if image.ndim == 3 and image.shape[2] != 3:  # 3D with Gray
+                    image = area_scaling(img=image, scale=scale, dtype=type_i)
+                else:
+                    image = linear_scaling(img=image, scale=scale, dtype=type_i)
             else:
-                image = linear_scaling(img=image, scale=scale, dtype=type_i)
+                image = pil_LANCZOS(img=image, scale=scale, dtype=type_i)
 
     if mask is not None:
         if not np.all(scale == mask.shape):
-            mask = linear_scaling(img=mask, scale=scale, dtype=type_m)
+            if scale[0] > mask.shape[0]:
+                mask = linear_scaling(img=mask, scale=scale, dtype=type_m)
+            else:
+                mask = pil_LANCZOS(img=mask, scale=scale, dtype=type_m)
 
     if image is not None and mask is not None:
         return image, mask, dim
@@ -58,6 +65,53 @@ def scale_image(
         return mask, dim
     else:
         return image, dim
+
+
+def pil_LANCZOS(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
+    """
+    Scale a 3D image by first down-sampling in the XY direction and then in the Z direction.
+
+    Args:
+        img: image array.
+        scale: Scale array size.
+        dtype: Output dtype for scale array.
+
+    Returns:
+        no.ndarray: Up or Down scale 3D array.
+    """
+    img = img.astype(dtype)
+
+    if len(scale) == 3:
+        new_depth, new_height, new_width = scale
+        scaled = []
+
+        # Down-sample each slice in the XY direction
+        for i in range(img.shape[0]):
+            image = Image.fromarray(img[i, ...])
+            scaled_image = image.resize((new_width, new_height), Image.LANCZOS)
+            scaled.append(np.asarray(scaled_image, dtype=dtype))
+
+        # Convert list to 3D array
+        img = np.array(scaled, dtype=dtype)
+
+        # Down-sample each slice in the Z direction if 3D
+        if len(scale) == 3:
+            scaled = np.zeros(scale, dtype=dtype)
+
+            for i in range(img.shape[2]):
+                image = Image.fromarray(img[..., i])
+                scaled[:, :, i] = np.asarray(
+                    image.resize((new_height, new_depth), Image.LANCZOS), dtype=dtype
+                )
+            img = scaled.astype(dtype)
+    else:
+        new_height, new_width = scale
+        img = Image.fromarray(img)
+        img = np.asarray(
+            img.resize((new_width, new_height), Image.LANCZOS), dtype=dtype
+        )
+
+    return img
 
 
 def linear_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
@@ -129,7 +183,12 @@ def linear_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray
                 break
 
         # Final resize to match the exact requested dimensions
-        img = F.interpolate(img, size=scale, mode="trilinear", align_corners=False)
+        if (
+            current_height != final_height
+            and current_width != final_width
+            and current_depth != final_depth
+        ):
+            img = F.interpolate(img, size=scale, mode="trilinear", align_corners=False)
     else:
         current_height, current_width = img.shape[0], img.shape[1]
         final_height, final_width = scale
@@ -160,13 +219,14 @@ def linear_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray
             current_height, current_width = new_height, new_width
 
         # Final resize to match the exact requested dimensions
-        img = F.interpolate(img, size=scale, mode="bilinear", align_corners=False)
+        if new_height != final_height and new_width != final_width:
+            img = F.interpolate(img, size=scale, mode="bilinear", align_corners=False)
     return img.detach().numpy()[0, 0, :].astype(dtype)
 
 
 def area_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
     """
-    Scaling of 3D array using area method from pytorch
+    Saling of 3D array using area method from pytorch
 
     Args:
         img: 3D array.
@@ -176,62 +236,37 @@ def area_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
     Returns:
         no.ndarray: Up or Down scale 3D array.
     """
-    # Scale XY axis
-    current_height, current_width = img.shape[1], img.shape[2]
-    _, final_height, final_width = scale
 
-    height_steps = int(abs(torch.log2(torch.tensor(final_height / current_height))))
-    width_steps = int(abs(torch.log2(torch.tensor(final_width / current_width))))
-
-    img_xy = np.zeros(scale, dtype=dtype)
-    for _ in range(max(height_steps, width_steps)):
-        # Calculate intermediate scale
-        new_height = int(current_height * (2 if current_height < final_height else 0.5))
-        new_width = int(current_width * (2 if current_width < final_width else 0.5))
-
-        if new_height >= final_height and new_width >= final_width:
-            break
-
-        for i in range(scale[0]):
-            df_img = torch.from_numpy(img[i, :]).to("cpu").type(torch.float)
-            img_xy[i, :] = (
-                F.interpolate(
-                    df_img[None, None, :], size=(new_height, new_width), mode="area"
-                )
-                .cpu()
-                .detach()
-                .numpy()[0, 0, :]
-                .astype(dtype)
-            )
-        current_height, current_width = new_height, new_width
-
-    size_Z = [scale[0], img_xy.shape[1], img_xy.shape[2]]
-    img = np.zeros(size_Z, dtype=dtype)
+    size_Z = [scale[0], img.shape[1], img.shape[2]]
+    image_scale_Z = np.zeros(size_Z, dtype=dtype)
 
     # Scale Z axis
-    current_depth = img.shape[0]
-    final_depth = scale[0]
+    for i in range(img.shape[2]):
+        df_img = torch.from_numpy(img[:, :, i]).to("cpu").type(torch.float)
 
-    depth_steps = int(abs(torch.log2(torch.tensor(final_depth / current_depth))))
-    for _ in range(depth_steps):
-        # Calculate intermediate scale
-        new_depth = int(current_depth * (2 if current_depth < final_depth else 0.5))
-
-        if new_depth >= final_depth:
-            break
-
-        for i in range(img_xy.shape[2]):
-            df_img = torch.from_numpy(img_xy[:, :, i]).to("cpu").type(torch.float)
-
-            img[:, :, i] = (
-                F.interpolate(
-                    df_img[None, None, :], size=(new_depth, final_height), mode="area"
-                )
-                .cpu()
-                .detach()
-                .numpy()[0, 0, :]
-                .astype(dtype)
+        image_scale_Z[:, :, i] = (
+            F.interpolate(
+                df_img[None, None, :], size=[int(s) for s in size_Z[:2]], mode="area"
             )
+            .cpu()
+            .detach()
+            .numpy()[0, 0, :]
+            .astype(dtype)
+        )
+
+    # Scale XY axis
+    img = np.zeros(scale, dtype=dtype)
+    for i in range(scale[0]):
+        df_img = torch.from_numpy(image_scale_Z[i, :]).to("cpu").type(torch.float)
+        img[i, :] = (
+            F.interpolate(
+                df_img[None, None, :], size=[int(s) for s in scale[1:]], mode="area"
+            )
+            .cpu()
+            .detach()
+            .numpy()[0, 0, :]
+            .astype(dtype)
+        )
 
     return img
 
