@@ -15,7 +15,6 @@ import torch.nn as nn
 
 from tardis_em.cnn.model.convolution import (
     DoubleConvolution,
-    RecurrentDoubleConvolution,
     SingleConvolution,
 )
 from tardis_em.cnn.model.init_weights import init_weights
@@ -61,7 +60,7 @@ class DecoderBlockCNN(nn.Module):
             self.upscale = nn.Upsample(size=size, mode="bilinear", align_corners=False)
 
         self.deconv_module = DoubleConvolution(
-            in_ch=in_ch + out_ch,
+            in_ch=in_ch,
             out_ch=out_ch,
             block_type="decoder",
             kernel=conv_kernel,
@@ -96,8 +95,8 @@ class DecoderBlockCNN(nn.Module):
         Returns:
             torch.Tensor: Image tensor after convolution.
         """
-        x = torch.cat((encoder_features, self.upscale(x)), dim=1)
-        x = self.deconv_module(x)
+        x = self.upscale(x)
+        x = self.deconv_module(x) + encoder_features
 
         if self.dropout is not None:
             x = self.dropout_layer(x)
@@ -248,7 +247,7 @@ class DecoderBlockUnet3Plus(nn.Module):
             self.upscale = nn.Upsample(size=size, mode="bilinear", align_corners=False)
 
         self.deconv = DoubleConvolution(
-            in_ch=in_ch + sum(x for x in encoder_feature_ch if x is not None),
+            in_ch=in_ch,
             out_ch=out_ch,
             block_type="decoder",
             kernel=conv_kernel,
@@ -263,6 +262,8 @@ class DecoderBlockUnet3Plus(nn.Module):
         pool_kernels = pool_kernels[:num_layer]
 
         self.encoder_max_pool = nn.ModuleList([])
+        self.encoder_conv = nn.ModuleList([])
+        self.sum_deconv_en = nn.ModuleList([])
         for i, en_in_channel in enumerate(encoder_feature_ch):
             pool_kernel = pool_kernels[i]
 
@@ -278,6 +279,35 @@ class DecoderBlockUnet3Plus(nn.Module):
                 max_pool = None
 
             self.encoder_max_pool.append(max_pool)
+
+            if "3" in components:
+                conv = nn.Conv3d(
+                    in_channels=en_in_channel,
+                    out_channels=out_ch,
+                    kernel_size=conv_kernel,
+                    padding=padding,
+                )
+                sum_conv = nn.Conv3d(
+                    in_channels=out_ch,
+                    out_channels=out_ch,
+                    kernel_size=conv_kernel,
+                    padding=padding,
+                )
+            else:
+                conv = nn.Conv2d(
+                    in_channels=en_in_channel,
+                    out_channels=out_ch,
+                    kernel_size=conv_kernel,
+                    padding=padding,
+                )
+                sum_conv = nn.Conv2d(
+                    in_channels=out_ch,
+                    out_channels=out_ch,
+                    kernel_size=conv_kernel,
+                    padding=padding,
+                )
+            self.encoder_conv.append(conv)
+            self.sum_deconv_en.append(sum_conv)
 
         """Optional Dropout"""
         if dropout is not None:
@@ -307,15 +337,13 @@ class DecoderBlockUnet3Plus(nn.Module):
         """
 
         """Main Block"""
-        x = self.upscale(x)
+        x = self.deconv(self.upscale(x))
 
         """Skip-Connections Encoder"""
         for i, encoder in enumerate(encoder_features):
             if self.encoder_max_pool[i] is not None:
                 encoder = self.encoder_max_pool[i](encoder)
-            x = torch.cat((x, encoder), dim=1)
-
-        x = self.deconv(x)
+            x = self.sum_deconv_en[i](x + self.encoder_conv[i](encoder))
 
         # Additional Dropout
         if self.dropout is not None:

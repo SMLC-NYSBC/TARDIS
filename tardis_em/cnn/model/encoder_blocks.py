@@ -85,14 +85,14 @@ class EncoderBlock(nn.Module):
         if self.attn_features:
             if "3" in components:
                 self.attn_conv = nn.Conv3d(
-                    in_channels=in_ch + out_ch,
+                    in_channels=in_ch,
                     out_channels=out_ch,
                     kernel_size=conv_kernel,
                     padding=padding,
                 )
             else:
                 self.attn_conv = nn.Conv2d(
-                    in_channels=in_ch + out_ch,
+                    in_channels=in_ch,
                     out_channels=out_ch,
                     kernel_size=conv_kernel,
                     padding=padding,
@@ -112,27 +112,18 @@ class EncoderBlock(nn.Module):
         Returns:
             torch.Tensor: Image after convolution.
         """
+        if self.maxpool is not None:
+            x = self.maxpool(x)
+
         if self.attn_features:
-            if self.maxpool is not None:
-                x = self.maxpool(x)
-
-            x_attn = self.conv_module(x)
-            x_attn = self.attn_conv(torch.cat((x, x_attn), dim=1))
-
-            if self.dropout is not None:
-                x_attn = self.dropout_layer(x_attn)
-
-            return x_attn
+            x = self.attn_conv(x) + self.conv_module(x)
         else:
-            if self.maxpool is not None:
-                x = self.maxpool(x)
-
             x = self.conv_module(x)
 
-            if self.dropout is not None:
-                x = self.dropout_layer(x)
+        if self.dropout is not None:
+            x = self.dropout_layer(x)
 
-            return x
+        return x
 
 
 def build_encoder(

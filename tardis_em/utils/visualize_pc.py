@@ -10,8 +10,6 @@
 
 from typing import Optional, Tuple
 
-import numpy as np
-
 try:
     import open3d as o3d
 except ModuleNotFoundError:
@@ -37,10 +35,12 @@ def show_image_list(
     list_images,
     list_titles=None,
     list_cmaps=None,
+    list_mask_cmaps=None,
     grid=True,
     num_cols=2,
     figsize=(20, 10),
     title_fontsize=30,
+    list_masks=None,
 ):
     """
     Shows a grid of images, where each image is a Numpy array. The images can be either
@@ -49,14 +49,15 @@ def show_image_list(
     Args:
         list_images (list): List of the images to be displayed.
         list_titles (list or None): Optional list of titles to be shown for each image.
-        list_cmaps (list or None): Optional list of cmap values for each image.
+        list_cmaps (list, str or None): Optional list of cmap values for each image.
             If None, then cmap will be automatically inferred.
+        list_mask_cmaps (list, str or None):
         grid (boolean): If True, show a grid over each image
         num_cols (int): Number of columns to show.
         figsize (tuple): Value to be passed to pyplot.figure()
-        title_fontsize (int): Value to be passed to set_title().
+        title_fontsize (int): Value to be passed to set_title()
+        list_masks(list, None):
     """
-
     assert isinstance(list_images, list)
     assert len(list_images) > 0
     assert isinstance(list_images[0], np.ndarray)
@@ -69,11 +70,15 @@ def show_image_list(
         )
 
     if list_cmaps is not None:
-        assert isinstance(list_cmaps, list)
-        assert len(list_images) == len(list_cmaps), "%d imgs != %d cmaps" % (
-            len(list_images),
-            len(list_cmaps),
-        )
+        assert isinstance(list_cmaps, (list, str))
+        if not isinstance(list_cmaps, str):
+            assert len(list_images) == len(list_cmaps), "%d imgs != %d cmaps" % (
+                len(list_images),
+                len(list_cmaps),
+            )
+
+    if list_masks is not None:
+        assert len(list_masks) == len(list_images)
 
     num_images = len(list_images)
     num_cols = min(num_images, num_cols)
@@ -90,14 +95,30 @@ def show_image_list(
 
     for i in range(num_images):
         img = list_images[i]
+        if list_masks is not None:
+            mask = list_masks[i]
 
-        cmap = (
-            list_cmaps[i]
-            if list_cmaps is not None
-            else (None if img_is_color(img) else "gray")
-        )
+        if isinstance(list_cmaps, str):
+            cmap = list_cmaps
+        else:
+            cmap = (
+                list_cmaps[i]
+                if list_cmaps is not None
+                else (None if img_is_color(img) else "gray")
+            )
+
+        if list_mask_cmaps is not None:
+            if isinstance(list_mask_cmaps, str):
+                cmap_mask = list_mask_cmaps
+            else:
+                cmap_mask = (
+                    list_mask_cmaps[i] if list_mask_cmaps is not None else "Reds"
+                )
 
         list_axes[i].imshow(img, cmap=cmap)
+        if list_masks is not None:
+            list_axes[i].imshow(mask, cmap=cmap_mask, alpha=0.5)
+
         if title_fontsize is not None:
             list_axes[i].set_title(
                 list_titles[i] if list_titles is not None else "Image %d" % i,

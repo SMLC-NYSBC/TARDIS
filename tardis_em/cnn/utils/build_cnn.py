@@ -163,6 +163,7 @@ class UNet(BasicCNN):
 
         """ Encoder """
         for i, encoder in enumerate(self.encoder):
+            print(x.shape)
             x = encoder(x)
 
             if (len(self.encoder) - 1) != i:
@@ -170,9 +171,11 @@ class UNet(BasicCNN):
 
         """ Decoder """
         for decoder, encoder_features in zip(self.decoder, encoder_features):
+            print(x.shape)
             x = decoder(encoder_features, x)
 
         """ Prediction """
+        print(x.shape)
         x = self.final_conv_layer(x)
 
         if self.prediction:
@@ -509,7 +512,9 @@ class FNet(nn.Module):
             )
 
             self.final_conv_layer = nn.Conv3d(
-                in_channels=conv_layer_scaler, out_channels=out_channels, kernel_size=1
+                in_channels=conv_layer_scaler * 2,
+                out_channels=out_channels,
+                kernel_size=1,
             )
         elif "2" in layer_components:
             self.unet_conv_layer = nn.Conv2d(
@@ -524,7 +529,9 @@ class FNet(nn.Module):
             )
 
             self.final_conv_layer = nn.Conv2d(
-                in_channels=conv_layer_scaler, out_channels=out_channels, kernel_size=1
+                in_channels=conv_layer_scaler * 2,
+                out_channels=out_channels,
+                kernel_size=1,
             )
 
         """ Prediction """
@@ -544,7 +551,6 @@ class FNet(nn.Module):
                 torch.Tensor: Probability mask of predicted image.
         """
         encoder_features = []
-
         """ Encoder """
         for i, encoder in enumerate(self.encoder):
             x = encoder(x)
@@ -568,7 +574,9 @@ class FNet(nn.Module):
 
         """ Final Layer/Prediction """
         x = self.final_conv_layer(
-            self.unet_conv_layer(x_dec) + self.unet3plus_conv_layer(x)
+            torch.cat(
+                (self.unet_conv_layer(x_dec), self.unet3plus_conv_layer(x)), dim=1
+            )
         )
 
         if self.prediction:
