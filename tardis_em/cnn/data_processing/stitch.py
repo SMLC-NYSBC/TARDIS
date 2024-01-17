@@ -248,9 +248,13 @@ class StitchImages:
                         self.stride,
                     )
                     if len(grid_y) > 0:
-                        stitched_image[grid_y[:,], :] = stitched_image[grid_y[:,], :] / 2
+                        stitched_image[grid_y[:,], :] = (
+                            stitched_image[grid_y[:,], :] / 2
+                        )
                     if len(grid_x) > 0:
-                        stitched_image[:, grid_x[:,]] = stitched_image[:, grid_x[:,]] / 2
+                        stitched_image[:, grid_x[:,]] = (
+                            stitched_image[:, grid_x[:,]] / 2
+                        )
                 else:
                     grid_y, grid_x, grid_z = generate_grid(
                         stitched_image.shape,

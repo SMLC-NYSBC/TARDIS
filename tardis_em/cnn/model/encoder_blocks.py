@@ -83,20 +83,15 @@ class EncoderBlock(nn.Module):
         )
 
         if self.attn_features:
-            if "3" in components:
-                self.attn_conv = nn.Conv3d(
-                    in_channels=in_ch + out_ch,
-                    out_channels=out_ch,
-                    kernel_size=conv_kernel,
-                    padding=padding,
-                )
-            else:
-                self.attn_conv = nn.Conv2d(
-                    in_channels=in_ch + out_ch,
-                    out_channels=out_ch,
-                    kernel_size=conv_kernel,
-                    padding=padding,
-                )
+            self.attn_conv = conv_module(
+                in_ch=in_ch + out_ch,
+                out_ch=out_ch,
+                block_type="encoder",
+                kernel=conv_kernel,
+                padding=padding,
+                components=components,
+                num_group=1 if (in_ch + out_ch) % num_group != 0 else num_group,
+            )
 
         """Initialise the blocks"""
         for m in self.children():
@@ -112,27 +107,18 @@ class EncoderBlock(nn.Module):
         Returns:
             torch.Tensor: Image after convolution.
         """
-        if self.attn_features:
-            if self.maxpool is not None:
-                x = self.maxpool(x)
+        if self.maxpool is not None:
+            x = self.maxpool(x)
 
-            x_attn = self.conv_module(x)
+        x_attn = self.conv_module(x)
+
+        if self.attn_features:
             x_attn = self.attn_conv(torch.cat((x, x_attn), dim=1))
 
-            if self.dropout is not None:
-                x_attn = self.dropout_layer(x_attn)
+        if self.dropout is not None:
+            x_attn = self.dropout_layer(x_attn)
 
-            return x_attn
-        else:
-            if self.maxpool is not None:
-                x = self.maxpool(x)
-
-            x = self.conv_module(x)
-
-            if self.dropout is not None:
-                x = self.dropout_layer(x)
-
-            return x
+        return x_attn
 
 
 def build_encoder(
