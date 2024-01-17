@@ -20,7 +20,6 @@ from tardis_em.cnn.data_processing.trim import trim_with_stride
 from tardis_em.utils.errors import TardisError
 from tardis_em.utils.load_data import ImportDataFromAmira, load_image
 from tardis_em.utils.logo import print_progress_bar, TardisLogo
-from tardis_em.utils.normalization import MeanStdNormalize, RescaleNormalize
 
 
 def build_train_dataset(
@@ -65,10 +64,6 @@ def build_train_dataset(
     # Activate Tardis progress bar
     tardis_progress = TardisLogo()
     tardis_progress(title="Data pre-processing for CNN")
-
-    # Normalize histogram
-    normalize = RescaleNormalize(clip_range=(1, 99))
-    meanstd = MeanStdNormalize()
 
     # Builder for point cloud
     b_pc = BuildPointCloud()
@@ -307,17 +302,6 @@ def build_train_dataset(
         )
 
         """Normalize image histogram"""
-        # Rescale image intensity
-        image = normalize(meanstd(image)).astype(np.float32)
-        if (
-            not image.min() >= -1 or not image.max() <= 1
-        ):  # Image not between in -1 and 1
-            if image.min() >= 0 and image.max() <= 1:
-                image = (image - 0.5) * 2
-            elif image.min() >= 0 and image.max() <= 255:
-                image = image / 255  # move to 0 - 1
-                image = (image - 0.5) * 2
-
         log_file[id_, 5] = str(image.min())
         log_file[id_, 6] = str(image.max())
         np.savetxt(

@@ -81,8 +81,6 @@ def pil_LANCZOS(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
     Returns:
         no.ndarray: Up or Down scale 3D array.
     """
-    img = img.astype(dtype)
-
     if len(scale) == 3:
         new_depth, new_height, new_width = scale
         scaled = []
@@ -113,7 +111,7 @@ def pil_LANCZOS(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
             img.resize((new_width, new_height), Image.LANCZOS), dtype=dtype
         )
 
-    return img
+    return img.astype(dtype)
 
 
 def linear_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
@@ -209,7 +207,9 @@ def linear_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray
                 new_height = int(
                     current_height * (2 if current_height < final_height else 0.5)
                 )
-                new_width = int(current_width * (2 if current_width < final_width else 0.5))
+                new_width = int(
+                    current_width * (2 if current_width < final_width else 0.5)
+                )
 
                 # Stop if the desired scale is reached or exceeded
                 if new_height >= final_height and new_width >= final_width:
@@ -217,13 +217,18 @@ def linear_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray
 
                 # Resize image
                 img = F.interpolate(
-                    img, size=(new_height, new_width), mode="bilinear", align_corners=False
+                    img,
+                    size=(new_height, new_width),
+                    mode="bilinear",
+                    align_corners=False,
                 )
                 current_height, current_width = new_height, new_width
 
             # Final resize to match the exact requested dimensions
             if new_height != final_height and new_width != final_width:
-                img = F.interpolate(img, size=scale, mode="bilinear", align_corners=False)
+                img = F.interpolate(
+                    img, size=scale, mode="bilinear", align_corners=False
+                )
         else:
             img = F.interpolate(img, size=scale, mode="bilinear", align_corners=False)
     return img.detach().numpy()[0, 0, :].astype(dtype)

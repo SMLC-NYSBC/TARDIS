@@ -19,6 +19,7 @@ from tifffile import tifffile as tif
 from tardis_em.cnn.utils.utils import scale_image
 from tardis_em.utils.export_data import to_mrc
 from tardis_em.utils.errors import TardisError
+from tardis_em.utils.normalization import MeanStdNormalize, RescaleNormalize
 
 
 def trim_with_stride(
@@ -55,6 +56,10 @@ def trim_with_stride(
         log (bool):
         pixel_size (None, float):
     """
+    # Normalize histogram
+    normalize = RescaleNormalize(clip_range=(1, 99))
+    meanstd = MeanStdNormalize()
+
     img_dtype = np.float32
 
     if not isdir(join(output, "imgs")):
@@ -76,6 +81,15 @@ def trim_with_stride(
     else:
         image, dim = scale_image(image=image, scale=scale)
 
+    # Rescale image intensity
+    image = normalize(meanstd(image)).astype(np.float32)
+    if not image.min() >= -1 or not image.max() <= 1:  # Image not between in -1 and 1
+        if image.min() >= 0 and image.max() <= 1:
+            image = (image - 0.5) * 2
+        elif image.min() >= 0 and image.max() <= 255:
+            image = image / 255  # move to 0 - 1
+            image = (image - 0.5) * 2
+
     if img_dtype != image.dtype:
         TardisError(
             "111",
@@ -83,7 +97,6 @@ def trim_with_stride(
             f"Image {img_dtype} has different dtype after interpolation {image.dtype}",
         )
 
-    min_px_count = 0
     nz, ny, nx, nc = 0, 0, 0, None
     if image.ndim == 4 and dim == 3:  # 3D RGB
         nz, ny, nx, nc = image.shape
