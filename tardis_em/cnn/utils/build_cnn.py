@@ -553,14 +553,13 @@ class FNet(nn.Module):
                 encoder_features.insert(0, x)
 
         """ Decoders """
-        x_3plus = x
         for i, (decoder, decoder_2) in enumerate(
             zip(self.decoder_unet, self.decoder_3plus)
         ):
             # Add Decoder layer
-            x = decoder(encoder_features[0], x)
-            x_3plus = decoder_2(
-                x=x_3plus,
+            x_dec = decoder(encoder_features[0], x if i == 0 else x_dec)
+            x = decoder_2(
+                x=x,
                 encoder_features=encoder_features,
             )
 
@@ -569,7 +568,7 @@ class FNet(nn.Module):
 
         """ Final Layer/Prediction """
         x = self.final_conv_layer(
-            self.unet_conv_layer(x) + self.unet3plus_conv_layer(x_3plus)
+            self.unet_conv_layer(x_dec) + self.unet3plus_conv_layer(x)
         )
 
         if self.prediction:

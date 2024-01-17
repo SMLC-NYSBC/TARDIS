@@ -61,7 +61,7 @@ class DecoderBlockCNN(nn.Module):
             self.upscale = nn.Upsample(size=size, mode="bilinear", align_corners=False)
 
         self.deconv_module = DoubleConvolution(
-            in_ch=in_ch,
+            in_ch=in_ch + out_ch,
             out_ch=out_ch,
             block_type="decoder",
             kernel=conv_kernel,
@@ -96,8 +96,8 @@ class DecoderBlockCNN(nn.Module):
         Returns:
             torch.Tensor: Image tensor after convolution.
         """
-
-        x = encoder_features + self.deconv_module(self.upscale(x))
+        x = torch.cat((encoder_features, self.upscale(x)), dim=1)
+        x = self.deconv_module(x)
 
         if self.dropout is not None:
             x = self.dropout_layer(x)
@@ -153,8 +153,8 @@ class DecoderBlockRCNN(nn.Module):
             num_group=num_group,
         )
 
-        self.deconv_res_module = RecurrentDoubleConvolution(
-            in_ch=out_ch,
+        self.deconv_res_module = SingleConvolution(
+            in_ch=in_ch + out_ch,
             out_ch=out_ch,
             block_type="decoder",
             kernel=conv_kernel,
@@ -192,7 +192,8 @@ class DecoderBlockRCNN(nn.Module):
         x = self.upscale(x)
         x = self.deconv_module(x)
 
-        x = encoder_features + x
+        # x = encoder_features + x
+        x = torch.cat((encoder_features, x))
         x = self.deconv_res_module(x)
 
         if self.dropout is not None:
@@ -232,8 +233,8 @@ class DecoderBlockUnet3Plus(nn.Module):
         num_group: int,
         num_layer: int,
         encoder_feature_ch: list,
-        attn_features=False,
         dropout: Optional[float] = None,
+        attn_features=False,
     ):
         super(DecoderBlockUnet3Plus, self).__init__()
 
@@ -247,7 +248,7 @@ class DecoderBlockUnet3Plus(nn.Module):
             self.upscale = nn.Upsample(size=size, mode="bilinear", align_corners=False)
 
         self.deconv = DoubleConvolution(
-            in_ch=in_ch,
+            in_ch=in_ch + sum(x for x in encoder_feature_ch if x is not None),
             out_ch=out_ch,
             block_type="decoder",
             kernel=conv_kernel,
@@ -258,12 +259,10 @@ class DecoderBlockUnet3Plus(nn.Module):
 
         """Skip-Connection Encoders"""
         num_layer = num_layer - 1
-        pool_kernels = [None, 2, 4, 8, 16, 32]
+        pool_kernels = [None, 2, 4, 8, 16, 32, 64, 128]
         pool_kernels = pool_kernels[:num_layer]
 
         self.encoder_max_pool = nn.ModuleList([])
-        self.encoder_feature_conv = nn.ModuleList([])
-
         for i, en_in_channel in enumerate(encoder_feature_ch):
             pool_kernel = pool_kernels[i]
 
@@ -278,28 +277,7 @@ class DecoderBlockUnet3Plus(nn.Module):
             else:
                 max_pool = None
 
-            conv = DoubleConvolution(
-                in_ch=en_in_channel,
-                out_ch=out_ch,
-                block_type="decoder",
-                kernel=conv_kernel,
-                padding=padding,
-                components=components,
-                num_group=num_group,
-            )
             self.encoder_max_pool.append(max_pool)
-            self.encoder_feature_conv.append(conv)
-
-        if attn_features is not None:
-            self.attn_conv = DoubleConvolution(
-                in_ch=out_ch + in_ch,
-                out_ch=out_ch,
-                block_type="decoder",
-                kernel=conv_kernel,
-                padding=padding,
-                components=components,
-                num_group=num_group,
-            )
 
         """Optional Dropout"""
         if dropout is not None:
@@ -329,24 +307,15 @@ class DecoderBlockUnet3Plus(nn.Module):
         """
 
         """Main Block"""
-        if self.attn_features:
-            x_attn = self.upscale(x)
-            x = self.deconv(x_attn)
-        else:
-            x = self.deconv(self.upscale(x))
+        x = self.upscale(x)
 
         """Skip-Connections Encoder"""
         for i, encoder in enumerate(encoder_features):
             if self.encoder_max_pool[i] is not None:
-                encoder = self.encoder_feature_conv[i](
-                    self.encoder_max_pool[i](encoder)
-                )
-            else:
-                encoder = self.encoder_feature_conv[i](encoder)
-            x = x + encoder
+                encoder = self.encoder_max_pool[i](encoder)
+            x = torch.cat((x, encoder), dim=1)
 
-        if self.attn_features:
-            x = self.attn_conv(torch.cat((x, x_attn), dim=1))
+        x = self.deconv(x)
 
         # Additional Dropout
         if self.dropout is not None:
@@ -437,7 +406,6 @@ def build_decoder(
     elif deconv_module == "unet3plus":
         # Unet3Plus decoder
         idx_en = 1
-        idx_de = 1
 
         for i in range(len(feature_map) - 1):
             # Main Module features
@@ -459,8 +427,8 @@ def build_decoder(
                 num_group=num_group,
                 num_layer=conv_layers,
                 encoder_feature_ch=encoder_feature_ch,
-                attn_features=attn_features,
                 dropout=dropout,
+                attn_features=attn_features,
             )
             decoders.append(decoder)
 
