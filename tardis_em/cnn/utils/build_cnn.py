@@ -163,7 +163,6 @@ class UNet(BasicCNN):
 
         """ Encoder """
         for i, encoder in enumerate(self.encoder):
-            print(x.shape)
             x = encoder(x)
 
             if (len(self.encoder) - 1) != i:
@@ -171,11 +170,9 @@ class UNet(BasicCNN):
 
         """ Decoder """
         for decoder, encoder_features in zip(self.decoder, encoder_features):
-            print(x.shape)
             x = decoder(encoder_features, x)
 
         """ Prediction """
-        print(x.shape)
         x = self.final_conv_layer(x)
 
         if self.prediction:
