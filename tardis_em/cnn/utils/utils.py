@@ -50,14 +50,16 @@ def scale_image(
                 else:
                     image = linear_scaling(img=image, scale=scale, dtype=type_i)
             else:
-                image = pil_LANCZOS(img=image, scale=scale, dtype=type_i)
+                image = pil_LANCZOS(
+                    img=image.astype(np.float32), scale=scale, dtype=type_i
+                )
 
     if mask is not None:
         if not np.all(scale == mask.shape):
             if scale[0] > mask.shape[0]:
                 mask = linear_scaling(img=mask, scale=scale, dtype=type_m)
             else:
-                mask = pil_LANCZOS(img=mask, scale=scale, dtype=type_m)
+                mask = pil_LANCZOS(img=mask.astype(np.int16), scale=scale, dtype=type_m)
 
     if image is not None and mask is not None:
         return image, mask, dim
