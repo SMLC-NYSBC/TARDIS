@@ -247,7 +247,7 @@ class DecoderBlockUnet3Plus(nn.Module):
             self.upscale = nn.Upsample(size=size, mode="bilinear", align_corners=False)
 
         self.deconv = DoubleConvolution(
-            in_ch=in_ch,
+            in_ch=in_ch + out_ch if self.attn_features else in_ch,
             out_ch=out_ch,
             block_type="decoder",
             kernel=conv_kernel,
@@ -324,25 +324,32 @@ class DecoderBlockUnet3Plus(nn.Module):
 
             init_weights(m)
 
-    def forward(self, x: torch.Tensor, encoder_features: list) -> torch.Tensor:
+    def forward(
+        self, x: torch.Tensor, encoder_features: list, decoder_features=None
+    ) -> torch.Tensor:
         """
         Forward CNN decoder block for Unet3Plus
 
         Args:
             x (torch.Tensor): Image tensor before convolution.
             encoder_features (list): Residual connection from the encoder.
+            decoder_features (torch.Tensor, None):
 
         Returns:
             torch.Tensor: Image tensor after convolution.
         """
 
         """Main Block"""
-        x = self.deconv(self.upscale(x))
+        if decoder_features is not None:
+            x = self.deconv(torch.cat((self.upscale(x), decoder_features), dim=1))
+        else:
+            x = self.deconv(self.upscale(x))
 
         """Skip-Connections Encoder"""
         for i, encoder in enumerate(encoder_features):
             if self.encoder_max_pool[i] is not None:
                 encoder = self.encoder_max_pool[i](encoder)
+
             x = self.sum_deconv_en[i](x + self.encoder_conv[i](encoder))
 
         # Additional Dropout

@@ -114,6 +114,8 @@ def show_image_list(
                 cmap_mask = (
                     list_mask_cmaps[i] if list_mask_cmaps is not None else "Reds"
                 )
+        else:
+            cmap_mask = "Reds"
 
         list_axes[i].imshow(img, cmap=cmap)
         if list_masks is not None:

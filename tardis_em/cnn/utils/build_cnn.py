@@ -564,6 +564,7 @@ class FNet(nn.Module):
             x = decoder_2(
                 x=x,
                 encoder_features=encoder_features,
+                decoder_features=x_dec if self.attn_features else None,
             )
 
             # Remove layer at each iter
