@@ -524,7 +524,7 @@ class FNet(nn.Module):
             )
 
             self.final_conv_layer = nn.Conv2d(
-                in_channels=conv_layer_scaler, out_channels=out_channels, kernel_size=1
+                in_channels=conv_layer_scaler*2, out_channels=out_channels, kernel_size=1
             )
 
         """ Prediction """
@@ -569,7 +569,9 @@ class FNet(nn.Module):
 
         """ Final Layer/Prediction """
         x = self.final_conv_layer(
-            self.unet_conv_layer(x) + self.unet3plus_conv_layer(x_3plus)
+            torch.cat(
+                (self.unet_conv_layer(x), self.unet3plus_conv_layer(x_3plus)), dim=1
+            )
         )
 
         if self.prediction:
