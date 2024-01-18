@@ -509,9 +509,7 @@ class FNet(nn.Module):
             )
 
             self.final_conv_layer = nn.Conv3d(
-                in_channels=conv_layer_scaler * 2,
-                out_channels=out_channels,
-                kernel_size=1,
+                in_channels=conv_layer_scaler, out_channels=out_channels, kernel_size=1
             )
         elif "2" in layer_components:
             self.unet_conv_layer = nn.Conv2d(
@@ -526,9 +524,7 @@ class FNet(nn.Module):
             )
 
             self.final_conv_layer = nn.Conv2d(
-                in_channels=conv_layer_scaler * 2,
-                out_channels=out_channels,
-                kernel_size=1,
+                in_channels=conv_layer_scaler, out_channels=out_channels, kernel_size=1
             )
 
         """ Prediction """
@@ -548,6 +544,7 @@ class FNet(nn.Module):
                 torch.Tensor: Probability mask of predicted image.
         """
         encoder_features = []
+
         """ Encoder """
         for i, encoder in enumerate(self.encoder):
             x = encoder(x)
@@ -556,15 +553,15 @@ class FNet(nn.Module):
                 encoder_features.insert(0, x)
 
         """ Decoders """
+        x_3plus = x
         for i, (decoder, decoder_2) in enumerate(
             zip(self.decoder_unet, self.decoder_3plus)
         ):
             # Add Decoder layer
-            x_dec = decoder(encoder_features[0], x if i == 0 else x_dec)
-            x = decoder_2(
-                x=x,
+            x = decoder(encoder_features[0], x)
+            x_3plus = decoder_2(
+                x=x_3plus,
                 encoder_features=encoder_features,
-                decoder_features=x_dec if self.attn_features else None,
             )
 
             # Remove layer at each iter
@@ -572,9 +569,7 @@ class FNet(nn.Module):
 
         """ Final Layer/Prediction """
         x = self.final_conv_layer(
-            torch.cat(
-                (self.unet_conv_layer(x_dec), self.unet3plus_conv_layer(x)), dim=1
-            )
+            self.unet_conv_layer(x) + self.unet3plus_conv_layer(x_3plus)
         )
 
         if self.prediction:
