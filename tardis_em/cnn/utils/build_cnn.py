@@ -509,7 +509,9 @@ class FNet(nn.Module):
             )
 
             self.final_conv_layer = nn.Conv3d(
-                in_channels=conv_layer_scaler, out_channels=out_channels, kernel_size=1
+                in_channels=conv_layer_scaler * 2,
+                out_channels=out_channels,
+                kernel_size=1,
             )
         elif "2" in layer_components:
             self.unet_conv_layer = nn.Conv2d(
