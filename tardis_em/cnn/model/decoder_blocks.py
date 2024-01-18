@@ -246,15 +246,26 @@ class DecoderBlockUnet3Plus(nn.Module):
         elif "2" in components:
             self.upscale = nn.Upsample(size=size, mode="bilinear", align_corners=False)
 
-        self.deconv = DoubleConvolution(
-            in_ch=in_ch + out_ch if self.attn_features else in_ch,
-            out_ch=out_ch,
-            block_type="decoder",
-            kernel=conv_kernel,
-            padding=padding,
-            components=components,
-            num_group=num_group,
-        )
+        if self.attn_features:
+            self.deconv = DoubleConvolution(
+                in_ch=in_ch + out_ch,
+                out_ch=out_ch,
+                block_type="decoder",
+                kernel=conv_kernel,
+                padding=padding,
+                components=components,
+                num_group=num_group,
+            )
+        else:
+            self.deconv = DoubleConvolution(
+                in_ch=in_ch,
+                out_ch=out_ch,
+                block_type="decoder",
+                kernel=conv_kernel,
+                padding=padding,
+                components=components,
+                num_group=num_group,
+            )
 
         """Skip-Connection Encoders"""
         num_layer = num_layer - 1
@@ -340,7 +351,7 @@ class DecoderBlockUnet3Plus(nn.Module):
         """
 
         """Main Block"""
-        if decoder_features is not None:
+        if self.attn_features:
             x = self.deconv(torch.cat((self.upscale(x), decoder_features), dim=1))
         else:
             x = self.deconv(self.upscale(x))
