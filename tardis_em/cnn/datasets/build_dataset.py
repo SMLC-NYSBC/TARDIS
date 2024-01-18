@@ -406,7 +406,8 @@ def load_img_mask_data(
         mask_px = img_px
 
     if not img_px == mask_px:
-        img_px = None
+        if not mask_px == 1.0 and not img_px > 1:
+            img_px = None
 
     if coord is not None:
         return image, coord, img_px
@@ -435,6 +436,6 @@ def error_log_build_data(
     log_file[id_ + 1, 1] = str(i)
     log_file[id_ + 1, 2] = "NA"
     log_file[id_ + 1, 3] = "NA"
-    np.savetxt(dir_, log_file, delimiter=",")
+    np.savetxt(dir_, log_file, fmt="%s", delimiter=",")
 
     return log_file
