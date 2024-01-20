@@ -104,7 +104,6 @@ class DataSetPredictor:
         debug: bool,
         checkpoint: Optional[list] = None,
         correct_px: float = False,
-        scale_factor: bool = False,
         amira_prefix: str = None,
         filter_by_length: float = None,
         connect_splines: int = None,
@@ -131,7 +130,6 @@ class DataSetPredictor:
         self.amira_prefix = amira_prefix
         self.checkpoint = checkpoint
         self.correct_px = correct_px
-        self.scale = scale_factor
 
         # Pre-processing setting
         self.patch_size = patch_size
@@ -427,11 +425,7 @@ class DataSetPredictor:
         if self.correct_px is not None:
             self.px = self.correct_px
 
-        if self.scale:
-            self.scale_factor = self.px / 15
-            self.px = 15
-        else:
-            self.scale_factor = 1.0
+        self.scale_factor = self.px / 15
 
         self.org_shape = self.image.shape
         self.scale_shape = np.multiply(self.org_shape, self.scale_factor).astype(
@@ -753,9 +747,6 @@ class DataSetPredictor:
                 if self.image is None:
                     continue
 
-                # Restore pixel size value based on scale factor
-                self.px = self.px / self.scale_factor
-
                 """Save predicted mask"""
                 if self.output_format.startswith("mrc"):
                     to_mrc(
@@ -881,7 +872,7 @@ class DataSetPredictor:
                     self.pc_ld = (
                         self.pc_ld * self.px
                         if self.correct_px is None
-                        else self.correct_px
+                        else self.pc_ld * self.correct_px
                     )
                     self.pc_ld[:, 0] = self.pc_ld[:, 0] + self.transformation[0]
                     self.pc_ld[:, 1] = self.pc_ld[:, 1] + self.transformation[1]
