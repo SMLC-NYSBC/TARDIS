@@ -346,7 +346,7 @@ class DataSetPredictor:
                         checkpoint=self.checkpoint[1],
                         network="dist",
                         subtype="triang",
-                        model_type="membrane_2d",
+                        model_type="microtubules_3d",
                         device=self.device,
                     )
             else:
