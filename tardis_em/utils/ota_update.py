@@ -68,7 +68,7 @@ def ota_update(status=False):
             main_logo = TardisLogo()
             main_logo(
                 title="| Transforms And Rapid Dimensionless Instance Segmentation",
-                text_0="TARDIS_pytorch has new update available via OTA-Update!",
+                text_0="TARDIS has new update available via OTA-Update!",
                 text_1="Please in run this command to update tardis",
                 text_3="tardis_ota",
                 text_5="Contact developers if segmentation of your organelle is not supported!",
@@ -113,6 +113,11 @@ def main():
     except:
         pass
 
+    try:
+        subprocess.run(["pip", "uninstall", "-y", "tardis-em"])
+    except:
+        pass
+
     subprocess.run(["pip", "uninstall", "-y", "tardis_em"])
 
     subprocess.run(
@@ -129,7 +134,7 @@ def main():
     main_logo = TardisLogo()
     main_logo(
         title="| Transforms And Rapid Dimensionless Instance Segmentation",
-        text_0="TARDIS_pytorch was updated via OTA-Update!",
+        text_0="TARDIS was updated via OTA-Update!",
         text_1="Please restart your previous operation.",
         text_3="(rkiewisz@nysbc.org | tbepler@nysbc.org).",
         text_4="Join Slack community: https://tardis-em.slack.com",

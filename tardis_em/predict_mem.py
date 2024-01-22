@@ -48,14 +48,6 @@ warnings.simplefilter("ignore", UserWarning)
     show_default=True,
 )
 @click.option(
-    "-sf",
-    "--scale_factor",
-    default=1.0,
-    type=float,
-    help="Optional scaling factor to scale image up- or down-.",
-    show_default=True,
-)
-@click.option(
     "-ch",
     "--checkpoint",
     default="None|None",
@@ -187,7 +179,6 @@ def main(
     mask: bool,
     convolution_nn: str,
     correct_px: float,
-    scale_factor: float,
     checkpoint: str,
     output_format: str,
     patch_size: int,
@@ -224,7 +215,6 @@ def main(
         dir_=path,
         binary_mask=mask,
         correct_px=correct_px,
-        scale_factor=scale_factor,
         convolution_nn=convolution_nn,
         checkpoint=checkpoint,
         output_format=output_format,
