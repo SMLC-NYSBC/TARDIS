@@ -7,7 +7,7 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2024                                            #
 #######################################################################
-
+from math import sqrt
 from typing import Optional, Tuple, Union
 
 import torch
@@ -256,7 +256,7 @@ class TriangularEdgeUpdate(nn.Module):
         self.input_dim = input_dim
         self.channel_dim = channel_dim
         self.axis = axis
-        self.init_scaling = 1 / 1.4142135623730951
+        self.init_scaling = 1 / sqrt(2)
 
         self.norm_input = nn.LayerNorm(input_dim)
 
@@ -337,7 +337,7 @@ class QuadraticEdgeUpdate(nn.Module):
         self.input_dim = input_dim
         self.channel_dim = channel_dim
         self.axis = axis
-        self.init_scaling = 1 / 1.4142135623730951
+        self.init_scaling = 1 / sqrt(2)
 
         self.norm_input = nn.LayerNorm(input_dim)
 
@@ -449,7 +449,7 @@ class MultiHeadAttention(nn.Module):
         add_zero_attn=False,
         self_attention=False,
         encoder_decoder_attention=False,
-        init_scaling=1 / 1.4142135623730951,
+        init_scaling=1 / sqrt(2),
     ):
         super().__init__()
 
@@ -838,4 +838,4 @@ def gelu(x: torch.Tensor) -> torch.Tensor:
     Returns:
         torch.Tensor: Gelu transform Tensor.
     """
-    return x * 0.5 * (1.0 + torch.erf(x / 1.4142135623730951))
+    return x * 0.5 * (1.0 + torch.erf(x / sqrt(2)))
