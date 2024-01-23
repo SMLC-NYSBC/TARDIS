@@ -54,14 +54,6 @@ def eval_graph_f1(
     """
     """Mask Diagonal as TP"""
     g_len = logits.shape[1]
-    g_range = range(g_len)
-
-    if logits.ndim == 3:
-        logits[:, g_range, g_range] = 1.0
-        targets[:, g_range, g_range] = 1.0
-    else:
-        logits[g_range, g_range] = 1.0
-        targets[g_range, g_range] = 1.0
 
     if soft:
         logits = torch.flatten(logits)
@@ -156,13 +148,16 @@ def eval_graph_f1(
             tp, fp, tn, fn = confusion_matrix(input_, target_)
             tp = tp - len(input_df)  # remove diagonal from F1
 
-            accuracy_score += (tp + tn) / (tp + tn + fp + fn + 1e-16)
-            precision_score += tp / (tp + fp + 1e-16)
-            recall_score += tp / (tp + fn + 1e-16)
+            acc = (tp + tn) / (tp + tn + fp + fn + 1e-16)
+            accuracy_score += acc
+            prec = tp / (tp + fp + 1e-16)
+            precision_score += prec
+            rec = tp / (tp + fn + 1e-16)
+            recall_score += rec
             F1_score += (
                     2
-                    * (precision_score * recall_score)
-                    / (precision_score + recall_score + 1e-16)
+                    * (prec * rec)
+                    / (rec + rec + 1e-16)
             )
 
         return accuracy_score/2, precision_score/2, recall_score/2, F1_score/2, threshold
