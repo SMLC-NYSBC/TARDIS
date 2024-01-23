@@ -199,7 +199,7 @@ class FilamentSimulateDataset(BasicDataset):
 
         # Simulate filament dataset
         coord_file = create_simulated_dataset(
-            size=list(np.random.randint((0, 512, 512), (250, 4096, 4096))),
+            size=list(np.random.randint((1, 512, 512), (250, 4096, 4096))),
             sim_type=self.type,
         )
 
