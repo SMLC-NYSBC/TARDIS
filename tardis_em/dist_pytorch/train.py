@@ -69,6 +69,7 @@ def train_dist(
     loss_functions = [
         AdaptiveDiceLoss,
         BCELoss,
+        BCEGraphWiseLoss,
         WBCELoss,
         BCEDiceLoss,
         CELoss,

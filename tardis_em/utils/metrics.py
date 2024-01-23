@@ -128,21 +128,44 @@ def eval_graph_f1(
             recall_score = round(recall[id_], 2)
             F1_score = round(f1[id_], 2)
         else:
+            accuracy_score, precision_score, recall_score, F1_score, threshold = 0, 0, 0, 0, 0
             input_df = torch.where(logits > threshold, 1, 0)
+            idx_1 = torch.where(targets > 0)
+            idx_0 = torch.where(targets == 0)
 
-            tp, fp, tn, fn = confusion_matrix(input_df, targets)
+            # IDX_1
+            input_ = input_df[idx_1]
+            target_ = targets[idx_1]
+
+            tp, fp, tn, fn = confusion_matrix(input_, target_)
             tp = tp - len(input_df)  # remove diagonal from F1
 
-            accuracy_score = (tp + tn) / (tp + tn + fp + fn + 1e-16)
-            precision_score = tp / (tp + fp + 1e-16)
-            recall_score = tp / (tp + fn + 1e-16)
-            F1_score = (
-                2
-                * (precision_score * recall_score)
-                / (precision_score + recall_score + 1e-16)
+            accuracy_score += (tp + tn) / (tp + tn + fp + fn + 1e-16)
+            precision_score += tp / (tp + fp + 1e-16)
+            recall_score += tp / (tp + fn + 1e-16)
+            F1_score += (
+                    2
+                    * (precision_score * recall_score)
+                    / (precision_score + recall_score + 1e-16)
             )
 
-        return accuracy_score, precision_score, recall_score, F1_score, threshold
+            # IDX_0
+            input_ = input_df[idx_0]
+            target_ = targets[idx_0]
+
+            tp, fp, tn, fn = confusion_matrix(input_, target_)
+            tp = tp - len(input_df)  # remove diagonal from F1
+
+            accuracy_score += (tp + tn) / (tp + tn + fp + fn + 1e-16)
+            precision_score += tp / (tp + fp + 1e-16)
+            recall_score += tp / (tp + fn + 1e-16)
+            F1_score += (
+                    2
+                    * (precision_score * recall_score)
+                    / (precision_score + recall_score + 1e-16)
+            )
+
+        return accuracy_score/2, precision_score/2, recall_score/2, F1_score/2, threshold
 
 
 def calculate_f1(
@@ -312,21 +335,21 @@ def mcov(
     unique_input = np.unique(input_[:, 0])
 
     # Get GT instances, compute IoU for best mach between GT and input
-    for j in unique_target:
+    for j in unique_input:
         g = targets[targets[:, 0] == j, 1:]  # Pick GT instance
         w_g = g.shape[0] / targets.shape[0]  # ratio of instance to whole PC
         iou = []
 
         # Select max IoU (the best mach)
-        for i in unique_input:
+        for i in unique_target:
             p = input_[input_[:, 0] == i, 1:]  # Pick input instance
 
             # Intersection of coordinates between GT and input instances
             # Union of coordinates between GT and input instances
 
-            intersection = np.sum(np.any(np.isin(g, p), axis=1))
+            intersection = np.sum(np.any(np.isin(p, g), axis=1))
             if intersection > 0:
-                union = np.unique(np.concatenate((g, p), axis=0), axis=0).shape[0]
+                union = np.unique(np.concatenate((p, g), axis=0), axis=0).shape[0]
                 iou.append(intersection / union)
 
         if len(iou) > 0:

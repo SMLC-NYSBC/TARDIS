@@ -148,6 +148,36 @@ class BCELoss(AbstractLoss):
         return self.loss(logits, targets)
 
 
+class BCEGraphWiseLoss(AbstractLoss):
+    """
+    Implements the Binary Cross-Entropy loss function with an option to ignore the diagonal elements.
+
+    The BCELoss class can be used for training where pixel-level accuracy is important.
+    """
+
+    def __init__(self, **kwargs):
+        """
+        Initializes the BCELoss with the given parameters.
+        """
+        super(BCEGraphWiseLoss, self).__init__(**kwargs)
+
+        self.loss = nn.BCELoss(reduction=self.reduction)
+
+    def forward(
+            self, logits: torch.Tensor, targets: torch.Tensor, mask=True
+    ) -> torch.Tensor:
+        """
+        Computes the BCE loss between the logits and targets.
+        """
+        logits, targets = self.initialize_tensors(logits, targets, mask)
+        idx_1 = torch.where(targets > 0)
+        idx_0 = torch.where(targets == 0)
+
+        pos_loss = self.loss(logits[idx_1], targets[idx_1])
+        neg_loss = self.loss(logits[idx_0], targets[idx_0])
+        return pos_loss + neg_loss
+
+
 class BCEDiceLoss(AbstractLoss):
     """
     DICE + BCE LOSS FUNCTION
