@@ -204,251 +204,193 @@ class BuildPointCloud:
         return coordinates_HD
 
 
-def generate_random_3d_point(low=-10, high=10) -> np.ndarray:
+def draw_line(p0: np.ndarray, p1: np.ndarray, line_id: int) -> np.ndarray:
     """
-    Generate a random 3D point.
+    Draws a straight line in 3D space between two points.
 
     Args:
-        low (float): The lower bound for each coordinate of the 3D point.
-        high (float): The upper bound for each coordinate of the 3D point.
+    p0 (tuple): (z0, y0, x0) representing the start point of the line.
+    p1 (tuple): (z1, y1, x1) representing the end point of the line.
+    line_id (int): An identifier for the line.
 
     Returns:
-        ndarray: A 3-element array representing the random 3D point with coordinates between `low` and `high`.
+        np.ndarray: A numpy array containing points (line_id, x, y, z) along the line.
     """
-    return np.random.uniform(low, high, 3)
+    xyz = []
+    z0, y0, x0 = p0
+    z1, y1, x1 = p1
+    dx, dy, dz = abs(x1 - x0), abs(y1 - y0), abs(z1 - z0)
+    sx = 1 if x0 < x1 else -1
+    sy = 1 if y0 < y1 else -1
+    sz = 1 if z0 < z1 else -1
 
+    if dx >= dy and dx >= dz:
+        err_1 = 2 * dy - dx
+        err_2 = 2 * dz - dx
 
-def generate_random_rotation_matrix() -> np.ndarray:
-    """
-    Generate a random 3D rotation matrix.
+        while x0 != x1:
+            xyz.append([line_id, x0, y0, z0])
 
-    This function creates a random rotation matrix that can be used to rotate points in 3D space.
-    It does this by generating three random angles corresponding to rotations about the x, y, and z axes.
-    Individual rotation matrices are then computed for each of these angles, which are combined to produce
-    the final rotation matrix.
+            if err_1 > 0:
+                y0 += sy
+                err_1 -= 2 * dx
+            if err_2 > 0:
+                z0 += sz
+                err_2 -= 2 * dx
+            err_1 += 2 * dy
+            err_2 += 2 * dz
+            x0 += sx
 
-    Returns:
-        ndarray: A 3x3 matrix representing the random 3D rotation.
-    """
-    # Random angles for rotation around x, y, and z
-    rx, ry, rz = np.random.uniform(-np.pi, np.pi, 3)
+    elif dy >= dx and dy >= dz:
+        err_1 = 2 * dx - dy
+        err_2 = 2 * dz - dy
 
-    # Rotation matrix around x-axis
-    rot_x = np.array(
-        [[1, 0, 0], [0, np.cos(rx), -np.sin(rx)], [0, np.sin(rx), np.cos(rx)]]
-    )
+        while y0 != y1:
+            xyz.append([line_id, x0, y0, z0])
+            if err_1 > 0:
+                x0 += sx
+                err_1 -= 2 * dy
+            if err_2 > 0:
+                z0 += sz
+                err_2 -= 2 * dy
+            err_1 += 2 * dx
+            err_2 += 2 * dz
+            y0 += sy
 
-    # Rotation matrix around y-axis
-    rot_y = np.array(
-        [[np.cos(ry), 0, np.sin(ry)], [0, 1, 0], [-np.sin(ry), 0, np.cos(ry)]]
-    )
-
-    # Rotation matrix around z-axis
-    rot_z = np.array(
-        [[np.cos(rz), -np.sin(rz), 0], [np.sin(rz), np.cos(rz), 0], [0, 0, 1]]
-    )
-
-    # Combined rotation matrix
-    rot_matrix = np.dot(rot_z, np.dot(rot_y, rot_x))
-
-    return rot_matrix
-
-
-def bezier_curve(control_points, n_points=100, curve_type="line"):
-    """
-    Evaluate a Bezier curve at a set of parameter values.
-
-    Given a list of control points, this function computes the Bezier curve's points using the Bernstein basis
-    polynomial. The resulting curve starts at the first control point and ends at the last control point.
-
-    Args:
-        control_points (List[ndarray]): List of 3D control points that define the Bezier curve.
-        n_points (int): Number of points on the curve to compute.
-        curve_type (str): Type of drawn curve
-
-    Returns:
-        ndarray: A set of 3D points (shape: [n_points, 3]) on the Bezier curve.
-    """
-    t_values = np.linspace(0, np.random.randint(10, 50) / 100, n_points)
-    if curve_type == "line":
-        n = len(control_points) - 1
-        curve_points = np.zeros((n_points, 3))
-
-        for i, t in enumerate(t_values):
-            for j in range(n + 1):
-                curve_points[i] += (
-                    control_points[j]
-                    * (
-                        np.math.factorial(n)
-                        / (np.math.factorial(j) * np.math.factorial(n - j))
-                    )
-                    * ((1 - t) ** (n - j))
-                    * (t**j)
-                )
     else:
-        # Generate random angles theta and phi
-        theta = np.linspace(0, 2 * np.pi, n_points)
+        err_1 = 2 * dy - dz
+        err_2 = 2 * dx - dz
+        while z0 != z1:
+            xyz.append([line_id, x0, y0, z0])
+            if err_1 > 0:
+                y0 += sy
+                err_1 -= 2 * dz
+            if err_2 > 0:
+                x0 += sx
+                err_2 -= 2 * dz
+            err_1 += 2 * dy
+            err_2 += 2 * dx
+            z0 += sz
 
-        curve_points = np.zeros((n_points, 3))
+    xyz.append([line_id, x0, y0, z0])
 
-        # Generate random radius
-        r = np.random.uniform(10, 25)
-
-        # Generate points using spherical coordinates
-        curve_points[:, 0] = r * np.cos(theta)
-        curve_points[:, 1] = r * np.sin(theta)
-        curve_points[:, 2] = 0
-
-    return curve_points
+    return np.vstack(xyz)
 
 
-def resample_curve(points, desired_distance=1.0):
+def quadratic_bezier(p0: np.ndarray, p1: np.ndarray, p2: np.ndarray, t: float) -> list:
     """
-    Resample a 3D curve to ensure a consistent distance between consecutive points.
-
-    This function takes in a list of 3D points that form a curve and resamples it so that the distance
-    between consecutive points on the resampled curve is approximately equal to the provided `desired_distance`.
+    Calculate a point on a quadratic Bézier curve.
 
     Args:
-        points (List[ndarray]): List of 3D points that form the curve.
-        desired_distance (float): The desired distance between consecutive points on the resampled curve.
+        p0 (np.ndarray): (z0, y0, x0) representing the start point of the Bézier curve.
+        p1 (np.ndarray): (z1, y1, x1) representing the control point of the Bézier curve.
+        p2 (np.ndarray): (z2, y2, x2) representing the end point of the Bézier curve.
+        t (float): A float between 0 and 1, representing the parameter of the curve.
 
     Returns:
-        ndarray: A set of 3D points on the resampled curve.
+        list: A list of integers [x, y, z], representing the calculated point on the curve.
     """
-    resampled_points = [points[0]]
-    remaining_distance = desired_distance
+    x_ = float((1 - t) ** 2 * p0[2] + 2 * (1 - t) * t * p1[2] + t**2 * p2[2])
+    y_ = float((1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * p1[1] + t**2 * p2[1])
+    z_ = float((1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * p1[0] + t**2 * p2[0])
 
+    return [int(round(x_)), int(round(y_)), int(round(z_))]
+
+
+def draw_curved_line(
+    p0: np.ndarray, p1: np.ndarray, p2: np.ndarray, line_id: int
+) -> np.ndarray:
+    """
+    Draw a quadratic Bézier curve in a 3D array.
+
+    Args:
+        p0 (np.ndarray): (z0, y0, x0) representing the start point of the curve.
+        p1 (np.ndarray): (z1, y1, x1) representing the control point of the curve.
+        p2 (np.ndarray): (z2, y2, x2) representing the end point of the curve.
+        line_id (int): An identifier for the curve.
+
+    Returns:
+        np.ndarray: A numpy array containing points [line_id, z, y, x] along the curve.
+    """
+    curve_points = []
+
+    # Estimate the number of points needed to represent the curve
+    distance_p0_p1 = np.linalg.norm(np.array(p0) - np.array(p1))
+    distance_p1_p2 = np.linalg.norm(np.array(p1) - np.array(p2))
+    num_points = int(np.sqrt(distance_p0_p1**2 + distance_p1_p2**2))
+
+    for t in np.linspace(0, 1, num_points):
+        point = quadratic_bezier(p0, p1, p2, t)
+        curve_points.append([line_id, *point])
+
+    return np.vstack(curve_points)
+
+
+def draw_circle(center: np.ndarray, radius: float, circle_id: int) -> np.ndarray:
+    """
+    Draw a circle in a 3D space.
+
+    Args:
+        center ( np.ndarray): (z0, y0, x0) representing the center of the circle.
+        radius (float): The radius of the circle.
+        circle_id (int): An identifier for the circle.
+
+    Returns:
+        np.ndarray: A numpy array containing points [circle_id, z, y, x] on the circle.
+    """
+    circle_points = []
+    z0, y0, x0 = center
+    x, y = radius - 1, 0
+    dx, dy = 1, 1
+    err = dx - (radius * 2)
+
+    while x >= y:
+        points = [
+            [x0 + x, y0 + y],
+            [x0 + x, y0 - y],
+            [x0 - x, y0 + y],
+            [x0 - x, y0 - y],
+            [x0 + y, y0 + x],
+            [x0 + y, y0 - x],
+            [x0 - y, y0 + x],
+            [x0 - y, y0 - x],
+        ]
+        for point in points:
+            circle_points.append([circle_id, *point, z0])
+
+        if err <= 0:
+            y += 1
+            err += dy * 2
+            dy += 1
+        if err > 0:
+            x -= 1
+            dx += 1
+            err += dx * 2 - (radius * 2)
+
+    return np.vstack(circle_points)
+
+
+def create_simulated_dataset(size):
+    coord = []
     i = 0
-    while i < len(points) - 1:
-        segment_length = np.linalg.norm(points[i + 1] - points[i])
+    for _ in range(10):  # Drawing n random lines
+        p1 = np.random.randint(0, size, size=(3,))
+        p2 = np.random.randint(0, size, size=(3,))
+        coord.append(draw_line(p1, p2, i))
+        i += 1
 
-        if segment_length > remaining_distance:
-            fraction = remaining_distance / segment_length
-            new_point = points[i] + fraction * (points[i + 1] - points[i])
-            resampled_points.append(new_point)
-            remaining_distance = desired_distance
-        else:
-            remaining_distance -= segment_length
-            i += 1  # Move to the next point
+    for _ in range(10):  # Drawing n random curves
+        sp = np.random.randint(0, size, size=(3,))
+        cp = np.random.randint(0, size, size=(3,))
+        ep = np.random.randint(0, size, size=(3,))
+        coord.append(draw_curved_line(sp, cp, ep, i))
+        i += 1
 
-    return np.array(resampled_points)
+    for _ in range(250):  # Drawing n random circles
+        radius = np.random.randint(10, size[1] // 20)
 
+        center = np.random.randint(0, (size[0], size[1] - radius, size[2] - radius))
+        coord.append(draw_circle(center, radius, i))
+        i += 1
 
-def generate_random_bezier_curve(id=0, curve_type="line"):
-    """
-    Generate a random 3D Bezier curve with a random origin.
-
-    This function generates a random Bezier curve in 3D space. The control points of the curve are first
-    generated randomly. These points are then rotated using a random rotation matrix and moved to a new
-    random origin. The Bezier curve is then calculated based on these transformed control points.
-    Optionally, the resulting curve points might be shuffled and reduced to half.
-
-    Args:
-        id (int): An identifier for the curve. Default is 0.
-        curve_type (str): Type of drawn curve
-
-    Returns:
-        List[ndarray]: If the number of curve points is greater than 3, the function returns
-        the sorted segment of points; otherwise, it returns an empty list. Each point has an additional
-        dimension at the beginning indicating the curve id.
-    """
-    # Generate random control points
-    origin_range = np.random.randint(10, 250)
-    origin_range = (-origin_range, origin_range)
-
-    control_points = np.array(
-        [generate_random_3d_point(origin_range[0], origin_range[1]) for _ in range(3)]
-    )
-
-    # Generate a random rotation matrix
-    rotation_matrix = generate_random_rotation_matrix()
-
-    # Apply rotation to control points
-    rotated_control_points = np.dot(control_points, rotation_matrix)
-
-    # Generate a random origin
-    if curve_type == "line":
-        origin_range = np.random.randint(10, 250)
-    else:
-        origin_range = np.random.randint(10, 25)
-    origin_range = (-origin_range, origin_range)
-    origin = generate_random_3d_point(low=origin_range[0], high=origin_range[1])
-
-    # Move the control points to the new origin
-    if curve_type == "line":
-        moved_control_points = rotated_control_points + origin
-    else:
-        moved_control_points = rotated_control_points
-
-    # Calculate the points on the Bezier curve
-    curve_points = bezier_curve(moved_control_points, 100, curve_type)
-    if curve_type != "line":
-        curve_points = np.dot(curve_points, rotation_matrix)
-        curve_points[:, 0] = curve_points[:, 0] + origin[0] * 10
-        curve_points[:, 1] = curve_points[:, 1] + origin[1] * 10
-        curve_points[:, 2] = curve_points[:, 2] + origin[2] * 10
-
-    if np.random.randint(0, 10) > 5:
-        np.random.shuffle(curve_points)
-        curve_points = curve_points[: int(len(curve_points) / 1.2), :]
-    points = np.zeros((len(curve_points), 4))
-    points[:, 0] = id
-    points[:, 1] = curve_points[:, 0]
-    points[:, 2] = curve_points[:, 1]
-    points[:, 3] = curve_points[:, 2]
-
-    if len(points) > 5:
-        return sort_segment(points)
-    else:
-        return []
-
-
-def generate_bezier_curve_dataset(n=50, ds_type="line"):
-    """
-    Generate a dataset of random 3D Bezier curves.
-
-    This function generates a dataset of random Bezier curves by repeatedly calling the
-    `generate_random_bezier_curve` function. Only curves with more than 0 points are included
-    in the final dataset.
-
-    Args:
-        n (int): The number of random Bezier curves to generate. Default is 50.
-        ds_type (str): Type of simulated dataset
-
-    Returns:
-        ndarray: A concatenated set of 3D points representing the generated Bezier curves.
-    """
-    # Generate lines
-    c_line = np.concatenate(
-        [
-            j
-            for j in [generate_random_bezier_curve(i, "line") for i in range(n // 4)]
-            if len(j) > 2
-        ]
-    )
-
-    c_2 = c_line.copy()
-    c_2[:, 0] += np.max(c_line[:, 0]) + 1
-    c_2[:, 1] += np.random.randint(10, 15)
-
-    c_3 = c_line.copy()
-    c_3[:, 0] += np.max(c_2[:, 0]) + 1
-    c_3[:, 2] += np.random.randint(10, 15)
-    c_line = np.vstack((c_line, c_2, c_3))
-
-    c_circle = np.concatenate(
-        [
-            j
-            for j in [generate_random_bezier_curve(i, "curve") for i in range(n // 4)]
-            if len(j) > 2
-        ]
-    )
-
-    c_2 = c_circle.copy()
-    c_2[:, 0] += np.max(c_circle[:, 0]) + 1
-    c_2[:, 1] += np.random.randint(10, 25)
-
-    c_circle = np.vstack((c_circle, c_2))
-
-    return np.vstack((c_line, c_circle))
+    return np.vstack(coord)

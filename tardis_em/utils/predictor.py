@@ -58,7 +58,6 @@ except ImportError:
 
 # Pytorch CUDA optimization
 torch.backends.cudnn.benchmark = True
-torch.set_float32_matmul_precision("high")
 
 
 class DataSetPredictor:
@@ -303,6 +302,11 @@ class DataSetPredictor:
         self.build_NN(NN=self.predict)
 
     def build_NN(self, NN: str):
+        if NN == "Microtubule":
+            self.normalize_px = 25
+        else:
+            self.normalize_px = 15
+
         if NN in ["Filament", "Microtubule"]:
             # Build CNN network with loaded pre-trained weights
             if not self.output_format.startswith("None") or not self.binary_mask:
@@ -346,7 +350,7 @@ class DataSetPredictor:
                         checkpoint=self.checkpoint[1],
                         network="dist",
                         subtype="triang",
-                        model_type="microtubules",
+                        model_type="membrane_2d",
                         device=self.device,
                     )
             else:
@@ -425,7 +429,7 @@ class DataSetPredictor:
         if self.correct_px is not None:
             self.px = self.correct_px
 
-        self.scale_factor = self.px / 15
+        self.scale_factor = self.px / self.normalize_px
 
         self.org_shape = self.image.shape
         self.scale_shape = np.multiply(self.org_shape, self.scale_factor).astype(

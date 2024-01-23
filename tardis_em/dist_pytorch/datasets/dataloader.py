@@ -8,7 +8,6 @@
 #  MIT License 2021 - 2024                                            #
 #######################################################################
 
-import time
 from os import getcwd, listdir, mkdir
 from os.path import isdir, join
 from shutil import rmtree
@@ -31,9 +30,7 @@ from tardis_em.dist_pytorch.utils.utils import (
     VoxelDownSampling,
 )
 from tardis_em.dist_pytorch.utils.utils import pc_median_dist
-from tardis_em.dist_pytorch.utils.build_point_cloud import (
-    generate_bezier_curve_dataset,
-)
+from tardis_em.dist_pytorch.utils.build_point_cloud import create_simulated_dataset
 from tardis_em.utils.spline_metric import sort_segment
 
 
@@ -183,7 +180,7 @@ class FilamentSimulateDataset(BasicDataset):
 
         self.VD = PatchDataSet(
             max_number_of_points=self.max_point_in_patch,
-            overlap=0.1,
+            overlap=0.15,
             drop_rate=0.1,
             graph=True,
             tensor=True,
@@ -200,7 +197,9 @@ class FilamentSimulateDataset(BasicDataset):
             self.temp = "temp_test"
 
         # Simulate filament dataset
-        coord_file = generate_bezier_curve_dataset(n=self.sample_count)
+        coord_file = create_simulated_dataset(
+            size=list(np.random.randint((0, 512, 512), (250, 4096, 4096))),
+        )
 
         # Pre-process coord and image data also, if exist remove duplicates
         coord, _ = preprocess_data(coord=coord_file)
@@ -208,6 +207,7 @@ class FilamentSimulateDataset(BasicDataset):
         # Optional Down-sampling of simulated dataset
         if self.downscale is not None:
             scale = self.downscale.split("_")
+
             if scale[1] == "random":
                 if scale[0] == "v":
                     scale[1] = np.random.randint(1, 15)
@@ -241,13 +241,8 @@ class FilamentSimulateDataset(BasicDataset):
                     )
             coord = np.concatenate(df_coord)
 
-        # Jiggling
-        coord[:, 1:] = coord[:, 1:] + np.random.normal(
-            0, np.random.random(len(coord)).reshape(-1, 1) * 0.25, (len(coord), 3)
-        )
-
         # Normalize distance
-        coord[:, 1:] = coord[:, 1:] / pc_median_dist(coord[:, 1:], True)
+        # coord[:, 1:] = coord[:, 1:] / pc_median_dist(coord[:, 1:], True)
 
         # Patch dataset
         if self.train:
