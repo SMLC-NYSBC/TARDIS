@@ -392,6 +392,8 @@ def create_simulated_dataset(size, sim_type: str):
         for _ in range(250):  # Drawing n random circles
             radius = np.random.randint(10, size[1] // 20)
 
+            while size[0] > (size[1] - radius) and size[0] > (size[2] - radius):
+                center = np.random.randint(0, (size[0], size[1] - radius, size[2] - radius))
             center = np.random.randint(0, (size[0], size[1] - radius, size[2] - radius))
             coord.append(draw_circle(center, radius, i))
             i += 1

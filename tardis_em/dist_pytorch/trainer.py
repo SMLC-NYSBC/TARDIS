@@ -194,10 +194,7 @@ class SparseDistTrainer(BasicTrainer):
                 graph = graph[0, indices[3][:, 0], indices[3][:, 1]].type(torch.float32)
 
                 # Back-propagate
-                loss = self.criterion(
-                    edge[:, 0],
-                    graph,
-                )
+                loss = self.criterion(edge[:, 0], graph)
                 loss.backward()  # One backward pass
                 self.optimizer.step()  # Update the parameters
 
@@ -524,7 +521,7 @@ class DistTrainer(BasicTrainer):
                     edge = self.model(coords=edge, node_features=None)
 
                 # Back-propagate
-                loss = self.criterion(edge[:, 0, :], graph)  # Calc. loss
+                loss = self.criterion(edge[:, 0, ...], graph)  # Calc. loss
                 loss.backward()  # One backward pass
                 self.optimizer.step()  # Update the parameters
 
