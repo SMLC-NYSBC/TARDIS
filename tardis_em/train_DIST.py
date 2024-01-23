@@ -366,7 +366,8 @@ def main(
         if "model_struct_dict" in save_train.keys():
             model_dict = save_train["model_struct_dict"]
             globals().update(model_dict)
-    if model_dict is None:
+
+    if len(model_dict) == 0:
         model_dict = {
             "dist_type": dist_structure,
             "n_out": n_out,

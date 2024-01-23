@@ -84,14 +84,12 @@ def train_dist(
     }
 
     """Check input variable"""
-    print(model_structure)
     model_structure = check_model_dict(model_structure)
 
     if not isinstance(device, torch.device) and isinstance(device, str):
         device = get_device(device)
 
     """Build DIST model"""
-    print(model_structure)
     if model_structure["dist_type"] == "instance":
         model = DIST(
             n_out=model_structure["n_out"],
