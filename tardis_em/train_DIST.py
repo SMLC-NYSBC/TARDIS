@@ -156,7 +156,7 @@ ota = ota_update()
     "-lo",
     "--loss",
     default="BCELoss",
-    type=click.Choice(["WBCELoss", "BCELoss", "DiceLoss", "BCEDiceLoss"]),
+    type=str,
     help="Type of loss function use for training.",
     show_default=True,
 )
