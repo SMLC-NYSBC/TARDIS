@@ -249,7 +249,7 @@ def main(
     COORD_FORMAT = ".txt"
     if dataset_type not in ["stanford", "stanford_rgb"]:
         COORD_FORMAT = (".CorrelationLines.am", ".npy", ".csv", ".ply")
-    if dataset_type.startswith("simulate_filament"):
+    if dataset_type.startswith("simulate_"):
         COORD_FORMAT = None
 
     """Check if dir has train/test folder and if f  older have compatible data"""

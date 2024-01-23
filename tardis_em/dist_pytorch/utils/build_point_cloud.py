@@ -370,27 +370,30 @@ def draw_circle(center: np.ndarray, radius: float, circle_id: int) -> np.ndarray
     return np.vstack(circle_points)
 
 
-def create_simulated_dataset(size):
+def create_simulated_dataset(size, sim_type: str):
+    assert sim_type in ['mix', 'filaments', 'membranes']
     coord = []
     i = 0
-    for _ in range(10):  # Drawing n random lines
-        p1 = np.random.randint(0, size, size=(3,))
-        p2 = np.random.randint(0, size, size=(3,))
-        coord.append(draw_line(p1, p2, i))
-        i += 1
+    if sim_type == 'mix' or sim_type == 'filaments':
+        for _ in range(10):  # Drawing n random lines
+            p1 = np.random.randint(0, size, size=(3,))
+            p2 = np.random.randint(0, size, size=(3,))
+            coord.append(draw_line(p1, p2, i))
+            i += 1
 
-    for _ in range(10):  # Drawing n random curves
-        sp = np.random.randint(0, size, size=(3,))
-        cp = np.random.randint(0, size, size=(3,))
-        ep = np.random.randint(0, size, size=(3,))
-        coord.append(draw_curved_line(sp, cp, ep, i))
-        i += 1
+        for _ in range(10):  # Drawing n random curves
+            sp = np.random.randint(0, size, size=(3,))
+            cp = np.random.randint(0, size, size=(3,))
+            ep = np.random.randint(0, size, size=(3,))
+            coord.append(draw_curved_line(sp, cp, ep, i))
+            i += 1
 
-    for _ in range(250):  # Drawing n random circles
-        radius = np.random.randint(10, size[1] // 20)
+    if sim_type == 'mix' or sim_type == 'membranes':
+        for _ in range(250):  # Drawing n random circles
+            radius = np.random.randint(10, size[1] // 20)
 
-        center = np.random.randint(0, (size[0], size[1] - radius, size[2] - radius))
-        coord.append(draw_circle(center, radius, i))
-        i += 1
+            center = np.random.randint(0, (size[0], size[1] - radius, size[2] - radius))
+            coord.append(draw_circle(center, radius, i))
+            i += 1
 
     return np.vstack(coord)

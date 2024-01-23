@@ -173,10 +173,11 @@ class FilamentSimulateDataset(BasicDataset):
         df_idx: Normalize zero-out output for standardized dummy.
     """
 
-    def __init__(self, sample_count=50, **kwargs):
+    def __init__(self, type_: str, sample_count=50, **kwargs):
         super(FilamentSimulateDataset, self).__init__(**kwargs)
 
         self.sample_count = sample_count
+        self.type = type_
 
         self.VD = PatchDataSet(
             max_number_of_points=self.max_point_in_patch,
@@ -199,6 +200,7 @@ class FilamentSimulateDataset(BasicDataset):
         # Simulate filament dataset
         coord_file = create_simulated_dataset(
             size=list(np.random.randint((0, 512, 512), (250, 4096, 4096))),
+            sim_type=self.type,
         )
 
         # Pre-process coord and image data also, if exist remove duplicates
@@ -790,16 +792,19 @@ def build_dataset(
     """
 
     if isinstance(dataset_type, list):
+        assert len(dataset_type) == 4
         if dataset_type[0] == "simulate":
             if not benchmark:
                 dl_train = FilamentSimulateDataset(
-                    sample_count=int(dataset_type[1]),
+                    type_=dataset_type[1],
+                    sample_count=int(dataset_type[2]),
                     patch_if=max_points_per_patch,
                     train=True,
                     downscale=downscale,
                 )
             dl_test = FilamentSimulateDataset(
-                sample_count=int(dataset_type[2]),
+                type_=dataset_type[1],
+                sample_count=int(dataset_type[3]),
                 patch_if=max_points_per_patch,
                 train=False,
                 downscale=downscale,
