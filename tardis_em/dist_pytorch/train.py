@@ -90,6 +90,7 @@ def train_dist(
         device = get_device(device)
 
     """Build DIST model"""
+    print(model_structure)
     if model_structure["dist_type"] == "instance":
         model = DIST(
             n_out=model_structure["n_out"],
