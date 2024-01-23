@@ -157,7 +157,7 @@ def eval_graph_f1(
             F1_score += (
                     2
                     * (prec * rec)
-                    / (rec + rec + 1e-16)
+                    / (prec + rec + 1e-16)
             )
 
         return accuracy_score/2, precision_score/2, recall_score/2, F1_score/2, threshold
