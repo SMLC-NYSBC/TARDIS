@@ -84,6 +84,7 @@ def train_dist(
     }
 
     """Check input variable"""
+    print(model_structure)
     model_structure = check_model_dict(model_structure)
 
     if not isinstance(device, torch.device) and isinstance(device, str):
