@@ -339,7 +339,12 @@ def draw_circle(center: np.ndarray, radius: float, circle_id: int) -> np.ndarray
         np.ndarray: A numpy array containing points [circle_id, z, y, x] on the circle.
     """
     circle_points = []
-    z0, y0, x0 = center
+    if len(center) == 3:
+        z0, y0, x0 = center
+    else:
+        y0, x0 = center
+        z0 = 0
+
     x, y = radius - 1, 0
     dx, dy = 1, 1
     err = dx - (radius * 2)
@@ -371,7 +376,7 @@ def draw_circle(center: np.ndarray, radius: float, circle_id: int) -> np.ndarray
 
 
 def create_simulated_dataset(size, sim_type: str):
-    assert sim_type in ['mix', 'filaments', 'membranes']
+    assert sim_type in ['mix', 'filaments', 'membranes', 'membranes2d']
     coord = []
     i = 0
     if sim_type == 'mix' or sim_type == 'filaments':
@@ -395,6 +400,14 @@ def create_simulated_dataset(size, sim_type: str):
             while size[0] > (size[1] - radius) and size[0] > (size[2] - radius):
                 center = np.random.randint(0, (size[0], size[1] - radius, size[2] - radius))
             center = np.random.randint(0, (size[0], size[1] - radius, size[2] - radius))
+            coord.append(draw_circle(center, radius, i))
+            i += 1
+
+    if sim_type == 'mix' or sim_type == 'membranes2d':
+        for _ in range(250):  # Drawing n random circles
+            radius = np.random.randint(10, size[1] // 20)
+
+            center = np.random.randint(0, (size[1] - radius, size[2] - radius))
             coord.append(draw_circle(center, radius, i))
             i += 1
 
