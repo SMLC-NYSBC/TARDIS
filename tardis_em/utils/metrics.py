@@ -120,8 +120,8 @@ def eval_graph_f1(
             recall_score = round(recall[id_], 2)
             F1_score = round(f1[id_], 2)
         else:
-            accuracy_score, precision_score, recall_score, F1_score, threshold = 0, 0, 0, 0, 0
-            input_df = torch.where(logits > threshold, 1, 0)
+            accuracy_score, precision_score, recall_score, F1_score = 0, 0, 0, 0
+            input_df = torch.where(logits >= threshold, 1, 0)
             idx_1 = torch.where(targets == 1)
             idx_0 = torch.where(targets == 0)
 
