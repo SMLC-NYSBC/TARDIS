@@ -132,7 +132,7 @@ class EdgeEmbedding(nn.Module):
         Returns:
             torch.Tensor: Embedded features.
         """
-        g_len = input_coord.shape[-1]
+        g_len = input_coord.shape[-2]
         g_range = range(g_len)
 
         dist = torch.cdist(input_coord, input_coord)
@@ -155,7 +155,7 @@ class EdgeEmbedding(nn.Module):
                 (1, g_len, g_len, len(self._range)), device=dist.device
             )
             for id_, i in enumerate(self._range):
-                dist_range[:, :, :, id_] = torch.exp(-(dist**2) / (i**2 * 2))
+                dist_range[..., id_] = torch.exp(-(dist**2) / (i**2 * 2))
 
             isnan = torch.isnan(dist_range)
             dist_range = torch.where(isnan, torch.zeros_like(dist_range), dist_range)
