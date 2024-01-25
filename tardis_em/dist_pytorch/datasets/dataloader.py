@@ -198,11 +198,16 @@ class FilamentSimulateDataset(BasicDataset):
             self.temp = "temp_test"
 
         # Simulate filament dataset
-        coord_file = create_simulated_dataset(
-            size=list(np.random.randint((1, 512, 512), (250, 4096, 4096))),
-            sim_type=self.type,
-        )
-
+        if self.type in ["mix3d", "membranes"]:
+            coord_file = create_simulated_dataset(
+                size=list(np.random.randint((50, 512, 512), (50, 1024, 1024))),
+                sim_type=self.type,
+            )
+        else:
+            coord_file = create_simulated_dataset(
+                size=list(np.random.randint((1, 512, 512), (250, 4096, 4096))),
+                sim_type=self.type,
+            )
         # Pre-process coord and image data also, if exist remove duplicates
         coord, _ = preprocess_data(coord=coord_file)
 

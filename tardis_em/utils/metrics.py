@@ -136,16 +136,16 @@ def eval_graph_f1(
             precision_score += tp / (tp + fp + 1e-16)
             recall_score += tp / (tp + fn + 1e-16)
             F1_score += (
-                    2
-                    * (precision_score * recall_score)
-                    / (precision_score + recall_score + 1e-16)
+                2
+                * (precision_score * recall_score)
+                / (precision_score + recall_score + 1e-16)
             )
 
             # IDX_0
             input_ = input_df[idx_0]
             target_ = targets[idx_0]
 
-            tp, fp, tn, fn = confusion_matrix(input_, target_)
+            tn, fn, tp, fp = confusion_matrix(input_, target_)
 
             acc = (tp + tn) / (tp + tn + fp + fn + 1e-16)
             accuracy_score += acc
@@ -153,13 +153,15 @@ def eval_graph_f1(
             precision_score += prec
             rec = tp / (tp + fn + 1e-16)
             recall_score += rec
-            F1_score += (
-                    2
-                    * (prec * rec)
-                    / (prec + rec + 1e-16)
-            )
+            F1_score += 2 * (prec * rec) / (prec + rec + 1e-16)
 
-        return accuracy_score/2, precision_score/2, recall_score/2, F1_score/2, threshold
+        return (
+            accuracy_score / 2,
+            precision_score / 2,
+            recall_score / 2,
+            F1_score / 2,
+            threshold,
+        )
 
 
 def calculate_f1(

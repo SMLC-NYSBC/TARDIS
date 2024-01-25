@@ -326,7 +326,13 @@ def draw_curved_line(
     return np.vstack(curve_points)
 
 
-def draw_circle(center: np.ndarray, radius: float, circle_id: int) -> np.ndarray:
+def draw_circle(
+    center: np.ndarray,
+    radius: float,
+    circle_id: int,
+    _3d=False,
+    size=None,
+) -> np.ndarray:
     """
     Draw a circle in a 3D space.
 
@@ -334,52 +340,168 @@ def draw_circle(center: np.ndarray, radius: float, circle_id: int) -> np.ndarray
         center ( np.ndarray): (z0, y0, x0) representing the center of the circle.
         radius (float): The radius of the circle.
         circle_id (int): An identifier for the circle.
+        _3d (bool):
 
     Returns:
         np.ndarray: A numpy array containing points [circle_id, z, y, x] on the circle.
     """
     circle_points = []
-    if len(center) == 3:
+
+    if _3d:
         z0, y0, x0 = center
+        sphere_points = []
+        lower_bound = np.array([0, 0, 0])
+        upper_bound = np.array(size)
+
+        # Determine the angle increments based on the desired distance between points
+        d_phi = d_theta = 1 / radius
+        pi1 = np.random.randint(1, 5)
+        pi2 = np.random.randint(1, 5)
+
+        for theta in np.arange(0, 2 * np.pi // pi1, d_theta):
+            for phi in np.arange(0, np.pi // pi2, d_phi):
+                x = x0 + radius * np.sin(phi) * np.cos(theta)
+                y = y0 + radius * np.sin(phi) * np.sin(theta)
+                z = z0 + radius * np.cos(phi)
+
+                sphere_points.append([circle_id, z, y, x])
+
+        sphere_points = np.array(
+            [
+                p
+                for p in sphere_points
+                if np.all(p[1:] >= lower_bound) and np.all(p[1:] <= upper_bound)
+            ]
+        )
+
+        return np.array(sphere_points)
     else:
-        y0, x0 = center
-        z0 = 0
+        if len(center) == 3:
+            z0, y0, x0 = center
+        else:
+            y0, x0 = center
+            z0 = 0
 
-    x, y = radius - 1, 0
-    dx, dy = 1, 1
-    err = dx - (radius * 2)
+        x, y = radius - 1, 0
+        dx, dy = 1, 1
+        err = dx - (radius * 2)
 
-    while x >= y:
-        points = [
-            [x0 + x, y0 + y],
-            [x0 + x, y0 - y],
-            [x0 - x, y0 + y],
-            [x0 - x, y0 - y],
-            [x0 + y, y0 + x],
-            [x0 + y, y0 - x],
-            [x0 - y, y0 + x],
-            [x0 - y, y0 - x],
-        ]
-        for point in points:
-            circle_points.append([circle_id, *point, z0])
+        while x >= y:
+            points = [
+                [x0 + x, y0 + y],
+                [x0 + x, y0 - y],
+                [x0 - x, y0 + y],
+                [x0 - x, y0 - y],
+                [x0 + y, y0 + x],
+                [x0 + y, y0 - x],
+                [x0 - y, y0 + x],
+                [x0 - y, y0 - x],
+            ]
+            for point in points:
+                circle_points.append([circle_id, *point, z0])
 
-        if err <= 0:
-            y += 1
-            err += dy * 2
-            dy += 1
-        if err > 0:
-            x -= 1
-            dx += 1
-            err += dx * 2 - (radius * 2)
+            if err <= 0:
+                y += 1
+                err += dy * 2
+                dy += 1
+            if err > 0:
+                x -= 1
+                dx += 1
+                err += dx * 2 - (radius * 2)
 
     return np.vstack(circle_points)
 
 
+def draw_sheet(center: np.ndarray, size: tuple, sheet_id: int) -> np.ndarray:
+    """
+    Generate n points on a 3D sheet.
+
+    Args:
+        center (np.ndarray): (z0, y0, x0) representing the center of the circle.
+        size (tuple): Max size to fit sheet.
+        sheet_id (int): Sheet unique id.
+
+    Returns:
+        np.ndarray: A numpy array containing points [x, y, z] on the sheet.
+    """
+    x_range = (0, 100)
+    y_range = (0, 100)
+    z_range = (0, 100)
+
+    lower_bound = np.array([0, 0, 0])
+    upper_bound = np.array((size[2], size[1], size[0]))
+
+    # Random coefficients for more varied shapes
+    coeffs = np.random.uniform(-10, 10, 12)
+
+    # Create grid of x and y coordinates
+    x = np.linspace(x_range[0], x_range[1], 100)
+    y = np.linspace(y_range[0], y_range[1], 100)
+    X, Y = np.meshgrid(x, y)
+
+    # # Apply transformations for Z
+    Z = (
+        coeffs[0] * np.sin(coeffs[1] * X)
+        + coeffs[2] * np.cos(coeffs[3] * Y)
+        + coeffs[4] * X**2
+        + coeffs[5] * Y**2
+    )
+    Z = np.interp(Z, (Z.min(), Z.max()), z_range)
+
+    # Apply transformations for Y
+    Y = (
+        coeffs[6] * np.sin(coeffs[7] * X)
+        + coeffs[8] * np.cos(coeffs[9] * Z)
+        + coeffs[10] * X**2
+        + coeffs[11] * Z**2
+    )
+    Y = Y / z_range[1]
+
+    points = np.vstack([X.ravel(), Y.ravel(), Z.ravel()]).T
+
+    # Define random rotation angles
+    angle_x, angle_y, angle_z = np.random.uniform(0, 2 * np.pi, 3)
+
+    # Rotation matrices
+    Rx = np.array(
+        [
+            [1, 0, 0],
+            [0, np.cos(angle_x), -np.sin(angle_x)],
+            [0, np.sin(angle_x), np.cos(angle_x)],
+        ]
+    )
+
+    Ry = np.array(
+        [
+            [np.cos(angle_y), 0, np.sin(angle_y)],
+            [0, 1, 0],
+            [-np.sin(angle_y), 0, np.cos(angle_y)],
+        ]
+    )
+
+    # Apply rotations
+    points = np.dot(points, Rx.T)
+    points = np.dot(points, Ry.T)
+
+    points[:, 0] = points[:, 0] + center[2] / 2
+    points[:, 1] = points[:, 1] + center[1] / 2
+    points[:, 2] = points[:, 2] + center[0] / 2
+
+    points = np.array(
+        [p for p in points if np.all(p >= lower_bound) and np.all(p <= upper_bound)]
+    )
+
+    if len(points) > 0:
+        return np.hstack((np.repeat(sheet_id, len(points))[:, None], points))
+    else:
+        return points
+
+
 def create_simulated_dataset(size, sim_type: str):
-    assert sim_type in ['mix', 'filaments', 'membranes', 'membranes2d']
+    assert sim_type in ["mix3d", "mix2d", "filaments", "membranes", "membranes2d"]
     coord = []
     i = 0
-    if sim_type == 'mix' or sim_type == 'filaments':
+    if sim_type in ["mix2d", "mix3d"] or sim_type == "filaments":
         for _ in range(10):  # Drawing n random lines
             p1 = np.random.randint(0, size, size=(3,))
             p2 = np.random.randint(0, size, size=(3,))
@@ -393,22 +515,37 @@ def create_simulated_dataset(size, sim_type: str):
             coord.append(draw_curved_line(sp, cp, ep, i))
             i += 1
 
-    if sim_type == 'mix' or sim_type == 'membranes':
-        for _ in range(250):  # Drawing n random circles
-            radius = np.random.randint(10, size[1] // 20)
-
-            while size[0] > (size[1] - radius) and size[0] > (size[2] - radius):
-                center = np.random.randint(0, (size[0], size[1] - radius, size[2] - radius))
-            center = np.random.randint(0, (size[0], size[1] - radius, size[2] - radius))
-            coord.append(draw_circle(center, radius, i))
-            i += 1
-
-    if sim_type == 'mix' or sim_type == 'membranes2d':
+    if sim_type == "mix2d" or sim_type == "membranes2d":
         for _ in range(100):  # Drawing n random circles
             radius = np.random.randint(10, size[1] // 20)
 
             center = np.random.randint(0, (size[1] - radius, size[2] - radius))
             coord.append(draw_circle(center, radius, i))
             i += 1
+
+    if sim_type == "mix3d" or sim_type == "membranes":
+        for _ in range(15):  # Drawing n random sphere
+            radius = np.random.randint(10, size[1] // 4)
+            z_center = np.random.randint(10, size[0] - 10)
+
+            center = np.random.randint(
+                0, (z_center, size[1] - radius, size[2] - radius)
+            )
+            c = draw_circle(center, radius, i, _3d=True, size=size)
+            if len(c) > 0:
+                coord.append(c)
+                i += 1
+
+        for _ in range(5):  # Drawing n random sheets
+            z_center = np.random.randint(10, size[0] - 10)
+
+            center = np.random.randint(
+                0, (z_center, size[1] - radius, size[2] - radius)
+            )
+
+            c = draw_sheet(center, size, i)
+            if len(c) > 0:
+                coord.append(c)
+                i += 1
 
     return np.vstack(coord)

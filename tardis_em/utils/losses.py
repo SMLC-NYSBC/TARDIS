@@ -164,7 +164,7 @@ class BCEGraphWiseLoss(AbstractLoss):
         self.loss = nn.BCELoss(reduction=self.reduction)
 
     def forward(
-            self, logits: torch.Tensor, targets: torch.Tensor, mask=True
+        self, logits: torch.Tensor, targets: torch.Tensor, mask=True
     ) -> torch.Tensor:
         """
         Computes the BCE loss between the logits and targets.

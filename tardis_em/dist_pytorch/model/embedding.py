@@ -145,10 +145,7 @@ class EdgeEmbedding(nn.Module):
             dist[:, g_range, g_range] = 1
 
             if self.cos:
-                return torch.cos(
-                    F.linear(dist.unsqueeze(3),
-                             self.weight, self.bias)
-                )
+                return torch.cos(F.linear(dist.unsqueeze(3), self.weight, self.bias))
             return self.linear(dist.unsqueeze(3))
         else:
             dist_range = torch.zeros(
@@ -162,8 +159,5 @@ class EdgeEmbedding(nn.Module):
             dist_range[:, g_range, g_range, :] = 1
 
             if self.cos:
-                return torch.cos(
-                    F.linear(dist_range, self.weight, self.bias)
-                )
+                return torch.cos(F.linear(dist_range, self.weight, self.bias))
             return self.linear(dist_range)
-
