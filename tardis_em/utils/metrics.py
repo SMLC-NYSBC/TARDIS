@@ -130,7 +130,6 @@ def eval_graph_f1(
             target_ = targets[idx_1]
 
             tp, fp, tn, fn = confusion_matrix(input_, target_)
-            tp = tp - len(input_df)  # remove diagonal from F1
 
             accuracy_score += (tp + tn) / (tp + tn + fp + fn + 1e-16)
             precision_score += tp / (tp + fp + 1e-16)
