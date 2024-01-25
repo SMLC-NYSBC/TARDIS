@@ -404,7 +404,7 @@ def create_simulated_dataset(size, sim_type: str):
             i += 1
 
     if sim_type == 'mix' or sim_type == 'membranes2d':
-        for _ in range(250):  # Drawing n random circles
+        for _ in range(100):  # Drawing n random circles
             radius = np.random.randint(10, size[1] // 20)
 
             center = np.random.randint(0, (size[1] - radius, size[2] - radius))

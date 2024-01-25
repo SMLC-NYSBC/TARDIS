@@ -389,7 +389,7 @@ class FilterConnectedNearSegments:
             ]
         )
 
-    def __call__(self, point_cloud: np.ndarray, omit_border: int):
+    def __call__(self, point_cloud: np.ndarray, omit_border=0):
         past_l = 0
         while len(np.unique(point_cloud[:, 0])) != past_l:
             if past_l == 0:
