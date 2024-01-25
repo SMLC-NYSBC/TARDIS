@@ -122,7 +122,7 @@ def eval_graph_f1(
         else:
             accuracy_score, precision_score, recall_score, F1_score, threshold = 0, 0, 0, 0, 0
             input_df = torch.where(logits > threshold, 1, 0)
-            idx_1 = torch.where(targets > 0)
+            idx_1 = torch.where(targets == 1)
             idx_0 = torch.where(targets == 0)
 
             # IDX_1
@@ -146,7 +146,6 @@ def eval_graph_f1(
             target_ = targets[idx_0]
 
             tp, fp, tn, fn = confusion_matrix(input_, target_)
-            tp = tp - len(input_df)  # remove diagonal from F1
 
             acc = (tp + tn) / (tp + tn + fp + fn + 1e-16)
             accuracy_score += acc
