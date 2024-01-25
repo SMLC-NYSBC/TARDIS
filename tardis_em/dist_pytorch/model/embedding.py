@@ -94,7 +94,7 @@ class EdgeEmbedding(nn.Module):
             if len(sigma) == 2:
                 self._range = torch.linspace(sigma[0], sigma[1], n_out)
             else:
-                self._range = torch.linspace(sigma[0], sigma[1], sigma[2])
+                self._range = torch.linspace(sigma[0], sigma[1], int(sigma[2]))
             assert (
                 len(self._range) <= n_out
             ), f"Sigma range is out of shape. n_out = {n_out} but sigma range = {len(self._range)}"
