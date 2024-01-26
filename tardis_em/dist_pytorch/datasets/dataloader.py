@@ -203,11 +203,13 @@ class FilamentSimulateDataset(BasicDataset):
                 size=list(np.random.randint((50, 512, 512), (60, 1024, 1024))),
                 sim_type=self.type,
             )
+            mesh = 4
         else:
             coord_file = create_simulated_dataset(
                 size=list(np.random.randint((1, 512, 512), (250, 4096, 4096))),
                 sim_type=self.type,
             )
+            mesh = 2
         # Pre-process coord and image data also, if exist remove duplicates
         coord, _ = preprocess_data(coord=coord_file)
 
@@ -254,11 +256,11 @@ class FilamentSimulateDataset(BasicDataset):
         # Patch dataset
         if self.train:
             coords_idx, df_idx, graph_idx, output_idx, _ = self.VD.patched_dataset(
-                coord=coord, mesh=2, random=True
+                coord=coord, mesh=mesh, random=True
             )
         else:
             coords_idx, df_idx, graph_idx, output_idx, _ = self.VD.patched_dataset(
-                coord=coord, mesh=2
+                coord=coord, mesh=mesh
             )
 
         # Output edge_f,   node_f, graph,     node_idx,   node_class

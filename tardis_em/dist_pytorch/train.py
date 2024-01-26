@@ -193,8 +193,7 @@ def train_dist(
 
     """Build trainer"""
     if dataset_type in ["filament", "MT", "Mem"] or dataset_type[1] in [
-        "filament",
-        "membrane2d",
+        "filament", "membrane2d", "mix2d"
     ]:
         dataset_type = 2
     else:
