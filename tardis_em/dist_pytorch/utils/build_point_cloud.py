@@ -18,7 +18,8 @@ from skimage.morphology import skeletonize, skeletonize_3d
 
 from tardis_em.dist_pytorch.utils.utils import VoxelDownSampling
 from tardis_em.utils.errors import TardisError
-from tardis_em.utils.spline_metric import sort_segment
+from tardis_em.dist_pytorch.utils.utils import pc_median_dist
+from copy import deepcopy
 
 
 class BuildPointCloud:
@@ -536,7 +537,15 @@ def create_simulated_dataset(size, sim_type: str):
                 coord.append(c)
                 i += 1
 
-        for _ in range(5):  # Drawing n random sheets
+                dist_ = pc_median_dist(c[:, 1:], False) * np.random.randint(3, 10)
+                d = deepcopy(c)
+
+                d[:, 0] += 1
+                d[:, 1:] += dist_
+                coord.append(d)
+                i += 1
+
+        for _ in range(10):  # Drawing n random sheets
             z_center = np.random.randint(10, size[0] - 10)
 
             center = np.random.randint(
@@ -546,6 +555,13 @@ def create_simulated_dataset(size, sim_type: str):
             c = draw_sheet(center, size, i)
             if len(c) > 0:
                 coord.append(c)
+
+                dist_ = pc_median_dist(c[:, 1:], False) * np.random.randint(3, 10)
+                d = deepcopy(c)
+
+                d[:, 0] += 1
+                d[:, 1:] += dist_
+                coord.append(d)
                 i += 1
 
     return np.vstack(coord)
