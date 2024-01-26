@@ -203,7 +203,7 @@ class FilamentSimulateDataset(BasicDataset):
                 size=list(np.random.randint((50, 512, 512), (60, 1024, 1024))),
                 sim_type=self.type,
             )
-            mesh = 4
+            mesh = 8
         else:
             coord_file = create_simulated_dataset(
                 size=list(np.random.randint((1, 512, 512), (250, 4096, 4096))),
