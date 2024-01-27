@@ -200,7 +200,7 @@ class FilamentSimulateDataset(BasicDataset):
         # Simulate filament dataset
         if self.type in ["mix3d", "membranes"]:
             coord_file = create_simulated_dataset(
-                size=list(np.random.randint((50, 512, 512), (60, 1024, 1024))),
+                size=list(np.random.randint((50, 512, 512), (60, 640, 640))),
                 sim_type=self.type,
             )
             mesh = 8

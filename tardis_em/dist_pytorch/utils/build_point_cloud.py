@@ -525,7 +525,7 @@ def create_simulated_dataset(size, sim_type: str):
             i += 1
 
     if sim_type == "mix3d" or sim_type == "membranes":
-        for _ in range(15):  # Drawing n random sphere
+        for _ in range(5):  # Drawing n random sphere
             radius = np.random.randint(10, size[1] // 4)
             z_center = np.random.randint(10, size[0] - 10)
 
@@ -537,15 +537,7 @@ def create_simulated_dataset(size, sim_type: str):
                 coord.append(c)
                 i += 1
 
-                dist_ = pc_median_dist(c[:, 1:], False) * np.random.randint(3, 10)
-                d = deepcopy(c)
-
-                d[:, 0] += 1
-                d[:, 1:] += dist_
-                coord.append(d)
-                i += 1
-
-        for _ in range(10):  # Drawing n random sheets
+        for _ in range(5):  # Drawing n random sheets
             z_center = np.random.randint(10, size[0] - 10)
 
             center = np.random.randint(
@@ -555,8 +547,9 @@ def create_simulated_dataset(size, sim_type: str):
             c = draw_sheet(center, size, i)
             if len(c) > 0:
                 coord.append(c)
+                i += 1
 
-                dist_ = pc_median_dist(c[:, 1:], False) * np.random.randint(3, 10)
+                dist_ = pc_median_dist(c[:, 1:], False) * np.random.randint(7, 10)
                 d = deepcopy(c)
 
                 d[:, 0] += 1
