@@ -537,7 +537,8 @@ def create_simulated_dataset(size, sim_type: str):
         #         coord.append(c)
         #         i += 1
 
-        for _ in range(2):  # Drawing n random sheets
+        len_ = len(coord) + 4
+        while len_ != len(coord):
             radius = np.random.randint(10, size[1] // 4)
             z_center = np.random.randint(10, size[0] - 10)
 
@@ -546,7 +547,7 @@ def create_simulated_dataset(size, sim_type: str):
             )
 
             c = draw_sheet(center, size, i)
-            if len(c) > 0:
+            if len(c) > 100:
                 coord.append(c)
                 i += 1
 
@@ -554,7 +555,7 @@ def create_simulated_dataset(size, sim_type: str):
                 d = deepcopy(c)
 
                 d[:, 0] += 1
-                d[:, 1:] += dist_
+                d[:, 1] += dist_
                 coord.append(d)
                 i += 1
 
