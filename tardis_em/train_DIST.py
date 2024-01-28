@@ -73,6 +73,14 @@ ota = ota_update()
     show_default=True,
 )
 @click.option(
+    "-eg",
+    "--edge_angles",
+    default=False,
+    type=bool,
+    help="Perfomer angle embedding.",
+    show_default=True,
+)
+@click.option(
     "-nk",
     "--num_knn",
     default=None,
@@ -218,6 +226,7 @@ def main(
     n_out: int,
     node_dim: int,
     edge_dim: int,
+    edge_angles: bool,
     num_knn: int,
     layers: int,
     heads: int,
@@ -386,6 +395,7 @@ def main(
 
     train_dist(
         dataset_type=dataset_type,
+        edge_angles=edge_angles,
         train_dataloader=dl_train_graph,
         test_dataloader=dl_test_graph,
         model_structure=model_dict,

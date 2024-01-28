@@ -51,6 +51,7 @@ class BasicDIST(nn.Module):
         dropout_rate=0,
         structure="full",
         predict=False,
+        edge_angles=False,
     ):
         super(BasicDIST, self).__init__()
 
@@ -73,7 +74,9 @@ class BasicDIST(nn.Module):
                     n_in=self.node_input, n_out=self.node_dim, sigma=self.node_sigma
                 )
 
-        self.coord_embed = EdgeEmbedding(n_out=self.edge_dim, sigma=self.edge_sigma)
+        self.coord_embed = EdgeEmbedding(
+            n_out=self.edge_dim, sigma=self.edge_sigma, angles=edge_angles
+        )
 
         self.layers = DistStack(
             node_dim=self.node_dim,

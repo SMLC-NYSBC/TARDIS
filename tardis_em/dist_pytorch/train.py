@@ -37,6 +37,7 @@ torch.autograd.profiler.emit_nvtx(enabled=False)
 
 def train_dist(
     dataset_type: str,
+    edge_angles: bool,
     train_dataloader,
     test_dataloader,
     model_structure: dict,
@@ -104,6 +105,7 @@ def train_dist(
             dropout_rate=model_structure["dropout_rate"],
             structure=model_structure["structure"],
             predict=True,
+            edge_angles=edge_angles,
         )
     elif model_structure["dist_type"] == "instance-sparse":
         losses_f = {
@@ -193,7 +195,9 @@ def train_dist(
 
     """Build trainer"""
     if dataset_type in ["filament", "MT", "Mem"] or dataset_type[1] in [
-        "filament", "membrane2d", "mix2d"
+        "filament",
+        "membrane2d",
+        "mix2d",
     ]:
         dataset_type = 2
     else:

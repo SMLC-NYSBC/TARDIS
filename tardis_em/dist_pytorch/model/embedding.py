@@ -83,7 +83,9 @@ class EdgeEmbedding(nn.Module):
             used to normalize distances.
     """
 
-    def __init__(self, n_out: int, sigma: Union[int, float, list], cos=False, angles=False):
+    def __init__(
+        self, n_out: int, sigma: Union[int, float, list], cos=False, angles=False
+    ):
         super().__init__()
 
         self.n_out = n_out
@@ -151,15 +153,15 @@ class EdgeEmbedding(nn.Module):
             # Overwrite diagonal with 1
             dist = dist.unsqueeze(3)
 
-            angles = torch.zeros(
-                (1, g_len, g_len, 7), device=dist.device
-            )
+            angles = torch.zeros((1, g_len, g_len, 7), device=dist.device)
             if self.angles:
                 centers = torch.mean(input_coord, dim=1, keepdim=True)
                 vectors_from_center = input_coord - centers
 
                 norms = torch.norm(vectors_from_center, dim=2, keepdim=True)
-                dot_products = torch.matmul(vectors_from_center, vectors_from_center.transpose(-1, -2))
+                dot_products = torch.matmul(
+                    vectors_from_center, vectors_from_center.transpose(-1, -2)
+                )
 
                 cosine_angles = dot_products / (norms @ norms.transpose(-1, -2))
                 cosine_angles = torch.clamp(cosine_angles, -1.0, 1.0)
@@ -168,7 +170,7 @@ class EdgeEmbedding(nn.Module):
 
                 sigma_rot = [2, 4, 8, 16, 32, 64, 182]
                 for id_, s in enumerate(sigma_rot):
-                    angles[..., id_] = torch.exp(-(angles_matrix ** 2) / (s ** 2 * 2))
+                    angles[..., id_] = torch.exp(-(angles_matrix**2) / (s**2 * 2))
 
                 dist = torch.concat((dist, angles), dim=-1)
             dist[:, g_range, g_range, :] = 1
@@ -197,7 +199,9 @@ class EdgeEmbedding(nn.Module):
                 vectors_from_center = input_coord - centers
 
                 norms = torch.norm(vectors_from_center, dim=2, keepdim=True)
-                dot_products = torch.matmul(vectors_from_center, vectors_from_center.transpose(-1, -2))
+                dot_products = torch.matmul(
+                    vectors_from_center, vectors_from_center.transpose(-1, -2)
+                )
 
                 cosine_angles = dot_products / (norms @ norms.transpose(-1, -2))
                 cosine_angles = torch.clamp(cosine_angles, -1.0, 1.0)
@@ -206,7 +210,9 @@ class EdgeEmbedding(nn.Module):
 
                 sigma_rot = [2, 4, 8, 16, 32, 64, 182]
                 for id_2, s in enumerate(sigma_rot):
-                    dist_range[..., id_1 + id_2 + 1] = torch.exp(-(angles_matrix ** 2) / (s ** 2 * 2))
+                    dist_range[..., id_1 + id_2 + 1] = torch.exp(
+                        -(angles_matrix**2) / (s**2 * 2)
+                    )
 
             dist_range[:, g_range, g_range, :] = 1
 
