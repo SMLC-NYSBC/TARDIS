@@ -537,7 +537,7 @@ def create_simulated_dataset(size, sim_type: str):
         #         coord.append(c)
         #         i += 1
 
-        len_ = len(coord) + 4
+        len_ = len(coord) + 6
         while len_ != len(coord):
             radius = np.random.randint(10, size[1] // 4)
             z_center = np.random.randint(10, size[0] - 10)
@@ -551,7 +551,7 @@ def create_simulated_dataset(size, sim_type: str):
                 coord.append(c)
                 i += 1
 
-                dist_ = pc_median_dist(c[:, 1:], False) * np.random.randint(8, 15)
+                dist_ = pc_median_dist(c[:, 1:], False) * np.random.randint(10, 15)
                 d = deepcopy(c)
 
                 d[:, 0] += 1

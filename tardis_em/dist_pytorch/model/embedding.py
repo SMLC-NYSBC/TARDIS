@@ -83,12 +83,13 @@ class EdgeEmbedding(nn.Module):
             used to normalize distances.
     """
 
-    def __init__(self, n_out: int, sigma: Union[int, float, list], cos=False):
+    def __init__(self, n_out: int, sigma: Union[int, float, list], cos=False, angles=False):
         super().__init__()
 
         self.n_out = n_out
         self.sigma = sigma
         self.cos = cos
+        self.angles = angles
 
         if isinstance(sigma, list):
             if len(sigma) == 2:
@@ -99,9 +100,15 @@ class EdgeEmbedding(nn.Module):
                 len(self._range) <= n_out
             ), f"Sigma range is out of shape. n_out = {n_out} but sigma range = {len(self._range)}"
 
-            self.linear = nn.Linear(len(self._range), n_out, bias=False)
+            if self.angles:
+                self.linear = nn.Linear(len(self._range) + 7, n_out, bias=False)
+            else:
+                self.linear = nn.Linear(len(self._range), n_out, bias=False)
         else:
-            self.linear = nn.Linear(1, n_out, bias=False)
+            if self.angles:
+                self.linear = nn.Linear(8, n_out, bias=False)
+            else:
+                self.linear = nn.Linear(1, n_out, bias=False)
 
         if cos:
             self.linear = None
@@ -142,20 +149,65 @@ class EdgeEmbedding(nn.Module):
             dist = torch.where(isnan, torch.zeros_like(dist), dist)
 
             # Overwrite diagonal with 1
-            dist[:, g_range, g_range] = 1
+            dist = dist.unsqueeze(3)
+
+            angles = torch.zeros(
+                (1, g_len, g_len, 7), device=dist.device
+            )
+            if self.angles:
+                centers = torch.mean(input_coord, dim=1, keepdim=True)
+                vectors_from_center = input_coord - centers
+
+                norms = torch.norm(vectors_from_center, dim=2, keepdim=True)
+                dot_products = torch.matmul(vectors_from_center, vectors_from_center.transpose(-1, -2))
+
+                cosine_angles = dot_products / (norms @ norms.transpose(-1, -2))
+                cosine_angles = torch.clamp(cosine_angles, -1.0, 1.0)
+
+                angles_matrix = torch.acos(cosine_angles)
+
+                sigma_rot = [2, 4, 8, 16, 32, 64, 182]
+                for id_, s in enumerate(sigma_rot):
+                    angles[..., id_] = torch.exp(-(angles_matrix ** 2) / (s ** 2 * 2))
+
+                dist = torch.concat((dist, angles), dim=-1)
+            dist[:, g_range, g_range, :] = 1
 
             if self.cos:
-                return torch.cos(F.linear(dist.unsqueeze(3), self.weight, self.bias))
-            return self.linear(dist.unsqueeze(3))
+                return torch.cos(F.linear(dist, self.weight, self.bias))
+            return self.linear(dist)
         else:
-            dist_range = torch.zeros(
-                (1, g_len, g_len, len(self._range)), device=dist.device
-            )
-            for id_, i in enumerate(self._range):
-                dist_range[..., id_] = torch.exp(-(dist**2) / (i**2 * 2))
+            if self.angles:
+                dist_range = torch.zeros(
+                    (1, g_len, g_len, len(self._range) + 7), device=dist.device
+                )
+            else:
+                dist_range = torch.zeros(
+                    (1, g_len, g_len, len(self._range) + 7), device=dist.device
+                )
+
+            for id_1, i in enumerate(self._range):
+                dist_range[..., id_1] = torch.exp(-(dist**2) / (i**2 * 2))
 
             isnan = torch.isnan(dist_range)
             dist_range = torch.where(isnan, torch.zeros_like(dist_range), dist_range)
+
+            if self.angles:
+                centers = torch.mean(input_coord, dim=1, keepdim=True)
+                vectors_from_center = input_coord - centers
+
+                norms = torch.norm(vectors_from_center, dim=2, keepdim=True)
+                dot_products = torch.matmul(vectors_from_center, vectors_from_center.transpose(-1, -2))
+
+                cosine_angles = dot_products / (norms @ norms.transpose(-1, -2))
+                cosine_angles = torch.clamp(cosine_angles, -1.0, 1.0)
+
+                angles_matrix = torch.acos(cosine_angles)
+
+                sigma_rot = [2, 4, 8, 16, 32, 64, 182]
+                for id_2, s in enumerate(sigma_rot):
+                    dist_range[..., id_1 + id_2 + 1] = torch.exp(-(angles_matrix ** 2) / (s ** 2 * 2))
+
             dist_range[:, g_range, g_range, :] = 1
 
             if self.cos:
