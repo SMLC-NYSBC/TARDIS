@@ -185,7 +185,7 @@ class EdgeEmbedding(nn.Module):
                 )
             else:
                 dist_range = torch.zeros(
-                    (1, g_len, g_len, len(self._range) + 7), device=dist.device
+                    (1, g_len, g_len, len(self._range)), device=dist.device
                 )
 
             for id_1, i in enumerate(self._range):
