@@ -103,6 +103,7 @@ class DataSetPredictor:
         debug: bool,
         checkpoint: Optional[list] = None,
         correct_px: float = False,
+        sampling: float = None,
         amira_prefix: str = None,
         filter_by_length: float = None,
         connect_splines: int = None,
@@ -129,6 +130,7 @@ class DataSetPredictor:
         self.amira_prefix = amira_prefix
         self.checkpoint = checkpoint
         self.correct_px = correct_px
+        self.sampling = sampling
 
         # Pre-processing setting
         self.patch_size = patch_size
@@ -306,6 +308,9 @@ class DataSetPredictor:
             self.normalize_px = 25
         else:
             self.normalize_px = 15
+
+        if self.sampling:
+            self.normalize_px = self.sampling
 
         if NN in ["Filament", "Microtubule"]:
             # Build CNN network with loaded pre-trained weights

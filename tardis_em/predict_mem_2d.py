@@ -48,6 +48,14 @@ warnings.simplefilter("ignore", UserWarning)
     show_default=True,
 )
 @click.option(
+    "-sm",
+    "--sampling",
+    default=None,
+    type=float,
+    help="Correct normalization pixel size values.",
+    show_default=True,
+)
+@click.option(
     "-ch",
     "--checkpoint",
     default="None|None",
@@ -178,6 +186,7 @@ def main(
     path: str,
     mask: bool,
     correct_px: float,
+    sampling: int,
     convolution_nn: str,
     checkpoint: str,
     output_format: str,
@@ -215,6 +224,7 @@ def main(
         dir_=path,
         binary_mask=mask,
         correct_px=correct_px,
+        sampling=sampling,
         convolution_nn=convolution_nn,
         checkpoint=checkpoint,
         output_format=output_format,
