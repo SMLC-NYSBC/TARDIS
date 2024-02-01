@@ -187,7 +187,7 @@ def main(
     mask: bool,
     convolution_nn: str,
     correct_px: float,
-    sampling: int,
+    sampling: float,
     checkpoint: str,
     output_format: str,
     patch_size: int,

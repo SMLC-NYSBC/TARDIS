@@ -434,7 +434,10 @@ class DataSetPredictor:
         if self.correct_px is not None:
             self.px = self.correct_px
 
-        self.scale_factor = self.px / self.normalize_px
+        if self.normalize_px is not None:
+            self.scale_factor = self.px / self.normalize_px
+        else:
+            self.scale_factor = 1.0
 
         self.org_shape = self.image.shape
         self.scale_shape = np.multiply(self.org_shape, self.scale_factor).astype(
@@ -516,6 +519,7 @@ class DataSetPredictor:
                 self.tardis_progress(
                     title=self.title,
                     text_1=f"Found {len(self.predict_list)} images to predict!",
+                    text_2=f"Device: {self.device}",
                     text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {id_name}",
                     text_4=f"Original Pixel size: {self.px} A",
                     text_5=pred_title,

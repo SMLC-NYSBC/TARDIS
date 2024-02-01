@@ -186,7 +186,7 @@ def main(
     path: str,
     mask: bool,
     correct_px: float,
-    sampling: int,
+    sampling: float,
     convolution_nn: str,
     checkpoint: str,
     output_format: str,
