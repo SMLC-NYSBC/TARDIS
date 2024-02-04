@@ -182,13 +182,7 @@ def linear_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray
             ):
                 break
 
-        # Final resize to match the exact requested dimensions
-        if (
-            current_height != final_height
-            or current_width != final_width
-            or current_depth != final_depth
-        ):
-            img = F.interpolate(img, size=scale, mode="trilinear", align_corners=False)
+        img = F.interpolate(img, size=scale, mode="trilinear", align_corners=False)
     else:
         current_height, current_width = img.shape[0], img.shape[1]
         final_height, final_width = scale
@@ -224,19 +218,13 @@ def linear_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray
                 )
                 current_height, current_width = new_height, new_width
 
-            # Final resize to match the exact requested dimensions
-            if new_height != final_height or new_width != final_width:
-                img = F.interpolate(
-                    img, size=scale, mode="bilinear", align_corners=False
-                )
-        else:
-            img = F.interpolate(img, size=scale, mode="bilinear", align_corners=False)
+        img = F.interpolate(img, size=scale, mode="bilinear", align_corners=False)
     return img.detach().numpy()[0, 0, :].astype(dtype)
 
 
 def area_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
     """
-    Saling of 3D array using area method from pytorch
+    Scaling of 3D array using area method from pytorch
 
     Args:
         img: 3D array.
