@@ -185,8 +185,8 @@ def linear_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray
         # Final resize to match the exact requested dimensions
         if (
             current_height != final_height
-            and current_width != final_width
-            and current_depth != final_depth
+            or current_width != final_width
+            or current_depth != final_depth
         ):
             img = F.interpolate(img, size=scale, mode="trilinear", align_corners=False)
     else:
@@ -225,7 +225,7 @@ def linear_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray
                 current_height, current_width = new_height, new_width
 
             # Final resize to match the exact requested dimensions
-            if new_height != final_height and new_width != final_width:
+            if new_height != final_height or new_width != final_width:
                 img = F.interpolate(
                     img, size=scale, mode="bilinear", align_corners=False
                 )
