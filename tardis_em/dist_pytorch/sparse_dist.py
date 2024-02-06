@@ -45,7 +45,8 @@ class SparseDIST(nn.Module):
             edge_dim (int): The dimensionality of the edge features.
             num_layers (int): The number of transformer layers.
             coord_embed_sigma (int, list): The standard deviation for the edge embedding.
-            predict (bool): A boolean value to decide whether to apply a sigmoid activation to the final output.
+            predict (bool): A boolean value to decide whether to apply 
+                a sigmoid activation to the final output.
         """
         super(SparseDIST, self).__init__()
 
@@ -77,7 +78,8 @@ class SparseDIST(nn.Module):
         Embeds the input coordinates using the coord_embed layer.
 
         Args:
-            coords (torch.sparse_coo_tensor): A sparse coordinate tensor containing the input coordinates.
+            coords (torch.sparse_coo_tensor): A sparse coordinate tensor 
+                containing the input coordinates.
 
         Returns:
             torch.sparse_coo_tensor: A sparse coordinate tensor containing the embedded coordinates.
@@ -94,7 +96,8 @@ class SparseDIST(nn.Module):
             coord (torch.tensor): A sparse coordinate tensor containing the input data.
 
         Returns:
-            torch.sparse_coo_tensor: A sparse coordinate tensor representing the output from the model.
+            torch.sparse_coo_tensor: A sparse coordinate tensor 
+                representing the output from the model.
         """
         # Embed coord [n, 3] coordinates into spares tensor
         edge, idx = self.embed_input(coords=coord)  # List[Indices, Values, Shape]

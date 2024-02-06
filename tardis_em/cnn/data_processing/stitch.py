@@ -210,7 +210,7 @@ class StitchImages:
                                     id_="",
                                     py="tardis_em/cnn/data_processing.md/stitch.py",
                                     desc=f"Stitch image size does not match. {img.shape} "
-                                    f"doesnt match ({self.ny}, {self.nx})",
+                                    f"doesn't match ({self.ny}, {self.nx})",
                                 )
                                 sys.exit()
                         else:
@@ -219,7 +219,7 @@ class StitchImages:
                                     id_="",
                                     py="tardis_em/cnn/data_processing.md/stitch.py",
                                     desc=f"Stitch image size does not match. {img.shape} "
-                                    f"doesnt match ({self.nz}, {self.ny}, {self.nx})",
+                                    f"doesn't match ({self.nz}, {self.ny}, {self.nx})",
                                 )
                                 sys.exit()
 

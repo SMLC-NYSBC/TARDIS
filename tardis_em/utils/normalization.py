@@ -10,7 +10,6 @@
 import numpy as np
 import scipy
 import torch
-from scipy.stats import beta
 
 from skimage import exposure
 

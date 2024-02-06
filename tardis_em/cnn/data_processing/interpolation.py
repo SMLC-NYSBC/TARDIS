@@ -166,7 +166,7 @@ def interpolation(points: np.ndarray) -> np.ndarray:
     new_coord = []
     for i in range(0, len(points) - 1):
         """3D interpolation for XYZ dimension"""
-        new_coord.append(list(interpolate_generator(points[i : i + 2, :])))
+        new_coord.append(list(interpolate_generator(points[i:i + 2, :])))
 
     # Append last point
     new_coord.append(list(np.round(points[-1, :]).astype(np.int32)))

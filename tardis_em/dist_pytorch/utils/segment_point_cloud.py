@@ -159,7 +159,7 @@ class PropGreedyGraphCut:
                 return None
 
         for g, o in zip(graphs, output_idx):
-            top_k_indices = np.argsort(g, axis=1)[:, : -10 - 1 : -1]
+            top_k_indices = np.argsort(g, axis=1)[:, : -10 - 1:-1]
             top_k_probs = np.take_along_axis(g, top_k_indices, axis=1).tolist()
 
             top_k_indices = o[top_k_indices].tolist()

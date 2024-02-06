@@ -47,7 +47,8 @@ class SparseEdgeEmbedding(nn.Module):
         Forward pass for SparseEdgeEmbedding.
 
         Args:
-            input_coord (torch.sparse_coo_tensor): A sparse coordinate tensor containing the input coordinates.
+            input_coord (torch.sparse_coo_tensor): A sparse coordinate tensor 
+                containing the input coordinates.
 
         Returns:
             torch.sparse_coo_tensor: A sparse coordinate tensor representing the adjacency matrix.

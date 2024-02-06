@@ -330,11 +330,11 @@ def trim_label_mask(
         min_z = 0
 
     image_trim = image[
-        int(min_z) : int(max_z), int(min_y) : int(max_y), int(min_x) : int(max_x)
+        int(min_z):int(max_z), int(min_y):int(max_y), int(min_x):int(max_x)
     ]
 
     label_mask_trim = label_mask[
-        int(min_z) : int(max_z), int(min_y) : int(max_y), int(min_x) : int(max_x)
+        int(min_z):int(max_z), int(min_y):int(max_y), int(min_x):int(max_x)
     ]
 
     points[:, 0] = points[:, 0] - min_x

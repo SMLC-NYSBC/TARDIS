@@ -7,8 +7,6 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2024                                            #
 #######################################################################
-import sys
-
 import numpy as np
 import torch
 

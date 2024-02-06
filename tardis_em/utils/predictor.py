@@ -76,7 +76,8 @@ class DataSetPredictor:
         amira_prefix (str): Optional, Amira file prefix used for spatial graph comparison.
         filter_by_length (float): Optional, filter setting for filtering short splines.
         connect_splines (int): Optional, filter setting for connecting near splines.
-        connect_cylinder (int): Optional, filter setting for connecting splines withing cylinder radius.
+        connect_cylinder (int): Optional, filter setting for connecting splines 
+            withing cylinder radius.
         amira_compare_distance (int): Optional, compare setting, max distance between two splines
         to consider them as the same.
         amira_inter_probability (float): Optional, compare setting, portability threshold
@@ -190,7 +191,8 @@ class DataSetPredictor:
             TardisError(
                 id_="151",
                 py="tardis_em/utils/predictor.py",
-                desc=f"Require that at lest one output format is not None but {output_format} was given!",
+                desc="Require that at lest one output format is not None "
+                f"but {output_format} was given!",
             )
             sys.exit()
 

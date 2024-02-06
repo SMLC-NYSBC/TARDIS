@@ -10,7 +10,7 @@
 from typing import Optional, Tuple, Union
 
 import numpy as np
-from scipy.interpolate import splev, splprep, UnivariateSpline
+from scipy.interpolate import splev, splprep
 from scipy.spatial.distance import cdist
 from sklearn.neighbors import KDTree
 
@@ -698,7 +698,7 @@ def sort_segment(coord: np.ndarray) -> np.ndarray:
     Returns:
         np.ndarray: Array of point in line order.
     """
-    if len(coord) == 0:
+    if len(coord) < 2:
         return coord
 
     new_c = []
@@ -717,7 +717,11 @@ def sort_segment(coord: np.ndarray) -> np.ndarray:
 
         new_c.append(coord[points])
         coord = np.delete(coord, points, 0)
-    return np.stack(new_c)
+
+    if len(new_c) > 0:
+        return np.stack(new_c)
+    else:
+        return coord
 
 
 def reorder_segments_id(
@@ -868,7 +872,8 @@ def cut_150_degree(segments_array: np.ndarray):
         segments_array:
 
     Returns:
-        Tuple[bool, np.ndarray]: Indicates whether any segment was cut, and New array of cut segments.
+        Tuple[bool, np.ndarray]: Indicates whether any segment was cut, 
+            and New array of cut segments.
     """
 
     cut_segments = []
@@ -897,7 +902,7 @@ def cut_150_degree(segments_array: np.ndarray):
             # Find the minimum angle and cut the segment
             min_angle_idx = np.where(angles_ == np.min(angles_))[0][0]
             cut_segments.append(pc_[: min_angle_idx + 1, :])
-            cut_segments.append(pc_[min_angle_idx + 1 :, :])
+            cut_segments.append(pc_[min_angle_idx + 1:, :])
         else:
             cut_segments.append(pc_)
 
@@ -942,11 +947,13 @@ class ComputeConfidenceScore:
     @staticmethod
     def _angle_smoothness(tangents):
         """
-        Calculate the smoothness of a sequence of vectors based on the angles between consecutive vectors.
+        Calculate the smoothness of a sequence of vectors based on the angles
+        between consecutive vectors.
 
-        The smoothness is computed as 1 minus the standard deviation of the angles between consecutive vectors.
-        The angles are calculated using the dot product and magnitude of the vectors. A higher smoothness value
-        indicates a more consistent alignment between consecutive vectors, whereas a lower smoothness value
+        The smoothness is computed as 1 minus the standard deviation of the angles between
+        consecutive vectors. The angles are calculated using the dot product and
+        magnitude of the vectors. A higher smoothness value indicates a more
+        consistent alignment between consecutive vectors, whereas a lower smoothness value
         indicates more variability in the alignment.
 
         Args:

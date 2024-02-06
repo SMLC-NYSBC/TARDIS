@@ -25,7 +25,19 @@ from tardis_em.dist_pytorch.trainer import (
 from tardis_em.dist_pytorch.utils.utils import check_model_dict
 from tardis_em.utils.device import get_device
 from tardis_em.utils.logo import TardisLogo
-from tardis_em.utils.losses import *
+from tardis_em.utils.losses import (
+    AdaptiveDiceLoss,
+    BCELoss,
+    BCEGraphWiseLoss,
+    WBCELoss,
+    BCEDiceLoss,
+    CELoss,
+    DiceLoss,
+    ClDiceLoss,
+    ClBCELoss,
+    SigmoidFocalLoss,
+    LaplacianEigenmapsLoss,
+)
 from tardis_em.utils.trainer import ISR_LR
 
 # Setting for stable release to turn off all debug APIs

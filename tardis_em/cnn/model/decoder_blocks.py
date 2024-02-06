@@ -16,7 +16,6 @@ import torch.nn as nn
 from tardis_em.cnn.model.convolution import (
     DoubleConvolution,
     RecurrentDoubleConvolution,
-    SingleConvolution,
 )
 from tardis_em.cnn.model.init_weights import init_weights
 from tardis_em.cnn.utils.utils import number_of_features_per_level
@@ -437,7 +436,6 @@ def build_decoder(
     elif deconv_module == "unet3plus":
         # Unet3Plus decoder
         idx_en = 1
-        idx_de = 1
 
         for i in range(len(feature_map) - 1):
             # Main Module features

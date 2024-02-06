@@ -12,11 +12,9 @@ from typing import Optional
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from tardis_em.cnn.model.init_weights import init_weights
 from tardis_em.cnn.utils.utils import number_of_features_per_level
-from tardis_em.cnn.model.convolution import SingleConvolution
 
 
 class EncoderBlock(nn.Module):

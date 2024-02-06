@@ -14,9 +14,8 @@ matplotlib>3.5.2
 # Jupyter
 jupyter>=1.0.0
 notebook>6.5.2
-trame>=3.2.0
 
 # Point cloud processing library
 open3d==0.9.0; sys_platform == "linux" and python_version < "3.8"
 open3d>=0.9.0; sys_platform == "linux" and python_version >= "3.8"
-open3d>0.16.0; sys_platform != "linux" and python_version < "3.11"
+open3d>=0.16.0; sys_platform != "linux" and python_version < "3.12"

@@ -343,7 +343,7 @@ class Crop2D3D:
                 shape = crop_img.shape
 
                 crop_img = np.zeros((self.size[2], self.size[0], self.size[1]))
-                crop_img[0 : shape[0], 0 : shape[1], 0 : shape[2]] = crop_df
+                crop_img[0:shape[0], 0:shape[1], 0:shape[2]] = crop_df
         elif len(center_point) == 2:
             x0, x1 = self.get_xyz_position(
                 center_point=center_point[0], size=self.size[0], max_size=self.height
@@ -357,7 +357,7 @@ class Crop2D3D:
                 crop_df = np.array(crop_img)
                 shape = crop_img.shape
                 crop_img = np.zeros((self.size[0], self.size[1]))
-                crop_img[0 : shape[0], 0 : shape[1]] = crop_df
+                crop_img[0:shape[0], 0:shape[1]] = crop_df
 
         if self.normalization is not None:
             return self.normalization(crop_img)
