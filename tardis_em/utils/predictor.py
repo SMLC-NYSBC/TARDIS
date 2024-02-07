@@ -1006,21 +1006,23 @@ class DataSetPredictor:
                                         scores=None,
                                     )
                 elif self.output_format.endswith("csv"):
-                    np.savetxt(
-                        join(self.am_output, f"{i[:-self.in_format]}_Segments.csv"),
-                        self.segments,
-                        delimiter=",",
-                    )
+                    segments = pd.DataFrame(self.segments)
+                    segments.to_csv(
+                        join(self.am_output, f"{i[:-self.in_format]}_instances.csv"),
+                        header=['IDs', 'X [A]', 'Y [A]', 'Z [A]'], 
+                        index=False, 
+                        sep=',',
+                        )
 
                     if self.predict in ["Filament", "Microtubule"]:
-                        np.savetxt(
-                            join(
-                                self.am_output,
-                                f"{i[:-self.in_format]}_Segments_filter.csv",
-                            ),
-                            sort_by_length(self.filter_splines(segments=self.segments)),
-                            delimiter=",",
-                        )
+                        self.segments = sort_by_length(self.filter_splines(segments=self.segments))
+                        self.segments = pd.DataFrame(self.segments)
+                        self.segments.to_csv(
+                            join(self.am_output, f"{i[:-self.in_format]}_instances_filter.csv"),
+                            header=['IDs', 'X [A]', 'Y [A]', 'Z [A]'],
+                            index=False,
+                            sep=',',
+                            )
                 elif self.output_format.endswith(("mrc", "tif", "am")):
                     if self.predict in ["Membrane", "Membrane2D"]:
                         self.mask_semantic = draw_semantic_membrane(
