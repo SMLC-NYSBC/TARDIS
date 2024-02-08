@@ -76,7 +76,7 @@ class DataSetPredictor:
         amira_prefix (str): Optional, Amira file prefix used for spatial graph comparison.
         filter_by_length (float): Optional, filter setting for filtering short splines.
         connect_splines (int): Optional, filter setting for connecting near splines.
-        connect_cylinder (int): Optional, filter setting for connecting splines 
+        connect_cylinder (int): Optional, filter setting for connecting splines
             withing cylinder radius.
         amira_compare_distance (int): Optional, compare setting, max distance between two splines
         to consider them as the same.
@@ -311,7 +311,7 @@ class DataSetPredictor:
         else:
             self.normalize_px = 15
 
-        if self.sampling:
+        if self.sampling is not None:
             self.normalize_px = self.sampling
 
         if NN in ["Filament", "Microtubule"]:
@@ -1009,8 +1009,8 @@ class DataSetPredictor:
                     segments = pd.DataFrame(self.segments)
                     segments.to_csv(
                         join(self.am_output, f"{i[:-self.in_format]}_instances.csv"),
-                        header=['IDs', 'X [A]', 'Y [A]', 'Z [A]'], 
-                        index=False, 
+                        header=['IDs', 'X [A]', 'Y [A]', 'Z [A]'],
+                        index=False,
                         sep=',',
                         )
 
