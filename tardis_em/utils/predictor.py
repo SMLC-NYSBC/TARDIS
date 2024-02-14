@@ -459,7 +459,8 @@ class DataSetPredictor:
             )[: self.scale_shape[0], : self.scale_shape[1], : self.scale_shape[2]]
 
         # Restored original image pixel size
-        self.image, _ = scale_image(image=self.image, scale=self.org_shape)
+        self.image, _ = scale_image(image=self.image, scale=self.org_shape, nn=True)
+        self.image = torch.sigmoid(torch.from_numpy(self.image)).cpu().detach().numpy()
 
         if self.cnn_threshold != 0:
             self.image = np.where(self.image >= self.cnn_threshold, 1, 0).astype(
@@ -546,9 +547,6 @@ class DataSetPredictor:
             else:
                 # Predict
                 input_ = self.cnn.predict(input_[None, :], rotate=self.rotate)
-
-            # Mask z = 0 with z = 1 and z =-1 with z = -2, as well as borders with 0's
-            # input_ = self.mask_borders(np.array(input_, dtype=input_.dtype))
 
             tif.imwrite(join(self.output, f"{name}.tif"), input_)
 
@@ -938,9 +936,6 @@ class DataSetPredictor:
                     text_7="Current Task: Segmentation finished!",
                 )
 
-                if self.predict in ["Filament", "Microtubule"]:
-                    self.segments = sort_by_length(self.segments)
-
                 """Save as .am"""
                 if self.output_format.endswith("amSG") and self.predict in [
                     "Filament",
@@ -1246,7 +1241,8 @@ class Predictor:
                 else:
                     out = self.model(x).cpu().detach().numpy()[0, 0, :]
 
-                return torch.sigmoid(torch.from_numpy(out)).cpu().detach().numpy()
+                # return torch.sigmoid(torch.from_numpy(out)).cpu().detach().numpy()
+                return torch.from_numpy(out).cpu().detach().numpy()
 
 
 class BasicPredictor:

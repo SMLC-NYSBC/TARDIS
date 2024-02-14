@@ -75,7 +75,7 @@ class BasicDIST(nn.Module):
                 )
 
         self.coord_embed = EdgeEmbedding(
-            n_out=self.edge_dim, sigma=self.edge_sigma, angles=edge_angles
+            n_out=self.edge_dim, sigma=self.edge_sigma
         )
 
         self.layers = DistStack(
@@ -142,25 +142,25 @@ class BasicDIST(nn.Module):
         logits = self.decoder(edge + edge.transpose(1, 2))  # symmetries z
         logits = logits.permute(0, 3, 1, 2)
 
-        if self.num_cls is not None:
-            # Batch x Length x Channels
-            diag = np.arange(logits.shape[2])
-            logits_cls = self.decoder_cls(edge)[:, diag, diag, :]
+        # if self.num_cls is not None:
+        #     # Batch x Length x Channels
+        #     diag = np.arange(logits.shape[2])
+        #     logits_cls = self.decoder_cls(edge)[:, diag, diag, :]
 
         if self.predict:
-            if self.num_cls is not None:
-                # Batch x Length x Channel
-                logits_cls = self.logits_cls_softmax(logits_cls)
-                # Batch x Length
-                logits_cls = torch.argmax(logits_cls, 2)
-            else:
-                # Batch x Channels x Length x Length
-                logits = self.logits_sigmoid(logits)
+            # if self.num_cls is not None:
+            #     # Batch x Length x Channel
+            #     logits_cls = self.logits_cls_softmax(logits_cls)
+            #     # Batch x Length
+            #     logits_cls = torch.argmax(logits_cls, 2)
+            # else:
+            # Batch x Channels x Length x Length
+            logits = self.logits_sigmoid(logits)
 
-        if self.num_cls is not None:
-            return logits, logits_cls
-        else:
-            return logits
+        # if self.num_cls is not None:
+        #     return logits, logits_cls
+        # else:
+        return logits
 
 
 class DIST(BasicDIST):

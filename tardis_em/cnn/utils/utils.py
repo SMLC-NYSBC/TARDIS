@@ -17,7 +17,9 @@ from PIL import Image
 
 
 def scale_image(
-    scale: tuple, image: Optional[np.ndarray] = None, mask: Optional[np.ndarray] = None
+    scale: tuple, image: Optional[np.ndarray] = None, 
+    mask: Optional[np.ndarray] = None,
+    nn=False,
 ) -> Union[
     Tuple[np.ndarray, np.ndarray, int], Tuple[np.ndarray, int], Tuple[None, int]
 ]:
@@ -41,6 +43,10 @@ def scale_image(
         scale = tuple([scale[0], scale[1], scale[2]])
     else:
         scale = tuple([scale[0], scale[1]])
+
+    if nn:
+        image = nn_scaling(img=image, scale=scale, dtype=type_i)
+        return image
 
     if image is not None:
         if not np.all(scale == image.shape):
@@ -67,6 +73,13 @@ def scale_image(
         return mask, dim
     else:
         return image, dim
+
+
+def nn_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
+    img = torch.from_numpy(img)[None, None, ...]
+    img = F.interpolate(img, size=scale, mode='nearest')[0, 0, ...]
+
+    return img.cpu().detach().numpy()
 
 
 def pil_LANCZOS(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:

@@ -52,20 +52,17 @@ class FilterConnectedNearSegments:
             bool: If True, given point can be found in a cylinder.
         """
         # project the point onto the axis
-        d = np.dot(point - axis[0], axis[1] - axis[0]) / np.linalg.norm(
-            axis[1] - axis[0]
-        )
+        ax1 = (point - axis[0]) + 1e-16
+        ax2 = (axis[1] - axis[0]) + 1e-16
+
+        d = np.dot(ax1, ax2) / np.linalg.norm(ax2)
 
         # check if d is within the range [0, h]
         if d < 0 or d > h:
             return False
 
         # calculate the perpendicular distance
-        d = np.linalg.norm(
-            point
-            - axis[0]
-            - d * (axis[1] - axis[0]) / np.linalg.norm(axis[1] - axis[0])
-        )
+        d = np.linalg.norm(ax1 - d * (ax2) / np.linalg.norm(ax2))
 
         # check if d is less than the radius
         return d <= r
