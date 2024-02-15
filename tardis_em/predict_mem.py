@@ -138,7 +138,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-ct",
     "--cnn_threshold",
-    default=0.5,
+    default=0.25,
     type=float,
     help="Threshold used for CNN prediction..",
     show_default=True,
@@ -146,7 +146,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-dt",
     "--dist_threshold",
-    default=0.9,
+    default=0.5,
     type=float,
     help="Threshold used for instance prediction.",
     show_default=True,
@@ -154,7 +154,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-pv",
     "--points_in_patch",
-    default=1000,
+    default=900,
     type=int,
     help="Size of the cropped point cloud, given as a max. number of points "
     "per crop. This will break generated from the binary mask "
@@ -211,7 +211,7 @@ def main(
         TardisError(
             id_="00",
             py="tardis_em/predict_mt.py",
-            desc=f"Two checkpoint are expected!",
+            desc="Two checkpoint are expected!",
         )
     elif len(checkpoint) == 2:
         if checkpoint[0] == "None":

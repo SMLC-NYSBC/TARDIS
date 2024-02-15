@@ -357,7 +357,7 @@ class DataSetPredictor:
                         checkpoint=self.checkpoint[1],
                         network="dist",
                         subtype="triang",
-                        model_type="membrane_2d",
+                        model_type="2d",
                         device=self.device,
                     )
             else:
@@ -378,7 +378,7 @@ class DataSetPredictor:
                         checkpoint=self.checkpoint[1],
                         network="dist",
                         subtype="triang",
-                        model_type="s3dis",
+                        model_type="3d",
                         device=self.device,
                     )
 
