@@ -8,6 +8,7 @@
 #  MIT License 2021 - 2024                                            #
 #######################################################################
 import codecs
+import time
 from datetime import datetime
 from io import BytesIO
 from typing import List, Optional, Union
@@ -15,7 +16,7 @@ from typing import List, Optional, Union
 import numpy as np
 
 from tardis_em.utils.errors import TardisError
-from tardis_em.utils.load_data import mrc_mode, mrc_write_header
+from tardis_em.utils.load_data import mrc_mode, mrc_write_header, MRCHeader
 from tardis_em.utils.spline_metric import reorder_segments_id
 from tardis_em._version import version
 import shutil
@@ -405,7 +406,7 @@ class NumpyToAmira:
                     self._write_to_amira(data=edge_score, file_dir=file_dir)
 
 
-def to_mrc(data: np.ndarray, pixel_size: float, file_dir: str):
+def to_mrc(data: np.ndarray, pixel_size: float, file_dir: str, org_header: MRCHeader = None):
     """
     Save MRC image file
 
@@ -413,68 +414,91 @@ def to_mrc(data: np.ndarray, pixel_size: float, file_dir: str):
         data (np.ndarray): Image file.
         pixel_size (float): Image original pixel size.
         file_dir (str): Directory where the file should be saved.
+        org_header(MRCHeader): Optional original header
     """
     mode = mrc_mode(mode=data.dtype, amin=data.min())
+    time_ = time.asctime()
+    if org_header is not None:
+        labels = org_header.labels.split(b'\x00')[0]
+
+        if len(labels) > 0:
+            nlabl = org_header.nlabl + 1
+            label = f'Predicted with TARDIS {version}                        {time_}'
+            labels = labels + b'\x00' + bytes(label, 'utf-8')
+        else:
+            nlabl = 1
+            label = f'Predicted with TARDIS {version}                        {time_}'
+            labels = bytes(label, 'utf-8')
+    else:
+        nlabl = 1
+        label = f'Predicted with TARDIS {version}                        {time_}'
+        labels = bytes(label, 'utf-8')
+
+    len_ = 800 - len(labels)
+    labels = labels + b"\x00" * len_
 
     if data.ndim == 3:
         dim_ = 3
         zlen, ylen, xlen = np.multiply(data.shape, pixel_size)
+        mz, my, mx = data.shape
     else:
         dim_ = 2
         ylen, xlen = np.multiply(data.shape, pixel_size)
         zlen = 1
+        my, mx = data.shape
+        mz = 1
 
     header = mrc_write_header(
-        data.shape[2] if dim_ == 3 else data.shape[1],
-        data.shape[1] if dim_ == 3 else data.shape[0],
-        data.shape[0] if dim_ == 3 else zlen,  # nx ny nz
+        data.shape[2] if dim_ == 3 else data.shape[1],  # nx
+        data.shape[1] if dim_ == 3 else data.shape[0],  # ny
+        data.shape[0] if dim_ == 3 else zlen,  # nz
         mode,  # mrc dtype mode
-        0,
-        0,
-        0,  # nxstart nystart nzstart
-        1,
-        1,
-        1,  # mx my mz
-        xlen,
-        ylen,
-        zlen,  # xlen ylen zlen
-        0,
-        0,
-        0,  # alpha beta gamma
-        1,
-        2,
-        3,  # mapc mapr maps
-        data.min(),
-        data.max(),
-        data.mean(),  # amin amax amean
+        0,  # nxstart
+        0,  # nystart
+        0,  # nzstart
+        mx,  # mx
+        my,  # my
+        mz,  # mz
+        xlen,  # xlen
+        ylen,  # ylen
+        zlen,  # zlen
+        90.000,  # alpha
+        90.000,  # beta
+        90.000,  # gamma
+        1,  # mapc
+        2,  # mapr
+        3,  # maps
+        data.min(),  # amin
+        data.max(),  # amax
+        data.mean(),  # amean
         0,  # ispg, space group 0 means images or stack of images
         0,  # next
         0,  # creatid
-        0,
-        0,  # nint nreal
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,  # imodStamp imodFlags idtype lens nd1 nd2 vd1 vd2
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,  # tilt_ox tilt_oy tilt_oz tilt_cx tilt_cy tilt_cz
-        0,
-        0,
-        0,  # xorg yorg zorg
-        b"MAP\x00",
-        b"DD\x00\x00",  # cmap stamp
+        0,  # nint
+        0,  # nreal
+        0,  # imodStamp
+        0,  # imodFlags
+        0,  # idtype
+        0,  # lens
+        0,  # nd1
+        0,  # nd2
+        0,  # vd1
+        0,  # vd2
+        0,  # tilt_ox
+        0,  # tilt_oy
+        0,  # tilt_oz
+        0,  # tilt_cx
+        0,  # tilt_cy
+        0,  # tilt_cz
+        0,  # xorg
+        0,  # yorg
+        0,  # zorg
+        b"MAP\x00",  # cmap
+        b"DD\x00\x00",  # stamp
         data.std(),  # rms
-        0,  # nlabels
-        b"\x00" * 800,
-    )  # labels
+        nlabl,  # nlabels
+        labels,  # labels
+    )
 
     with open(file_dir, "wb") as f:
         # write the header

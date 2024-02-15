@@ -31,7 +31,7 @@ class BuildPointCloud:
     transformation to correct for skeletonization artefact. It will not fix
     issue with heavily overlapping objects.
 
-    The workflow follows: optional(edt_2d -> edt_thresholds -> edt_binary) ->
+    The workflows follows: optional(edt_2d -> edt_thresholds -> edt_binary) ->
         skeletonization_3d -> output point cloud -> (down-sampling)
     """
 
