@@ -99,7 +99,7 @@ def get_weights_aws(network: str, subtype: str, model: Optional[str] = None):
     ALL_SUBTYPE = ["16", "32", "64", "96", "128", "triang", "full"]
     CNN = ["unet", "unet3plus", "fnet", "fnet_attn"]
     CNN_DATASET = ["microtubules_3d", "microtubules_2d", "membrane_3d", "membrane_2d"]
-    DIST_DATASET = ["microtubules", "s3dis", "membrane_2d"]
+    DIST_DATASET = ["microtubules", "s3dis", "membrane_2d", "2d", "3d"]
 
     """Chech dir"""
     if not isdir(join(expanduser("~"), ".tardis_em")):

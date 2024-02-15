@@ -281,7 +281,7 @@ class DataSetPredictor:
 
             if predict in ["Filament", "Microtubule"]:
                 self.GraphToSegment = PropGreedyGraphCut(
-                    threshold=dist_threshold, connection=999999999, smooth=True
+                    threshold=dist_threshold, connection=2, smooth=True
                 )
 
                 self.filter_splines = FilterSpatialGraph(
@@ -296,7 +296,7 @@ class DataSetPredictor:
                 self.score_splines = ComputeConfidenceScore()
             elif predict in ["Membrane2D", "Membrane"]:
                 self.GraphToSegment = PropGreedyGraphCut(
-                    threshold=dist_threshold, connection=999999999
+                    threshold=dist_threshold, connection=8
                 )
 
         # Build handler to output amira file
@@ -333,7 +333,7 @@ class DataSetPredictor:
                     checkpoint=self.checkpoint[1],
                     network="dist",
                     subtype="triang",
-                    model_type="microtubules",
+                    model_type="2d",
                     device=self.device,
                 )
         elif NN in ["Membrane2D", "Membrane"]:
