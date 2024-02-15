@@ -263,9 +263,11 @@ class FilterConnectedNearSegments:
                         [
                             (
                                 m_end[
-                                    -1
-                                    if end_list in [end10_list01, end10_list10]
-                                    else 0
+                                    (
+                                        -1
+                                        if end_list in [end10_list01, end10_list10]
+                                        else 0
+                                    )
                                 ][2]
                                 - MIN_Z
                             )
@@ -273,9 +275,11 @@ class FilterConnectedNearSegments:
                             (
                                 MAX_Z
                                 - m_end[
-                                    -1
-                                    if end_list in [end10_list01, end10_list10]
-                                    else 0
+                                    (
+                                        -1
+                                        if end_list in [end10_list01, end10_list10]
+                                        else 0
+                                    )
                                 ][2]
                             )
                             >= omit_border,
@@ -289,16 +293,20 @@ class FilterConnectedNearSegments:
                         axis = (
                             np.array(
                                 value[
-                                    -2
-                                    if end_list in [end10_list01, end10_list10]
-                                    else 1
+                                    (
+                                        -2
+                                        if end_list in [end10_list01, end10_list10]
+                                        else 1
+                                    )
                                 ]
                             ),
                             np.array(
                                 value[
-                                    -1
-                                    if end_list in [end10_list01, end10_list10]
-                                    else 0
+                                    (
+                                        -1
+                                        if end_list in [end10_list01, end10_list10]
+                                        else 0
+                                    )
                                 ]
                             ),
                         )
@@ -869,7 +877,7 @@ def cut_150_degree(segments_array: np.ndarray):
         segments_array:
 
     Returns:
-        Tuple[bool, np.ndarray]: Indicates whether any segment was cut, 
+        Tuple[bool, np.ndarray]: Indicates whether any segment was cut,
             and New array of cut segments.
     """
 
@@ -899,7 +907,7 @@ def cut_150_degree(segments_array: np.ndarray):
             # Find the minimum angle and cut the segment
             min_angle_idx = np.where(angles_ == np.min(angles_))[0][0]
             cut_segments.append(pc_[: min_angle_idx + 1, :])
-            cut_segments.append(pc_[min_angle_idx + 1:, :])
+            cut_segments.append(pc_[min_angle_idx + 1 :, :])
         else:
             cut_segments.append(pc_)
 

@@ -23,7 +23,7 @@ class SparseDistStack(nn.Module):
     Module that stacks multiple layers of SparseDistLayer modules.
 
     This class allows you to define a deep architecture where each layer is a SparseDistLayer.
-    The input to each layer is the output from the previous layer, 
+    The input to each layer is the output from the previous layer,
     and the output from the final layer is the output of the SparseDistStack.
     """
 
@@ -69,12 +69,12 @@ class SparseDistStack(nn.Module):
         Forward pass for the SparseDistStack.
 
         Args:
-            edge_features (torch.sparse_coo_tensor): A sparse coordinate 
+            edge_features (torch.sparse_coo_tensor): A sparse coordinate
                 tensor containing the input data.
             indices (list): List of all indices
 
         Returns:
-            torch.sparse_coo_tensor: A sparse coordinate tensor representing 
+            torch.sparse_coo_tensor: A sparse coordinate tensor representing
                 the output from the final layer in the stack.
         """
         for layer in self.layers:
@@ -135,16 +135,16 @@ class SparseDistLayer(nn.Module):
         self, h_pairs: torch.tensor, indices: list
     ) -> Union[torch.tensor, list]:
         """
-        Updates edge features by applying row and column updates, 
+        Updates edge features by applying row and column updates,
         then applying a feed-forward network.
 
         Args:
-            h_pairs (torch.sparse_coo_tensor): A sparse coordinate tensor 
+            h_pairs (torch.sparse_coo_tensor): A sparse coordinate tensor
                 containing the edge features to be updated.
             indices (list): List of indices
 
         Returns:
-            torch.sparse_coo_tensor: A sparse coordinate tensor 
+            torch.sparse_coo_tensor: A sparse coordinate tensor
                 containing the updated edge features.
         """
         # ToDo Convert node features to edge shape
@@ -169,7 +169,7 @@ class SparseDistLayer(nn.Module):
             indices (list): List of indices
 
         Returns:
-            torch.sparse_coo_tensor: A sparse coordinate tensor 
+            torch.sparse_coo_tensor: A sparse coordinate tensor
                 representing the output from the edge updates.
         """
         # ToDo Update node features and convert to edge shape

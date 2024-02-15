@@ -82,9 +82,7 @@ class EdgeEmbedding(nn.Module):
             used to normalize distances.
     """
 
-    def __init__(
-        self, n_out: int, sigma: Union[int, float, list]
-    ):
+    def __init__(self, n_out: int, sigma: Union[int, float, list]):
         super().__init__()
 
         self.n_out = n_out

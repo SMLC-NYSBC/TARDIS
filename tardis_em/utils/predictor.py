@@ -713,7 +713,7 @@ class DataSetPredictor:
                     output=join(self.dir, "temp", "Patches"),
                     image_counter=0,
                     clean_empty=False,
-                    stride=round(self.patch_size * 0.25),
+                    stride=round(self.patch_size * 0.125),
                 )
                 self.image = None
 
@@ -767,16 +767,18 @@ class DataSetPredictor:
                         file_dir=join(
                             self.am_output, f"{i[:-self.in_format]}_semantic.mrc"
                         ),
-                        pixel_size=self.px
-                        if self.correct_px is None
-                        else self.correct_px,
+                        pixel_size=(
+                            self.px if self.correct_px is None else self.correct_px
+                        ),
                     )
                 elif self.output_format.startswith("tif"):
                     tif.imwrite(
                         join(self.am_output, f"{i[:-self.in_format]}_semantic.tif"),
-                        np.flip(self.image, 1)
-                        if i.endswith((".mrc", ".rec"))
-                        else self.image,
+                        (
+                            np.flip(self.image, 1)
+                            if i.endswith((".mrc", ".rec"))
+                            else self.image
+                        ),
                     )
                 elif self.output_format.startswith("am"):
                     to_am(
@@ -784,9 +786,9 @@ class DataSetPredictor:
                         file_dir=join(
                             self.am_output, f"{i[:-self.in_format]}_semantic.am"
                         ),
-                        pixel_size=self.px
-                        if self.correct_px is None
-                        else self.correct_px,
+                        pixel_size=(
+                            self.px if self.correct_px is None else self.correct_px
+                        ),
                     )
 
                 if not self.image.min() == 0 and not self.image.max() == 1:
@@ -1004,28 +1006,33 @@ class DataSetPredictor:
                     segments = pd.DataFrame(self.segments)
                     segments.to_csv(
                         join(self.am_output, f"{i[:-self.in_format]}_instances.csv"),
-                        header=['IDs', 'X [A]', 'Y [A]', 'Z [A]'],
+                        header=["IDs", "X [A]", "Y [A]", "Z [A]"],
                         index=False,
-                        sep=',',
-                        )
+                        sep=",",
+                    )
 
                     if self.predict in ["Filament", "Microtubule"]:
-                        self.segments = sort_by_length(self.filter_splines(segments=self.segments))
+                        self.segments = sort_by_length(
+                            self.filter_splines(segments=self.segments)
+                        )
                         self.segments = pd.DataFrame(self.segments)
                         self.segments.to_csv(
-                            join(self.am_output, f"{i[:-self.in_format]}_instances_filter.csv"),
-                            header=['IDs', 'X [A]', 'Y [A]', 'Z [A]'],
+                            join(
+                                self.am_output,
+                                f"{i[:-self.in_format]}_instances_filter.csv",
+                            ),
+                            header=["IDs", "X [A]", "Y [A]", "Z [A]"],
                             index=False,
-                            sep=',',
-                            )
+                            sep=",",
+                        )
                 elif self.output_format.endswith(("mrc", "tif", "am")):
                     if self.predict in ["Membrane", "Membrane2D"]:
                         self.mask_semantic = draw_semantic_membrane(
                             mask_size=self.org_shape,
                             coordinate=self.segments,
-                            pixel_size=self.px
-                            if self.correct_px is None
-                            else self.correct_px,
+                            pixel_size=(
+                                self.px if self.correct_px is None else self.correct_px
+                            ),
                             spline_size=60,
                         )
                     else:
@@ -1037,9 +1044,9 @@ class DataSetPredictor:
                         self.mask_semantic = draw_instances(
                             mask_size=self.org_shape,
                             coordinate=self.segments,
-                            pixel_size=self.px
-                            if self.correct_px is None
-                            else self.correct_px,
+                            pixel_size=(
+                                self.px if self.correct_px is None else self.correct_px
+                            ),
                             circle_size=125,
                         )
                     self._debug(id_name=i, debug_id="instance_mask")
@@ -1050,9 +1057,9 @@ class DataSetPredictor:
                             file_dir=join(
                                 self.am_output, f"{i[:-self.in_format]}_instance.mrc"
                             ),
-                            pixel_size=self.px
-                            if self.correct_px is None
-                            else self.correct_px,
+                            pixel_size=(
+                                self.px if self.correct_px is None else self.correct_px
+                            ),
                         )
                     elif self.output_format.endswith("tif"):
                         tif.imwrite(
@@ -1065,9 +1072,9 @@ class DataSetPredictor:
                             file_dir=join(
                                 self.am_output, f"{i[:-self.in_format]}_instance.am"
                             ),
-                            pixel_size=self.px
-                            if self.correct_px is None
-                            else self.correct_px,
+                            pixel_size=(
+                                self.px if self.correct_px is None else self.correct_px
+                            ),
                         )
                 elif self.output_format.endswith("stl"):
                     if self.predict == "Membrane":

@@ -766,10 +766,10 @@ class SelfAttention2D(MultiHeadAttention):
 
             h = []
             for i in range(0, x.size(1), batch_size):
-                xi = x[:, i:i + batch_size]
+                xi = x[:, i : i + batch_size]
                 mask = None
                 if padding_mask is not None:
-                    mask = padding_mask[i:i + batch_size]
+                    mask = padding_mask[i : i + batch_size]
                 h.append(
                     super(SelfAttention2D, self).forward(xi, key_padding_mask=mask)
                 )

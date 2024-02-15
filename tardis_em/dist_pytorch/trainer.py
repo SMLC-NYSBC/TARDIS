@@ -790,8 +790,10 @@ class CDistTrainer(BasicTrainer):
                 recall_mean.append(recall)
                 F1_mean.append(f1)
                 threshold_mean.append(th)
-                valid = "Validation: " \
+                valid = (
+                    "Validation: "
                     f"(loss {loss.item():.4f} Prec: {prec:.2f} Rec: {recall:.2f} F1: {f1:.2f})"
+                )
 
                 # Update progress bar
                 self._update_progress_bar(

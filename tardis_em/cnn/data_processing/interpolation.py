@@ -66,34 +66,34 @@ def interpolate_generator(points: np.ndarray) -> Iterable:
     delta_err_x = (
         0.0
         if delta_x == 0
-        else abs(delta_x / delta_y)
-        if delta_y != 0
-        else abs(delta_x / delta_z)
-        if delta_z != 0
-        else 0.0
+        else (
+            abs(delta_x / delta_y)
+            if delta_y != 0
+            else abs(delta_x / delta_z) if delta_z != 0 else 0.0
+        )
     )
     delta_err_y = (
         0.0
         if delta_y == 0
-        else abs(delta_y / delta_x)
-        if delta_x != 0
-        else abs(delta_y / delta_z)
-        if delta_z != 0
-        else 0.0
+        else (
+            abs(delta_y / delta_x)
+            if delta_x != 0
+            else abs(delta_y / delta_z) if delta_z != 0 else 0.0
+        )
     )
 
     if dim_ != 2:
         delta_err_z = (
             0.0
             if delta_z == 0
-            else np.minimum(abs(delta_z / delta_x), abs(delta_z / delta_y))
-            if delta_x != 0 and delta_y != 0
             else (
-                abs(delta_z / delta_y)
-                if delta_x == 0 and delta_y != 0
-                else abs(delta_z / delta_x)
-                if delta_x != 0
-                else 0.0
+                np.minimum(abs(delta_z / delta_x), abs(delta_z / delta_y))
+                if delta_x != 0 and delta_y != 0
+                else (
+                    abs(delta_z / delta_y)
+                    if delta_x == 0 and delta_y != 0
+                    else abs(delta_z / delta_x) if delta_x != 0 else 0.0
+                )
             )
         )
 
@@ -166,7 +166,7 @@ def interpolation(points: np.ndarray) -> np.ndarray:
     new_coord = []
     for i in range(0, len(points) - 1):
         """3D interpolation for XYZ dimension"""
-        new_coord.append(list(interpolate_generator(points[i:i + 2, :])))
+        new_coord.append(list(interpolate_generator(points[i : i + 2, :])))
 
     # Append last point
     new_coord.append(list(np.round(points[-1, :]).astype(np.int32)))

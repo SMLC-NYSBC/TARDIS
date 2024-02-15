@@ -17,7 +17,8 @@ from PIL import Image
 
 
 def scale_image(
-    scale: tuple, image: Optional[np.ndarray] = None, 
+    scale: tuple,
+    image: Optional[np.ndarray] = None,
     mask: Optional[np.ndarray] = None,
     nn=False,
 ) -> Union[
@@ -77,7 +78,7 @@ def scale_image(
 
 def nn_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
     img = torch.from_numpy(img)[None, None, ...]
-    img = F.interpolate(img, size=scale, mode='nearest')[0, 0, ...]
+    img = F.interpolate(img, size=scale, mode="nearest")[0, 0, ...]
 
     return img.cpu().detach().numpy()
 

@@ -57,17 +57,21 @@ class PropGreedyGraphCut:
             for k, _ in enumerate(idx_patch):
                 row = graph_patch[k, :]
                 row_v = [
-                    row[id_]
-                    if graph[i, idx_patch[k]] == 0
-                    else np.mean((graph[i, idx_patch[k]], row[id_]))
+                    (
+                        row[id_]
+                        if graph[i, idx_patch[k]] == 0
+                        else np.mean((graph[i, idx_patch[k]], row[id_]))
+                    )
                     for id_, i in enumerate(idx_patch)
                 ]
 
                 column = graph_patch[:, k]
                 column_v = [
-                    row[id_]
-                    if graph[i, idx_patch[k]] == 0
-                    else np.mean((graph[i, idx_patch[k]], column[id_]))
+                    (
+                        row[id_]
+                        if graph[i, idx_patch[k]] == 0
+                        else np.mean((graph[i, idx_patch[k]], column[id_]))
+                    )
                     for id_, i in enumerate(idx_patch)
                 ]
 
@@ -159,7 +163,7 @@ class PropGreedyGraphCut:
                 return None
 
         for g, o in zip(graphs, output_idx):
-            top_k_indices = np.argsort(g, axis=1)[:, : -10 - 1:-1]
+            top_k_indices = np.argsort(g, axis=1)[:, : -10 - 1 : -1]
             top_k_probs = np.take_along_axis(g, top_k_indices, axis=1).tolist()
 
             top_k_indices = o[top_k_indices].tolist()

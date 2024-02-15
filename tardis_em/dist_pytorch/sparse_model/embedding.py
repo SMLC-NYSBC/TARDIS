@@ -47,7 +47,7 @@ class SparseEdgeEmbedding(nn.Module):
         Forward pass for SparseEdgeEmbedding.
 
         Args:
-            input_coord (torch.sparse_coo_tensor): A sparse coordinate tensor 
+            input_coord (torch.sparse_coo_tensor): A sparse coordinate tensor
                 containing the input coordinates.
 
         Returns:
@@ -157,9 +157,11 @@ class SparseEdgeEmbeddingV4(nn.Module):
             # Column-Wise M[ij] index
             col_idx = np.array(
                 [
-                    np.pad(c, (0, self.knn - len(c)))
-                    if len(c) <= self.knn
-                    else c[np.argsort(M[c - 1])[: self.knn]]
+                    (
+                        np.pad(c, (0, self.knn - len(c)))
+                        if len(c) <= self.knn
+                        else c[np.argsort(M[c - 1])[: self.knn]]
+                    )
                     for c in [
                         np.where(all_ij_id[:, 1] == i)[0] + 1
                         for i in range(len(input_coord))

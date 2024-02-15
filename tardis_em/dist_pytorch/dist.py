@@ -74,9 +74,7 @@ class BasicDIST(nn.Module):
                     n_in=self.node_input, n_out=self.node_dim, sigma=self.node_sigma
                 )
 
-        self.coord_embed = EdgeEmbedding(
-            n_out=self.edge_dim, sigma=self.edge_sigma
-        )
+        self.coord_embed = EdgeEmbedding(n_out=self.edge_dim, sigma=self.edge_sigma)
 
         self.layers = DistStack(
             node_dim=self.node_dim,

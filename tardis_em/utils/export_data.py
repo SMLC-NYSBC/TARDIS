@@ -406,7 +406,9 @@ class NumpyToAmira:
                     self._write_to_amira(data=edge_score, file_dir=file_dir)
 
 
-def to_mrc(data: np.ndarray, pixel_size: float, file_dir: str, org_header: MRCHeader = None):
+def to_mrc(
+    data: np.ndarray, pixel_size: float, file_dir: str, org_header: MRCHeader = None
+):
     """
     Save MRC image file
 
@@ -419,20 +421,20 @@ def to_mrc(data: np.ndarray, pixel_size: float, file_dir: str, org_header: MRCHe
     mode = mrc_mode(mode=data.dtype, amin=data.min())
     time_ = time.asctime()
     if org_header is not None:
-        labels = org_header.labels.split(b'\x00')[0]
+        labels = org_header.labels.split(b"\x00")[0]
 
         if len(labels) > 0:
             nlabl = org_header.nlabl + 1
-            label = f'Predicted with TARDIS {version}                        {time_}'
-            labels = labels + b'\x00' + bytes(label, 'utf-8')
+            label = f"Predicted with TARDIS {version}                        {time_}"
+            labels = labels + b"\x00" + bytes(label, "utf-8")
         else:
             nlabl = 1
-            label = f'Predicted with TARDIS {version}                        {time_}'
-            labels = bytes(label, 'utf-8')
+            label = f"Predicted with TARDIS {version}                        {time_}"
+            labels = bytes(label, "utf-8")
     else:
         nlabl = 1
-        label = f'Predicted with TARDIS {version}                        {time_}'
-        labels = bytes(label, 'utf-8')
+        label = f"Predicted with TARDIS {version}                        {time_}"
+        labels = bytes(label, "utf-8")
 
     len_ = 800 - len(labels)
     labels = labels + b"\x00" * len_

@@ -25,7 +25,7 @@ class AbstractLoss(nn.Module):
                 'none': no reduction will be applied.
                 'mean': output would be a mean values.
                 'sum': the output will be summed.
-            diagonal (bool): If True, the diagonal of the adjacency matrix 
+            diagonal (bool): If True, the diagonal of the adjacency matrix
                 is removed in graph predictions.
             sigmoid (bool): If True, compute sigmoid before loss.
         """
@@ -95,7 +95,7 @@ class AdaptiveDiceLoss(AbstractLoss):
         Initializes the AdaptiveDiceLoss with the given parameters.
 
         Args:
-            alpha (float): The scaling factor for the adaptive term. 
+            alpha (float): The scaling factor for the adaptive term.
                 Higher values give more weight to false negatives.
             smooth (float): A small constant to avoid division by zero.
         """
@@ -126,7 +126,7 @@ class AdaptiveDiceLoss(AbstractLoss):
 
 class BCELoss(AbstractLoss):
     """
-    Implements the Binary Cross-Entropy loss function with an option to ignore 
+    Implements the Binary Cross-Entropy loss function with an option to ignore
     the diagonal elements.
 
     The BCELoss class can be used for training where pixel-level accuracy is important.
@@ -153,7 +153,7 @@ class BCELoss(AbstractLoss):
 
 class BCEGraphWiseLoss(AbstractLoss):
     """
-    Implements the Binary Cross-Entropy loss function with an option to ignore 
+    Implements the Binary Cross-Entropy loss function with an option to ignore
     the diagonal elements.
 
     The BCELoss class can be used for training where pixel-level accuracy is important.
@@ -538,10 +538,10 @@ class SigmoidFocalLoss(AbstractLoss):
 
 class WBCELoss(AbstractLoss):
     """
-    Implements a weighted Binary Cross-Entropy loss function with an option 
+    Implements a weighted Binary Cross-Entropy loss function with an option
     to ignore the diagonal elements.
 
-    The WBCELoss class can help to balance the contribution of positive and 
+    The WBCELoss class can help to balance the contribution of positive and
     negative samples in datasets
     where one class significantly outnumbers the other.
     It provides an option to ignore the diagonal elements of the input matrices,
@@ -592,7 +592,7 @@ class WBCELoss(AbstractLoss):
 
 class BCEMSELoss(AbstractLoss):
     """
-    Implements the Binary Cross-Entropy over MSE loss function with an option 
+    Implements the Binary Cross-Entropy over MSE loss function with an option
     to ignore the diagonal elements.
 
     The BCELoss class can be used for training where pixel-level accuracy is important.

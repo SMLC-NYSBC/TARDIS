@@ -104,7 +104,7 @@ class PatchDataSet:
         Creates a regular grid within a bounding box.
 
         Args:
-            bbox: list or tuple of 6 floats representing the bounding box as 
+            bbox: list or tuple of 6 floats representing the bounding box as
                 (xmin, ymin, zmin, xmax, ymax, zmax)
             voxel_size: float representing the size of each voxel
 
@@ -244,7 +244,7 @@ class PatchDataSet:
                     self.points_in_patch(coord=coord, patch_center=patch_grid[random_])
                 ]
 
-                # Check if picked voxel have more then self.mesh points 
+                # Check if picked voxel have more then self.mesh points
                 # and less then downsample threshold
                 pc_size = np.sum(all_patch[0])
 

@@ -276,7 +276,7 @@ class ImportDataFromAmira:
         id_ = 0
         idx = 0
         for i in segments:
-            segmentation[id_:(id_ + int(i))] = idx
+            segmentation[id_ : (id_ + int(i))] = idx
 
             idx += 1
             id_ += int(i)
