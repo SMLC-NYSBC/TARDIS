@@ -22,7 +22,7 @@ from cryoet_data_portal import Client, Tomogram
 import numpy as np
 from s3transfer import S3Transfer
 
-from tardis_em.utils.logo import TardisLogo
+from tardis_em.utils.logo import TardisLogo, print_progress_bar
 from tardis_em.utils.device import get_device
 from tardis_em.utils.predictor import Predictor
 from tardis_em.utils.normalization import RescaleNormalize, MeanStdNormalize
@@ -60,7 +60,7 @@ class ProcessTardisForCZI:
         # Load CNN model
         self.model_cnn = Predictor(
             checkpoint=None,
-            network='unet',
+            network="unet",
             subtype="32",
             model_type="membrane_3d",
             img_size=128,
@@ -95,9 +95,7 @@ class ProcessTardisForCZI:
 
         scale_factor = px / self.normalize_px
         org_shape = data.shape
-        scale_shape = np.multiply(org_shape, scale_factor).astype(
-            np.int16
-        )
+        scale_shape = np.multiply(org_shape, scale_factor).astype(np.int16)
         scale_shape = [int(i) for i in scale_shape]
 
         trim_with_stride(
@@ -112,30 +110,33 @@ class ProcessTardisForCZI:
         )
 
         self.predict_cnn(
-            dataloader=PredictionDataset(
-                join("temp", "Patches", "imgs")
-            ),
+            dataloader=PredictionDataset(join("temp", "Patches", "imgs")),
         )
         data = self.image_stitcher(
-            image_dir=join("temp", "Predictions"),
-            mask=False,
-            dtype=np.float32
-        )[:scale_shape[0], :scale_shape[1], :scale_shape[2]]
+            image_dir=join("temp", "Predictions"), mask=False, dtype=np.float32
+        )[: scale_shape[0], : scale_shape[1], : scale_shape[2]]
         data, _ = scale_image(image=data, scale=org_shape, nn=True)
         data = torch.sigmoid(torch.from_numpy(data)).cpu().detach().numpy()
 
         data = np.where(data > 0.25, 1, 0).astype(np.uint8)
-        to_mrc(data, px, name+"_semantic.mrc", header)
+        to_mrc(data, px, name + "_semantic.mrc", header)
 
-        _, pc_ld = BuildPointCloud().build_point_cloud(image=data, EDT=False, down_sampling=5, as_2d=False)
+        _, pc_ld = BuildPointCloud().build_point_cloud(
+            image=data, EDT=False, down_sampling=5, as_2d=False
+        )
 
-        coords_df, _, output_idx, _ = PatchDataSet(max_number_of_points=900, graph=False).patched_dataset(coord=pc_ld)
+        coords_df, _, output_idx, _ = PatchDataSet(
+            max_number_of_points=900, graph=False
+        ).patched_dataset(coord=pc_ld)
         x = []
         with torch.no_grad():
             for i in coords_df:
                 x.append(
-                    self.model_cnn.predict(x=i[None, :].to(self.device),
-                                           y=None).cpu().detach().numpy()[0, 0, :])
+                    self.model_cnn.predict(x=i[None, :].to(self.device), y=None)
+                    .cpu()
+                    .detach()
+                    .numpy()[0, 0, :]
+                )
 
         pc = PropGreedyGraphCut(threshold=0.5, connection=8).patch_to_segment(
             graph=x,
@@ -146,17 +147,37 @@ class ProcessTardisForCZI:
         )
         pc = pd.DataFrame(pc)
         pc.to_csv(
-            name+"_instance.csv",
+            name + "_instance.csv",
             header=["IDs", "X [A]", "Y [A]", "Z [A]"],
             index=False,
             sep=",",
         )
 
 
+@click.option(
+    "-aws",
+    "--aws_dir",
+    type=str,
+    show_default=True,
+)
+@click.option(
+    "-bucket",
+    "--bucket",
+    default='cryoet-data-portal-public',
+    type=str,
+    show_default=True,
+)
+@click.option(
+    "-gpu",
+    "--allocate_gpu",
+    default=7,
+    type=str,
+    show_default=True,
+)
 @click.version_option(version=version)
 async def main(aws_dir: str, bucket: str, allocate_gpu: int):
     terminal = TardisLogo()
-
+    terminal(title='Predict CIZ-Cryo-EM data-port datasets')
     process_tardis = ProcessTardisForCZI(allocate_gpu)
 
     aws = np.genfromtxt(aws_dir, delimiter=",")
@@ -178,11 +199,21 @@ async def main(aws_dir: str, bucket: str, allocate_gpu: int):
     file_names = [s.split("/")[4] for s in urls]
     czi_px = [float(s.split("/")[6][12:]) for s in urls]
 
+    terminal(title='Predict CIZ-Cryo-EM data-port datasets',
+             text_1='Prediction:',
+             text_3=f'Dataset: []',
+             text_5=print_progress_bar(0, len(urls)),)
+
     tasks = []
     next_download = asyncio.create_task(get_from_aws(urls[0][31:]))
-    for url, folder_name, file_name, px_czi in zip(
-            urls, folder_names, file_names, czi_px
+    for idx, (url, folder_name, file_name, px_czi) in enumerate(
+            zip(urls, folder_names, file_names, czi_px)
     ):
+        terminal(title='Predict CIZ-Cryo-EM data-port datasets',
+                 text_1='Prediction:',
+                 text_3=f'Dataset: [{file_name}]',
+                 text_5=print_progress_bar(idx, len(urls)), )
+
         # Wait for the current download to complete before processing
         await next_download
 
@@ -193,7 +224,9 @@ async def main(aws_dir: str, bucket: str, allocate_gpu: int):
             px = px_czi
 
         process_task = asyncio.create_task(
-            asyncio.get_running_loop().run_in_executor(None, process_tardis, data, px, header, file_name[:-4])
+            asyncio.get_running_loop().run_in_executor(
+                None, process_tardis, data, px, header, file_name[:-4]
+            )
         )
 
         # If there's a next file, start downloading it now
