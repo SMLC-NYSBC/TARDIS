@@ -279,7 +279,7 @@ class DataSetPredictor:
                 max_number_of_points=points_in_patch, graph=False
             )
 
-            if predict in ["Filament", "Microtubule"]:
+            if predict in ["Filament", "Microtubule", "Membrane2D"]:
                 self.GraphToSegment = PropGreedyGraphCut(
                     threshold=dist_threshold, connection=2, smooth=True
                 )
@@ -294,7 +294,7 @@ class DataSetPredictor:
                     interaction_threshold=amira_inter_probability,
                 )
                 self.score_splines = ComputeConfidenceScore()
-            elif predict in ["Membrane2D", "Membrane"]:
+            elif predict in ["Membrane"]:
                 self.GraphToSegment = PropGreedyGraphCut(
                     threshold=dist_threshold, connection=8
                 )

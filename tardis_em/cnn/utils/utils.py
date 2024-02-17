@@ -47,7 +47,7 @@ def scale_image(
 
     if nn:
         image = nn_scaling(img=image, scale=scale, dtype=type_i)
-        return image
+        return image, dim
 
     if image is not None:
         if not np.all(scale == image.shape):
