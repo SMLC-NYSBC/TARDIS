@@ -257,9 +257,9 @@ def draw_circle(
         # Remove pixel out of frame
         zyx = np.array((z, y, x)).T
         del_id = []
-        for id, i in enumerate(zyx):
+        for id_, i in enumerate(zyx):
             if i[0] >= shape[0] or i[1] >= shape[1] or i[2] >= shape[2]:
-                del_id.append(id)
+                del_id.append(id_)
 
         zyx = np.delete(zyx, del_id, 0)
 
@@ -271,9 +271,9 @@ def draw_circle(
         # Remove pixel out of frame
         yx = np.array((y, x)).T
         del_id = []
-        for id, i in enumerate(yx):
+        for id_, i in enumerate(yx):
             if i[0] >= shape[0] or i[1] >= shape[1]:
-                del_id.append(id)
+                del_id.append(id_)
 
         yx = np.delete(yx, del_id, 0)
 
@@ -322,11 +322,11 @@ def draw_sphere(
     # Remove pixel out of frame
     zyx = np.array((z, y, x)).T
     del_id = []
-    for id, i in enumerate(zyx):
+    for id_, i in enumerate(zyx):
         if i[0] >= shape[0] or i[1] >= shape[1] or i[2] >= shape[2]:
-            del_id.append(id)
+            del_id.append(id_)
         if i[0] < 0:  # Remove negative value
-            del_id.append(id)
+            del_id.append(id_)
 
     zyx = np.delete(zyx, del_id, 0)
 

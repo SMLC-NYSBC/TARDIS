@@ -1,4 +1,5 @@
 import asyncio
+import shutil
 from os.path import join
 
 import boto3
@@ -7,13 +8,13 @@ import pandas as pd
 import torch
 import tifffile.tifffile as tif
 
-from cnn.data_processing.stitch import StitchImages
-from cnn.data_processing.trim import trim_with_stride
-from cnn.datasets.dataloader import PredictionDataset
-from cnn.utils.utils import scale_image
-from dist_pytorch.datasets.patches import PatchDataSet
-from dist_pytorch.utils.build_point_cloud import BuildPointCloud
-from dist_pytorch.utils.segment_point_cloud import PropGreedyGraphCut
+from tardis_em.cnn.data_processing.stitch import StitchImages
+from tardis_em.cnn.data_processing.trim import trim_with_stride
+from tardis_em.cnn.datasets.dataloader import PredictionDataset
+from tardis_em.cnn.utils.utils import scale_image
+from tardis_em.dist_pytorch.datasets.patches import PatchDataSet
+from tardis_em.dist_pytorch.utils.build_point_cloud import BuildPointCloud
+from tardis_em.dist_pytorch.utils.segment_point_cloud import PropGreedyGraphCut
 from tardis_em import version
 from tardis_em.utils.load_data import load_image, mrc_read_header
 from botocore import UNSIGNED
@@ -26,8 +27,8 @@ from tardis_em.utils.logo import TardisLogo, print_progress_bar
 from tardis_em.utils.device import get_device
 from tardis_em.utils.predictor import Predictor
 from tardis_em.utils.normalization import RescaleNormalize, MeanStdNormalize
-from utils.export_data import to_mrc
-
+from tardis_em.utils.export_data import to_mrc
+from shutil import rmtree
 
 def get_from_aws(url):
     s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
@@ -44,6 +45,7 @@ def upload_to_aws(aws_key, aws_secret, bucket, id_, data_name, file_name):
         bucket,
         join("robert_kiewisz_tardis_01_2024", id_, data_name, file_name),
     )
+    rmtree(file_name)
 
 
 class ProcessTardisForCZI:
@@ -84,6 +86,7 @@ class ProcessTardisForCZI:
 
     def __call__(self, data: np.ndarray, px: float, header, name):
         data = self.normalize(self.mean_std(data)).astype(np.float32)
+        tif.imwrite(name + ".tif", data.sum(0).astype(np.uint16))
 
         # Sanity check image histogram
         if not data.min() >= -1 or not data.max() <= 1:  # Image not between in -1 and 1
@@ -120,6 +123,7 @@ class ProcessTardisForCZI:
 
         data = np.where(data > 0.25, 1, 0).astype(np.uint8)
         to_mrc(data, px, name + "_semantic.mrc", header)
+        tif.imwrite(name + "_semantic.tif", data.sum(0).astype(np.uint8))
 
         _, pc_ld = BuildPointCloud().build_point_cloud(
             image=data, EDT=False, down_sampling=5, as_2d=False
