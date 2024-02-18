@@ -361,7 +361,7 @@ class DataSetPredictor:
                         device=self.device,
                     )
             else:
-                if not self.output_format.startswith("None") or self.binary_mask:
+                if not self.output_format.startswith("None") or not self.binary_mask:
                     self.cnn = Predictor(
                         checkpoint=self.checkpoint[0],
                         network=self.convolution_nn,
