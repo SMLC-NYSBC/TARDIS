@@ -296,7 +296,7 @@ class DataSetPredictor:
                 self.score_splines = ComputeConfidenceScore()
             elif predict in ["Membrane"]:
                 self.GraphToSegment = PropGreedyGraphCut(
-                    threshold=dist_threshold, connection=80
+                    threshold=dist_threshold, connection=8
                 )
 
         # Build handler to output amira file
