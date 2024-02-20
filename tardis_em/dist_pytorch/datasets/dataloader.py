@@ -264,7 +264,7 @@ class FilamentSimulateDataset(BasicDataset):
             )
 
         # Output edge_f,   node_f, graph,     node_idx,   node_class
-        return coords_idx, df_idx, graph_idx, output_idx, df_idx
+        return coords_idx, df_idx, graph_idx, output_idx, df_idx, coord
 
 
 class FilamentDataset(BasicDataset):
