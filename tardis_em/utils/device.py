@@ -8,12 +8,12 @@
 #  MIT License 2021 - 2024                                            #
 #######################################################################
 
-from typing import Optional
+from typing import Union
 
 import torch
 
 
-def get_device(device: Optional[str] = 0) -> torch.device:
+def get_device(device: Union[str, int] = 0) -> torch.device:
     """
     Return a device that can be used for training or predictions
 

@@ -809,11 +809,6 @@ class DataSetPredictor:
             )
 
             self.preprocess_DIST(id_name=i)
-            if len(self.pc_hd) == 0:
-                continue
-            if len(self.pc_ld) < 100 and len(self.pc_hd) > 0:
-                self.pc_ld = self.pc_hd
-
             self.segments = None
             if len(self.pc_ld) > 0:
                 # Tardis progress bar update
@@ -828,32 +823,9 @@ class DataSetPredictor:
                 )
 
                 # Build patches dataset
-                if self.predict in ["Filament", "Microtubule", "Membrane2D"]:
-                    try:
-                        (
-                            self.coords_df,
-                            _,
-                            self.output_idx,
-                            _,
-                        ) = self.patch_pc.patched_dataset(
-                            coord=self.pc_ld / pc_median_dist(self.pc_ld, True)
-                        )
-                    except ValueError:
-                        (
-                            self.coords_df,
-                            _,
-                            self.output_idx,
-                            _,
-                        ) = self.patch_pc.patched_dataset(
-                            coord=self.pc_ld / pc_median_dist(self.pc_ld, False)
-                        )
-                else:
-                    (
-                        self.coords_df,
-                        _,
-                        self.output_idx,
-                        _,
-                    ) = self.patch_pc.patched_dataset(coord=self.pc_ld / 5)
+                self.coords_df, _, self.output_idx, _, = self.patch_pc.patched_dataset(
+                    coord=self.pc_ld
+                )
 
                 # Predict point cloud
                 self.tardis_progress(
@@ -904,12 +876,12 @@ class DataSetPredictor:
                     )
 
                 try:
-                    if self.predict in ["Filament", "Microtubule"]:
+                    if self.predict in ["Filament", "Microtubule", "Membrane2D"]:
                         sort = True
                         prune = 5
                     else:
                         sort = False
-                        prune = 10
+                        prune = 15
                     self.segments = self.GraphToSegment.patch_to_segment(
                         graph=self.graphs,
                         coord=self.pc_ld,
