@@ -42,6 +42,7 @@ from tardis_em.utils.normalization import MeanStdNormalize, RescaleNormalize
 from tardis_em.utils.setup_envir import build_temp_dir, clean_up
 from tardis_em.utils.spline_metric import (
     FilterSpatialGraph,
+    FilterConnectedNearSegments,
     SpatialGraphCompare,
     sort_by_length,
     ComputeConfidenceScore,
@@ -106,7 +107,7 @@ class DataSetPredictor:
         correct_px: float = False,
         sampling: float = None,
         amira_prefix: str = None,
-        filter_by_length: float = None,
+        filter_by_length: int = None,
         connect_splines: int = None,
         connect_cylinder: int = None,
         amira_compare_distance: int = None,
@@ -284,11 +285,16 @@ class DataSetPredictor:
                     threshold=dist_threshold, connection=2, smooth=True
                 )
 
-                self.filter_splines = FilterSpatialGraph(
-                    connect_seg_if_closer_then=connect_splines,
-                    cylinder_radius=connect_cylinder,
-                    filter_short_segments=filter_by_length,
-                )
+                if predict == "Membrane2D":
+                    self.filter_splines = FilterConnectedNearSegments(
+                        distance_th=connect_splines,
+                        cylinder_radius=connect_cylinder,)
+                else:
+                    self.filter_splines = FilterSpatialGraph(
+                        connect_seg_if_closer_then=connect_splines,
+                        cylinder_radius=connect_cylinder,
+                        filter_short_segments=filter_by_length,
+                    )
                 self.compare_spline = SpatialGraphCompare(
                     distance_threshold=amira_compare_distance,
                     interaction_threshold=amira_inter_probability,
@@ -459,7 +465,7 @@ class DataSetPredictor:
             )[: self.scale_shape[0], : self.scale_shape[1], : self.scale_shape[2]]
 
         # Restored original image pixel size
-        self.image, _ = scale_image(image=self.image, scale=self.org_shape, nn=True)
+        self.image, _ = scale_image(image=self.image, scale=self.org_shape, nn=False)
         self.image = torch.sigmoid(torch.from_numpy(self.image)).cpu().detach().numpy()
 
         if self.cnn_threshold != 0:
@@ -486,9 +492,14 @@ class DataSetPredictor:
                 image=self.image, EDT=False, down_sampling=5
             )
         else:
-            self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
-                image=self.image, EDT=False, down_sampling=5, as_2d=True
-            )
+            if self.predict == "Membrane2D":
+                self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
+                    image=self.image, EDT=False, down_sampling=5, as_2d=True
+                )
+            else:
+                self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
+                    image=self.image, EDT=False, down_sampling=5, as_2d=True
+                )
         del self.image
         self._debug(id_name=id_name, debug_id="pc")
 
@@ -1011,9 +1022,9 @@ class DataSetPredictor:
                         sep=",",
                     )
 
-                    if self.predict in ["Filament", "Microtubule"]:
+                    if self.predict in ["Filament", "Microtubule", "Membrane2D"]:
                         self.segments = sort_by_length(
-                            self.filter_splines(segments=self.segments)
+                            self.filter_splines(self.segments)
                         )
                         self.segments = pd.DataFrame(self.segments)
                         self.segments.to_csv(

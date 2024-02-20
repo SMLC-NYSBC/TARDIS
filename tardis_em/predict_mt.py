@@ -254,7 +254,7 @@ def main(
     cnn_threshold: float,
     dist_threshold: float,
     points_in_patch: int,
-    filter_by_length: float,
+    filter_by_length: int,
     connect_splines: int,
     connect_cylinder: int,
     amira_prefix: str,
