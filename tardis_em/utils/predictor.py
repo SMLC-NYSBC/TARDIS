@@ -1141,6 +1141,7 @@ class Predictor:
         )
 
         self.model.load_state_dict(weights["model_state_dict"])
+        self.model.eval()
 
         del weights  # Cleanup weight file from memory
 
@@ -1193,8 +1194,6 @@ class Predictor:
             y = torch.Tensor(y)
 
         with torch.no_grad():
-            self.model.eval()
-
             dim_ = x.shape[-1]
             x = x.to(self.device)
             if self.network == "dist":
