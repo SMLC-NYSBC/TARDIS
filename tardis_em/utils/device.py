@@ -13,7 +13,7 @@ from typing import Union
 import torch
 
 
-def get_device(device: Union[str, int] = 0) -> torch.device:
+def get_device(device: str = "0") -> torch.device:
     """
     Return a device that can be used for training or predictions
 
@@ -46,7 +46,7 @@ def get_device(device: Union[str, int] = 0) -> torch.device:
     return device
 
 
-def device_is_str(device: Optional[str] = 0) -> bool:
+def device_is_str(device: str = "0") -> bool:
     """
     Check if used device is convertible to int value
 

@@ -288,7 +288,8 @@ class DataSetPredictor:
                 if predict == "Membrane2D":
                     self.filter_splines = FilterConnectedNearSegments(
                         distance_th=connect_splines,
-                        cylinder_radius=connect_cylinder,)
+                        cylinder_radius=connect_cylinder,
+                    )
                 else:
                     self.filter_splines = FilterSpatialGraph(
                         connect_seg_if_closer_then=connect_splines,
@@ -834,9 +835,12 @@ class DataSetPredictor:
                 )
 
                 # Build patches dataset
-                self.coords_df, _, self.output_idx, _, = self.patch_pc.patched_dataset(
-                    coord=self.pc_ld
-                )
+                (
+                    self.coords_df,
+                    _,
+                    self.output_idx,
+                    _,
+                ) = self.patch_pc.patched_dataset(coord=self.pc_ld)
 
                 # Predict point cloud
                 self.tardis_progress(

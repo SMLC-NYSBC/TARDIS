@@ -73,6 +73,8 @@ class TardisLogo:
     """
 
     def __init__(self, logo=True):
+        self.title = ""
+
         self.CLEAR = None
         self.WIDTH = None
 
@@ -173,6 +175,9 @@ class TardisLogo:
             print: Print progress bar with all text options into cmd commend line
                 window or jupyter notebook.
         """
+        if title != "":
+            self.title = title
+
         # Check and update window size
         self.cell_width()
 
@@ -180,7 +185,7 @@ class TardisLogo:
         if self.logo:
             logo = (
                 f'  {self._build_text(self.WIDTH + 1, "=", True)}\n'
-                + f' | {self._build_text(self.WIDTH, "TARDIS  " + version + "  " + title)}|\n'
+                + f' | {self._build_text(self.WIDTH, "TARDIS  " + version + "  " + self.title)}|\n'
                 + f' | {self._build_text(self.WIDTH, " ", True)}|\n'
                 + f' | {self._build_text(self.WIDTH, "New York Structural Biology Center")}|\n'
                 + f' | {self._build_text(self.WIDTH - 13, "Simons Machine Learning Center")} ___         |\n'
@@ -207,7 +212,7 @@ class TardisLogo:
         else:
             logo = (
                 f'  {self._build_text(self.WIDTH + 1, "=", True)}\n'
-                + f' | {self._build_text(self.WIDTH, "TARDIS  " + version + "  " + title)}|\n'
+                + f' | {self._build_text(self.WIDTH, "TARDIS  " + version + "  " + self.title)}|\n'
                 + f' | {self._build_text(self.WIDTH, " ", True)}|\n'
                 + f' | {self._build_text(self.WIDTH, "New York Structural Biology Center")}|\n'
                 + f' | {self._build_text(self.WIDTH, "Simons Machine Learning Center")}|\n'
