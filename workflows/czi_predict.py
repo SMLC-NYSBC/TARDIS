@@ -16,8 +16,9 @@ import torch
 import tifffile.tifffile as tif
 import numpy as np
 import json
+import time
 
-from os import mkdir
+from os import mkdir, remove
 from os.path import join, isdir, isfile
 from botocore import UNSIGNED
 from botocore.config import Config
@@ -58,23 +59,30 @@ async def get_from_aws(url):
     s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
     s3.download_file("cryoet-data-portal-public", url, url.split("/")[-1])
 
+    print(f"Downloaded: {url.split('/')[-1]}")
+
 
 async def upload_to_aws(
-    aws_key, aws_secret, bucket, id_, data_name, file_name, remove=True
+    aws_key, aws_secret, bucket, id_, data_name, file_name, remove_=True
 ):
-    client = boto3.client(
-        "s3", aws_access_key_id=aws_key, aws_secret_access_key=aws_secret
-    )
-    transfer = S3Transfer(client)
-    transfer.upload_file(
-        file_name,
-        bucket,
-        join("robert_kiewisz_tardis_01_2024", id_, data_name, file_name),
-    )
-    if remove:
-        rmtree(file_name)
-    else:
-        move(file_name, join("TARDIS", file_name))
+    try:
+        client = boto3.client(
+            "s3", aws_access_key_id=aws_key, aws_secret_access_key=aws_secret
+        )
+        transfer = S3Transfer(client)
+        transfer.upload_file(
+            file_name,
+            bucket,
+            join("robert_kiewisz_tardis_01_2024", id_, data_name, file_name),
+        )
+        if remove_:
+            remove(file_name)
+        else:
+            move(file_name, join("TARDIS", file_name))
+
+        print(f"Uploaded: {file_name}")
+    except:
+        print(f"Upload fail: {file_name}")
 
 
 class ProcessTardisForCZI:
@@ -144,27 +152,47 @@ class ProcessTardisForCZI:
         mkdir(self.output)
 
     def predict_cnn(self, dataloader):
+        iter_time = 1
+
         for j in range(len(dataloader)):
-            input_, name = dataloader.__getitem__(j)
-            input_ = self.model_cnn.predict(input_[None, :], rotate=True)
-            tif.imwrite(join(self.output, f"{name}.tif"), input_)
+            if j % iter_time == 0:
+                self.terminal(
+                    text_1="TARDIS segmentation:",
+                    text_2="Semantic Segmentation...",
+                    text_3=f"Dataset: [{self.name}]",
+                    text_4=f"Pixel_size: {self.px}",
+                    text_6=print_progress_bar(self.progress[0], self.progress[1]),
+                    text_7=print_progress_bar(j, len(dataloader)),
+                )
+
+            if j == 0:
+                start = time.time()
+
+                input_, name = dataloader.__getitem__(j)
+                input_ = self.model_cnn.predict(input_[None, :], rotate=True)
+                tif.imwrite(join(self.output, f"{name}.tif"), input_)
+
+                end = time.time()
+                iter_time = 10 // (end - start)
+                if iter_time <= 1:
+                    iter_time = 1
+            else:
+                input_, name = dataloader.__getitem__(j)
+                input_ = self.model_cnn.predict(input_[None, :], rotate=True)
+                tif.imwrite(join(self.output, f"{name}.tif"), input_)
 
     def predict_dist(self, coords_df):
         x = []
         with torch.no_grad():
             for i in coords_df:
-                x.append(
-                    self.model_dist.predict(x=i[None, :].to(self.device), y=None)
-                    .cpu()
-                    .detach()
-                    .numpy()[0, 0, :]
-                )
+                x.append(self.model_dist.predict(x=i[None, :], y=None))
 
         return x
 
+    @staticmethod
     def prediction_stat(name: str, pc: np.ndarray):
         if isfile("stat.json"):
-            with open("", "r") as file:
+            with open("stat.json", "r") as file:
                 data = json.load(file)
         else:
             data = {}
@@ -177,8 +205,11 @@ class ProcessTardisForCZI:
         ]
 
         size_ = np.array(data[name]["Size_of_Each_Instance"])
-        data[name]["Contain_Membrane"] = np.any(size_ > 1000)
-        data[name]["Maybe_Contain_Membrane"] = np.any(size_ > 250)
+        data[name]["Contain_Membrane"] = 1 if np.any(size_ > 1000) else 0
+        if data[name]["Contain_Membrane"] == 0:
+            data[name]["Maybe_Contain_Membrane"] = np.any(size_ > 250)
+        else:
+            data[name]["Maybe_Contain_Membrane"] = 1
 
         with open("stat.json", "w") as file:
             json.dump(data, file, indent=4)
@@ -233,6 +264,9 @@ class ProcessTardisForCZI:
             text_6=print_progress_bar(progress[0], progress[1]),
         )
 
+        self.name = name
+        self.px = px
+        self.progress = (progress[0], progress[1])
         self.predict_cnn(
             dataloader=PredictionDataset(join(self.patches, "imgs")),
         )
@@ -247,6 +281,7 @@ class ProcessTardisForCZI:
         tif.imwrite(
             join(self.results, name + "_semantic.tif"), data.sum(0).astype(np.uint8)
         )  # Store for NYSBC
+        self.clean_temp()
 
         """TARDIS - Instance Segmentation"""
         self.terminal(
@@ -258,7 +293,10 @@ class ProcessTardisForCZI:
         )
 
         _, pc_ld = BuildPointCloud().build_point_cloud(
-            image=data, EDT=False, down_sampling=5, as_2d=False
+            image=data,
+            EDT=False,
+            down_sampling=5,
+            as_2d=True if self.predict == "Membrane" else False,
         )
         coords_df, _, output_idx, _ = self.patch_pc.patched_dataset(coord=pc_ld)
         x = self.predict_dist(coords_df)
@@ -296,7 +334,7 @@ async def main():
     aws_key = aws[0]
     aws_secret = aws[1]
     client = Client()
-    bucket = "cryoet-data-portal-public"
+    bucket = "cryoetportal-rawdatasets-dev"
 
     # Get all tomograms with voxel spacing <= 10
     all_tomogram = list(
@@ -319,20 +357,19 @@ async def main():
 
     tasks = []
     next_download = asyncio.create_task(get_from_aws(urls[0][31:]))
-    for idx, (url, folder_name, file_name, px_czi) in enumerate(
-        zip(urls, folder_names, file_names, czi_px)
+    for idx, (folder_name, file_name, px_czi) in enumerate(
+        zip(folder_names, file_names, czi_px)
     ):
         terminal(
             text_1="Waiting for Data from AWS:",
             text_3=f"Dataset: [{file_name}]",
             text_6=print_progress_bar(idx, len(urls)),
         )
-
-        # Wait for the current download to complete before processing
         await next_download
 
         data, px = load_image(file_name + ".mrc", False)
         header = mrc_read_header(file_name + ".mrc")
+        remove(file_name + ".mrc")
 
         if px != px_czi:
             px = px_czi
@@ -350,7 +387,7 @@ async def main():
 
         # If there's a next file, start downloading it now
         if idx + 1 < len(urls):
-            next_download = asyncio.create_task(get_from_aws(url[31:]))
+            next_download = asyncio.create_task(get_from_aws(urls[idx + 1][31:]))
 
         await tardis
 
@@ -361,9 +398,9 @@ async def main():
                     aws_key,
                     aws_secret,
                     bucket,
-                    folder_names,
-                    file_name[:-4],
-                    file_name[:-4] + "_semantic.mrc",
+                    folder_name,
+                    file_name,
+                    file_name + "_semantic.mrc",
                 )
             ),
             asyncio.create_task(
@@ -371,10 +408,10 @@ async def main():
                     aws_key,
                     aws_secret,
                     bucket,
-                    folder_names,
-                    file_name[:-4],
-                    file_name[:-4] + "_instance.csv",
-                    remove=False,
+                    folder_name,
+                    file_name,
+                    file_name + "_instance.csv",
+                    remove_=False,
                 )
             ),
         ]
