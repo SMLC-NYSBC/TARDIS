@@ -413,6 +413,33 @@ def draw_circle(
     return np.vstack(circle_points)
 
 
+def draw_sphere(center, radius, sheet_id):
+    # Approximate surface area of the sphere
+    surface_area = 4 * np.pi * radius ** 2
+    # Desired distance between points, roughly
+    distance = 1
+
+    # Estimate the number of points needed for the given spacing
+    point_area = distance ** 2
+    num_points = int(surface_area / point_area)
+
+    # Generate points
+    indices = np.arange(0, num_points, dtype=float) + 0.5
+    phi = np.arccos(1 - 2 * indices / num_points)
+    theta = np.pi * (1 + 5 ** 0.5) * indices
+
+    x = radius * np.sin(phi) * np.cos(theta)
+    y = radius * np.sin(phi) * np.sin(theta)
+    z = radius * np.cos(phi)
+
+    # Scale points to the sphere radius
+    points = np.stack([x, y, z], axis=-1)
+
+    points += center
+
+    return np.hstack((np.repeat(sheet_id, len(points))[:, None], points))
+
+
 def draw_sheet(center: np.ndarray, size: tuple, sheet_id: int) -> np.ndarray:
     """
     Generate n points on a 3D sheet.
@@ -525,38 +552,14 @@ def create_simulated_dataset(size, sim_type: str):
             i += 1
 
     if sim_type == "mix3d" or sim_type == "membranes":
-        # for _ in range(5):  # Drawing n random sphere
-        #     radius = np.random.randint(10, size[1] // 4)
-        #     z_center = np.random.randint(10, size[0] - 10)
-        #
-        #     center = np.random.randint(
-        #         0, (z_center, size[1] - radius, size[2] - radius)
-        #     )
-        #     c = draw_circle(center, radius, i, _3d=True, size=size)
-        #     if len(c) > 0:
-        #         coord.append(c)
-        #         i += 1
+        for _ in range(100):  # Drawing n random circles
+            radius = np.random.randint(10, size[1] // 20)
 
-        len_ = len(coord) + 6
-        while len_ != len(coord):
-            radius = np.random.randint(10, size[1] // 4)
-            z_center = np.random.randint(10, size[0] - 10)
-
-            center = np.random.randint(
-                0, (z_center, size[1] - radius, size[2] - radius)
-            )
-
-            c = draw_sheet(center, size, i)
-            if len(c) > 100:
-                coord.append(c)
-                i += 1
-
-                dist_ = pc_median_dist(c[:, 1:], False) * np.random.randint(10, 15)
-                d = deepcopy(c)
-
-                d[:, 0] += 1
-                d[:, 1] += dist_
-                coord.append(d)
-                i += 1
+            center = np.random.randint(0, (
+                size[0] - radius,
+                size[1] - radius,
+                size[2] - radius))
+            coord.append(draw_sphere(center, radius, i))
+            i += 1
 
     return np.vstack(coord)
