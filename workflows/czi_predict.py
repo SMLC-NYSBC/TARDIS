@@ -118,7 +118,7 @@ class ProcessTardisForCZI:
         # Load CNN model
         self.model_cnn = Predictor(
             checkpoint=None,
-            network="unet",
+            network="fnet_attn",
             subtype="32",
             model_type=(
                 "membrane_3d" if self.predict == "Membrane" else "microtubules_3d"
@@ -138,7 +138,7 @@ class ProcessTardisForCZI:
 
         self.patch_pc = PatchDataSet(max_number_of_points=1000, graph=False)
         self.segment_pc = PropGreedyGraphCut(
-            threshold=0.5, connection=8 if self.predict == "Membrane" else 2
+            threshold=0.5, connection=4 if self.predict == "Membrane" else 2
         )
 
     @staticmethod
@@ -165,7 +165,7 @@ class ProcessTardisForCZI:
     def predict_cnn(self, dataloader):
         for j in range(len(dataloader)):
             input_, name = dataloader.__getitem__(j)
-            input_ = self.model_cnn.predict(input_[None, :], rotate=True)
+            input_ = self.model_cnn.predict(input_[None, :], rotate=False)
             tif.imwrite(join(self.output, f"{name}.tif"), input_)
 
     def predict_dist(self, coords_df):
@@ -184,25 +184,40 @@ class ProcessTardisForCZI:
         else:
             data = {}
 
-        name_ = name[0]
-        data[name_] = {}
-        data[name_]['Pixel_Size'] = name[1]
-        data[name_]['Segmentation_time'] = name[2]
-        data[name_]["Number_of_Points"] = len(pc)
-        data[name_]["Number_of_Instances"] = len(np.unique(pc[:, 0]))
-        data[name_]["Size_of_Each_Instance"] = [
-            len(pc[pc[:, 0] == x, :]) for x in np.unique(pc[:, 0])
-        ]
+        try:
+            name_ = name[0]
+            data[name_] = {}
+            data[name_]['Pixel_Size'] = name[1]
+            data[name_]['Segmentation_time'] = name[2]
+            data[name_]["Number_of_Points"] = len(pc)
+            data[name_]["Number_of_Instances"] = len(np.unique(pc[:, 0]))
+            data[name_]["Size_of_Each_Instance"] = [
+                len(pc[pc[:, 0] == x, :]) for x in np.unique(pc[:, 0])
+            ]
 
-        size_ = np.array(data[name]["Size_of_Each_Instance"])
-        data[name]["Contain_Membrane"] = 1 if np.any(size_ > 1000) else 0
-        if data[name]["Contain_Membrane"] == 0:
-            data[name]["Maybe_Contain_Membrane"] = np.any(size_ > 250)
-        else:
-            data[name]["Maybe_Contain_Membrane"] = 1
+            size_ = np.array(data[name_]["Size_of_Each_Instance"])
+            data[name_]["Contain_Membrane"] = 1 if np.any(size_ > 1000) else 0
+            if data[name_]["Contain_Membrane"] == 0:
+                data[name_]["Maybe_Contain_Membrane"] = np.any(size_ > 250)
+            else:
+                data[name_]["Maybe_Contain_Membrane"] = 1
 
-        with open("stat.json", "w") as file:
-            json.dump(data, file, indent=4)
+            with open("stat.json", "w") as file:
+                json.dump(data, file, indent=4)
+        except TypeError:
+            name_ = name[0]
+            data[name_] = {}
+            data[name_]['Pixel_Size'] = name[1]
+            data[name_]['Segmentation_time'] = name[2]
+            data[name_]["Number_of_Points"] = 'NaN'
+            data[name_]["Number_of_Instances"] = 'NaN'
+            data[name_]["Size_of_Each_Instance"] = 'NaN'
+
+            data[name_]["Contain_Membrane"] = 'NaN'
+            data[name_]["Maybe_Contain_Membrane"] = 'NaN'
+
+            with open("stat.json", "w") as file:
+                json.dump(data, file, indent=4)
 
     async def __call__(
         self, data: np.ndarray, px: float, header, name: str, progress: tuple
@@ -299,7 +314,7 @@ class ProcessTardisForCZI:
             prune=25 if self.predict == "Membrane" else 10,
         )
         end_time = np.round(time.time() - start, 0) / 60  # Minutes
-        
+
         self.prediction_stat([name, px, end_time], pc)
         pc = sort_by_length(pc)
 
