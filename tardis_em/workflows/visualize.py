@@ -47,7 +47,7 @@ from tardis_em._version import version
 )
 @click.version_option(version=version)
 def main(dir_: str, type_: str, animate: bool, with_node: bool):
-    pc = np.genfromtxt(dir_, delimiter=',', skip_header=1, dtype=np.float)
+    pc = np.genfromtxt(dir_, delimiter=',', skip_header=1, dtype=np.float32)
     if type_ == 'p':
         if pc.shape[1] == 4:
             VisualizePointCloud(pc, segmented=True, animate=animate)
