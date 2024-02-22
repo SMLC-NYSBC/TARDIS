@@ -8,7 +8,6 @@
 #  MIT License 2021 - 2024                                            #
 #######################################################################
 
-import argparse
 import asyncio
 import boto3
 import pandas as pd
@@ -43,17 +42,6 @@ from tardis_em.utils.spline_metric import sort_by_length
 
 name = "czi_predict"
 help = "Predict entire CZI-dataportal"
-
-
-def add_arguments(parser=None):
-    if parser is None:
-        parser = argparse.ArgumentParser(help)
-
-    parser.add_argument("-a", "--aws_dir", type=str)
-    parser.add_argument("-g", "--allocate_gpu", type=str, default="0")
-    parser.add_argument("-p", "--predict", type=str, default="Membrane")
-
-    return parser
 
 
 async def get_from_aws(url):
