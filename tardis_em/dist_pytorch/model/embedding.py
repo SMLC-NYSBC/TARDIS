@@ -129,26 +129,24 @@ class EdgeEmbedding(nn.Module):
             # Overwrite diagonal with 1
             dist = dist.unsqueeze(3)
             dist[:, g_range, g_range, :] = 1.0
-
-            if self.linear is not None:
-                return self.linear(dist)
-            else:
-                return dist
         else:
-            dist_range = torch.zeros(
-                (1, g_len, g_len, len(self._range)), device=dist.device
-            )
+            _range_expanded = self._range.view(1, 1, 1, -1).to(dist.device)
+            dist = dist.unsqueeze(-1)
+            dist = torch.exp(-(dist ** 2) / (_range_expanded ** 2 * 2))
+            dist[torch.isnan(dist)] = 0.0
+            dist[:, g_range, g_range, :] = 1.0
 
-            for id_1, i in enumerate(self._range):
-                dist_range[..., id_1] = torch.exp(-(dist**2) / (i**2 * 2))
+            # dist_range = torch.zeros(
+            #     (1, g_len, g_len, len(self._range)), device=dist.device
+            # )
+            #
+            # for id_1, i in enumerate(self._range):
+            #     dist_range[..., id_1] = torch.exp(-(dist**2) / (i**2 * 2))
+            #
+            # dist_range[torch.isnan(dist_range)] = 0.0
+            # dist_range[:, g_range, g_range, :] = 1.0
 
-            dist_range[torch.isnan(dist_range)] = 0.0
-            # isnan = torch.isnan(dist_range)
-            # dist_range = torch.where(isnan, torch.zeros_like(dist_range), dist_range)
-
-            dist_range[:, g_range, g_range, :] = 1.0
-
-            if self.linear is not None:
-                return self.linear(dist_range)
-            else:
-                return dist_range
+        if self.linear is not None:
+            return self.linear(dist)
+        else:
+            return dist

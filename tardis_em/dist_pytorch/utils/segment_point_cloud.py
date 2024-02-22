@@ -34,7 +34,10 @@ class PropGreedyGraphCut:
 
     def __init__(self, threshold=float, connection=2, smooth=False):
         self.threshold = threshold
-        self.connection = connection
+        if isinstance(connection, int):
+            self.connection = connection
+        else:
+            self.connection = 10000000
         self.smooth = smooth
 
     @staticmethod
@@ -135,11 +138,11 @@ class PropGreedyGraphCut:
         return cls_df
 
     def _adjacency_list(
-        self,
-        graphs: list,
-        coord: np.ndarray,
-        output_idx: Optional[list] = None,
-        threshold=True,
+            self,
+            graphs: list,
+            coord: np.ndarray,
+            output_idx: Optional[list] = None,
+            threshold=0.5,
     ) -> Optional[list]:
         """
         Builder of adjacency matrix from stitched coord and graph voxels
@@ -147,80 +150,112 @@ class PropGreedyGraphCut:
         [id][coord][interactions][interaction probability]
 
         Args:
-            graphs (list): Graph patch output from DIST.
+            graphs (list[np.ndarray]): Graph patch output from DIST.
             coord (np.ndarray): Stitched coord output from DIST.
-            output_idx (list, None): Index lists from DIST.
+            output_idx (list[list], None): Index lists from DIST.
 
         Returns:
             list: Adjacency list of all bind graph connections.
         """
-        all_prop = [[idx, list(i), [], []] for idx, i in enumerate(coord)]
-
         if output_idx is None:
             if len(graphs) == 1:
                 output_idx = list(range(len(graphs[0])))
             else:
                 return None
 
+        all_prop = [[idx, coord_i.tolist(), [], []] for idx, coord_i in enumerate(coord)]
         for g, o in zip(graphs, output_idx):
-            top_k_indices = np.argsort(g, axis=1)[:, : -10 - 1 : -1]
-            top_k_probs = np.take_along_axis(g, top_k_indices, axis=1).tolist()
+            top_k_indices = np.argsort(g, axis=1)
+            top_k_probs = np.take_along_axis(g, top_k_indices, axis=1)
+            o = np.array(o)
 
-            top_k_indices = o[top_k_indices].tolist()
+            for i in range(top_k_indices.shape[0]):
+                indices = o[top_k_indices[i]].tolist()
+                probs = top_k_probs[i].tolist()
 
-            # Find the indices of the non-zero values
-            if threshold:
-                top_k_indices = [
-                    [x for x, y in zip(i, p) if y >= self.threshold]
-                    for i, p in zip(top_k_indices, top_k_probs)
-                ]
-                top_k_probs = [
-                    [x for x in p if x >= self.threshold] for p in top_k_probs
-                ]
-            else:
-                top_k_indices = [
-                    [x for x, y in zip(i, p) if y != 0]
-                    for i, p in zip(top_k_indices, top_k_probs)
-                ]
-                top_k_probs = [[x for x in p if x != 0] for p in top_k_probs]
+                if threshold:
+                    filtered_indices_probs = [(idx, prob) for idx, prob in zip(indices, probs) if
+                                              prob >= self.threshold]
+                else:
+                    filtered_indices_probs = [(idx, prob) for idx, prob in zip(indices, probs) if prob != 0]
 
-            adj = list(zip(o, top_k_indices, top_k_probs))
+                indices, probs = zip(*filtered_indices_probs) if filtered_indices_probs else ([], [])
 
-            for i in adj:
-                indices = i[1]
-                probs = i[2]
+                # Remove self-connection
+                if o[i] in indices:
+                    idx = indices.index(o[i])
+                    indices = list(indices)
+                    probs = list(probs)
+                    del indices[idx]
+                    del probs[idx]
 
-                # Remove self connection
-                self_connect = [id_ for id_, x in enumerate(indices) if x == i[0]]
-                if len(self_connect) > 0:
-                    indices.pop(self_connect[0])
-                    probs.pop(self_connect[0])
-
-                all_prop[i[0]][2].extend(indices)
-                all_prop[i[0]][3].extend(probs)
+                all_prop[o[i]][2].extend(indices)
+                all_prop[o[i]][3].extend(probs)
 
         # Merge duplicates
-        for p_id, i in enumerate(all_prop):
-            inter = i[2]
-            prop = i[3]
-            if len(inter) > 1:
-                all_prop[p_id][2] = list(np.unique(inter))
-                all_prop[p_id][3] = [
-                    np.median([x for idx, x in enumerate(prop) if inter[idx] == k])
-                    for k in np.unique(inter)
-                ]
+        for p in all_prop:
+            if p[2]:
+                unique_indices, inv = np.unique(p[2], return_inverse=True)
+                p[2] = unique_indices.tolist()
+                p[3] = [np.median(np.array(p[3])[inv == i]) for i in range(len(unique_indices))]
 
-        # Sort and remove self connection
-        for id_, a in enumerate(all_prop):
-            if len(a[2]) > 1:
-                prop, inter = zip(*sorted(zip(a[3], a[2]), reverse=True))
-                all_prop[id_][2] = list(inter)[: self.connection]
-                all_prop[id_][3] = list(prop)[: self.connection]
+                # Sort by probability in descending order and apply connection limit
+                sorted_indices = np.argsort(p[3])[::-1]
+                p[2] = np.array(p[2])[sorted_indices].tolist()
+                p[3] = np.array(p[3])[sorted_indices].tolist()
 
         return all_prop
 
+    def preprocess_connections(self, adj_matrix):
+        """
+        Preprocess the adjacency matrix to keep only the top 8 connections based
+        on the connection probability for each node.
+        """
+        for i in range(len(adj_matrix)):
+            connections, probabilities = adj_matrix[i][2], adj_matrix[i][3]
+            # Sort by probability and keep the top 8
+            top_indices = sorted(range(len(probabilities)), key=lambda k: probabilities[k], reverse=True)[
+                          :self.connection]
+            adj_matrix[i][2] = [connections[j] for j in top_indices]
+            adj_matrix[i][3] = [probabilities[j] for j in top_indices]
+
+        return adj_matrix
+
+    def _find_segment_matrix_fast(self, adj_matrix: list) -> list:
+        """
+        Find a segment of connected nodes considering the connection strength and
+        limiting each node to a maximum of 8 connections.
+        """
+        visited = set()
+        to_visit = set()
+
+        # Start with the first node that has connections
+        for i, (_, _, connections, _) in enumerate(adj_matrix):
+            if connections:
+                to_visit.add(i)
+                break
+
+        while to_visit:
+            current = to_visit.pop()
+            if current in visited:
+                continue
+
+            visited.add(current)
+            _, _, connections, _ = adj_matrix[current]
+
+            for neighbor in connections:
+                if neighbor not in visited:
+                    neighbor_connections = adj_matrix[neighbor][2]
+                    # Check for mutual strong connection
+                    if current in neighbor_connections and len(neighbor_connections) <= self.connection:
+                        to_visit.add(neighbor)
+
+        non_empty_nodes = [i for i in visited if adj_matrix[i][2]]
+        return non_empty_nodes
+
     def _find_segment_matrix(self, adj_matrix: list) -> list:
         """
+        !Deprecated!
         Iterative search mechanism that search for connected points in the
         adjacency list.
 
@@ -353,13 +388,14 @@ class PropGreedyGraphCut:
         adjacency_matrix = self._adjacency_list(
             graphs=graph, coord=coord, output_idx=idx
         )
+        adjacency_matrix = self.preprocess_connections(adjacency_matrix)
 
         coord_segment = []
         stop = False
         segment_id = 0
 
         while not stop:
-            idx = self._find_segment_matrix(adjacency_matrix)
+            idx = self._find_segment_matrix_fast(adjacency_matrix)
 
             """Select segment longer then 3 points"""
             if len(idx) >= prune:
