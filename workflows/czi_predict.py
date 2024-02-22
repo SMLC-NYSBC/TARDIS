@@ -39,6 +39,7 @@ from tardis_em.utils.device import get_device
 from tardis_em.utils.predictor import Predictor
 from tardis_em.utils.normalization import RescaleNormalize, MeanStdNormalize
 from tardis_em.utils.export_data import to_mrc
+from tardis_em.utils.spline_metric import sort_by_length
 
 name = "czi_predict"
 help = "Predict entire CZI-dataportal"
@@ -65,6 +66,16 @@ async def get_from_aws(url):
 async def upload_to_aws(
     aws_key, aws_secret, bucket, id_, data_name, file_name, remove_=True
 ):
+    if data_name is None:
+        client = boto3.client(
+            "s3", aws_access_key_id=aws_key, aws_secret_access_key=aws_secret
+        )
+        transfer = S3Transfer(client)
+        transfer.upload_file(
+            file_name,
+            bucket,
+            join("robert_kiewisz_tardis_01_2024", id_, file_name),
+        )
     try:
         client = boto3.client(
             "s3", aws_access_key_id=aws_key, aws_secret_access_key=aws_secret
@@ -152,34 +163,10 @@ class ProcessTardisForCZI:
         mkdir(self.output)
 
     def predict_cnn(self, dataloader):
-        iter_time = 1
-
         for j in range(len(dataloader)):
-            if j % iter_time == 0:
-                self.terminal(
-                    text_1="TARDIS segmentation:",
-                    text_2="Semantic Segmentation...",
-                    text_3=f"Dataset: [{self.name}]",
-                    text_4=f"Pixel_size: {self.px}",
-                    text_6=print_progress_bar(self.progress[0], self.progress[1]),
-                    text_7=print_progress_bar(j, len(dataloader)),
-                )
-
-            if j == 0:
-                start = time.time()
-
-                input_, name = dataloader.__getitem__(j)
-                input_ = self.model_cnn.predict(input_[None, :], rotate=True)
-                tif.imwrite(join(self.output, f"{name}.tif"), input_)
-
-                end = time.time()
-                iter_time = 10 // (end - start)
-                if iter_time <= 1:
-                    iter_time = 1
-            else:
-                input_, name = dataloader.__getitem__(j)
-                input_ = self.model_cnn.predict(input_[None, :], rotate=True)
-                tif.imwrite(join(self.output, f"{name}.tif"), input_)
+            input_, name = dataloader.__getitem__(j)
+            input_ = self.model_cnn.predict(input_[None, :], rotate=True)
+            tif.imwrite(join(self.output, f"{name}.tif"), input_)
 
     def predict_dist(self, coords_df):
         x = []
@@ -190,17 +177,20 @@ class ProcessTardisForCZI:
         return x
 
     @staticmethod
-    def prediction_stat(name: str, pc: np.ndarray):
+    def prediction_stat(name: list, pc: np.ndarray):
         if isfile("stat.json"):
             with open("stat.json", "r") as file:
                 data = json.load(file)
         else:
             data = {}
 
-        data[name] = {}
-        data[name]["Number_of_Points"] = len(pc)
-        data[name]["Number_of_Instances"] = len(np.unique(pc[:, 0]))
-        data[name]["Size_of_Each_Instance"] = [
+        name_ = name[0]
+        data[name_] = {}
+        data[name_]['Pixel_Size'] = name[1]
+        data[name_]['Segmentation_time'] = name[2]
+        data[name_]["Number_of_Points"] = len(pc)
+        data[name_]["Number_of_Instances"] = len(np.unique(pc[:, 0]))
+        data[name_]["Size_of_Each_Instance"] = [
             len(pc[pc[:, 0] == x, :]) for x in np.unique(pc[:, 0])
         ]
 
@@ -244,6 +234,7 @@ class ProcessTardisForCZI:
         scale_shape = np.multiply(org_shape, scale_factor).astype(np.int16)
         scale_shape = [int(i) for i in scale_shape]
 
+        start = time.time()
         trim_with_stride(
             image=data,
             scale=scale_shape,
@@ -276,7 +267,7 @@ class ProcessTardisForCZI:
         data, _ = scale_image(image=data, scale=org_shape, nn=False)
         data = torch.sigmoid(torch.from_numpy(data)).cpu().detach().numpy()
 
-        data = np.where(data > 0.25, 1, 0).astype(np.uint8)
+        data = np.where(data > 0.5, 1, 0).astype(np.uint8)
         to_mrc(data, px, name + "_semantic.mrc", header)  # To upload back to AWS
         tif.imwrite(
             join(self.results, name + "_semantic.tif"), data.sum(0).astype(np.uint8)
@@ -305,9 +296,12 @@ class ProcessTardisForCZI:
             coord=pc_ld,
             idx=output_idx,
             sort=False if self.predict == "Membrane" else True,
-            prune=15 if self.predict == "Membrane" else 5,
+            prune=25 if self.predict == "Membrane" else 10,
         )
-        self.prediction_stat(name, pc)
+        end_time = np.round(time.time() - start, 0) / 60  # Minutes
+        
+        self.prediction_stat([name, px, end_time], pc)
+        pc = sort_by_length(pc)
 
         pc = pd.DataFrame(pc)
         pc.to_csv(
@@ -414,6 +408,15 @@ async def main():
                     remove_=False,
                 )
             ),
+            upload_to_aws(
+                    aws_key,
+                    aws_secret,
+                    bucket,
+                    'TARDIS_Prediction_Stats',
+                    None,
+                    "stat.json",
+                    remove_=False,
+                ),
         ]
     await asyncio.gather(*tasks)
 
