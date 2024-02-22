@@ -208,16 +208,28 @@ class PropGreedyGraphCut:
 
     def preprocess_connections(self, adj_matrix):
         """
-        Preprocess the adjacency matrix to keep only the top 8 connections based
-        on the connection probability for each node.
+        Preprocess the adjacency matrix to first ensure mutual connections and then
+        limit each node to its top 8 connections based on connection probability.
         """
-        for i in range(len(adj_matrix)):
-            connections, probabilities = adj_matrix[i][2], adj_matrix[i][3]
-            # Sort by probability and keep the top 8
-            top_indices = sorted(range(len(probabilities)), key=lambda k: probabilities[k], reverse=True)[
-                          :self.connection]
-            adj_matrix[i][2] = [connections[j] for j in top_indices]
-            adj_matrix[i][3] = [probabilities[j] for j in top_indices]
+        # Step 1: Identify potential top connections without immediately limiting to top 8
+        potential_top_connections = {}
+        for idx, (_, _, connections, probabilities) in enumerate(adj_matrix):
+            sorted_indices = sorted(range(len(probabilities)), key=lambda k: probabilities[k], reverse=True)
+            potential_top_connections[idx] = {connections[i]: probabilities[i] for i in sorted_indices}
+
+        # Step 2: Ensure mutual connections
+        mutual_connections = {}
+        for idx, connections in potential_top_connections.items():
+            for conn_idx, prob in connections.items():
+                if idx in potential_top_connections.get(conn_idx, {}):
+                    mutual_connections.setdefault(idx, {})[conn_idx] = prob
+                    mutual_connections.setdefault(conn_idx, {})[idx] = potential_top_connections[conn_idx][idx]
+
+        # Step 3: Limit to top 8 mutual connections based on probability
+        for idx, connections in mutual_connections.items():
+            top_indices = sorted(connections, key=connections.get, reverse=True)[:self.connection]
+            adj_matrix[idx][2] = top_indices
+            adj_matrix[idx][3] = [connections[i] for i in top_indices]
 
         return adj_matrix
 
