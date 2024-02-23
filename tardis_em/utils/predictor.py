@@ -490,17 +490,16 @@ class DataSetPredictor:
         # Post-process predicted image patches
         if self.predict in ["Filament", "Microtubule"]:
             self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
-                image=self.image, EDT=False, down_sampling=5
+                image=self.image, EDT=False, down_sampling=10
+            )
+        elif self.predict == "Membrane2D":
+            self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
+                image=self.image, EDT=False, down_sampling=10, as_2d=True
             )
         else:
-            if self.predict == "Membrane2D":
-                self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
-                    image=self.image, EDT=False, down_sampling=5, as_2d=True
-                )
-            else:
-                self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
-                    image=self.image, EDT=False, down_sampling=5, as_2d=True
-                )
+            self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
+                image=self.image, EDT=False, down_sampling=5, as_2d=True
+            )
         del self.image
         self._debug(id_name=id_name, debug_id="pc")
 
@@ -858,6 +857,13 @@ class DataSetPredictor:
                 self.graphs = self.predict_DIST(id_=id_, id_name=i)
                 self._debug(id_name=i, debug_id="graph")
 
+                self.pc_ld = (
+                    self.pc_ld * self.px
+                    if self.correct_px is None
+                    else self.pc_ld * self.correct_px
+                )
+                self.pc_ld = self.pc_ld + self.transformation
+
                 if self.predict in ["Filament", "Microtubule"]:
                     self.tardis_progress(
                         title=self.title,
@@ -870,15 +876,6 @@ class DataSetPredictor:
                         text_8="MTs segmentation is fitted to:",
                         text_9=f"pixel size: {self.px}; transformation: {self.transformation}",
                     )
-
-                    self.pc_ld = (
-                        self.pc_ld * self.px
-                        if self.correct_px is None
-                        else self.pc_ld * self.correct_px
-                    )
-                    self.pc_ld[:, 0] = self.pc_ld[:, 0] + self.transformation[0]
-                    self.pc_ld[:, 1] = self.pc_ld[:, 1] + self.transformation[1]
-                    self.pc_ld[:, 2] = self.pc_ld[:, 2] + self.transformation[2]
                 else:
                     self.tardis_progress(
                         title=self.title,
@@ -897,6 +894,7 @@ class DataSetPredictor:
                     else:
                         sort = False
                         prune = 15
+
                     self.segments = self.GraphToSegment.patch_to_segment(
                         graph=self.graphs,
                         coord=self.pc_ld,

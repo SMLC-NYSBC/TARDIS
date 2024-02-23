@@ -664,13 +664,12 @@ def smooth_spline(points: np.ndarray, s=0.5):
         Returns: Smooth spline
     """
     if points.shape[1] == 4:  # [ID, X, Y, Z]
-        id = int(points[0, 0])
+        id_ = int(points[0, 0])
         points = points[:, 1:]
         norm_pc = pc_median_dist(points)
         points = points / norm_pc
 
         t_before = tortuosity(points)
-
         try:
             tck, u = splprep(points.T, s=s)
             spline = np.stack(splev(u, tck)).T
@@ -680,11 +679,11 @@ def smooth_spline(points: np.ndarray, s=0.5):
         spline = spline * norm_pc
         t_after = tortuosity(spline)
         ids = np.zeros((len(spline), 1))
-        ids[:, 0] = id
+        ids[:, 0] = id_
 
         # Sanity check if spline smoothing failed
         if t_after > t_before:
-            return np.hstack((ids, points))
+            return np.hstack((ids, points * norm_pc))
         return np.hstack((ids, spline))
     else:  # [X, Y, Z]
         tck, u = splprep(points.T)

@@ -407,7 +407,7 @@ class PropGreedyGraphCut:
         segment_id = 0
 
         while not stop:
-            idx = self._find_segment_matrix_fast(adjacency_matrix)
+            idx = self._find_segment_matrix(adjacency_matrix)
 
             """Select segment longer then 3 points"""
             if len(idx) >= prune:
@@ -457,11 +457,13 @@ class PropGreedyGraphCut:
                 stop = True
 
         segments = np.vstack(coord_segment)
+
         if self.smooth:
             voxel_ds = VoxelDownSampling(voxel=5, labels=True, KNN=True)
             segments = voxel_ds(segments)
             segments = segments[segments[:, 0].argsort()]
             df_coord = []
+
             for i in np.unique(segments[:, 0]):
                 id_ = i
                 idx = np.where(segments[:, 0] == id_)[0]
@@ -476,7 +478,6 @@ class PropGreedyGraphCut:
                         )
                     )
             segments = np.concatenate(df_coord)
-
             segments = self._smooth_segments(segments)
 
         if visualize is not None:
