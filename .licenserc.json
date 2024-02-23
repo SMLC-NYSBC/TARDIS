@@ -4,7 +4,7 @@
     "**/__init__.py",
     "tardis_em/__init__.py",
     "tardis_em/tardis/__init__.py",
-    "tardis_em/workflows/__init__.py",
+    "tardis_em/scripts/__init__.py",
     "tardis_em/tardis_helper/__init__.py",
     "tardis_em/utils/__init__.py",
     "tardis_em/cnn/__init__.py",
