@@ -40,48 +40,56 @@ from tardis_em.utils.normalization import RescaleNormalize, MeanStdNormalize
 from tardis_em.utils.export_data import to_mrc
 from tardis_em.utils.spline_metric import sort_by_length
 
-name = "czi_predict"
-help = "Predict entire CZI-dataportal"
-
 
 async def get_from_aws(url):
-    s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
-    s3.download_file("cryoet-data-portal-public", url, url.split("/")[-1])
+    def download_file():
+        s3 = boto3.client("s3", config=Config(signature_version=UNSIGNED))
+        s3.download_file("cryoet-data-portal-public", url, url.split("/")[-1])
 
-    print(f"Downloaded: {url.split('/')[-1]}")
+        print(f"Downloaded: {url.split('/')[-1]}")
+
+    loop = asyncio.get_running_loop()
+    # Run the download_file function in a separate thread
+    await loop.run_in_executor(None, download_file)
 
 
-async def upload_to_aws(
-    aws_key, aws_secret, bucket, id_, data_name, file_name, remove_=True
-):
-    if data_name is None:
-        client = boto3.client(
-            "s3", aws_access_key_id=aws_key, aws_secret_access_key=aws_secret
-        )
-        transfer = S3Transfer(client)
-        transfer.upload_file(
-            file_name,
-            bucket,
-            join("robert_kiewisz_tardis_01_2024", id_, file_name),
-        )
+async def upload_to_aws(aws_key, aws_secret, bucket, id_, data_name, file_name, remove_=True):
+    def upload_file():
+        if data_name is None:
+            client = boto3.client(
+                "s3", aws_access_key_id=aws_key, aws_secret_access_key=aws_secret
+            )
+            transfer = S3Transfer(client)
+            transfer.upload_file(
+                file_name,
+                bucket,
+                join("robert_kiewisz_tardis_01_2024", id_, file_name),
+            )
+        try:
+            client = boto3.client(
+                "s3", aws_access_key_id=aws_key, aws_secret_access_key=aws_secret
+            )
+            transfer = S3Transfer(client)
+            transfer.upload_file(
+                file_name,
+                bucket,
+                join("robert_kiewisz_tardis_01_2024", id_, data_name, file_name),
+            )
+            if remove_:
+                remove(file_name)
+            else:
+                move(file_name, join("TARDIS", file_name))
+
+            print(f"Uploaded: {file_name}")
+        except:
+            print(f"Upload fail: {file_name}")
+
+    loop = asyncio.get_running_loop()
     try:
-        client = boto3.client(
-            "s3", aws_access_key_id=aws_key, aws_secret_access_key=aws_secret
-        )
-        transfer = S3Transfer(client)
-        transfer.upload_file(
-            file_name,
-            bucket,
-            join("robert_kiewisz_tardis_01_2024", id_, data_name, file_name),
-        )
-        if remove_:
-            remove(file_name)
-        else:
-            move(file_name, join("TARDIS", file_name))
-
-        print(f"Uploaded: {file_name}")
-    except:
-        print(f"Upload fail: {file_name}")
+        # Run the upload_file function in a separate thread
+        await loop.run_in_executor(None, upload_file)
+    except Exception as e:
+        print(f"Upload fail: {file_name}, Error: {str(e)}")
 
 
 class ProcessTardisForCZI:
@@ -150,6 +158,24 @@ class ProcessTardisForCZI:
         mkdir(self.patches)
         mkdir(self.output)
 
+    def pre_process(self, data, px, name):
+        data = self.normalize(self.mean_std(data)).astype(np.float32)
+        tif.imwrite(join(self.results, name + ".tif"), data.sum(0).astype(np.float32))
+
+        if not data.min() >= -1 or not data.max() <= 1:  # Image not between in -1 and 1
+            if data.min() >= 0 and data.max() <= 1:
+                data = (data - 0.5) * 2  # shift to -1 - 1
+            elif data.min() >= 0 and data.max() <= 255:
+                data = data / 255  # move to 0 - 1
+                data = (data - 0.5) * 2  # shift to -1 - 1
+
+        scale_factor = px / self.normalize_px
+        org_shape = data.shape
+        scale_shape = np.multiply(org_shape, scale_factor).astype(np.int16)
+        scale_shape = [int(i) for i in scale_shape]
+
+        return data, scale_factor, org_shape, scale_shape
+
     def predict_cnn(self, dataloader):
         for j in range(len(dataloader)):
             input_, name = dataloader.__getitem__(j)
@@ -208,7 +234,7 @@ class ProcessTardisForCZI:
                 json.dump(data, file, indent=4)
 
     async def __call__(
-        self, data: np.ndarray, px: float, header, name: str, progress: tuple
+        self, data: list, px: float, header, name: str, progress: tuple
     ):
         """Build temp dir"""
         self.build_temp()
@@ -222,22 +248,9 @@ class ProcessTardisForCZI:
             text_6=print_progress_bar(progress[0], progress[1]),
         )
 
-        data = self.normalize(self.mean_std(data)).astype(np.float32)
-        tif.imwrite(join(self.results, name + ".tif"), data.sum(0).astype(np.float32))
-
-        if not data.min() >= -1 or not data.max() <= 1:  # Image not between in -1 and 1
-            if data.min() >= 0 and data.max() <= 1:
-                data = (data - 0.5) * 2  # shift to -1 - 1
-            elif data.min() >= 0 and data.max() <= 255:
-                data = data / 255  # move to 0 - 1
-                data = (data - 0.5) * 2  # shift to -1 - 1
-
-        scale_factor = px / self.normalize_px
-        org_shape = data.shape
-        scale_shape = np.multiply(org_shape, scale_factor).astype(np.int16)
-        scale_shape = [int(i) for i in scale_shape]
-
         start = time.time()
+
+        data, scale_factor, org_shape, scale_shape = data
         trim_with_stride(
             image=data,
             scale=scale_shape,
@@ -275,6 +288,7 @@ class ProcessTardisForCZI:
         tif.imwrite(
             join(self.results, name + "_semantic.tif"), data.sum(0).astype(np.uint8)
         )  # Store for NYSBC
+
         self.clean_temp()
 
         """TARDIS - Instance Segmentation"""
@@ -381,6 +395,8 @@ async def main():
         await next_download
 
         data, px = load_image(file_name + ".mrc", False)
+        data = process_tardis.pre_process(data, px, file_name)
+
         header = mrc_read_header(file_name + ".mrc")
         remove(file_name + ".mrc")
 
@@ -394,23 +410,13 @@ async def main():
             text_6=print_progress_bar(idx, len(urls)),
         )
 
-        tardis = asyncio.get_running_loop().run_in_executor(
-            None,  # Uses the default executor
-            process_tardis,  # Your synchronous function
-            data,  # Arguments to the function
-            px,
-            header,
-            file_name,
-            (idx, len(urls))
-        )
-
-        # tardis = asyncio.create_task(
-        #     process_tardis(data, px, header, file_name, (idx, len(urls)))
-        # )
-
         # If there's a next file, start downloading it now
         if idx + 1 < len(urls):
             next_download = asyncio.create_task(get_from_aws(urls[idx + 1][31:]))
+
+        tardis = asyncio.create_task(
+            process_tardis(data, px, header, file_name, (idx, len(urls)))
+        )
 
         await tardis
 
