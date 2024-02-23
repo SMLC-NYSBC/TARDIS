@@ -1200,6 +1200,7 @@ class Predictor:
         with torch.no_grad():
             dim_ = x.shape[-1]
             x = x.to(self.device)
+
             if self.network == "dist":
                 if y is None:
                     out = self.model(coords=x, node_features=None)
@@ -1234,8 +1235,7 @@ class Predictor:
                 else:
                     out = self.model(x).cpu().detach().numpy()[0, 0, :]
 
-                # return torch.sigmoid(torch.from_numpy(out)).cpu().detach().numpy()
-                return torch.from_numpy(out).cpu().detach().numpy()
+                return out
 
 
 class BasicPredictor:

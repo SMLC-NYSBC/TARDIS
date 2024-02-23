@@ -280,7 +280,7 @@ class ProcessTardisForCZI:
         """TARDIS - Instance Segmentation"""
         self.terminal(
             text_1="TARDIS segmentation:",
-            text_2="Instance Segmentation...",
+            text_2="Build Point Cloud...",
             text_3=f"Dataset: [{name}]",
             text_4=f"Pixel_size: {px}",
             text_6=print_progress_bar(progress[0], progress[1]),
@@ -292,8 +292,24 @@ class ProcessTardisForCZI:
             down_sampling=5,
             as_2d=True if self.predict == "Membrane" else False,
         )
+
+        self.terminal(
+            text_1="TARDIS segmentation:",
+            text_2="DIST prediction...",
+            text_3=f"Dataset: [{name}]",
+            text_4=f"Pixel_size: {px}",
+            text_6=print_progress_bar(progress[0], progress[1]),
+        )
         coords_df, _, output_idx, _ = self.patch_pc.patched_dataset(coord=pc_ld)
         x = self.predict_dist(coords_df)
+
+        self.terminal(
+            text_1="TARDIS segmentation:",
+            text_2="Instance Segmentation...",
+            text_3=f"Dataset: [{name}]",
+            text_4=f"Pixel_size: {px}",
+            text_6=print_progress_bar(progress[0], progress[1]),
+        )
         pc = self.segment_pc.patch_to_segment(
             graph=x,
             coord=pc_ld,
@@ -319,6 +335,7 @@ async def main():
     aws_dir = "aws_czi.csv"
     allocate_gpu = "7"
     predict = "Membrane"
+    start_from = 201
 
     assert predict in ["Membrane", "Microtubule"]
 
@@ -333,12 +350,8 @@ async def main():
     client = Client()
     bucket = "cryoetportal-rawdatasets-dev"
 
-    # Get all tomograms with voxel spacing <= 10
-    all_tomogram = list(
-        Tomogram.find(
-            client,
-        )
-    )
+    # Get all tomograms
+    all_tomogram = list(Tomogram.find(client,))
 
     # S3 URIs for MRCs
     urls = [t.s3_mrc_scale0 for t in all_tomogram]
@@ -349,14 +362,17 @@ async def main():
     terminal(
         text_1="Prediction:",
         text_3="Dataset: []",
-        text_5=print_progress_bar(0, len(urls)),
+        text_5=print_progress_bar(start_from, len(urls)),
     )
 
     tasks = []
-    next_download = asyncio.create_task(get_from_aws(urls[0][31:]))
+    next_download = asyncio.create_task(get_from_aws(urls[start_from][31:]))
     for idx, (folder_name, file_name, px_czi) in enumerate(
         zip(folder_names, file_names, czi_px)
     ):
+        if idx < start_from:
+            continue
+
         terminal(
             text_1="Waiting for Data from AWS:",
             text_3=f"Dataset: [{file_name}]",
@@ -378,15 +394,32 @@ async def main():
             text_6=print_progress_bar(idx, len(urls)),
         )
 
-        tardis = asyncio.create_task(
-            process_tardis(data, px, header, file_name, (idx, len(urls)))
+        tardis = asyncio.get_running_loop().run_in_executor(
+            None,  # Uses the default executor
+            process_tardis,  # Your synchronous function
+            data,  # Arguments to the function
+            px,
+            header,
+            file_name,
+            (idx, len(urls))
         )
+
+        # tardis = asyncio.create_task(
+        #     process_tardis(data, px, header, file_name, (idx, len(urls)))
+        # )
 
         # If there's a next file, start downloading it now
         if idx + 1 < len(urls):
             next_download = asyncio.create_task(get_from_aws(urls[idx + 1][31:]))
 
         await tardis
+
+        terminal(
+            text_1="TARDIS segmentation:",
+            text_3=f"Dataset: [{file_name}]",
+            text_4=f"Pixel_size: {px}",
+            text_6=print_progress_bar(idx, len(urls)),
+        )
 
         # Upload the processed files
         tasks += [
@@ -421,6 +454,7 @@ async def main():
                     remove_=False,
                 ),
         ]
+
     await asyncio.gather(*tasks)
 
 
