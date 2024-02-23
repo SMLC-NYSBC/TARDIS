@@ -283,7 +283,7 @@ class ProcessTardisForCZI:
         data, _ = scale_image(image=data, scale=org_shape, nn=False)
         data = torch.sigmoid(torch.from_numpy(data)).cpu().detach().numpy()
 
-        data = np.where(data > 0.5, 1, 0).astype(np.uint8)
+        data = np.where(data > 0.25, 1, 0).astype(np.uint8)
         to_mrc(data, px, name + "_semantic.mrc", header)  # To upload back to AWS
         tif.imwrite(
             join(self.results, name + "_semantic.tif"), data.sum(0).astype(np.uint8)
@@ -349,7 +349,7 @@ async def main():
     aws_dir = "aws_czi.csv"
     allocate_gpu = "7"
     predict = "Membrane"
-    start_from = 201
+    start_from = 219
 
     assert predict in ["Membrane", "Microtubule"]
 
