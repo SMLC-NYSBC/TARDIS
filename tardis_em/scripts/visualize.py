@@ -64,7 +64,6 @@ def main(dir_: str, _2d: bool, type_: str, animate: bool, with_node: bool):
         pc = ImportDataFromAmira(dir_).get_segmented_points()
 
     if type_ == 'p':
-        if pc.shape[1] == 4:
         if pc.shape[1] == 4 or pc.shape[1] == 3 and _2d:
             VisualizePointCloud(pc, segmented=True, animate=animate)
         elif pc.shape[1] == 6:
