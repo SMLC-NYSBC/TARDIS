@@ -11,6 +11,7 @@
 import click
 import numpy as np
 from tardis_em.utils.visualize_pc import VisualizeFilaments, VisualizePointCloud
+from tardis_em.utils.load_data import ImportDataFromAmira
 from tardis_em._version import version
 
 
@@ -48,8 +49,17 @@ from tardis_em._version import version
 )
 @click.version_option(version=version)
 def main(dir_: str, type_: str, animate: bool, with_node: bool):
+<<<<<<< HEAD
     pc = np.genfromtxt(dir_, delimiter=",", skip_header=1, dtype=np.float32)
     if type_ == "p":
+=======
+    if dir_.endswith('.csv'):
+        pc = np.genfromtxt(dir_, delimiter=',', skip_header=1, dtype=np.float32)
+    elif dir_.endswith('am'):
+        pc = ImportDataFromAmira(dir_).get_segmented_points()
+
+    if type_ == 'p':
+>>>>>>> 87a1eafea04451f5055907e9a88e72bbac0fb28f
         if pc.shape[1] == 4:
             VisualizePointCloud(pc, segmented=True, animate=animate)
         elif pc.shape[1] == 6:
