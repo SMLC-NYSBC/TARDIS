@@ -53,7 +53,9 @@ async def get_from_aws(url):
     await loop.run_in_executor(None, download_file)
 
 
-async def upload_to_aws(aws_key, aws_secret, bucket, id_, data_name, file_name, remove_=True):
+async def upload_to_aws(
+    aws_key, aws_secret, bucket, id_, data_name, file_name, remove_=True
+):
     def upload_file():
         if data_name is None:
             client = boto3.client(
@@ -114,7 +116,7 @@ class ProcessTardisForCZI:
         # Load CNN model
         self.model_cnn = Predictor(
             checkpoint=None,
-            network="fnet_attn",
+            network="unet",
             subtype="32",
             model_type=(
                 "membrane_3d" if self.predict == "Membrane" else "microtubules_3d"
@@ -201,8 +203,8 @@ class ProcessTardisForCZI:
         try:
             name_ = name[0]
             data[name_] = {}
-            data[name_]['Pixel_Size'] = name[1]
-            data[name_]['Segmentation_time'] = name[2]
+            data[name_]["Pixel_Size"] = name[1]
+            data[name_]["Segmentation_time"] = name[2]
             data[name_]["Number_of_Points"] = len(pc)
             data[name_]["Number_of_Instances"] = len(np.unique(pc[:, 0]))
             data[name_]["Size_of_Each_Instance"] = [
@@ -221,21 +223,19 @@ class ProcessTardisForCZI:
         except TypeError:
             name_ = name[0]
             data[name_] = {}
-            data[name_]['Pixel_Size'] = name[1]
-            data[name_]['Segmentation_time'] = name[2]
-            data[name_]["Number_of_Points"] = 'NaN'
-            data[name_]["Number_of_Instances"] = 'NaN'
-            data[name_]["Size_of_Each_Instance"] = 'NaN'
+            data[name_]["Pixel_Size"] = name[1]
+            data[name_]["Segmentation_time"] = name[2]
+            data[name_]["Number_of_Points"] = "NaN"
+            data[name_]["Number_of_Instances"] = "NaN"
+            data[name_]["Size_of_Each_Instance"] = "NaN"
 
-            data[name_]["Contain_Membrane"] = 'NaN'
-            data[name_]["Maybe_Contain_Membrane"] = 'NaN'
+            data[name_]["Contain_Membrane"] = "NaN"
+            data[name_]["Maybe_Contain_Membrane"] = "NaN"
 
             with open("stat.json", "w") as file:
                 json.dump(data, file, indent=4)
 
-    async def __call__(
-        self, data: list, px: float, header, name: str, progress: tuple
-    ):
+    async def __call__(self, data: list, px: float, header, name: str, progress: tuple):
         """Build temp dir"""
         self.build_temp()
 
@@ -280,7 +280,7 @@ class ProcessTardisForCZI:
         data = self.image_stitcher(image_dir=self.output, mask=False, dtype=np.float32)[
             : scale_shape[0], : scale_shape[1], : scale_shape[2]
         ]
-        data, _ = scale_image(image=data, scale=org_shape, nn=False)
+        data, _ = scale_image(image=data, scale=org_shape, nn=False, device=self.device)
         data = torch.sigmoid(torch.from_numpy(data)).cpu().detach().numpy()
 
         data = np.where(data > 0.25, 1, 0).astype(np.uint8)
@@ -306,32 +306,37 @@ class ProcessTardisForCZI:
             down_sampling=5,
             as_2d=True if self.predict == "Membrane" else False,
         )
+        if len(pc_ld) > 100:
+            self.terminal(
+                text_1="TARDIS segmentation:",
+                text_2="DIST prediction...",
+                text_3=f"Dataset: [{name}]",
+                text_4=f"Pixel_size: {px}",
+                text_6=print_progress_bar(progress[0], progress[1]),
+            )
+            coords_df, _, output_idx, _ = self.patch_pc.patched_dataset(coord=pc_ld)
+            x = self.predict_dist(coords_df)
 
-        self.terminal(
-            text_1="TARDIS segmentation:",
-            text_2="DIST prediction...",
-            text_3=f"Dataset: [{name}]",
-            text_4=f"Pixel_size: {px}",
-            text_6=print_progress_bar(progress[0], progress[1]),
-        )
-        coords_df, _, output_idx, _ = self.patch_pc.patched_dataset(coord=pc_ld)
-        x = self.predict_dist(coords_df)
-
-        self.terminal(
-            text_1="TARDIS segmentation:",
-            text_2="Instance Segmentation...",
-            text_3=f"Dataset: [{name}]",
-            text_4=f"Pixel_size: {px}",
-            text_6=print_progress_bar(progress[0], progress[1]),
-        )
-        pc = self.segment_pc.patch_to_segment(
-            graph=x,
-            coord=pc_ld,
-            idx=output_idx,
-            sort=False if self.predict == "Membrane" else True,
-            prune=25 if self.predict == "Membrane" else 10,
-        )
-        end_time = np.round(time.time() - start, 0) / 60  # Minutes
+            self.terminal(
+                text_1="TARDIS segmentation:",
+                text_2="Instance Segmentation...",
+                text_3=f"Dataset: [{name}]",
+                text_4=f"Pixel_size: {px}",
+                text_6=print_progress_bar(progress[0], progress[1]),
+            )
+            try:
+                pc = self.segment_pc.patch_to_segment(
+                    graph=x,
+                    coord=pc_ld,
+                    idx=output_idx,
+                    sort=False if self.predict == "Membrane" else True,
+                    prune=25 if self.predict == "Membrane" else 10,
+                )
+            except ValueError:
+                pc = np.zeros((1, 4))  # Empty Instance, no instance found
+            end_time = np.round(time.time() - start, 0) / 60  # Minutes
+        else:
+            pc = np.zeros((0, 4))
 
         self.prediction_stat([name, px, end_time], pc)
         pc = sort_by_length(pc)
@@ -349,7 +354,7 @@ async def main():
     aws_dir = "aws_czi.csv"
     allocate_gpu = "7"
     predict = "Membrane"
-    start_from = 219
+    start_from = 436
 
     assert predict in ["Membrane", "Microtubule"]
 
@@ -365,7 +370,11 @@ async def main():
     bucket = "cryoetportal-rawdatasets-dev"
 
     # Get all tomograms
-    all_tomogram = list(Tomogram.find(client,))
+    all_tomogram = list(
+        Tomogram.find(
+            client,
+        )
+    )
 
     # S3 URIs for MRCs
     urls = [t.s3_mrc_scale0 for t in all_tomogram]
@@ -451,14 +460,14 @@ async def main():
                 )
             ),
             upload_to_aws(
-                    aws_key,
-                    aws_secret,
-                    bucket,
-                    'TARDIS_Prediction_Stats',
-                    None,
-                    "stat.json",
-                    remove_=False,
-                ),
+                aws_key,
+                aws_secret,
+                bucket,
+                "TARDIS_Prediction_Stats",
+                None,
+                "stat.json",
+                remove_=False,
+            ),
         ]
 
     await asyncio.gather(*tasks)

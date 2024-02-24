@@ -13,6 +13,7 @@ import numpy as np
 from tardis_em.utils.visualize_pc import VisualizeFilaments, VisualizePointCloud
 from tardis_em._version import version
 
+
 @click.command()
 @click.option(
     "-dir",
@@ -24,8 +25,8 @@ from tardis_em._version import version
 @click.option(
     "-t",
     "--type_",
-    type=click.Choice(['f', 'p']),
-    default='p',
+    type=click.Choice(["f", "p"]),
+    default="p",
     help="Visualize filaments or points",
     show_default=True,
 )
@@ -47,19 +48,18 @@ from tardis_em._version import version
 )
 @click.version_option(version=version)
 def main(dir_: str, type_: str, animate: bool, with_node: bool):
-    pc = np.genfromtxt(dir_, delimiter=',', skip_header=1, dtype=np.float32)
-    if type_ == 'p':
+    pc = np.genfromtxt(dir_, delimiter=",", skip_header=1, dtype=np.float32)
+    if type_ == "p":
         if pc.shape[1] == 4:
             VisualizePointCloud(pc, segmented=True, animate=animate)
         elif pc.shape[1] == 6:
-            VisualizePointCloud(pc[:, :3],
-                                segmented=False,
-                                rgb=pc[:, 3:],
-                                animate=animate)
+            VisualizePointCloud(
+                pc[:, :3], segmented=False, rgb=pc[:, 3:], animate=animate
+            )
         else:
             VisualizePointCloud(pc, segmented=False, animate=animate)
     else:
-        assert pc.shape[1] == 4, 'Filament visualization require segmented point cloud'
+        assert pc.shape[1] == 4, "Filament visualization require segmented point cloud"
         VisualizeFilaments(pc, animate=animate, with_node=with_node)
 
 

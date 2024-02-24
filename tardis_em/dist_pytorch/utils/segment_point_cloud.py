@@ -138,11 +138,11 @@ class PropGreedyGraphCut:
         return cls_df
 
     def _adjacency_list(
-            self,
-            graphs: list,
-            coord: np.ndarray,
-            output_idx: Optional[list] = None,
-            threshold=0.5,
+        self,
+        graphs: list,
+        coord: np.ndarray,
+        output_idx: Optional[list] = None,
+        threshold=0.5,
     ) -> Optional[list]:
         """
         Builder of adjacency matrix from stitched coord and graph voxels
@@ -163,7 +163,9 @@ class PropGreedyGraphCut:
             else:
                 return None
 
-        all_prop = [[idx, coord_i.tolist(), [], []] for idx, coord_i in enumerate(coord)]
+        all_prop = [
+            [idx, coord_i.tolist(), [], []] for idx, coord_i in enumerate(coord)
+        ]
         for g, o in zip(graphs, output_idx):
             top_k_indices = np.argsort(g, axis=1)
             top_k_probs = np.take_along_axis(g, top_k_indices, axis=1)
@@ -174,12 +176,19 @@ class PropGreedyGraphCut:
                 probs = top_k_probs[i].tolist()
 
                 if threshold:
-                    filtered_indices_probs = [(idx, prob) for idx, prob in zip(indices, probs) if
-                                              prob >= self.threshold]
+                    filtered_indices_probs = [
+                        (idx, prob)
+                        for idx, prob in zip(indices, probs)
+                        if prob >= self.threshold
+                    ]
                 else:
-                    filtered_indices_probs = [(idx, prob) for idx, prob in zip(indices, probs) if prob != 0]
+                    filtered_indices_probs = [
+                        (idx, prob) for idx, prob in zip(indices, probs) if prob != 0
+                    ]
 
-                indices, probs = zip(*filtered_indices_probs) if filtered_indices_probs else ([], [])
+                indices, probs = (
+                    zip(*filtered_indices_probs) if filtered_indices_probs else ([], [])
+                )
 
                 # Remove self-connection
                 if o[i] in indices:
@@ -197,7 +206,10 @@ class PropGreedyGraphCut:
             if p[2]:
                 unique_indices, inv = np.unique(p[2], return_inverse=True)
                 p[2] = unique_indices.tolist()
-                p[3] = [np.median(np.array(p[3])[inv == i]) for i in range(len(unique_indices))]
+                p[3] = [
+                    np.median(np.array(p[3])[inv == i])
+                    for i in range(len(unique_indices))
+                ]
 
                 # Sort by probability in descending order and apply connection limit
                 sorted_indices = np.argsort(p[3])[::-1]
@@ -214,8 +226,12 @@ class PropGreedyGraphCut:
         # Step 1: Identify potential top connections without immediately limiting to top 8
         potential_top_connections = {}
         for idx, (_, _, connections, probabilities) in enumerate(adj_matrix):
-            sorted_indices = sorted(range(len(probabilities)), key=lambda k: probabilities[k], reverse=True)
-            potential_top_connections[idx] = {connections[i]: probabilities[i] for i in sorted_indices}
+            sorted_indices = sorted(
+                range(len(probabilities)), key=lambda k: probabilities[k], reverse=True
+            )
+            potential_top_connections[idx] = {
+                connections[i]: probabilities[i] for i in sorted_indices
+            }
 
         # Step 2: Ensure mutual connections
         mutual_connections = {}
@@ -223,11 +239,15 @@ class PropGreedyGraphCut:
             for conn_idx, prob in connections.items():
                 if idx in potential_top_connections.get(conn_idx, {}):
                     mutual_connections.setdefault(idx, {})[conn_idx] = prob
-                    mutual_connections.setdefault(conn_idx, {})[idx] = potential_top_connections[conn_idx][idx]
+                    mutual_connections.setdefault(conn_idx, {})[idx] = (
+                        potential_top_connections[conn_idx][idx]
+                    )
 
         # Step 3: Limit to top 8 mutual connections based on probability
         for idx, connections in mutual_connections.items():
-            top_indices = sorted(connections, key=connections.get, reverse=True)[:self.connection]
+            top_indices = sorted(connections, key=connections.get, reverse=True)[
+                : self.connection
+            ]
             adj_matrix[idx][2] = top_indices
             adj_matrix[idx][3] = [connections[i] for i in top_indices]
 
@@ -259,7 +279,10 @@ class PropGreedyGraphCut:
                 if neighbor not in visited:
                     neighbor_connections = adj_matrix[neighbor][2]
                     # Check for mutual strong connection
-                    if current in neighbor_connections and len(neighbor_connections) <= self.connection:
+                    if (
+                        current in neighbor_connections
+                        and len(neighbor_connections) <= self.connection
+                    ):
                         to_visit.add(neighbor)
 
         non_empty_nodes = [i for i in visited if adj_matrix[i][2]]

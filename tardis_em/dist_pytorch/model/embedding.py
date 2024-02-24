@@ -132,7 +132,7 @@ class EdgeEmbedding(nn.Module):
         else:
             _range_expanded = self._range.view(1, 1, 1, -1).to(dist.device)
             dist = dist.unsqueeze(-1)
-            dist = torch.exp(-(dist ** 2) / (_range_expanded ** 2 * 2))
+            dist = torch.exp(-(dist**2) / (_range_expanded**2 * 2))
             dist[torch.isnan(dist)] = 0.0
             dist[:, g_range, g_range, :] = 1.0
 

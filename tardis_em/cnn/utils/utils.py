@@ -21,6 +21,7 @@ def scale_image(
     image: Optional[np.ndarray] = None,
     mask: Optional[np.ndarray] = None,
     nn=False,
+    device="cpu",
 ) -> Union[
     Tuple[np.ndarray, np.ndarray, int], Tuple[np.ndarray, int], Tuple[None, int]
 ]:
@@ -46,16 +47,20 @@ def scale_image(
         scale = tuple([scale[0], scale[1]])
 
     if nn:
-        image = nn_scaling(img=image, scale=scale, dtype=type_i)
+        image = nn_scaling(img=image, scale=scale, dtype=type_i, device=device)
         return image, dim
 
     if image is not None:
         if not np.all(scale == image.shape):
             if scale[0] > image.shape[0]:
                 if image.ndim == 3 and image.shape[2] != 3:  # 3D with Gray
-                    image = area_scaling(img=image, scale=scale, dtype=type_i)
+                    image = area_scaling(
+                        img=image, scale=scale, dtype=type_i, device=device
+                    )
                 else:
-                    image = linear_scaling(img=image, scale=scale, dtype=type_i)
+                    image = linear_scaling(
+                        img=image, scale=scale, dtype=type_i, device=device
+                    )
             else:
                 image = pil_LANCZOS(
                     img=image.astype(np.float32), scale=scale, dtype=type_i
@@ -76,8 +81,10 @@ def scale_image(
         return image, dim
 
 
-def nn_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
-    img = torch.from_numpy(img)[None, None, ...]
+def nn_scaling(
+    img: np.ndarray, scale: tuple, dtype: np.dtype, device="cpu"
+) -> np.ndarray:
+    img = torch.from_numpy(img)[None, None, ...].to(device)
     img = F.interpolate(img, size=scale, mode="nearest")[0, 0, ...]
 
     return img.cpu().detach().numpy()
@@ -128,7 +135,9 @@ def pil_LANCZOS(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
     return img.astype(dtype)
 
 
-def linear_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
+def linear_scaling(
+    img: np.ndarray, scale: tuple, dtype: np.dtype, device="cpu"
+) -> np.ndarray:
     """
     Scaling of 2D/3D array using trilinear method from pytorch
 
@@ -148,7 +157,7 @@ def linear_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray
         )
         final_depth, final_height, final_width = scale
 
-        img = torch.from_numpy(img[None, None, :]).to("cpu").type(torch.float)
+        img = torch.from_numpy(img[None, None, :]).to(device).type(torch.float)
 
         # Calculate the number of steps required to reach the final scale by halving/doubling
         # Use logarithm base 2 since scaling is done by 2x at each step
@@ -201,7 +210,7 @@ def linear_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray
         current_height, current_width = img.shape[0], img.shape[1]
         final_height, final_width = scale
 
-        img = torch.from_numpy(img[None, None, :]).to("cpu").type(torch.float)
+        img = torch.from_numpy(img[None, None, :]).to(device).type(torch.float)
 
         # Calculate the number of steps required to reach the final scale by halving/doubling
         # Use logarithm base 2 since scaling is done by 2x at each step
@@ -236,7 +245,9 @@ def linear_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray
     return img.detach().numpy()[0, 0, :].astype(dtype)
 
 
-def area_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
+def area_scaling(
+    img: np.ndarray, scale: tuple, dtype: np.dtype, device="cpu"
+) -> np.ndarray:
     """
     Scaling of 3D array using area method from pytorch
 
@@ -254,7 +265,7 @@ def area_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
 
     # Scale Z axis
     for i in range(img.shape[2]):
-        df_img = torch.from_numpy(img[:, :, i]).to("cpu").type(torch.float)
+        df_img = torch.from_numpy(img[:, :, i]).to(device).type(torch.float)
 
         image_scale_Z[:, :, i] = (
             F.interpolate(
@@ -269,7 +280,7 @@ def area_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
     # Scale XY axis
     img = np.zeros(scale, dtype=dtype)
     for i in range(scale[0]):
-        df_img = torch.from_numpy(image_scale_Z[i, :]).to("cpu").type(torch.float)
+        df_img = torch.from_numpy(image_scale_Z[i, :]).to(device).type(torch.float)
         img[i, :] = (
             F.interpolate(
                 df_img[None, None, :], size=[int(s) for s in scale[1:]], mode="area"

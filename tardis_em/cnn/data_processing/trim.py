@@ -17,6 +17,7 @@ import numpy as np
 from tifffile import tifffile as tif
 
 from tardis_em.cnn.utils.utils import scale_image
+from tardis_em.utils.device import get_device
 from tardis_em.utils.export_data import to_mrc
 from tardis_em.utils.errors import TardisError
 from tardis_em.utils.normalization import MeanStdNormalize, RescaleNormalize
@@ -35,6 +36,7 @@ def trim_with_stride(
     mask: Optional[np.ndarray] = None,
     log=True,
     pixel_size=None,
+    device=get_device("cpu"),
 ):
     """
     Function to patch image and mask to specified patch size with overlying area
@@ -50,11 +52,13 @@ def trim_with_stride(
         image_counter (int): Number id of image.
         scale (tuple): Up- DownScale image and mask to the given shape or factor.
         clean_empty (bool): Remove empty patches.
-        keep_if (float):
+        keep_if (float): If float, keep only patches that have mask.
+            Evaluated based on % of pixels with mask
         stride (int): Trimming step size.
         mask (np.ndarray, None): Label mask.
-        log (bool):
-        pixel_size (None, float):
+        log (bool): If True, output trimming log information.
+        pixel_size (None, float): If not None, save mask as mrc with pixel size information.
+        device (torch.device): Optional device.
     """
     # Normalize histogram
     normalize = RescaleNormalize(clip_range=(1, 99))
@@ -69,7 +73,9 @@ def trim_with_stride(
 
     if mask is not None:
         mask_dtype = np.uint8
-        image, mask, dim = scale_image(image=image, mask=mask, scale=scale)
+        image, mask, dim = scale_image(
+            image=image, mask=mask, scale=scale, device=device
+        )
         mask = np.where(mask > 0, 1, 0).astype(np.uint8)
 
         if image.shape != mask.shape:
@@ -79,7 +85,7 @@ def trim_with_stride(
                 f"Image {image.shape} has different shape from mask {mask.shape}",
             )
     else:
-        image, dim = scale_image(image=image, scale=scale)
+        image, dim = scale_image(image=image, scale=scale, device=device)
 
     # Rescale image intensity
     image = normalize(meanstd(image)).astype(np.float32)

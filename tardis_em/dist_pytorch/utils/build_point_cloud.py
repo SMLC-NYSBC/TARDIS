@@ -415,18 +415,18 @@ def draw_circle(
 
 def draw_sphere(center, radius, sheet_id):
     # Approximate surface area of the sphere
-    surface_area = 4 * np.pi * radius ** 2
+    surface_area = 4 * np.pi * radius**2
     # Desired distance between points, roughly
     distance = 1
 
     # Estimate the number of points needed for the given spacing
-    point_area = distance ** 2
+    point_area = distance**2
     num_points = int(surface_area / point_area)
 
     # Generate points
     indices = np.arange(0, num_points, dtype=float) + 0.5
     phi = np.arccos(1 - 2 * indices / num_points)
-    theta = np.pi * (1 + 5 ** 0.5) * indices
+    theta = np.pi * (1 + 5**0.5) * indices
 
     x = radius * np.sin(phi) * np.cos(theta)
     y = radius * np.sin(phi) * np.sin(theta)
@@ -555,10 +555,9 @@ def create_simulated_dataset(size, sim_type: str):
         for _ in range(100):  # Drawing n random circles
             radius = np.random.randint(10, size[1] // 20)
 
-            center = np.random.randint(0, (
-                size[0] - radius,
-                size[1] - radius,
-                size[2] - radius))
+            center = np.random.randint(
+                0, (size[0] - radius, size[1] - radius, size[2] - radius)
+            )
             coord.append(draw_sphere(center, radius, i))
             i += 1
 
