@@ -294,7 +294,7 @@ class DataSetPredictor:
                     self.filter_splines = FilterSpatialGraph(
                         connect_seg_if_closer_then=connect_splines,
                         cylinder_radius=connect_cylinder,
-                        filter_short_segments=filter_by_length,
+                        filter_short_segments=filter_by_length if filter_by_length is not None else 0,
                     )
                 self.compare_spline = SpatialGraphCompare(
                     distance_threshold=amira_compare_distance,
@@ -490,7 +490,7 @@ class DataSetPredictor:
         # Post-process predicted image patches
         if self.predict in ["Filament", "Microtubule"]:
             self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
-                image=self.image, EDT=False, down_sampling=10
+                image=self.image, EDT=False, down_sampling=5
             )
         elif self.predict == "Membrane2D":
             self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(

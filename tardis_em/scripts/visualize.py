@@ -23,6 +23,14 @@ from tardis_em._version import version
     show_default=True,
 )
 @click.option(
+    "-2d",
+    "--_2d",
+    type=bool,
+    default=False,
+    help="True if 2D data",
+    show_default=True,
+)
+@click.option(
     "-t",
     "--type_",
     type=click.Choice(['f', 'p']),
@@ -47,14 +55,15 @@ from tardis_em._version import version
     show_default=True,
 )
 @click.version_option(version=version)
-def main(dir_: str, type_: str, animate: bool, with_node: bool):
+def main(dir_: str, _2d: bool, type_: str, animate: bool, with_node: bool):
     if dir_.endswith('.csv'):
         pc = np.genfromtxt(dir_, delimiter=',', skip_header=1, dtype=np.float32)
     elif dir_.endswith('am'):
         pc = ImportDataFromAmira(dir_).get_segmented_points()
 
     if type_ == 'p':
-        if pc.shape[1] == 4:
+
+        if pc.shape[1] == 4 or pc.shape[1] == 3 and _2d:
             VisualizePointCloud(pc, segmented=True, animate=animate)
         elif pc.shape[1] == 6:
             VisualizePointCloud(pc[:, :3],
