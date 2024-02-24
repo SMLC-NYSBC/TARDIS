@@ -56,28 +56,16 @@ from tardis_em._version import version
     show_default=True,
 )
 @click.version_option(version=version)
-<<<<<<< HEAD
-def main(dir_: str, type_: str, animate: bool, with_node: bool):
-<<<<<<< HEAD
-    pc = np.genfromtxt(dir_, delimiter=",", skip_header=1, dtype=np.float32)
-    if type_ == "p":
-=======
-=======
+
 def main(dir_: str, _2d: bool, type_: str, animate: bool, with_node: bool):
->>>>>>> 4bfdf22ca172c8b2eaf0e2000e0aaef492c178f2
     if dir_.endswith('.csv'):
         pc = np.genfromtxt(dir_, delimiter=',', skip_header=1, dtype=np.float32)
     elif dir_.endswith('am'):
         pc = ImportDataFromAmira(dir_).get_segmented_points()
 
     if type_ == 'p':
-<<<<<<< HEAD
->>>>>>> 87a1eafea04451f5055907e9a88e72bbac0fb28f
         if pc.shape[1] == 4:
-=======
-
         if pc.shape[1] == 4 or pc.shape[1] == 3 and _2d:
->>>>>>> 4bfdf22ca172c8b2eaf0e2000e0aaef492c178f2
             VisualizePointCloud(pc, segmented=True, animate=animate)
         elif pc.shape[1] == 6:
             VisualizePointCloud(
