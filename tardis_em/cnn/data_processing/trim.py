@@ -74,7 +74,10 @@ def trim_with_stride(
     if mask is not None:
         mask_dtype = np.uint8
         image, mask, dim = scale_image(
-            image=image, mask=mask, scale=scale, device=device
+            image=image,
+            mask=mask,
+            scale=scale,
+            device=device,
         )
         mask = np.where(mask > 0, 1, 0).astype(np.uint8)
 

@@ -430,7 +430,7 @@ class PropGreedyGraphCut:
         segment_id = 0
 
         while not stop:
-            idx = self._find_segment_matrix(adjacency_matrix)
+            idx = self._find_segment_matrix_fast(adjacency_matrix)
 
             """Select segment longer then 3 points"""
             if len(idx) >= prune:

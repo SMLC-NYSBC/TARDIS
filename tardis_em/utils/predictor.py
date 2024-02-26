@@ -294,7 +294,9 @@ class DataSetPredictor:
                     self.filter_splines = FilterSpatialGraph(
                         connect_seg_if_closer_then=connect_splines,
                         cylinder_radius=connect_cylinder,
-                        filter_short_segments=filter_by_length if filter_by_length is not None else 0,
+                        filter_short_segments=(
+                            filter_by_length if filter_by_length is not None else 0
+                        ),
                     )
                 self.compare_spline = SpatialGraphCompare(
                     distance_threshold=amira_compare_distance,

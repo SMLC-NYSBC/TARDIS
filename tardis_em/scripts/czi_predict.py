@@ -83,8 +83,8 @@ async def upload_to_aws(
                 move(file_name, join("TARDIS", file_name))
 
             print(f"Uploaded: {file_name}")
-        except:
-            print(f"Upload fail: {file_name}")
+        except Exception as e:
+            print(f"Upload fail: {file_name}, Error: {str(e)}")
 
     loop = asyncio.get_running_loop()
     try:
@@ -95,8 +95,14 @@ async def upload_to_aws(
 
 
 class ProcessTardisForCZI:
-    def __init__(self, allocate_gpu: str, predict="Membrane"):
-        self.device = get_device(allocate_gpu)
+    def __init__(self, aws: list, allocate_gpu: list, predict="Membrane"):
+        self.upload_tasks = []
+
+        self.aws_key, self.aws_secret, self.bucket = aws
+
+        self.device_cnn = get_device(allocate_gpu[0])
+        self.device_dist = get_device(allocate_gpu[1])
+
         self.predict = predict
         self.normalize_px = 15 if self.predict == "Membrane" else 25
         self.image_stitcher = StitchImages()
@@ -113,6 +119,8 @@ class ProcessTardisForCZI:
         self.terminal = TardisLogo()
         self.terminal(title="Predict CIZ-Cryo-EM data-port datasets")
 
+        self.last_dist_task = None
+
         # Load CNN model
         self.model_cnn = Predictor(
             checkpoint=None,
@@ -123,7 +131,7 @@ class ProcessTardisForCZI:
             ),
             img_size=128,
             sigmoid=False,
-            device=self.device,
+            device=self.device_cnn,
         )
 
         self.model_dist = Predictor(
@@ -131,7 +139,7 @@ class ProcessTardisForCZI:
             network="dist",
             subtype="triang",
             model_type="3d" if self.predict == "Membrane" else "2d",
-            device=self.device,
+            device=self.device_dist,
         )
 
         self.patch_pc = PatchDataSet(max_number_of_points=1000, graph=False)
@@ -235,7 +243,9 @@ class ProcessTardisForCZI:
             with open("stat.json", "w") as file:
                 json.dump(data, file, indent=4)
 
-    async def __call__(self, data: list, px: float, header, name: str, progress: tuple):
+    async def cnn_prediction(
+        self, data: list, px: float, header, name: str, progress: tuple
+    ):
         """Build temp dir"""
         self.build_temp()
 
@@ -248,8 +258,6 @@ class ProcessTardisForCZI:
             text_6=print_progress_bar(progress[0], progress[1]),
         )
 
-        start = time.time()
-
         data, scale_factor, org_shape, scale_shape = data
         trim_with_stride(
             image=data,
@@ -260,6 +268,7 @@ class ProcessTardisForCZI:
             image_counter=0,
             clean_empty=False,
             stride=round(128 * 0.125),
+            device=self.device_cnn,
         )
 
         """TARDIS - Semantic Segmentation"""
@@ -271,16 +280,21 @@ class ProcessTardisForCZI:
             text_6=print_progress_bar(progress[0], progress[1]),
         )
 
+        # CNN predict
         self.name = name
         self.px = px
         self.progress = (progress[0], progress[1])
         self.predict_cnn(
             dataloader=PredictionDataset(join(self.patches, "imgs")),
         )
+
+        # Post process
         data = self.image_stitcher(image_dir=self.output, mask=False, dtype=np.float32)[
             : scale_shape[0], : scale_shape[1], : scale_shape[2]
         ]
-        data, _ = scale_image(image=data, scale=org_shape, nn=False, device=self.device)
+        data, _ = scale_image(
+            image=data, scale=org_shape, nn=False, device=self.device_cnn
+        )
         data = torch.sigmoid(torch.from_numpy(data)).cpu().detach().numpy()
 
         data = np.where(data > 0.25, 1, 0).astype(np.uint8)
@@ -291,14 +305,39 @@ class ProcessTardisForCZI:
 
         self.clean_temp()
 
-        """TARDIS - Instance Segmentation"""
+        return data
+
+    async def dist_prediction(
+        self,
+        data,
+        px: float,
+        start_time: float,
+        name: str,
+        folder_name: str,
+        progress: tuple,
+    ):
+        data = await data
+
+        self.upload_tasks += [
+            asyncio.create_task(
+                upload_to_aws(
+                    self.aws_key,
+                    self.aws_secret,
+                    self.bucket,
+                    folder_name,
+                    name,
+                    name + "_semantic.mrc",
+                )
+            )
+        ]
+
         self.terminal(
-            text_1="TARDIS segmentation:",
-            text_2="Build Point Cloud...",
-            text_3=f"Dataset: [{name}]",
-            text_4=f"Pixel_size: {px}",
-            text_6=print_progress_bar(progress[0], progress[1]),
-        )
+                text_1="TARDIS segmentation:",
+                text_2="Instance Segmentation...",
+                text_3=f"Dataset: [{name}]",
+                text_4=f"Pixel_size: {px}",
+                text_6=print_progress_bar(progress[0], progress[1]),
+            )
 
         _, pc_ld = BuildPointCloud().build_point_cloud(
             image=data,
@@ -307,23 +346,9 @@ class ProcessTardisForCZI:
             as_2d=True if self.predict == "Membrane" else False,
         )
         if len(pc_ld) > 100:
-            self.terminal(
-                text_1="TARDIS segmentation:",
-                text_2="DIST prediction...",
-                text_3=f"Dataset: [{name}]",
-                text_4=f"Pixel_size: {px}",
-                text_6=print_progress_bar(progress[0], progress[1]),
-            )
             coords_df, _, output_idx, _ = self.patch_pc.patched_dataset(coord=pc_ld)
             x = self.predict_dist(coords_df)
 
-            self.terminal(
-                text_1="TARDIS segmentation:",
-                text_2="Instance Segmentation...",
-                text_3=f"Dataset: [{name}]",
-                text_4=f"Pixel_size: {px}",
-                text_6=print_progress_bar(progress[0], progress[1]),
-            )
             try:
                 pc = self.segment_pc.patch_to_segment(
                     graph=x,
@@ -334,40 +359,67 @@ class ProcessTardisForCZI:
                 )
             except ValueError:
                 pc = np.zeros((1, 4))  # Empty Instance, no instance found
-            end_time = np.round(time.time() - start, 0) / 60  # Minutes
         else:
             pc = np.zeros((0, 4))
 
+        end_time = np.round(time.time() - start_time, 0) / 60  # Minutes
         self.prediction_stat([name, px, end_time], pc)
-        pc = sort_by_length(pc)
 
-        pc = pd.DataFrame(pc)
-        pc.to_csv(
-            name + "_instance.csv",
-            header=["IDs", "X [A]", "Y [A]", "Z [A]"],
-            index=False,
-            sep=",",
-        )
+        if len(np.unique(pc[:, 0]) > 1):
+            pc = sort_by_length(pc)
+
+            pc = pd.DataFrame(pc)
+            pc.to_csv(
+                name + "_instance.csv",
+                header=["IDs", "X [A]", "Y [A]", "Z [A]"],
+                index=False,
+                sep=",",
+            )
+
+        self.upload_tasks += [
+            asyncio.create_task(
+                upload_to_aws(
+                    self.aws_key,
+                    self.aws_secret,
+                    self.bucket,
+                    folder_name,
+                    name,
+                    name + "_instance.csv",
+                    remove_=False,
+                )
+            ),
+            upload_to_aws(
+                self.aws_key,
+                self.aws_secret,
+                self.bucket,
+                "TARDIS_Prediction_Stats",
+                None,
+                "stat.json",
+                remove_=False,
+            ),
+        ]
 
 
 async def main():
-    aws_dir = "aws_czi.csv"
-    allocate_gpu = "7"
-    predict = "Membrane"
-    start_from = 436
-
-    assert predict in ["Membrane", "Microtubule"]
-
-    terminal = TardisLogo()
-    terminal(title="Predict CIZ-Cryo-EM data-port datasets")
-    process_tardis = ProcessTardisForCZI(allocate_gpu, predict)
-
     # AWS pre-setting
+    aws_dir = "aws_czi.csv"
     aws = np.genfromtxt(aws_dir, delimiter=",", dtype=str)
     aws_key = aws[0]
     aws_secret = aws[1]
     client = Client()
     bucket = "cryoetportal-rawdatasets-dev"
+
+    allocate_gpu = ["6", "7"]
+    predict = "Membrane"
+    start_from = 699
+
+    assert predict in ["Membrane", "Microtubule"]
+
+    terminal = TardisLogo()
+    terminal(title="Predict CIZ-Cryo-ET data-port datasets")
+    process_tardis = ProcessTardisForCZI(
+        aws=[aws_key, aws_secret, bucket], allocate_gpu=allocate_gpu, predict=predict
+    )
 
     # Get all tomograms
     all_tomogram = list(
@@ -403,6 +455,11 @@ async def main():
         )
         await next_download
 
+        terminal(
+            text_1="Normalize image:",
+            text_3=f"Dataset: [{file_name}]",
+            text_6=print_progress_bar(idx, len(urls)),
+        )
         data, px = load_image(file_name + ".mrc", False)
         data = process_tardis.pre_process(data, px, file_name)
 
@@ -412,63 +469,22 @@ async def main():
         if px != px_czi:
             px = px_czi
 
-        terminal(
-            text_1="TARDIS segmentation:",
-            text_3=f"Dataset: [{file_name}]",
-            text_4=f"Pixel_size: {px}",
-            text_6=print_progress_bar(idx, len(urls)),
-        )
-
         # If there's a next file, start downloading it now
         if idx + 1 < len(urls):
             next_download = asyncio.create_task(get_from_aws(urls[idx + 1][31:]))
 
-        tardis = asyncio.create_task(
-            process_tardis(data, px, header, file_name, (idx, len(urls)))
+        start_time = time.time()
+        data = asyncio.create_task(
+            process_tardis.cnn_prediction(data, px, header, file_name, (idx, len(urls)))
         )
 
-        await tardis
-
-        terminal(
-            text_1="TARDIS segmentation:",
-            text_3=f"Dataset: [{file_name}]",
-            text_4=f"Pixel_size: {px}",
-            text_6=print_progress_bar(idx, len(urls)),
+        tasks.append(
+            asyncio.create_task(
+                process_tardis.dist_prediction(
+                    data, px, start_time, file_name, folder_name, (idx, len(urls))
+                )
+            )
         )
-
-        # Upload the processed files
-        tasks += [
-            asyncio.create_task(
-                upload_to_aws(
-                    aws_key,
-                    aws_secret,
-                    bucket,
-                    folder_name,
-                    file_name,
-                    file_name + "_semantic.mrc",
-                )
-            ),
-            asyncio.create_task(
-                upload_to_aws(
-                    aws_key,
-                    aws_secret,
-                    bucket,
-                    folder_name,
-                    file_name,
-                    file_name + "_instance.csv",
-                    remove_=False,
-                )
-            ),
-            upload_to_aws(
-                aws_key,
-                aws_secret,
-                bucket,
-                "TARDIS_Prediction_Stats",
-                None,
-                "stat.json",
-                remove_=False,
-            ),
-        ]
 
     await asyncio.gather(*tasks)
 
