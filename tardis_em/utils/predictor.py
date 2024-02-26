@@ -496,7 +496,7 @@ class DataSetPredictor:
             )
         elif self.predict == "Membrane2D":
             self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
-                image=self.image, EDT=False, down_sampling=10, as_2d=True
+                image=self.image, EDT=False, down_sampling=5, as_2d=True
             )
         else:
             self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
