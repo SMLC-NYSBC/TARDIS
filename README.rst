@@ -5,7 +5,7 @@
 
 ========
 
-.. image:: https://img.shields.io/badge/Release-0.1.1-success
+.. image:: https://img.shields.io/badge/Release-0.2.0_release_candidate_1-success
     :target: https://shields.io
 
 .. image:: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_pytest.yml/badge.svg

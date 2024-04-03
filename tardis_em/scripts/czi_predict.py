@@ -332,12 +332,12 @@ class ProcessTardisForCZI:
         ]
 
         self.terminal(
-                text_1="TARDIS segmentation:",
-                text_2="Instance Segmentation...",
-                text_3=f"Dataset: [{name}]",
-                text_4=f"Pixel_size: {px}",
-                text_6=print_progress_bar(progress[0], progress[1]),
-            )
+            text_1="TARDIS segmentation:",
+            text_2="Instance Segmentation...",
+            text_3=f"Dataset: [{name}]",
+            text_4=f"Pixel_size: {px}",
+            text_6=print_progress_bar(progress[0], progress[1]),
+        )
 
         _, pc_ld = BuildPointCloud().build_point_cloud(
             image=data,
@@ -411,7 +411,7 @@ async def main():
 
     allocate_gpu = ["6", "7"]
     predict = "Membrane"
-    start_from = 699
+    start_from = 13143
 
     assert predict in ["Membrane", "Microtubule"]
 
