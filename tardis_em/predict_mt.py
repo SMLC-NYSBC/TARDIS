@@ -57,7 +57,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-cnn",
     "--convolution_nn",
-    default="fnet",
+    default="fnet_attn",
     type=str,
     help="Select CNN used for semantic segmentation.",
     show_default=True,
