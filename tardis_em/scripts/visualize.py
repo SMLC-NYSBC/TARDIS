@@ -61,6 +61,8 @@ def main(dir_: str, _2d: bool, type_: str, animate: bool, with_node: bool):
         pc = np.genfromtxt(dir_, delimiter=",", skip_header=1, dtype=np.float32)
     elif dir_.endswith("am"):
         pc = ImportDataFromAmira(dir_).get_segmented_points()
+    elif dir_.endswith(".npy"):
+        pc = np.load(dir_)
 
     if type_ == "p":
         if pc.shape[1] == 4 or pc.shape[1] == 3 and _2d:
