@@ -687,7 +687,8 @@ class GeneralPredictor:
             "text_2": f"Device: {self.device}",
             "text_3": f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
         }
-
+        
+        no_segments = np.max(self.segments[:, 0]) if len(self.segments) > 0 else 0
         # Define text configurations for each log_id
         text_configurations = {
             0: {
@@ -745,7 +746,7 @@ class GeneralPredictor:
             7: {
                 **common_text,
                 "text_4": f"Original pixel size: {self.px} A",
-                "text_5": f"Point Cloud: {self.pc_ld.shape[0]} Nodes; {np.max(self.segments[:, 0])} Segments",
+                "text_5": f"Point Cloud: {self.pc_ld.shape[0]} Nodes; {no_segments} Segments",
                 "text_7": "Current Task: Segmentation finished!",
             },
         }
