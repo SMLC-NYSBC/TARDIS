@@ -1035,7 +1035,7 @@ class GeneralPredictor:
                 "Please pass correct_px argument as a correct pixel size value."
             )
             assert_ = self.px is None and not isinstance(i, str)
-            if not assert_:
+            if assert_:
                 if self.tardis_logo:
                     TardisError(id_="161", py="tardis_em.utils.predictor.py", desc=msg)
                     sys.exit()
