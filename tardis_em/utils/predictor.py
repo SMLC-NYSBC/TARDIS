@@ -1009,19 +1009,6 @@ class GeneralPredictor:
 
         semantic_output, instance_output, instance_filter_output = [], [], []
         for id_, i in enumerate(self.predict_list):
-            msg = (
-                f"{i}"
-                f"Predicted file {id_} is numpy array without pixel size metadate {self.px}."
-                "Please pass correct_px argument as a correct pixel size value."
-            )
-            assert_ = self.px is None and not isinstance(i, str)
-            if not assert_:
-                if self.tardis_logo:
-                    TardisError(id_="161", py="tardis_em.utils.predictor.py", desc=msg)
-                    sys.exit()
-                else:
-                    assert not assert_, msg
-
             """CNN Pre-Processing"""
             if isinstance(i, str):
                 if i.endswith("CorrelationLines.am"):
@@ -1042,6 +1029,18 @@ class GeneralPredictor:
 
             # Load data
             self.load_data(id_name=i)
+            
+            msg = (
+                f"Predicted file {id_} is numpy array without pixel size metadate {self.px}."
+                "Please pass correct_px argument as a correct pixel size value."
+            )
+            assert_ = self.px is None and not isinstance(i, str)
+            if not assert_:
+                if self.tardis_logo:
+                    TardisError(id_="161", py="tardis_em.utils.predictor.py", desc=msg)
+                    sys.exit()
+                else:
+                    assert not assert_, msg
 
             # Tardis progress bar update
             self.log_tardis(id_, i, log_id=1)
