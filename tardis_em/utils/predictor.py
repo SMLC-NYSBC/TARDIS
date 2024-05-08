@@ -458,9 +458,9 @@ class GeneralPredictor:
     def predict_cnn(self, id_: int, id_name: str, dataloader):
         iter_time = 1
         if self.rotate:
-            pred_title = "CNN prediction with four 90 degree rotations."
+            pred_title = f"CNN prediction with four 90 degree rotations with {self.convolution_nn}"
         else:
-            pred_title = ""
+            pred_title = f"CNN prediction with {self.convolution_nn}"
 
         for j in range(len(dataloader)):
             if j % iter_time == 0 and self.tardis_logo:
