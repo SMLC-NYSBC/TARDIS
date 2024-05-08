@@ -1128,7 +1128,7 @@ class GeneralPredictor:
             self.log_tardis(id_, i, log_id=3)
 
             self.preprocess_DIST(id_name=i)
-            self.segments = None
+            self.segments = np.zeros((0, 4))
 
             # Break iter loop for instances if no point cloud is found
             if len(self.pc_ld) == 0:
