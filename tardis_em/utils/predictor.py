@@ -278,11 +278,11 @@ class GeneralPredictor:
             self.tardis_progress(title=self.title, text_2=f"Device: {self.device}")
 
         # Check for any other errors
-        if self.tardis_logo:
-            # Early stop if not semantic of instance was specified
-            msg = f"Require that at lest one output format is not None but {self.output_format} was given!"
-            assert_ = self.output_format == "None_None"
-            if assert_:
+        # Early stop if not semantic of instance was specified
+        msg = f"Require that at lest one output format is not None but {self.output_format} was given!"
+        assert_ = self.output_format == "None_None"
+        if assert_:
+            if self.tardis_logo:
                 TardisError(
                     id_="151",
                     py="tardis_em/utils/predictor.py",
@@ -292,40 +292,40 @@ class GeneralPredictor:
             else:
                 assert assert_, msg
 
-            # Check for know error if using ARM64 machine
-            msg = f"STL output is not allowed on {platform.machine()} machine type!"
-            assert_ = platform.machine() == "aarch64"
-            if self.output_format.endswith("stl"):
-                if self.tardis_logo:
-                    TardisError(
-                        id_="151",
-                        py="tardis_em/utils/predictor.py",
-                        desc=msg,
-                    )
-                    sys.exit()
-                else:
-                    assert not assert_, msg
-
-            # Check if there is anything to predict in user indicated folder
-            msg = f"Given {self.dir} does not contain any recognizable file!"
-            assert_ = len(self.predict_list) == 0
+        # Check for know error if using ARM64 machine
+        msg = f"STL output is not allowed on {platform.machine()} machine type!"
+        assert_ = platform.machine() == "aarch64"
+        if self.output_format.endswith("stl"):
             if self.tardis_logo:
-                if assert_:
-                    TardisError(
-                        id_="12",
-                        py="tardis_em/utils/predictor.py",
-                        desc=msg,
-                    )
-                    sys.exit()
-                else:
-                    self.tardis_progress(
-                        title=self.title,
-                        text_1=f"Found {len(self.predict_list)} images to predict!",
-                        text_2=f"Device: {self.device}",
-                        text_7="Current Task: Setting-up environment...",
-                    )
+                TardisError(
+                    id_="151",
+                    py="tardis_em/utils/predictor.py",
+                    desc=msg,
+                )
+                sys.exit()
             else:
                 assert not assert_, msg
+
+        # Check if there is anything to predict in user indicated folder
+        msg = f"Given {self.dir} does not contain any recognizable file!"
+        assert_ = len(self.predict_list) == 0
+        if self.tardis_logo:
+            if assert_:
+                TardisError(
+                    id_="12",
+                    py="tardis_em/utils/predictor.py",
+                    desc=msg,
+                )
+                sys.exit()
+            else:
+                self.tardis_progress(
+                    title=self.title,
+                    text_1=f"Found {len(self.predict_list)} images to predict!",
+                    text_2=f"Device: {self.device}",
+                    text_7="Current Task: Setting-up environment...",
+                )
+        else:
+            assert not assert_, msg
 
     def build_NN(self, NN: str):
         if NN == "Microtubule":
