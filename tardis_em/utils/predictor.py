@@ -306,27 +306,6 @@ class GeneralPredictor:
             else:
                 assert not assert_, msg
 
-        # Check if there is anything to predict in user indicated folder
-        msg = f"Given {self.dir} does not contain any recognizable file!"
-        assert_ = len(self.predict_list) == 0
-        if self.tardis_logo:
-            if assert_:
-                TardisError(
-                    id_="12",
-                    py="tardis_em/utils/predictor.py",
-                    desc=msg,
-                )
-                sys.exit()
-            else:
-                self.tardis_progress(
-                    title=self.title,
-                    text_1=f"Found {len(self.predict_list)} images to predict!",
-                    text_2=f"Device: {self.device}",
-                    text_7="Current Task: Setting-up environment...",
-                )
-        else:
-            assert not assert_, msg
-
     def build_NN(self, NN: str):
         if NN == "Microtubule":
             self.normalize_px = 25
@@ -676,6 +655,27 @@ class GeneralPredictor:
         else:
             self.output = None
             self.am_output = None
+
+        # Check if there is anything to predict in user indicated folder
+        msg = f"Given {self.dir} does not contain any recognizable file!"
+        assert_ = len(self.predict_list) == 0
+        if self.tardis_logo:
+            if assert_:
+                TardisError(
+                    id_="12",
+                    py="tardis_em/utils/predictor.py",
+                    desc=msg,
+                )
+                sys.exit()
+            else:
+                self.tardis_progress(
+                    title=self.title,
+                    text_1=f"Found {len(self.predict_list)} images to predict!",
+                    text_2=f"Device: {self.device}",
+                    text_7="Current Task: Setting-up environment...",
+                )
+        else:
+            assert not assert_, msg
 
     def log_tardis(self, id_: int, i: Union[str, np.ndarray], log_id: float):
         if isinstance(i, np.ndarray):
