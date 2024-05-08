@@ -11,14 +11,14 @@ import sys
 import time
 from os import listdir, getcwd
 from os.path import isdir, isfile, join, dirname
-from typing import Optional
+from typing import Optional, Union, List
+import platform
 
 import numpy as np
 import pandas as pd
 import tifffile.tifffile as tif
 import torch
 
-from tardis_em.dist_pytorch.utils.utils import pc_median_dist
 from tardis_em.dist_pytorch.datasets.patches import PatchDataSet
 from tardis_em.dist_pytorch.dist import build_dist_network
 from tardis_em.dist_pytorch.utils.build_point_cloud import BuildPointCloud
@@ -50,24 +50,25 @@ from tardis_em.utils.spline_metric import (
 )
 from tardis_em._version import version
 
-try:
-    from tardis_em.utils.ota_update import ota_update
-
-    ota = ota_update(status=True)
-except ImportError:
-    ota = ""
+# try:
+#     from tardis_em.utils.ota_update import ota_update
+#
+#     ota = ota_update(status=True)
+# except ImportError:
+#     ota = ""
+ota = ""
 
 # Pytorch CUDA optimization
 torch.backends.cudnn.benchmark = True
 
 
-class DataSetPredictor:
+class GeneralPredictor:
     """
     MAIN WRAPPER FOR PREDICTION MT/MEM WITH TARDIS-PYTORCH
 
     Args:
         predict (str): Dataset type name.
-        dir_ (str): Dataset directory.
+        dir_ (str, np.ndarray): Dataset directory.
         output_format (str): Two output format for semantic and instance prediction.
         patch_size (int): Image 3D crop size.
         cnn_threshold (float): Threshold for CNN model.
@@ -91,7 +92,7 @@ class DataSetPredictor:
     def __init__(
         self,
         predict: str,
-        dir_: str,
+        dir_: Union[str, tuple[np.ndarray], np.ndarray],
         binary_mask: bool,
         output_format: str,
         patch_size: int,
@@ -104,22 +105,19 @@ class DataSetPredictor:
         device_: str,
         debug: bool,
         checkpoint: Optional[list] = None,
-        correct_px: float = False,
-        sampling: float = None,
+        correct_px: float = None,
         amira_prefix: str = None,
         filter_by_length: int = None,
         connect_splines: int = None,
         connect_cylinder: int = None,
         amira_compare_distance: int = None,
         amira_inter_probability: float = None,
+        tardis_logo: bool = True,
     ):
-        if predict not in ["Filament", "Membrane2D", "Membrane", "Microtubule"]:
-            TardisError(
-                id_="01",
-                py="tardis_em/utils/predictor.py",
-                desc=f"TARDIS v.{version} supports only MT and Mem segmentation!",
-            )
-            sys.exit()
+        self.transformation, self.px, self.image = None, None, None
+        self.tardis_logo = tardis_logo
+        self.tardis_progress = None
+        self.title = None
 
         # Directories and dataset info
         self.dir = dir_
@@ -132,11 +130,14 @@ class DataSetPredictor:
         self.amira_prefix = amira_prefix
         self.checkpoint = checkpoint
         self.correct_px = correct_px
-        self.sampling = sampling
 
         # Pre-processing setting
         self.patch_size = patch_size
         self.points_in_patch = points_in_patch
+        self.pc_hd, self.pc_ld = np.zeros((0, 3)), np.zeros((0, 3))
+        self.coords_df = np.zeros((1, 3))
+        self.transformation = [0, 0, 0]
+        self.segments = np.zeros((1, 3))
 
         # Prediction setting
         self.convolution_nn = convolution_nn
@@ -152,65 +153,20 @@ class DataSetPredictor:
 
         """Initial Setup"""
         if debug:
-            str_debug = " <Debugging Mode>"
+            self.str_debug = " <Debugging Mode>"
         else:
-            str_debug = ""
-
-        # Initiate log output
-        self.tardis_progress = TardisLogo()
-        if self.predict_instance:
-            if self.output_format.startswith("None"):
-                self.title = (
-                    f"Fully-automatic Instance {self.predict} segmentation module | {ota} "
-                    f"{str_debug}"
-                )
-            else:
-                self.title = (
-                    f"Fully-automatic Semantic-Instance {self.predict} segmentation module | {ota} "
-                    f"{str_debug}"
-                )
-        else:
-            self.title = (
-                f"Fully-automatic Semantic {self.predict} segmentation module | {ota} "
-                f"{str_debug}"
-            )
+            self.str_debug = ""
 
         # Check for spatial graph in folder from amira/tardis_em comp.
         self.amira_check = False
-        if isdir(join(self.dir, "amira")):
-            self.amira_check = True
-            self.dir_amira = join(dir_, "amira")
-            self.title = (
-                f"Fully-automatic Instance {self.predict} segmentation module "
-                f"with Amira comparison {str_debug}"
-            )
-
-        self.tardis_progress(title=self.title, text_2=f"Device: {self.device}")
-
-        # Early stop if not semantic of instance was specified
-        if self.output_format == "None_None":
-            TardisError(
-                id_="151",
-                py="tardis_em/utils/predictor.py",
-                desc="Require that at lest one output format is not None "
-                f"but {output_format} was given!",
-            )
-            sys.exit()
-
-        if self.output_format.endswith("stl"):  # Check if not ARM64 machine
-            import platform
-
-            if platform.machine() == "aarch64":
-                TardisError(
-                    id_="151",
-                    py="tardis_em/utils/predictor.py",
-                    desc=f"STL output is not allowed on {platform.machine()} machine type!",
-                )
-                sys.exit()
+        if isinstance(self.dir, str):
+            if isdir(join(self.dir, "amira")):
+                self.amira_check = True
+                self.dir_amira = join(dir_, "amira")
 
         # Searching for available images for prediction
-        available_format = (".tif", ".tiff", ".mrc", ".rec", ".am", ".map")
-        omit_format = (
+        self.available_format = (".tif", ".tiff", ".mrc", ".rec", ".am", ".map", ".npy")
+        self.omit_format = (
             "mask.tif",
             "mask.tiff",
             "mask.mrc",
@@ -219,48 +175,6 @@ class DataSetPredictor:
             "mask.am",
             "mask.map",
         )
-        self.output = join(self.dir, "temp", "Predictions")
-        self.am_output = join(self.dir, "Predictions")
-
-        # Pickup files for the prediction
-        if isdir(dir_):
-            self.predict_list = [
-                f
-                for f in listdir(dir_)
-                if f.endswith(available_format) and not f.endswith(omit_format)
-            ]
-        else:
-            dir_ = dirname(self.dir)
-            if dir_ == "":
-                dir_ = getcwd()
-
-            self.predict_list = [
-                f
-                for f in listdir(dir_)
-                if f.endswith(available_format) and not f.endswith(omit_format)
-            ]
-            self.predict_list = [f for f in self.predict_list if self.dir.endswith(f)]
-
-            # Update Dir paths
-            self.dir = dir_
-            self.output = join(self.dir, "temp", "Predictions")
-            self.am_output = join(self.dir, "Predictions")
-
-        # Tardis progress bar update
-        if len(self.predict_list) == 0:
-            TardisError(
-                id_="12",
-                py="tardis_em/utils/predictor.py",
-                desc=f"Given {dir_} does not contain any recognizable file!",
-            )
-            sys.exit()
-        else:
-            self.tardis_progress(
-                title=self.title,
-                text_1=f"Found {len(self.predict_list)} images to predict!",
-                text_2=f"Device: {self.device}",
-                text_7="Current Task: Setting-up environment...",
-            )
 
         """Build handler's"""
         # Build handler's for reading data to correct format
@@ -311,17 +225,113 @@ class DataSetPredictor:
         # Build handler to output amira file
         self.amira_file = NumpyToAmira()
 
-        """Build NN from checkpoints"""
+        # Sanity error checks
+        self.init_check()
+
+        # Build NN from checkpoints
         self.build_NN(NN=self.predict)
+
+    def init_check(self):
+        """
+        All sanity checks before TARDIS initialize prediction
+        """
+        msg = f"TARDIS v.{version} supports only MT and Mem segmentation!"
+        assert_ = self.predict in ["Filament", "Membrane2D", "Membrane", "Microtubule"]
+        if self.tardis_logo:
+            # Check if user ask to predict correct structure
+            if not assert_:
+                TardisError(
+                    id_="01",
+                    py="tardis_em/utils/predictor.py",
+                    desc=msg,
+                )
+                sys.exit()
+        else:
+            assert assert_, msg
+
+        # Initiate log output
+        if self.tardis_logo:
+            self.tardis_progress = TardisLogo()
+
+            if isdir(join(self.dir, "amira")):
+                self.title = (
+                    f"Fully-automatic Instance {self.predict} segmentation module "
+                    f"with Amira comparison {self.str_debug}"
+                )
+            elif self.predict_instance:
+                if self.output_format.startswith("None"):
+                    self.title = (
+                        f"Fully-automatic Instance {self.predict} segmentation module | {ota} "
+                        f"{self.str_debug}"
+                    )
+                else:
+                    self.title = (
+                        f"Fully-automatic Semantic-Instance {self.predict} segmentation module | {ota} "
+                        f"{self.str_debug}"
+                    )
+            else:
+                self.title = (
+                    f"Fully-automatic Semantic {self.predict} segmentation module | {ota} "
+                    f"{self.str_debug}"
+                )
+
+            self.tardis_progress(title=self.title, text_2=f"Device: {self.device}")
+
+        # Check for any other errors
+        if self.tardis_logo:
+            # Early stop if not semantic of instance was specified
+            msg = f"Require that at lest one output format is not None but {self.output_format} was given!"
+            assert_ = self.output_format == "None_None"
+            if assert_:
+                TardisError(
+                    id_="151",
+                    py="tardis_em/utils/predictor.py",
+                    desc=msg,
+                )
+                sys.exit()
+            else:
+                assert assert_, msg
+
+            # Check for know error if using ARM64 machine
+            msg = f"STL output is not allowed on {platform.machine()} machine type!"
+            assert_ = platform.machine() == "aarch64"
+            if self.output_format.endswith("stl"):
+                if self.tardis_logo:
+                    TardisError(
+                        id_="151",
+                        py="tardis_em/utils/predictor.py",
+                        desc=msg,
+                    )
+                    sys.exit()
+                else:
+                    assert not assert_, msg
+
+            # Check if there is anything to predict in user indicated folder
+            msg = f"Given {self.dir} does not contain any recognizable file!"
+            assert_ = len(self.predict_list) == 0
+            if self.tardis_logo:
+                if assert_:
+                    TardisError(
+                        id_="12",
+                        py="tardis_em/utils/predictor.py",
+                        desc=msg,
+                    )
+                    sys.exit()
+                else:
+                    self.tardis_progress(
+                        title=self.title,
+                        text_1=f"Found {len(self.predict_list)} images to predict!",
+                        text_2=f"Device: {self.device}",
+                        text_7="Current Task: Setting-up environment...",
+                    )
+            else:
+                assert not assert_, msg
 
     def build_NN(self, NN: str):
         if NN == "Microtubule":
             self.normalize_px = 25
         else:
             self.normalize_px = 15
-
-        if self.sampling is not None:
-            self.normalize_px = self.sampling
 
         if NN in ["Filament", "Microtubule"]:
             # Build CNN network with loaded pre-trained weights
@@ -391,20 +401,26 @@ class DataSetPredictor:
                         device=self.device,
                     )
 
-    def load_data(self, id_name: str):
+    def load_data(self, id_name: Union[str, np.ndarray]):
         # Build temp dir
         build_temp_dir(dir_=self.dir)
 
-        # Load image file
-        if id_name.endswith(".am"):
-            self.image, self.px, _, self.transformation = import_am(
-                am_file=join(self.dir, id_name)
-            )
+        if isinstance(id_name, str):
+            # Load image file
+            if id_name.endswith(".am"):
+                self.image, self.px, _, self.transformation = import_am(
+                    am_file=join(self.dir, id_name)
+                )
+            else:
+                self.image, self.px = load_image(join(self.dir, id_name))
+                self.transformation = [0, 0, 0]
         else:
-            self.image, self.px = load_image(join(self.dir, id_name))
+            self.image = id_name
+            self.px = self.correct_px
             self.transformation = [0, 0, 0]
 
         # Normalize image histogram
+        msg = f"Error while loading image {id_name}. Image loaded correctly, but output format "
         if not self.output_format.startswith("None") or not self.binary_mask:
             self.image = self.normalize(self.mean_std(self.image)).astype(np.float32)
 
@@ -418,30 +434,34 @@ class DataSetPredictor:
                     self.image = self.image / 255  # move to 0 - 1
                     self.image = (self.image - 0.5) * 2  # shift to -1 - 1
 
-            if not self.image.dtype == np.float32:
-                TardisError(
-                    id_="11",
-                    py="tardis_em/utils/predictor.py",
-                    desc=f"Error while loading image {id_name}: "
-                    f"Image loaded correctly, but output format "
-                    f"{self.image.dtype} is not float32!",
-                )
-                sys.exit()
+            assert_ = self.image.dtype == np.float32
+            if self.tardis_logo:
+                if not assert_:
+                    TardisError(
+                        id_="11",
+                        py="tardis_em/utils/predictor.py",
+                        desc=msg + f" {self.image.dtype} is not float32!",
+                    )
+                    sys.exit()
+            else:
+                assert assert_, msg
         else:
             # Check image structure
             self.image = np.where(self.image > 0, 1, 0).astype(np.int8)
 
-            if not self.image.dtype == np.int8 or self.image.dtype == np.uint8:
-                TardisError(
-                    id_="11",
-                    py="tardis_em/utils/predictor.py",
-                    desc=f"Error while loading image {id_name}: "
-                    f"Image loaded correctly, but output format "
-                    f"{self.image.dtype} is not int8!",
-                )
-                sys.exit()
+            assert_ = self.image.dtype == np.int8 or self.image.dtype == np.uint8
+            if self.tardis_logo:
+                if not assert_:
+                    TardisError(
+                        id_="11",
+                        py="tardis_em/utils/predictor.py",
+                        desc=msg + f" {self.image.dtype} is not int8!",
+                    )
+                    sys.exit()
+            else:
+                assert assert_, msg
 
-        # Calculate parameters for image pixel size with optional scaleing
+        # Calculate parameters for image pixel size with optional scaling
         if self.correct_px is not None:
             self.px = self.correct_px
 
@@ -456,72 +476,6 @@ class DataSetPredictor:
         )
         self.scale_shape = [int(i) for i in self.scale_shape]
 
-    def postprocess_CNN(self, id_name: str):
-        # Stitch predicted image patches
-        if self.expect_2d:
-            self.image = self.image_stitcher(
-                image_dir=self.output, mask=False, dtype=np.float32
-            )[: self.scale_shape[0], : self.scale_shape[1]]
-        else:
-            self.image = self.image_stitcher(
-                image_dir=self.output, mask=False, dtype=np.float32
-            )[: self.scale_shape[0], : self.scale_shape[1], : self.scale_shape[2]]
-
-        # Restored original image pixel size
-        self.image, _ = scale_image(image=self.image, scale=self.org_shape, nn=False)
-        self.image = torch.sigmoid(torch.from_numpy(self.image)).cpu().detach().numpy()
-
-        if self.cnn_threshold != 0:
-            self.image = np.where(self.image >= self.cnn_threshold, 1, 0).astype(
-                np.uint8
-            )
-        else:
-            tif.imwrite(
-                join(self.am_output, f"{id_name[:-self.in_format]}_CNN.tif"), self.image
-            )
-            self.image = None
-
-        if self.image is not None:
-            if len(pd.unique(self.image.flatten())) == 1:
-                self.image = None
-
-        """Clean-up temp dir"""
-        clean_up(dir_=self.dir)
-
-    def preprocess_DIST(self, id_name: str):
-        # Post-process predicted image patches
-        if self.predict in ["Filament", "Microtubule"]:
-            self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
-                image=self.image, EDT=False, down_sampling=5
-            )
-        elif self.predict == "Membrane2D":
-            self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
-                image=self.image, EDT=False, down_sampling=5, as_2d=True
-            )
-        else:
-            self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
-                image=self.image, EDT=False, down_sampling=5, as_2d=True
-            )
-        del self.image
-        self._debug(id_name=id_name, debug_id="pc")
-
-    @staticmethod
-    def mask_borders(data: np.ndarray) -> np.ndarray:
-        """
-        Mask borders in predicted mask
-
-        Args:
-            data (np.ndarray): Predicted probabilities [ZYX or YX]
-
-        Return:
-            np.ndarray: Masked probabilities [ZYX or YX]
-        """
-        # Mask z = [0, -1]
-        data[0, :] = data[1, :]
-        data[-1, :] = data[-2, :]
-
-        return data
-
     def predict_cnn(self, id_: int, id_name: str, dataloader):
         iter_time = 1
         if self.rotate:
@@ -530,7 +484,7 @@ class DataSetPredictor:
             pred_title = ""
 
         for j in range(len(dataloader)):
-            if j % iter_time == 0:
+            if j % iter_time == 0 and self.tardis_logo:
                 # Tardis progress bar update
                 self.tardis_progress(
                     title=self.title,
@@ -563,6 +517,56 @@ class DataSetPredictor:
 
             tif.imwrite(join(self.output, f"{name}.tif"), input_)
 
+    def postprocess_CNN(self, id_name: str):
+        # Stitch predicted image patches
+        if self.expect_2d:
+            self.image = self.image_stitcher(
+                image_dir=self.output, mask=False, dtype=np.float32
+            )[: self.scale_shape[0], : self.scale_shape[1]]
+        else:
+            self.image = self.image_stitcher(
+                image_dir=self.output, mask=False, dtype=np.float32
+            )[: self.scale_shape[0], : self.scale_shape[1], : self.scale_shape[2]]
+
+        # Restored original image pixel size
+        self.image, _ = scale_image(image=self.image, scale=self.org_shape, nn=False)
+        self.image = torch.sigmoid(torch.from_numpy(self.image)).cpu().detach().numpy()
+
+        # Threshold CNN prediction
+        if self.cnn_threshold != 0:
+            self.image = np.where(self.image >= self.cnn_threshold, 1, 0).astype(
+                np.uint8
+            )
+        else:
+            if not self.output_format.startswith("return"):
+                tif.imwrite(
+                    join(self.am_output, f"{id_name[:-self.in_format]}_CNN.tif"),
+                    self.image,
+                )
+                self.image = None
+
+        """Clean-up temp dir"""
+        clean_up(dir_=self.dir)
+
+    def preprocess_DIST(self, id_name: str):
+        # Post-process predicted image patches
+        if self.predict in ["Filament", "Microtubule"]:
+            self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
+                image=self.image, EDT=False, down_sampling=5
+            )
+        elif self.predict == "Membrane2D":
+            self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
+                image=self.image, EDT=False, down_sampling=5, as_2d=True
+            )
+        else:
+            self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
+                image=self.image, EDT=False, down_sampling=5, as_2d=True
+            )
+
+        if not self.output_format.startswith("return"):
+            self.image = None
+        self._debug(id_name=id_name, debug_id="pc")
+
     def predict_DIST(self, id_: int, id_name: str):
         iter_time = int(round(len(self.coords_df) / 10))
         if iter_time == 0:
@@ -573,7 +577,7 @@ class DataSetPredictor:
         pc = self.pc_ld.shape
         graphs = []
         for id_dist, coord in enumerate(self.coords_df):
-            if id_dist % iter_time == 0:
+            if id_dist % iter_time == 0 and self.tardis_logo:
                 self.tardis_progress(
                     title=self.title,
                     text_1=f"Found {len(self.predict_list)} images to predict!",
@@ -589,17 +593,343 @@ class DataSetPredictor:
             graphs.append(graph)
 
         # Tardis progress bar update
-        self.tardis_progress(
-            title=self.title,
-            text_1=f"Found {len(self.predict_list)} images to predict!",
-            text_2=f"Device: {self.device}",
-            text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {id_name}",
-            text_4=f"Original pixel size: {self.px} A",
-            text_5=f"Point Cloud: {pc[0]}; NaN Segments",
-            text_7=f"Current Task: {self.predict} segmentation...",
-        )
+        if self.tardis_logo:
+            self.tardis_progress(
+                title=self.title,
+                text_1=f"Found {len(self.predict_list)} images to predict!",
+                text_2=f"Device: {self.device}",
+                text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {id_name}",
+                text_4=f"Original pixel size: {self.px} A",
+                text_5=f"Point Cloud: {pc[0]}; NaN Segments",
+                text_7=f"Current Task: {self.predict} segmentation...",
+            )
 
         return graphs
+
+    def postprocess_DIST(self, id_, i):
+        self.pc_ld = (
+            self.pc_ld * self.px
+            if self.correct_px is None
+            else self.pc_ld * self.correct_px
+        )
+        self.pc_ld = self.pc_ld + self.transformation
+
+        if self.predict in ["Filament", "Microtubule"]:
+            self.log_tardis(id_, i, log_id=6.1)
+        else:
+            self.log_tardis(id_, i, log_id=6.2)
+
+        try:
+            if self.predict in ["Filament", "Microtubule", "Membrane2D"]:
+                sort = True
+                prune = 5
+            else:
+                sort = False
+                prune = 15
+
+            self.segments = self.GraphToSegment.patch_to_segment(
+                graph=self.graphs,
+                coord=self.pc_ld,
+                idx=self.output_idx,
+                sort=sort,
+                prune=prune,
+            )
+            self.segments = sort_by_length(self.segments)
+        except:
+            self.segments = None
+
+    def get_file_list(self, output=True):
+        # Pickup files for the prediction
+        if not isinstance(self.dir, str):
+            if isinstance(self.dir, tuple) or isinstance(self.dir, list):
+                self.predict_list = self.dir
+            else:
+                self.predict_list = [self.dir]
+            self.dir = "."
+        else:
+            if isdir(self.dir):
+                self.predict_list = [
+                    f
+                    for f in listdir(self.dir)
+                    if f.endswith(self.available_format)
+                    and not f.endswith(self.omit_format)
+                ]
+            else:
+                self.dir = dirname(self.dir)
+                if self.dir == "":
+                    self.dir = getcwd()
+
+                self.predict_list = [
+                    f
+                    for f in listdir(self.dir)
+                    if f.endswith(self.available_format)
+                    and not f.endswith(self.omit_format)
+                ]
+                self.predict_list = [
+                    f for f in self.predict_list if self.dir.endswith(f)
+                ]
+
+        # Update Dir paths
+        if output:
+            self.output = join(self.dir, "temp", "Predictions")
+            self.am_output = join(self.dir, "Predictions")
+        else:
+            self.output = None
+            self.am_output = None
+
+    def log_tardis(self, id_: int, i: Union[str, np.ndarray], log_id: float):
+        if isinstance(i, np.ndarray):
+            i = "Numpy array"
+
+        if not self.tardis_logo:
+            return
+
+        # Common text for all configurations
+        common_text = {
+            "text_1": f"Found {len(self.predict_list)} images to predict!",
+            "text_2": f"Device: {self.device}",
+            "text_3": f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
+        }
+
+        # Define text configurations for each log_id
+        text_configurations = {
+            0: {
+                **common_text,
+                "text_4": "Original Pixel size: Nan A",
+                "text_7": "Current Task: Preprocessing for CNN...",
+            },
+            1: {
+                **common_text,
+                "text_4": f"Original Pixel size: {self.px} A",
+                "text_7": f"Current Task: Sub-dividing images for {self.patch_size} size",
+            },
+            2: {
+                **common_text,
+                "text_4": f"Original pixel size: {self.px} A",
+                "text_7": "Current Task: Stitching...",
+            },
+            3: {
+                **common_text,
+                "text_4": f"Original pixel size: {self.px} A",
+                "text_5": "Point Cloud: In processing...",
+                "text_7": "Current Task: Image Postprocessing...",
+            },
+            4: {
+                **common_text,
+                "text_4": f"Original pixel size: {self.px} A",
+                "text_5": f"Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments",
+                "text_7": "Current Task: Preparing for instance segmentation...",
+            },
+            5: {
+                **common_text,
+                "text_4": f"Original pixel size: {self.px} A",
+                "text_5": f"Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments",
+                "text_7": "Current Task: DIST prediction...",
+                "text_8": (
+                    print_progress_bar(0, len(self.coords_df))
+                    if self.tardis_logo
+                    else ""
+                ),
+            },
+            6.1: {
+                **common_text,
+                "text_4": f"Original pixel size: {self.px} A",
+                "text_5": f"Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments",
+                "text_7": "Current Task: Instance Segmentation...",
+                "text_8": "MTs segmentation is fitted to:",
+                "text_9": f"pixel size: {self.px}; transformation: {self.transformation}",
+            },
+            6.2: {
+                **common_text,
+                "text_4": f"Original pixel size: {self.px} A",
+                "text_5": f"Point Cloud: {self.pc_ld.shape[0]}; NaN Segments",
+                "text_7": "Current Task: Instance segmentation...",
+            },
+            7: {
+                **common_text,
+                "text_4": f"Original pixel size: {self.px} A",
+                "text_5": f"Point Cloud: {self.pc_ld.shape[0]} Nodes; {np.max(self.segments[:, 0])} Segments",
+                "text_7": "Current Task: Segmentation finished!",
+            },
+        }
+
+        # Retrieve text configuration based on log_id
+        config = text_configurations.get(log_id)
+
+        # Tardis progress bar update
+        self.tardis_progress(title=self.title, **config)
+
+    def save_semantic_mask(self, i):
+        if self.output_format.startswith("mrc"):
+            to_mrc(
+                data=self.image,
+                file_dir=join(self.am_output, f"{i[:-self.in_format]}_semantic.mrc"),
+                pixel_size=(self.px if self.correct_px is None else self.correct_px),
+            )
+        elif self.output_format.startswith("tif"):
+            tif.imwrite(
+                join(self.am_output, f"{i[:-self.in_format]}_semantic.tif"),
+                (
+                    np.flip(self.image, 1)
+                    if i.endswith((".mrc", ".rec"))
+                    else self.image
+                ),
+            )
+        elif self.output_format.startswith("am"):
+            to_am(
+                data=self.image,
+                file_dir=join(self.am_output, f"{i[:-self.in_format]}_semantic.am"),
+                pixel_size=(self.px if self.correct_px is None else self.correct_px),
+            )
+        elif self.output_format.startswith("npy"):
+            np.save(
+                join(self.am_output, f"{i[:-self.in_format]}_semantic.npy"), self.image
+            )
+
+    def save_instance_PC(self, i):
+        if self.output_format.endswith("amSG") and self.predict in [
+            "Filament",
+            "Microtubule",
+        ]:
+            self.amira_file.export_amira(
+                coords=self.segments,
+                file_dir=join(self.am_output, f"{i[:-self.in_format]}_SpatialGraph.am"),
+                labels=["TardisPrediction"],
+                scores=[
+                    ["EdgeLength", "EdgeConfidenceScore"],
+                    [
+                        length_list(self.segments),
+                        self.score_splines(self.segments),
+                    ],
+                ],
+            )
+
+            self.segments_filter = self.filter_splines(segments=self.segments)
+            self.segments_filter = sort_by_length(self.segments_filter)
+
+            self.amira_file.export_amira(
+                coords=self.segments_filter,
+                file_dir=join(
+                    self.am_output,
+                    f"{i[:-self.in_format]}_SpatialGraph_filter.am",
+                ),
+                labels=["TardisPrediction"],
+                scores=[
+                    ["EdgeLength", "EdgeConfidenceScore"],
+                    [
+                        length_list(self.segments_filter),
+                        self.score_splines(self.segments_filter),
+                    ],
+                ],
+            )
+
+            if self.amira_check and self.predict == "Microtubule":
+                dir_amira_file = join(
+                    self.dir_amira,
+                    i[: -self.in_format] + self.amira_prefix + ".am",
+                )
+
+                if isfile(dir_amira_file):
+                    amira_sg = ImportDataFromAmira(src_am=dir_amira_file)
+                    amira_sg = amira_sg.get_segmented_points()
+
+                    if amira_sg is not None:
+                        compare_sg, label_sg = self.compare_spline(
+                            amira_sg=amira_sg, tardis_sg=self.segments_filter
+                        )
+
+                        if self.output_format.endswith("amSG"):
+                            self.amira_file.export_amira(
+                                file_dir=join(
+                                    self.am_output,
+                                    f"{i[:-self.in_format]}_AmiraCompare.am",
+                                ),
+                                coords=compare_sg,
+                                labels=label_sg,
+                                scores=None,
+                            )
+        elif self.output_format.endswith("csv"):
+            segments = pd.DataFrame(self.segments)
+            segments.to_csv(
+                join(self.am_output, f"{i[:-self.in_format]}_instances.csv"),
+                header=["IDs", "X [A]", "Y [A]", "Z [A]"],
+                index=False,
+                sep=",",
+            )
+
+            if self.predict in ["Filament", "Microtubule", "Membrane2D"]:
+                self.segments = sort_by_length(self.filter_splines(self.segments))
+                self.segments = pd.DataFrame(self.segments)
+                self.segments.to_csv(
+                    join(
+                        self.am_output,
+                        f"{i[:-self.in_format]}_instances_filter.csv",
+                    ),
+                    header=["IDs", "X [A]", "Y [A]", "Z [A]"],
+                    index=False,
+                    sep=",",
+                )
+        elif self.output_format.endswith(("mrc", "tif", "am")):
+            if self.predict in ["Membrane", "Membrane2D"]:
+                self.mask_semantic = draw_semantic_membrane(
+                    mask_size=self.org_shape,
+                    coordinate=self.segments,
+                    pixel_size=(
+                        self.px if self.correct_px is None else self.correct_px
+                    ),
+                    spline_size=60,
+                )
+            else:
+                self.segments[:, 1:] = (
+                    self.segments[:, 1:] / self.px
+                    if self.correct_px is None
+                    else self.correct_px
+                )
+
+                self.mask_semantic = draw_instances(
+                    mask_size=self.org_shape,
+                    coordinate=self.segments,
+                    pixel_size=(
+                        self.px if self.correct_px is None else self.correct_px
+                    ),
+                    circle_size=125,
+                )
+            self._debug(id_name=i, debug_id="instance_mask")
+
+            if self.output_format.endswith("mrc"):
+                to_mrc(
+                    data=self.mask_semantic,
+                    file_dir=join(
+                        self.am_output, f"{i[:-self.in_format]}_instance.mrc"
+                    ),
+                    pixel_size=(
+                        self.px if self.correct_px is None else self.correct_px
+                    ),
+                )
+            elif self.output_format.endswith("tif"):
+                tif.imwrite(
+                    join(self.am_output, f"{i[:-self.in_format]}_instance.tif"),
+                    self.mask_semantic,
+                )
+            elif self.output_format.endswith("am"):
+                to_am(
+                    data=self.mask_semantic,
+                    file_dir=join(self.am_output, f"{i[:-self.in_format]}_instance.am"),
+                    pixel_size=(
+                        self.px if self.correct_px is None else self.correct_px
+                    ),
+                )
+        elif self.output_format.endswith("stl"):
+            if self.predict == "Membrane":
+                to_stl(
+                    data=self.segments,
+                    file_dir=join(self.am_output, f"{i[:-self.in_format]}.stl"),
+                )
+        elif self.output_format.endswith("npy"):
+            np.save(
+                join(self.am_output, f"{i[:-self.in_format]}_instance.npy"),
+                self.segments,
+            )
 
     def _debug(self, id_name: str, debug_id: str):
         if self.debug:
@@ -678,44 +1008,47 @@ class DataSetPredictor:
 
     def __call__(self, *args, **kwargs):
         """Process each image with CNN and DIST"""
-        for id_, i in enumerate(self.predict_list):
-            """CNN Pre-Processing"""
-            if i.endswith("CorrelationLines.am"):
-                # Skip .am files which are spatial graphs not images
-                continue
+        self.get_file_list()
 
-            # Find file format
-            self.in_format = 0
-            if i.endswith((".tif", ".mrc", ".rec", ".map")):
-                self.in_format = 4
-            elif i.endswith(".tiff"):
-                self.in_format = 5
-            elif i.endswith(".am"):
-                self.in_format = 3
+        semantic_output, instance_output, instance_filter_output = [], [], []
+        for id_, i in enumerate(self.predict_list):
+            msg = (
+                "Predicted file is numpy array without pixel size metadate."
+                "Please pass correct_px argument as a correct pixel size value."
+            )
+            assert_ = self.correct_px is None and isinstance(i, np.ndarray)
+            if self.tardis_logo:
+                if not assert_:
+                    TardisError(id_="161", py="tardis_em.utils.predictor.py", desc=msg)
+                    sys.exit()
+            else:
+                assert not assert_, msg
+
+            """CNN Pre-Processing"""
+            if isinstance(i, str):
+                if i.endswith("CorrelationLines.am"):
+                    # Skip .am files which are spatial graphs not images
+                    continue
+
+                # Find file format
+                self.in_format = 0
+                if i.endswith((".tif", ".mrc", ".rec", ".map", ".npy")):
+                    self.in_format = 4
+                elif i.endswith(".tiff"):
+                    self.in_format = 5
+                elif i.endswith(".am"):
+                    self.in_format = 3
 
             # Tardis progress bar update
-            self.tardis_progress(
-                title=self.title,
-                text_1=f"Found {len(self.predict_list)} images to predict!",
-                text_2=f"Device: {self.device}",
-                text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
-                text_4="Original Pixel size: Nan A",
-                text_7="Current Task: Preprocessing for CNN...",
-            )
+            self.log_tardis(id_, i, log_id=0)
 
             # Load data
             self.load_data(id_name=i)
 
             # Tardis progress bar update
-            self.tardis_progress(
-                title=self.title,
-                text_1=f"Found {len(self.predict_list)} images to predict!",
-                text_2=f"Device: {self.device}",
-                text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
-                text_4=f"Original Pixel size: {self.px} A",
-                text_7=f"Current Task: Sub-dividing images for {self.patch_size} size",
-            )
+            self.log_tardis(id_, i, log_id=1)
 
+            """Semantic Segmentation"""
             if not self.output_format.startswith("None") or not self.binary_mask:
                 # Cut image for fix patch size and normalizing image pixel size
                 trim_with_stride(
@@ -741,16 +1074,22 @@ class DataSetPredictor:
 
                 """CNN Post-Processing"""
                 # Tardis progress bar update
-                self.tardis_progress(
-                    title=self.title,
-                    text_1=f"Found {len(self.predict_list)} images to predict!",
-                    text_2=f"Device: {self.device}",
-                    text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
-                    text_4=f"Original pixel size: {self.px} A",
-                    text_7="Current Task: Stitching...",
-                )
+                self.log_tardis(id_, i, log_id=2)
 
+                # Post-process
                 self.postprocess_CNN(id_name=i)
+
+                # Store optionally for return
+                if self.output_format.startswith("return"):
+                    semantic_output.append(self.image)
+
+                # Check if image is binary
+                if self.image is not None and not self.output_format.startswith(
+                    "return"
+                ):
+                    if len(pd.unique(self.image.flatten())) == 1:
+                        self.image = None
+
                 if self.image is None:
                     continue
 
@@ -758,320 +1097,92 @@ class DataSetPredictor:
                 self._debug(id_name=i, debug_id="cnn")
 
                 # Check if predicted image
-                if not self.image.shape == self.org_shape:
-                    TardisError(
-                        id_="116",
-                        py="tardis_em/utils/predictor.py",
-                        desc="Last Task: Stitching/Scaling/Make correction..."
+                assert_ = self.image.shape == self.org_shape
+                if not assert_:
+                    msg = (
+                        "Last Task: Stitching/Scaling/Make correction..."
                         f"Tardis Error: Error while converting to {self.px} A "
                         f"Org. shape {self.org_shape} is not the same as "
-                        f"converted shape {self.image.shape}",
+                        f"converted shape {self.image.shape}"
                     )
+                    if self.tardis_logo:
+                        TardisError(
+                            id_="116",
+                            py="tardis_em/utils/predictor.py",
+                            desc=msg,
+                        )
+                    else:
+                        assert assert_, msg
                     sys.exit()
 
-                # If prediction fail aka no prediction was produces continue with next image
-                if self.image is None:
-                    continue
+                # Save predicted mask as file
+                self.save_semantic_mask(i)
 
-                """Save predicted mask"""
-                if self.output_format.startswith("mrc"):
-                    to_mrc(
-                        data=self.image,
-                        file_dir=join(
-                            self.am_output, f"{i[:-self.in_format]}_semantic.mrc"
-                        ),
-                        pixel_size=(
-                            self.px if self.correct_px is None else self.correct_px
-                        ),
-                    )
-                elif self.output_format.startswith("tif"):
-                    tif.imwrite(
-                        join(self.am_output, f"{i[:-self.in_format]}_semantic.tif"),
-                        (
-                            np.flip(self.image, 1)
-                            if i.endswith((".mrc", ".rec"))
-                            else self.image
-                        ),
-                    )
-                elif self.output_format.startswith("am"):
-                    to_am(
-                        data=self.image,
-                        file_dir=join(
-                            self.am_output, f"{i[:-self.in_format]}_semantic.am"
-                        ),
-                        pixel_size=(
-                            self.px if self.correct_px is None else self.correct_px
-                        ),
-                    )
-
+                # Sanity check for binary mask
                 if not self.image.min() == 0 and not self.image.max() == 1:
                     continue
+
+                # Close iter loop if not instance prediction
                 if not self.predict_instance:
                     continue
 
-            """DIST pre-processing"""
+            """Instance Segmentation"""
             # Tardis progress bar update
-            self.tardis_progress(
-                title=self.title,
-                text_1=f"Found {len(self.predict_list)} images to predict!",
-                text_2=f"Device: {self.device}",
-                text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
-                text_4=f"Original pixel size: {self.px} A",
-                text_5="Point Cloud: In processing...",
-                text_7="Current Task: Image Postprocessing...",
-            )
+            self.log_tardis(id_, i, log_id=3)
 
             self.preprocess_DIST(id_name=i)
             self.segments = None
-            if len(self.pc_ld) > 0:
-                # Tardis progress bar update
-                self.tardis_progress(
-                    title=self.title,
-                    text_1=f"Found {len(self.predict_list)} images to predict!",
-                    text_2=f"Device: {self.device}",
-                    text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
-                    text_4=f"Original pixel size: {self.px} A",
-                    text_5=f"Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments",
-                    text_7="Current Task: Preparing for instance segmentation...",
-                )
 
-                # Build patches dataset
-                (
-                    self.coords_df,
-                    _,
-                    self.output_idx,
-                    _,
-                ) = self.patch_pc.patched_dataset(coord=self.pc_ld)
+            # Break iter loop for instances if no point cloud is found
+            if len(self.pc_ld) == 0:
+                if self.output_format.endswith("return"):
+                    instance_output.append(np.zeros((0, 4)))
+                    instance_filter_output.append(np.zeros((0, 4)))
+                continue
 
-                # Predict point cloud
-                self.tardis_progress(
-                    title=self.title,
-                    text_1=f"Found {len(self.predict_list)} images to predict!",
-                    text_2=f"Device: {self.device}",
-                    text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
-                    text_4=f"Original pixel size: {self.px} A",
-                    text_5=f"Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments",
-                    text_7="Current Task: DIST prediction...",
-                    text_8=print_progress_bar(0, len(self.coords_df)),
-                )
+            # Tardis progress bar update
+            self.log_tardis(id_, i, log_id=4)
 
-                """DIST prediction"""
-                self.graphs = self.predict_DIST(id_=id_, id_name=i)
-                self._debug(id_name=i, debug_id="graph")
+            # Build patches dataset
+            (
+                self.coords_df,
+                _,
+                self.output_idx,
+                _,
+            ) = self.patch_pc.patched_dataset(coord=self.pc_ld)
 
-                self.pc_ld = (
-                    self.pc_ld * self.px
-                    if self.correct_px is None
-                    else self.pc_ld * self.correct_px
-                )
-                self.pc_ld = self.pc_ld + self.transformation
+            # Predict point cloud
+            self.log_tardis(id_, i, log_id=5)
 
-                if self.predict in ["Filament", "Microtubule"]:
-                    self.tardis_progress(
-                        title=self.title,
-                        text_1=f"Found {len(self.predict_list)} images to predict!",
-                        text_2=f"Device: {self.device}",
-                        text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
-                        text_4=f"Original pixel size: {self.px} A",
-                        text_5=f"Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments",
-                        text_7="Current Task: Instance Segmentation...",
-                        text_8="MTs segmentation is fitted to:",
-                        text_9=f"pixel size: {self.px}; transformation: {self.transformation}",
-                    )
-                else:
-                    self.tardis_progress(
-                        title=self.title,
-                        text_1=f"Found {len(self.predict_list)} images to predict!",
-                        text_2=f"Device: {self.device}",
-                        text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
-                        text_4=f"Original pixel size: {self.px} A",
-                        text_5=f"Point Cloud: {self.pc_ld.shape[0]}; NaN Segments",
-                        text_7="Current Task: Instance segmentation...",
-                    )
+            # DIST prediction
+            self.graphs = self.predict_DIST(id_=id_, id_name=i)
+            self._debug(id_name=i, debug_id="graph")
 
-                try:
-                    if self.predict in ["Filament", "Microtubule", "Membrane2D"]:
-                        sort = True
-                        prune = 5
-                    else:
-                        sort = False
-                        prune = 15
+            # DIST Instance graph-cut
+            self.postprocess_DIST(id_, i)
 
-                    self.segments = self.GraphToSegment.patch_to_segment(
-                        graph=self.graphs,
-                        coord=self.pc_ld,
-                        idx=self.output_idx,
-                        sort=sort,
-                        prune=prune,
-                    )
-                    self.segments = sort_by_length(self.segments)
-                except:
-                    self.segments = None
+            if self.segments is None:
+                if self.output_format.endswith("return"):
+                    instance_output.append(np.zeros((0, 4)))
+                    instance_filter_output.append(np.zeros((0, 4)))
+                continue
 
-                if self.segments is None:
-                    continue
+            # Save debugging check point
+            self._debug(id_name=i, debug_id="segment")
 
-                # Save debugging check point
-                self._debug(id_name=i, debug_id="segment")
+            self.log_tardis(id_, i, log_id=7)
 
-                self.tardis_progress(
-                    title=self.title,
-                    text_1=f"Found {len(self.predict_list)} images to predict!",
-                    text_2=f"Device: {self.device}",
-                    text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
-                    text_4=f"Original pixel size: {self.px} A",
-                    text_5=f"Point Cloud: {self.pc_ld.shape[0]} Nodes;"
-                    f" {np.max(self.segments[:, 0])} Segments",
-                    text_7="Current Task: Segmentation finished!",
-                )
-
-                """Save as .am"""
-                if self.output_format.endswith("amSG") and self.predict in [
-                    "Filament",
-                    "Microtubule",
-                ]:
-                    self.amira_file.export_amira(
-                        coords=self.segments,
-                        file_dir=join(
-                            self.am_output, f"{i[:-self.in_format]}_SpatialGraph.am"
-                        ),
-                        labels=["TardisPrediction"],
-                        scores=[
-                            ["EdgeLength", "EdgeConfidenceScore"],
-                            [
-                                length_list(self.segments),
-                                self.score_splines(self.segments),
-                            ],
-                        ],
-                    )
-
-                    segments_filter = self.filter_splines(segments=self.segments)
-                    segments_filter = sort_by_length(segments_filter)
-
-                    self.amira_file.export_amira(
-                        coords=segments_filter,
-                        file_dir=join(
-                            self.am_output,
-                            f"{i[:-self.in_format]}_SpatialGraph_filter.am",
-                        ),
-                        labels=["TardisPrediction"],
-                        scores=[
-                            ["EdgeLength", "EdgeConfidenceScore"],
-                            [
-                                length_list(segments_filter),
-                                self.score_splines(segments_filter),
-                            ],
-                        ],
-                    )
-
-                    if self.amira_check and self.predict == "Microtubule":
-                        dir_amira_file = join(
-                            self.dir_amira,
-                            i[: -self.in_format] + self.amira_prefix + ".am",
-                        )
-
-                        if isfile(dir_amira_file):
-                            amira_sg = ImportDataFromAmira(src_am=dir_amira_file)
-                            amira_sg = amira_sg.get_segmented_points()
-
-                            if amira_sg is not None:
-                                compare_sg, label_sg = self.compare_spline(
-                                    amira_sg=amira_sg, tardis_sg=segments_filter
-                                )
-
-                                if self.output_format.endswith("amSG"):
-                                    self.amira_file.export_amira(
-                                        file_dir=join(
-                                            self.am_output,
-                                            f"{i[:-self.in_format]}_AmiraCompare.am",
-                                        ),
-                                        coords=compare_sg,
-                                        labels=label_sg,
-                                        scores=None,
-                                    )
-                elif self.output_format.endswith("csv"):
-                    segments = pd.DataFrame(self.segments)
-                    segments.to_csv(
-                        join(self.am_output, f"{i[:-self.in_format]}_instances.csv"),
-                        header=["IDs", "X [A]", "Y [A]", "Z [A]"],
-                        index=False,
-                        sep=",",
-                    )
-
-                    if self.predict in ["Filament", "Microtubule", "Membrane2D"]:
-                        self.segments = sort_by_length(
-                            self.filter_splines(self.segments)
-                        )
-                        self.segments = pd.DataFrame(self.segments)
-                        self.segments.to_csv(
-                            join(
-                                self.am_output,
-                                f"{i[:-self.in_format]}_instances_filter.csv",
-                            ),
-                            header=["IDs", "X [A]", "Y [A]", "Z [A]"],
-                            index=False,
-                            sep=",",
-                        )
-                elif self.output_format.endswith(("mrc", "tif", "am")):
-                    if self.predict in ["Membrane", "Membrane2D"]:
-                        self.mask_semantic = draw_semantic_membrane(
-                            mask_size=self.org_shape,
-                            coordinate=self.segments,
-                            pixel_size=(
-                                self.px if self.correct_px is None else self.correct_px
-                            ),
-                            spline_size=60,
-                        )
-                    else:
-                        self.segments[:, 1:] = (
-                            self.segments[:, 1:] / self.px
-                            if self.correct_px is None
-                            else self.correct_px
-                        )
-                        self.mask_semantic = draw_instances(
-                            mask_size=self.org_shape,
-                            coordinate=self.segments,
-                            pixel_size=(
-                                self.px if self.correct_px is None else self.correct_px
-                            ),
-                            circle_size=125,
-                        )
-                    self._debug(id_name=i, debug_id="instance_mask")
-
-                    if self.output_format.endswith("mrc"):
-                        to_mrc(
-                            data=self.mask_semantic,
-                            file_dir=join(
-                                self.am_output, f"{i[:-self.in_format]}_instance.mrc"
-                            ),
-                            pixel_size=(
-                                self.px if self.correct_px is None else self.correct_px
-                            ),
-                        )
-                    elif self.output_format.endswith("tif"):
-                        tif.imwrite(
-                            join(self.am_output, f"{i[:-self.in_format]}_instance.tif"),
-                            self.mask_semantic,
-                        )
-                    elif self.output_format.endswith("am"):
-                        to_am(
-                            data=self.mask_semantic,
-                            file_dir=join(
-                                self.am_output, f"{i[:-self.in_format]}_instance.am"
-                            ),
-                            pixel_size=(
-                                self.px if self.correct_px is None else self.correct_px
-                            ),
-                        )
-                elif self.output_format.endswith("stl"):
-                    if self.predict == "Membrane":
-                        to_stl(
-                            data=self.segments,
-                            file_dir=join(self.am_output, f"{i[:-self.in_format]}.stl"),
-                        )
+            """Save as .am"""
+            self.save_instance_PC(i)
 
             """Clean-up temp dir"""
             clean_up(dir_=self.dir)
+
+        """Optional return"""
+        if self.output_format.startswith("return"):
+            if self.output_format.endswith("return"):
+                return semantic_output, instance_output, instance_filter_output
+            return semantic_output
 
 
 class Predictor:
@@ -1099,15 +1210,23 @@ class Predictor:
         sigma: Optional[float] = None,
         sigmoid=True,
         _2d=False,
+        logo=True,
     ):
+        self.logo = logo
+
         self.device = device
         self.img_size = img_size
-        if checkpoint is None and network is None:
-            TardisError(
-                "139",
-                "tardis_em/utils/predictor.py",
-                "Missing network weights or network name!",
-            )
+
+        msg = "Missing network weights or network name!"
+        if self.logo:
+            if checkpoint is None and network is None:
+                TardisError(
+                    "139",
+                    "tardis_em/utils/predictor.py",
+                    msg,
+                )
+        else:
+            assert checkpoint is not None and network is not None, msg
 
         if checkpoint is None:
             print(f"Searching for weight file for {network}_{subtype}...")
@@ -1236,83 +1355,3 @@ class Predictor:
                     out = self.model(x).cpu().detach().numpy()[0, 0, :]
 
                 return out
-
-
-class BasicPredictor:
-    """
-    BASIC MODEL PREDICTOR FOR DIST AND CNN
-
-    Args:
-        model (nn.Module): ML model build with nn.Module or nn.sequential.
-        structure (dict): Model structure as dictionary.
-        device (str): Device for prediction.
-        predicting_DataLoader (torch.DataLoader): DataLoader with prediction dataset.
-        print_setting (tuple): Model property to display in TARDIS progress bar.
-    """
-
-    def __init__(
-        self,
-        model,
-        structure: dict,
-        device: str,
-        print_setting: tuple,
-        predicting_DataLoader,
-        classification=False,
-    ):
-        super(BasicPredictor, self).__init__()
-
-        self.model = model.to(device)
-        self.device = device
-        self.structure = structure
-
-        if "cnn_type" in self.structure:
-            self.classification = classification
-            self.nn_name = self.structure["cnn_type"]
-        elif "dist_type" in self.structure:
-            self.nn_name = self.structure["dist_type"]
-
-            if "node_input" in structure:
-                self.node_input = structure["node_input"]
-
-        self.predicting_DataLoader = predicting_DataLoader
-
-        # Set-up progress bar
-        self.progress_predict = TardisLogo()
-        self.print_setting = print_setting
-
-        self.id = 0
-        self.predicting_idx = len(self.predicting_DataLoader)
-
-    def _update_progress_bar(self):
-        """
-        Update entire Tardis progress bar.
-        """
-        if self.id % 50 == 0:
-            self.progress_predict(
-                title=f"{self.nn_name} Predicting module",
-                text_1=self.print_setting[0],
-                text_2=self.print_setting[1],
-                text_3=self.print_setting[2],
-                text_4=self.print_setting[3],
-                text_8=print_progress_bar(self.id, self.predicting_idx),
-            )
-
-    def run_predictor(self):
-        """
-        Main prediction loop.
-        """
-        # Initialize progress bar.
-        self.progress_predict(
-            title=f"{self.nn_name} prediction module.",
-            text_2="Predicted image: 0",
-            text_3=print_progress_bar(0, self.predicting_idx),
-        )
-
-        self._update_progress_bar()
-
-        """Training block"""
-        self.model.eval()
-        self._predict()
-
-    def _predict(self):
-        pass

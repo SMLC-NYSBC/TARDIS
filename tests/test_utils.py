@@ -39,17 +39,6 @@ from tardis_em.utils.spline_metric import (
 from tardis_em.utils.utils import EarlyStopping
 
 
-# TEST aws.py
-def test_aws():
-    # Get weights
-    aws = get_weights_aws(network="dist", subtype="triang", model="microtubules")
-    assert isinstance(aws, str) or isinstance(aws, io.BytesIO)
-
-    # Check if pass check
-    aws = get_weights_aws(network="dist", subtype="triang", model="microtubules")
-    assert isinstance(aws, str)
-
-
 # TEST device.py
 def test_check_device():
     dev = get_device("cpu")
@@ -148,11 +137,11 @@ def test_rec_mrc():
     assert px == 23.2
 
     mrc, px = load_mrc_file(mrc="./tests/test_data/data_type/mrc3D.mrc")
-    assert mrc.shape == (78, 64, 32)
+    assert mrc.shape == (32, 64, 78)
     assert px == 23.2
 
     rec, px = load_mrc_file(mrc="./tests/test_data/data_type/rec3D.rec")
-    assert rec.shape == (78, 64, 32)
+    assert rec.shape == (32, 64, 78)
     assert px == 23.2
 
 

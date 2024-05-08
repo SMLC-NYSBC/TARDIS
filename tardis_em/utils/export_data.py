@@ -254,8 +254,8 @@ class NumpyToAmira:
     def export_amira(
         self,
         file_dir: str,
-        coords: Optional[Union[tuple, list, np.ndarray]] = np.ndarray,
-        labels: Optional[Union[tuple, list, None]] = None,
+        coords: Union[tuple, list, np.ndarray] = np.ndarray,
+        labels: Union[tuple, list, None] = None,
         scores: Optional[list] = None,
     ):
         """

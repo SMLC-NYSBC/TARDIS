@@ -13,12 +13,12 @@ from os import getcwd
 
 import click
 
-from tardis_em.utils.predictor import DataSetPredictor
+from tardis_em.utils.predictor import GeneralPredictor
 from tardis_em._version import version
 from tardis_em.utils.errors import TardisError
 from tardis_em.utils.ota_update import ota_update
 
-ota = ota_update()
+# ota = ota_update()
 warnings.simplefilter("ignore", UserWarning)
 
 
@@ -45,14 +45,6 @@ warnings.simplefilter("ignore", UserWarning)
     default=None,
     type=float,
     help="Correct pixel size values.",
-    show_default=True,
-)
-@click.option(
-    "-sm",
-    "--sampling",
-    default=None,
-    type=float,
-    help="Correct normalization pixel size values.",
     show_default=True,
 )
 @click.option(
@@ -213,7 +205,6 @@ def main(
     path: str,
     mask: bool,
     correct_px: float,
-    sampling: float,
     convolution_nn: str,
     checkpoint: str,
     output_format: str,
@@ -248,12 +239,11 @@ def main(
         if checkpoint[1] == "None":
             checkpoint[1] = None
 
-    predictor = DataSetPredictor(
+    predictor = GeneralPredictor(
         predict="Membrane2D",
         dir_=path,
         binary_mask=mask,
         correct_px=correct_px,
-        sampling=sampling,
         convolution_nn=convolution_nn,
         checkpoint=checkpoint,
         output_format=output_format,

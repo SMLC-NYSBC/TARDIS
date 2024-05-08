@@ -95,7 +95,7 @@ def get_weights_aws(network: str, subtype: str, model: Optional[str] = None):
         subtype (str): Sub-name of the network or sub-parameter for the network.
         model (str): Additional dataset name used for the DIST.
     """
-    ALL_MODELS = ["unet", "unet3plus", "fnet", "fnet_attn", "dist"]
+    ALL_MODELS = ["unet", "unet3plus", "fnet_attn", "dist"]
     ALL_SUBTYPE = ["16", "32", "64", "96", "128", "triang", "full"]
     CNN = ["unet", "unet3plus", "fnet", "fnet_attn"]
     CNN_DATASET = ["microtubules_3d", "microtubules_2d", "membrane_3d", "membrane_2d"]

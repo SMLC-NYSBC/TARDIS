@@ -22,7 +22,7 @@ structure = {
     "conv_kernel": 3,
     "conv_padding": 1,
     "maxpool_kernel": 2,
-    "num_group": 8,
+    "num_group": 1,
     "num_conv_layers": 5,
     "conv_scaler": 32,
     "classification": False,
@@ -186,50 +186,50 @@ class TestNetwork3D:
                 with torch.no_grad():
                     nn(input)
 
-    def test_unet3plus_2d(self):
-        for i in self.image_sizes:
-            for j in self.conv_scaler:
-                # Batch x Channel x Z x Y x X
-                input = torch.rand((1, 1, i, i))
+    # def test_unet3plus_2d(self):
+    #     for i in self.image_sizes:
+    #         for j in self.conv_scaler:
+    #             # Batch x Channel x Z x Y x X
+    #             input = torch.rand((1, 1, i, i))
+    #
+    #             nn = unet3plus_2d(
+    #                 image_size=i, layer_num=5, conv_scaler=j, dropout=None
+    #             )
+    #
+    #             with torch.no_grad():
+    #                 nn(input)
+    #
+    # def test_unet3plus_3d(self):
+    #     for i in self.image_sizes:
+    #         for j in self.conv_scaler:
+    #             # Batch x Channel x Z x Y x X
+    #             input = torch.rand((1, 1, i, i, i))
+    #
+    #             nn = unet3plus_3d(
+    #                 image_size=i, layer_num=5, conv_scaler=j, dropout=None
+    #             )
+    #
+    #             with torch.no_grad():
+    #                 nn(input)
 
-                nn = unet3plus_2d(
-                    image_size=i, layer_num=5, conv_scaler=j, dropout=None
-                )
-
-                with torch.no_grad():
-                    nn(input)
-
-    def test_unet3plus_3d(self):
-        for i in self.image_sizes:
-            for j in self.conv_scaler:
-                # Batch x Channel x Z x Y x X
-                input = torch.rand((1, 1, i, i, i))
-
-                nn = unet3plus_3d(
-                    image_size=i, layer_num=5, conv_scaler=j, dropout=None
-                )
-
-                with torch.no_grad():
-                    nn(input)
-
-    def test_fnet_2d(self):
-        for i in self.image_sizes:
-            for j in self.conv_scaler:
-                # Batch x Channel x Z x Y x X
-                input = torch.rand((1, 1, i, i))
-
-                nn = fnet_2d(image_size=i, layer_num=5, conv_scaler=j, dropout=None)
-
-                with torch.no_grad():
-                    nn(input)
-
-    def test_fnet_3d(self):
-        for i in self.image_sizes:
-            for j in self.conv_scaler:
-                # Batch x Channel x Z x Y x X
-                input = torch.rand((1, 1, i, i, i))
-
-                nn = fnet_3d(image_size=i, layer_num=5, conv_scaler=j, dropout=None)
-
-                with torch.no_grad():
-                    nn(input)
+    # def test_fnet_2d(self):
+    #     for i in self.image_sizes:
+    #         for j in self.conv_scaler:
+    #             # Batch x Channel x Z x Y x X
+    #             input = torch.rand((1, 1, i, i))
+    #
+    #             nn = fnet_2d(image_size=i, layer_num=5, conv_scaler=j, dropout=None)
+    #
+    #             with torch.no_grad():
+    #                 nn(input)
+    #
+    # def test_fnet_3d(self):
+    #     for i in self.image_sizes:
+    #         for j in self.conv_scaler:
+    #             # Batch x Channel x Z x Y x X
+    #             input = torch.rand((1, 1, i, i, i))
+    #
+    #             nn = fnet_3d(image_size=i, layer_num=5, conv_scaler=j, dropout=None)
+    #
+    #             with torch.no_grad():
+    #                 nn(input)

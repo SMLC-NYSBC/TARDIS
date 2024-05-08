@@ -165,8 +165,8 @@ def eval_graph_f1(
 
 
 def calculate_f1(
-    logits: Optional[Union[np.ndarray, torch.Tensor]],
-    targets: Optional[Union[np.ndarray, torch.Tensor]],
+    logits: Union[np.ndarray, torch.Tensor],
+    targets: Union[np.ndarray, torch.Tensor],
     best_f1=True,
 ):
     """
@@ -360,8 +360,8 @@ def mcov(
 
 
 def confusion_matrix(
-    logits: Optional[Union[np.ndarray, torch.Tensor]],
-    targets: Optional[Union[np.ndarray, torch.Tensor]],
+    logits: Union[np.ndarray, torch.Tensor],
+    targets: Union[np.ndarray, torch.Tensor],
 ):
     if torch.is_tensor(logits):
         confusion_vector = logits / targets

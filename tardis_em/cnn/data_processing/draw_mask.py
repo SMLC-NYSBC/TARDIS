@@ -19,7 +19,7 @@ from tardis_em.utils.errors import TardisError
 
 
 def draw_instances(
-    mask_size: list,
+    mask_size: Union[list, tuple],
     coordinate: np.ndarray,
     pixel_size: float,
     circle_size=250,
@@ -35,6 +35,7 @@ def draw_instances(
         pixel_size (float): Pixel size in Angstrom.
         circle_size (int): Size of a circle the label mask in Angstrom.
         label (bool): If True, expect label point cloud.
+        dtype (dtype):
 
     Returns:
         np.ndarray: Binary mask with drawn all coordinates as lines.

@@ -5,7 +5,7 @@
 
 ========
 
-.. image:: https://img.shields.io/badge/Release-0.2.0_release_candidate_1-success
+.. image:: https://img.shields.io/badge/Release-0.2.1-success
     :target: https://shields.io
 
 .. image:: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_pytest.yml/badge.svg
@@ -47,7 +47,7 @@ Features
 Citation
 ========
 
-`DOI: 10.1093/micmic/ozad067.485 <http://dx.doi.org/10.1093/micmic/ozad067.485>`__
+`DOI [Microscopy and Microanalysis] <http://dx.doi.org/10.1093/micmic/ozad067.485>`__
 
 Kiewisz R., Fabig G., Müller-Reichert T. Bepler T. 2023. Automated Segmentation of 3D Cytoskeletal Filaments from Electron Micrographs with TARDIS. Microscopy and Microanalysis 29(Supplement_1):970-972.
 
@@ -60,10 +60,12 @@ What's new?
 
 `Full History <https://smlc-nysbc.github.io/TARDIS/HISTORY.html>`__
 
-TARDIS-em v0.1.1 (2023-08-10):
-    * General improvement from Microtubule and Membrane prediction
+TARDIS-em v0.2.1 (2024-08):
+    * Improvement from Microtubule and Membrane prediction with updated models
+    * Added option for scripting TARDIS predictions
     * Bug fixes
     * Documentation tutorials
+    * Pypi and Conda releases
 
 Quick Start
 ===========

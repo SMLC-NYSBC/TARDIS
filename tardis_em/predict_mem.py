@@ -13,12 +13,12 @@ from os import getcwd
 
 import click
 
-from tardis_em.utils.predictor import DataSetPredictor
+from tardis_em.utils.predictor import GeneralPredictor
 from tardis_em._version import version
 from tardis_em.utils.errors import TardisError
 from tardis_em.utils.ota_update import ota_update
 
-ota = ota_update()
+# ota = ota_update()
 warnings.simplefilter("ignore", UserWarning)
 
 
@@ -48,14 +48,6 @@ warnings.simplefilter("ignore", UserWarning)
     show_default=True,
 )
 @click.option(
-    "-sm",
-    "--sampling",
-    default=None,
-    type=float,
-    help="Correct normalization pixel size values.",
-    show_default=True,
-)
-@click.option(
     "-ch",
     "--checkpoint",
     default="None|None",
@@ -66,7 +58,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-cnn",
     "--convolution_nn",
-    default="fnet",
+    default="fnet_attn",
     type=str,
     help="Select CNN used for semantic segmentation.",
     show_default=True,
@@ -187,7 +179,6 @@ def main(
     mask: bool,
     convolution_nn: str,
     correct_px: float,
-    sampling: float,
     checkpoint: str,
     output_format: str,
     patch_size: int,
@@ -219,12 +210,11 @@ def main(
         if checkpoint[1] == "None":
             checkpoint[1] = None
 
-    predictor = DataSetPredictor(
+    predictor = GeneralPredictor(
         predict="Membrane",
         dir_=path,
         binary_mask=mask,
         correct_px=correct_px,
-        sampling=sampling,
         convolution_nn=convolution_nn,
         checkpoint=checkpoint,
         output_format=output_format,

@@ -484,7 +484,7 @@ header_struct = struct.Struct(fstr)
 MRCHeader = namedtuple("MRCHeader", names)
 
 
-def mrc_read_header(mrc: Optional[Union[str, bytes]] = None):
+def mrc_read_header(mrc: Union[str, bytes, None] = None):
     """
     Helper function to read MRC header.
 

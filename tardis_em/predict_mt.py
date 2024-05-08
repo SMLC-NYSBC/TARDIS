@@ -12,12 +12,12 @@ from os import getcwd
 
 import click
 
-from tardis_em.utils.predictor import DataSetPredictor
+from tardis_em.utils.predictor import GeneralPredictor
 from tardis_em.utils.errors import TardisError
 from tardis_em._version import version
 from tardis_em.utils.ota_update import ota_update
 
-ota = ota_update()
+# ota = ota_update()
 warnings.simplefilter("ignore", UserWarning)
 
 
@@ -284,7 +284,7 @@ def main(
         if checkpoint[1] == "None":
             checkpoint[1] = None
 
-    predictor = DataSetPredictor(
+    predictor = GeneralPredictor(
         predict="Microtubule",
         dir_=path,
         binary_mask=mask,
