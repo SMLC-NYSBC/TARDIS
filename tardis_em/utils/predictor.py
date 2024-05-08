@@ -643,9 +643,6 @@ class GeneralPredictor:
                     if f.endswith(self.available_format)
                     and not f.endswith(self.omit_format)
                 ]
-                self.predict_list = [
-                    f for f in self.predict_list if self.dir.endswith(f)
-                ]
                 self.dir = getcwd()
 
         # Update Dir paths
@@ -1016,7 +1013,7 @@ class GeneralPredictor:
                 "Predicted file is numpy array without pixel size metadate."
                 "Please pass correct_px argument as a correct pixel size value."
             )
-            assert_ = self.correct_px is None and not isinstance(i, str)
+            assert_ = self.px is None and not isinstance(i, str)
             if not assert_:
                 if self.tardis_logo:
                     TardisError(id_="161", py="tardis_em.utils.predictor.py", desc=msg)
