@@ -635,7 +635,7 @@ class GeneralPredictor:
                 ]
             else:
                 if dirname(self.dir) == "":
-                    self.dir = getcwd() + split(self.dir)[-1]
+                    self.dir = self.dir
 
                 self.predict_list = [
                     f
@@ -1029,7 +1029,7 @@ class GeneralPredictor:
 
             # Load data
             self.load_data(id_name=i)
-            
+
             msg = (
                 f"Predicted file {id_} is numpy array without pixel size metadate {self.px}."
                 "Please pass correct_px argument as a correct pixel size value."
