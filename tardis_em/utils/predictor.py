@@ -10,7 +10,7 @@
 import sys
 import time
 from os import listdir, getcwd
-from os.path import isdir, isfile, join, dirname
+from os.path import isdir, isfile, join, dirname, split
 from typing import Optional, Union, List
 import platform
 
@@ -634,19 +634,19 @@ class GeneralPredictor:
                     and not f.endswith(self.omit_format)
                 ]
             else:
-                self.dir = dirname(self.dir)
-                if self.dir == "":
-                    self.dir = getcwd()
+                if dirname(self.dir) == "":
+                    self.dir = getcwd() + split(self.dir)[-1]
 
                 self.predict_list = [
                     f
-                    for f in listdir(self.dir)
+                    for f in [self.dir]
                     if f.endswith(self.available_format)
                     and not f.endswith(self.omit_format)
                 ]
                 self.predict_list = [
                     f for f in self.predict_list if self.dir.endswith(f)
                 ]
+                self.dir = getcwd()
 
         # Update Dir paths
         if output:
