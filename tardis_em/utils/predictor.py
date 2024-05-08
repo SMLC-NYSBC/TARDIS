@@ -1016,13 +1016,13 @@ class GeneralPredictor:
                 "Predicted file is numpy array without pixel size metadate."
                 "Please pass correct_px argument as a correct pixel size value."
             )
-            assert_ = self.correct_px is None and isinstance(i, np.ndarray)
-            if self.tardis_logo:
-                if not assert_:
+            assert_ = self.correct_px is None and not isinstance(i, str)
+            if not assert_:
+                if self.tardis_logo:
                     TardisError(id_="161", py="tardis_em.utils.predictor.py", desc=msg)
                     sys.exit()
-            else:
-                assert not assert_, msg
+                else:
+                    assert not assert_, msg
 
             """CNN Pre-Processing"""
             if isinstance(i, str):
