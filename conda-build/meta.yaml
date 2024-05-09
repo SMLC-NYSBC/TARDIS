@@ -2,7 +2,7 @@
 
 package:
   name: "tardis-em"
-  version: {{ data.get(version) }}
+  version: {{ data.get['version'] }}
 
 source:
     git_url: https://github.com/SMLC-NYSBC/TARDIS.git
@@ -36,10 +36,9 @@ requirements:
 build:
     noarch: python
     number: 0
-    script: "{{ PYTHON }} setup.py install --single-version-externally-managed --record=record.txt"
-
+    script: "python setup.py install --single-version-externally-managed --record=record.txt"
 
 about:
-    home: https://github.com/SMLC-NYSBC/TARDIS
-    license: MIT
-    license_file: LICENSE
+    home: {{ data['url'] }}
+    license: {{ data['license'] }}
+    summary: {{ data['description'] }}

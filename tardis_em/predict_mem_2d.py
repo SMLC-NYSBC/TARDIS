@@ -16,8 +16,9 @@ import click
 from tardis_em.utils.predictor import GeneralPredictor
 from tardis_em._version import version
 from tardis_em.utils.errors import TardisError
-from tardis_em.utils.ota_update import ota_update
+from tardis_em import format_choices
 
+# from tardis_em.utils.ota_update import ota_update
 # ota = ota_update()
 warnings.simplefilter("ignore", UserWarning)
 
@@ -67,38 +68,7 @@ warnings.simplefilter("ignore", UserWarning)
     "-out",
     "--output_format",
     default="mrc_csv",
-    type=click.Choice(
-        [
-            "None_am",
-            "am_am",
-            "mrc_am",
-            "tif_am",
-            "None_amSG",
-            "am_amSG",
-            "mrc_amSG",
-            "tif_amSG",
-            "None_mrc",
-            "am_mrc",
-            "mrc_mrc",
-            "tif_mrc",
-            "None_tif",
-            "am_tif",
-            "mrc_tif",
-            "tif_tif",
-            "None_csv",
-            "am_csv",
-            "mrc_csv",
-            "tif_csv",
-            "None_stl",
-            "am_stl",
-            "mrc_stl",
-            "tif_stl",
-            "None_stl",
-            "am_None",
-            "mrc_None",
-            "tif_None",
-        ]
-    ),
+    type=click.Choice(format_choices),
     help="Type of output files. The First optional output file is the binary mask "
     "which can be of type None [no output], am [Amira], mrc or tif. "
     "Second output is instance segmentation of objects, which can be "
@@ -167,16 +137,16 @@ warnings.simplefilter("ignore", UserWarning)
     show_default=True,
 )
 @click.option(
-    "-cs",
-    "--connect_splines",
+    "-cm",
+    "--connect_membranes",
     default=1000,
     type=int,
-    help="To address the issue where microtubules are mistakenly "
+    help="To address the issue where membrane are mistakenly "
     "identified as two different filaments, we use a filtering technique. "
-    "This involves identifying the direction each filament end points towards and then "
-    "linking any filaments that are facing the same direction and are within "
+    "This involves identifying the direction each membranes end points and then "
+    "linking any membranes that are facing the same direction and are within "
     "a certain distance from each other, measured in angstroms. This distance threshold "
-    "determines how far apart two microtubules can be, while still being considered "
+    "determines how far apart two membranes can be, while still being considered "
     "as a single unit if they are oriented in the same direction.",
     show_default=True,
 )
@@ -214,7 +184,7 @@ def main(
     dist_threshold: float,
     points_in_patch: int,
     connect_splines: int,
-    connect_cylinder: int,
+    connect_membranes: int,
     device: str,
     debug: bool,
 ):
@@ -254,7 +224,7 @@ def main(
         predict_with_rotation=rotate,
         instances=instances,
         connect_splines=connect_splines,
-        connect_cylinder=connect_cylinder,
+        connect_cylinder=connect_membranes,
         device_=str(device),
         debug=debug,
     )

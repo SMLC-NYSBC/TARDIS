@@ -687,7 +687,7 @@ class GeneralPredictor:
             "text_2": f"Device: {self.device}",
             "text_3": f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
         }
-        
+
         no_segments = np.max(self.segments[:, 0]) if len(self.segments) > 0 else 0
         # Define text configurations for each log_id
         text_configurations = {

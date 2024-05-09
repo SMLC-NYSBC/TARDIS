@@ -30,7 +30,7 @@ _______________
 Preparation
 ___________
 Simply store all your tomograms in one folder. TARDIS will recognize all
-image file with the extension [.tif, .tiff, .rec, .map, .mrc, .am].
+image file with the extension [.tif, .tiff, .rec, .map, .mrc, .am, .npy].
 
 `Tip:` In the case of REC/MAP/MRC files try to make sure that files have embedded
 in the header pixel size information.
@@ -38,7 +38,7 @@ in the header pixel size information.
 Prediction
 __________
 
-(Optional) Type the following to check if TARDIS is up-to-date and is working properly.
+(Optional) Type the following to check if TARDIS is working properly.
 
 `Tips:` If any error occurs, try using our `troubleshooting chapter <troubleshooting.html>`__.
 
@@ -46,7 +46,7 @@ __________
 
     tardis
 
-This will display the TARDIS interface and show available options or available updates.
+This will display the TARDIS interface and show available options.
 
 .. image:: ../resources/main_tardis.jpg
   :width: 512
@@ -64,6 +64,8 @@ the folder with your data.
 
 Running this will segment all tomograms in the indicated path. Predicted output
 will be store in file format indicated in :bash:`-out <output_type>` [:ref:`see all -out options <out>`].
+
+You can also segment individual file by replacing :bash:`-dir` with file not a folder location.
 
 For example:
 
@@ -128,10 +130,10 @@ with the explanation for their functionality:
       csv coordinate file [ID, X, Y, Z], stl [mesh grid], or None [no instance prediction].
 
     - :guilabel:`default:` mrc_csv
-    - :guilabel:`Allowed options:` am_None, mrc_None, tif_None, None_am, am_am, mrc_am, tif_am,
-      None_amSG, am_amSG, mrc_amSG, tif_amSG, None_mrc, am_mrc, mrc_mrc, tif_mrc,
-      None_tif, am_tif, mrc_tif, tif_tif, None_csv, am_csv, mrc_csv, tif_csv,
-      None_stl, am_stl, mrc_stl, tif_stl
+    - :guilabel:`Allowed options:` am_None, mrc_None, tif_None, npy_None, None_am, am_am, mrc_am, tif_am, npy_am,
+      None_amSG, am_amSG, mrc_amSG, tif_amSG, npy_amSG, None_mrc, am_mrc, mrc_mrc, tif_mrc, npy_csv,
+      None_tif, am_tif, mrc_tif, tif_tif, npy_tif, None_csv, am_csv, mrc_csv, tif_csv, npy_csv,
+      None_stl, am_stl, mrc_stl, tif_stl, npy_stl, None_npy, am_npy, mrc_npy, tif_npy, npy_npy
 
 :bash:`-ps` or :bash:`--patch_size`: Window size used for prediction.
     - :guilabel:`Example:` This will break tomograms into smaller patches with 25% overlap.

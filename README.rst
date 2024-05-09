@@ -20,6 +20,7 @@
 .. image:: https://img.shields.io/badge/Join%20Our%20Community-Slack-blue
         :target: https://join.slack.com/t/tardis-em/shared_invite/zt-27jznfn9j-OplbV70KdKjkHsz5FcQQGg
 
+
 Python-based software for generalized object instance segmentation from (cryo-)electron microscopy
 micrographs/tomograms. The software package is built on a general workflow where predicted semantic segmentation
 is used for instance segmentation of 2D/3D images.
@@ -32,7 +33,7 @@ Features
 - Robust and high-throughput semantic/instance segmentation of all microtubules:
     - Supported file formats: [.tif, .mrc, .rec, .am]
     - Supported modality: [ET, Cryo-ET]
-    - Supported Å resolution: [all]
+    - Supported Å resolution: [any best results in 1-40 Å range]
     - 2D micrograph modality microtubule segmentation will come soon!
 
 - Robust and high-throughput semantic/instance segmentation of membranes:
@@ -63,6 +64,7 @@ What's new?
 TARDIS-em v0.2.1 (2024-08):
     * Improvement from Microtubule and Membrane prediction with updated models
     * Added option for scripting TARDIS predictions
+    * TARDIS build in results visualization
     * Bug fixes
     * Documentation tutorials
     * Pypi and Conda releases
@@ -82,11 +84,16 @@ TBD
 
 3D prediction
 ^^^^^^^^^^^^^
+Full tutorial: Full tutorial: `3D Microtubules Prediction <https://smlc-nysbc.github.io/TARDIS/usage/3d_mt.html>`__
+
 
 Example:
 """"""""
 
 .. image:: resources/3d_mt.jpg
+
+Data source: Dr. Gunar Fabig and Prof. Dr. Thomas Müller-Reichert, TU Dresden
+
 
 Usage:
 """"""
@@ -95,7 +102,7 @@ Usage:
 
     recommended usage: tardis_mt [-dir path/to/folder/with/input/tomogram]
     advance usage: tardis_mt [-dir str] [-out str] [-ps int] [-ct float] [-dt float]
-                             [-pv int] [-ap str] ...
+                             [-pv int] [-px float] ...
 
 
 Membrane Prediction

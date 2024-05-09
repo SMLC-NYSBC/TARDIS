@@ -31,15 +31,16 @@ Preparation
 ___________
 
 Simply store all your micrographs in one folder. TARDIS will recognize all
-image file with the extension [.tif, .tiff, .rec, .map, .mrc, .am].
+image file with the extension [.tif, .tiff, .rec, .map, .mrc, .am, .npy].
 
 `Tip:` In the case of REC/MAP/MRC files try to make sure that files have embedded
-in the header pixel size information.
+in the header pixel size information. You can check it with Imod :bash:`header`
+in your bash terminal.
 
 Prediction
 __________
 
-(Optional) Type the following to check if TARDIS is up-to-date and is working properly.
+(Optional) Type the following to check if TARDIS is working properly.
 
 `Tips:` If any error occurs, try using our `troubleshooting chapter <troubleshooting.html>`__.
 
@@ -47,7 +48,7 @@ __________
 
     tardis
 
-This will display the TARDIS interface and show available options or available updates.
+This will display the TARDIS interface and show available options.
 
 .. image:: ../resources/main_tardis.jpg
   :width: 512
@@ -65,6 +66,8 @@ the folder with your data.
 
 Running this will segment all micrographs in the indicated path. Predicted output
 will be store in file format indicated in :bash:`-out <output_type>` [:ref:`see all -out options <out>`].
+
+You can also segment individual file by replacing :bash:`-dir` with file not a folder location.
 
 For example:
 
@@ -128,10 +131,10 @@ with the explanation for their functionality:
       csv coordinate file [ID, X, Y], stl [mesh grid], or None [no instance prediction].
 
     - :guilabel:`default:` mrc_csv
-    - :guilabel:`Allowed options:` am_None, mrc_None, tif_None, None_am, am_am, mrc_am, tif_am,
-      None_amSG, am_amSG, mrc_amSG, tif_amSG, None_mrc, am_mrc, mrc_mrc, tif_mrc,
-      None_tif, am_tif, mrc_tif, tif_tif, None_csv, am_csv, mrc_csv, tif_csv,
-      None_stl, am_stl, mrc_stl, tif_stl
+    - :guilabel:`Allowed options:` am_None, mrc_None, tif_None, npy_None, None_am, am_am, mrc_am, tif_am, npy_am,
+      None_amSG, am_amSG, mrc_amSG, tif_amSG, npy_amSG, None_mrc, am_mrc, mrc_mrc, tif_mrc, npy_csv,
+      None_tif, am_tif, mrc_tif, tif_tif, npy_tif, None_csv, am_csv, mrc_csv, tif_csv, npy_csv,
+      None_stl, am_stl, mrc_stl, tif_stl, npy_stl, None_npy, am_npy, mrc_npy, tif_npy, npy_npy,
 
 :bash:`-ps` or :bash:`--patch_size`: Window size used for prediction.
     - :guilabel:`Example:` This will break the micrograph into smaller patches with 25% overlap.
@@ -173,6 +176,27 @@ with the explanation for their functionality:
 
     - :guilabel:`default:` 1000
     - :guilabel:`Allowed options:` Int value between 250 and 5000.
+
+:bash:`-cc` or :bash:`--connect_cylinder`: Cylinder radius used to filter unconnected components.
+    - :guilabel:`Example:` To minimize false positives when linking membranes,
+    we limit the search area to a cylindrical radius specified in angstroms. For each spline,
+    we find the direction the filament end is pointing in and look for another
+    filament that is oriented in the same direction. The ends of these filaments
+    must be located within this cylinder to be considered connected.
+
+    - :guilabel:`default:` 40
+    - :guilabel:`Allowed options:` Float value between 0 - inf
+
+:bash:`-cm` or :bash:`--connect_membranes`: Cylinder radius used to filter unconnected components.
+    - :guilabel:`Example:` To address the issue where membrane are mistakenly
+    identified as two different filaments, we use a filtering technique. This involves
+    identifying the direction each membranes end points and then linking any membranes
+    that are facing the same direction and are within a certain distance from each other,
+    measured in angstroms. This distance threshold determines how far apart two membranes can be,
+    while still being considered as a single unit if they are oriented in the same direction.
+
+    - :guilabel:`default:` 1000
+    - :guilabel:`Allowed options:` Float value between 0 - inf
 
 :bash:`-dv` or :bash:`--device`: Define which device to use for inference.
     - :guilabel:`Example:` You can use :bash:`-dv gpu` to use the first available gpu on your system.

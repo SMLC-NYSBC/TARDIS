@@ -37,7 +37,7 @@ from tardis_em.utils.ota_update import ota_update
     show_default=True,
 )
 @click.option(
-    "-o",
+    "-out",
     "--output",
     default=join(getcwd(), "output"),
     type=str,

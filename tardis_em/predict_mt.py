@@ -15,8 +15,9 @@ import click
 from tardis_em.utils.predictor import GeneralPredictor
 from tardis_em.utils.errors import TardisError
 from tardis_em._version import version
-from tardis_em.utils.ota_update import ota_update
+from tardis_em import format_choices
 
+# from tardis_em.utils.ota_update import ota_update
 # ota = ota_update()
 warnings.simplefilter("ignore", UserWarning)
 
@@ -66,38 +67,7 @@ warnings.simplefilter("ignore", UserWarning)
     "-out",
     "--output_format",
     default="None_amSG",
-    type=click.Choice(
-        [
-            "None_am",
-            "am_am",
-            "mrc_am",
-            "tif_am",
-            "None_amSG",
-            "am_amSG",
-            "mrc_amSG",
-            "tif_amSG",
-            "None_mrc",
-            "am_mrc",
-            "mrc_mrc",
-            "tif_mrc",
-            "None_tif",
-            "am_tif",
-            "mrc_tif",
-            "tif_tif",
-            "None_csv",
-            "am_csv",
-            "mrc_csv",
-            "tif_csv",
-            "None_stl",
-            "am_stl",
-            "mrc_stl",
-            "tif_stl",
-            "None_stl",
-            "am_None",
-            "mrc_None",
-            "tif_None",
-        ]
-    ),
+    type=click.Choice(format_choices),
     help="Type of output files. The First optional output file is the binary mask "
     "which can be of type None [no output], am [Amira], mrc or tif. "
     "Second output is instance segmentation of objects, which can be "

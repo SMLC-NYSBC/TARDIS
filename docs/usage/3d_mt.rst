@@ -31,7 +31,7 @@ _______________
 Preparation
 ___________
 Simply store all your tomograms in one folder. TARDIS will recognize all
-image file with the extension [.tif, .tiff, .rec, .map, .mrc, .am].
+image file with the extension [.tif, .tiff, .rec, .map, .mrc, .am, .npy].
 
 `Tip:` In the case of REC/MAP/MRC files try to make sure that files have embedded
 in the header pixel size information.
@@ -55,7 +55,7 @@ And will use that file to compare both outputs.
 Prediction
 __________
 
-(Optional) Type the following to check if TARDIS is up-to-date and is working properly.
+(Optional) Type the following to check if TARDIS is working properly.
 
 `Tips:` If any error occurs, try using our `troubleshooting chapter <troubleshooting.html>`__.
 
@@ -63,7 +63,7 @@ __________
 
     tardis
 
-This will display the TARDIS interface and show available options or available updates.
+This will display the TARDIS interface and show available options.
 
 .. image:: ../resources/main_tardis.jpg
   :width: 512
@@ -81,6 +81,8 @@ the folder with your data.
 
 Running this will segment all tomograms in the indicated path. Predicted output
 will be store in file format indicated in :bash:`-out <output_type>` [:ref:`see all -out options <out>`].
+
+You can also segment individual file by replacing :bash:`-dir` with file not a folder location.
 
 For example:
 

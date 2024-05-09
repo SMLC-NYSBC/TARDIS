@@ -1,4 +1,9 @@
 name: conda-publish-env
+python:
+  - 3.8
+  - 3.9
+  - 3.10
+  - 3.11
 dependencies:
   - python>=3.8
   - pytorch>=1.12.0

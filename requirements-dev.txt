@@ -7,6 +7,7 @@ black>23.0.0
 
 # Build package
 setuptools>67.2.0
+twine>=5.0.0
 
 # Plots
 matplotlib>3.5.2
