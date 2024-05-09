@@ -18,8 +18,6 @@ from skimage.morphology import skeletonize, skeletonize_3d
 
 from tardis_em.dist_pytorch.utils.utils import VoxelDownSampling
 from tardis_em.utils.errors import TardisError
-from tardis_em.dist_pytorch.utils.utils import pc_median_dist
-from copy import deepcopy
 
 
 class BuildPointCloud:
@@ -129,67 +127,31 @@ class BuildPointCloud:
 
             return e, e
 
-        if EDT:
-            import edt
+        """Skeletonization"""
+        if image.ndim == 2:
+            image_point = skeletonize(image)
+        elif as_2d:
+            image_point = np.zeros(image.shape, dtype=np.uint8)
 
-            """Calculate EDT and apply threshold based on predefine mask size"""
-            if image.ndim == 2:
-                image_edt = edt.edt(image)
-                image_edt = np.where(image_edt > mask_size, 1, 0)
-            else:
-                image_edt = np.zeros(image.shape, dtype=np.uint8)
-
-                if as_2d:
-                    for i in range(image_edt.shape[0]):
-                        df_edt = edt.edt(image[i, :])
-
-                        image_edt[i, :] = np.where(df_edt > mask_size, 1, 0)
-                else:
-                    image_edt = edt.edt(image)
-                    image_edt = np.where(image_edt > mask_size, 1, 0)
-
-            image_edt = image_edt.astype(np.uint8)
-
-            """Skeletonization"""
-            if image.ndim == 2:
-                image_point = skeletonize(image_edt)
-            elif as_2d:
-                image_point = np.zeros(image_edt.shape, dtype=np.uint8)
-
-                for i in range(image_point.shape[0]):
-                    image_point[i, :] = np.where(skeletonize(image_edt[i, :]), 1, 0)
-            else:
-                image_point = skeletonize_3d(image_edt)
-            image_point = np.where(image_point > 0)
-
-            """CleanUp to avoid memory loss"""
-            del image, image_edt
+            for i in range(image_point.shape[0]):
+                image_point[i, :] = np.where(skeletonize(image[i, :]), 1, 0)
         else:
-            """Skeletonization"""
-            if image.ndim == 2:
-                image_point = skeletonize(image)
-            elif as_2d:
-                image_point = np.zeros(image.shape, dtype=np.uint8)
+            image_point = skeletonize_3d(image)
+        image_point = np.where(image_point > 0)
 
-                for i in range(image_point.shape[0]):
-                    image_point[i, :] = np.where(skeletonize(image[i, :]), 1, 0)
-            else:
-                image_point = skeletonize_3d(image)
-            image_point = np.where(image_point > 0)
+        """CleanUp to avoid memory loss"""
+        del image
 
-            """CleanUp to avoid memory loss"""
-            del image
-
-        """Output point cloud [X x Y x Z]"""
-        if len(image_point) == 2:
-            """If 2D bring artificially Z dim == 0"""
-            coordinates_HD = np.stack(
-                (image_point[1], image_point[0], np.zeros(image_point[0].shape))
-            ).T
-        else:
-            coordinates_HD = np.stack(
-                (image_point[2], image_point[1], image_point[0])
-            ).T
+    """Output point cloud [X x Y x Z]"""
+    if len(image_point) == 2:
+        """If 2D bring artificially Z dim == 0"""
+        coordinates_HD = np.stack(
+            (image_point[1], image_point[0], np.zeros(image_point[0].shape))
+        ).T
+    else:
+        coordinates_HD = np.stack(
+            (image_point[2], image_point[1], image_point[0])
+        ).T
 
         """CleanUp to avoid memory loss"""
         del image_point

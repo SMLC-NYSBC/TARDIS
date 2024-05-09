@@ -20,7 +20,6 @@ requirements:
         - scikit-learn>1.0.1
         - scikit-image>0.19.2
         - scipy>=1.8.1
-        - edt>=2.3.0
         - pillow>10.0.0
         - open3d>=0.9.0
         - requests>2.28.0
