@@ -4,7 +4,7 @@ package:
 
 source:
     git_url: https://github.com/SMLC-NYSBC/TARDIS.git
-    git_tag: v0.2.1
+    git_tag: v0.2.2
 
 requirements:
     build:
