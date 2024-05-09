@@ -1,6 +1,7 @@
 name: publish_conda
 
 on:
+  workflow_dispatch:
   release:
     types: [published]
     
@@ -16,4 +17,3 @@ jobs:
         AnacondaToken: ${{ secrets.ANACONDA_TOKEN }}
         platforms: 'all'
         override: true
-        dry_run: true
