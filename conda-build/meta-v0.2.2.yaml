@@ -35,7 +35,6 @@ build:
     number: 0
     script: "{{ PYTHON }} setup.py install --single-version-externally-managed --record=record.txt"
 
-
 about:
     home: https://github.com/SMLC-NYSBC/TARDIS
     license: MIT

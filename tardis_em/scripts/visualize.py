@@ -11,7 +11,7 @@
 import click
 import numpy as np
 from tardis_em.utils.visualize_pc import VisualizeFilaments, VisualizePointCloud
-from tardis_em.utils.load_data import ImportDataFromAmira
+from tardis_em.utils.load_data import ImportDataFromAmira, load_mrc_file
 from tardis_em._version import version
 
 
@@ -63,6 +63,24 @@ def main(dir_: str, _2d: bool, type_: str, animate: bool, with_node: bool):
         pc = ImportDataFromAmira(dir_).get_segmented_points()
     elif dir_.endswith(".npy"):
         pc = np.load(dir_)
+    elif dir_.endswith(".mrc"):
+        pc, _ = load_mrc_file(dir_)
+        if pc.min() == 0 and pc.max() == 1:
+            pc = np.array(np.where(pc > 0)).T
+        else:
+            idx_ = np.unique(pc)
+
+            px_df = []
+            for i in idx_:
+                if i == 0:
+                    continue
+
+                i_ = np.array(np.where(pc == i)).T
+                px_df.append(
+                    np.hstack((np.repeat(i, len(i_))[:, None], i_))
+                )
+
+            pc = np.vstack(px_df)
 
     if type_ == "p":
         if pc.shape[1] == 4 or pc.shape[1] == 3 and _2d:

@@ -4,16 +4,34 @@ on:
   workflow_dispatch:
   release:
     types: [published]
-    
+
 jobs:
-  publish:
+  conda_deployment_with_new_tag:
+    name: Conda deployment of package with Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
     steps:
-    - uses: actions/checkout@v1
-    - name: publish-to-conda
-      uses: MichaelsJP/conda-package-publish-action@v1.0.0
-      with:
-        subDir: 'conda-build'
-        AnacondaToken: ${{ secrets.ANACONDA_TOKEN }}
-        platforms: 'all'
-        override: true
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Conda environment creation and activation
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          environment-file: conda-build/conda_build_config.yml
+          auto-update-conda: false
+          auto-activate-base: false
+          show-channel-urls: true
+      - name: Build and upload the conda packages
+        uses: uibcdf/action-build-and-upload-conda-packages@v1.3.0
+        with:
+          meta_yaml_dir: conda-build
+          python-version: ${{ matrix.python-version }}
+          platform_linux-64: true
+          platform_osx-64: true
+          platform_win-64: true
+          user: RRobert92
+          label: auto
+          token: ${{ secrets.ANACONDA_TOKEN }} # Replace with the right name of your secret

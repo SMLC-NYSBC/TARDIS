@@ -15,3 +15,6 @@ Tutorials
 
 `4. Visualize Instance segmentation results <usage/visualization.html>`__
 -------------------------------------------------------------------------
+
+`4. Helper functions <usage/helper.html>`__
+-------------------------------------------------------------------------
