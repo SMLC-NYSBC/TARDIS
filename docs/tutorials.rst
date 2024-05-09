@@ -12,3 +12,6 @@ Tutorials
 
 `4. 2D Membrane Prediction <usage/2d_membrane.html>`__
 ------------------------------------------------------
+
+`4. Visualize Instance segmentation results <usage/visualization.html>`__
+-------------------------------------------------------------------------

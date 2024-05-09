@@ -68,6 +68,13 @@ The following command will install TARDIS and all its dependencies
 
     pip install tardis-em
 
+or
+
+.. code-block:: bash
+
+    conda install tardis-em
+
+
 (Optional) Install from GitHub master branch:
 
 .. code-block:: bash
