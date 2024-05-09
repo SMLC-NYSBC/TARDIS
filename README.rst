@@ -68,6 +68,10 @@ TARDIS-em v0.2.1 (2024-08):
     * Bug fixes
     * Documentation tutorials
     * Pypi and Conda releases
+    * Re-trained DIST model using simulated datasets
+    * Build 2 model for:
+        * filaments and general 2D structures
+        * 3D objects like membranes mitochondria LiDAR data etc.
 
 Quick Start
 ===========

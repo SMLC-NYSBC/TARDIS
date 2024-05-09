@@ -1,9 +1,33 @@
 # History
 
 <details open>
-    <summary><b>0.1.5 (2023-12-NA)</b></summary>
+    <summary><b>0.2.1 (2024-05-09)</b></summary>
 
-*This intends to be a release submitted with Nature Method 2023*
+*This intends to be a release submitted with Nature Method 2024*
+
+* **General changes:**
+    * *General*:
+        * Improve prediction for microtubules and membranes (reduce false positive)
+        * Update Membrane and Microtubule modules predictions
+        * Update usage tutorials
+        * Added pypi and conda installations
+        * Enabled scripting with tardis-em
+    
+* **SpindleTorch module changes:**
+  * *General*: 
+    * Update Fnet_attn model
+
+* **DIST module changes:**
+    * *Optimize*:
+      * Re-trained DIST model using simulated datasets
+      * Build 2 model for:
+        * filaments and general 2D structures
+        * 3D objects like membranes mitochondria LiDAR data etc.
+
+</details>
+
+<details>
+    <summary><b>0.1.5 (2023-12-NA)</b></summary>
 
 * **General changes:**
     * *General*:
