@@ -11,14 +11,15 @@
 import click
 import numpy as np
 from tardis_em.utils.visualize_pc import VisualizeFilaments, VisualizePointCloud
-from tardis_em.utils.load_data import ImportDataFromAmira, load_mrc_file
+from tardis_em.utils.load_data import ImportDataFromAmira, load_mrc_file, import_am
+import tifffile.tifffile as tif
 from tardis_em._version import version
 
 
 @click.command()
 @click.option(
     "-dir",
-    "--dir_",
+    "--path",
     type=str,
     help="File directory to visualize.",
     show_default=True,
@@ -56,44 +57,63 @@ from tardis_em._version import version
     show_default=True,
 )
 @click.version_option(version=version)
-def main(dir_: str, _2d: bool, type_: str, animate: bool, with_node: bool):
-    if dir_.endswith(".csv"):
-        pc = np.genfromtxt(dir_, delimiter=",", skip_header=1, dtype=np.float32)
-    elif dir_.endswith("am"):
-        pc = ImportDataFromAmira(dir_).get_segmented_points()
-    elif dir_.endswith(".npy"):
-        pc = np.load(dir_)
-    elif dir_.endswith(".mrc"):
-        pc, _ = load_mrc_file(dir_)
-        if pc.min() == 0 and pc.max() == 1:
-            pc = np.array(np.where(pc > 0)).T
-        else:
-            idx_ = np.unique(pc)
+def main(path: str, _2d: bool, type_: str, animate: bool, with_node: bool):
+    pc = None
 
-            px_df = []
-            for i in idx_:
-                if i == 0:
-                    continue
-
-                i_ = np.array(np.where(pc == i)).T
-                px_df.append(
-                    np.hstack((np.repeat(i, len(i_))[:, None], i_))
-                )
-
-            pc = np.vstack(px_df)
-
-    if type_ == "p":
-        if pc.shape[1] == 4 or pc.shape[1] == 3 and _2d:
-            VisualizePointCloud(pc, segmented=True, animate=animate)
-        elif pc.shape[1] == 6:
-            VisualizePointCloud(
-                pc[:, :3], segmented=False, rgb=pc[:, 3:], animate=animate
-            )
-        else:
-            VisualizePointCloud(pc, segmented=False, animate=animate)
+    if path.endswith(".csv"):
+        pc = np.genfromtxt(path, delimiter=",", skip_header=1, dtype=np.float32)
+    elif path.endswith("am"):
+        try:
+            pc = ImportDataFromAmira(path).get_segmented_points()
+        except:
+            pc, _, _, _ = import_am(path)
+            pc = build_pc_from_img(pc)
+    elif path.endswith(".npy"):
+        pc = np.load(path)
     else:
-        assert pc.shape[1] == 4, "Filament visualization require segmented point cloud"
-        VisualizeFilaments(pc, animate=animate, with_node=with_node)
+        if path.endswith((".mrc", ".rec")):
+            pc, _ = load_mrc_file(path)
+        elif path.endswith((".tif", ".tiff")):
+            pc = tif.imread(path)
+
+        pc = build_pc_from_img(pc)
+
+    if pc is not None:
+        if type_ == "p":
+            if pc.shape[1] == 4 or pc.shape[1] == 3 and _2d:
+                VisualizePointCloud(pc, segmented=True, animate=animate)
+            elif pc.shape[1] == 6:
+                VisualizePointCloud(
+                    pc[:, :3], segmented=False, rgb=pc[:, 3:], animate=animate
+                )
+            else:
+                VisualizePointCloud(pc, segmented=False, animate=animate)
+        else:
+            assert pc.shape[1] == 4, "Filament visualization require segmented point cloud"
+            VisualizeFilaments(pc, animate=animate, with_node=with_node)
+
+
+def build_pc_from_img(img: np.ndarray):
+    pc = None
+
+    if img.min() == 0 and img.max() == 1:
+        pc = np.array(np.where(img > 0)).T
+    else:
+        idx_ = np.unique(img)
+
+        px_df = []
+        for i in idx_:
+            if i == 0:
+                continue
+
+            i_ = np.array(np.where(img == i)).T
+            px_df.append(
+                np.hstack((np.repeat(i, len(i_))[:, None], i_))
+            )
+
+        pc = np.vstack(px_df)
+
+    return pc
 
 
 if __name__ == "__main__":

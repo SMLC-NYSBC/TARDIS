@@ -114,3 +114,6 @@ ENV/
 docs/resources/Tardis_logo_1.svg
 docs/resources/Tardis_logo_1.png
 docs/resources/Tardis_logo_2.svg
+.github/workflows/build.sh
+.github/workflows/bld.bat
+/conda-build/builds

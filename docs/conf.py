@@ -3,7 +3,7 @@ import sys
 from tardis_em import version
 
 project = "TARDIS-em"
-copyright = "2021, Robert Kiewisz, Tristan Bepler"
+copyright = "2021-2024, Robert Kiewisz, Tristan Bepler"
 author = "Robert Kiewisz, Tristan Bepler"
 release = version
 source_suffix = [".rst", ".md"]

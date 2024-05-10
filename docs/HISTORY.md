@@ -1,6 +1,19 @@
 # History
-
 <details open>
+    <summary><b>0.2.3 (2024-05-10)</b></summary>
+
+*This intends to be a release submitted with Nature Method 2024*
+
+* **General changes:**
+    * *General*:
+        * Few fixes from v0.2.2
+        * Added visualization for semantic masks
+        * Documentation
+        * Fix conda upload
+
+</details>
+
+<details>
     <summary><b>0.2.1 (2024-05-09)</b></summary>
 
 *This intends to be a release submitted with Nature Method 2024*

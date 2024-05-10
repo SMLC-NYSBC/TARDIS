@@ -142,28 +142,27 @@ class BuildPointCloud:
         """CleanUp to avoid memory loss"""
         del image
 
-    """Output point cloud [X x Y x Z]"""
-    if len(image_point) == 2:
-        """If 2D bring artificially Z dim == 0"""
-        coordinates_HD = np.stack(
-            (image_point[1], image_point[0], np.zeros(image_point[0].shape))
-        ).T
-    else:
-        coordinates_HD = np.stack(
-            (image_point[2], image_point[1], image_point[0])
-        ).T
+        """Output point cloud [X x Y x Z]"""
+        if len(image_point) < 2:
+            """If 2D bring artificially Z dim == 0"""
+            coordinates_HD = np.stack(
+                (image_point[1], image_point[0], np.zeros(image_point[0].shape))
+            ).T
+        else:
+            coordinates_HD = np.stack(
+                (image_point[2], image_point[1], image_point[0])
+            ).T
 
-        """CleanUp to avoid memory loss"""
-        del image_point
-        gc.collect()
+            """CleanUp to avoid memory loss"""
+            del image_point
+            gc.collect()
 
-        """ Down-sampling point cloud by removing closest point """
-        if down_sampling is not None:
-            down_sampling = VoxelDownSampling(
-                voxel=down_sampling, labels=False, KNN=True
-            )
-
-            return coordinates_HD, down_sampling(coord=coordinates_HD)
+            """ Down-sampling point cloud by removing closest point """
+            if down_sampling is not None:
+                down_sampling = VoxelDownSampling(
+                    voxel=down_sampling, labels=False, KNN=True
+                )
+                return coordinates_HD, down_sampling(coord=coordinates_HD)
         return coordinates_HD
 
 
