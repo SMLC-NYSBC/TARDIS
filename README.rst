@@ -5,7 +5,7 @@
 
 ========
 
-.. image:: https://img.shields.io/badge/Release-0.2.3-success
+.. image:: https://img.shields.io/badge/Release-0.2.4-success
     :target: https://shields.io
 
 .. image:: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_pytest.yml/badge.svg
@@ -61,7 +61,7 @@ What's new?
 
 `Full History <https://smlc-nysbc.github.io/TARDIS/HISTORY.html>`__
 
-TARDIS-em v0.2.3 (2024-08):
+TARDIS-em v0.2.4 (2024-08):
     * Improvement from Microtubule and Membrane prediction with updated models
     * Added option for scripting TARDIS predictions
     * Added visualization for semantic and instance predictions
