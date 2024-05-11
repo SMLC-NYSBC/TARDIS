@@ -15,6 +15,11 @@ Install TARDIS using the newest released package on `Github <https://github.com/
 
     pip install package_name-py3-none-any.whl
 
+or
+
+.. coda-block:: bash
+
+    conda install tardis-em -c rrobert92
 
 And jump to `Validate`_.
 

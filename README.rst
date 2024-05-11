@@ -79,6 +79,24 @@ Quick Start
 
 For more examples and advanced usage please find more details in our `Documentation <https://smlc-nysbc.github.io/TARDIS/>`__
 
+1) Install TARDIS-em:
+
+.. code-block:: bash
+
+    pip install tardis-em
+
+or
+
+.. code-block:: bash
+
+    conda install tardis-em -c rrobert92
+
+2) Verifies installation:
+
+.. code-block:: bash
+
+    tardis
+
 Microtubule Prediction
 ----------------------
 
