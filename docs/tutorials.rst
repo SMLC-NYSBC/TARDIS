@@ -13,8 +13,11 @@ Tutorials
 `4. 2D Membrane Prediction <usage/2d_membrane.html>`__
 ------------------------------------------------------
 
-`4. Visualize Instance segmentation results <usage/visualization.html>`__
+`6. Scripting in python <usage/scripting.html>`__
 -------------------------------------------------------------------------
 
-`4. Helper functions <usage/helper.html>`__
+`6. Visualize Instance segmentation results <usage/visualization.html>`__
+-------------------------------------------------------------------------
+
+`7. Helper functions <usage/helper.html>`__
 -------------------------------------------------------------------------

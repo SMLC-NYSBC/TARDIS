@@ -110,7 +110,7 @@ ENV/
 # IDE settings
 .vscode/
 .DS_Store
-*.ipynb
+tests/jupyter/
 docs/resources/Tardis_logo_1.svg
 docs/resources/Tardis_logo_1.png
 docs/resources/Tardis_logo_2.svg

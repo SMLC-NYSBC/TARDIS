@@ -34,6 +34,8 @@ def scale_image(
         image (np.ndarray, Optional): image data
         mask (np.ndarray, Optional): Optional binary mask image data
         scale (tuple): scale value for image
+        nn (bool):
+        device (str):
     """
     dim = 1
     type_i = image.dtype
