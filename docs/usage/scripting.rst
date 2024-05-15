@@ -11,7 +11,7 @@ TARDIS-em library can be use to simply and fast script your own workflows.
 More examples can be find in: tardis_em/examples/TARDIS_em_Script.ipynb
 
 Example
--------
+_______
 
 .. code-block::
 
