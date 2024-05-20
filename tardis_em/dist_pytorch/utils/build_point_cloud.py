@@ -102,8 +102,6 @@ class BuildPointCloud:
     def build_point_cloud(
         self,
         image: Union[str, np.ndarray],
-        EDT=False,
-        mask_size=1.5,
         down_sampling: Union[float, None] = None,
         as_2d=False,
     ) -> Union[Tuple[ndarray, ndarray], np.ndarray]:
@@ -112,8 +110,6 @@ class BuildPointCloud:
 
         Args:
             image (np.ndarray): Predicted semantic mask.
-            EDT (bool): If True, compute EDT to extract line centers.
-            mask_size (float): Mask size to filter with EDT.
             down_sampling (float, None): If not None, down-sample point cloud with open3d.
             as_2d: Treat data as 2D not 3D.
 

@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 import tifffile.tifffile as tif
 import torch
+from tardis_em.dist_pytorch.utils.utils import VoxelDownSampling
 
 from tardis_em.dist_pytorch.datasets.patches import PatchDataSet
 from tardis_em.dist_pytorch.dist import build_dist_network
@@ -46,7 +47,7 @@ from tardis_em.utils.spline_metric import (
     SpatialGraphCompare,
     sort_by_length,
     ComputeConfidenceScore,
-    length_list,
+    length_list, resample_filament,
 )
 from tardis_em._version import version
 
@@ -387,10 +388,33 @@ class GeneralPredictor:
         if isinstance(id_name, str):
             # Load image file
             if id_name.endswith(".am"):
-                self.image, self.px, _, self.transformation = import_am(
-                    am_file=join(self.dir, id_name)
-                )
+                try:
+                    self.amira_image = True
+                    self.image, self.px, _, self.transformation = import_am(
+                        am_file=join(self.dir, id_name)
+                    )
+                except IndexError:
+                    self.amira_image = False
+                    self.pc_hd = ImportDataFromAmira(join(self.dir, id_name)).get_segmented_points()
+
+                    self.image = None
+                    self.px = self.correct_px
+                    self.transformation = [0, 0, 0]
+
+                    assert_ = self.pc_hd.shape[1] == 4
+                    msg = f'Amira Spatial Graph has wrong dimension. Given {self.pc_hd.shape[1]}, but expected 4.'
+                    if self.tardis_logo:
+                        if not assert_:
+                            TardisError(
+                                id_="11",
+                                py="tardis_em/utils/predictor.py",
+                                desc=msg,
+                            )
+                            sys.exit()
+                    else:
+                        assert assert_, msg
             else:
+                self.amira_image = True
                 self.image, self.px = load_image(join(self.dir, id_name))
                 self.transformation = [0, 0, 0]
         else:
@@ -425,35 +449,37 @@ class GeneralPredictor:
             else:
                 assert assert_, msg
         else:
-            # Check image structure
-            self.image = np.where(self.image > 0, 1, 0).astype(np.int8)
+            if self.amira_image:
+                # Check image structure
+                self.image = np.where(self.image > 0, 1, 0).astype(np.int8)
 
-            assert_ = self.image.dtype == np.int8 or self.image.dtype == np.uint8
-            if self.tardis_logo:
-                if not assert_:
-                    TardisError(
-                        id_="11",
-                        py="tardis_em/utils/predictor.py",
-                        desc=msg + f" {self.image.dtype} is not int8!",
-                    )
-                    sys.exit()
+                assert_ = self.image.dtype == np.int8 or self.image.dtype == np.uint8
+                if self.tardis_logo:
+                    if not assert_:
+                        TardisError(
+                            id_="11",
+                            py="tardis_em/utils/predictor.py",
+                            desc=msg + f" {self.image.dtype} is not int8!",
+                        )
+                        sys.exit()
+                else:
+                    assert assert_, msg
+
+        if self.amira_image:
+            # Calculate parameters for image pixel size with optional scaling
+            if self.correct_px is not None:
+                self.px = self.correct_px
+
+            if self.normalize_px is not None:
+                self.scale_factor = self.px / self.normalize_px
             else:
-                assert assert_, msg
+                self.scale_factor = 1.0
 
-        # Calculate parameters for image pixel size with optional scaling
-        if self.correct_px is not None:
-            self.px = self.correct_px
-
-        if self.normalize_px is not None:
-            self.scale_factor = self.px / self.normalize_px
-        else:
-            self.scale_factor = 1.0
-
-        self.org_shape = self.image.shape
-        self.scale_shape = np.multiply(self.org_shape, self.scale_factor).astype(
-            np.int16
-        )
-        self.scale_shape = [int(i) for i in self.scale_shape]
+            self.org_shape = self.image.shape
+            self.scale_shape = np.multiply(self.org_shape, self.scale_factor).astype(
+                np.int16
+            )
+            self.scale_shape = [int(i) for i in self.scale_shape]
 
     def predict_cnn(self, id_: int, id_name: str, dataloader):
         iter_time = 1
@@ -528,23 +554,28 @@ class GeneralPredictor:
         clean_up(dir_=self.dir)
 
     def preprocess_DIST(self, id_name: str):
-        # Post-process predicted image patches
-        if self.predict in ["Filament", "Microtubule"]:
-            self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
-                image=self.image, EDT=False, down_sampling=5
-            )
-        elif self.predict == "Membrane2D":
-            self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
-                image=self.image, EDT=False, down_sampling=5, as_2d=True
-            )
-        else:
-            self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
-                image=self.image, EDT=False, down_sampling=5, as_2d=True
-            )
+        if self.amira_image:
+            # Post-process predicted image patches
+            if self.predict in ["Filament", "Microtubule"]:
+                self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
+                    image=self.image, down_sampling=5
+                )
+            elif self.predict == "Membrane2D":
+                self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
+                    image=self.image, down_sampling=5, as_2d=True
+                )
+            else:
+                self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
+                    image=self.image, down_sampling=5, as_2d=True
+                )
 
-        if not self.output_format.startswith("return"):
-            self.image = None
-        self._debug(id_name=id_name, debug_id="pc")
+            if not self.output_format.startswith("return"):
+                self.image = None
+            self._debug(id_name=id_name, debug_id="pc")
+        else:
+            self.pc_hd = resample_filament(self.pc_hd, self.px)
+            down_sample = VoxelDownSampling(voxel=5, labels=True, KNN=True)
+            self.pc_ld = down_sample(coord=self.pc_hd)
 
     def predict_DIST(self, id_: int, id_name: str):
         iter_time = int(round(len(self.coords_df) / 10))
@@ -1012,10 +1043,6 @@ class GeneralPredictor:
         for id_, i in enumerate(self.predict_list):
             """CNN Pre-Processing"""
             if isinstance(i, str):
-                if i.endswith("CorrelationLines.am"):
-                    # Skip .am files which are spatial graphs not images
-                    continue
-
                 # Find file format
                 self.in_format = 0
                 if i.endswith((".tif", ".mrc", ".rec", ".map", ".npy")):
