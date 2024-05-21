@@ -195,7 +195,7 @@ class GeneralPredictor:
                 max_number_of_points=points_in_patch, graph=False
             )
 
-            if predict in ["Filament", "Microtubule", "Membrane2D"]:
+            if predict in ["Actin", "Microtubule", "Membrane2D"]:
                 self.GraphToSegment = PropGreedyGraphCut(
                     threshold=dist_threshold, connection=2, smooth=True
                 )
@@ -237,7 +237,7 @@ class GeneralPredictor:
         All sanity checks before TARDIS initialize prediction
         """
         msg = f"TARDIS v.{version} supports only MT and Mem segmentation!"
-        assert_ = self.predict in ["Filament", "Membrane2D", "Membrane", "Microtubule"]
+        assert_ = self.predict in ["Actin", "Membrane2D", "Membrane", "Microtubule"]
         if self.tardis_logo:
             # Check if user ask to predict correct structure
             if not assert_:
@@ -308,19 +308,19 @@ class GeneralPredictor:
                 assert not assert_, msg
 
     def build_NN(self, NN: str):
-        if NN == "Microtubule":
+        if NN in ["Microtubule", "Actin"]:
             self.normalize_px = 25
         else:
             self.normalize_px = 15
 
-        if NN in ["Filament", "Microtubule"]:
+        if NN in ["Actin", "Microtubule"]:
             # Build CNN network with loaded pre-trained weights
             if not self.output_format.startswith("None") or not self.binary_mask:
                 self.cnn = Predictor(
                     checkpoint=self.checkpoint[0],
                     network=self.convolution_nn,
                     subtype="32",
-                    model_type="microtubules_3d",
+                    model_type="microtubules_3d" if NN == "Microtubule" else "actin_3d",
                     img_size=self.patch_size,
                     sigmoid=False,
                     device=self.device,
@@ -556,7 +556,7 @@ class GeneralPredictor:
     def preprocess_DIST(self, id_name: str):
         if self.amira_image:
             # Post-process predicted image patches
-            if self.predict in ["Filament", "Microtubule"]:
+            if self.predict in ["Actin", "Microtubule"]:
                 self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
                     image=self.image, down_sampling=5
                 )
@@ -624,13 +624,13 @@ class GeneralPredictor:
         )
         self.pc_ld = self.pc_ld + self.transformation
 
-        if self.predict in ["Filament", "Microtubule"]:
+        if self.predict in ["Actin", "Microtubule"]:
             self.log_tardis(id_, i, log_id=6.1)
         else:
             self.log_tardis(id_, i, log_id=6.2)
 
         try:
-            if self.predict in ["Filament", "Microtubule", "Membrane2D"]:
+            if self.predict in ["Actin", "Microtubule", "Membrane2D"]:
                 sort = True
                 prune = 5
             else:
@@ -648,7 +648,7 @@ class GeneralPredictor:
         except:
             self.segments = None
 
-    def get_file_list(self, output=True):
+    def get_file_list(self):
         # Pickup files for the prediction
         if not isinstance(self.dir, str):
             if isinstance(self.dir, tuple) or isinstance(self.dir, list):
@@ -677,12 +677,7 @@ class GeneralPredictor:
                 self.dir = getcwd()
 
         # Update Dir paths
-        if output:
-            self.output = join(self.dir, "temp", "Predictions")
-            self.am_output = join(self.dir, "Predictions")
-        else:
-            self.output = None
-            self.am_output = None
+        self.am_output = join(self.dir, "Predictions")
 
         # Check if there is anything to predict in user indicated folder
         msg = f"Given {self.dir} does not contain any recognizable file!"
@@ -817,7 +812,7 @@ class GeneralPredictor:
 
     def save_instance_PC(self, i):
         if self.output_format.endswith("amSG") and self.predict in [
-            "Filament",
+            "Actin",
             "Microtubule",
         ]:
             self.amira_file.export_amira(
@@ -886,7 +881,7 @@ class GeneralPredictor:
                 sep=",",
             )
 
-            if self.predict in ["Filament", "Microtubule", "Membrane2D"]:
+            if self.predict in ["Actin", "Microtubule", "Membrane2D"]:
                 self.segments = sort_by_length(self.filter_splines(self.segments))
                 self.segments = pd.DataFrame(self.segments)
                 self.segments.to_csv(
