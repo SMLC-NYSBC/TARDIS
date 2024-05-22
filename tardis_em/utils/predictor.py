@@ -392,14 +392,14 @@ class GeneralPredictor:
 
                 if "AmiraMesh 3D ASCII" in am:
                     self.amira_image = False
-                    self.pc_hd = ImportDataFromAmira(join(self.dir, id_name)).get_segmented_points()
+                    self.pc_hd = ImportDataFromAmira(join(self.dir, id_name)).get_points()
 
                     self.image = None
                     self.px = self.correct_px
                     self.transformation = [0, 0, 0]
 
-                    assert_ = self.pc_hd.shape[1] == 4
-                    msg = f'Amira Spatial Graph has wrong dimension. Given {self.pc_hd.shape[1]}, but expected 4.'
+                    assert_ = self.pc_hd.shape[1] == 3
+                    msg = f'Amira Spatial Graph has wrong dimension. Given {self.pc_hd.shape[1]}, but expected 3.'
                     if self.tardis_logo:
                         if not assert_:
                             TardisError(
