@@ -123,38 +123,6 @@ warnings.simplefilter("ignore", UserWarning)
     show_default=True,
 )
 @click.option(
-    "-ap",
-    "--amira_prefix",
-    default=".CorrelationLines",
-    type=str,
-    help="If dir/amira foldr exist, TARDIS will search for files with "
-    "given prefix (e.g. file_name.CorrelationLines.am). If the correct "
-    "file is found, TARDIS will use its instance segmentation with "
-    "ZiB Amira prediction, and output additional file called "
-    "file_name_AmiraCompare.am.",
-    show_default=True,
-)
-@click.option(
-    "-acd",
-    "--amira_compare_distance",
-    default=175,
-    type=int,
-    help="The comparison with Amira prediction is done by evaluating"
-    "filaments distance between Amira and TARDIS. This parameter defines the maximum"
-    "distance to the similarity between two splines. Value given in Angstrom [A].",
-    show_default=True,
-)
-@click.option(
-    "-aip",
-    "--amira_inter_probability",
-    default=0.25,
-    type=float,
-    help="This parameter define normalize between 0 and 1 overlap"
-    "between filament from TARDIS na Amira sufficient to identifies actin as "
-    "a match between both software.",
-    show_default=True,
-)
-@click.option(
     "-fl",
     "--filter_by_length",
     default=1000,
@@ -227,9 +195,6 @@ def main(
     filter_by_length: int,
     connect_splines: int,
     connect_cylinder: int,
-    amira_prefix: str,
-    amira_compare_distance: int,
-    amira_inter_probability: float,
     device: str,
     debug: bool,
 ):
@@ -267,12 +232,9 @@ def main(
         dist_threshold=dist_threshold,
         points_in_patch=points_in_patch,
         predict_with_rotation=rotate,
-        amira_prefix=amira_prefix,
         filter_by_length=filter_by_length,
         connect_splines=connect_splines,
         connect_cylinder=connect_cylinder,
-        amira_compare_distance=amira_compare_distance,
-        amira_inter_probability=amira_inter_probability,
         instances=instances,
         device_=str(device),
         debug=debug,

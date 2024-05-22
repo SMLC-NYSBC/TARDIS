@@ -392,14 +392,14 @@ class GeneralPredictor:
 
                 if "AmiraMesh 3D ASCII" in am:
                     self.amira_image = False
-                    self.pc_hd = ImportDataFromAmira(join(self.dir, id_name)).get_points()
+                    self.pc_hd = ImportDataFromAmira(join(self.dir, id_name)).get_segmented_points()
 
                     self.image = None
                     self.px = self.correct_px
                     self.transformation = [0, 0, 0]
 
-                    assert_ = self.pc_hd.shape[1] == 3
-                    msg = f'Amira Spatial Graph has wrong dimension. Given {self.pc_hd.shape[1]}, but expected 3.'
+                    assert_ = self.pc_hd.shape[1] == 4
+                    msg = f'Amira Spatial Graph has wrong dimension. Given {self.pc_hd.shape[1]}, but expected 4.'
                     if self.tardis_logo:
                         if not assert_:
                             TardisError(
@@ -574,8 +574,8 @@ class GeneralPredictor:
             self._debug(id_name=id_name, debug_id="pc")
         else:
             self.pc_hd = resample_filament(self.pc_hd, self.px)
-            down_sample = VoxelDownSampling(voxel=5, labels=True, KNN=True)
-            self.pc_ld = down_sample(coord=self.pc_hd)
+            down_sample = VoxelDownSampling(voxel=5, labels=False, KNN=True)
+            self.pc_ld = down_sample(coord=self.pc_hd[:, 1:])
 
     def predict_DIST(self, id_: int, id_name: str):
         iter_time = int(round(len(self.coords_df) / 10))
