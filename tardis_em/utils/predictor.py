@@ -315,7 +315,7 @@ class GeneralPredictor:
 
         if NN in ["Actin", "Microtubule"]:
             # Build CNN network with loaded pre-trained weights
-            if not self.output_format.startswith("None") or not self.binary_mask:
+            if not self.output_format.startswith("None") and not self.binary_mask:
                 self.cnn = Predictor(
                     checkpoint=self.checkpoint[0],
                     network=self.convolution_nn,
@@ -338,7 +338,7 @@ class GeneralPredictor:
         elif NN in ["Membrane2D", "Membrane"]:
             # Build CNN network with loaded pre-trained weights
             if NN == "Membrane2D":
-                if not self.output_format.startswith("None") or not self.binary_mask:
+                if not self.output_format.startswith("None") and not self.binary_mask:
                     self.cnn = Predictor(
                         checkpoint=self.checkpoint[0],
                         network=self.convolution_nn,
@@ -360,7 +360,7 @@ class GeneralPredictor:
                         device=self.device,
                     )
             else:
-                if not self.output_format.startswith("None") or not self.binary_mask:
+                if not self.output_format.startswith("None") and not self.binary_mask:
                     self.cnn = Predictor(
                         checkpoint=self.checkpoint[0],
                         network=self.convolution_nn,
@@ -388,12 +388,9 @@ class GeneralPredictor:
         if isinstance(id_name, str):
             # Load image file
             if id_name.endswith(".am"):
-                try:
-                    self.amira_image = True
-                    self.image, self.px, _, self.transformation = import_am(
-                        am_file=join(self.dir, id_name)
-                    )
-                except IndexError:
+                am = open(join(self.dir, id_name), "r", encoding="iso-8859-1").read(500)
+
+                if "AmiraMesh 3D ASCII" in am:
                     self.amira_image = False
                     self.pc_hd = ImportDataFromAmira(join(self.dir, id_name)).get_segmented_points()
 
@@ -413,6 +410,11 @@ class GeneralPredictor:
                             sys.exit()
                     else:
                         assert assert_, msg
+                else:
+                    self.amira_image = True
+                    self.image, self.px, _, self.transformation = import_am(
+                        am_file=join(self.dir, id_name)
+                    )
             else:
                 self.amira_image = True
                 self.image, self.px = load_image(join(self.dir, id_name))
@@ -424,7 +426,7 @@ class GeneralPredictor:
 
         # Normalize image histogram
         msg = f"Error while loading image {id_name}. Image loaded correctly, but output format "
-        if not self.output_format.startswith("None") or not self.binary_mask:
+        if self.amira_image and not self.binary_mask:
             self.image = self.normalize(self.mean_std(self.image)).astype(np.float32)
 
             # Sanity check image histogram
@@ -448,24 +450,7 @@ class GeneralPredictor:
                     sys.exit()
             else:
                 assert assert_, msg
-        else:
-            if self.amira_image:
-                # Check image structure
-                self.image = np.where(self.image > 0, 1, 0).astype(np.int8)
 
-                assert_ = self.image.dtype == np.int8 or self.image.dtype == np.uint8
-                if self.tardis_logo:
-                    if not assert_:
-                        TardisError(
-                            id_="11",
-                            py="tardis_em/utils/predictor.py",
-                            desc=msg + f" {self.image.dtype} is not int8!",
-                        )
-                        sys.exit()
-                else:
-                    assert assert_, msg
-
-        if self.amira_image:
             # Calculate parameters for image pixel size with optional scaling
             if self.correct_px is not None:
                 self.px = self.correct_px
@@ -480,6 +465,21 @@ class GeneralPredictor:
                 np.int16
             )
             self.scale_shape = [int(i) for i in self.scale_shape]
+        elif self.amira_image and self.binary_mask:
+            # Check image structure
+            self.image = np.where(self.image > 0, 1, 0).astype(np.int8)
+
+            assert_ = self.image.dtype == np.int8 or self.image.dtype == np.uint8
+            if self.tardis_logo:
+                if not assert_:
+                    TardisError(
+                        id_="11",
+                        py="tardis_em/utils/predictor.py",
+                        desc=msg + f" {self.image.dtype} is not int8!",
+                    )
+                    sys.exit()
+            else:
+                assert assert_, msg
 
     def predict_cnn(self, id_: int, id_name: str, dataloader):
         iter_time = 1
@@ -655,7 +655,7 @@ class GeneralPredictor:
                 self.predict_list = self.dir
             else:
                 self.predict_list = [self.dir]
-            self.dir = "."
+            self.dir = getcwd()
         else:
             if isdir(self.dir):
                 self.predict_list = [
@@ -665,9 +665,6 @@ class GeneralPredictor:
                     and not f.endswith(self.omit_format)
                 ]
             else:
-                if dirname(self.dir) == "":
-                    self.dir = self.dir
-
                 self.predict_list = [
                     f
                     for f in [self.dir]
@@ -677,6 +674,7 @@ class GeneralPredictor:
                 self.dir = getcwd()
 
         # Update Dir paths
+        self.output = join(self.dir, "temp", "Predictions")
         self.am_output = join(self.dir, "Predictions")
 
         # Check if there is anything to predict in user indicated folder
@@ -1030,7 +1028,7 @@ class GeneralPredictor:
                     self.mask_semantic,
                 )
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self):
         """Process each image with CNN and DIST"""
         self.get_file_list()
 
@@ -1069,7 +1067,7 @@ class GeneralPredictor:
             self.log_tardis(id_, i, log_id=1)
 
             """Semantic Segmentation"""
-            if not self.output_format.startswith("None") or not self.binary_mask:
+            if not self.output_format.startswith("None") and not self.binary_mask:
                 # Cut image for fix patch size and normalizing image pixel size
                 trim_with_stride(
                     image=self.image,
