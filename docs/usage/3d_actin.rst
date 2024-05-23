@@ -58,7 +58,7 @@ For the semantic prediction, you only need to type:
 
 .. code-block::
 
-    tardis_mt -dir <path-to-your-tomograms> -out <output_type>
+    tardis_actin -dir <path-to-your-tomograms> -out <output_type>
 
 TARDIS will save predictions in the default folder :bash:`Prediction` located in
 the folder with your data.
@@ -72,21 +72,21 @@ For example:
 
 .. code-block::
 
-    tardis_mt -dir <path-to-your-tomograms> -out mrc_None
+    tardis_actin -dir <path-to-your-tomograms> -out mrc_None
 
 Will perform only semantic segmentation and save the output file as .a mrc file.
 
 
 .. code-block::
 
-    tardis_mt -dir <path-to-your-tomograms> -out None_amSG
+    tardis_actin -dir <path-to-your-tomograms> -out None_amSG
 
 Will perform only instance segmentation and save the output file as .am spatial graph file with data
 structure as [Microtubule ID x X x Y x Z]
 
 .. code-block::
 
-    tardis_mt -dir <path-to-your-tomograms> -out mrc_amSG
+    tardis_actin -dir <path-to-your-tomograms> -out mrc_amSG
 
 Will perform semantic and instance segmentation and save the output file as .mrc and .am spatial graph files.
 
@@ -96,7 +96,7 @@ with :bash:`_SpatialGraph_filter.am` extension contains filter actin based on le
 
 Advance usage:
 ``````````````
-Below you can find all available arguments you can use with :bash:`tardis_mt`,
+Below you can find all available arguments you can use with :bash:`tardis_actin`,
 with the explanation for their functionality:
 
 :bash:`-dir` or :bash:`--path`: Directory path with all tomograms for TARDIS prediction.
