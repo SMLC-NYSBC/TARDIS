@@ -18,6 +18,53 @@ from tardis_em.dist_pytorch.utils.utils import pc_median_dist
 from tardis_em.utils.errors import TardisError
 
 
+def resample_filament(points, spacing_size):
+    """
+    Resamples points for each filament so they have the given spacing size.
+
+    Parameters:
+    points (np.array): Array of shape [N, 4] where each column is [ID, X, Y, Z].
+    spacing_size (float): Desired spacing size between points.
+
+    Returns:
+    np.array: Resampled array with the same structure.
+    """
+    unique_ids = np.unique(points[:, 0])
+    resampled_points = []
+
+    for filament_id in unique_ids:
+        filament_points = points[points[:, 0] == filament_id][:, 1:]
+        if filament_points.shape[0] < 2:
+            resampled_points.append(points[points[:, 0] == filament_id])
+            continue
+
+        cumulative_distances = np.cumsum(np.sqrt(np.sum(np.diff(filament_points, axis=0) ** 2, axis=1)))
+        cumulative_distances = np.insert(cumulative_distances, 0, 0)
+
+        num_new_points = int(cumulative_distances[-1] // spacing_size)
+        new_points = [filament_points[0]]
+
+        for i in range(1, num_new_points + 1):
+            target_distance = i * spacing_size
+            idx = np.searchsorted(cumulative_distances, target_distance)
+            if idx >= len(cumulative_distances):
+                continue
+
+            if cumulative_distances[idx] == target_distance:
+                new_points.append(filament_points[idx])
+            else:
+                ratio = (target_distance - cumulative_distances[idx - 1]) / (
+                            cumulative_distances[idx] - cumulative_distances[idx - 1])
+                new_point = filament_points[idx - 1] + ratio * (filament_points[idx] - filament_points[idx - 1])
+                new_points.append(new_point)
+
+        new_points = np.array(new_points)
+        filament_ids = np.full((new_points.shape[0], 1), filament_id)
+        resampled_points.append(np.hstack((filament_ids, new_points)))
+
+    return np.vstack(resampled_points)
+
+
 class FilterConnectedNearSegments:
     """
     Connect splines based on spline trajectory and splines end distances.

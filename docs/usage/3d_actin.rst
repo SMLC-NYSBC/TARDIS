@@ -4,18 +4,18 @@
 
 .. role:: guilabel
 
-Prediction of 3D MT semantics/instances
+Prediction of 3D Actin semantics/instances
 ---------------------------------------
 
-This guide provides detailed instructions to perform fully automatic microtubule
+This guide provides detailed instructions to perform fully automatic actin
 segmentation on all of your tomograms using our most up-to-date model.
 
-TARDIS can predict fully automatic microtubules as semantic labels, or
+TARDIS can predict fully automatic actin as semantic labels, or
 instances [track, or labels].
 
-.. image:: ../resources/3d_mt.jpg
+.. image:: ../resources/3d_actin.jpg
 
-Data source: Gunar Fabig and Thomas Müller-Reichert, CFCI MTZ-TU Dresden
+Data source: 10002 dataset, CZI Cryo-EM Data Portal
 
 Example of segmented tomograms with indicated predicted semantic binary segmentation
 and individual instances represented as tracks of different colors.
@@ -25,7 +25,7 @@ _______________
 
 #. Prepare a folder with data
 #. (Optional) Prepare for comparing TARDIS results with Amira
-#. Predict microtubule segmentation
+#. Predict actin segmentation
 #. (Optional) Advance prediction setting
 
 Preparation
@@ -35,22 +35,6 @@ image file with the extension [.tif, .tiff, .rec, .map, .mrc, .am, .npy].
 
 `Tip:` In the case of REC/MAP/MRC files try to make sure that files have embedded
 in the header pixel size information.
-
-(Optional) Amira Comparison
-___________________________
-TARDIS at the end of the instance prediction can use already generated Amira prediction
-and create a file that will contain information that predicts microtubules are a match
-between both tools and which are possible False-Positive instances.
-
-To do this create a new sub-folder, named :bash:`amira` in your directory with all tomograms.
-For each predicted tomogram, TARDIS will search for a file with :bash:`.CorrelationLines.am` prefix.
-And will use that file to compare both outputs.
-
-`Tips`:
-
-#. Amira file with :bash:`.CorrelationLines.am` prefix should have the same name as a tomogram.
-#. Amira spatial graph file should be saved in ASCII format. Remember that by default Amira saves files in binary format.
-#. In TARDIS you can also find a few arguments you can use to tune this comparison setting [:ref:`compare`].
 
 Prediction
 __________
@@ -106,9 +90,9 @@ structure as [Microtubule ID x X x Y x Z]
 
 Will perform semantic and instance segmentation and save the output file as .mrc and .am spatial graph files.
 
-`Tips`: As a final product of TARDIS instance segmentation for microtubules, TARDIS produces two files.
-The first file with :bash:`_SpatialGraph.am` extension contains all predicted microtubules. The second file
-with :bash:`_SpatialGraph_filter.am` extension contains filter microtubules based on length and curvature [:ref:`filter`].
+`Tips`: As a final product of TARDIS instance segmentation for actin, TARDIS produces two files.
+The first file with :bash:`_SpatialGraph.am` extension contains all predicted actin. The second file
+with :bash:`_SpatialGraph_filter.am` extension contains filter actin based on length and curvature [:ref:`filter`].
 
 Advance usage:
 ``````````````
@@ -118,8 +102,8 @@ with the explanation for their functionality:
 :bash:`-dir` or :bash:`--path`: Directory path with all tomograms for TARDIS prediction.
     - :guilabel:`default:` Current command line directory.
 
-:bash:`-ms` or :bash:`--mask`: Define if your input is a binary mask with a pre-segmented microtubules.
-    - :guilabel:`Example:` You can set this argument to :bash:`-ms True` if you have already segmented microtubules
+:bash:`-ms` or :bash:`--mask`: Define if your input is a binary mask with a pre-segmented actin.
+    - :guilabel:`Example:` You can set this argument to :bash:`-ms True` if you have already segmented actin
       and you only want to segment instances.
 
     - :guilabel:`default:` False
@@ -169,7 +153,7 @@ with the explanation for their functionality:
 
 :bash:`-ct` or :bash:`--cnn_threshold`: Threshold used for semantic prediction.
     - :guilabel:`Example:` Higher value then :bash:`-ct 0.25` will lead to a reduction in noise
-      and microtubule prediction recall. A lower value will increase microtubules prediction
+      and microtubule prediction recall. A lower value will increase actin prediction
       recall but may lead to increased noise.
 
     - :guilabel:`default:` 0.25
@@ -194,51 +178,27 @@ with the explanation for their functionality:
     - :guilabel:`default:` 1000
     - :guilabel:`Allowed options:` Int value between 250 and 5000.
 
-.. _compare:
-
-:bash:`-ap` or :bash:`--amira_prefix`: Amira prefix file name.
-    - :guilabel:`Example:`  If amira sub-foldr exist, TARDIS will search for files with
-      given prefix (e.g. <file_name><amira_prefix>.am). If the correct file is found,
-      TARDIS will use its instance segmentation with Amira prediction, and output
-      additional file called <file_name>_AmiraCompare.am.
-
-    - :guilabel:`default:` .CorrelationLines
-
-:bash:`-acd` or :bash:`--amira_compare_distance`: Overlying distance threshold between Amira and TARDIS
-    - :guilabel:`Example:` The comparison with Amira prediction is done by evaluating
-      filaments distance between Amira and TARDIS. This parameter defines the maximum
-      distance to the similarity between two splines. Value given in Angstrom [A].
-
-    - :guilabel:`default:` 175
-
-:bash:`-aip` or :bash:`--amira_inter_probability`: Microtubule overlap between Amira and TARDIS
-    - :guilabel:`Example:` This parameter define normalize between 0 and 1 overlap
-      between filament from TARDIS na Amira sufficient to identifies microtubule as
-      a match between both software.
-
-    - :guilabel:`default:` 0.25
-
 .. _filter:
 
-:bash:`-fl` or :bash:`--filter_by_length`: Minimum microtubule length
-    - :guilabel:`Example:` Filtering parameters for microtubules, defining maximum microtubule
+:bash:`-fl` or :bash:`--filter_by_length`: Minimum actin length
+    - :guilabel:`Example:` Filtering parameters for actin, defining maximum actin
       length in Angstrom. All filaments shorter then this length will be deleted.
 
     - :guilabel:`default:` 1000
 
-:bash:`-cs` or :bash:`--connect_splines`: Threshold distance between two microtubules
-    - :guilabel:`Example:` To address the issue where microtubules are mistakenly
+:bash:`-cs` or :bash:`--connect_splines`: Threshold distance between two actin
+    - :guilabel:`Example:` To address the issue where actin are mistakenly
       identified as two different filaments, we use a filtering technique.
       This involves identifying the direction each filament end points towards and then
       linking any filaments that are facing the same direction and are within
       a certain distance from each other, measured in angstroms. This distance threshold
-      determines how far apart two microtubules can be, while still being considered
+      determines how far apart two actin can be, while still being considered
       as a single unit if they are oriented in the same direction.
 
     - :guilabel:`default:` 2500
 
-:bash:`-cc` or :bash:`--connect_cylinder`: Microtubule thickens in Angstrom
-    - :guilabel:`Example:` To minimize false positives when linking microtubules,
+:bash:`-cc` or :bash:`--connect_cylinder`: Actin thickens in Angstrom
+    - :guilabel:`Example:` To minimize false positives when linking actin,
       we limit the search area to a cylindrical radius specified in angstroms.
       For each spline, we find the direction the filament end is pointing in
       and look for another filament that is oriented in the same direction.

@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 import tifffile.tifffile as tif
 import torch
+from tardis_em.dist_pytorch.utils.utils import VoxelDownSampling
 
 from tardis_em.dist_pytorch.datasets.patches import PatchDataSet
 from tardis_em.dist_pytorch.dist import build_dist_network
@@ -46,7 +47,7 @@ from tardis_em.utils.spline_metric import (
     SpatialGraphCompare,
     sort_by_length,
     ComputeConfidenceScore,
-    length_list,
+    length_list, resample_filament,
 )
 from tardis_em._version import version
 
@@ -194,7 +195,7 @@ class GeneralPredictor:
                 max_number_of_points=points_in_patch, graph=False
             )
 
-            if predict in ["Filament", "Microtubule", "Membrane2D"]:
+            if predict in ["Actin", "Microtubule", "Membrane2D"]:
                 self.GraphToSegment = PropGreedyGraphCut(
                     threshold=dist_threshold, connection=2, smooth=True
                 )
@@ -236,7 +237,7 @@ class GeneralPredictor:
         All sanity checks before TARDIS initialize prediction
         """
         msg = f"TARDIS v.{version} supports only MT and Mem segmentation!"
-        assert_ = self.predict in ["Filament", "Membrane2D", "Membrane", "Microtubule"]
+        assert_ = self.predict in ["Actin", "Membrane2D", "Membrane", "Microtubule"]
         if self.tardis_logo:
             # Check if user ask to predict correct structure
             if not assert_:
@@ -307,19 +308,19 @@ class GeneralPredictor:
                 assert not assert_, msg
 
     def build_NN(self, NN: str):
-        if NN == "Microtubule":
+        if NN in ["Microtubule", "Actin"]:
             self.normalize_px = 25
         else:
             self.normalize_px = 15
 
-        if NN in ["Filament", "Microtubule"]:
+        if NN in ["Actin", "Microtubule"]:
             # Build CNN network with loaded pre-trained weights
-            if not self.output_format.startswith("None") or not self.binary_mask:
+            if not self.output_format.startswith("None") and not self.binary_mask:
                 self.cnn = Predictor(
                     checkpoint=self.checkpoint[0],
                     network=self.convolution_nn,
                     subtype="32",
-                    model_type="microtubules_3d",
+                    model_type="microtubules_3d" if NN == "Microtubule" else "actin_3d",
                     img_size=self.patch_size,
                     sigmoid=False,
                     device=self.device,
@@ -337,7 +338,7 @@ class GeneralPredictor:
         elif NN in ["Membrane2D", "Membrane"]:
             # Build CNN network with loaded pre-trained weights
             if NN == "Membrane2D":
-                if not self.output_format.startswith("None") or not self.binary_mask:
+                if not self.output_format.startswith("None") and not self.binary_mask:
                     self.cnn = Predictor(
                         checkpoint=self.checkpoint[0],
                         network=self.convolution_nn,
@@ -359,7 +360,7 @@ class GeneralPredictor:
                         device=self.device,
                     )
             else:
-                if not self.output_format.startswith("None") or not self.binary_mask:
+                if not self.output_format.startswith("None") and not self.binary_mask:
                     self.cnn = Predictor(
                         checkpoint=self.checkpoint[0],
                         network=self.convolution_nn,
@@ -387,10 +388,35 @@ class GeneralPredictor:
         if isinstance(id_name, str):
             # Load image file
             if id_name.endswith(".am"):
-                self.image, self.px, _, self.transformation = import_am(
-                    am_file=join(self.dir, id_name)
-                )
+                am = open(join(self.dir, id_name), "r", encoding="iso-8859-1").read(500)
+
+                if "AmiraMesh 3D ASCII" in am:
+                    self.amira_image = False
+                    self.pc_hd = ImportDataFromAmira(join(self.dir, id_name)).get_segmented_points()
+
+                    self.image = None
+                    self.px = self.correct_px
+                    self.transformation = [0, 0, 0]
+
+                    assert_ = self.pc_hd.shape[1] == 4
+                    msg = f'Amira Spatial Graph has wrong dimension. Given {self.pc_hd.shape[1]}, but expected 4.'
+                    if self.tardis_logo:
+                        if not assert_:
+                            TardisError(
+                                id_="11",
+                                py="tardis_em/utils/predictor.py",
+                                desc=msg,
+                            )
+                            sys.exit()
+                    else:
+                        assert assert_, msg
+                else:
+                    self.amira_image = True
+                    self.image, self.px, _, self.transformation = import_am(
+                        am_file=join(self.dir, id_name)
+                    )
             else:
+                self.amira_image = True
                 self.image, self.px = load_image(join(self.dir, id_name))
                 self.transformation = [0, 0, 0]
         else:
@@ -400,7 +426,7 @@ class GeneralPredictor:
 
         # Normalize image histogram
         msg = f"Error while loading image {id_name}. Image loaded correctly, but output format "
-        if not self.output_format.startswith("None") or not self.binary_mask:
+        if self.amira_image and not self.binary_mask:
             self.image = self.normalize(self.mean_std(self.image)).astype(np.float32)
 
             # Sanity check image histogram
@@ -424,7 +450,22 @@ class GeneralPredictor:
                     sys.exit()
             else:
                 assert assert_, msg
-        else:
+
+            # Calculate parameters for image pixel size with optional scaling
+            if self.correct_px is not None:
+                self.px = self.correct_px
+
+            if self.normalize_px is not None:
+                self.scale_factor = self.px / self.normalize_px
+            else:
+                self.scale_factor = 1.0
+
+            self.org_shape = self.image.shape
+            self.scale_shape = np.multiply(self.org_shape, self.scale_factor).astype(
+                np.int16
+            )
+            self.scale_shape = [int(i) for i in self.scale_shape]
+        elif self.amira_image and self.binary_mask:
             # Check image structure
             self.image = np.where(self.image > 0, 1, 0).astype(np.int8)
 
@@ -439,21 +480,6 @@ class GeneralPredictor:
                     sys.exit()
             else:
                 assert assert_, msg
-
-        # Calculate parameters for image pixel size with optional scaling
-        if self.correct_px is not None:
-            self.px = self.correct_px
-
-        if self.normalize_px is not None:
-            self.scale_factor = self.px / self.normalize_px
-        else:
-            self.scale_factor = 1.0
-
-        self.org_shape = self.image.shape
-        self.scale_shape = np.multiply(self.org_shape, self.scale_factor).astype(
-            np.int16
-        )
-        self.scale_shape = [int(i) for i in self.scale_shape]
 
     def predict_cnn(self, id_: int, id_name: str, dataloader):
         iter_time = 1
@@ -528,23 +554,28 @@ class GeneralPredictor:
         clean_up(dir_=self.dir)
 
     def preprocess_DIST(self, id_name: str):
-        # Post-process predicted image patches
-        if self.predict in ["Filament", "Microtubule"]:
-            self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
-                image=self.image, EDT=False, down_sampling=5
-            )
-        elif self.predict == "Membrane2D":
-            self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
-                image=self.image, EDT=False, down_sampling=5, as_2d=True
-            )
-        else:
-            self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
-                image=self.image, EDT=False, down_sampling=5, as_2d=True
-            )
+        if self.amira_image:
+            # Post-process predicted image patches
+            if self.predict in ["Actin", "Microtubule"]:
+                self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
+                    image=self.image, down_sampling=5
+                )
+            elif self.predict == "Membrane2D":
+                self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
+                    image=self.image, down_sampling=5, as_2d=True
+                )
+            else:
+                self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
+                    image=self.image, down_sampling=5, as_2d=True
+                )
 
-        if not self.output_format.startswith("return"):
-            self.image = None
-        self._debug(id_name=id_name, debug_id="pc")
+            if not self.output_format.startswith("return"):
+                self.image = None
+            self._debug(id_name=id_name, debug_id="pc")
+        else:
+            self.pc_hd = resample_filament(self.pc_hd, self.px)
+            down_sample = VoxelDownSampling(voxel=5, labels=False, KNN=True)
+            self.pc_ld = down_sample(coord=self.pc_hd[:, 1:])
 
     def predict_DIST(self, id_: int, id_name: str):
         iter_time = int(round(len(self.coords_df) / 10))
@@ -593,13 +624,13 @@ class GeneralPredictor:
         )
         self.pc_ld = self.pc_ld + self.transformation
 
-        if self.predict in ["Filament", "Microtubule"]:
+        if self.predict in ["Actin", "Microtubule"]:
             self.log_tardis(id_, i, log_id=6.1)
         else:
             self.log_tardis(id_, i, log_id=6.2)
 
         try:
-            if self.predict in ["Filament", "Microtubule", "Membrane2D"]:
+            if self.predict in ["Actin", "Microtubule", "Membrane2D"]:
                 sort = True
                 prune = 5
             else:
@@ -617,14 +648,14 @@ class GeneralPredictor:
         except:
             self.segments = None
 
-    def get_file_list(self, output=True):
+    def get_file_list(self):
         # Pickup files for the prediction
         if not isinstance(self.dir, str):
             if isinstance(self.dir, tuple) or isinstance(self.dir, list):
                 self.predict_list = self.dir
             else:
                 self.predict_list = [self.dir]
-            self.dir = "."
+            self.dir = getcwd()
         else:
             if isdir(self.dir):
                 self.predict_list = [
@@ -634,9 +665,6 @@ class GeneralPredictor:
                     and not f.endswith(self.omit_format)
                 ]
             else:
-                if dirname(self.dir) == "":
-                    self.dir = self.dir
-
                 self.predict_list = [
                     f
                     for f in [self.dir]
@@ -646,12 +674,8 @@ class GeneralPredictor:
                 self.dir = getcwd()
 
         # Update Dir paths
-        if output:
-            self.output = join(self.dir, "temp", "Predictions")
-            self.am_output = join(self.dir, "Predictions")
-        else:
-            self.output = None
-            self.am_output = None
+        self.output = join(self.dir, "temp", "Predictions")
+        self.am_output = join(self.dir, "Predictions")
 
         # Check if there is anything to predict in user indicated folder
         msg = f"Given {self.dir} does not contain any recognizable file!"
@@ -786,7 +810,7 @@ class GeneralPredictor:
 
     def save_instance_PC(self, i):
         if self.output_format.endswith("amSG") and self.predict in [
-            "Filament",
+            "Actin",
             "Microtubule",
         ]:
             self.amira_file.export_amira(
@@ -855,7 +879,7 @@ class GeneralPredictor:
                 sep=",",
             )
 
-            if self.predict in ["Filament", "Microtubule", "Membrane2D"]:
+            if self.predict in ["Actin", "Microtubule", "Membrane2D"]:
                 self.segments = sort_by_length(self.filter_splines(self.segments))
                 self.segments = pd.DataFrame(self.segments)
                 self.segments.to_csv(
@@ -1004,7 +1028,7 @@ class GeneralPredictor:
                     self.mask_semantic,
                 )
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self):
         """Process each image with CNN and DIST"""
         self.get_file_list()
 
@@ -1012,10 +1036,6 @@ class GeneralPredictor:
         for id_, i in enumerate(self.predict_list):
             """CNN Pre-Processing"""
             if isinstance(i, str):
-                if i.endswith("CorrelationLines.am"):
-                    # Skip .am files which are spatial graphs not images
-                    continue
-
                 # Find file format
                 self.in_format = 0
                 if i.endswith((".tif", ".mrc", ".rec", ".map", ".npy")):
@@ -1047,7 +1067,7 @@ class GeneralPredictor:
             self.log_tardis(id_, i, log_id=1)
 
             """Semantic Segmentation"""
-            if not self.output_format.startswith("None") or not self.binary_mask:
+            if not self.output_format.startswith("None") and not self.binary_mask:
                 # Cut image for fix patch size and normalizing image pixel size
                 trim_with_stride(
                     image=self.image,

@@ -341,7 +341,6 @@ class ProcessTardisForCZI:
 
         _, pc_ld = BuildPointCloud().build_point_cloud(
             image=data,
-            EDT=False,
             down_sampling=5,
             as_2d=True if self.predict == "Membrane" else False,
         )

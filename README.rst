@@ -5,7 +5,7 @@
 
 ========
 
-.. image:: https://img.shields.io/badge/Release-0.2.4-success
+.. image:: https://img.shields.io/badge/Release-0.2.5-success
     :target: https://shields.io
 
 .. image:: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_pytest.yml/badge.svg
@@ -41,6 +41,7 @@ Features
     - Supported modality: [EM, ET, Cryo-EM, Cryo-ET]
     - Supported Å resolution: [all]
 
+- High-throughput semantic/instance segmentation of actin [Beta]
 - Fully automatic segmentation solution!
 - Napari plugin [Coming soon]
 - Cloud computing [Coming soon]
@@ -61,7 +62,8 @@ What's new?
 
 `Full History <https://smlc-nysbc.github.io/TARDIS/HISTORY.html>`__
 
-TARDIS-em v0.2.4 (2024-08):
+TARDIS-em v0.2.5 (2024-05-22):
+    * Added actin segmentation
     * Improvement from Microtubule and Membrane prediction with updated models
     * Added option for scripting TARDIS predictions
     * Added visualization for semantic and instance predictions
@@ -97,17 +99,31 @@ or
 
     tardis
 
-Microtubule Prediction
-----------------------
+Filaments Prediction
+--------------------
 
-2D prediction
-^^^^^^^^^^^^^
+3D Actin prediction
+^^^^^^^^^^^^^^^^^^^
+Full tutorial: `3D Actin Prediction <https://smlc-nysbc.github.io/TARDIS/usage/3d_actin.html>`__
+
+Usage:
+""""""
+
+.. code-block:: bash
+
+    recommended usage: tardis_actin [-dir path/to/folder/with/input/tomogram]
+    advance usage: tardis_actin [-dir str] [-out str] [-ps int] [-ct float] [-dt float]
+                             [-pv int] [-px float] ...
+
+
+2D Microtubule prediction
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 TBD
 
-3D prediction
-^^^^^^^^^^^^^
-Full tutorial: Full tutorial: `3D Microtubules Prediction <https://smlc-nysbc.github.io/TARDIS/usage/3d_mt.html>`__
+3D Microtubule prediction
+^^^^^^^^^^^^^^^^^^^^^^^^^
+Full tutorial: `3D Microtubules Prediction <https://smlc-nysbc.github.io/TARDIS/usage/3d_mt.html>`__
 
 
 Example:
@@ -133,7 +149,7 @@ Membrane Prediction
 
 2D prediction
 ^^^^^^^^^^^^^
-Full tutorial: Full tutorial: `2D Membrane Prediction <https://smlc-nysbc.github.io/TARDIS/usage/2d_membrane.html>`__
+Full tutorial: `2D Membrane Prediction <https://smlc-nysbc.github.io/TARDIS/usage/2d_membrane.html>`__
 
 Example:
 """"""""
