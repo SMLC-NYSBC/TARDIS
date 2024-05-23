@@ -2,8 +2,6 @@
 <details open>
     <summary><b>0.2.5 (2024-05-22)</b></summary>
 
-*This intends to be a release submitted with Nature Method 2024*
-
 * **General changes:**
     * *General*:
         * Added support for predicting Actin
