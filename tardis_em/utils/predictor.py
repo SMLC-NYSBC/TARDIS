@@ -712,7 +712,11 @@ class GeneralPredictor:
             "text_3": f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
         }
 
-        no_segments = np.max(self.segments[:, 0]) if len(self.segments) > 0 else 0
+        if log_id == 7:
+            no_segments = np.max(self.segments[:, 0]) if len(self.segments) > 0 else 0
+        else:
+            no_segments = 'None'
+
         # Define text configurations for each log_id
         text_configurations = {
             0: {

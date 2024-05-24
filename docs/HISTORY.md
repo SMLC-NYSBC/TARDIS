@@ -1,11 +1,12 @@
 # History
 <details open>
-    <summary><b>0.2.5 (2024-05-22)</b></summary>
+    <summary><b>0.2.6 (2024-05-22)</b></summary>
 
 * **General changes:**
     * *General*:
-        * Added support for predicting Actin
-        * Predicting point clouds directly from cli
+      * Bugfix when multiple files are predicted in batch
+      * Added support for predicting Actin
+      * Predicting point clouds directly from cli
 
 </details>
 
