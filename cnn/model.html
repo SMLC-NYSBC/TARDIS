@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CNN -&gt; Model &mdash; TARDIS-em 0.2.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=fc7d8818"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="CNN -&gt; Datasets" href="datasets.html" />
+    <link rel="prev" title="CNN" href="cnn.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TARDIS-em
+          </a>
+              <div class="version">
+                0.2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../HISTORY.html">History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../instructions.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_actin.html">-  3D Actin Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_membrane.html">-  3D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/scripting.html">-  Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/fine_tune_model.html">Fine-Tune TARDIS models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../code_doc.html">CNN Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cnn.html">CNN</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">CNN Model</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.cnn.model.convolution">Convolutions Modules</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.model.convolution.GeLU"><code class="docutils literal notranslate"><span class="pre">GeLU</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.model.convolution.convolution"><code class="docutils literal notranslate"><span class="pre">convolution()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.model.convolution.SingleConvolution"><code class="docutils literal notranslate"><span class="pre">SingleConvolution</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.model.convolution.DoubleConvolution"><code class="docutils literal notranslate"><span class="pre">DoubleConvolution</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.model.convolution.RecurrentDoubleConvolution"><code class="docutils literal notranslate"><span class="pre">RecurrentDoubleConvolution</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.cnn.model.encoder_blocks">Generalize Encoder Module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.model.encoder_blocks.EncoderBlock"><code class="docutils literal notranslate"><span class="pre">EncoderBlock</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.model.encoder_blocks.build_encoder"><code class="docutils literal notranslate"><span class="pre">build_encoder()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.cnn.model.decoder_blocks">Generalize Decoder Module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.model.decoder_blocks.DecoderBlockCNN"><code class="docutils literal notranslate"><span class="pre">DecoderBlockCNN</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.model.decoder_blocks.DecoderBlockRCNN"><code class="docutils literal notranslate"><span class="pre">DecoderBlockRCNN</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.model.decoder_blocks.DecoderBlockUnet3Plus"><code class="docutils literal notranslate"><span class="pre">DecoderBlockUnet3Plus</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.model.decoder_blocks.build_decoder"><code class="docutils literal notranslate"><span class="pre">build_decoder()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.cnn.model.init_weights">Weight Initialization</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.model.init_weights.weights_init_kaiming"><code class="docutils literal notranslate"><span class="pre">weights_init_kaiming()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.model.init_weights.init_weights"><code class="docutils literal notranslate"><span class="pre">init_weights()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="datasets.html">DataLoader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_processing.html">Data processeing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#dist-module">DIST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#global-functions">Global Functions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../code_doc.html">CNN Module</a></li>
+      <li class="breadcrumb-item active">CNN -&gt; Model</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/cnn/model.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cnn-model">
+<h1>CNN -&gt; Model<a class="headerlink" href="#cnn-model" title="Link to this heading"></a></h1>
+<section id="module-tardis_em.cnn.model.convolution">
+<span id="convolutions-modules"></span><h2>Convolutions Modules<a class="headerlink" href="#module-tardis_em.cnn.model.convolution" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.cnn.model.convolution.GeLU">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.model.convolution.</span></span><span class="sig-name descname"><span class="pre">GeLU</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tanh</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.model.convolution.GeLU" title="Link to this definition"></a></dt>
+<dd><p>CUSTOM GAUSSIAN ERROR LINEAR UNITS ACTIVATION FUNCTION</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tanh</strong> (<em>float</em>) – hyperbolic tangent value for GeLU</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.cnn.model.convolution.GeLU.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.cnn.model.convolution.GeLU.forward" title="Link to this definition"></a></dt>
+<dd><p>Forward GeLu transformation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>torch.Tensor</em>) – Image tensor to transform.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Transformed image tensor.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.model.convolution.convolution">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.model.convolution.</span></span><span class="sig-name descname"><span class="pre">convolution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_ch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_ch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">components</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#tardis_em.cnn.model.convolution.convolution" title="Link to this definition"></a></dt>
+<dd><p>Customizable convolution block builder.</p>
+<p>Build an convolution block with a specified components and order:
+dimension (2 or 3), conv (c),
+ReLu (r), LeakyReLu (l), GeLu (e), PReLu (p),
+GroupNorm (g), BatchNorm (b).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_ch</strong> (<em>int</em>) – Number of input channels.</p></li>
+<li><p><strong>out_ch</strong> (<em>int</em>) – Number of output channels.</p></li>
+<li><p><strong>components</strong> (<em>str</em>) – Components that are used for conv. block.</p></li>
+<li><p><strong>kernel</strong> (<em>int</em><em>, </em><em>tuple</em>) – Kernel size for the convolution.</p></li>
+<li><p><strong>padding</strong> (<em>int</em><em>, </em><em>tuple</em>) – Padding size for the convolution.</p></li>
+<li><p><strong>num_group</strong> (<em>int</em>) – Num. of groups for the nn.GroupNorm.
+None -&gt; if nn.GroupNorm is not used.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Ordered nn.Module list.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.cnn.model.convolution.SingleConvolution">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.model.convolution.</span></span><span class="sig-name descname"><span class="pre">SingleConvolution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_ch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_ch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">components</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'any'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.model.convolution.SingleConvolution" title="Link to this definition"></a></dt>
+<dd><p>STANDARD SINGLE 3D CONVOLUTION BLOCK</p>
+<p>Output single convolution composed of conv, normalization and relu in order
+defined by components variable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_ch</strong> (<em>int</em>) – Number of input channels.</p></li>
+<li><p><strong>out_ch</strong> (<em>int</em>) – Number of output channels.</p></li>
+<li><p><strong>block_type</strong> (<em>str</em>) – Define encode or decoder path e.g.
+- ‘encoder’: Encoder convolution path
+- ‘decoder’: Decoder convolution path</p></li>
+<li><p><strong>components</strong> (<em>str</em>) – Components that are used for conv. block.</p></li>
+<li><p><strong>kernel</strong> (<em>int</em><em>, </em><em>tuple</em>) – Kernel size for the convolution.</p></li>
+<li><p><strong>padding</strong> (<em>int</em><em>, </em><em>tuple</em>) – Padding size for the convolution.</p></li>
+<li><p><strong>num_group</strong> (<em>int</em>) – Num. of groups for the nn.GroupNorm.
+None -&gt; if nn.GroupNorm is not used.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.cnn.model.convolution.DoubleConvolution">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.model.convolution.</span></span><span class="sig-name descname"><span class="pre">DoubleConvolution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_ch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_ch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">components</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cgr'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.model.convolution.DoubleConvolution" title="Link to this definition"></a></dt>
+<dd><p>DOUBLE CONVOLUTION BLOCK</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_ch</strong> (<em>int</em>) – Number of input channels.</p></li>
+<li><p><strong>out_ch</strong> (<em>int</em>) – Number of output channels.</p></li>
+<li><p><strong>block_type</strong> (<em>str</em>) – Define encode or decoder path e.g.
+- ‘encoder’: Encoder convolution path
+- ‘decoder’: Decoder convolution path</p></li>
+<li><p><strong>components</strong> (<em>str</em>) – Components that are used for conv. block.</p></li>
+<li><p><strong>kernel</strong> (<em>int</em><em>, </em><em>tuple</em>) – Kernel size for the convolution.</p></li>
+<li><p><strong>padding</strong> (<em>int</em><em>, </em><em>tuple</em>) – Padding size for the convolution.</p></li>
+<li><p><strong>num_group</strong> (<em>int</em>) – Num. of groups for the nn.GroupNorm.
+None -&gt; if nn.GroupNorm is not used.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.cnn.model.convolution.RecurrentDoubleConvolution">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.model.convolution.</span></span><span class="sig-name descname"><span class="pre">RecurrentDoubleConvolution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_ch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_ch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">components</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cgr'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.model.convolution.RecurrentDoubleConvolution" title="Link to this definition"></a></dt>
+<dd><p>RECURRENT DOUBLE CONVOLUTION BLOCK</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_ch</strong> (<em>int</em>) – Number of input channels.</p></li>
+<li><p><strong>out_ch</strong> (<em>int</em>) – Number of output channels.</p></li>
+<li><p><strong>block_type</strong> (<em>str</em>) – Define encode or decoder path e.g.
+- ‘encoder’: Encoder convolution path
+- ‘decoder’: Decoder convolution path</p></li>
+<li><p><strong>components</strong> (<em>str</em>) – Components that are used for conv. block.</p></li>
+<li><p><strong>kernel</strong> (<em>int</em><em>, </em><em>tuple</em>) – Kernel size for the convolution.</p></li>
+<li><p><strong>padding</strong> (<em>int</em><em>, </em><em>tuple</em>) – Padding size for the convolution.</p></li>
+<li><p><strong>num_group</strong> (<em>int</em>) – Num. of groups for the nn.GroupNorm.
+None -&gt; if nn.GroupNorm is not used.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.cnn.model.convolution.RecurrentDoubleConvolution.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.cnn.model.convolution.RecurrentDoubleConvolution.forward" title="Link to this definition"></a></dt>
+<dd><p>Forward function for customized convolution
+:param x: Image patch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Up or down convoluted image patch.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-tardis_em.cnn.model.encoder_blocks">
+<span id="generalize-encoder-module"></span><h2>Generalize Encoder Module<a class="headerlink" href="#module-tardis_em.cnn.model.encoder_blocks" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.cnn.model.encoder_blocks.EncoderBlock">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.model.encoder_blocks.</span></span><span class="sig-name descname"><span class="pre">EncoderBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_ch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_ch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conv_module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conv_kernel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_pool</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_kernel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">components</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'3gcr'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attn_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.model.encoder_blocks.EncoderBlock" title="Link to this definition"></a></dt>
+<dd><p>ENCODER BUILDER</p>
+<p>Single encoder module composed of nn.MaxPool and convolution module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_ch</strong> (<em>int</em>) – Number of input channels.</p></li>
+<li><p><strong>out_ch</strong> (<em>int</em>) – Number of output channels.</p></li>
+<li><p><strong>conv_module</strong> (<em>conv_module</em>) – Single, Double or RCNN convolution block.</p></li>
+<li><p><strong>conv_kernel</strong> (<em>int</em>) – Convolution kernel size.</p></li>
+<li><p><strong>max_pool</strong> (<em>int</em>) – If True nn.MaxPool is applied.</p></li>
+<li><p><strong>pool_kernel</strong> (<em>int</em>) – Kernel size for max pooling.</p></li>
+<li><p><strong>dropout</strong> (<em>float</em><em>, </em><em>optional</em>) – Optionals, dropout rate.</p></li>
+<li><p><strong>padding</strong> (<em>int</em>) – Padding size for the convolution.</p></li>
+<li><p><strong>components</strong> (<em>str</em>) – Components that are used for conv. block.</p></li>
+<li><p><strong>num_group</strong> (<em>int</em>) – Num. of groups for the nn.GroupNorm.
+None -&gt; if nn.GroupNorm is not used.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.cnn.model.encoder_blocks.EncoderBlock.dropout">
+<span class="sig-name descname"><span class="pre">dropout</span></span><a class="headerlink" href="#tardis_em.cnn.model.encoder_blocks.EncoderBlock.dropout" title="Link to this definition"></a></dt>
+<dd><p>Optionally, add maxpool</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.cnn.model.encoder_blocks.EncoderBlock.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.cnn.model.encoder_blocks.EncoderBlock.forward" title="Link to this definition"></a></dt>
+<dd><p>Forward CNN encoder block.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>torch.Tensor</em>) – Image torch before convolution.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Image after convolution.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.model.encoder_blocks.build_encoder">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.model.encoder_blocks.</span></span><span class="sig-name descname"><span class="pre">build_encoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_ch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conv_layers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conv_layer_scaler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conv_kernel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_group</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">components</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_kernel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conv_module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attn_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ModuleList</span></span></span><a class="headerlink" href="#tardis_em.cnn.model.encoder_blocks.build_encoder" title="Link to this definition"></a></dt>
+<dd><p>Encoder wrapper for entire CNN model.</p>
+<p>Create encoder block from feature map and convolution modules. Number of
+encoder layers is indicated by number of features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_ch</strong> (<em>int</em>) – Number of input channels.</p></li>
+<li><p><strong>conv_layers</strong> (<em>int</em>) – Number of convolution layers.</p></li>
+<li><p><strong>conv_layer_scaler</strong> (<em>int</em>) – Number of channel by which each CNN block is scaled up.</p></li>
+<li><p><strong>conv_module</strong> (<em>conv_module</em>) – Single, Double or RCNN convolution block.</p></li>
+<li><p><strong>conv_kernel</strong> (<em>int</em>) – Convolution kernel size.</p></li>
+<li><p><strong>pool_kernel</strong> (<em>int</em>) – Kernel size for max pooling.</p></li>
+<li><p><strong>dropout</strong> (<em>float</em><em>, </em><em>optional</em>) – Optionals, dropout rate.</p></li>
+<li><p><strong>padding</strong> (<em>int</em>) – Padding size for the convolution.</p></li>
+<li><p><strong>components</strong> (<em>str</em>) – Components that are used for conv. block.</p></li>
+<li><p><strong>num_group</strong> (<em>int</em>) – Num. of groups for the nn.GroupNorm.
+None -&gt; if nn.GroupNorm is not used.</p></li>
+<li><p><strong>attn_features</strong> (<em>bool</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Encoder block.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nn.ModuleList</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-tardis_em.cnn.model.decoder_blocks">
+<span id="generalize-decoder-module"></span><h2>Generalize Decoder Module<a class="headerlink" href="#module-tardis_em.cnn.model.decoder_blocks" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.cnn.model.decoder_blocks.DecoderBlockCNN">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.model.decoder_blocks.</span></span><span class="sig-name descname"><span class="pre">DecoderBlockCNN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_ch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_ch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conv_kernel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">components</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'3gcr'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.model.decoder_blocks.DecoderBlockCNN" title="Link to this definition"></a></dt>
+<dd><p>CNN DECODER BUILDER FOR UNET</p>
+<p>Create a decoder block consisting of indicated number of deconvolutions followed
+by up-sampling and concatenation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_ch</strong> (<em>int</em>) – Number of input channels.</p></li>
+<li><p><strong>out_ch</strong> (<em>int</em>) – Number of output channels.</p></li>
+<li><p><strong>size</strong> (<em>int</em>) – Size for the resampling.</p></li>
+<li><p><strong>dropout</strong> (<em>float</em><em>, </em><em>optional</em>) – Optional, dropout rate.</p></li>
+<li><p><strong>components</strong> (<em>str</em>) – String list of components from which convolution block
+is composed</p></li>
+<li><p><strong>num_group</strong> (<em>int</em>) – No. of groups for nn.GroupNorm()</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.cnn.model.decoder_blocks.DecoderBlockCNN.dropout">
+<span class="sig-name descname"><span class="pre">dropout</span></span><a class="headerlink" href="#tardis_em.cnn.model.decoder_blocks.DecoderBlockCNN.dropout" title="Link to this definition"></a></dt>
+<dd><p>Build decoders</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.cnn.model.decoder_blocks.DecoderBlockCNN.deconv_module">
+<span class="sig-name descname"><span class="pre">deconv_module</span></span><a class="headerlink" href="#tardis_em.cnn.model.decoder_blocks.DecoderBlockCNN.deconv_module" title="Link to this definition"></a></dt>
+<dd><p>Optional Dropout</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.cnn.model.decoder_blocks.DecoderBlockCNN.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoder_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.cnn.model.decoder_blocks.DecoderBlockCNN.forward" title="Link to this definition"></a></dt>
+<dd><p>Forward CNN decoder block for Unet</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>encoder_features</strong> (<em>torch.Tensor</em>) – Residual connection.</p></li>
+<li><p><strong>x</strong> (<em>torch.Tensor</em>) – Image tensor before convolution.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Image tensor after convolution.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.cnn.model.decoder_blocks.DecoderBlockRCNN">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.model.decoder_blocks.</span></span><span class="sig-name descname"><span class="pre">DecoderBlockRCNN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_ch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_ch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conv_kernel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">components</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'3gcr'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.model.decoder_blocks.DecoderBlockRCNN" title="Link to this definition"></a></dt>
+<dd><p>RCNN DECODER BUILDER</p>
+<p>Create a decoder block consisting of indicated number of deconvolutions followed
+by upscale and connection with torch.cat().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_ch</strong> (<em>int</em>) – Number of input channels.</p></li>
+<li><p><strong>out_ch</strong> (<em>int</em>) – Number of output channels.</p></li>
+<li><p><strong>size</strong> (<em>int</em>) – Size for the resampling.</p></li>
+<li><p><strong>dropout</strong> (<em>float</em><em>, </em><em>optional</em>) – Optional, dropout rate.</p></li>
+<li><p><strong>components</strong> (<em>str</em>) – String list of components from which convolution block
+is composed</p></li>
+<li><p><strong>num_group</strong> (<em>int</em>) – No. of groups for nn.GroupNorm()</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.cnn.model.decoder_blocks.DecoderBlockRCNN.dropout">
+<span class="sig-name descname"><span class="pre">dropout</span></span><a class="headerlink" href="#tardis_em.cnn.model.decoder_blocks.DecoderBlockRCNN.dropout" title="Link to this definition"></a></dt>
+<dd><p>Build decoders</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.cnn.model.decoder_blocks.DecoderBlockRCNN.deconv_res_module">
+<span class="sig-name descname"><span class="pre">deconv_res_module</span></span><a class="headerlink" href="#tardis_em.cnn.model.decoder_blocks.DecoderBlockRCNN.deconv_res_module" title="Link to this definition"></a></dt>
+<dd><p>Optional Dropout</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.cnn.model.decoder_blocks.DecoderBlockRCNN.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoder_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.cnn.model.decoder_blocks.DecoderBlockRCNN.forward" title="Link to this definition"></a></dt>
+<dd><p>Forward RCNN decoder block</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>encoder_features</strong> (<em>torch.Tensor</em>) – Residual connection.</p></li>
+<li><p><strong>x</strong> (<em>torch.Tensor</em>) – Image tensor before convolution.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Image tensor after convolution.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.cnn.model.decoder_blocks.DecoderBlockUnet3Plus">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.model.decoder_blocks.</span></span><span class="sig-name descname"><span class="pre">DecoderBlockUnet3Plus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_ch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_ch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conv_kernel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">components</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_group</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_layer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoder_feature_ch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attn_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.model.decoder_blocks.DecoderBlockUnet3Plus" title="Link to this definition"></a></dt>
+<dd><p>CNN DECODER BUILDER FOR UNET3PLUS</p>
+<p>Create a decoder block consisting of the indicated number of deconvolutions followed
+by upscale and connection with torch.cat().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_ch</strong> (<em>int</em>) – Number of input channels.</p></li>
+<li><p><strong>out_ch</strong> (<em>int</em>) – Number of output channels.</p></li>
+<li><p><strong>size</strong> (<em>int</em>) – Size for the resampling.</p></li>
+<li><p><strong>dropout</strong> (<em>float</em><em>, </em><em>optional</em>) – Optional, dropout rate.</p></li>
+<li><p><strong>components</strong> (<em>str</em>) – String list of components from which convolution block
+is composed.</p></li>
+<li><p><strong>num_group</strong> (<em>int</em>) – Number of groups inc CNN block.</p></li>
+<li><p><strong>num_layer</strong> (<em>int</em>) – Number of CNN layers.</p></li>
+<li><p><strong>encoder_feature_ch</strong> (<em>list</em>) – List of encode outputs.</p></li>
+<li><p><strong>num_group</strong> – No. of groups for nn.GroupNorm()</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.cnn.model.decoder_blocks.DecoderBlockUnet3Plus.dropout">
+<span class="sig-name descname"><span class="pre">dropout</span></span><a class="headerlink" href="#tardis_em.cnn.model.decoder_blocks.DecoderBlockUnet3Plus.dropout" title="Link to this definition"></a></dt>
+<dd><p>Main Block Up-Convolution</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.cnn.model.decoder_blocks.DecoderBlockUnet3Plus.deconv">
+<span class="sig-name descname"><span class="pre">deconv</span></span><a class="headerlink" href="#tardis_em.cnn.model.decoder_blocks.DecoderBlockUnet3Plus.deconv" title="Link to this definition"></a></dt>
+<dd><p>Skip-Connection Encoders</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.cnn.model.decoder_blocks.DecoderBlockUnet3Plus.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoder_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.cnn.model.decoder_blocks.DecoderBlockUnet3Plus.forward" title="Link to this definition"></a></dt>
+<dd><p>Forward CNN decoder block for Unet3Plus</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>torch.Tensor</em>) – Image tensor before convolution.</p></li>
+<li><p><strong>encoder_features</strong> (<em>list</em>) – Residual connection from the encoder.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Image tensor after convolution.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.model.decoder_blocks.build_decoder">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.model.decoder_blocks.</span></span><span class="sig-name descname"><span class="pre">build_decoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conv_layers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conv_layer_scaler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">components</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_group</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conv_kernel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sizes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deconv_module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CNN'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attn_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.model.decoder_blocks.build_decoder" title="Link to this definition"></a></dt>
+<dd><p>Decoder wrapper for the entire CNN model.</p>
+<p>Create a decoder block from a number of convolution and convolution modules.
+The Decoder block is followed by upscale(interpolation) and joining with
+torch.cat()</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>conv_layers</strong> (<em>int</em>) – Number of deconvolution layers.</p></li>
+<li><p><strong>conv_layer_scaler</strong> (<em>int</em>) – Number of channels by which each CNN block is scaled up.</p></li>
+<li><p><strong>components</strong> (<em>str</em>) – Components that are used for deconvolution block.</p></li>
+<li><p><strong>conv_kernel</strong> (<em>int</em>) – Convolution kernel size.</p></li>
+<li><p><strong>padding</strong> (<em>int</em>) – Padding size for the convolution.</p></li>
+<li><p><strong>sizes</strong> (<em>list</em>) – List of tensor sizes for upscale.</p></li>
+<li><p><strong>num_group</strong> (<em>int</em>) – Num. of groups for the nn.GroupNorm.
+None -&gt; if nn.GroupNorm is not used.</p></li>
+<li><p><strong>dropout</strong> (<em>float</em><em>, </em><em>Optional</em>) – Dropout value.</p></li>
+<li><p><strong>deconv_module</strong> – Module of the deconvolution for the decoder.</p></li>
+<li><p><strong>attn_features</strong></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of decoder blocks.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nn.ModuleList</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-tardis_em.cnn.model.init_weights">
+<span id="weight-initialization"></span><h2>Weight Initialization<a class="headerlink" href="#module-tardis_em.cnn.model.init_weights" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.model.init_weights.weights_init_kaiming">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.model.init_weights.</span></span><span class="sig-name descname"><span class="pre">weights_init_kaiming</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.model.init_weights.weights_init_kaiming" title="Link to this definition"></a></dt>
+<dd><p>Kaiming weight and bias initialization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>m</strong> – CNN block.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.model.init_weights.init_weights">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.model.init_weights.</span></span><span class="sig-name descname"><span class="pre">init_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">net</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'kaiming'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.model.init_weights.init_weights" title="Link to this definition"></a></dt>
+<dd><p>Wrapper for network module initialization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>net</strong> – Network to initialized.</p></li>
+<li><p><strong>init_type</strong> (<em>str</em>) – type of initialization.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – _description_</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cnn.html" class="btn btn-neutral float-left" title="CNN" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="datasets.html" class="btn btn-neutral float-right" title="CNN -&gt; Datasets" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2024, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Global -&gt; Data Handlers &mdash; TARDIS-em 0.2.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=fc7d8818"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Global -&gt; Spline Metrics Handlers" href="spline.html" />
+    <link rel="prev" title="Global -&gt; AWS Handlers" href="aws.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TARDIS-em
+          </a>
+              <div class="version">
+                0.2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../HISTORY.html">History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../instructions.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_actin.html">-  3D Actin Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_membrane.html">-  3D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/scripting.html">-  Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/fine_tune_model.html">Fine-Tune TARDIS models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html">CNN Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#dist-module">DIST Module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../code_doc.html#global-functions">Global Functions</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="aws.html">AWS</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Data Handlers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.utils.load_data">Import data formats</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.ImportDataFromAmira"><code class="docutils literal notranslate"><span class="pre">ImportDataFromAmira</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.import_tiff"><code class="docutils literal notranslate"><span class="pre">import_tiff()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.MRCHeader"><code class="docutils literal notranslate"><span class="pre">MRCHeader</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.mrc_read_header"><code class="docutils literal notranslate"><span class="pre">mrc_read_header()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.mrc_write_header"><code class="docutils literal notranslate"><span class="pre">mrc_write_header()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.mrc_mode"><code class="docutils literal notranslate"><span class="pre">mrc_mode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.import_am"><code class="docutils literal notranslate"><span class="pre">import_am()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.load_mrc_file"><code class="docutils literal notranslate"><span class="pre">load_mrc_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.load_ply_scannet"><code class="docutils literal notranslate"><span class="pre">load_ply_scannet()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.load_ply_partnet"><code class="docutils literal notranslate"><span class="pre">load_ply_partnet()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.load_txt_s3dis"><code class="docutils literal notranslate"><span class="pre">load_txt_s3dis()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.load_s3dis_scene"><code class="docutils literal notranslate"><span class="pre">load_s3dis_scene()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.load_image"><code class="docutils literal notranslate"><span class="pre">load_image()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.utils.export_data">Export data formats</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.export_data.NumpyToAmira"><code class="docutils literal notranslate"><span class="pre">NumpyToAmira</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.export_data.to_mrc"><code class="docutils literal notranslate"><span class="pre">to_mrc()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.export_data.to_am"><code class="docutils literal notranslate"><span class="pre">to_am()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.export_data.to_stl"><code class="docutils literal notranslate"><span class="pre">to_stl()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.utils.normalization">Image normalization</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.normalization.SimpleNormalize"><code class="docutils literal notranslate"><span class="pre">SimpleNormalize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.normalization.MinMaxNormalize"><code class="docutils literal notranslate"><span class="pre">MinMaxNormalize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.normalization.MeanStdNormalize"><code class="docutils literal notranslate"><span class="pre">MeanStdNormalize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.normalization.RescaleNormalize"><code class="docutils literal notranslate"><span class="pre">RescaleNormalize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.normalization.FFTNormalize"><code class="docutils literal notranslate"><span class="pre">FFTNormalize</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="spline.html">Spline metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trainer.html">Trainer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="predictor.html">Predictor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="helper.html">Helper Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logger.html">Logger</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utils Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html">SetUp Enviroment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize.html">Visualizer</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../code_doc.html">CNN Module</a></li>
+      <li class="breadcrumb-item active">Global -&gt; Data Handlers</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/utils/import_data.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="global-data-handlers">
+<h1>Global -&gt; Data Handlers<a class="headerlink" href="#global-data-handlers" title="Link to this heading"></a></h1>
+<section id="module-tardis_em.utils.load_data">
+<span id="import-data-formats"></span><h2>Import data formats<a class="headerlink" href="#module-tardis_em.utils.load_data" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.ImportDataFromAmira">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">ImportDataFromAmira</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_am</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_img</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.load_data.ImportDataFromAmira" title="Link to this definition"></a></dt>
+<dd><p>LOADER FOR AMIRA SPATIAL GRAPH FILES</p>
+<p>This class read any .am file and if the spatial graph is recognized it is converted
+into a numpy array as (N, 4) with class ids and coordinates for XYZ.
+Also, due to Amira’s design, file properties are encoded only in the image file
+therefore in order to properly ready spatial graph, class optionally requires
+amira binary or ASCII image file which contains transformation properties and
+pixel size. If the image file is not included, the spatial graph is returned without
+corrections.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>src_am</strong> (<em>str</em>) – Amira spatial graph directory.</p></li>
+<li><p><strong>src_img</strong> (<em>str</em><em>, </em><em>optional</em>) – Amira binary or ASCII image file directory.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.ImportDataFromAmira.get_points">
+<span class="sig-name descname"><span class="pre">get_points</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.ImportDataFromAmira.get_points" title="Link to this definition"></a></dt>
+<dd><p>General class function to retrieve point cloud.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>Point cloud as [X, Y, Z] after transformation and</dt><dd><p>pixel size correction.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.ImportDataFromAmira.get_segmented_points">
+<span class="sig-name descname"><span class="pre">get_segmented_points</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.ImportDataFromAmira.get_segmented_points" title="Link to this definition"></a></dt>
+<dd><p>General class function to retrieve segmented point cloud.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Point cloud as [ID, X, Y, Z].</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.ImportDataFromAmira.get_labels">
+<span class="sig-name descname"><span class="pre">get_labels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.ImportDataFromAmira.get_labels" title="Link to this definition"></a></dt>
+<dd><p>General class function to read all labels from amira file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary with label IDs</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.ImportDataFromAmira.get_image">
+<span class="sig-name descname"><span class="pre">get_image</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.load_data.ImportDataFromAmira.get_image" title="Link to this definition"></a></dt>
+<dd><p>General class function to return image file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Image and if available pixel size data.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.ndarray, float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.ImportDataFromAmira.get_pixel_size">
+<span class="sig-name descname"><span class="pre">get_pixel_size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.ImportDataFromAmira.get_pixel_size" title="Link to this definition"></a></dt>
+<dd><p>Catch pixel size value from image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Pixel size.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.import_tiff">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">import_tiff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tiff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.load_data.import_tiff" title="Link to this definition"></a></dt>
+<dd><p>Function to load any tiff file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tiff</strong> (<em>str</em>) – Tiff file directory.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Image data and unified pixel size.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray, float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">MRCHeader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ny</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nz</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nxstart</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nystart</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nzstart</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">my</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mz</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xlen</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylen</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zlen</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ispg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">next</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">creatid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nreal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imodStamp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imodFlags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nd1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nd2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vd1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vd2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tilt_ox</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tilt_oy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tilt_oz</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tilt_cx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tilt_cy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tilt_cz</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xorg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yorg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zorg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stamp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nlabl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader" title="Link to this definition"></a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.alpha">
+<span class="sig-name descname"><span class="pre">alpha</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.alpha" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 13</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.amax">
+<span class="sig-name descname"><span class="pre">amax</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.amax" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 20</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.amean">
+<span class="sig-name descname"><span class="pre">amean</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.amean" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 21</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.amin">
+<span class="sig-name descname"><span class="pre">amin</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.amin" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 19</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.beta">
+<span class="sig-name descname"><span class="pre">beta</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.beta" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 14</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.cmap">
+<span class="sig-name descname"><span class="pre">cmap</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.cmap" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 44</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.creatid">
+<span class="sig-name descname"><span class="pre">creatid</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.creatid" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 24</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.gamma">
+<span class="sig-name descname"><span class="pre">gamma</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.gamma" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 15</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.idtype">
+<span class="sig-name descname"><span class="pre">idtype</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.idtype" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 29</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.imodFlags">
+<span class="sig-name descname"><span class="pre">imodFlags</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.imodFlags" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 28</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.imodStamp">
+<span class="sig-name descname"><span class="pre">imodStamp</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.imodStamp" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 27</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.ispg">
+<span class="sig-name descname"><span class="pre">ispg</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.ispg" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 22</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.labels">
+<span class="sig-name descname"><span class="pre">labels</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.labels" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 48</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.lens">
+<span class="sig-name descname"><span class="pre">lens</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.lens" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 30</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.mapc">
+<span class="sig-name descname"><span class="pre">mapc</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.mapc" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 16</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.mapr">
+<span class="sig-name descname"><span class="pre">mapr</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.mapr" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 17</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.maps">
+<span class="sig-name descname"><span class="pre">maps</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.maps" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 18</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.mode">
+<span class="sig-name descname"><span class="pre">mode</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.mode" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 3</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.mx">
+<span class="sig-name descname"><span class="pre">mx</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.mx" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 7</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.my">
+<span class="sig-name descname"><span class="pre">my</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.my" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 8</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.mz">
+<span class="sig-name descname"><span class="pre">mz</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.mz" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 9</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.nd1">
+<span class="sig-name descname"><span class="pre">nd1</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.nd1" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 31</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.nd2">
+<span class="sig-name descname"><span class="pre">nd2</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.nd2" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 32</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.next">
+<span class="sig-name descname"><span class="pre">next</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.next" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 23</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.nint">
+<span class="sig-name descname"><span class="pre">nint</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.nint" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 25</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.nlabl">
+<span class="sig-name descname"><span class="pre">nlabl</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.nlabl" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 47</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.nreal">
+<span class="sig-name descname"><span class="pre">nreal</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.nreal" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 26</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.nx">
+<span class="sig-name descname"><span class="pre">nx</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.nx" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.nxstart">
+<span class="sig-name descname"><span class="pre">nxstart</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.nxstart" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 4</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.ny">
+<span class="sig-name descname"><span class="pre">ny</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.ny" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.nystart">
+<span class="sig-name descname"><span class="pre">nystart</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.nystart" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 5</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.nz">
+<span class="sig-name descname"><span class="pre">nz</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.nz" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.nzstart">
+<span class="sig-name descname"><span class="pre">nzstart</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.nzstart" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 6</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.rms">
+<span class="sig-name descname"><span class="pre">rms</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.rms" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 46</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.stamp">
+<span class="sig-name descname"><span class="pre">stamp</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.stamp" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 45</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.tilt_cx">
+<span class="sig-name descname"><span class="pre">tilt_cx</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.tilt_cx" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 38</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.tilt_cy">
+<span class="sig-name descname"><span class="pre">tilt_cy</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.tilt_cy" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 39</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.tilt_cz">
+<span class="sig-name descname"><span class="pre">tilt_cz</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.tilt_cz" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 40</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.tilt_ox">
+<span class="sig-name descname"><span class="pre">tilt_ox</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.tilt_ox" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 35</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.tilt_oy">
+<span class="sig-name descname"><span class="pre">tilt_oy</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.tilt_oy" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 36</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.tilt_oz">
+<span class="sig-name descname"><span class="pre">tilt_oz</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.tilt_oz" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 37</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.vd1">
+<span class="sig-name descname"><span class="pre">vd1</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.vd1" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 33</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.vd2">
+<span class="sig-name descname"><span class="pre">vd2</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.vd2" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 34</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.xlen">
+<span class="sig-name descname"><span class="pre">xlen</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.xlen" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 10</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.xorg">
+<span class="sig-name descname"><span class="pre">xorg</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.xorg" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 41</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.ylen">
+<span class="sig-name descname"><span class="pre">ylen</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.ylen" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 11</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.yorg">
+<span class="sig-name descname"><span class="pre">yorg</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.yorg" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 42</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.zlen">
+<span class="sig-name descname"><span class="pre">zlen</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.zlen" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 12</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.MRCHeader.zorg">
+<span class="sig-name descname"><span class="pre">zorg</span></span><a class="headerlink" href="#tardis_em.utils.load_data.MRCHeader.zorg" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 43</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.mrc_read_header">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">mrc_read_header</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mrc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.load_data.mrc_read_header" title="Link to this definition"></a></dt>
+<dd><p>Helper function to read MRC header.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>mrc</strong> (<em>str</em>) – MRC file directory.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>MRC header.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>class</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.mrc_write_header">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">mrc_write_header</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.mrc_write_header" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.mrc_mode">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">mrc_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.load_data.mrc_mode" title="Link to this definition"></a></dt>
+<dd><p>Helper function to decode MRC mode type.</p>
+<p>mode int: MRC mode from mrc header.
+amin int: MRC minimum pixel value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Mode as np.dtype.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.dtype</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.import_am">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">import_am</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">am_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.load_data.import_am" title="Link to this definition"></a></dt>
+<dd><p>Function to load Amira binary image data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>am_file</strong> (<em>str</em>) – Amira binary image .am file.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Image file as well images parameters.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray, float, float, list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.load_mrc_file">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">load_mrc_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mrc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.load_mrc_file" title="Link to this definition"></a></dt>
+<dd><p>Function to load MRC 2014 file format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>mrc</strong> (<em>str</em>) – MRC file directory.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Image data and pixel size.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray, float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.load_ply_scannet">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">load_ply_scannet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ply</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downscaling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.load_ply_scannet" title="Link to this definition"></a></dt>
+<dd><p>Function to read .ply files.
+:param ply: File directory.
+:type ply: str
+:param downscaling: Downscaling point cloud by fixing voxel size defaults to 0.1.
+:type downscaling: float
+:param color: Optional color feature defaults to None.
+:type color: str, optional</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>Label point cloud coordinates and optionally RGB value for</dt><dd><p>each point.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.load_ply_partnet">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">load_ply_partnet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ply</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downscaling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.load_ply_partnet" title="Link to this definition"></a></dt>
+<dd><p>Function to read .ply files.
+:param ply: File directory.
+:type ply: str
+:param downscaling: Downscaling point cloud by fixing voxel size.
+:type downscaling: float</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Labeled point cloud coordinates.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.load_txt_s3dis">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">load_txt_s3dis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">txt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rgb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downscaling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.load_txt_s3dis" title="Link to this definition"></a></dt>
+<dd><p>Function to read .txt Stanford 3D instance scene file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>txt</strong> (<em>str</em>) – File directory.</p></li>
+<li><p><strong>rgb</strong> (<em>bool</em>) – If True return RGB value.</p></li>
+<li><p><strong>downscaling</strong> (<em>float</em>) – Downscaling point cloud by fixing voxel size.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Labeled point cloud coordinates.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.load_s3dis_scene">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">load_s3dis_scene</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dir_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downscaling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_ds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rgb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.load_s3dis_scene" title="Link to this definition"></a></dt>
+<dd><p>Function to read .txt Stanford 3D instance scene files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dir</strong> (<em>str</em>) – Folder directory with all instances.</p></li>
+<li><p><strong>downscaling</strong> (<em>float</em>) – Downscaling point cloud by fixing voxel size.</p></li>
+<li><p><strong>random_ds</strong> (<em>None</em><em>, </em><em>float</em>) – If not None, indicate ration of point to keep.</p></li>
+<li><p><strong>rgb</strong> (<em>bool</em>) – If True, load rgb value.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Labeled point cloud coordinates.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.load_image">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">load_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.load_image" title="Link to this definition"></a></dt>
+<dd><p>Quick wrapper for loading image data based on detected file format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<em>str</em>) – Image file directory.</p></li>
+<li><p><strong>normalize</strong> (<em>bool</em>) – Rescale histogram to 1% - 99% percentile.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Image array and associated pixel size.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray, float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-tardis_em.utils.export_data">
+<span id="export-data-formats"></span><h2>Export data formats<a class="headerlink" href="#module-tardis_em.utils.export_data" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.export_data.NumpyToAmira">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.export_data.</span></span><span class="sig-name descname"><span class="pre">NumpyToAmira</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">as_point_cloud</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.export_data.NumpyToAmira" title="Link to this definition"></a></dt>
+<dd><p>Builder of Amira file from numpy array.
+Support for 3D only! If 2D data, Z dim build with Z=0</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.export_data.NumpyToAmira.check_3d">
+<span class="sig-name descname"><span class="pre">check_3d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">typing.List</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.utils.export_data.NumpyToAmira.check_3d" title="Link to this definition"></a></dt>
+<dd><p>Check and correct if needed to 3D</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>coord</strong> (<em>np.ndarray</em><em>, </em><em>list</em>) – Coordinate file to check for 3D.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The same or converted to 3D coordinates.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Union[np.ndarray, List[np.ndarray]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.export_data.NumpyToAmira.export_amira">
+<span class="sig-name descname"><span class="pre">export_amira</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_dir:</span> <span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords:</span> <span class="pre">tuple</span> <span class="pre">|</span> <span class="pre">list</span> <span class="pre">|</span> <span class="pre">~numpy.ndarray</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'numpy.ndarray'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels:</span> <span class="pre">tuple</span> <span class="pre">|</span> <span class="pre">list</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores:</span> <span class="pre">list</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.export_data.NumpyToAmira.export_amira" title="Link to this definition"></a></dt>
+<dd><p>Save Amira file with all filaments without any labels</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_dir</strong> (<em>str</em>) – Directory where the file should be saved.</p></li>
+<li><p><strong>coords</strong> (<em>np.ndarray</em><em>, </em><em>tuple</em>) – 3D coordinate file.</p></li>
+<li><p><strong>labels</strong> (<em>tuple</em><em>, </em><em>list</em><em>, </em><em>None</em>) – Labels names.</p></li>
+<li><p><strong>scores</strong> (<em>list</em><em>, </em><em>None</em>) – List of confidence scores for each instance.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.export_data.to_mrc">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.export_data.</span></span><span class="sig-name descname"><span class="pre">to_mrc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">org_header</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#tardis_em.utils.load_data.MRCHeader" title="tardis_em.utils.load_data.MRCHeader"><span class="pre">MRCHeader</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.export_data.to_mrc" title="Link to this definition"></a></dt>
+<dd><p>Save MRC image file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>np.ndarray</em>) – Image file.</p></li>
+<li><p><strong>pixel_size</strong> (<em>float</em>) – Image original pixel size.</p></li>
+<li><p><strong>file_dir</strong> (<em>str</em>) – Directory where the file should be saved.</p></li>
+<li><p><strong>org_header</strong> (<a class="reference internal" href="#tardis_em.utils.load_data.MRCHeader" title="tardis_em.utils.load_data.MRCHeader"><em>MRCHeader</em></a>) – Optional original header</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.export_data.to_am">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.export_data.</span></span><span class="sig-name descname"><span class="pre">to_am</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.export_data.to_am" title="Link to this definition"></a></dt>
+<dd><p>Save image to binary Amira image file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>np.ndarray</em>) – Image file.</p></li>
+<li><p><strong>pixel_size</strong> (<em>float</em>) – Image original pixel size.</p></li>
+<li><p><strong>file_dir</strong> (<em>str</em>) – Directory where the file should be saved.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.export_data.to_stl">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.export_data.</span></span><span class="sig-name descname"><span class="pre">to_stl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.export_data.to_stl" title="Link to this definition"></a></dt>
+<dd><p>Save a point cloud as a PLY file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>np.ndarray</em>) – The name of the PLY file to create.</p></li>
+<li><p><strong>file_dir</strong> (<em>str</em>) – Output file location.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-tardis_em.utils.normalization">
+<span id="image-normalization"></span><h2>Image normalization<a class="headerlink" href="#module-tardis_em.utils.normalization" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.normalization.SimpleNormalize">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.normalization.</span></span><span class="sig-name descname"><span class="pre">SimpleNormalize</span></span><a class="headerlink" href="#tardis_em.utils.normalization.SimpleNormalize" title="Link to this definition"></a></dt>
+<dd><p>SIMPLE IMAGE NORMALIZATION</p>
+<p>Take int8-int32 image file with 0 - 255 value. All image value are spread
+between 0 - 1.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.normalization.MinMaxNormalize">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.normalization.</span></span><span class="sig-name descname"><span class="pre">MinMaxNormalize</span></span><a class="headerlink" href="#tardis_em.utils.normalization.MinMaxNormalize" title="Link to this definition"></a></dt>
+<dd><p>IMAGE NORMALIZATION BETWEEN MIN AND MAX VALUE</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.normalization.MeanStdNormalize">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.normalization.</span></span><span class="sig-name descname"><span class="pre">MeanStdNormalize</span></span><a class="headerlink" href="#tardis_em.utils.normalization.MeanStdNormalize" title="Link to this definition"></a></dt>
+<dd><p>IMAGE NORMALIZATION BASED ON MEAN AND STD</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.normalization.RescaleNormalize">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.normalization.</span></span><span class="sig-name descname"><span class="pre">RescaleNormalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clip_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2,</span> <span class="pre">98)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.normalization.RescaleNormalize" title="Link to this definition"></a></dt>
+<dd><p>NORMALIZE IMAGE VALUE USING Skimage</p>
+<p>Rescale intensity with top% and bottom% percentiles as default</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>clip_range</strong> – Histogram percentiles range crop.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.normalization.FFTNormalize">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.normalization.</span></span><span class="sig-name descname"><span class="pre">FFTNormalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'affine'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">900</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta_</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_iters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_cuda</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.normalization.FFTNormalize" title="Link to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.normalization.FFTNormalize.gmm_fit">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gmm_fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta_</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_iters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">share_var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.normalization.FFTNormalize.gmm_fit" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.normalization.FFTNormalize.norm_fit">
+<span class="sig-name descname"><span class="pre">norm_fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">900</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta_</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_iters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_cuda</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.normalization.FFTNormalize.norm_fit" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="aws.html" class="btn btn-neutral float-left" title="Global -&gt; AWS Handlers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="spline.html" class="btn btn-neutral float-right" title="Global -&gt; Spline Metrics Handlers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2024, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

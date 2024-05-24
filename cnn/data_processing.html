@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CNN -&gt; Data processing &mdash; TARDIS-em 0.2.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=fc7d8818"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="CNN -&gt; Utils" href="utils.html" />
+    <link rel="prev" title="CNN -&gt; Datasets" href="datasets.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TARDIS-em
+          </a>
+              <div class="version">
+                0.2.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../HISTORY.html">History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../instructions.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_actin.html">-  3D Actin Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_membrane.html">-  3D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/scripting.html">-  Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/fine_tune_model.html">Fine-Tune TARDIS models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../code_doc.html">CNN Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cnn.html">CNN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model.html">CNN Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets.html">DataLoader</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Data processeing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.cnn.data_processing.trim">Image patching - Image trimming</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.trim.trim_with_stride"><code class="docutils literal notranslate"><span class="pre">trim_with_stride()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.trim.trim_label_mask"><code class="docutils literal notranslate"><span class="pre">trim_label_mask()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.cnn.data_processing.stitch">Image patching - Image stitching</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.stitch.StitchImages"><code class="docutils literal notranslate"><span class="pre">StitchImages</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.stitch.generate_grid"><code class="docutils literal notranslate"><span class="pre">generate_grid()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.cnn.data_processing.interpolation">Utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.interpolation.interpolate_generator"><code class="docutils literal notranslate"><span class="pre">interpolate_generator()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.interpolation.interpolation"><code class="docutils literal notranslate"><span class="pre">interpolation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.draw_mask.draw_instances"><code class="docutils literal notranslate"><span class="pre">draw_instances()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.draw_mask.draw_semantic_membrane"><code class="docutils literal notranslate"><span class="pre">draw_semantic_membrane()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.draw_mask.draw_instances_membrane"><code class="docutils literal notranslate"><span class="pre">draw_instances_membrane()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.draw_mask.draw_mask"><code class="docutils literal notranslate"><span class="pre">draw_mask()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.draw_mask.draw_circle"><code class="docutils literal notranslate"><span class="pre">draw_circle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.draw_mask.draw_sphere"><code class="docutils literal notranslate"><span class="pre">draw_sphere()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#dist-module">DIST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#global-functions">Global Functions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../code_doc.html">CNN Module</a></li>
+      <li class="breadcrumb-item active">CNN -&gt; Data processing</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/cnn/data_processing.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cnn-data-processing">
+<h1>CNN -&gt; Data processing<a class="headerlink" href="#cnn-data-processing" title="Link to this heading"></a></h1>
+<section id="module-tardis_em.cnn.data_processing.trim">
+<span id="image-patching-image-trimming"></span><h2>Image patching - Image trimming<a class="headerlink" href="#module-tardis_em.cnn.data_processing.trim" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.trim.trim_with_stride">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.trim.</span></span><span class="sig-name descname"><span class="pre">trim_with_stride</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trim_size_xy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trim_size_z</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_counter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clean_empty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_if</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">device(type='cpu')</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.data_processing.trim.trim_with_stride" title="Link to this definition"></a></dt>
+<dd><p>Function to patch image and mask to specified patch size with overlying area</p>
+<p>Output images are saved as tiff with naming shame 1_1_1_25. Where
+number indicate grid position in xyz. Last number indicate stride.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<em>np.ndarray</em>) – Corresponding image for the labels.</p></li>
+<li><p><strong>trim_size_xy</strong> (<em>int</em>) – Size of trimming in xy dimension.</p></li>
+<li><p><strong>trim_size_z</strong> (<em>int</em>) – Size of trimming in z dimension.</p></li>
+<li><p><strong>output</strong> (<em>str</em>) – Name of the output directory for saving.</p></li>
+<li><p><strong>image_counter</strong> (<em>int</em>) – Number id of image.</p></li>
+<li><p><strong>scale</strong> (<em>tuple</em>) – Up- DownScale image and mask to the given shape or factor.</p></li>
+<li><p><strong>clean_empty</strong> (<em>bool</em>) – Remove empty patches.</p></li>
+<li><p><strong>keep_if</strong> (<em>float</em>) – If float, keep only patches that have mask.
+Evaluated based on % of pixels with mask</p></li>
+<li><p><strong>stride</strong> (<em>int</em>) – Trimming step size.</p></li>
+<li><p><strong>mask</strong> (<em>np.ndarray</em><em>, </em><em>None</em>) – Label mask.</p></li>
+<li><p><strong>log</strong> (<em>bool</em>) – If True, output trimming log information.</p></li>
+<li><p><strong>pixel_size</strong> (<em>None</em><em>, </em><em>float</em>) – If not None, save mask as mrc with pixel size information.</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em>) – Optional device.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.trim.trim_label_mask">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.trim.</span></span><span class="sig-name descname"><span class="pre">trim_label_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.cnn.data_processing.trim.trim_label_mask" title="Link to this definition"></a></dt>
+<dd><p>! DEPRECIATED ! Module to trim image and mask to boundary box of point cloud.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> (<em>np.ndarray</em>) – 3D coordinates of pitons.</p></li>
+<li><p><strong>image</strong> (<em>np.ndarray</em>) – corresponding image for the labels.</p></li>
+<li><p><strong>label_mask</strong> (<em>np.ndarray</em>) – empty label mask.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-tardis_em.cnn.data_processing.stitch">
+<span id="image-patching-image-stitching"></span><h2>Image patching - Image stitching<a class="headerlink" href="#module-tardis_em.cnn.data_processing.stitch" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.stitch.StitchImages">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.stitch.</span></span><span class="sig-name descname"><span class="pre">StitchImages</span></span><a class="headerlink" href="#tardis_em.cnn.data_processing.stitch.StitchImages" title="Link to this definition"></a></dt>
+<dd><p>MAIN MODULE TO STITCH IMAGE FROM IMAGE PATCHES</p>
+<p>Class object to stitch cut date into one big image. Object recognize images
+with naming 0_1_1_1_25_pf where:
+- 0 indicate id of image
+- 1 indicate xyz position
+- 25 indicate stride value for overlap
+- pf indicate optional prefix in file name</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.stitch.generate_grid">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.stitch.</span></span><span class="sig-name descname"><span class="pre">generate_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.data_processing.stitch.generate_grid" title="Link to this definition"></a></dt>
+<dd><p>Generates grid coordinates for either 2D or 3D images.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image_size</strong> (<em>list</em>) – The dimensions of the image.
+For 3D, it should be [z, y, x], and for 2D, [y, x].</p></li>
+<li><p><strong>patch_size</strong> (<em>list</em>) – The dimensions of each patch.
+For 3D, [nz, ny, nx], and for 2D, [ny, nx].</p></li>
+<li><p><strong>grid_size</strong> (<em>list</em>) – The grid size.
+For 3D, [gz, gy, gx], and for 2D, [gy, gx].</p></li>
+<li><p><strong>stride</strong> (<em>int</em>) – The stride for grid generation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple of numpy arrays with coordinates of the grid.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[list]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-tardis_em.cnn.data_processing.interpolation">
+<span id="utils"></span><h2>Utils<a class="headerlink" href="#module-tardis_em.cnn.data_processing.interpolation" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.interpolation.interpolate_generator">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.interpolation.</span></span><span class="sig-name descname"><span class="pre">interpolate_generator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterable</span></span></span><a class="headerlink" href="#tardis_em.cnn.data_processing.interpolation.interpolate_generator" title="Link to this definition"></a></dt>
+<dd><p>Generator for 3D array interpolation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>points</strong> – Expect array of 2 point in 3D as [X x Y x (Z)] of [2, 3] shape</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Iterable object to generate 3D list of points between given 2
+points as [X x Y x (Z)]</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Iterable</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.interpolation.interpolation">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.interpolation.</span></span><span class="sig-name descname"><span class="pre">interpolation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.cnn.data_processing.interpolation.interpolation" title="Link to this definition"></a></dt>
+<dd><p>3D INTERPOLATION FOR BUILDING SEMANTIC MASK</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>points</strong> (<em>np.ndarray</em>) – numpy array with points belonging to individual segments
+given by x, y, (z) coordinates.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Interpolated 2 or 3D array</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function" id="module-tardis_em.cnn.data_processing.draw_mask">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.draw_mask.draw_instances">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.draw_mask.</span></span><span class="sig-name descname"><span class="pre">draw_instances</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mask_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">circle_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">250</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.cnn.data_processing.draw_mask.draw_instances" title="Link to this definition"></a></dt>
+<dd><p>Module to build semantic mask from corresponding coordinates</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mask_size</strong> (<em>tuple</em>) – Size of array that will hold created mask.</p></li>
+<li><p><strong>coordinate</strong> (<em>np.ndarray</em>) – Segmented coordinates of a shape [Label x X x Y x (Z)].</p></li>
+<li><p><strong>pixel_size</strong> (<em>float</em>) – Pixel size in Angstrom.</p></li>
+<li><p><strong>circle_size</strong> (<em>int</em>) – Size of a circle the label mask in Angstrom.</p></li>
+<li><p><strong>label</strong> (<em>bool</em>) – If True, expect label point cloud.</p></li>
+<li><p><strong>dtype</strong> (<em>dtype</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Binary mask with drawn all coordinates as lines.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.draw_mask.draw_semantic_membrane">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.draw_mask.</span></span><span class="sig-name descname"><span class="pre">draw_semantic_membrane</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mask_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spline_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">70</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.cnn.data_processing.draw_mask.draw_semantic_membrane" title="Link to this definition"></a></dt>
+<dd><p>Draw semantic membrane</p>
+<p>For each Z pick individual instance and draw a fitted spline of given thickness.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mask_size</strong> (<em>tuple</em>) – Size of array that will hold created mask.</p></li>
+<li><p><strong>coordinate</strong> (<em>np.ndarray</em>) – Segmented coordinates of a shape [Label x X x Y x (Z)].</p></li>
+<li><p><strong>pixel_size</strong> (<em>float</em>) – Pixel size in Angstrom.</p></li>
+<li><p><strong>spline_size</strong> (<em>int</em>) – Size of a circle the label mask in Angstrom.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Binary mask with drawn all coordinates as lines.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.draw_mask.draw_instances_membrane">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.draw_mask.</span></span><span class="sig-name descname"><span class="pre">draw_instances_membrane</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mask_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spline_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">70</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.cnn.data_processing.draw_mask.draw_instances_membrane" title="Link to this definition"></a></dt>
+<dd><p>Draw instances membrane</p>
+<p>For each Z pick individual instance and draw a fitted spline of given thickness.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mask_size</strong> (<em>tuple</em>) – Size of array that will hold created mask.</p></li>
+<li><p><strong>coordinate</strong> (<em>np.ndarray</em>) – Segmented coordinates of a shape [Label x X x Y x (Z)].</p></li>
+<li><p><strong>pixel_size</strong> (<em>float</em>) – Pixel size in Angstrom.</p></li>
+<li><p><strong>spline_size</strong> (<em>int</em>) – Size of a circle the label mask in Angstrom.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Binary mask with drawn all coordinates as lines.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.draw_mask.draw_mask">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.draw_mask.</span></span><span class="sig-name descname"><span class="pre">draw_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.cnn.data_processing.draw_mask.draw_mask" title="Link to this definition"></a></dt>
+<dd><p>Module draw_mask to construct sphere shape of a label</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>r</strong> (<em>int</em>) – radius of a circle in Angstrom.</p></li>
+<li><p><strong>c</strong> (<em>np.ndarray</em>) – point in 3D indicating center of a circle [X x Y x Z].</p></li>
+<li><p><strong>label_mask</strong> (<em>np.ndarray</em>) – array of a mask on which circle is drawn.</p></li>
+<li><p><strong>segment_shape</strong> (<em>str</em>) – Type of shape to draw. Expect [‘s’, ‘c’].</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Binary mask.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.draw_mask.draw_circle">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.draw_mask.</span></span><span class="sig-name descname"><span class="pre">draw_circle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.cnn.data_processing.draw_mask.draw_circle" title="Link to this definition"></a></dt>
+<dd><p>Draw a circle and shift coordinate to c position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>r</strong> (<em>int</em>) – radius of a circle in Angstrom.</p></li>
+<li><p><strong>c</strong> (<em>tuple</em>) – point in 3D indicating center of a circle [(Z), Y, X].</p></li>
+<li><p><strong>shape</strong> (<em>tuple</em>) – Shape of mask to eliminated ofe-flowed pixel.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple of array’s with zyx coordinates</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[np.ndarray, np.ndarray, np.ndarray]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.draw_mask.draw_sphere">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.draw_mask.</span></span><span class="sig-name descname"><span class="pre">draw_sphere</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.cnn.data_processing.draw_mask.draw_sphere" title="Link to this definition"></a></dt>
+<dd><p>Draw a sphere and shift coordinate to c position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>r</strong> (<em>int</em>) – radius of a sphere in Angstrom.</p></li>
+<li><p><strong>c</strong> (<em>tuple</em>) – point in 3D indicating center of a sphere [Z, Y, X].</p></li>
+<li><p><strong>shape</strong> (<em>tuple</em>) – Shape of mask to eliminated ofe-flowed pixel.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple of array’s with zyx coordinates</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[np.ndarray, np.ndarray, np.ndarray]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="datasets.html" class="btn btn-neutral float-left" title="CNN -&gt; Datasets" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="utils.html" class="btn btn-neutral float-right" title="CNN -&gt; Utils" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2024, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
