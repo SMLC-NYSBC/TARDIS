@@ -59,7 +59,7 @@ What's new?
 
 `Full History <https://smlc-nysbc.github.io/TARDIS/HISTORY.html>`__
 
-TARDIS-em v0.2.5 (2024-05-22):
+TARDIS-em v0.2.6 (2024-05-22):
     * Added actin segmentation
     * Improvement from Microtubule and Membrane prediction with updated models
     * Added option for scripting TARDIS predictions
