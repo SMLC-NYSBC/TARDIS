@@ -1,5 +1,14 @@
 # History
 <details open>
+    <summary><b>0.2.7 (2024-05-28)</b></summary>
+
+* **General changes:**
+    * *General*:
+      * Bugfix when multiple files are predicted in batch
+
+</details>
+
+<details>
     <summary><b>0.2.6 (2024-05-22)</b></summary>
 
 * **General changes:**

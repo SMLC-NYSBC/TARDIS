@@ -315,7 +315,7 @@ class GeneralPredictor:
 
         if NN in ["Actin", "Microtubule"]:
             # Build CNN network with loaded pre-trained weights
-            if not self.output_format.startswith("None") and not self.binary_mask:
+            if not self.binary_mask:
                 self.cnn = Predictor(
                     checkpoint=self.checkpoint[0],
                     network=self.convolution_nn,
@@ -338,7 +338,7 @@ class GeneralPredictor:
         elif NN in ["Membrane2D", "Membrane"]:
             # Build CNN network with loaded pre-trained weights
             if NN == "Membrane2D":
-                if not self.output_format.startswith("None") and not self.binary_mask:
+                if not self.binary_mask:
                     self.cnn = Predictor(
                         checkpoint=self.checkpoint[0],
                         network=self.convolution_nn,
@@ -360,7 +360,7 @@ class GeneralPredictor:
                         device=self.device,
                     )
             else:
-                if not self.output_format.startswith("None") and not self.binary_mask:
+                if not self.binary_mask:
                     self.cnn = Predictor(
                         checkpoint=self.checkpoint[0],
                         network=self.convolution_nn,
@@ -1071,7 +1071,7 @@ class GeneralPredictor:
             self.log_tardis(id_, i, log_id=1)
 
             """Semantic Segmentation"""
-            if not self.output_format.startswith("None") and not self.binary_mask:
+            if not self.binary_mask:
                 # Cut image for fix patch size and normalizing image pixel size
                 trim_with_stride(
                     image=self.image,
