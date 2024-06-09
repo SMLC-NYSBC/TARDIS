@@ -124,19 +124,6 @@ warnings.simplefilter("ignore", UserWarning)
     show_default=True,
 )
 @click.option(
-    "-cc",
-    "--connect_cylinder",
-    default=40,
-    type=int,
-    help="To minimize false positives when linking membranes, we limit "
-    "the search area to a cylindrical radius specified in angstroms. "
-    "For each spline, we find the direction the filament end is pointing in "
-    "and look for another filament that is oriented in the same direction. "
-    "The ends of these filaments must be located within this cylinder "
-    "to be considered connected.",
-    show_default=True,
-)
-@click.option(
     "-cm",
     "--connect_membranes",
     default=1000,
@@ -183,7 +170,6 @@ def main(
     cnn_threshold: float,
     dist_threshold: float,
     points_in_patch: int,
-    connect_splines: int,
     connect_membranes: int,
     device: str,
     debug: bool,
@@ -223,8 +209,8 @@ def main(
         points_in_patch=points_in_patch,
         predict_with_rotation=rotate,
         instances=instances,
-        connect_splines=connect_splines,
-        connect_cylinder=connect_membranes,
+        connect_splines=connect_membranes,
+        connect_cylinder=250,
         device_=str(device),
         debug=debug,
     )
