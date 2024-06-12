@@ -88,7 +88,7 @@ or
 
 .. code-block:: bash
 
-    conda install tardis-em -c rrobert92
+    conda install tardis-em -c rrobert92 -c open3d-admin
 
 2) Verifies installation:
 
