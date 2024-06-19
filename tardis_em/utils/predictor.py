@@ -39,7 +39,7 @@ from tardis_em.utils.errors import TardisError
 from tardis_em.utils.export_data import NumpyToAmira, to_am, to_mrc, to_stl
 from tardis_em.utils.load_data import import_am, ImportDataFromAmira, load_image
 from tardis_em.utils.logo import print_progress_bar, TardisLogo
-from tardis_em.utils.normalization import MeanStdNormalize, RescaleNormalize
+from tardis_em.utils.normalization import MeanStdNormalize, RescaleNormalize, adaptive_threshold
 from tardis_em.utils.setup_envir import build_temp_dir, clean_up
 from tardis_em.utils.spline_metric import (
     FilterSpatialGraph,
@@ -72,7 +72,7 @@ class GeneralPredictor:
         dir_ (str, np.ndarray): Dataset directory.
         output_format (str): Two output format for semantic and instance prediction.
         patch_size (int): Image 3D crop size.
-        cnn_threshold (float): Threshold for CNN model.
+        cnn_threshold (str): Threshold for CNN model.
         dist_threshold (float): Threshold for DIST model.
         points_in_patch (int): Maximum number of points per patched point cloud.
         predict_with_rotation (bool): If True, CNN predict with 4 90* rotations.
@@ -98,7 +98,7 @@ class GeneralPredictor:
         output_format: str,
         patch_size: int,
         convolution_nn: str,
-        cnn_threshold: float,
+        cnn_threshold: str,
         dist_threshold: float,
         points_in_patch: int,
         predict_with_rotation: bool,
@@ -538,17 +538,22 @@ class GeneralPredictor:
         self.image = torch.sigmoid(torch.from_numpy(self.image)).cpu().detach().numpy()
 
         # Threshold CNN prediction
-        if self.cnn_threshold != 0:
-            self.image = np.where(self.image >= self.cnn_threshold, 1, 0).astype(
-                np.uint8
-            )
+        if self.cnn_threshold == 'auto':
+            self.image = adaptive_threshold(self.image)
         else:
-            if not self.output_format.startswith("return"):
-                tif.imwrite(
-                    join(self.am_output, f"{id_name[:-self.in_format]}_CNN.tif"),
-                    self.image,
+            self.cnn_threshold = float(self.cnn_threshold)
+
+            if self.cnn_threshold != 0:
+                self.image = np.where(self.image >= self.cnn_threshold, 1, 0).astype(
+                    np.uint8
                 )
-                self.image = None
+            else:
+                if not self.output_format.startswith("return"):
+                    tif.imwrite(
+                        join(self.am_output, f"{id_name[:-self.in_format]}_CNN.tif"),
+                        self.image,
+                    )
+                    self.image = None
 
         """Clean-up temp dir"""
         clean_up(dir_=self.dir)

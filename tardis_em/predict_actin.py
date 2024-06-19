@@ -99,8 +99,8 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-ct",
     "--cnn_threshold",
-    default=0.25,
-    type=float,
+    default="0.25",
+    type=str,
     help="Threshold used for CNN prediction.",
     show_default=True,
 )
@@ -189,7 +189,7 @@ def main(
     rotate: bool,
     correct_px: float,
     convolution_nn: str,
-    cnn_threshold: float,
+    cnn_threshold: str,
     dist_threshold: float,
     points_in_patch: int,
     filter_by_length: int,

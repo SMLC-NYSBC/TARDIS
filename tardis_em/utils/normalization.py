@@ -14,6 +14,14 @@ import torch
 from skimage import exposure
 
 
+def adaptive_threshold(img: np.ndarray):
+    std_ = np.std(img, axis=(1, 2), keepdims=True)
+    mean_ = np.mean(img, axis=(1, 2), keepdims=True)
+
+    # Perform the thresholding in a vectorized manner
+    return (img >= (mean_ / std_)).astype(np.uint8)
+
+
 class SimpleNormalize:
     """
     SIMPLE IMAGE NORMALIZATION

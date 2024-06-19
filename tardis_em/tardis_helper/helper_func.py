@@ -17,15 +17,14 @@ def tardis_helper(func: str, dir_=None):
 
     if func == "csv_am":
         px = click.prompt(
-            "Detected .tif files, please provide pixel size "
-            "(It will be used for all .tif images):",
+            "What is the pixel size of the data:",
             type=float,
         )
 
         csv_files = [f for f in os.listdir(dir_) if f.endswith(".csv")]
         for i in csv_files:
             try:
-                coord = np.genfromtxt(os.path.join(dir_, i), delimiter=",")
+                coord = np.genfromtxt(os.path.join(dir_, i), delimiter=",")[1:, :]
                 if isinstance((coord[0, 0]), int) or isinstance((coord[0, 0]), float):
                     if coord.shape[1] == 3:
                         coord = np.vstack(

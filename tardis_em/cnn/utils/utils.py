@@ -86,10 +86,16 @@ def scale_image(
 def nn_scaling(
     img: np.ndarray, scale: tuple, dtype: np.dtype, device="cpu"
 ) -> np.ndarray:
+    # TODO Gaussian filter, bandwidth is size of the scaling in pytorch (gpu)
+    # Maybe TODO Furrier crop ?
+
     img = torch.from_numpy(img)[None, None, ...].to(device)
     img = F.interpolate(img, size=scale, mode="nearest")[0, 0, ...]
 
+    # ToDO Return dtype
     return img.cpu().detach().numpy()
+
+# TODO maxpool sampling for mask ?
 
 
 def pil_LANCZOS(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
