@@ -32,7 +32,7 @@ from tardis_em.cnn.data_processing.stitch import StitchImages
 from tardis_em.cnn.data_processing.trim import trim_with_stride
 from tardis_em.cnn.datasets.dataloader import PredictionDataset
 from tardis_em.cnn.cnn import build_cnn_network
-from tardis_em.cnn.utils.utils import scale_image
+from tardis_em.cnn.data_processing.scaling import scale_image
 from tardis_em.utils.aws import get_weights_aws
 from tardis_em.utils.device import get_device
 from tardis_em.utils.errors import TardisError

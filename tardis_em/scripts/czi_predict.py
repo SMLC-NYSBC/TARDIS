@@ -28,7 +28,7 @@ from shutil import rmtree, move
 from tardis_em.cnn.data_processing.stitch import StitchImages
 from tardis_em.cnn.data_processing.trim import trim_with_stride
 from tardis_em.cnn.datasets.dataloader import PredictionDataset
-from tardis_em.cnn.utils.utils import scale_image
+from tardis_em.cnn.data_processing.scaling import scale_image
 from tardis_em.dist_pytorch.datasets.patches import PatchDataSet
 from tardis_em.dist_pytorch.utils.build_point_cloud import BuildPointCloud
 from tardis_em.dist_pytorch.utils.segment_point_cloud import PropGreedyGraphCut

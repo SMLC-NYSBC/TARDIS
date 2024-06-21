@@ -16,7 +16,7 @@ from typing import Optional, Tuple
 import numpy as np
 from tifffile import tifffile as tif
 
-from tardis_em.cnn.utils.utils import scale_image
+from tardis_em.cnn.data_processing.scaling import scale_image
 from tardis_em.utils.device import get_device
 from tardis_em.utils.export_data import to_mrc
 from tardis_em.utils.errors import TardisError
