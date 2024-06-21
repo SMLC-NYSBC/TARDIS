@@ -108,7 +108,7 @@ ENV/
 .mypy_cache/
 
 # IDE settings
-.vscode/jupyter/local
+tests/jupyter/local/
 .DS_Store
 docs/resources/Tardis_logo_1.svg
 docs/resources/Tardis_logo_1.png
