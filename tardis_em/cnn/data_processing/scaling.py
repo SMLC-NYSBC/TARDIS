@@ -48,10 +48,10 @@ def scale_image(
         scale = tuple([scale[0], scale[1], scale[2]])
     else:
         scale = tuple([scale[0], scale[1]])
-
-    if nn:
-        image = nn_scaling(img=image, scale=scale, dtype=type_i, device=device)
-        return image, dim
+    #
+    # if nn:
+    #     image = nn_scaling(img=image, scale=scale, dtype=type_i, device=device)
+    #     return image, dim
 
     if image is not None:
         if not np.all(scale == image.shape):
@@ -65,16 +65,16 @@ def scale_image(
                         img=image, scale=scale, dtype=type_i, device=device
                     )
             else:
-                image = pil_LANCZOS(
+                image = linear_scaling(
                     img=image.astype(np.float32), scale=scale, dtype=type_i
                 )
 
     if mask is not None:
         if not np.all(scale == mask.shape):
             if scale[0] > mask.shape[0]:
-                mask = linear_scaling(img=mask, scale=scale, dtype=type_m)
+                mask = nn_scaling(img=mask, scale=scale, dtype=type_m)
             else:
-                mask = pil_LANCZOS(img=mask.astype(np.int16), scale=scale, dtype=type_m)
+                mask = fourier_scaling(img=mask.astype(np.int16), scale=scale, dtype=type_m)
 
     if image is not None and mask is not None:
         return image, mask, dim

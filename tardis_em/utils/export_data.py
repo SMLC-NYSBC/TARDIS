@@ -420,20 +420,19 @@ def to_mrc(
     """
     mode = mrc_mode(mode=data.dtype, amin=data.min())
     time_ = time.asctime()
+    label = f"Saved with TARDIS {version}                        {time_}"
+
     if org_header is not None:
         labels = org_header.labels.split(b"\x00")[0]
 
         if len(labels) > 0:
             nlabl = org_header.nlabl + 1
-            label = f"Predicted with TARDIS {version}                        {time_}"
             labels = labels + b"\x00" + bytes(label, "utf-8")
         else:
             nlabl = 1
-            label = f"Predicted with TARDIS {version}                        {time_}"
             labels = bytes(label, "utf-8")
     else:
         nlabl = 1
-        label = f"Predicted with TARDIS {version}                        {time_}"
         labels = bytes(label, "utf-8")
 
     len_ = 800 - len(labels)

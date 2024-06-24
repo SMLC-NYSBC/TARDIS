@@ -218,7 +218,7 @@ class GeneralPredictor:
                     interaction_threshold=amira_inter_probability,
                 )
                 self.score_splines = ComputeConfidenceScore()
-            elif predict in ["Membrane"]:
+            elif predict in ["Membrane", "General"]:
                 self.GraphToSegment = PropGreedyGraphCut(
                     threshold=dist_threshold, connection=8
                 )
@@ -237,7 +237,12 @@ class GeneralPredictor:
         All sanity checks before TARDIS initialize prediction
         """
         msg = f"TARDIS v.{version} supports only MT and Mem segmentation!"
-        assert_ = self.predict in ["Actin", "Membrane2D", "Membrane", "Microtubule"]
+        assert_ = self.predict in [
+            "Actin",
+            "Membrane2D", "Membrane",
+            "Microtubule",
+            "General"
+        ]
         if self.tardis_logo:
             # Check if user ask to predict correct structure
             if not assert_:
@@ -308,10 +313,28 @@ class GeneralPredictor:
                 assert not assert_, msg
 
     def build_NN(self, NN: str):
-        if NN in ["Microtubule", "Actin"]:
-            self.normalize_px = 25
+        if NN == "General":
+            self.normalize_px = None
+            self.cnn = Predictor(
+                checkpoint=self.checkpoint[0],
+                network=self.convolution_nn,
+                img_size=self.patch_size,
+                sigmoid=False,
+                device=self.device,
+            )
+            if not self.output_format.endswith("None"):
+                self.dist = Predictor(
+                    checkpoint=self.checkpoint[1],
+                    network="dist",
+                    subtype="triang",
+                    model_type="3d",
+                    device=self.device,
+                )
         else:
-            self.normalize_px = 15
+            if NN in ["Microtubule", "Actin"]:
+                self.normalize_px = 25
+            else:
+                self.normalize_px = 15
 
         if NN in ["Actin", "Microtubule"]:
             # Build CNN network with loaded pre-trained weights
@@ -534,7 +557,7 @@ class GeneralPredictor:
             )[: self.scale_shape[0], : self.scale_shape[1], : self.scale_shape[2]]
 
         # Restored original image pixel size
-        self.image, _ = scale_image(image=self.image, scale=self.org_shape, nn=False)
+        self.image, _ = scale_image(image=self.image, scale=self.org_shape)
         self.image = torch.sigmoid(torch.from_numpy(self.image)).cpu().detach().numpy()
 
         # Threshold CNN prediction
