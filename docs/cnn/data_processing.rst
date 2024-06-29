@@ -17,4 +17,4 @@ Utils
 
 .. automodule:: tardis_em.cnn.data_processing.interpolation
 .. automodule:: tardis_em.cnn.data_processing.draw_mask
-
+.. automodule:: tardis_em.cnn.data_processing.scaling

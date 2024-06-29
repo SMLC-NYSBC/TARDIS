@@ -19,7 +19,7 @@ or
 
 .. coda-block:: bash
 
-    conda install tardis-em -c rrobert92
+    conda install tardis-em -c rrobert92 -c open3d-admin -c pytorch -c nvidia
 
 And jump to `Validate`_.
 
