@@ -9,6 +9,7 @@
 #######################################################################
 import sys
 import time
+from datetime import datetime
 from os import listdir, getcwd
 from os.path import isdir, isfile, join, dirname, split
 from typing import Optional, Union, List
@@ -39,7 +40,11 @@ from tardis_em.utils.errors import TardisError
 from tardis_em.utils.export_data import NumpyToAmira, to_am, to_mrc, to_stl
 from tardis_em.utils.load_data import import_am, ImportDataFromAmira, load_image
 from tardis_em.utils.logo import print_progress_bar, TardisLogo
-from tardis_em.utils.normalization import MeanStdNormalize, RescaleNormalize, adaptive_threshold
+from tardis_em.utils.normalization import (
+    MeanStdNormalize,
+    RescaleNormalize,
+    adaptive_threshold,
+)
 from tardis_em.utils.setup_envir import build_temp_dir, clean_up
 from tardis_em.utils.spline_metric import (
     FilterSpatialGraph,
@@ -47,7 +52,8 @@ from tardis_em.utils.spline_metric import (
     SpatialGraphCompare,
     sort_by_length,
     ComputeConfidenceScore,
-    length_list, resample_filament,
+    length_list,
+    resample_filament,
 )
 from tardis_em._version import version
 
@@ -224,13 +230,54 @@ class GeneralPredictor:
                 )
 
         # Build handler to output amira file
-        self.amira_file = NumpyToAmira()
+        self.create_headers()
+        self.amira_file = NumpyToAmira(self.instance_header)
 
         # Sanity error checks
         self.init_check()
 
         # Build NN from checkpoints
         self.build_NN(NN=self.predict)
+
+    def create_headers(self):
+        main_ = [
+            "# ASCII Spatial Graph",
+            "# TARDIS - Transformer And Rapid Dimensionless Instance Segmentation (R)",
+            f"# tardis_em-pytorch v{version} \r",
+            f"# MIT License * 2021-{datetime.now().year} * "
+            "Robert Kiewisz & Tristan Bepler",
+            "Robert Kiewisz & Tristan Bepler",
+            "",
+            f"Directory: {self.dir}",
+            f"Output Format: {self.output_format}",
+            f"Predict: {self.predict}",
+            f"Device: {self.device}",
+        ]
+
+        self.semantic_header = [
+            f"CNN type: {self.convolution_nn} version {version}"
+            f"Image patch size used for CNN: {self.patch_size}",
+            f"CNN threshold: {self.cnn_threshold}",
+            f"CNN predicted with 4x 90 degrees rotations: {self.rotate}",
+        ]
+
+        self.instance_header = [
+            (
+                "DIST 2D model"
+                if self.predict in ["Actin", "Microtubule", "Membrane2D"]
+                else "DIST 3D model"
+            ),
+            f"DIST threshold: {self.dist_threshold}",
+            f"Maximum number of points used in single DIST run: {self.points_in_patch}",
+        ]
+
+        self.log_prediction = (
+            main_
+            + ["----Semantic Segmentation----"]
+            + self.semantic_header
+            + ["", "----Instance Segmentation----"]
+            + self.instance_header
+        )
 
     def init_check(self):
         """
@@ -239,9 +286,10 @@ class GeneralPredictor:
         msg = f"TARDIS v.{version} supports only MT and Mem segmentation!"
         assert_ = self.predict in [
             "Actin",
-            "Membrane2D", "Membrane",
+            "Membrane2D",
+            "Membrane",
             "Microtubule",
-            "General"
+            "General",
         ]
         if self.tardis_logo:
             # Check if user ask to predict correct structure
@@ -335,7 +383,6 @@ class GeneralPredictor:
                 self.normalize_px = 25
             else:
                 self.normalize_px = 15
-
         if NN in ["Actin", "Microtubule"]:
             # Build CNN network with loaded pre-trained weights
             if not self.binary_mask:
@@ -415,14 +462,16 @@ class GeneralPredictor:
 
                 if "AmiraMesh 3D ASCII" in am:
                     self.amira_image = False
-                    self.pc_hd = ImportDataFromAmira(join(self.dir, id_name)).get_segmented_points()
+                    self.pc_hd = ImportDataFromAmira(
+                        join(self.dir, id_name)
+                    ).get_segmented_points()
 
                     self.image = None
                     self.px = self.correct_px
                     self.transformation = [0, 0, 0]
 
                     assert_ = self.pc_hd.shape[1] == 4
-                    msg = f'Amira Spatial Graph has wrong dimension. Given {self.pc_hd.shape[1]}, but expected 4.'
+                    msg = f"Amira Spatial Graph has wrong dimension. Given {self.pc_hd.shape[1]}, but expected 4."
                     if self.tardis_logo:
                         if not assert_:
                             TardisError(
@@ -561,7 +610,7 @@ class GeneralPredictor:
         self.image = torch.sigmoid(torch.from_numpy(self.image)).cpu().detach().numpy()
 
         # Threshold CNN prediction
-        if self.cnn_threshold == 'auto':
+        if self.cnn_threshold == "auto":
             self.image = adaptive_threshold(self.image)
         else:
             self.cnn_threshold = float(self.cnn_threshold)
@@ -743,7 +792,7 @@ class GeneralPredictor:
         if log_id == 7:
             no_segments = np.max(self.segments[:, 0]) if len(self.segments) > 0 else 0
         else:
-            no_segments = 'None'
+            no_segments = "None"
 
         # Define text configurations for each log_id
         text_configurations = {
@@ -819,6 +868,7 @@ class GeneralPredictor:
                 data=self.image,
                 file_dir=join(self.am_output, f"{i[:-self.in_format]}_semantic.mrc"),
                 pixel_size=(self.px if self.correct_px is None else self.correct_px),
+                label=self.semantic_header,
             )
         elif self.output_format.startswith("tif"):
             tif.imwrite(
@@ -834,11 +884,16 @@ class GeneralPredictor:
                 data=self.image,
                 file_dir=join(self.am_output, f"{i[:-self.in_format]}_semantic.am"),
                 pixel_size=(self.px if self.correct_px is None else self.correct_px),
+                header=self.semantic_header,
             )
         elif self.output_format.startswith("npy"):
             np.save(
                 join(self.am_output, f"{i[:-self.in_format]}_semantic.npy"), self.image
             )
+
+        self.log_prediction.append(f"Semantic Prediction: {i[:-self.in_format]}")
+        with open() as f:
+            f.write(" \n".join(self.log_prediction))
 
     def save_instance_PC(self, i):
         if self.output_format.endswith("amSG") and self.predict in [
@@ -959,6 +1014,7 @@ class GeneralPredictor:
                     pixel_size=(
                         self.px if self.correct_px is None else self.correct_px
                     ),
+                    label=self.instance_header,
                 )
             elif self.output_format.endswith("tif"):
                 tif.imwrite(
@@ -972,6 +1028,7 @@ class GeneralPredictor:
                     pixel_size=(
                         self.px if self.correct_px is None else self.correct_px
                     ),
+                    header=self.instance_header,
                 )
         elif self.output_format.endswith("stl"):
             if self.predict == "Membrane":
@@ -984,6 +1041,12 @@ class GeneralPredictor:
                 join(self.am_output, f"{i[:-self.in_format]}_instance.npy"),
                 self.segments,
             )
+
+        self.log_prediction.append(
+            f"Instance Prediction: {i[:-self.in_format]}; Number of segments: {np.max(self.segments[:, 0])}"
+        )
+        with open() as f:
+            f.write(" \n".join(self.log_prediction))
 
     def _debug(self, id_name: str, debug_id: str):
         if self.debug:

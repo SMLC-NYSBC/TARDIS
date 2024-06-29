@@ -41,6 +41,7 @@ def show_image_list(
     figsize=(20, 10),
     title_fontsize=30,
     list_masks=None,
+    dpi=100,
 ):
     """
     Shows a grid of images, where each image is a Numpy array. The images can be either
@@ -57,6 +58,7 @@ def show_image_list(
         figsize (tuple): Value to be passed to pyplot.figure()
         title_fontsize (int): Value to be passed to set_title()
         list_masks(list, None):
+        dpi (int):
     """
     assert isinstance(list_images, list)
     assert len(list_images) > 0
@@ -85,7 +87,7 @@ def show_image_list(
     num_rows = int(num_images / num_cols) + (1 if num_images % num_cols != 0 else 0)
 
     # Create a grid of subplots.
-    fig, axes = plt.subplots(num_rows, num_cols, figsize=figsize)
+    fig, axes = plt.subplots(num_rows, num_cols, figsize=figsize, dpi=dpi)
 
     # Create list of axes for easy iteration.
     if isinstance(axes, np.ndarray):

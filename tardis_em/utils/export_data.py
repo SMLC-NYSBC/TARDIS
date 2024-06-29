@@ -9,6 +9,7 @@
 #######################################################################
 import codecs
 import time
+from collections.abc import Iterable
 from datetime import datetime
 from io import BytesIO
 from typing import List, Optional, Union
@@ -36,7 +37,7 @@ class NumpyToAmira:
     Support for 3D only! If 2D data, Z dim build with Z=0
     """
 
-    def __init__(self, as_point_cloud=False):
+    def __init__(self, as_point_cloud=False, header: list = None):
         self.as_point_cloud = as_point_cloud
 
         self.tardis_header = [
@@ -46,7 +47,14 @@ class NumpyToAmira:
             f"# tardis_em-pytorch v{version} \r\n",
             f"# MIT License * 2021-{datetime.now().year} * "
             "Robert Kiewisz & Tristan Bepler \n",
+            "",
         ]
+
+        if header is not None:
+            header = [h + " \n" if not h.endswith("\n") else h for h in header]
+            header = ["# " + h if not h.startswith("#") else h for h in header]
+
+            self.tardis_header = self.tardis_header + header
 
     def check_3d(
         self, coord: Optional[np.ndarray] = List
@@ -257,6 +265,7 @@ class NumpyToAmira:
         coords: Union[tuple, list, np.ndarray] = np.ndarray,
         labels: Union[tuple, list, None] = None,
         scores: Optional[list] = None,
+        header: list = None,
     ):
         """
         Save Amira file with all filaments without any labels
@@ -266,6 +275,7 @@ class NumpyToAmira:
             coords (np.ndarray, tuple): 3D coordinate file.
             labels (tuple, list, None): Labels names.
             scores (list, None): List of confidence scores for each instance.
+            header(list): Optional header information.
         """
         coord_list = self.check_3d(coord=coords)
 
@@ -407,7 +417,11 @@ class NumpyToAmira:
 
 
 def to_mrc(
-    data: np.ndarray, pixel_size: float, file_dir: str, org_header: MRCHeader = None
+    data: np.ndarray,
+    pixel_size: float,
+    file_dir: str,
+    org_header: MRCHeader = None,
+    label=None,
 ):
     """
     Save MRC image file
@@ -417,10 +431,19 @@ def to_mrc(
         pixel_size (float): Image original pixel size.
         file_dir (str): Directory where the file should be saved.
         org_header(MRCHeader): Optional original header
+        label(str): Optional costume label for header
     """
     mode = mrc_mode(mode=data.dtype, amin=data.min())
     time_ = time.asctime()
-    label = f"Saved with TARDIS {version}                        {time_}"
+
+    text_ = f"Saved with TARDIS {version}                        {time_}"
+    if label is not None:
+        if len(label) > 800:
+            label = label[:800]
+
+        label = text_ + "\n " + label
+    else:
+        label = text_
 
     if org_header is not None:
         labels = org_header.labels.split(b"\x00")[0]
@@ -509,7 +532,7 @@ def to_mrc(
         f.write(data.tobytes())
 
 
-def to_am(data: np.ndarray, pixel_size: float, file_dir: str):
+def to_am(data: np.ndarray, pixel_size: float, file_dir: str, header: list = None):
     """
     Save image to binary Amira image file.
 
@@ -517,15 +540,24 @@ def to_am(data: np.ndarray, pixel_size: float, file_dir: str):
         data (np.ndarray): Image file.
         pixel_size (float): Image original pixel size.
         file_dir (str): Directory where the file should be saved.
+        header(list): Optional header in to form of list(str)
     """
     nz, ny, nx = data.shape
     xLen, yLen, zLen = nx * pixel_size, ny * pixel_size, nz * pixel_size
+
+    if header is not None:
+        header = ["# " + h if not h.startswith("#") else h for h in header]
 
     am = [
         "# AmiraMesh BINARY-LITTLE-ENDIAN 3.0",
         "# TARDIS - Transformer And Rapid Dimensionless Instance Segmentation (R)",
         f"# tardis_em-pytorch v{version}",
         f"# MIT License * 2021-{datetime.now().year} * Robert Kiewisz & Tristan Bepler",
+    ]
+    if header is not None:
+        am = am + header
+    am = am + [
+        header,
         "",
         "",
         f"define Lattice {nx} {ny} {nz}",
