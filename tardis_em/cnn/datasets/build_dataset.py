@@ -246,41 +246,41 @@ def build_train_dataset(
                 mask[..., :1] = 0
                 mask[..., -1:] = 0
 
-            if scale_factor != 1.0:
-                pc = b_pc.build_point_cloud(image=mask, as_2d=True)
-                pc = pc * scale_factor
-                pc = pc.astype(np.uint32)
-
-                # Remove gaps from conversion to int
-                gaps = [
-                    i
-                    for i in list(range(min(pc[:, 2]), max(pc[:, 2]) + 1))
-                    if i not in np.unique(pc[:, 2])
-                ]
-
-                gaps_pc = []
-                for j in gaps:
-                    pick_coord = pc[np.where(pc[:, 2] == j + 1)[0], :]
-                    if len(pick_coord) == 0:
-                        pick_coord = pc[np.where(pc[:, 2] == j - 1)[0], :]
-
-                    if len(pick_coord) > 0:
-                        pick_coord[:, 2] = j
-                        gaps_pc.append(pick_coord)
-                if len(gaps_pc) > 0:
-                    gaps_pc = np.concatenate(gaps_pc)
-                    pc = np.concatenate((pc, gaps_pc))
-
-                # Draw mask from coordinates
-                mask = draw_instances(
-                    mask_size=scale_shape,
-                    coordinate=pc,
-                    label=False,
-                    pixel_size=pixel_size,
-                    circle_size=circle_size,
-                )
-                # Convert to binary
-                mask = np.where(mask > 0, 1, 0).astype(np.uint8)
+            # if scale_factor != 1.0:
+            #     pc = b_pc.build_point_cloud(image=mask, as_2d=True)
+            #     pc = pc * scale_factor
+            #     pc = pc.astype(np.uint32)
+            #
+            #     # Remove gaps from conversion to int
+            #     gaps = [
+            #         i
+            #         for i in list(range(min(pc[:, 2]), max(pc[:, 2]) + 1))
+            #         if i not in np.unique(pc[:, 2])
+            #     ]
+            #
+            #     gaps_pc = []
+            #     for j in gaps:
+            #         pick_coord = pc[np.where(pc[:, 2] == j + 1)[0], :]
+            #         if len(pick_coord) == 0:
+            #             pick_coord = pc[np.where(pc[:, 2] == j - 1)[0], :]
+            #
+            #         if len(pick_coord) > 0:
+            #             pick_coord[:, 2] = j
+            #             gaps_pc.append(pick_coord)
+            #     if len(gaps_pc) > 0:
+            #         gaps_pc = np.concatenate(gaps_pc)
+            #         pc = np.concatenate((pc, gaps_pc))
+            #
+            #     # Draw mask from coordinates
+            #     mask = draw_instances(
+            #         mask_size=scale_shape,
+            #         coordinate=pc,
+            #         label=False,
+            #         pixel_size=pixel_size,
+            #         circle_size=circle_size,
+            #     )
+            #     # Convert to binary
+            #     mask = np.where(mask > 0, 1, 0).astype(np.uint8)
 
             log_file[id_, 4] = "mask"
             np.savetxt(

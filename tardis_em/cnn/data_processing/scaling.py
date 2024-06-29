@@ -15,14 +15,14 @@ import torch
 import torch.nn.functional as F
 from PIL import Image
 from torch.fft import fftn, ifftn, fftshift, ifftshift
+from scipy.ndimage import gaussian_filter
 
 
 def scale_image(
     scale: tuple,
     image: Optional[np.ndarray] = None,
     mask: Optional[np.ndarray] = None,
-    nn=False,
-    device="cpu",
+    device=torch.device("cpu"),
 ) -> Union[
     Tuple[np.ndarray, np.ndarray, int], Tuple[np.ndarray, int], Tuple[None, int]
 ]:
@@ -35,7 +35,6 @@ def scale_image(
         image (np.ndarray, Optional): image data
         mask (np.ndarray, Optional): Optional binary mask image data
         scale (tuple): scale value for image
-        nn (bool):
         device (str):
     """
     dim = 1
@@ -48,33 +47,34 @@ def scale_image(
         scale = tuple([scale[0], scale[1], scale[2]])
     else:
         scale = tuple([scale[0], scale[1]])
-    #
-    # if nn:
-    #     image = nn_scaling(img=image, scale=scale, dtype=type_i, device=device)
-    #     return image, dim
 
     if image is not None:
+        image = np.ascontiguousarray(image)
+
         if not np.all(scale == image.shape):
-            if scale[0] > image.shape[0]:
-                if image.ndim == 3 and image.shape[2] != 3:  # 3D with Gray
-                    image = area_scaling(
-                        img=image, scale=scale, dtype=type_i, device=device
-                    )
-                else:
-                    image = linear_scaling(
-                        img=image, scale=scale, dtype=type_i, device=device
-                    )
-            else:
+            if scale[0] < image.shape[0]:
                 image = linear_scaling(
-                    img=image.astype(np.float32), scale=scale, dtype=type_i
+                    img=image, scale=scale, dtype=type_i, device=device
+                )
+            else:
+                image = nn_scaling(
+                    img=image,
+                    scale=scale,
+                    dtype=type_i,
+                    device=device,
+                    gauss=True,
                 )
 
     if mask is not None:
+        mask = np.ascontiguousarray(mask)
+
         if not np.all(scale == mask.shape):
-            if scale[0] > mask.shape[0]:
+            if scale[0] < mask.shape[0]:
                 mask = nn_scaling(img=mask, scale=scale, dtype=type_m)
             else:
-                mask = fourier_scaling(img=mask.astype(np.int16), scale=scale, dtype=type_m)
+                mask = fourier_scaling(
+                    img=mask.astype(np.int16), scale=scale, dtype=type_m
+                )
 
     if image is not None and mask is not None:
         return image, mask, dim
@@ -88,20 +88,13 @@ def nn_scaling(
     img: np.ndarray, scale: tuple, dtype: np.dtype, device="cpu", gauss=False
 ) -> np.ndarray:
     if gauss:
-        from scipy.ndimage import gaussian_filter
-        filter_ = img.shape[0] / scale[0]
-        img = gaussian_filter(img, filter_)
-
-    # TODO Gaussian filter, bandwidth is size of the scaling in pytorch (gpu)
-    # Maybe TODO Furrier crop ?
+        filter_ = img.shape[0] / scale[0]  # Scaling factor
+        img = gaussian_filter(img, filter_ / 2)
 
     img = torch.from_numpy(img)[None, None, ...].to(device)
-    img = F.interpolate(img, size=(scale[0], scale[1], scale[2]), mode="nearest")[0, 0, ...]
+    img = F.interpolate(img, size=scale, mode="nearest")[0, 0, ...]
 
     return img.cpu().detach().numpy().astype(dtype)
-
-
-# TODO maxpool sampling for mask ?
 
 
 def pil_LANCZOS(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
@@ -313,9 +306,13 @@ def area_scaling(
     return img
 
 
-def fourier_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype, device="cpu") -> np.ndarray:
+def fourier_scaling(
+    img: np.ndarray, scale: tuple, dtype: np.dtype, device="cpu"
+) -> np.ndarray:
     """
     Resize a 2D or 3D image using Fourier cropping.
+
+    Check in Topaz how
 
     Parameters:
     img (np.ndarray): 2D or 3D array representing the image.
@@ -345,10 +342,14 @@ def fourier_scaling(img: np.ndarray, scale: tuple, dtype: np.dtype, device="cpu"
     f_image_shifted = fftshift(f_image)
 
     # Slicing logic for cropping or padding
-    slices_current = [slice(max(0, start), max(0, start) + min(cs, s)) for start, cs, s in
-                      zip(start_indices, org_shape, scale)]
-    slices_resized = [slice(max(0, -start), max(0, -start) + min(cs, s)) for start, cs, s in
-                      zip(start_indices, org_shape, scale)]
+    slices_current = [
+        slice(max(0, start), max(0, start) + min(cs, s))
+        for start, cs, s in zip(start_indices, org_shape, scale)
+    ]
+    slices_resized = [
+        slice(max(0, -start), max(0, -start) + min(cs, s))
+        for start, cs, s in zip(start_indices, org_shape, scale)
+    ]
 
     resized_f_image_shifted = torch.zeros(scale, dtype=torch.complex64, device=device)
     resized_f_image_shifted[slices_resized] = f_image_shifted[slices_current]

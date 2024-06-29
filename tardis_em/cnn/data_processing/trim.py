@@ -76,7 +76,7 @@ def trim_with_stride(
         image, mask, dim = scale_image(
             image=image,
             mask=mask,
-            scale=scale,
+            scale=tuple(scale),
             device=device,
         )
         mask = np.where(mask > 0, 1, 0).astype(np.uint8)

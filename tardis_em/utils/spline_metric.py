@@ -38,7 +38,9 @@ def resample_filament(points, spacing_size):
             resampled_points.append(points[points[:, 0] == filament_id])
             continue
 
-        cumulative_distances = np.cumsum(np.sqrt(np.sum(np.diff(filament_points, axis=0) ** 2, axis=1)))
+        cumulative_distances = np.cumsum(
+            np.sqrt(np.sum(np.diff(filament_points, axis=0) ** 2, axis=1))
+        )
         cumulative_distances = np.insert(cumulative_distances, 0, 0)
 
         num_new_points = int(cumulative_distances[-1] // spacing_size)
@@ -54,8 +56,11 @@ def resample_filament(points, spacing_size):
                 new_points.append(filament_points[idx])
             else:
                 ratio = (target_distance - cumulative_distances[idx - 1]) / (
-                            cumulative_distances[idx] - cumulative_distances[idx - 1])
-                new_point = filament_points[idx - 1] + ratio * (filament_points[idx] - filament_points[idx - 1])
+                    cumulative_distances[idx] - cumulative_distances[idx - 1]
+                )
+                new_point = filament_points[idx - 1] + ratio * (
+                    filament_points[idx] - filament_points[idx - 1]
+                )
                 new_points.append(new_point)
 
         new_points = np.array(new_points)
