@@ -255,8 +255,12 @@ class GeneralPredictor:
         ]
 
         self.semantic_header = [
-            f"CNN type: {self.convolution_nn} version {version}"
-            f"Image patch size used for CNN: {self.patch_size}",
+            (
+                f"CNN type: {self.convolution_nn} version {version}" ""
+                if self.checkpoint[0] is None
+                else f"CNN model loaded from checkpoint: {self.checkpoint[0]}"
+                f"Image patch size used for CNN: {self.patch_size}"
+            ),
             f"CNN threshold: {self.cnn_threshold}",
             f"CNN predicted with 4x 90 degrees rotations: {self.rotate}",
         ]
@@ -267,7 +271,12 @@ class GeneralPredictor:
                 if self.predict in ["Actin", "Microtubule", "Membrane2D"]
                 else "DIST 3D model"
             ),
-            f"DIST threshold: {self.dist_threshold}",
+            (
+                ""
+                if self.checkpoint[1] is None
+                else f"DIST model loaded from checkpoint: {self.checkpoint[1]}"
+                f"DIST threshold: {self.dist_threshold}"
+            ),
             f"Maximum number of points used in single DIST run: {self.points_in_patch}",
         ]
 
