@@ -89,7 +89,9 @@ def main(path: str, _2d: bool, type_: str, animate: bool, with_node: bool):
             else:
                 VisualizePointCloud(pc, segmented=False, animate=animate)
         else:
-            assert pc.shape[1] == 4, "Filament visualization require segmented point cloud"
+            assert (
+                pc.shape[1] == 4
+            ), "Filament visualization require segmented point cloud"
             VisualizeFilaments(pc, animate=animate, with_node=with_node)
 
 
@@ -107,9 +109,7 @@ def build_pc_from_img(img: np.ndarray):
                 continue
 
             i_ = np.array(np.where(img == i)).T
-            px_df.append(
-                np.hstack((np.repeat(i, len(i_))[:, None], i_))
-            )
+            px_df.append(np.hstack((np.repeat(i, len(i_))[:, None], i_)))
 
         pc = np.vstack(px_df)
 
