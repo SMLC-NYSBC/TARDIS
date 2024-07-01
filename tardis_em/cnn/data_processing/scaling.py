@@ -38,7 +38,7 @@ def scale_image(
         device (str):
     """
     dim = 1
-    type_i = image.dtype
+    type_i = np.float32
     type_m = None
 
     if len(scale) == 3:
@@ -47,6 +47,7 @@ def scale_image(
         scale = tuple([scale[0], scale[1]])
 
     if image is not None:
+        image = image.astype(np.float32)
         image = np.ascontiguousarray(image)
 
         if not np.all(scale == image.shape):
@@ -73,7 +74,7 @@ def scale_image(
                 mask = nn_scaling(img=mask, scale=scale, dtype=type_m)
             else:
                 mask = fourier_scaling(
-                    img=mask.astype(np.int16), scale=scale, dtype=type_m
+                    img=mask, scale=scale, dtype=type_m
                 )
 
     if image is not None and mask is not None:
@@ -85,7 +86,7 @@ def scale_image(
 
 
 def nn_scaling(
-    img: np.ndarray, scale: tuple, dtype: np.dtype, device="cpu", gauss=False
+    img: np.ndarray, scale: tuple, device="cpu", gauss=False
 ) -> np.ndarray:
     if gauss:
         filter_ = img.shape[0] / scale[0]  # Scaling factor
@@ -94,10 +95,10 @@ def nn_scaling(
     img = torch.from_numpy(img)[None, None, ...].to(device)
     img = F.interpolate(img, size=scale, mode="nearest")[0, 0, ...]
 
-    return img.cpu().detach().numpy().astype(dtype)
+    return img.cpu().detach().numpy()
 
 
-def pil_LANCZOS(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
+def pil_LANCZOS(img: np.ndarray, scale: tuple) -> np.ndarray:
     """
     Scale a 3D image by first down-sampling in the XY direction and then in the Z direction.
 
@@ -117,33 +118,33 @@ def pil_LANCZOS(img: np.ndarray, scale: tuple, dtype: np.dtype) -> np.ndarray:
         for i in range(img.shape[0]):
             image = Image.fromarray(img[i, ...])
             scaled_image = image.resize((new_width, new_height), Image.LANCZOS)
-            scaled.append(np.asarray(scaled_image, dtype=dtype))
+            scaled.append(np.asarray(scaled_image))
 
         # Convert list to 3D array
-        img = np.array(scaled, dtype=dtype)
+        img = np.array(scaled)
 
         # Down-sample each slice in the Z direction if 3D
         if len(scale) == 3:
-            scaled = np.zeros(scale, dtype=dtype)
+            scaled = np.zeros(scale)
 
             for i in range(img.shape[2]):
                 image = Image.fromarray(img[..., i])
                 scaled[:, :, i] = np.asarray(
-                    image.resize((new_height, new_depth), Image.LANCZOS), dtype=dtype
+                    image.resize((new_height, new_depth), Image.LANCZOS)
                 )
-            img = scaled.astype(dtype)
+            img = scaled
     else:
         new_height, new_width = scale
         img = Image.fromarray(img)
         img = np.asarray(
-            img.resize((new_width, new_height), Image.LANCZOS), dtype=dtype
+            img.resize((new_width, new_height), Image.LANCZOS)
         )
 
-    return img.astype(dtype)
+    return img
 
 
 def linear_scaling(
-    img: np.ndarray, scale: tuple, dtype: np.dtype, device="cpu"
+    img: np.ndarray, scale: tuple, device="cpu"
 ) -> np.ndarray:
     """
     Scaling of 2D/3D array using trilinear method from pytorch
@@ -254,11 +255,11 @@ def linear_scaling(
                 current_height, current_width = new_height, new_width
 
         img = F.interpolate(img, size=scale, mode="bilinear", align_corners=False)
-    return img.detach().numpy()[0, 0, :].astype(dtype)
+    return img.detach().numpy()[0, 0, :]
 
 
 def area_scaling(
-    img: np.ndarray, scale: tuple, dtype: np.dtype, device="cpu"
+    img: np.ndarray, scale: tuple, device="cpu"
 ) -> np.ndarray:
     """
     Scaling of 3D array using area method from pytorch
@@ -273,7 +274,7 @@ def area_scaling(
     """
 
     size_Z = [scale[0], img.shape[1], img.shape[2]]
-    image_scale_Z = np.zeros(size_Z, dtype=dtype)
+    image_scale_Z = np.zeros(size_Z)
 
     # Scale Z axis
     for i in range(img.shape[2]):
@@ -286,11 +287,10 @@ def area_scaling(
             .cpu()
             .detach()
             .numpy()[0, 0, :]
-            .astype(dtype)
         )
 
     # Scale XY axis
-    img = np.zeros(scale, dtype=dtype)
+    img = np.zeros(scale)
     for i in range(scale[0]):
         df_img = torch.from_numpy(image_scale_Z[i, :]).to(device).type(torch.float)
         img[i, :] = (
@@ -300,14 +300,13 @@ def area_scaling(
             .cpu()
             .detach()
             .numpy()[0, 0, :]
-            .astype(dtype)
         )
 
     return img
 
 
 def fourier_scaling(
-    img: np.ndarray, scale: tuple, dtype: np.dtype, device="cpu"
+    img: np.ndarray, scale: tuple, device="cpu"
 ) -> np.ndarray:
     """
     Resize a 2D or 3D image using Fourier cropping.
@@ -361,4 +360,4 @@ def fourier_scaling(
     resized_image = ifftn(resized_f_image)
 
     # Return the real part of the resized image
-    return torch.abs(resized_image).cpu().detach().numpy().astype(dtype)
+    return torch.abs(resized_image).cpu().detach().numpy()
