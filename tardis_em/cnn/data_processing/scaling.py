@@ -40,8 +40,6 @@ def scale_image(
     dim = 1
     type_i = image.dtype
     type_m = None
-    if mask is not None:
-        type_m = mask.dtype
 
     if len(scale) == 3:
         scale = tuple([scale[0], scale[1], scale[2]])
@@ -66,6 +64,8 @@ def scale_image(
                 )
 
     if mask is not None:
+        type_m = mask.dtype
+        mask = mask.astype(np.float32)
         mask = np.ascontiguousarray(mask)
 
         if not np.all(scale == mask.shape):

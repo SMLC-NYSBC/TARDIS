@@ -108,6 +108,7 @@ class BasicCNN(nn.Module):
                 pool_kernel=pool_kernel,
                 conv_module=RecurrentDoubleConvolution,
             )
+
         """ Decoder """
         self.decoder = build_decoder(
             conv_layers=num_conv_layer,

@@ -243,7 +243,7 @@ def aws_check_with_temp(model_name: list) -> bool:
     else:
         try:
             weight = requests.get(
-                "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/"
+                "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/tardis_em/"
                 f"{model_name[0]}_{model_name[1]}/"
                 f"{model_name[2]}/model_weights.pth",
                 stream=True,
