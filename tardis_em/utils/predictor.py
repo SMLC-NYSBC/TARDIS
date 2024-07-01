@@ -11,8 +11,8 @@ import sys
 import time
 from datetime import datetime
 from os import listdir, getcwd
-from os.path import isdir, isfile, join, dirname, split
-from typing import Optional, Union, List
+from os.path import isdir, isfile, join
+from typing import Optional, Union
 import platform
 
 import numpy as np
@@ -137,6 +137,7 @@ class GeneralPredictor:
         self.amira_prefix = amira_prefix
         self.checkpoint = checkpoint
         self.correct_px = correct_px
+        self.normalize_px = None
 
         # Pre-processing setting
         self.patch_size = patch_size
@@ -157,6 +158,7 @@ class GeneralPredictor:
         self.predict_instance = instances
         self.device = get_device(device_)
         self.debug = debug
+        self.semantic_header, self.instance_header, self.log_prediction = [], [], []
 
         """Initial Setup"""
         if debug:

@@ -285,13 +285,18 @@ class BasicTrainer:
                 ),
             )
 
+        # torch.save(
+        #     {
+        #         "model_struct_dict": self.structure,
+        #         "model_state_dict": self.model.state_dict(),
+        #         "optimizer_state_dict": self.optimizer.state_dict(),
+        #     },
+        #     join(getcwd(), f"{self.checkpoint_name}_checkpoint", "model_weights.pth"),
+        # )
+
         torch.save(
-            {
-                "model_struct_dict": self.structure,
-                "model_state_dict": self.model.state_dict(),
-                "optimizer_state_dict": self.optimizer.state_dict(),
-            },
-            join(getcwd(), f"{self.checkpoint_name}_checkpoint", "model_weights.pth"),
+            self.model,
+            join(getcwd(), f"{self.checkpoint_name}_checkpoint", "model_weights.pth")
         )
 
         if self.early_stopping.early_stop:
