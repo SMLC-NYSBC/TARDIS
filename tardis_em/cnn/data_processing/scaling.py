@@ -38,8 +38,6 @@ def scale_image(
         device (str):
     """
     dim = 1
-    type_i = np.float32
-    type_m = None
 
     if len(scale) == 3:
         scale = tuple([scale[0], scale[1], scale[2]])
@@ -53,13 +51,12 @@ def scale_image(
         if not np.all(scale == image.shape):
             if scale[0] < image.shape[0]:
                 image = linear_scaling(
-                    img=image, scale=scale, dtype=type_i, device=device
+                    img=image, scale=scale, device=device
                 )
             else:
                 image = nn_scaling(
                     img=image,
                     scale=scale,
-                    dtype=type_i,
                     device=device,
                     gauss=True,
                 )
@@ -71,10 +68,10 @@ def scale_image(
 
         if not np.all(scale == mask.shape):
             if scale[0] < mask.shape[0]:
-                mask = nn_scaling(img=mask, scale=scale, dtype=type_m)
+                mask = nn_scaling(img=mask, scale=scale)
             else:
                 mask = fourier_scaling(
-                    img=mask, scale=scale, dtype=type_m
+                    img=mask, scale=scale
                 )
 
     if image is not None and mask is not None:
