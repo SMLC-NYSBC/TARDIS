@@ -26,6 +26,9 @@ class BasicCNN(nn.Module):
     """
     Basic CNN MODEL
 
+    Back-compatible with old CNN builder method. New functionality allows to package
+    the model in onnx format and rapidly re-use/deploy.
+
     Args:
         in_channels (int): Number of input channels for the first convolution.
         out_channels (int): Number of output channels for the last deconvolution.
@@ -72,9 +75,11 @@ class BasicCNN(nn.Module):
         prediction=False,
     ):
         super(BasicCNN, self).__init__()
+
         self.prediction = prediction
         self.model = model
         self.encoder, self.decoder = None, None
+        self.patch_sizes = img_patch_size
 
         self.in_channels, self.out_channels = in_channels, out_channels
         self.num_conv_layer = num_conv_layer
@@ -91,16 +96,18 @@ class BasicCNN(nn.Module):
         self.update_patch_size(img_patch_size)
         self.build_cnn_model()
 
-    @staticmethod
     def update_patch_size(self, img_patch_size):
         self.patch_sizes = [img_patch_size]
         for _ in range(self.num_conv_layer):
             img_patch_size = int(img_patch_size / 2)
             self.patch_sizes.append(img_patch_size)
+        self.patch_sizes = list(reversed(self.patch_sizes))[2:]
 
         if not isinstance(self.model, str):
             states = self.model.state_dict()
-            self.model = self.build_cnn_model().load_state_dict(states)
+            self.build_cnn_model()
+            self.model.load_state_dict(states)
+
             states = None
 
     def build_cnn_model(self):
@@ -474,89 +481,141 @@ class FNet(nn.Module):
     ):
         super(FNet, self).__init__()
         self.prediction = prediction
+        self.encoder, self.decoder_unet, self.decoder_3plus = None, None, None
+        self.unet_conv_layer, self.unet3plus_conv_layer, self.final_conv_layer = None, None, None
+        self.activation = None
+
+        self.patch_sizes = img_patch_size
+
+        self.in_channels, self.out_channels = in_channels, out_channels
+        self.num_conv_layer = num_conv_layer
+        self.conv_layer_scaler = conv_layer_scaler
+        self.conv_kernel = conv_kernel
+        self.padding = padding
+        self.dropout = dropout
+        self.num_group = num_group
+        self.layer_components = layer_components
+        self.pool_kernel = pool_kernel
+
         self.attn_features = attn_features
+        self.sigmoid = sigmoid
 
-        patch_sizes = [img_patch_size]
-        for _ in range(num_conv_layer):
+        self.patch_sizes = [img_patch_size]
+        self.update_patch_size(img_patch_size)
+        self.build_cnn_model()
+
+    def update_patch_size(self, img_patch_size):
+        self.patch_sizes = [img_patch_size]
+        for _ in range(self.num_conv_layer):
             img_patch_size = int(img_patch_size / 2)
-            patch_sizes.append(img_patch_size)
-        patch_sizes = list(reversed(patch_sizes))[2:]
+            self.patch_sizes.append(img_patch_size)
+        self.patch_sizes = list(reversed(self.patch_sizes))[2:]
 
+        if self.decoder_unet is not None:
+            states = [self.decoder_unet.state_dict(), self.decoder_3plus.state_dict()]
+
+            """ Decoder """
+            self.decoder_unet = build_decoder(
+                conv_layers=self.num_conv_layer,
+                conv_layer_scaler=self.conv_layer_scaler,
+                components=self.layer_components,
+                conv_kernel=self.conv_kernel,
+                padding=self.padding,
+                sizes=self.patch_sizes,
+                num_group=self.num_group,
+            )
+            self.decoder_3plus = build_decoder(
+                conv_layers=self.num_conv_layer,
+                conv_layer_scaler=self.conv_layer_scaler,
+                components=self.layer_components,
+                conv_kernel=self.conv_kernel,
+                padding=self.padding,
+                sizes=self.patch_sizes,
+                num_group=self.num_group,
+                deconv_module="unet3plus",
+                attn_features=self.attn_features,
+            )
+            self.decoder_unet.load_state_dict(states[0])
+            self.decoder_3plus.load_state_dict(states[1])
+
+            states = None
+
+    def build_cnn_model(self):
         """ Encoder """
         self.encoder = build_encoder(
-            in_ch=in_channels,
-            conv_layers=num_conv_layer,
-            conv_layer_scaler=conv_layer_scaler,
-            conv_kernel=conv_kernel,
-            padding=padding,
-            dropout=dropout,
-            num_group=num_group,
-            components=layer_components,
-            pool_kernel=pool_kernel,
+            in_ch=self.in_channels,
+            conv_layers=self.num_conv_layer,
+            conv_layer_scaler=self.conv_layer_scaler,
+            conv_kernel=self.conv_kernel,
+            padding=self.padding,
+            dropout=self.dropout,
+            num_group=self.num_group,
+            components=self.layer_components,
+            pool_kernel=self.pool_kernel,
             conv_module=DoubleConvolution,
             attn_features=self.attn_features,
         )
 
         """ Decoder """
         self.decoder_unet = build_decoder(
-            conv_layers=num_conv_layer,
-            conv_layer_scaler=conv_layer_scaler,
-            components=layer_components,
-            conv_kernel=conv_kernel,
-            padding=padding,
-            sizes=patch_sizes,
-            num_group=num_group,
+            conv_layers=self.num_conv_layer,
+            conv_layer_scaler=self.conv_layer_scaler,
+            components=self.layer_components,
+            conv_kernel=self.conv_kernel,
+            padding=self.padding,
+            sizes=self.patch_sizes,
+            num_group=self.num_group,
         )
         self.decoder_3plus = build_decoder(
-            conv_layers=num_conv_layer,
-            conv_layer_scaler=conv_layer_scaler,
-            components=layer_components,
-            conv_kernel=conv_kernel,
-            padding=padding,
-            sizes=patch_sizes,
-            num_group=num_group,
+            conv_layers=self.num_conv_layer,
+            conv_layer_scaler=self.conv_layer_scaler,
+            components=self.layer_components,
+            conv_kernel=self.conv_kernel,
+            padding=self.padding,
+            sizes=self.patch_sizes,
+            num_group=self.num_group,
             deconv_module="unet3plus",
             attn_features=self.attn_features,
         )
 
         """ Final Layer """
-        if "3" in layer_components:
+        if "3" in self.layer_components:
             self.unet_conv_layer = nn.Conv3d(
-                in_channels=conv_layer_scaler,
-                out_channels=conv_layer_scaler,
+                in_channels=self.conv_layer_scaler,
+                out_channels=self.conv_layer_scaler,
                 kernel_size=1,
             )
             self.unet3plus_conv_layer = nn.Conv3d(
-                in_channels=conv_layer_scaler,
-                out_channels=conv_layer_scaler,
+                in_channels=self.conv_layer_scaler,
+                out_channels=self.conv_layer_scaler,
                 kernel_size=1,
             )
 
             self.final_conv_layer = nn.Conv3d(
-                in_channels=conv_layer_scaler * 2,
-                out_channels=out_channels,
+                in_channels=self.conv_layer_scaler * 2,
+                out_channels=self.out_channels,
                 kernel_size=1,
             )
-        elif "2" in layer_components:
+        elif "2" in self.layer_components:
             self.unet_conv_layer = nn.Conv2d(
-                in_channels=conv_layer_scaler,
-                out_channels=conv_layer_scaler,
+                in_channels=self.conv_layer_scaler,
+                out_channels=self.conv_layer_scaler,
                 kernel_size=1,
             )
             self.unet3plus_conv_layer = nn.Conv2d(
-                in_channels=conv_layer_scaler,
-                out_channels=conv_layer_scaler,
+                in_channels=self.conv_layer_scaler,
+                out_channels=self.conv_layer_scaler,
                 kernel_size=1,
             )
 
             self.final_conv_layer = nn.Conv2d(
-                in_channels=conv_layer_scaler * 2,
-                out_channels=out_channels,
+                in_channels=self.conv_layer_scaler * 2,
+                out_channels=self.out_channels,
                 kernel_size=1,
             )
 
         """ Prediction """
-        if sigmoid:
+        if self.sigmoid:
             self.activation = nn.Sigmoid()
         else:
             self.activation = nn.Softmax(dim=1)

@@ -1364,30 +1364,37 @@ class Predictor:
             print("Loading weight file...")
             weights = torch.load(checkpoint, map_location=device)
 
-        # Allow overwriting sigma
-        if sigma is not None:
-            weights["model_struct_dict"]["coord_embed_sigma"] = sigma
+            # ToDo: Load onnx without any extra libraries
 
-        if "dist_type" in weights["model_struct_dict"]:
-            from tardis_em.dist_pytorch.utils.utils import check_model_dict
-        else:
-            from tardis_em.cnn.utils.utils import check_model_dict
-        model_structure = check_model_dict(weights["model_struct_dict"])
+        # Load model
+        if isinstance(weights, dict):  # Deprecated support for dictionary
+            # Allow overwriting sigma
+            if sigma is not None:
+                weights["model_struct_dict"]["coord_embed_sigma"] = sigma
 
-        if network is not None:
-            self.network = network
-        else:
-            if "dist_type" in model_structure:
-                self.network = "dist"
+            if "dist_type" in weights["model_struct_dict"]:
+                from tardis_em.dist_pytorch.utils.utils import check_model_dict
             else:
-                self.network = "cnn"
+                from tardis_em.cnn.utils.utils import check_model_dict
+            model_structure = check_model_dict(weights["model_struct_dict"])
 
-        self._2d = _2d
-        self.model = self._build_model_from_checkpoint(
-            structure=model_structure, sigmoid=sigmoid
-        )
+            if network is not None:
+                self.network = network
+            else:
+                if "dist_type" in model_structure:
+                    self.network = "dist"
+                else:
+                    self.network = "cnn"
 
-        self.model.load_state_dict(weights["model_state_dict"])
+            self._2d = _2d
+            self.model = self._build_model_from_checkpoint(
+                structure=model_structure, sigmoid=sigmoid
+            )
+
+            self.model.load_state_dict(weights["model_state_dict"])
+        else:  # Load onnx or other model
+            self.model = weights
+            self.model = self.model.update_patch_size(self.img_size)
         self.model.eval()
 
         del weights  # Cleanup weight file from memory

@@ -49,11 +49,11 @@ def scale_image(
         image = np.ascontiguousarray(image)
 
         if not np.all(scale == image.shape):
-            if scale[0] < image.shape[0]:
+            if scale[0] < image.shape[0]:  # Down-sampling
                 image = linear_scaling(
                     img=image, scale=scale, device=device
                 )
-            else:
+            else:  # Up-sampling
                 image = nn_scaling(
                     img=image,
                     scale=scale,
@@ -67,12 +67,14 @@ def scale_image(
         mask = np.ascontiguousarray(mask)
 
         if not np.all(scale == mask.shape):
-            if scale[0] < mask.shape[0]:
-                mask = nn_scaling(img=mask, scale=scale)
-            else:
-                mask = fourier_scaling(
-                    img=mask, scale=scale
-                )
+            mask = nn_scaling(img=mask, scale=scale)
+
+            # if scale[0] < mask.shape[0]:  # Down-sampling
+            #     mask = nn_scaling(img=mask, scale=scale)
+            # else:  # Up-sampling
+            #     mask = nn_scaling(
+            #         img=mask, scale=scale
+            #     )
 
     if image is not None and mask is not None:
         return image, mask, dim
