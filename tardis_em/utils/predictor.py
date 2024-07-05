@@ -112,6 +112,7 @@ class GeneralPredictor:
         device_: str,
         debug: bool,
         checkpoint: Optional[list] = None,
+        model_version: Optional[int] = None,
         correct_px: float = None,
         amira_prefix: str = None,
         filter_by_length: int = None,
@@ -136,6 +137,7 @@ class GeneralPredictor:
             self.expect_2d = False
         self.amira_prefix = amira_prefix
         self.checkpoint = checkpoint
+        self.model_version = model_version
         self.correct_px = correct_px
         self.normalize_px = None
 
@@ -258,7 +260,7 @@ class GeneralPredictor:
 
         self.semantic_header = [
             (
-                f"CNN type: {self.convolution_nn} version {version}" ""
+                f"CNN type: {self.convolution_nn} V{self.model_version}"
                 if self.checkpoint[0] is None
                 else f"CNN model loaded from checkpoint: {self.checkpoint[0]}"
                 f"Image patch size used for CNN: {self.patch_size}"
@@ -376,6 +378,7 @@ class GeneralPredictor:
             self.normalize_px = None
             self.cnn = Predictor(
                 checkpoint=self.checkpoint[0],
+                model_version=self.model_version,
                 network=self.convolution_nn,
                 img_size=self.patch_size,
                 sigmoid=False,
@@ -387,6 +390,7 @@ class GeneralPredictor:
                     network="dist",
                     subtype="triang",
                     model_type="3d",
+                    model_version=self.model_version,
                     device=self.device,
                 )
         else:
@@ -402,6 +406,7 @@ class GeneralPredictor:
                     network=self.convolution_nn,
                     subtype="32",
                     model_type="microtubules_3d" if NN == "Microtubule" else "actin_3d",
+                    model_version=self.model_version,
                     img_size=self.patch_size,
                     sigmoid=False,
                     device=self.device,
@@ -414,6 +419,7 @@ class GeneralPredictor:
                     network="dist",
                     subtype="triang",
                     model_type="2d",
+                    model_version=self.model_version,
                     device=self.device,
                 )
         elif NN in ["Membrane2D", "Membrane"]:
@@ -425,6 +431,7 @@ class GeneralPredictor:
                         network=self.convolution_nn,
                         subtype="32",
                         model_type="membrane_2d",
+                        model_version=self.model_version,
                         img_size=self.patch_size,
                         sigmoid=False,
                         device=self.device,
@@ -438,6 +445,7 @@ class GeneralPredictor:
                         network="dist",
                         subtype="triang",
                         model_type="2d",
+                        model_version=self.model_version,
                         device=self.device,
                     )
             else:
@@ -447,6 +455,7 @@ class GeneralPredictor:
                         network=self.convolution_nn,
                         subtype="32",
                         model_type="membrane_3d",
+                        model_version=self.model_version,
                         img_size=self.patch_size,
                         sigmoid=False,
                         device=self.device,
@@ -459,6 +468,7 @@ class GeneralPredictor:
                         network="dist",
                         subtype="triang",
                         model_type="3d",
+                        model_version=self.model_version,
                         device=self.device,
                     )
 
@@ -1319,6 +1329,7 @@ class Predictor:
          network (str, Optional): Optional network type name.
          subtype (str, Optional): Optional model subtype name.
          model_type (str, Optional): Optional model type name.
+         model_version (int, Optional): Optional model version.
          img_size (int, Optional): Optional image patch size.
          sigmoid (bool): Predict output with sigmoid.
     """
@@ -1329,6 +1340,7 @@ class Predictor:
         network: Optional[str] = None,
         checkpoint: Optional[str] = None,
         subtype: Optional[str] = None,
+        model_version: Optional[int] = None,
         img_size: Optional[int] = None,
         model_type: Optional[str] = None,
         sigma: Optional[float] = None,
@@ -1356,7 +1368,8 @@ class Predictor:
             print(f"Searching for weight file for {network}_{subtype}...")
 
             weights = torch.load(
-                get_weights_aws(network, subtype, model_type), map_location=device
+                get_weights_aws(network, subtype, model_type, model_version),
+                map_location=device,
             )
         elif isinstance(checkpoint, dict):
             weights = checkpoint
@@ -1392,7 +1405,7 @@ class Predictor:
             )
 
             self.model.load_state_dict(weights["model_state_dict"])
-        else:  # Load onnx or other model
+        else:  # Load onnx or another model
             self.model = weights
             self.model = self.model.update_patch_size(self.img_size)
         self.model.eval()

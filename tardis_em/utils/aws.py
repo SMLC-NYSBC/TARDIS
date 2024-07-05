@@ -21,7 +21,7 @@ from tardis_em.utils.errors import TardisError
 
 def get_benchmark_aws() -> dict:
     """
-    Retrieve best benchmarking score for given NN type
+    Retrieve best benchmarking score for a given NN type
 
     Returns:
         dict: Dictionary with keys[network name] and values[list of scores]
@@ -76,15 +76,20 @@ def get_model_aws(https: str):
     )
 
 
-def get_weights_aws(network: str, subtype: str, model: Optional[str] = None):
+def get_weights_aws(
+    network: str,
+    subtype: str,
+    model: Optional[str] = None,
+    version: Optional[int] = None,
+):
     """
     Module to download pre-train weights from S3 AWS bucket.
 
     Model weight stored on S3 bucket with the naming convention
     network_subtype/model/model_weights.pth
     References.:
-    - fnet_32/microtubules_3d/model_weights.pth
-    - dist_triang/microtubules_3d/model_weights.pth
+    - fnet_32/microtubules_3d/V_XX/model_weights.pth
+    - dist_triang/microtubules_3d/V_XX/model_weights.pth
 
     Weights are stored in ~/.tardis_em with the same convention and .txt
     file with file header information to identified update status for local file
@@ -94,6 +99,7 @@ def get_weights_aws(network: str, subtype: str, model: Optional[str] = None):
         network (str): Type of network for which weights are requested.
         subtype (str): Sub-name of the network or sub-parameter for the network.
         model (str): Additional dataset name used for the DIST.
+        version (int): Version of the model, be defaults we fetch the newest model
     """
     ALL_MODELS = ["unet", "unet3plus", "fnet_attn", "dist"]
     ALL_SUBTYPE = ["16", "32", "64", "96", "128", "triang", "full"]
@@ -149,7 +155,31 @@ def get_weights_aws(network: str, subtype: str, model: Optional[str] = None):
                 f"Incorrect DIST model selected {model} but expected {DIST_DATASET}",
             )
 
-    if aws_check_with_temp(model_name=[network, subtype, model]):
+    r = requests.get(
+        "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/",
+    )
+    r = r.content.decode("utf-8")
+    r.split("Key")
+    r.split("Key")[5]
+    all_version = [
+        f[1:-3].split("/")[-1]
+        for f in r.split("Key")
+        if f.startswith(f">tardis_em/{network}_{subtype}/{model}/V_")
+    ]
+    all_version = [v for v in all_version if v.startswith("V_")]
+
+    if version is not None:
+        version_assert = len([v for v in all_version if v == f"V_{version}"])
+        if not version_assert == 1:
+            TardisError(
+                "19", "tardis_em/utils/aws.py", f"{model} of V{version} not found"
+            )
+        else:
+            version = f"V_{version_assert}"
+    else:
+        version = f"V_{max([int(v.split('_')[1]) for v in all_version])}"
+
+    if aws_check_with_temp(model_name=[network, subtype, model, version]):
         if isfile(join(dir_, "model_weights.pth")):
             return join(dir_, "model_weights.pth")
         else:
@@ -158,8 +188,9 @@ def get_weights_aws(network: str, subtype: str, model: Optional[str] = None):
         weight = get_model_aws(
             "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/tardis_em/"
             f"{network}_{subtype}/"
-            f"{model}/model_weights.pth"
+            f"{model}/{version}/model_weights.pth"
         )
+
         # Save weights
         open(join(dir_, "model_weights.pth"), "wb").write(weight.content)
 
@@ -245,7 +276,7 @@ def aws_check_with_temp(model_name: list) -> bool:
             weight = requests.get(
                 "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/tardis_em/"
                 f"{model_name[0]}_{model_name[1]}/"
-                f"{model_name[2]}/model_weights.pth",
+                f"{model_name[2]}/{model_name[3]}/model_weights.pth",
                 stream=True,
                 timeout=(5, None),
             )
@@ -267,7 +298,7 @@ def aws_check_with_temp(model_name: list) -> bool:
     if save_data == aws_data:
         return True  # Up-to data weight, load from local dir
     else:
-        return False  # There is new version on aws, download from aws
+        return False  # There is a new version on aws, download from aws
 
 
 def aws_check_pkg_with_temp() -> bool:

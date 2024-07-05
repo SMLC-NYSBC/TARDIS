@@ -111,7 +111,7 @@ class BasicCNN(nn.Module):
             states = None
 
     def build_cnn_model(self):
-        """ Encoder """
+        """Encoder"""
         if self.model == "CNN":
             self.encoder = build_encoder(
                 in_ch=self.in_channels,
@@ -154,11 +154,15 @@ class BasicCNN(nn.Module):
         """ Final Layer """
         if "3" in self.layer_components:
             self.final_conv_layer = nn.Conv3d(
-                in_channels=self.conv_layer_scaler, out_channels=self.out_channels, kernel_size=1
+                in_channels=self.conv_layer_scaler,
+                out_channels=self.out_channels,
+                kernel_size=1,
             )
         elif "2" in self.layer_components:
             self.final_conv_layer = nn.Conv2d(
-                in_channels=self.conv_layer_scaler, out_channels=self.out_channels, kernel_size=1
+                in_channels=self.conv_layer_scaler,
+                out_channels=self.out_channels,
+                kernel_size=1,
             )
 
         """ Prediction """
@@ -482,7 +486,11 @@ class FNet(nn.Module):
         super(FNet, self).__init__()
         self.prediction = prediction
         self.encoder, self.decoder_unet, self.decoder_3plus = None, None, None
-        self.unet_conv_layer, self.unet3plus_conv_layer, self.final_conv_layer = None, None, None
+        self.unet_conv_layer, self.unet3plus_conv_layer, self.final_conv_layer = (
+            None,
+            None,
+            None,
+        )
         self.activation = None
 
         self.patch_sizes = img_patch_size
@@ -541,7 +549,7 @@ class FNet(nn.Module):
             states = None
 
     def build_cnn_model(self):
-        """ Encoder """
+        """Encoder"""
         self.encoder = build_encoder(
             in_ch=self.in_channels,
             conv_layers=self.num_conv_layer,

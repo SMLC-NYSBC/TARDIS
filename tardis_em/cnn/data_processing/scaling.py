@@ -50,9 +50,7 @@ def scale_image(
 
         if not np.all(scale == image.shape):
             if scale[0] < image.shape[0]:  # Down-sampling
-                image = linear_scaling(
-                    img=image, scale=scale, device=device
-                )
+                image = linear_scaling(img=image, scale=scale, device=device)
             else:  # Up-sampling
                 image = nn_scaling(
                     img=image,
@@ -84,9 +82,7 @@ def scale_image(
         return image, dim
 
 
-def nn_scaling(
-    img: np.ndarray, scale: tuple, device="cpu", gauss=False
-) -> np.ndarray:
+def nn_scaling(img: np.ndarray, scale: tuple, device="cpu", gauss=False) -> np.ndarray:
     if gauss:
         filter_ = img.shape[0] / scale[0]  # Scaling factor
         img = gaussian_filter(img, filter_ / 2)
@@ -135,16 +131,12 @@ def pil_LANCZOS(img: np.ndarray, scale: tuple) -> np.ndarray:
     else:
         new_height, new_width = scale
         img = Image.fromarray(img)
-        img = np.asarray(
-            img.resize((new_width, new_height), Image.LANCZOS)
-        )
+        img = np.asarray(img.resize((new_width, new_height), Image.LANCZOS))
 
     return img
 
 
-def linear_scaling(
-    img: np.ndarray, scale: tuple, device="cpu"
-) -> np.ndarray:
+def linear_scaling(img: np.ndarray, scale: tuple, device="cpu") -> np.ndarray:
     """
     Scaling of 2D/3D array using trilinear method from pytorch
 
@@ -257,9 +249,7 @@ def linear_scaling(
     return img.detach().numpy()[0, 0, :]
 
 
-def area_scaling(
-    img: np.ndarray, scale: tuple, device="cpu"
-) -> np.ndarray:
+def area_scaling(img: np.ndarray, scale: tuple, device="cpu") -> np.ndarray:
     """
     Scaling of 3D array using area method from pytorch
 
@@ -304,9 +294,7 @@ def area_scaling(
     return img
 
 
-def fourier_scaling(
-    img: np.ndarray, scale: tuple, device="cpu"
-) -> np.ndarray:
+def fourier_scaling(img: np.ndarray, scale: tuple, device="cpu") -> np.ndarray:
     """
     Resize a 2D or 3D image using Fourier cropping.
 

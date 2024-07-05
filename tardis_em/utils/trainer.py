@@ -296,7 +296,7 @@ class BasicTrainer:
 
         torch.save(
             self.model,
-            join(getcwd(), f"{self.checkpoint_name}_checkpoint", "model_weights.pth")
+            join(getcwd(), f"{self.checkpoint_name}_checkpoint", "model_weights.pth"),
         )
 
         if self.early_stopping.early_stop:

@@ -57,6 +57,14 @@ warnings.simplefilter("ignore", UserWarning)
     show_default=True,
 )
 @click.option(
+    "-mv",
+    "--model_version",
+    default=None,
+    type=int,
+    help="Optional version of the model from 1 to inf.",
+    show_default=True,
+)
+@click.option(
     "-cnn",
     "--convolution_nn",
     default="fnet_attn",
@@ -164,6 +172,7 @@ def main(
     correct_px: float,
     convolution_nn: str,
     checkpoint: str,
+    model_version: int,
     output_format: str,
     patch_size: int,
     rotate: bool,
@@ -202,6 +211,7 @@ def main(
         correct_px=correct_px,
         convolution_nn=convolution_nn,
         checkpoint=checkpoint,
+        model_version=model_version,
         output_format=output_format,
         patch_size=patch_size,
         cnn_threshold=cnn_threshold,

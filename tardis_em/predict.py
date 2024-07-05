@@ -50,7 +50,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-ch",
     "--checkpoint",
-    default="None|None",
+    default="",
     type=str,
     help="Optional list of pre-trained weights",
     show_default=True,
@@ -186,6 +186,7 @@ def main(
         correct_px=correct_px,
         convolution_nn=convolution_nn,
         checkpoint=checkpoint,
+        model_version=None,
         output_format=output_format,
         patch_size=patch_size,
         cnn_threshold=cnn_threshold,
