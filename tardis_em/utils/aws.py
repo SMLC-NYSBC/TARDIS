@@ -159,8 +159,6 @@ def get_weights_aws(
         "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/",
     )
     r = r.content.decode("utf-8")
-    r.split("Key")
-    r.split("Key")[5]
     all_version = [
         f[1:-3].split("/")[-1]
         for f in r.split("Key")
@@ -180,11 +178,14 @@ def get_weights_aws(
         version = f"V_{max([int(v.split('_')[1]) for v in all_version])}"
 
     if aws_check_with_temp(model_name=[network, subtype, model, version]):
+        print(f'Loaded temp weights for: {network}_{subtype} {version}...')
+
         if isfile(join(dir_, "model_weights.pth")):
             return join(dir_, "model_weights.pth")
         else:
             TardisError("19", "tardis_em/utils/aws.py", "No weights found")
     else:
+        print(f'Downloading new weights for: {network}_{subtype} {version}...')
         weight = get_model_aws(
             "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/tardis_em/"
             f"{network}_{subtype}/"

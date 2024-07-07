@@ -294,7 +294,7 @@ class GeneralPredictor:
 
     def init_check(self):
         """
-        All sanity checks before TARDIS initialize prediction
+        All sanities check before TARDIS initialize prediction
         """
         msg = f"TARDIS v.{version} supports only MT and Mem segmentation!"
         assert_ = self.predict in [
@@ -1407,7 +1407,7 @@ class Predictor:
             self.model.load_state_dict(weights["model_state_dict"])
         else:  # Load onnx or another model
             self.model = weights
-            self.model = self.model.update_patch_size(self.img_size)
+            self.model.update_patch_size(self.img_size)
         self.model.eval()
 
         del weights  # Cleanup weight file from memory
