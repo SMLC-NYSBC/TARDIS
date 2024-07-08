@@ -926,7 +926,7 @@ class GeneralPredictor:
         self.log_prediction.append(
             f"Instance Prediction: {i[:-self.in_format]}; Number of segments: {np.max(self.segments[:, 0])}"
         )
-        with open() as f:
+        with open(join("Predictions", "prediction_log.txt"), "w") as f:
             f.write(" \n".join(self.log_prediction))
 
         if self.output_format.endswith("amSG") and self.predict in [
