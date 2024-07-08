@@ -913,7 +913,7 @@ class GeneralPredictor:
             )
 
         self.log_prediction.append(f"Semantic Prediction: {i[:-self.in_format]}")
-        with open() as f:
+        with open(join("Predictions", "prediction_log.txt"), "w") as f:
             f.write(" \n".join(self.log_prediction))
 
     def save_instance_PC(self, i):
@@ -1217,7 +1217,7 @@ class GeneralPredictor:
                 if self.output_format.startswith("return"):
                     semantic_output.append(self.image)
 
-                # Check if image is binary
+                # Check if the image is binary
                 if self.image is not None and not self.output_format.startswith(
                     "return"
                 ):
