@@ -166,16 +166,19 @@ def get_weights_aws(
     ]
     all_version = [v for v in all_version if v.startswith("V_")]
 
-    if version is not None:
-        version_assert = len([v for v in all_version if v == f"V_{version}"])
-        if not version_assert == 1:
-            TardisError(
-                "19", "tardis_em/utils/aws.py", f"{model} of V{version} not found"
-            )
-        else:
-            version = f"V_{version_assert}"
+    if len(all_version) == 0:
+        version = None
     else:
-        version = f"V_{max([int(v.split('_')[1]) for v in all_version])}"
+        if version is not None:
+            version_assert = len([v for v in all_version if v == f"V_{version}"])
+            if not version_assert == 1:
+                TardisError(
+                    "19", "tardis_em/utils/aws.py", f"{model} of V{version} not found"
+                )
+            else:
+                version = f"V_{version_assert}"
+        else:
+            version = f"V_{max([int(v.split('_')[1]) for v in all_version])}"
 
     if aws_check_with_temp(model_name=[network, subtype, model, version]):
         print(f'Loaded temp weights for: {network}_{subtype} {version}...')
@@ -186,11 +189,19 @@ def get_weights_aws(
             TardisError("19", "tardis_em/utils/aws.py", "No weights found")
     else:
         print(f'Downloading new weights for: {network}_{subtype} {version}...')
-        weight = get_model_aws(
-            "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/tardis_em/"
-            f"{network}_{subtype}/"
-            f"{model}/{version}/model_weights.pth"
-        )
+
+        if version is None:
+            weight = get_model_aws(
+                "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/tardis_em/"
+                f"{network}_{subtype}/"
+                f"{model}/model_weights.pth"
+            )
+        else:
+            weight = get_model_aws(
+                "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/tardis_em/"
+                f"{network}_{subtype}/"
+                f"{model}/{version}/model_weights.pth"
+            )
 
         # Save weights
         open(join(dir_, "model_weights.pth"), "wb").write(weight.content)
@@ -274,14 +285,24 @@ def aws_check_with_temp(model_name: list) -> bool:
         return False  # Error loading json, download from aws
     else:
         try:
-            weight = requests.get(
-                "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/tardis_em/"
-                f"{model_name[0]}_{model_name[1]}/"
-                f"{model_name[2]}/{model_name[3]}/model_weights.pth",
-                stream=True,
-                timeout=(5, None),
-            )
-            aws = dict(weight.headers)
+            if model_name[3] == None:
+                weight = requests.get(
+                    "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/tardis_em/"
+                    f"{model_name[0]}_{model_name[1]}/"
+                    f"{model_name[2]}/model_weights.pth",
+                    stream=True,
+                    timeout=(5, None),
+                )
+                aws = dict(weight.headers)
+            else:
+                weight = requests.get(
+                    "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/tardis_em/"
+                    f"{model_name[0]}_{model_name[1]}/"
+                    f"{model_name[2]}/{model_name[3]}/model_weights.pth",
+                    stream=True,
+                    timeout=(5, None),
+                )
+                aws = dict(weight.headers)
         except:
             print("Network cannot be checked! Connect to the internet next time!")
             return True  # Found saved weight but cannot connect to aws

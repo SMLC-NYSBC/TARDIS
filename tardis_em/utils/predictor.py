@@ -1407,7 +1407,9 @@ class Predictor:
             self.model.load_state_dict(weights["model_state_dict"])
         else:  # Load onnx or another model
             self.model = weights
-            self.model.update_patch_size(self.img_size)
+
+            if not network == 'dist':
+                self.model.update_patch_size(self.img_size)
         self.model.eval()
 
         del weights  # Cleanup weight file from memory
