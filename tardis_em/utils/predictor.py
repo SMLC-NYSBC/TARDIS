@@ -260,7 +260,7 @@ class GeneralPredictor:
 
         self.semantic_header = [
             (
-                f"CNN type: {self.convolution_nn} V{self.model_version}"
+                f"CNN type: {self.convolution_nn} V{self.model_version} "
                 if self.checkpoint[0] is None
                 else f"CNN model loaded from checkpoint: {self.checkpoint[0]}"
                 f"Image patch size used for CNN: {self.patch_size}"

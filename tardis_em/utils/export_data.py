@@ -421,7 +421,7 @@ def to_mrc(
     pixel_size: float,
     file_dir: str,
     org_header: MRCHeader = None,
-    label=None,
+    label: List = None,
 ):
     """
     Save MRC image file
@@ -431,13 +431,14 @@ def to_mrc(
         pixel_size (float): Image original pixel size.
         file_dir (str): Directory where the file should be saved.
         org_header(MRCHeader): Optional original header
-        label(str): Optional costume label for header
+        label(list): Optional costume label for header
     """
     mode = mrc_mode(mode=data.dtype, amin=data.min())
     time_ = time.asctime()
 
     text_ = f"Saved with TARDIS {version}                        {time_}"
     if label is not None:
+        label = "\n ".join(label)
         if len(label) > 800:
             label = label[:800]
 
