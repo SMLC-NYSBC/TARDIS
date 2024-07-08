@@ -1406,6 +1406,8 @@ class Predictor:
 
             self.model.load_state_dict(weights["model_state_dict"])
         else:  # Load onnx or another model
+            self.network = network
+            self._2d = _2d
             self.model = weights
 
             if not network == 'dist':
@@ -1452,7 +1454,7 @@ class Predictor:
         Args:
             x (torch.Tensor): Main feature used for prediction.
             y (torch.Tensor, None): Optional feature used for prediction.
-            rotate (bool): Optional flag for CNN to output avg. from 4x 90* rotation
+            rotate (bool): Optional flag for CNN to output avg. From 4x 90* rotation
 
         Returns:
             np.ndarray: Predicted features.
