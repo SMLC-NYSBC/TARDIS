@@ -256,6 +256,7 @@ class GeneralPredictor:
             f"Output Format: {self.output_format}",
             f"Predict: {self.predict}",
             f"Device: {self.device}",
+            ""
         ]
 
         self.semantic_header = [
@@ -290,6 +291,7 @@ class GeneralPredictor:
             + self.semantic_header
             + ["", "----Instance Segmentation----"]
             + self.instance_header
+            + [""]
         )
 
     def init_check(self):
