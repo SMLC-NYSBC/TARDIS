@@ -884,6 +884,11 @@ class GeneralPredictor:
         self.tardis_progress(title=self.title, **config)
 
     def save_semantic_mask(self, i):
+        self.log_prediction.append(f"Semantic Prediction: {i[:-self.in_format]}"
+                                   f" | Number of pixels: {np.sum(self.image)}")
+        with open(join("Predictions", "prediction_log.txt"), "w") as f:
+            f.write(" \n".join(self.log_prediction))
+
         if self.output_format.startswith("mrc"):
             to_mrc(
                 data=self.image,
@@ -912,11 +917,13 @@ class GeneralPredictor:
                 join(self.am_output, f"{i[:-self.in_format]}_semantic.npy"), self.image
             )
 
-        self.log_prediction.append(f"Semantic Prediction: {i[:-self.in_format]}")
-        with open(join("Predictions", "prediction_log.txt"), "w") as f:
+    def save_instance_PC(self, i):
+        self.log_prediction.append(
+            f"Instance Prediction: {i[:-self.in_format]}; Number of segments: {np.max(self.segments[:, 0])}"
+        )
+        with open() as f:
             f.write(" \n".join(self.log_prediction))
 
-    def save_instance_PC(self, i):
         if self.output_format.endswith("amSG") and self.predict in [
             "Actin",
             "Microtubule",
@@ -1062,12 +1069,6 @@ class GeneralPredictor:
                 join(self.am_output, f"{i[:-self.in_format]}_instance.npy"),
                 self.segments,
             )
-
-        self.log_prediction.append(
-            f"Instance Prediction: {i[:-self.in_format]}; Number of segments: {np.max(self.segments[:, 0])}"
-        )
-        with open() as f:
-            f.write(" \n".join(self.log_prediction))
 
     def _debug(self, id_name: str, debug_id: str):
         if self.debug:
