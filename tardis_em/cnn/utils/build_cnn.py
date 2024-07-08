@@ -96,7 +96,9 @@ class BasicCNN(nn.Module):
         self.update_patch_size(img_patch_size)
         self.build_cnn_model()
 
-    def update_patch_size(self, img_patch_size):
+    def update_patch_size(self, img_patch_size, sigmoid):
+        self.prediction = sigmoid
+
         self.patch_sizes = [img_patch_size]
         for _ in range(self.num_conv_layer):
             img_patch_size = int(img_patch_size / 2)
@@ -512,7 +514,9 @@ class FNet(nn.Module):
         self.update_patch_size(img_patch_size)
         self.build_cnn_model()
 
-    def update_patch_size(self, img_patch_size):
+    def update_patch_size(self, img_patch_size, sigmoid):
+        self.prediction = sigmoid
+
         self.patch_sizes = [img_patch_size]
         for _ in range(self.num_conv_layer):
             img_patch_size = int(img_patch_size / 2)
