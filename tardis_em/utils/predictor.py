@@ -1412,7 +1412,7 @@ class Predictor:
             self.model = weights
 
             if not network == 'dist':
-                self.model.update_patch_size(self.img_size)
+                self.model.update_patch_size(self.img_size, sigmoid)
             self.model.to(self.device)
         self.model.eval()
 
