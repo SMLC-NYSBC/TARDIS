@@ -1412,6 +1412,7 @@ class Predictor:
 
             if not network == 'dist':
                 self.model.update_patch_size(self.img_size)
+            self.model.to(self.device)
         self.model.eval()
 
         del weights  # Cleanup weight file from memory
