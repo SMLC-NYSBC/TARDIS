@@ -64,7 +64,7 @@ from tardis_em.utils.ota_update import ota_update
     "--mask_size",
     default=150,
     type=int,
-    help="Size of drawn mask in A.",
+    help="Size of drawn mask in A. If you are using .csv files as labels.",
     show_default=True,
 )
 @click.option(
@@ -104,7 +104,7 @@ from tardis_em.utils.ota_update import ota_update
 @click.option(
     "-cm",
     "--cnn_scaler",
-    default=64,
+    default=32,
     type=int,
     help="Convolution multiplayer for CNN layers.",
     show_default=True,
@@ -112,7 +112,7 @@ from tardis_em.utils.ota_update import ota_update
 @click.option(
     "-cs",
     "--cnn_structure",
-    default="3gcp",
+    default="3gcl",
     type=str,
     help="Define structure of the convolution layer."
     "2 or 3 - dimension in 2D or 3D"
@@ -174,7 +174,7 @@ from tardis_em.utils.ota_update import ota_update
     show_default=True,
 )
 @click.option(
-    "-d",
+    "-dv",
     "--device",
     default=0,
     type=str,
@@ -196,7 +196,7 @@ from tardis_em.utils.ota_update import ota_update
 @click.option(
     "-e",
     "--epochs",
-    default=100,
+    default=10000,
     type=int,
     help="Number of epoches.",
     show_default=True,
@@ -204,7 +204,7 @@ from tardis_em.utils.ota_update import ota_update
 @click.option(
     "-es",
     "--early_stop",
-    default=10,
+    default=1000,
     type=int,
     help="Number of epoches without improvement after which early stop "
     "is initiated. Default should is 10% of the total number of epochs.",
@@ -221,7 +221,7 @@ from tardis_em.utils.ota_update import ota_update
 @click.option(
     "-dp",
     "--dropout_rate",
-    default=None,
+    default=0.5,
     type=float,
     help="If indicated, value of dropout for CNN.",
     show_default=True,

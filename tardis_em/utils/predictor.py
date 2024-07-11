@@ -644,7 +644,7 @@ class GeneralPredictor:
                 )
             else:
                 if not self.output_format.startswith("return"):
-                    self.log_prediction.append(f"Semantic Prediction: {i[:-self.in_format]}"
+                    self.log_prediction.append(f"Semantic Prediction: {id_name[:-self.in_format]}"
                                                f" | Number of pixels: {np.sum(self.image)}")
                     with open(join("Predictions", "prediction_log.txt"), "w") as f:
                         f.write(" \n".join(self.log_prediction))
