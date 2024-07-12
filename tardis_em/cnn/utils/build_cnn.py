@@ -93,7 +93,7 @@ class BasicCNN(nn.Module):
 
         self.final_conv_layer, self.sigmoid, self.activation = None, sigmoid, None
 
-        self.update_patch_size(img_patch_size)
+        self.update_patch_size(img_patch_size, prediction)
         self.build_cnn_model()
 
     def update_patch_size(self, img_patch_size, sigmoid):
