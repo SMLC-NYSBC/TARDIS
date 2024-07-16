@@ -952,7 +952,7 @@ def load_image(image: str, normalize=False) -> Tuple[np.ndarray, float]:
     Returns:
         np.ndarray, float: Image array and associated pixel size.
     """
-    px = 1.0
+    px = 0.0
 
     if image.endswith((".tif", ".tiff")):
         image, px = import_tiff(image)

@@ -66,7 +66,8 @@ from tardis_em._version import version
 ota = ""
 
 # Pytorch CUDA optimization
-torch.backends.cudnn.benchmark = True
+if torch.cuda.is_available():
+    torch.backends.cudnn.benchmark = True
 
 
 class GeneralPredictor:
@@ -142,6 +143,7 @@ class GeneralPredictor:
         self.normalize_px = None
 
         # Pre-processing setting
+        self.cnn, self.dist = None, None
         self.patch_size = patch_size
         self.points_in_patch = points_in_patch
         self.pc_hd, self.pc_ld = np.zeros((0, 3)), np.zeros((0, 3))
@@ -244,6 +246,7 @@ class GeneralPredictor:
         self.build_NN(NN=self.predict)
 
     def create_headers(self):
+        dir_ = self.dir if isinstance(self.dir, str) else "np.ndarray"
         main_ = [
             "# ASCII Spatial Graph",
             "# TARDIS - Transformer And Rapid Dimensionless Instance Segmentation (R)",
@@ -252,7 +255,7 @@ class GeneralPredictor:
             "Robert Kiewisz & Tristan Bepler",
             "Robert Kiewisz & Tristan Bepler",
             "",
-            f"Directory: {self.dir}",
+            f"Directory: {dir_}",
             f"Output Format: {self.output_format}",
             f"Predict: {self.predict}",
             f"Device: {self.device}",
@@ -617,6 +620,12 @@ class GeneralPredictor:
 
             tif.imwrite(join(self.output, f"{name}.tif"), input_)
 
+    def predict_cnn_napari(self, input_: torch.Tensor(), name: str):
+        input_ = self.cnn.predict(input_[None, :], rotate=self.rotate)
+        tif.imwrite(join(self.output, f"{name}.tif"), input_)
+
+        return input_
+
     def postprocess_CNN(self, id_name: str):
         # Stitch predicted image patches
         if self.expect_2d:
@@ -760,7 +769,6 @@ class GeneralPredictor:
                 self.predict_list = self.dir
             else:
                 self.predict_list = [self.dir]
-            self.dir = getcwd()
         else:
             if isdir(self.dir):
                 self.predict_list = [
@@ -776,7 +784,12 @@ class GeneralPredictor:
                     if f.endswith(self.available_format)
                     and not f.endswith(self.omit_format)
                 ]
-                self.dir = getcwd()
+        out_ = [
+            i
+            for i in self.dir.split("/")
+            if not i.endswith((".mrc", ".rec", ".map", ".tif", ".tiff", ".am"))
+        ]
+        self.dir = join("/".join(out_))
 
         # Update Dir paths
         self.output = join(self.dir, "temp", "Predictions")
@@ -1160,7 +1173,7 @@ class GeneralPredictor:
         for id_, i in enumerate(self.predict_list):
             """CNN Pre-Processing"""
             if isinstance(i, str):
-                # Find file format
+                # Find a file format
                 self.in_format = 0
                 if i.endswith((".tif", ".mrc", ".rec", ".map", ".npy")):
                     self.in_format = 4
@@ -1377,13 +1390,14 @@ class Predictor:
 
             weights = torch.load(
                 get_weights_aws(network, subtype, model_type, model_version),
-                map_location=device,
+                map_location='cpu',
             )
         elif isinstance(checkpoint, dict):
+            print("Loading weight dictionary...")
             weights = checkpoint
         else:
-            print("Loading weight file...")
-            weights = torch.load(checkpoint, map_location=device)
+            print("Loading weight model...")
+            weights = torch.load(checkpoint, map_location='cpu')
 
             # ToDo: Load onnx without any extra libraries
 
@@ -1397,6 +1411,7 @@ class Predictor:
                 from tardis_em.dist_pytorch.utils.utils import check_model_dict
             else:
                 from tardis_em.cnn.utils.utils import check_model_dict
+
             model_structure = check_model_dict(weights["model_struct_dict"])
 
             if network is not None:
@@ -1411,7 +1426,6 @@ class Predictor:
             self.model = self._build_model_from_checkpoint(
                 structure=model_structure, sigmoid=sigmoid
             )
-
             self.model.load_state_dict(weights["model_state_dict"])
         else:  # Load onnx or another model
             self.network = network
@@ -1420,7 +1434,7 @@ class Predictor:
 
             if not network == 'dist':
                 self.model.update_patch_size(self.img_size, sigmoid)
-            self.model.to(self.device)
+        self.model.to(self.device)
         self.model.eval()
 
         del weights  # Cleanup weight file from memory
@@ -1452,7 +1466,7 @@ class Predictor:
         else:
             model = None
 
-        return model.to(self.device)
+        return model
 
     def predict(
         self, x: torch.Tensor, y: Optional[torch.Tensor] = None, rotate=False

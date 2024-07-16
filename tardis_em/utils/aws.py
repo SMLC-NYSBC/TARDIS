@@ -69,6 +69,19 @@ def put_benchmark_aws(data: dict, network: Optional[str] = "", model=None) -> bo
     return r.status_code == 200
 
 
+def get_all_version_aws(network: str, subtype: str, model: str):
+    r = requests.get(
+        "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/",
+    )
+    r = r.content.decode("utf-8")
+    all_version = [
+        f[1:-3].split("/")[-1]
+        for f in r.split("Key")
+        if f.startswith(f">tardis_em/{network}_{subtype}/{model}/V_")
+    ]
+    return [v for v in all_version if v.startswith("V_")]
+
+
 def get_model_aws(https: str):
     return requests.get(
         https,
@@ -155,16 +168,7 @@ def get_weights_aws(
                 f"Incorrect DIST model selected {model} but expected {DIST_DATASET}",
             )
 
-    r = requests.get(
-        "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/",
-    )
-    r = r.content.decode("utf-8")
-    all_version = [
-        f[1:-3].split("/")[-1]
-        for f in r.split("Key")
-        if f.startswith(f">tardis_em/{network}_{subtype}/{model}/V_")
-    ]
-    all_version = [v for v in all_version if v.startswith("V_")]
+    all_version = get_all_version_aws(network, subtype, model)
 
     if len(all_version) == 0:
         version = None
