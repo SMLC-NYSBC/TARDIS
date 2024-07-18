@@ -511,11 +511,11 @@ class FNet(nn.Module):
         self.sigmoid = sigmoid
 
         self.patch_sizes = [img_patch_size]
-        self.update_patch_size(img_patch_size, self.sigmoid)
+        self.update_patch_size(img_patch_size, self.prediction)
         self.build_cnn_model()
 
-    def update_patch_size(self, img_patch_size, sigmoid):
-        self.prediction = sigmoid
+    def update_patch_size(self, img_patch_size, prediction):
+        self.prediction = prediction
 
         self.patch_sizes = [img_patch_size]
         for _ in range(self.num_conv_layer):
