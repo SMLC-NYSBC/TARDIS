@@ -655,7 +655,7 @@ class GeneralPredictor:
                 if not self.output_format.startswith("return"):
                     self.log_prediction.append(f"Semantic Prediction: {id_name[:-self.in_format]}"
                                                f" | Number of pixels: {np.sum(self.image)}")
-                    with open(join("Predictions", "prediction_log.txt"), "w") as f:
+                    with open(join(self.am_output, "prediction_log.txt"), "w") as f:
                         f.write(" \n".join(self.log_prediction))
 
                     tif.imwrite(
@@ -906,7 +906,7 @@ class GeneralPredictor:
     def save_semantic_mask(self, i):
         self.log_prediction.append(f"Semantic Prediction: {i[:-self.in_format]}"
                                    f" | Number of pixels: {np.sum(self.image)}")
-        with open(join("Predictions", "prediction_log.txt"), "w") as f:
+        with open(join(self.am_output, "prediction_log.txt"), "w") as f:
             f.write(" \n".join(self.log_prediction))
 
         if self.output_format.startswith("mrc"):
@@ -941,7 +941,7 @@ class GeneralPredictor:
         self.log_prediction.append(
             f"Instance Prediction: {i[:-self.in_format]}; Number of segments: {np.max(self.segments[:, 0])}"
         )
-        with open(join("Predictions", "prediction_log.txt"), "w") as f:
+        with open(join(self.am_output, "prediction_log.txt"), "w") as f:
             f.write(" \n".join(self.log_prediction))
 
         if self.output_format.endswith("amSG") and self.predict in [
