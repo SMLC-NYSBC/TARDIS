@@ -136,6 +136,9 @@ def build_train_dataset(
         mask_name = ""
         mask_dir = ""
         while not isfile(join(dataset_dir, mask_name)):
+            if mask_prefix >= len(MASK_FORMATS):
+                break
+
             mask_name = (
                 i[:-3] + MASK_FORMATS[mask_prefix]
                 if i.endswith(".am")
@@ -144,9 +147,6 @@ def build_train_dataset(
 
             mask_dir = join(dataset_dir, mask_name)
             mask_prefix += 1
-
-            if mask_prefix > len(MASK_FORMATS):
-                break
 
         if not isfile(mask_dir):
             # Store fail in the log file

@@ -17,9 +17,7 @@ import click
 import torch
 from torch.utils.data import DataLoader
 
-from tardis_em.cnn.datasets.build_dataset import (
-    build_train_dataset,
-)
+from tardis_em.cnn.datasets.build_dataset import build_train_dataset
 from tardis_em.cnn.datasets.dataloader import CNNDataset
 from tardis_em.cnn.train import train_cnn
 from tardis_em.utils.dataset import build_test_dataset
@@ -379,6 +377,7 @@ def main(
             "prediction": False,
         }
 
+    print(model_dict)
     """Run Training loop"""
     train_cnn(
         train_dataloader=train_DL,

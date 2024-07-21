@@ -372,6 +372,10 @@ class PatchDataSet:
             np.ndarray: An array all points in a patch with corrected ID value.
         """
         unique_idx, inverse_idx = np.unique(coord_with_idx[:, 0], return_inverse=True)
+        # Hot-fix for numpy 2.0.0
+        if inverse_idx.ndim == 2:
+            inverse_index = inverse_idx[:, 0]
+
         norm_idx = np.arange(len(unique_idx))
 
         for _, id_ in enumerate(unique_idx):
@@ -381,7 +385,7 @@ class PatchDataSet:
 
     def output_format(self, data: np.ndarray) -> Union[np.ndarray, torch.Tensor]:
         """
-        Utile class function to output array in the correct format (numpy or tensor)
+        Utile class function to output an array in the correct format (numpy or tensor)
 
         Args:
             data (np.ndarray): Input data for format change.

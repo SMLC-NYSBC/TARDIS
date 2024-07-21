@@ -257,6 +257,10 @@ class VoxelDownSampling(DownSampling):
             voxel_index, axis=0, return_inverse=True, return_counts=True
         )
 
+        # Hot-fix for numpy 2.0.0
+        if inverse_index.ndim == 2:
+            inverse_index = inverse_index[:, 0]
+
         # Compute the centroids of each voxel
         voxel_centers = np.zeros((len(unique_voxel_index), 3))
         np.add.at(voxel_centers, inverse_index, coord)

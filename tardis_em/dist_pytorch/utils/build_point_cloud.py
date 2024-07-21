@@ -14,7 +14,7 @@ from typing import Tuple, Union
 import numpy as np
 import pandas as pd
 from numpy import ndarray
-from skimage.morphology import skeletonize, skeletonize_3d
+from skimage.morphology import skeletonize
 
 from tardis_em.dist_pytorch.utils.utils import VoxelDownSampling
 from tardis_em.utils.errors import TardisError
@@ -132,7 +132,7 @@ class BuildPointCloud:
             for i in range(image_point.shape[0]):
                 image_point[i, :] = np.where(skeletonize(image[i, :]), 1, 0)
         else:
-            image_point = skeletonize_3d(image)
+            image_point = skeletonize(image)
         image_point = np.where(image_point > 0)
 
         """CleanUp to avoid memory loss"""

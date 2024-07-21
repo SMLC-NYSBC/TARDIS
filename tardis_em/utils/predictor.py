@@ -115,6 +115,7 @@ class GeneralPredictor:
         checkpoint: Optional[list] = None,
         model_version: Optional[int] = None,
         correct_px: float = None,
+        normalize_px: float = None,
         amira_prefix: str = None,
         filter_by_length: int = None,
         connect_splines: int = None,
@@ -132,7 +133,7 @@ class GeneralPredictor:
         self.dir = dir_
         self.output_format = output_format
         self.predict = predict
-        if self.predict == "Membrane2D":
+        if self.predict in ["Membrane2D"]:
             self.expect_2d = True
         else:
             self.expect_2d = False
@@ -140,7 +141,7 @@ class GeneralPredictor:
         self.checkpoint = checkpoint
         self.model_version = model_version
         self.correct_px = correct_px
-        self.normalize_px = None
+        self.normalize_px = normalize_px
 
         # Pre-processing setting
         self.cnn, self.dist = None, None
@@ -149,7 +150,7 @@ class GeneralPredictor:
         self.pc_hd, self.pc_ld = np.zeros((0, 3)), np.zeros((0, 3))
         self.coords_df = np.zeros((1, 3))
         self.transformation = [0, 0, 0]
-        self.segments = np.zeros((1, 3))
+        self.segments,  self.segments_filter = None, None
 
         # Prediction setting
         self.convolution_nn = convolution_nn
@@ -307,7 +308,8 @@ class GeneralPredictor:
             "Membrane2D",
             "Membrane",
             "Microtubule",
-            "General",
+            "General_filament",
+            "General_object"
         ]
         if self.tardis_logo:
             # Check if user ask to predict correct structure
@@ -379,31 +381,9 @@ class GeneralPredictor:
                 assert not assert_, msg
 
     def build_NN(self, NN: str):
-        if NN == "General":
-            self.normalize_px = None
-            self.cnn = Predictor(
-                checkpoint=self.checkpoint[0],
-                model_version=self.model_version,
-                network=self.convolution_nn,
-                img_size=self.patch_size,
-                sigmoid=False,
-                device=self.device,
-            )
-            if not self.output_format.endswith("None"):
-                self.dist = Predictor(
-                    checkpoint=self.checkpoint[1],
-                    network="dist",
-                    subtype="triang",
-                    model_type="3d",
-                    model_version=self.model_version,
-                    device=self.device,
-                )
-        else:
-            if NN in ["Microtubule", "Actin"]:
-                self.normalize_px = 25
-            else:
-                self.normalize_px = 15
         if NN in ["Actin", "Microtubule"]:
+            self.normalize_px = 25 if self.normalize_px is None else self.normalize_px
+
             # Build CNN network with loaded pre-trained weights
             if not self.binary_mask:
                 self.cnn = Predictor(
@@ -428,6 +408,8 @@ class GeneralPredictor:
                     device=self.device,
                 )
         elif NN in ["Membrane2D", "Membrane"]:
+            self.normalize_px = 15 if self.normalize_px is None else self.normalize_px
+
             # Build CNN network with loaded pre-trained weights
             if NN == "Membrane2D":
                 if not self.binary_mask:
@@ -468,6 +450,34 @@ class GeneralPredictor:
 
                 # Build DIST network with loaded pre-trained weights
                 if not self.output_format.endswith("None"):
+                    self.dist = Predictor(
+                        checkpoint=self.checkpoint[1],
+                        network="dist",
+                        subtype="triang",
+                        model_type="3d",
+                        model_version=self.model_version,
+                        device=self.device,
+                    )
+        elif NN.startswith("General"):
+            self.cnn = Predictor(
+                checkpoint=self.checkpoint[0],
+                model_version=self.model_version,
+                network=self.convolution_nn,
+                img_size=self.patch_size,
+                sigmoid=False,
+                device=self.device,
+            )
+            if not self.output_format.endswith("None"):
+                if NN.endswith("filament"):
+                    self.dist = Predictor(
+                        checkpoint=self.checkpoint[1],
+                        network="dist",
+                        subtype="triang",
+                        model_type="2d",
+                        model_version=self.model_version,
+                        device=self.device,
+                    )
+                else:
                     self.dist = Predictor(
                         checkpoint=self.checkpoint[1],
                         network="dist",
@@ -579,6 +589,11 @@ class GeneralPredictor:
             else:
                 assert assert_, msg
 
+        if self.image.ndim == 2:
+            self.expect_2d = True
+        else:
+            self.expect_2d = False
+
     def predict_cnn(self, id_: int, id_name: str, dataloader):
         iter_time = 1
         if self.rotate:
@@ -670,11 +685,11 @@ class GeneralPredictor:
     def preprocess_DIST(self, id_name: str):
         if self.amira_image:
             # Post-process predicted image patches
-            if self.predict in ["Actin", "Microtubule"]:
+            if self.predict in ["Actin", "Microtubule", "General_filament"]:
                 self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
                     image=self.image, down_sampling=5
                 )
-            elif self.predict == "Membrane2D":
+            elif self.predict in ["Membrane2D"]:
                 self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
                     image=self.image, down_sampling=5, as_2d=True
                 )
@@ -738,13 +753,13 @@ class GeneralPredictor:
         )
         self.pc_ld = self.pc_ld + self.transformation
 
-        if self.predict in ["Actin", "Microtubule"]:
+        if self.predict in ["Actin", "Microtubule", "General_filament"]:
             self.log_tardis(id_, i, log_id=6.1)
         else:
             self.log_tardis(id_, i, log_id=6.2)
 
         try:
-            if self.predict in ["Actin", "Microtubule", "Membrane2D"]:
+            if self.predict in ["Actin", "Microtubule", "Membrane2D", "General_filament"]:
                 sort = True
                 prune = 5
             else:
@@ -880,7 +895,7 @@ class GeneralPredictor:
                 "text_4": f"Original pixel size: {self.px} A",
                 "text_5": f"Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments",
                 "text_7": "Current Task: Instance Segmentation...",
-                "text_8": "MTs segmentation is fitted to:",
+                "text_8": "Filament segmentation is fitted to:",
                 "text_9": f"pixel size: {self.px}; transformation: {self.transformation}",
             },
             6.2: {
@@ -947,6 +962,7 @@ class GeneralPredictor:
         if self.output_format.endswith("amSG") and self.predict in [
             "Actin",
             "Microtubule",
+            "General_filament"
         ]:
             self.amira_file.export_amira(
                 coords=self.segments,
@@ -1014,7 +1030,7 @@ class GeneralPredictor:
                 sep=",",
             )
 
-            if self.predict in ["Actin", "Microtubule", "Membrane2D"]:
+            if self.predict in ["Actin", "Microtubule", "Membrane2D", "General_filament"]:
                 self.segments = sort_by_length(self.filter_splines(self.segments))
                 self.segments = pd.DataFrame(self.segments)
                 self.segments.to_csv(
@@ -1026,8 +1042,9 @@ class GeneralPredictor:
                     index=False,
                     sep=",",
                 )
+                self.segments = self.segments.to_numpy()
         elif self.output_format.endswith(("mrc", "tif", "am")):
-            if self.predict in ["Membrane", "Membrane2D"]:
+            if self.predict in ["Membrane", "Membrane2D", "General_object"]:
                 self.mask_semantic = draw_semantic_membrane(
                     mask_size=self.org_shape,
                     coordinate=self.segments,
@@ -1287,6 +1304,7 @@ class GeneralPredictor:
 
             self.preprocess_DIST(id_name=i)
             self.segments = np.zeros((0, 4))
+            self.segments_filter = None
 
             # Break iter loop for instances if no point cloud is found
             if len(self.pc_ld) == 0:

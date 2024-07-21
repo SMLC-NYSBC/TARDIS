@@ -86,7 +86,7 @@ def train_cnn(
     if not isinstance(device, torch.device) and isinstance(device, str):
         device = get_device(device)
 
-    """Build DIST model"""
+    """Build CNN model"""
     try:
         model = build_cnn_network(
             network_type=model_structure["cnn_type"],

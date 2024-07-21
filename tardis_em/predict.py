@@ -48,6 +48,15 @@ warnings.simplefilter("ignore", UserWarning)
     show_default=True,
 )
 @click.option(
+    "-fi",
+    "--filament",
+    default=False,
+    type=bool,
+    help="If True, use general workflow for filament segmentation, else use general workflow"
+         "for object instance segmentation.",
+    show_default=True,
+)
+@click.option(
     "-ch",
     "--checkpoint",
     default="",
@@ -99,7 +108,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-ct",
     "--cnn_threshold",
-    default="0.25",
+    default="0.50",
     type=str,
     help="Threshold used for CNN prediction.",
     show_default=True,
@@ -146,6 +155,7 @@ warnings.simplefilter("ignore", UserWarning)
 def main(
     path: str,
     mask: bool,
+    filament: bool,
     checkpoint: str,
     output_format: str,
     patch_size: int,
@@ -179,8 +189,13 @@ def main(
         if checkpoint[1] == "None":
             checkpoint[1] = None
 
+    if filament:
+        predict = "General_filament"
+    else:
+        predict = "General_object"
+
     predictor = GeneralPredictor(
-        predict="General",
+        predict=predict,
         dir_=path,
         binary_mask=mask,
         correct_px=correct_px,

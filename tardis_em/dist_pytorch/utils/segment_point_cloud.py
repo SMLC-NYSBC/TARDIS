@@ -203,6 +203,10 @@ class PropGreedyGraphCut:
         for p in all_prop:
             if p[2]:
                 unique_indices, inv = np.unique(p[2], return_inverse=True)
+                # Hot-fix for numpy 2.0.0
+                if inv.ndim == 2:
+                    inverse_index = inv[:, 0]
+
                 p[2] = unique_indices.tolist()
                 p[3] = [
                     np.median(np.array(p[3])[inv == i])
