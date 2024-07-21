@@ -17,6 +17,7 @@ from tardis_em.dist_pytorch.utils.utils import VoxelDownSampling
 from tardis_em.utils.errors import TardisError
 from tardis_em.utils.spline_metric import smooth_spline, sort_segment
 
+
 class PropGreedyGraphCut:
     """
     PROBABILITY DRIVEN GREEDY GRAPH CUT
@@ -506,7 +507,11 @@ class PropGreedyGraphCut:
             segments = self._smooth_segments(segments)
 
         if visualize is not None:
-            from tardis_em.utils.visualize_pc import VisualizeFilaments, VisualizePointCloud
+            from tardis_em.utils.visualize_pc import (
+                VisualizeFilaments,
+                VisualizePointCloud,
+            )
+
             if visualize not in ["f", "p"]:
                 TardisError(
                     "124",

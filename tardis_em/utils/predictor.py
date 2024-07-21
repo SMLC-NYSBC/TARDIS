@@ -150,7 +150,7 @@ class GeneralPredictor:
         self.pc_hd, self.pc_ld = np.zeros((0, 3)), np.zeros((0, 3))
         self.coords_df = np.zeros((1, 3))
         self.transformation = [0, 0, 0]
-        self.segments,  self.segments_filter = None, None
+        self.segments, self.segments_filter = None, None
 
         # Prediction setting
         self.convolution_nn = convolution_nn
@@ -260,7 +260,7 @@ class GeneralPredictor:
             f"Output Format: {self.output_format}",
             f"Predict: {self.predict}",
             f"Device: {self.device}",
-            ""
+            "",
         ]
 
         self.semantic_header = [
@@ -309,7 +309,7 @@ class GeneralPredictor:
             "Membrane",
             "Microtubule",
             "General_filament",
-            "General_object"
+            "General_object",
         ]
         if self.tardis_logo:
             # Check if user ask to predict correct structure
@@ -668,8 +668,10 @@ class GeneralPredictor:
                 )
             else:
                 if not self.output_format.startswith("return"):
-                    self.log_prediction.append(f"Semantic Prediction: {id_name[:-self.in_format]}"
-                                               f" | Number of pixels: {np.sum(self.image)}")
+                    self.log_prediction.append(
+                        f"Semantic Prediction: {id_name[:-self.in_format]}"
+                        f" | Number of pixels: {np.sum(self.image)}"
+                    )
                     with open(join(self.am_output, "prediction_log.txt"), "w") as f:
                         f.write(" \n".join(self.log_prediction))
 
@@ -759,7 +761,12 @@ class GeneralPredictor:
             self.log_tardis(id_, i, log_id=6.2)
 
         try:
-            if self.predict in ["Actin", "Microtubule", "Membrane2D", "General_filament"]:
+            if self.predict in [
+                "Actin",
+                "Microtubule",
+                "Membrane2D",
+                "General_filament",
+            ]:
                 sort = True
                 prune = 5
             else:
@@ -919,8 +926,10 @@ class GeneralPredictor:
         self.tardis_progress(title=self.title, **config)
 
     def save_semantic_mask(self, i):
-        self.log_prediction.append(f"Semantic Prediction: {i[:-self.in_format]}"
-                                   f" | Number of pixels: {np.sum(self.image)}")
+        self.log_prediction.append(
+            f"Semantic Prediction: {i[:-self.in_format]}"
+            f" | Number of pixels: {np.sum(self.image)}"
+        )
         with open(join(self.am_output, "prediction_log.txt"), "w") as f:
             f.write(" \n".join(self.log_prediction))
 
@@ -962,7 +971,7 @@ class GeneralPredictor:
         if self.output_format.endswith("amSG") and self.predict in [
             "Actin",
             "Microtubule",
-            "General_filament"
+            "General_filament",
         ]:
             self.amira_file.export_amira(
                 coords=self.segments,
@@ -1030,7 +1039,12 @@ class GeneralPredictor:
                 sep=",",
             )
 
-            if self.predict in ["Actin", "Microtubule", "Membrane2D", "General_filament"]:
+            if self.predict in [
+                "Actin",
+                "Microtubule",
+                "Membrane2D",
+                "General_filament",
+            ]:
                 self.segments = sort_by_length(self.filter_splines(self.segments))
                 self.segments = pd.DataFrame(self.segments)
                 self.segments.to_csv(
@@ -1408,14 +1422,14 @@ class Predictor:
 
             weights = torch.load(
                 get_weights_aws(network, subtype, model_type, model_version),
-                map_location='cpu',
+                map_location="cpu",
             )
         elif isinstance(checkpoint, dict):
             print("Loading weight dictionary...")
             weights = checkpoint
         else:
             print("Loading weight model...")
-            weights = torch.load(checkpoint, map_location='cpu')
+            weights = torch.load(checkpoint, map_location="cpu")
 
             # ToDo: Load onnx without any extra libraries
 
@@ -1450,7 +1464,7 @@ class Predictor:
             self._2d = _2d
             self.model = weights
 
-            if not network == 'dist':
+            if not network == "dist":
                 self.model.update_patch_size(self.img_size, sigmoid)
         self.model.to(self.device)
         self.model.eval()

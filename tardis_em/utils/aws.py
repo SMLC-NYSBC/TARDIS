@@ -185,14 +185,14 @@ def get_weights_aws(
             version = f"V_{max([int(v.split('_')[1]) for v in all_version])}"
 
     if aws_check_with_temp(model_name=[network, subtype, model, version]):
-        print(f'Loaded temp weights for: {network}_{subtype} {version}...')
+        print(f"Loaded temp weights for: {network}_{subtype} {version}...")
 
         if isfile(join(dir_, "model_weights.pth")):
             return join(dir_, "model_weights.pth")
         else:
             TardisError("19", "tardis_em/utils/aws.py", "No weights found")
     else:
-        print(f'Downloading new weights for: {network}_{subtype} {version}...')
+        print(f"Downloading new weights for: {network}_{subtype} {version}...")
 
         if version is None:
             weight = get_model_aws(

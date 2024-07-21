@@ -53,7 +53,7 @@ warnings.simplefilter("ignore", UserWarning)
     default=False,
     type=bool,
     help="If True, use general workflow for filament segmentation, else use general workflow"
-         "for object instance segmentation.",
+    "for object instance segmentation.",
     show_default=True,
 )
 @click.option(
