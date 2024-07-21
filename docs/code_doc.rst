@@ -7,7 +7,7 @@ CNN Module
    
    CNN Model <cnn/model>
    DataLoader <cnn/datasets>
-   Data processeing <cnn/data_processing>
+   Data processing <cnn/data_processing>
    Utils <cnn/utils>
 
 DIST Module
@@ -37,6 +37,6 @@ Global Functions
    
    Logger <utils/logger>
    Utils Functions <utils/utils>
-   SetUp Enviroment <utils/setup>
+   SetUp Environment <utils/setup>
    
    Visualizer <utils/visualize>

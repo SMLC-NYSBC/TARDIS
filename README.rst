@@ -40,7 +40,7 @@ Features
 
 - High-throughput semantic/instance segmentation of actin [Beta]
 - Fully automatic segmentation solution!
-- Napari plugin [Coming soon]
+- `Napari plugin <https://github.com/SMLC-NYSBC/napari-tardis_em/>`__
 - Cloud computing [Coming soon]
 
 Citation
@@ -59,19 +59,16 @@ What's new?
 
 `Full History <https://smlc-nysbc.github.io/TARDIS/HISTORY.html>`__
 
-TARDIS-em v0.2.6 (2024-05-22):
-    * Added actin segmentation
-    * Improvement from Microtubule and Membrane prediction with updated models
-    * Added option for scripting TARDIS predictions
-    * Added visualization for semantic and instance predictions
-    * TARDIS build in results visualization
-    * Bug fixes
-    * Documentation tutorials
-    * Pypi and Conda releases
-    * Re-trained DIST model using simulated datasets
-    * Build 2 model for:
-        * filaments and general 2D structures
-        * 3D objects like membranes mitochondria LiDAR data etc.
+TARDIS-em v0.2.8 (2024-07-21):
+    * Fixed numpy v2.0.0 support
+    * Added general predictor for filament and object type structures
+    * Added support for model versioning
+    * Users are now allowed to use starting from v0.2.8 new and old model version
+    * Added prediction metadata to all save files, including prediction log file
+    * Fixes from v0.2.6 version
+    * Change scaling types for up- and down- scaling of images before/after predictions
+    * Added adaptive threshold as an optional cnn threshold
+    * Added model for actin
 
 Quick Start
 ===========
@@ -95,6 +92,12 @@ or
 .. code-block:: bash
 
     tardis
+
+3) Optional Napari plugin installation
+
+.. code-block:: bash
+
+    pip install napari-tardis-em
 
 Filaments Prediction
 --------------------

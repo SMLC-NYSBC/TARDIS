@@ -1,5 +1,36 @@
 # History
 <details open>
+    <summary><b>0.2.8 (2024-07-21)</b></summary>
+
+* **General changes:**
+    * *General*:
+        * Update and bugfixes for napari plugin
+        * Fixed numpy v2.0.0 support
+        * Added general predictor for filament and object type structures
+
+    * *New_Feature*: 
+        * Added support for model versioning
+          * Users are now allowed to use starting from v0.2.8 new and old model version
+        * Added prediction metadata to all save files, including prediction log file
+        * Added docker builder
+    * *Bugfixes*:
+      * Fixes from v0.2.6 version
+
+* **CNN module changes:**
+  * *General*:
+    * Change scaling types for up- and down- scaling of images before/after predictions
+  * *New_Feature*: 
+    * Added adaptive threshold as an optional cnn threshold
+    * Added model for actin
+
+* **Napari plugin:**
+  * *General*:
+    * Build in training workflow within napari plugin
+    * Build general predictor for trained CNN models including filament and object instance segmentation
+    * Build in prediction workflow for all supported structures within tardis-em v0.2.8
+</details>
+
+<details>
     <summary><b>0.2.7 (2024-05-28)</b></summary>
 
 * **General changes:**

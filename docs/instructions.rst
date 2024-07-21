@@ -9,11 +9,17 @@ We are working on a more intuitive installation of our software. In the meantime
 
 Option 1:
 ---------
-Install TARDIS using the newest released package on `Github <https://github.com/SMLC-NYSBC/TARDIS/releases>`__
+Install TARDIS using the newest released package from `Github <https://github.com/SMLC-NYSBC/TARDIS/releases>`__
 
 .. code-block:: bash
 
     pip install package_name-py3-none-any.whl
+
+or
+
+.. coda-block:: bash
+
+    pip install tardis-em
 
 or
 
@@ -104,6 +110,12 @@ This should display the TARDIS home screen, similar to the screenshot below:
     .. image:: resources/main_tardis.jpg
       :width: 512
 
+[Optional] installation of Napari plugin
+----------------------------------------
+
+.. code-block:: bash
+
+    pip install napari-tardis-em
 
 Run automatic segmentation
 --------------------------
