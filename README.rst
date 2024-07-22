@@ -5,18 +5,24 @@
 
 ========
 
-.. image:: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_pytest.yml/badge.svg
-        :target: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_pytest.yml
-
-.. image:: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/licensed.yml/badge.svg
-        :target: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/licensed.yml
-
-.. image:: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/sphinx_documentation.yml/badge.svg
-        :target: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/sphinx_documentation.yml
+.. image:: https://img.shields.io/github/v/release/smlc-nysbc/tardis
+        :target: https://img.shields.io/github/v/release/smlc-nysbc/tardis
 
 .. image:: https://img.shields.io/badge/Join%20Our%20Community-Slack-blue
         :target: https://join.slack.com/t/tardis-em/shared_invite/zt-27jznfn9j-OplbV70KdKjkHsz5FcQQGg
 
+.. image:: https://img.shields.io/github/downloads/smlc-nysbc/tardis/total
+        :target: https://img.shields.io/github/downloads/smlc-nysbc/tardis/total
+
+.. image:: https://img.shields.io/badge/https%3A%2F%2Fgithub.com%2FSMLC-NYSBC%2Fnapari-tardis_em?style=plastic&label=Napari&link=https%3A%2F%2Fgithub.com%2FSMLC-NYSBC%2Fnapari-tardis_em
+   :alt: Static Badge
+
+
+.. image:: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_pytest.yml/badge.svg
+        :target: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_pytest.yml
+
+.. image:: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/sphinx_documentation.yml/badge.svg
+        :target: https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/sphinx_documentation.yml
 
 Python-based software for generalized object instance segmentation from (cryo-)electron microscopy
 micrographs/tomograms. The software package is built on a general workflow where predicted semantic segmentation
@@ -61,12 +67,12 @@ What's new?
 
 TARDIS-em v0.2.8 (2024-07-21):
     * Fixed numpy v2.0.0 support
-    * Added general predictor for filament and object type structures
+    * Added general predictor for filament and object-type structures
     * Added support for model versioning
     * Users are now allowed to use starting from v0.2.8 new and old model version
-    * Added prediction metadata to all save files, including prediction log file
+    * Added prediction metadata to all save files, including the prediction log file
     * Fixes from v0.2.6 version
-    * Change scaling types for up- and down- scaling of images before/after predictions
+    * Change scaling types for up- and down-scaling of images before/after predictions
     * Added adaptive threshold as an optional cnn threshold
     * Added model for actin
 
