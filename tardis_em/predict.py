@@ -57,6 +57,14 @@ warnings.simplefilter("ignore", UserWarning)
     show_default=True,
 )
 @click.option(
+    "-it",
+    "--image_type",
+    default='3d',
+    type=click.Choice(['2d', '3d']),
+    help="Select type of predicted image, 2D or 3D.",
+    show_default=True,
+)
+@click.option(
     "-ch",
     "--checkpoint",
     default="",
@@ -156,6 +164,7 @@ def main(
     path: str,
     mask: bool,
     filament: bool,
+    image_type: str,
     checkpoint: str,
     output_format: str,
     patch_size: int,
@@ -212,6 +221,11 @@ def main(
         device_=str(device),
         debug=debug,
     )
+
+    if image_type == "2d":
+        predictor.expect_2d = True
+    else:
+        predictor.expect_2d = True
 
     predictor()
 

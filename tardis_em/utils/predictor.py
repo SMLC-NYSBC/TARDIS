@@ -466,6 +466,7 @@ class GeneralPredictor:
                 img_size=self.patch_size,
                 sigmoid=False,
                 device=self.device,
+                _2d=self.expect_2d
             )
             if not self.output_format.endswith("None"):
                 if NN.endswith("filament"):
