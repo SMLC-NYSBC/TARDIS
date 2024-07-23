@@ -15,8 +15,12 @@ from skimage import exposure
 
 
 def adaptive_threshold(img: np.ndarray):
-    std_ = np.std(img, axis=(1, 2), keepdims=True)
-    mean_ = np.mean(img, axis=(1, 2), keepdims=True)
+    if img.ndim == 3:
+        std_ = np.std(img, axis=(1, 2), keepdims=True)
+        mean_ = np.mean(img, axis=(1, 2), keepdims=True)
+    else:
+        std_ = np.std(img)
+        mean_ = np.mean(img)
 
     # Perform the thresholding in a vectorized manner
     return (img >= (mean_ / std_)).astype(np.uint8)

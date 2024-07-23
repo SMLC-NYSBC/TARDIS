@@ -93,7 +93,7 @@ class GeneralPredictor:
         amira_inter_probability (float): Optional, compare setting, portability threshold
         to define comparison class.
         instances (bool): If True, run instance segmentation after semantic.
-        device_ (str): Define computation device.
+        device_ (str): Define a computation device.
         debug (bool): If True, run in debugging mode.
     """
 
@@ -208,7 +208,7 @@ class GeneralPredictor:
                 max_number_of_points=points_in_patch, graph=False
             )
 
-            if predict in ["Actin", "Microtubule", "Membrane2D"]:
+            if predict in ["Actin", "Microtubule", "Membrane2D", "General_filament"]:
                 self.GraphToSegment = PropGreedyGraphCut(
                     threshold=dist_threshold, connection=2, smooth=True
                 )
@@ -231,7 +231,7 @@ class GeneralPredictor:
                     interaction_threshold=amira_inter_probability,
                 )
                 self.score_splines = ComputeConfidenceScore()
-            elif predict in ["Membrane", "General"]:
+            elif predict in ["Membrane", "General_object"]:
                 self.GraphToSegment = PropGreedyGraphCut(
                     threshold=dist_threshold, connection=8
                 )

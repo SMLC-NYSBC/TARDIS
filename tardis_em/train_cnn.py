@@ -270,10 +270,10 @@ def main(
         with_img=True,
         train_img=TRAIN_IMAGE_DIR,
         train_mask=TRAIN_MASK_DIR,
-        img_format=(".mrc", ".tif"),
+        img_format=IMG_FORMAT,
         test_img=TEST_IMAGE_DIR,
         test_mask=TEST_MASK_DIR,
-        mask_format=("_mask.mrc", "_mask.tif"),
+        mask_format=("_mask.am", ".CorrelationLines.am", "_mask.mrc", "_mask.tif", "_mask.csv"),
     )
 
     """Optionally: Set-up environment if not existing"""
