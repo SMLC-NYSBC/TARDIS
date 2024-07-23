@@ -29,7 +29,7 @@ def preprocess_data(
     Data augmentation function.
 
     Given any supported coordinate file, the function process it with optional image
-    data. If image data are used, the image output is a list of flattened image patches
+    data. If image data is used, the image output is a list of flattened image patches
     of a specified size.
     Additionally, the graph output can be created.
 
@@ -231,7 +231,7 @@ class BuildGraph:
                         graph[j, j + 1] = 1
                         graph[j, j - 1] = 1
 
-                # Check euclidean distance between fist and last point
+                # Check Euclidean distance between fist and last point
                 ends_distance = np.linalg.norm(
                     coord[points_in_contour[0]][1:] - coord[points_in_contour[-1]][1:]
                 )
@@ -251,7 +251,7 @@ class Crop2D3D:
     """
     2D/3D IMAGE CROPPING
 
-    Center crop gave image to the specified size.
+    Center crop gave the image to the specified size.
 
     Args:
         image (np.ndarray): Image array.
@@ -275,7 +275,7 @@ class Crop2D3D:
         center_point: int, size: int, max_size: int
     ) -> Tuple[int, int]:
         """
-        Given the center point calculate the range to crop.
+        Given the center point, calculate the range to crop.
 
         Args:
             center_point (int): XYZ coordinate for center point.

@@ -295,10 +295,11 @@ def draw_circle(
     Draw a circle in a 3D space.
 
     Args:
-        center ( np.ndarray): (z0, y0, x0) representing the center of the circle.
+        center (np.ndarray): (z0, y0, x0) representing the center of the circle.
         radius (float): The radius of the circle.
         circle_id (int): An identifier for the circle.
-        _3d (bool):
+        _3d (bool): True if 3D object.
+        size: Size of drawn mask
 
     Returns:
         np.ndarray: A numpy array containing points [circle_id, z, y, x] on the circle.

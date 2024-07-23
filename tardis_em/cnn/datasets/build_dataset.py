@@ -7,7 +7,6 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2024                                            #
 #######################################################################
-
 from os import listdir
 from os.path import isfile, join
 from typing import Tuple, Union
@@ -29,27 +28,28 @@ def build_train_dataset(
     trim_xy: int,
     trim_z: int,
     benchmark=False,
+    correct_pixel_size = None,
 ):
     """
     Module for building train datasets from compatible files.
 
-    This module building a train dataset from each file in the specified dir.
+    This module builds a train dataset from each file in the specified dir.
     Module working on the file as .tif/.mrc/.rec/.am and mask in image format
     of .csv and .am:
     - If mask is .csv, module expect image file in format of .tif/.mrc/.rec/.am
     - If mask is .am, module expect image file in format of .am
 
-    For the given dir, module recognize file, and then for each file couple
+    For the given dir, module recognizes file, and then for each file couple
     (e.g. image and mask) if needed (e.g. mask is not .tif) it's build mask from
-    the point cloud. For this module expect that mask file (.csv, .am) contain
+    the point cloud. For this module, expect that mask file (.csv, .am) contains
     coordinates values. Then for each point module draws 2D label.
 
-    This image arrays are then scale up or down to fit given pixel size, and
+    These image arrays are then scaled up or down to fit given pixel size, and
     finally arrays are trimmed with overlay (stride) for specific size.
 
     Files are saved in ./dir/train/imgs and ./dir/train/masks.
 
-    Mask are computed as np.uint8 arrays and images as np.float64 normalized image
+    Mask is computed as np.uint8 arrays and images as np.float64 normalized image
     value between 0 and 1.
 
     Args:
@@ -59,6 +59,7 @@ def build_train_dataset(
         trim_xy (int): Voxel size of output image in x and y dimension.
         trim_z (int): Voxel size of output image in z dimension.
         benchmark (bool): If True construct data for benchmark.
+        correct_pixel_size (float, None): Optionally, correction for pixel size value.
     """
     """Setup"""
     # Activate Tardis progress bar
@@ -71,7 +72,7 @@ def build_train_dataset(
     clean_empty = not benchmark
 
     # All expected formats
-    IMG_FORMATS = (".am", ".mrc", ".rec", ".map")
+    IMG_FORMATS = (".am", ".mrc", ".rec", ".map", ".tif")
     MASK_FORMATS = (
         ".CorrelationLines.am",
         "_mask.am",
@@ -90,7 +91,7 @@ def build_train_dataset(
 
     """For each image find matching mask, pre-process, trim and save"""
     img_counter = 0
-    log_file = np.zeros((len(img_list) + 1, 8), dtype=object)
+    log_file = np.zeros((len(img_list) + 1, 9), dtype=object)
     log_file[0, :] = np.array(
         (
             "ID",
@@ -100,11 +101,12 @@ def build_train_dataset(
             "Mask_Type",
             "Image_Min",
             "Image_Max",
-            "Patches_No",
+            "Total_Patches_No",
+            "Saved_Patches_No",
         )
     )
 
-    id_ = 0
+    id_ = 1
     for i in img_list:
         """Update progress bar"""
         tardis_progress(
@@ -160,6 +162,9 @@ def build_train_dataset(
 
         """Load files"""
         image, mask, pixel_size = load_img_mask_data(img_dir, mask_dir)
+        if correct_pixel_size is not None:
+            pixel_size = correct_pixel_size
+
         log_file[id_, 1] = str(i + "||" + mask_name)
         np.savetxt(
             join(dataset_dir, "log.csv"), log_file.astype(str), fmt="%s", delimiter=","
@@ -333,7 +338,8 @@ def build_train_dataset(
             pixel_size=pixel_size,
         )
         img_counter += 1
-        log_file[id_, 7] = str(count)
+        log_file[id_, 7] = str(count[0])
+        log_file[id_, 8] = str(count[1])
         np.savetxt(
             join(dataset_dir, "log.csv"), log_file.astype(str), fmt="%s", delimiter=","
         )
@@ -352,7 +358,7 @@ def load_img_mask_data(
         - Amira (image) + Amira (mask) or MRC/REC (mask)
         - Amira (image) + tif (mask)
 
-        - MRC/REC(image) + Amira (coord) ! Need check if coordinate is not transformed !
+        - MRC/REC(image) + Amira (coord)! Need to check if coordinate is not transformed!
         - MRC/REC(image) + csv (coord)
         - MRC/REC(image) + Amira (mask) or MRC/REC (mask)
         - MRC/REC (image) + tif (mask)
@@ -381,6 +387,8 @@ def load_img_mask_data(
             mask_px = img_px
         else:  # Image is Amira (image)
             image, img_px = load_image(image)
+    elif image.endswith(('.tif', '.tiff')):
+        image, img_px = load_image(image)
 
     """Load Amira or MRC/REC or csv mask"""
     # Find maska file and load

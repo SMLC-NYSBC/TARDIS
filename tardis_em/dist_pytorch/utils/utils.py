@@ -103,7 +103,7 @@ def point_in_bb(
     Args:
         points (np.ndarray): (n,3) array.
         min_i, max_i (int): The bounding box limits for each coordinate.
-            If some limits are missing, the default values are -infinite for
+            If some limits are missing, the default values are - infinite for
             the min_i and infinite for the max_i.
 
     Returns:

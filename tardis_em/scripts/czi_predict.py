@@ -98,6 +98,8 @@ class ProcessTardisForCZI:
     def __init__(self, aws: list, allocate_gpu: list, predict="Membrane"):
         self.upload_tasks = []
 
+        self.name, self.px, self.progress = None, None, None
+
         self.aws_key, self.aws_secret, self.bucket = aws
 
         self.device_cnn = get_device(allocate_gpu[0])
@@ -157,7 +159,7 @@ class ProcessTardisForCZI:
         Standard set-up for creating new temp dir for cnn prediction.
 
         Args:
-            dir_ (str): Directory where folder will be build.
+            dir_ (str): Directory where the folder will be built.
         """
         if not isdir(self.results):
             mkdir(self.results)
@@ -292,9 +294,7 @@ class ProcessTardisForCZI:
         data = self.image_stitcher(image_dir=self.output, mask=False, dtype=np.float32)[
             : scale_shape[0], : scale_shape[1], : scale_shape[2]
         ]
-        data, _ = scale_image(
-            image=data, scale=org_shape, nn=False, device=self.device_cnn
-        )
+        data, _ = scale_image(image=data, scale=org_shape, device=self.device_cnn)
         data = torch.sigmoid(torch.from_numpy(data)).cpu().detach().numpy()
 
         data = np.where(data > 0.25, 1, 0).astype(np.uint8)

@@ -80,7 +80,6 @@ class CnnBenchmark:
                 resize_pixel_size=25,
                 trim_xy=patch_size,
                 trim_z=patch_size,
-                keep_if=0.0001,
             )
         else:
             TardisError(

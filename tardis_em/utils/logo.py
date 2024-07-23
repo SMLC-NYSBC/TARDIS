@@ -44,7 +44,7 @@ def print_progress_bar(value: int, max_v: int):
 
 def is_interactive():
     """
-    Simple check if command line window is from Jupiter.
+    Simple check if a command line window is from Jupiter.
     """
     import __main__ as main
 

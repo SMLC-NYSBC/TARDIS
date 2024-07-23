@@ -717,7 +717,7 @@ class SelfAttention2D(MultiHeadAttention):
 
     def forward(self, x: torch.Tensor, padding_mask=None) -> torch.Tensor:
         """
-        Forward self-attention over 2D edge features.
+        Forward self-attention over 2D-edge features.
 
         Reshape X depending on the axis attention mode!
         flatten over rows and cols for full N*M*N*M attention.

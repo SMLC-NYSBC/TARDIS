@@ -100,7 +100,6 @@ def pil_LANCZOS(img: np.ndarray, scale: tuple) -> np.ndarray:
     Args:
         img: image array.
         scale: Scale array size.
-        dtype: Output dtype for scale array.
 
     Returns:
         no.ndarray: Up or Down scale 3D array.
@@ -143,7 +142,7 @@ def linear_scaling(img: np.ndarray, scale: tuple, device="cpu") -> np.ndarray:
     Args:
         img: image array.
         scale: Scale array size.
-        dtype: Output dtype for scale array.
+        device: Compute device
 
     Returns:
         no.ndarray: Up or Down scale 3D array.
@@ -256,7 +255,7 @@ def area_scaling(img: np.ndarray, scale: tuple, device="cpu") -> np.ndarray:
     Args:
         img: 3D array.
         scale: Scale array size.
-        dtype: Output dtype for scale array.
+        device: Compute device
 
     Returns:
         no.ndarray: Up or Down scale 3D array.

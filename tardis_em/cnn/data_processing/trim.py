@@ -114,7 +114,6 @@ def trim_with_stride(
         nz = 0  # 2D
     elif image.ndim == 3 and dim == 1:  # 3D gray
         nz, ny, nx = image.shape
-
         nc = None  # Gray
     elif image.ndim == 2:  # 2D gray
         ny, nx = image.shape
@@ -205,7 +204,9 @@ def trim_with_stride(
 
     """Trim image and mask with stride"""
     z_start, z_stop = 0 - (trim_size_z - stride), 0
-    count = len(range(x)) * len(range(y)) * len(range(z))
+    count = len(range(x)) * len(range(y))
+    if len(range(z)) > 0:
+        count = count * len(range(z))
     count_save = 0
     if z == 0:
         z = 1
@@ -317,7 +318,7 @@ def trim_with_stride(
                             )
 
     if log:
-        return f"{str(count)}|{str(count_save)}"
+        return [count, count_save]
 
 
 def trim_label_mask(

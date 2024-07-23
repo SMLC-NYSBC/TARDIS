@@ -46,7 +46,7 @@ class PatchDataSet:
         self,
         max_number_of_points=500,
         overlap=0.15,
-        drop_rate=0.1,
+        drop_rate=None,
         graph=True,
         tensor=True,
     ):
@@ -54,10 +54,11 @@ class PatchDataSet:
         self.DOWNSAMPLING_TH = max_number_of_points
 
         # Patch setting
-        self.drop_rate = None
+        self.voxel = None
+        self.drop_rate = drop_rate
         self.TORCH_OUTPUT = tensor
         self.GRAPH_OUTPUT = graph
-        self.EXPAND = 0.1  # Expand boundary box by 10%
+        self.EXPAND = 0.1  # Expand the boundary box by 10%
         self.STRIDE = overlap  # Create 15% overlaps between patches
 
         # Initialization

@@ -233,7 +233,7 @@ def aws_check_with_temp(model_name: list) -> bool:
     """
     Module to check aws up-to data status.
 
-    Quick check if local file if exist is up-to data with aws server.
+    Quick check if local file is exist is up-to data with aws server.
 
     Args:
         model_name (list): Name of the NN model.
@@ -266,7 +266,7 @@ def aws_check_with_temp(model_name: list) -> bool:
                 "model_header.json",
             )
         ):
-            return False  # Weight found but no json, download from aws
+            return False  # Weight found but no JSON, download from aws
         else:
             try:
                 save = json.load(
@@ -286,7 +286,7 @@ def aws_check_with_temp(model_name: list) -> bool:
     """Compare stored file with file stored on aws"""
     if save is None:
         print("Network cannot be checked! Connect to the internet next time!")
-        return False  # Error loading json, download from aws
+        return False  # Error loading JSON, download from aws
     else:
         try:
             if model_name[3] == None:
@@ -331,7 +331,7 @@ def aws_check_pkg_with_temp() -> bool:
     """
     Module to check aws up-to data status for OTA-Update.
 
-    Quick check if local pkg file exist and is up-to data with aws server.
+    Quick check if local pkg file exists and is up-to data with aws server.
 
     Returns:
         bool: If True, local file is up-to-date.
@@ -372,7 +372,7 @@ def aws_check_pkg_with_temp() -> bool:
     """Compare stored file with file stored on aws"""
     if save is None:
         print("Tardis_e pkg cannot be checked! Connect to the internet next time!")
-        return False  # Error loading json, download from aws
+        return False  # Error loading JSON, download from aws
     else:
         try:
             pkg = requests.get(
@@ -398,4 +398,4 @@ def aws_check_pkg_with_temp() -> bool:
     if save_data == aws_data:
         return True  # Up-to data weight, load from local dir
     else:
-        return False  # There is new version on aws, download from aws
+        return False  # There is a new version on aws, download from aws

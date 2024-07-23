@@ -26,7 +26,7 @@ class BasicCNN(nn.Module):
     """
     Basic CNN MODEL
 
-    Back-compatible with old CNN builder method. New functionality allows to package
+    Back-compatible with old CNN builder method. New functionality allows packaging
     the model in onnx format and rapidly re-use/deploy.
 
     Args:
@@ -43,7 +43,7 @@ class BasicCNN(nn.Module):
         pool_kernel (int): kernel size for max_pooling.
         img_patch_size (int): Image patch size used for calculation network structure.
         layer_components (str): Convolution module used for building network.
-        dropout (float, optional): If float, the dropout layer is built with a given drop out rate.
+        dropout (float, optional): If float, the dropout layer is built with a given drop-out rate.
         num_group (int): Number of groups for nn.GroupNorm.
         prediction (bool): If True, prediction mode is on.
 
@@ -188,7 +188,7 @@ class UNet(BasicCNN):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Forward for Unet model.
+        Forward for an Unet model.
 
             Args:
                 x (torch.Tensor): Input image features.

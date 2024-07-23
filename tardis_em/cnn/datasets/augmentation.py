@@ -40,7 +40,7 @@ class CenterCrop:
 
     def __call__(
         self, x: np.ndarray, y: Optional[np.ndarray] = None
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
         """
         Call for centre crop.
 
@@ -136,9 +136,9 @@ class RandomFlip:
 
 class RandomRotation:
     """
-    MULTIPLE 90 RANDOM ROTATION
+    MULTIPLE 90 RANDOM ROTATIONS
 
-    Perform 90, 180 or 270-degree rotation for 2D or 3D in left or right
+    Perform 90, 180 or 270-degree rotations for 2D or 3D in left or right
 
         - 0 is 90, 1 is 180, 2 is 270
         - 0 is left, 1 is right
@@ -235,8 +235,8 @@ def preprocess(
     Args:
         image (np.ndarray): 2D/3D array with image data.
         mask (np.ndarray, optional): 2D/3D array with semantic labels.
-        transformation (bool): If True perform transformation on img and mask with
-            same random effect.
+        transformation (bool): If True, perform transformation on img and mask with
+            the same random effect.
         size (tuple, int): Image size output for center crop.
         output_dim_mask (int): Number of output channel dimensions for label mask.
 

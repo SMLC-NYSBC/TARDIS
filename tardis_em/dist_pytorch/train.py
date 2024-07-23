@@ -66,6 +66,7 @@ def train_dist(
 
     Args:
         dataset_type (str): Type of input dataset.
+        edge_angles(bool): If True, use an angle for embedding.
         train_dataloader (torch.DataLoader): DataLoader with train dataset.
         test_dataloader (torch.DataLoader): DataLoader with test dataset.
         model_structure (dict): Dictionary with model setting.

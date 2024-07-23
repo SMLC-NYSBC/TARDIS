@@ -101,7 +101,7 @@ def check_dir(
     mask_format: Union[tuple, str, None],
 ) -> bool:
     """
-    Check list used to evaluate if directory containing dataset for CNN.
+    Check the list used to evaluate if directory containing dataset for CNN.
 
     Args:
         dir_ (str): Main directory with all files.
