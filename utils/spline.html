@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Global -&gt; Spline Metrics Handlers &mdash; TARDIS-em 0.2.9 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=14672bda"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Global -&gt; Trainer Handlers" href="trainer.html" />
+    <link rel="prev" title="Global -&gt; Data Handlers" href="import_data.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TARDIS-em
+          </a>
+              <div class="version">
+                0.2.9
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../HISTORY.html">History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../instructions.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_actin.html">-  3D Actin Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_membrane.html">-  3D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/scripting.html">-  Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/fine_tune_model.html">Fine-Tune TARDIS models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html">CNN Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#dist-module">DIST Module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../code_doc.html#global-functions">Global Functions</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="aws.html">AWS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="import_data.html">Data Handlers</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Spline metrics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#tardis_em.utils.spline_metric.resample_filament"><code class="docutils literal notranslate"><span class="pre">resample_filament()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tardis_em.utils.spline_metric.FilterConnectedNearSegments"><code class="docutils literal notranslate"><span class="pre">FilterConnectedNearSegments</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.spline_metric.FilterConnectedNearSegments.splines_direction"><code class="docutils literal notranslate"><span class="pre">FilterConnectedNearSegments.splines_direction()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.spline_metric.FilterConnectedNearSegments.marge_splines"><code class="docutils literal notranslate"><span class="pre">FilterConnectedNearSegments.marge_splines()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#tardis_em.utils.spline_metric.FilterSpatialGraph"><code class="docutils literal notranslate"><span class="pre">FilterSpatialGraph</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tardis_em.utils.spline_metric.SpatialGraphCompare"><code class="docutils literal notranslate"><span class="pre">SpatialGraphCompare</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tardis_em.utils.spline_metric.compare_splines_probability"><code class="docutils literal notranslate"><span class="pre">compare_splines_probability()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tardis_em.utils.spline_metric.smooth_spline"><code class="docutils literal notranslate"><span class="pre">smooth_spline()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tardis_em.utils.spline_metric.sort_segment"><code class="docutils literal notranslate"><span class="pre">sort_segment()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tardis_em.utils.spline_metric.reorder_segments_id"><code class="docutils literal notranslate"><span class="pre">reorder_segments_id()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tardis_em.utils.spline_metric.tortuosity"><code class="docutils literal notranslate"><span class="pre">tortuosity()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tardis_em.utils.spline_metric.total_length"><code class="docutils literal notranslate"><span class="pre">total_length()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tardis_em.utils.spline_metric.length_list"><code class="docutils literal notranslate"><span class="pre">length_list()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tardis_em.utils.spline_metric.angle_between_vectors"><code class="docutils literal notranslate"><span class="pre">angle_between_vectors()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tardis_em.utils.spline_metric.cut_150_degree"><code class="docutils literal notranslate"><span class="pre">cut_150_degree()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tardis_em.utils.spline_metric.sort_by_length"><code class="docutils literal notranslate"><span class="pre">sort_by_length()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tardis_em.utils.spline_metric.ComputeConfidenceScore"><code class="docutils literal notranslate"><span class="pre">ComputeConfidenceScore</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.spline_metric.ComputeConfidenceScore.normalized_length"><code class="docutils literal notranslate"><span class="pre">ComputeConfidenceScore.normalized_length()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.spline_metric.ComputeConfidenceScore.combined_smoothness"><code class="docutils literal notranslate"><span class="pre">ComputeConfidenceScore.combined_smoothness()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="trainer.html">Trainer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="predictor.html">Predictor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="helper.html">Helper Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logger.html">Logger</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utils Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html">SetUp Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize.html">Visualizer</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../code_doc.html">CNN Module</a></li>
+      <li class="breadcrumb-item active">Global -&gt; Spline Metrics Handlers</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/utils/spline.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-tardis_em.utils.spline_metric">
+<span id="global-spline-metrics-handlers"></span><h1>Global -&gt; Spline Metrics Handlers<a class="headerlink" href="#module-tardis_em.utils.spline_metric" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.spline_metric.resample_filament">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.spline_metric.</span></span><span class="sig-name descname"><span class="pre">resample_filament</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.spline_metric.resample_filament" title="Link to this definition"></a></dt>
+<dd><p>Resamples points for each filament so they have the given spacing size.</p>
+<p>Parameters:
+points (np.array): Array of shape [N, 4] where each column is [ID, X, Y, Z].
+spacing_size (float): Desired spacing size between points.</p>
+<p>Returns:
+np.array: Resampled array with the same structure.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.spline_metric.FilterConnectedNearSegments">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.spline_metric.</span></span><span class="sig-name descname"><span class="pre">FilterConnectedNearSegments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distance_th</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cylinder_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">150</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.spline_metric.FilterConnectedNearSegments" title="Link to this definition"></a></dt>
+<dd><p>Connect splines based on spline trajectory and splines end distances.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.spline_metric.FilterConnectedNearSegments.splines_direction">
+<span class="sig-name descname"><span class="pre">splines_direction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spline1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spline2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#tardis_em.utils.spline_metric.FilterConnectedNearSegments.splines_direction" title="Link to this definition"></a></dt>
+<dd><p>Check if two splines facing the same direction. Knowing that spline1 facing
+a direction of spline2, check if spline2 also face a direction of spline1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>spline1</strong> (<em>list</em>) – Sorted array of point with 3D coordinates.</p></li>
+<li><p><strong>spline2</strong> (<em>list</em>) – Sorted array of point with 3D coordinates.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>If true, given splines facing the same direction</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.spline_metric.FilterConnectedNearSegments.marge_splines">
+<span class="sig-name descname"><span class="pre">marge_splines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point_cloud</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omit_border</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.utils.spline_metric.FilterConnectedNearSegments.marge_splines" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Connect splines in the point_cloud that are close enough to each other</dt><dd><p>and return the reordered splines.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<ul class="simple">
+<li><p>Get dictionary with {id: [sorted list of points]}</p></li>
+<li><dl class="simple">
+<dt>While there is more than 1 spline in the dict:</dt><dd><ul>
+<li><p>Pick first spline in a dict.</p></li>
+<li><p>Select all ends</p></li>
+<li><p>Calc. end distance to all other ends.</p></li>
+<li><dl class="simple">
+<dt>If any ends within threshold distance:</dt><dd><ul>
+<li><p>Calculate initial end vector</p></li>
+<li><p>Calculate distance to the cylinder</p></li>
+<li><dl class="simple">
+<dt>If any picked ends are within cylinder radius</dt><dd><ul>
+<li><p>Pick one with the smallest distance</p></li>
+<li><p>Save two spline IDs to connected</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>If Connected ID list not empty:</dt><dd><ul>
+<li><p>Marge and sort points from two IDs</p></li>
+<li><p>Check tortuosity</p></li>
+<li><dl class="simple">
+<dt>If tortuosity &lt;= 1.5:</dt><dd><ul>
+<li><p>Add to the connected dict</p></li>
+<li><p>Remove from dict</p></li>
+<li><p>start over</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>If connected ID list is empty or tortuosity &gt; 1.5:</dt><dd><ul>
+<li><p>Add only initial spline to the connected dict</p></li>
+<li><p>Remove from dict</p></li>
+<li><p>start over</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>point_cloud</strong> (<em>np.ndarray</em>) – Array with segmented and sorted point cloud
+of a shape [ID, X, Y, Z].</p></li>
+<li><p><strong>omit_border</strong> (<em>int</em>) – In A, distance from the border as a limit not to
+connect splines.</p></li>
+<li><p><strong>initial</strong> (<em>bool</em>) – Initial run for the operation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Array of segmented point cloud with connected splines
+that fit the criteria</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.spline_metric.FilterSpatialGraph">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.spline_metric.</span></span><span class="sig-name descname"><span class="pre">FilterSpatialGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">connect_seg_if_closer_then</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cylinder_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_short_segments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.spline_metric.FilterSpatialGraph" title="Link to this definition"></a></dt>
+<dd><p>Calculate length of each spline and distance between all splines ends.</p>
+<p>This clas iterate over all splines in array [ID, X, Y, Z] by given ID.
+Firstly if specified during initialization, class calculate distance
+between all splines ends and use it to define which splines are obviously
+broken.
+Then it calculate length of all the splines (also new one) and filter out
+ones that are too short.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.spline_metric.SpatialGraphCompare">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.spline_metric.</span></span><span class="sig-name descname"><span class="pre">SpatialGraphCompare</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distance_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interaction_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.spline_metric.SpatialGraphCompare" title="Link to this definition"></a></dt>
+<dd><p>Compare two spatial graphs and output filtered-out array’s of splines based
+on similarity.</p>
+<p>This class take as na input two arrays of shape [n, 3 or 4] for 2D or 3D
+point cloud. This arrays contain [ID x X x Y x Z] dimensions.</p>
+<p>The comparison is archived by calculating cdist for all splines from one spatial
+graph to all splines from second spatial graph. And for each spline it output
+probability of similarity and splines id’s.</p>
+<p>The Probability is calculated as a ration of points (in threshold contact)
+to all points in spline.</p>
+<p>The selection threshold for the spline interaction is given between 0 and 1.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.spline_metric.compare_splines_probability">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.spline_metric.</span></span><span class="sig-name descname"><span class="pre">compare_splines_probability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spline_1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spline_2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.spline_metric.compare_splines_probability" title="Link to this definition"></a></dt>
+<dd><p>Compare two splines and calculate probability of how likely given two
+splines are the same line given array of points for same or similar splines
+with no matching coordinates of points.</p>
+<p>Calculates the probability of two splines being similar by comparing
+the distance between their points and taking the mean of the matching
+points below a threshold.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>spline_1</strong> (<em>np.ndarray</em>) – The first spline to compare, represented
+as an array of points.</p></li>
+<li><p><strong>spline_2</strong> (<em>np.ndarray</em>) – The second spline to compare, represented
+as an array of points.</p></li>
+<li><p><strong>threshold</strong> (<em>int</em>) – The maximum distance between points for them to be
+considered matching.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The probability of the splines being similar, ranging from 0.0 to 1.0.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.spline_metric.smooth_spline">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.spline_metric.</span></span><span class="sig-name descname"><span class="pre">smooth_spline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.spline_metric.smooth_spline" title="Link to this definition"></a></dt>
+<dd><p>Spline smoothing given an ‘s’ smoothness factor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> (<em>np.ndarray</em>) – Point array [(ID), X, Y, Z] with optional ID and Z</p></li>
+<li><p><strong>dimension.</strong></p></li>
+<li><p><strong>s</strong> (<em>float</em>) – Smoothness factor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Smooth spline</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Returns</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.spline_metric.sort_segment">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.spline_metric.</span></span><span class="sig-name descname"><span class="pre">sort_segment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.utils.spline_metric.sort_segment" title="Link to this definition"></a></dt>
+<dd><p>Sorting of the point cloud based on number of connections followed by
+searching of the closest point with cdist.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>coord</strong> (<em>np.ndarray</em>) – Coordinates for each unsorted point idx.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Array of point in line order.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.spline_metric.reorder_segments_id">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.spline_metric.</span></span><span class="sig-name descname"><span class="pre">reorder_segments_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.utils.spline_metric.reorder_segments_id" title="Link to this definition"></a></dt>
+<dd><p>Reorder list of segments to remove missing IDs</p>
+<p>E.g. Change IDs from [1, 2, 3, 5, 6, 8] to [1, 2, 3, 4, 5, 6]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coord</strong> – Array of points in 3D or 3D with their segment ID</p></li>
+<li><p><strong>order_range</strong> – Costume id range for reordering</p></li>
+<li><p><strong>order_list</strong> – List of reorder IDs to match to coord.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Array of points with reordered IDs values</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.spline_metric.tortuosity">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.spline_metric.</span></span><span class="sig-name descname"><span class="pre">tortuosity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#tardis_em.utils.spline_metric.tortuosity" title="Link to this definition"></a></dt>
+<dd><p>Calculate spline tortuosity.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>coord</strong> (<em>np.ndarray</em>) – Coordinates for each unsorted point idx.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Spline curvature measured with tortuosity.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.spline_metric.total_length">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.spline_metric.</span></span><span class="sig-name descname"><span class="pre">total_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#tardis_em.utils.spline_metric.total_length" title="Link to this definition"></a></dt>
+<dd><p>Calculate total length of the spline.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>coord</strong> (<em>np.ndarray</em>) – Coordinates for each unsorted point idx.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Spline length.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.spline_metric.length_list">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.spline_metric.</span></span><span class="sig-name descname"><span class="pre">length_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#tardis_em.utils.spline_metric.length_list" title="Link to this definition"></a></dt>
+<dd><p>Calculate total length of all splines and return it as a list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>coord</strong> (<em>np.ndarray</em>) – Coordinates for each unsorted point idx.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Spline length list.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.spline_metric.angle_between_vectors">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.spline_metric.</span></span><span class="sig-name descname"><span class="pre">angle_between_vectors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.spline_metric.angle_between_vectors" title="Link to this definition"></a></dt>
+<dd><p>Calculate the angle in degrees between two vectors.</p>
+<p>This function uses the dot product and the magnitudes of the vectors
+to calculate the angle between them according to the formula:</p>
+<blockquote>
+<div><p>cos(theta) = (A . B) / (||A|| ||B||)</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>v1</strong> (<em>np.ndarray</em>) – First input vector.</p></li>
+<li><p><strong>v2</strong> (<em>np.ndarray</em>) – Second input vector.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>float The angle in degrees between vector ‘v1’ and ‘v2’.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.spline_metric.cut_150_degree">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.spline_metric.</span></span><span class="sig-name descname"><span class="pre">cut_150_degree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">segments_array</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.spline_metric.cut_150_degree" title="Link to this definition"></a></dt>
+<dd><p>Cut segments based on angles between adjacent vectors.</p>
+<p>Given an array of line segments, this function calculates angles between
+adjacent vectors in each line. If the angle is less than or equal to 150
+degrees, the segment is cut into two new segments.</p>
+<p>Args:
+segments_array(np. ndarray): Array of line segments where the first column
+indicates the segment id and the remaining columns represent
+the coordinates of points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>segments_array</strong></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Indicates whether any segment was cut,</dt><dd><p>and New array of cut segments.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[bool, np.ndarray]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.spline_metric.sort_by_length">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.spline_metric.</span></span><span class="sig-name descname"><span class="pre">sort_by_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.spline_metric.sort_by_length" title="Link to this definition"></a></dt>
+<dd><p>Sort all splines by their length.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>coord</strong> – Array of coordinates.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>sorted and reorder splines.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.spline_metric.ComputeConfidenceScore">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.spline_metric.</span></span><span class="sig-name descname"><span class="pre">ComputeConfidenceScore</span></span><a class="headerlink" href="#tardis_em.utils.spline_metric.ComputeConfidenceScore" title="Link to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.spline_metric.ComputeConfidenceScore.normalized_length">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">normalized_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_l</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_l</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.spline_metric.ComputeConfidenceScore.normalized_length" title="Link to this definition"></a></dt>
+<dd><p>Calculate and normalize the total length of a sequence of points.
+The total length is calculated using the <cite>total_length</cite> function.
+The result is then normalized to a value between 0 and 1 based on the provided
+minimum and maximum length values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> (<em>np.ndarray</em>)</p></li>
+<li><p><strong>min_l</strong> (<em>float</em>) – The minimum length value.</p></li>
+<li><p><strong>max_l</strong> (<em>float</em>) – The maximum length value.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.spline_metric.ComputeConfidenceScore.combined_smoothness">
+<span class="sig-name descname"><span class="pre">combined_smoothness</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_l</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_l</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.spline_metric.ComputeConfidenceScore.combined_smoothness" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="import_data.html" class="btn btn-neutral float-left" title="Global -&gt; Data Handlers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="trainer.html" class="btn btn-neutral float-right" title="Global -&gt; Trainer Handlers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2024, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

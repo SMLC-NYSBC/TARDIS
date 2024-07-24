@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CNN -&gt; Utils &mdash; TARDIS-em 0.2.9 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=14672bda"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="DIST" href="../dist_pytorch/dist.html" />
+    <link rel="prev" title="CNN -&gt; Data processing" href="data_processing.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TARDIS-em
+          </a>
+              <div class="version">
+                0.2.9
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../HISTORY.html">History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../instructions.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_actin.html">-  3D Actin Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_membrane.html">-  3D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/scripting.html">-  Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/fine_tune_model.html">Fine-Tune TARDIS models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../code_doc.html">CNN Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cnn.html">CNN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model.html">CNN Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets.html">DataLoader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_processing.html">Data processing</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Utils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.cnn.utils.build_cnn">CNN Builder</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.utils.build_cnn.BasicCNN"><code class="docutils literal notranslate"><span class="pre">BasicCNN</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.utils.build_cnn.UNet"><code class="docutils literal notranslate"><span class="pre">UNet</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.utils.build_cnn.ResUNet"><code class="docutils literal notranslate"><span class="pre">ResUNet</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.utils.build_cnn.UNet3Plus"><code class="docutils literal notranslate"><span class="pre">UNet3Plus</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.utils.build_cnn.FNet"><code class="docutils literal notranslate"><span class="pre">FNet</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.cnn.utils.utils">CNN Utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.utils.utils.number_of_features_per_level"><code class="docutils literal notranslate"><span class="pre">number_of_features_per_level()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.utils.utils.max_number_of_conv_layer"><code class="docutils literal notranslate"><span class="pre">max_number_of_conv_layer()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.utils.utils.normalize_image"><code class="docutils literal notranslate"><span class="pre">normalize_image()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.utils.utils.check_model_dict"><code class="docutils literal notranslate"><span class="pre">check_model_dict()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#dist-module">DIST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#global-functions">Global Functions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../code_doc.html">CNN Module</a></li>
+      <li class="breadcrumb-item active">CNN -&gt; Utils</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/cnn/utils.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cnn-utils">
+<h1>CNN -&gt; Utils<a class="headerlink" href="#cnn-utils" title="Link to this heading"></a></h1>
+<section id="module-tardis_em.cnn.utils.build_cnn">
+<span id="cnn-builder"></span><h2>CNN Builder<a class="headerlink" href="#module-tardis_em.cnn.utils.build_cnn" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.cnn.utils.build_cnn.BasicCNN">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.utils.build_cnn.</span></span><span class="sig-name descname"><span class="pre">BasicCNN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CNN'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmoid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_conv_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conv_layer_scaler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conv_kernel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_kernel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_patch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_components</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'3gcl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prediction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.utils.build_cnn.BasicCNN" title="Link to this definition"></a></dt>
+<dd><p>Basic CNN MODEL</p>
+<p>Back-compatible with old CNN builder method. New functionality allows packaging
+the model in onnx format and rapidly re-use/deploy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_channels</strong> (<em>int</em>) – Number of input channels for the first convolution.</p></li>
+<li><p><strong>out_channels</strong> (<em>int</em>) – Number of output channels for the last deconvolution.</p></li>
+<li><p><strong>sigmoid</strong> (<em>bool</em>) – If True, use nn.Sigmoid or nn.Softmax if False. Use True if
+nn.BCELoss is used as a loss function for (two-class segmentation).</p></li>
+<li><p><strong>num_conv_layer</strong> (<em>int</em>) – Number of convolution and deconvolution steps. A number of
+input channels for convolution is calculated as a linear progression.
+E.g. [64, 128, 256, 512].</p></li>
+<li><p><strong>conv_layer_scaler</strong> (<em>int</em>) – Scaler for the output feature channels.</p></li>
+<li><p><strong>conv_kernel</strong> (<em>int</em>) – Kernel size for the convolution.</p></li>
+<li><p><strong>padding</strong> (<em>int</em>) – Padding size for convolution.</p></li>
+<li><p><strong>pool_kernel</strong> (<em>int</em>) – kernel size for max_pooling.</p></li>
+<li><p><strong>img_patch_size</strong> (<em>int</em>) – Image patch size used for calculation network structure.</p></li>
+<li><p><strong>layer_components</strong> (<em>str</em>) – Convolution module used for building network.</p></li>
+<li><p><strong>dropout</strong> (<em>float</em><em>, </em><em>optional</em>) – If float, the dropout layer is built with a given drop-out rate.</p></li>
+<li><p><strong>num_group</strong> (<em>int</em>) – Number of groups for nn.GroupNorm.</p></li>
+<li><p><strong>prediction</strong> (<em>bool</em>) – If True, prediction mode is on.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Returns if Training:</dt><dd><p>torch.tensor: 5D torch without final activation.</p>
+</dd>
+<dt>Returns if Prediction:</dt><dd><dl class="simple">
+<dt>If sigmoid is True:</dt><dd><p>torch.tensor: 5D torch with final activation from nn.Sigmoid().</p>
+</dd>
+<dt>If sigmoid is False:</dt><dd><p>torch.tensor: 5D torch with final activation from nn.Softmax(dim=1).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.cnn.utils.build_cnn.BasicCNN.update_patch_size">
+<span class="sig-name descname"><span class="pre">update_patch_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img_patch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmoid</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.utils.build_cnn.BasicCNN.update_patch_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.cnn.utils.build_cnn.BasicCNN.build_cnn_model">
+<span class="sig-name descname"><span class="pre">build_cnn_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.utils.build_cnn.BasicCNN.build_cnn_model" title="Link to this definition"></a></dt>
+<dd><p>Encoder</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.cnn.utils.build_cnn.UNet">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.utils.build_cnn.</span></span><span class="sig-name descname"><span class="pre">UNet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CNN'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.utils.build_cnn.UNet" title="Link to this definition"></a></dt>
+<dd><p>2D/3D UNET MODEL</p>
+<p>“3D U-Net: Learning Dense Volumetric Segmentation from Sparse Annotation”
+&lt;<a class="reference external" href="https://arxiv.org/pdf/1606.06650.pdf">https://arxiv.org/pdf/1606.06650.pdf</a>&gt;.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.cnn.utils.build_cnn.UNet.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.cnn.utils.build_cnn.UNet.forward" title="Link to this definition"></a></dt>
+<dd><p>Forward for an Unet model.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>Args:</dt><dd><p>x (torch.Tensor): Input image features.</p>
+</dd>
+<dt>Returns:</dt><dd><p>torch.Tensor: Probability mask of predicted image.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.cnn.utils.build_cnn.ResUNet">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.utils.build_cnn.</span></span><span class="sig-name descname"><span class="pre">ResUNet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RCNN'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.utils.build_cnn.ResUNet" title="Link to this definition"></a></dt>
+<dd><p>2D/3D RESNET MODEL</p>
+<p>modified of &lt;10.1016/j.isprsjprs.2020.01.013&gt;</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.cnn.utils.build_cnn.ResUNet.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.cnn.utils.build_cnn.ResUNet.forward" title="Link to this definition"></a></dt>
+<dd><p>Forward for ResNet model.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>Args:</dt><dd><p>x (torch.Tensor): Input image features.</p>
+</dd>
+<dt>Returns:</dt><dd><p>torch.Tensor: Probability mask of predicted image.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.cnn.utils.build_cnn.UNet3Plus">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.utils.build_cnn.</span></span><span class="sig-name descname"><span class="pre">UNet3Plus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmoid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_conv_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conv_layer_scaler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conv_kernel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_kernel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_patch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_components</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'3gcl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prediction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classifies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.utils.build_cnn.UNet3Plus" title="Link to this definition"></a></dt>
+<dd><p>3D FULLY CONNECTED UNET</p>
+<p>modified of &lt;<a class="reference external" href="https://arxiv.org/abs/2004.08790">https://arxiv.org/abs/2004.08790</a>&gt;</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.cnn.utils.build_cnn.UNet3Plus.encoder">
+<span class="sig-name descname"><span class="pre">encoder</span></span><a class="headerlink" href="#tardis_em.cnn.utils.build_cnn.UNet3Plus.encoder" title="Link to this definition"></a></dt>
+<dd><p>UNet3Plus classifier</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.cnn.utils.build_cnn.UNet3Plus.decoder">
+<span class="sig-name descname"><span class="pre">decoder</span></span><a class="headerlink" href="#tardis_em.cnn.utils.build_cnn.UNet3Plus.decoder" title="Link to this definition"></a></dt>
+<dd><p>Final Layer</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.cnn.utils.build_cnn.UNet3Plus.dot_product">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dot_product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_cls</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.cnn.utils.build_cnn.UNet3Plus.dot_product" title="Link to this definition"></a></dt>
+<dd><p>Dot product for two tensors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>torch.Tensor</em>) – Image tensor.</p></li>
+<li><p><strong>x_cls</strong> (<em>torch.Tensor</em>) – Classified image tensor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dot product of two tensors.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.cnn.utils.build_cnn.UNet3Plus.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.utils.build_cnn.UNet3Plus.forward" title="Link to this definition"></a></dt>
+<dd><p>Forward for Unet3Plus model.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>Args:</dt><dd><p>x (torch.Tensor): Input image features.</p>
+</dd>
+<dt>Returns:</dt><dd><p>torch.Tensor: Probability mask of predicted image.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.cnn.utils.build_cnn.FNet">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.utils.build_cnn.</span></span><span class="sig-name descname"><span class="pre">FNet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmoid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_conv_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conv_layer_scaler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conv_kernel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_kernel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_patch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_components</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'3gcl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attn_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prediction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.utils.build_cnn.FNet" title="Link to this definition"></a></dt>
+<dd><p>New Unet model combining Unet and Unet3Plus
+The model shares encoder path which is split for decoding patch Unet and Unet3Plus
+style. The final layers from each are summed and sigmoid</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_channels</strong> – Number of input channels for the first convolution.</p></li>
+<li><p><strong>out_channels</strong> – Number of output channels for the last deconvolution.</p></li>
+<li><p><strong>sigmoid</strong> – If True, use nn.Sigmoid or nn.Softmax if False. Use True if
+nn.BCELoss is used as a loss function for (two-class segmentation).</p></li>
+<li><p><strong>num_conv_layer</strong> – Number of convolution and deconvolution steps. A number of
+input channels for convolution is calculated as a linear progression.
+E.g. [64, 128, 256, 512].</p></li>
+<li><p><strong>conv_layer_scaler</strong> – Feature output of the first layer.</p></li>
+<li><p><strong>conv_kernel</strong> – Kernel size for the convolution.</p></li>
+<li><p><strong>padding</strong> – Padding size for convolution.</p></li>
+<li><p><strong>pool_kernel</strong> – kernel size for max_pooling.</p></li>
+<li><p><strong>img_patch_size</strong> – Image patch size used for calculation of network structure.</p></li>
+<li><p><strong>layer_components</strong> – Convolution module used for building network.</p></li>
+<li><p><strong>num_group</strong> – Number of groups for nn.GroupNorm.</p></li>
+<li><p><strong>prediction</strong> – If True, prediction mode is on.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.cnn.utils.build_cnn.FNet.update_patch_size">
+<span class="sig-name descname"><span class="pre">update_patch_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img_patch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prediction</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.utils.build_cnn.FNet.update_patch_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.cnn.utils.build_cnn.FNet.build_cnn_model">
+<span class="sig-name descname"><span class="pre">build_cnn_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.utils.build_cnn.FNet.build_cnn_model" title="Link to this definition"></a></dt>
+<dd><p>Encoder</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.cnn.utils.build_cnn.FNet.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.utils.build_cnn.FNet.forward" title="Link to this definition"></a></dt>
+<dd><p>Forward for FNet model.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>Args:</dt><dd><p>x (torch.Tensor): Input image features.</p>
+</dd>
+<dt>Returns:</dt><dd><p>torch.Tensor: Probability mask of predicted image.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-tardis_em.cnn.utils.utils">
+<span id="id1"></span><h2>CNN Utils<a class="headerlink" href="#module-tardis_em.cnn.utils.utils" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.utils.utils.number_of_features_per_level">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.utils.utils.</span></span><span class="sig-name descname"><span class="pre">number_of_features_per_level</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">channel_scaler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_levels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#tardis_em.cnn.utils.utils.number_of_features_per_level" title="Link to this definition"></a></dt>
+<dd><p>Compute list of output channels for CNN.</p>
+<dl class="simple">
+<dt>Features = channel_scaler * 2^k</dt><dd><p>where:
+- k is layer number</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>channel_scaler</strong> (<em>int</em>) – Number of initial input channels for CNN.</p></li>
+<li><p><strong>num_levels</strong> (<em>int</em>) – Number of channels from max_number_of_conv_layer().</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of output channels.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.utils.utils.max_number_of_conv_layer">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.utils.utils.</span></span><span class="sig-name descname"><span class="pre">max_number_of_conv_layer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_volume</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pool_stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_max_pool</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#tardis_em.cnn.utils.utils.max_number_of_conv_layer" title="Link to this definition"></a></dt>
+<dd><p>Calculate maximum possible number of layers given image size.</p>
+<p>Based on the torch input automatically select number of convolution blocks,
+based on a standard settings.</p>
+<blockquote>
+<div><p>I = [(W - K + 2*P) / S] + 1
+Out_size = [(I - F) / S] + 1
+- W is the input volume
+- K is the Kernel size
+- P is the padding
+- S is the stride
+- F is the max pooling kernel size</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> (<em>np.ndarray</em><em>, </em><em>Optional</em>) – Tensor data from which size of is calculated.</p></li>
+<li><p><strong>input_volume</strong> (<em>int</em>) – Size of the multiplayer for the convolution.</p></li>
+<li><p><strong>max_out</strong> (<em>int</em>) – Maximal output dimension after max_pooling.</p></li>
+<li><p><strong>kernel_size</strong> (<em>int</em>) – Kernel size for the convolution.</p></li>
+<li><p><strong>padding</strong> (<em>int</em>) – Padding size for the convolution blocks.</p></li>
+<li><p><strong>stride</strong> – (int) Stride for the convolution blocks.</p></li>
+<li><p><strong>pool_size</strong> (<em>int</em>)</p></li>
+<li><p><strong>pool_stride</strong> (<em>int</em>) – Max Pooling stride size.</p></li>
+<li><p><strong>first_max_pool</strong> (<em>bool</em>) – If first CNN block has max pooling.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Maximum number of CNN layers.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.utils.utils.normalize_image">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.utils.utils.</span></span><span class="sig-name descname"><span class="pre">normalize_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.cnn.utils.utils.normalize_image" title="Link to this definition"></a></dt>
+<dd><p>Simple image data normalizer between 0,1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>image</strong> – Image data set.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Normalized image between 0 and 1 values.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.utils.utils.check_model_dict">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.utils.utils.</span></span><span class="sig-name descname"><span class="pre">check_model_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#tardis_em.cnn.utils.utils.check_model_dict" title="Link to this definition"></a></dt>
+<dd><p>Check and rebuild model structure dictionary to ensure back-compatibility.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model_dict</strong> (<em>dict</em>) – Model structure dictionary.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Standardize model structure dictionary.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="data_processing.html" class="btn btn-neutral float-left" title="CNN -&gt; Data processing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../dist_pytorch/dist.html" class="btn btn-neutral float-right" title="DIST" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2024, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
