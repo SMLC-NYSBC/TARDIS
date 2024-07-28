@@ -610,7 +610,7 @@ class GeneralPredictor:
                     text_1=f"Found {len(self.predict_list)} images to predict!",
                     text_2=f"Device: {self.device}",
                     text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {id_name}",
-                    text_4=f"Original Pixel size: {self.px} A",
+                    text_4=f"Org. Pixel size: {self.px} A | Norm. Pixel size: {self.normalize_px}",
                     text_5=pred_title,
                     text_7="Current Task: CNN prediction...",
                     text_8=print_progress_bar(j, len(dataloader)),
@@ -725,7 +725,7 @@ class GeneralPredictor:
                     text_1=f"Found {len(self.predict_list)} images to predict!",
                     text_2=f"Device: {self.device}",
                     text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {id_name}",
-                    text_4=f"Original pixel size: {self.px} A",
+                    text_4=f"Org. Pixel size: {self.px} A | Norm. Pixel size: {self.normalize_px}",
                     text_5=f"Point Cloud: {pc[0]} Nodes; NaN Segments",
                     text_7="Current Task: DIST prediction...",
                     text_8=print_progress_bar(id_dist, len(self.coords_df)),
@@ -741,7 +741,7 @@ class GeneralPredictor:
                 text_1=f"Found {len(self.predict_list)} images to predict!",
                 text_2=f"Device: {self.device}",
                 text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {id_name}",
-                text_4=f"Original pixel size: {self.px} A",
+                text_4=f"Org. Pixel size: {self.px} A | Norm. Pixel size: {self.normalize_px}",
                 text_5=f"Point Cloud: {pc[0]}; NaN Segments",
                 text_7=f"Current Task: {self.predict} segmentation...",
             )
@@ -862,34 +862,34 @@ class GeneralPredictor:
         text_configurations = {
             0: {
                 **common_text,
-                "text_4": "Original Pixel size: Nan A",
+                "text_4": "Org. Pixel size: Nan A",
                 "text_7": "Current Task: Preprocessing for CNN...",
             },
             1: {
                 **common_text,
-                "text_4": f"Original Pixel size: {self.px} A",
+                "text_4": f"Org. Pixel size: {self.px} A | Norm. Pixel size: {self.normalize_px}",
                 "text_7": f"Current Task: Sub-dividing images for {self.patch_size} size",
             },
             2: {
                 **common_text,
-                "text_4": f"Original pixel size: {self.px} A",
+                "text_4": f"Org. Pixel size: {self.px} A | Norm. Pixel size: {self.normalize_px}",
                 "text_7": "Current Task: Stitching...",
             },
             3: {
                 **common_text,
-                "text_4": f"Original pixel size: {self.px} A",
+                "text_4": f"Org. Pixel size: {self.px} A | Norm. Pixel size: {self.normalize_px}",
                 "text_5": "Point Cloud: In processing...",
                 "text_7": "Current Task: Image Postprocessing...",
             },
             4: {
                 **common_text,
-                "text_4": f"Original pixel size: {self.px} A",
+                "text_4": f"Org. Pixel size: {self.px} A | Norm. Pixel size: {self.normalize_px}",
                 "text_5": f"Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments",
                 "text_7": "Current Task: Preparing for instance segmentation...",
             },
             5: {
                 **common_text,
-                "text_4": f"Original pixel size: {self.px} A",
+                "text_4": f"Org. Pixel size: {self.px} A | Norm. Pixel size: {self.normalize_px}",
                 "text_5": f"Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments",
                 "text_7": "Current Task: DIST prediction...",
                 "text_8": (
@@ -900,7 +900,7 @@ class GeneralPredictor:
             },
             6.1: {
                 **common_text,
-                "text_4": f"Original pixel size: {self.px} A",
+                "text_4": f"Org. Pixel size: {self.px} A | Norm. Pixel size: {self.normalize_px}",
                 "text_5": f"Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments",
                 "text_7": "Current Task: Instance Segmentation...",
                 "text_8": "Filament segmentation is fitted to:",
@@ -908,13 +908,13 @@ class GeneralPredictor:
             },
             6.2: {
                 **common_text,
-                "text_4": f"Original pixel size: {self.px} A",
+                "text_4": f"Org. Pixel size: {self.px} A | Norm. Pixel size: {self.normalize_px}",
                 "text_5": f"Point Cloud: {self.pc_ld.shape[0]}; NaN Segments",
                 "text_7": "Current Task: Instance segmentation...",
             },
             7: {
                 **common_text,
-                "text_4": f"Original pixel size: {self.px} A",
+                "text_4": f"Org. Pixel size: {self.px} A | Norm. Pixel size: {self.normalize_px}",
                 "text_5": f"Point Cloud: {self.pc_ld.shape[0]} Nodes; {no_segments} Segments",
                 "text_7": "Current Task: Segmentation finished!",
             },

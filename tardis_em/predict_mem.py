@@ -49,6 +49,14 @@ warnings.simplefilter("ignore", UserWarning)
     show_default=True,
 )
 @click.option(
+    "-npx",
+    "--normalize_px",
+    default=None,
+    type=float,
+    help="Normalize pixel size values.",
+    show_default=True,
+)
+@click.option(
     "-ch",
     "--checkpoint",
     default="None|None",
@@ -157,6 +165,7 @@ def main(
     mask: bool,
     convolution_nn: str,
     correct_px: float,
+    normalize_px: float,
     checkpoint: str,
     model_version: int,
     output_format: str,
@@ -194,6 +203,7 @@ def main(
         dir_=path,
         binary_mask=mask,
         correct_px=correct_px,
+        normalize_px=normalize_px,
         convolution_nn=convolution_nn,
         checkpoint=checkpoint,
         model_version=model_version,
