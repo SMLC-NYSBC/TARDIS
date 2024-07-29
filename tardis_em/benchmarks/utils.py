@@ -17,27 +17,20 @@ def benchmark_cnn(logits: list, targets: list, reduce='mean', tqdm_=True):
     else:
         zip_ = zip(logits, targets)
 
-    id_ = 0
     for logit, target in zip_:
-        print(id_)
         logit = logit.flatten()
-        logit_th = np.where(logit.flatten() > 0.5, 1, 0).astype(np.uint8)
-        target = np.where(target.flatten() > 0, 1, 0).astype(np.uint8)
+        logit_th = np.where(logit > 0.5, 1, 0).astype(np.uint8).flatten()
+        target = np.where(target > 0, 1, 0).astype(np.uint8).flatten()
 
-        print(logit.shape, target.shape)
         all_precisions.append(precision_score(target, logit_th))
-        print(all_precisions)
         all_recall.append(recall_score(target, logit_th))
-        print(all_recall)
         all_f1.append(f1_score(target, logit_th))
-        print(all_f1)
 
         # Average precision scores
         AP_score, _, _, AP90 = AP(logits=[logit], targets=[target], AP90=True, reduce='mean')
         all_AP.append(AP_score)
         all_AP90.append(AP90)
-        print(all_AP, all_AP90)
-        id_ += 1
+
     if reduce == 'none':
         return all_precisions, all_recall, all_f1, all_AP, all_AP90
     else:
