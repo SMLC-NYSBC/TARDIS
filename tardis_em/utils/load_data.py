@@ -941,13 +941,14 @@ def load_s3dis_scene(
             return down_scale(coord=coord)
 
 
-def load_image(image: str, normalize=False) -> Tuple[np.ndarray, float]:
+def load_image(image: str, normalize=False, px_ = True) -> Union[np.ndarray, Tuple[np.ndarray, float]]:
     """
     Quick wrapper for loading image data based on detected file format.
 
     Args:
         image (str): Image file directory.
         normalize (bool): Rescale histogram to 1% - 99% percentile.
+        px_ (bool): Return px if True
 
     Returns:
         np.ndarray, float: Image array and associated pixel size.
@@ -971,4 +972,7 @@ def load_image(image: str, normalize=False) -> Tuple[np.ndarray, float]:
             "tardis_em/utils/load_data.py",
             f"Indicated .mrc {image} file does not exist...",
         )
-    return image, px
+
+    if px_:
+        return image, px
+    return image
