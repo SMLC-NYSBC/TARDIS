@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.metrics import f1_score, precision_score, recall_score
-from tqdm import tqdm
+from tqdm.contrib import tzip
 
 
 def benchmark_cnn(logits: list, targets: list, reduce='mean', tqdm_=True):
@@ -13,11 +13,13 @@ def benchmark_cnn(logits: list, targets: list, reduce='mean', tqdm_=True):
 
     # Validation scores
     if tqdm_:
-        zip_ = tqdm(zip(logits, targets))
+        zip_ = tzip(logits, targets)
     else:
         zip_ = zip(logits, targets)
 
+    id_ = 0
     for logit, target in zip_:
+        print(id_)
         logit = logit.flatten()
         logit_th = np.where(logit > 0.5, 1, 0).astype(np.uint8).flatten()
         target = np.where(target > 0, 1, 0).astype(np.uint8).flatten()
@@ -25,12 +27,13 @@ def benchmark_cnn(logits: list, targets: list, reduce='mean', tqdm_=True):
         all_precisions.append(precision_score(target, logit_th))
         all_recall.append(recall_score(target, logit_th))
         all_f1.append(f1_score(target, logit_th))
+        print(all_precisions, all_recall, all_f1)
 
         # Average precision scores
         AP_score, _, _, AP90 = AP(logits=[logit], targets=[target], AP90=True, reduce='mean')
         all_AP.append(AP_score)
         all_AP90.append(AP90)
-
+        print(all_AP, all_AP90)
     if reduce == 'none':
         return all_precisions, all_recall, all_f1, all_AP, all_AP90
     else:

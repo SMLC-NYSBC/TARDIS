@@ -42,8 +42,16 @@ ota = ""
     help="Directory to files.",
     show_default=True,
 )
+@click.option(
+    "-px",
+    "--pixel_size",
+    default=None,
+    type=float,
+    help="Optional pixel size value for image/coordinates conversion.",
+    show_default=True,
+)
 @click.version_option(version=version)
-def main(func=None, dir_=None):
+def main(func=None, dir_=None, pixel_size=None):
     main_logo = TardisLogo()
 
     # Check if PyTorch was installed correctly with GPU support
@@ -63,7 +71,7 @@ def main(func=None, dir_=None):
         time.sleep(10)
 
     if func is not None and dir_ is not None:
-        tardis_helper(func, dir_)
+        tardis_helper(func, dir_, pixel_size)
     else:
         main_logo(
             title=f"| Transforms And Rapid Dimensionless Instance Segmentation | {ota}",

@@ -15,3 +15,11 @@ matplotlib>3.5.2
 # Jupyter
 jupyter>=1.0.0
 notebook>6.5.2
+
+# Documentation
+sphinx
+myst_parser
+pydata_sphinx_theme
+sphinx_markdown_tables
+sphinx_rtd_theme
+sphinxcontrib-mermaid
