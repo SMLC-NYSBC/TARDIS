@@ -40,7 +40,7 @@ def get_device(device: str = "0") -> torch.device:
             device = torch.device("cpu")
     elif device == "mps":  # Load Apple silicon
         if torch.backends.mps.is_available():
-            device = torch.device("cpu")  # So far pytorch don't support CNN on MPS
+            device = torch.device("mps")
         else:
             device = torch.device("cpu")
     return device

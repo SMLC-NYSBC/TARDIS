@@ -507,22 +507,29 @@ class PropGreedyGraphCut:
             segments = self._smooth_segments(segments)
 
         if visualize is not None:
-            from tardis_em.utils.visualize_pc import (
-                VisualizeFilaments,
-                VisualizePointCloud,
-            )
+            try:
+                from tardis_em.utils.visualize_pc import (
+                    VisualizeFilaments,
+                    VisualizePointCloud,
+                )
 
-            if visualize not in ["f", "p"]:
+                if visualize not in ["f", "p"]:
+                    TardisError(
+                        "124",
+                        "tardis_em/dist/utils/segment_point_cloud.py",
+                        'To visualize output use "f" for filament '
+                        'or "p" for point cloud!',
+                    )
+
+                if visualize == "p":
+                    VisualizePointCloud(segments, True, None, False)
+                elif visualize == "f":
+                    VisualizeFilaments(segments, False, False)
+            except:
                 TardisError(
                     "124",
                     "tardis_em/dist/utils/segment_point_cloud.py",
-                    'To visualize output use "f" for filament '
-                    'or "p" for point cloud!',
+                    'Please install Open3D library extras with pip install "tardis_em[open3d"',
                 )
-
-            if visualize == "p":
-                VisualizePointCloud(segments, True, None, False)
-            elif visualize == "f":
-                VisualizeFilaments(segments, False, False)
 
         return segments

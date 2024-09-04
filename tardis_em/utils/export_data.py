@@ -24,12 +24,6 @@ import shutil
 from io import StringIO
 import os
 
-# STL save exception for Arm64 machines
-try:
-    import pyvista as pv
-except ImportError:
-    pass
-
 
 class NumpyToAmira:
     """
@@ -595,6 +589,11 @@ def to_stl(data: np.ndarray, file_dir: str):
         data (np.ndarray): The name of the PLY file to create.
         file_dir (str): Output file location.
     """
+    # STL save exception for Arm64 machines
+    try:
+        import pyvista as pv
+    except ImportError:
+        return
 
     def change_first_line_of_file(filename, new_first_line):
         fr = open(filename, "r")
