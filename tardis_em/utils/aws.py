@@ -118,6 +118,7 @@ def get_weights_aws(
     ALL_SUBTYPE = ["16", "32", "64", "96", "128", "triang", "full"]
     CNN = ["unet", "unet3plus", "fnet", "fnet_attn"]
     CNN_DATASET = [
+        "microtubules_tirf",
         "microtubules_3d",
         "microtubules_2d",
         "membrane_3d",

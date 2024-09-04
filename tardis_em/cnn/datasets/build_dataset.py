@@ -28,7 +28,7 @@ def build_train_dataset(
     trim_xy: int,
     trim_z: int,
     benchmark=False,
-    correct_pixel_size = None,
+    correct_pixel_size=None,
 ):
     """
     Module for building train datasets from compatible files.
@@ -387,7 +387,7 @@ def load_img_mask_data(
             mask_px = img_px
         else:  # Image is Amira (image)
             image, img_px = load_image(image)
-    elif image.endswith(('.tif', '.tiff')):
+    elif image.endswith((".tif", ".tiff")):
         image, img_px = load_image(image)
 
     """Load Amira or MRC/REC or csv mask"""

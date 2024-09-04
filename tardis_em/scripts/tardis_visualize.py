@@ -11,7 +11,7 @@
 import click
 import numpy as np
 from tardis_em.utils.visualize_pc import VisualizeFilaments, VisualizePointCloud
-from tardis_em.utils.load_data import ImportDataFromAmira, load_mrc_file, import_am
+from tardis_em.utils.load_data import ImportDataFromAmira, load_mrc_file, load_am
 import tifffile.tifffile as tif
 from tardis_em._version import version
 
@@ -66,7 +66,7 @@ def main(path: str, _2d: bool, type_: str, animate: bool, with_node: bool):
         try:
             pc = ImportDataFromAmira(path).get_segmented_points()
         except:
-            pc, _, _, _ = import_am(path)
+            pc, _, _, _ = load_am(path)
             pc = build_pc_from_img(pc)
     elif path.endswith(".npy"):
         pc = np.load(path)

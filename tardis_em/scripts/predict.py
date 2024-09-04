@@ -59,8 +59,8 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-it",
     "--image_type",
-    default='3d',
-    type=click.Choice(['2d', '3d']),
+    default="3d",
+    type=click.Choice(["2d", "3d"]),
     help="Select type of predicted image, 2D or 3D.",
     show_default=True,
 )

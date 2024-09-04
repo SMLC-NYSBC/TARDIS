@@ -157,6 +157,9 @@ class StitchImages:
             max(list(map(int, [str.split(f[:-4], "_")[0] for f in file_list]))) + 1
         )
 
+        if self.idx > 1:
+            image_stack = []
+
         for idx in range(self.idx):
             self._find_xyz(file_list, idx)
             self._calculate_dim(
@@ -276,13 +279,18 @@ class StitchImages:
                             stitched_image[grid_z[:,], ...] / 2
                         )
 
-            if output is None:
-                return np.array(stitched_image, dtype=dtype)
-            else:
-                tif.imwrite(
-                    join(output, f"Stitched_Image_idx_{idx}.tif"),
-                    np.array(stitched_image, dtype=dtype),
-                )
+            if self.idx > 1:
+                image_stack.append(stitched_image)
+
+        if output is None:
+            return np.array(
+                stitched_image if self.idx == 1 else image_stack, dtype=dtype
+            )
+        else:
+            tif.imwrite(
+                join(output, f"Stitched_Image_idx_{idx}.tif"),
+                np.array(stitched_image if self.idx == 1 else image_stack, dtype=dtype),
+            )
 
 
 def generate_grid(image_size: tuple, patch_size: list, grid_size: list, stride: int):

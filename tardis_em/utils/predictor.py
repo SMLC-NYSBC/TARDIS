@@ -19,6 +19,7 @@ import numpy as np
 import pandas as pd
 import tifffile.tifffile as tif
 import torch
+
 from tardis_em.dist_pytorch.utils.utils import VoxelDownSampling
 
 from tardis_em.dist_pytorch.datasets.patches import PatchDataSet
@@ -38,7 +39,7 @@ from tardis_em.utils.aws import get_weights_aws
 from tardis_em.utils.device import get_device
 from tardis_em.utils.errors import TardisError
 from tardis_em.utils.export_data import NumpyToAmira, to_am, to_mrc, to_stl
-from tardis_em.utils.load_data import import_am, ImportDataFromAmira, load_image
+from tardis_em.utils.load_data import load_am, ImportDataFromAmira, load_image
 from tardis_em.utils.logo import print_progress_bar, TardisLogo
 from tardis_em.utils.normalization import (
     MeanStdNormalize,
@@ -133,7 +134,7 @@ class GeneralPredictor:
         self.dir = dir_
         self.output_format = output_format
         self.predict = predict
-        if self.predict in ["Membrane2D"]:
+        if self.predict in ["Membrane2D", "Microtubule_tirf"]:
             self.expect_2d = True
         else:
             self.expect_2d = False
@@ -171,7 +172,7 @@ class GeneralPredictor:
         else:
             self.str_debug = ""
 
-        # Check for spatial graph in folder from amira/tardis_em comp.
+        # Check for the spatial graph in the folder from amira/tardis_em comp.
         self.amira_check = False
         if isinstance(self.dir, str):
             if isdir(join(self.dir, "amira")):
@@ -179,7 +180,15 @@ class GeneralPredictor:
                 self.dir_amira = join(dir_, "amira")
 
         # Searching for available images for prediction
-        self.available_format = (".tif", ".tiff", ".mrc", ".rec", ".am", ".map", ".npy")
+        self.available_format = (
+            ".tif",
+            ".tiff",
+            ".mrc",
+            ".rec",
+            ".am",
+            ".map",
+            ".npy",
+        )
         self.omit_format = (
             "mask.tif",
             "mask.tiff",
@@ -202,13 +211,19 @@ class GeneralPredictor:
         self.image_stitcher = StitchImages()
         self.post_processes = BuildPointCloud()
 
-        # Build handler's for DIST input and output
+        # Build handler for DIST input and output
         if self.predict_instance:
             self.patch_pc = PatchDataSet(
                 max_number_of_points=points_in_patch, graph=False
             )
 
-            if predict in ["Actin", "Microtubule", "Membrane2D", "General_filament"]:
+            if predict in [
+                "Actin",
+                "Microtubule",
+                "Membrane2D",
+                "General_filament",
+                "Microtubule_tirf",
+            ]:
                 self.GraphToSegment = PropGreedyGraphCut(
                     threshold=dist_threshold, connection=2, smooth=True
                 )
@@ -308,11 +323,12 @@ class GeneralPredictor:
             "Membrane2D",
             "Membrane",
             "Microtubule",
+            "Microtubule_tirf",
             "General_filament",
             "General_object",
         ]
         if self.tardis_logo:
-            # Check if user ask to predict correct structure
+            # Check if users ask to predict the correct structure
             if not assert_:
                 TardisError(
                     id_="01",
@@ -381,22 +397,36 @@ class GeneralPredictor:
                 assert not assert_, msg
 
     def build_NN(self, NN: str):
-        if NN in ["Actin", "Microtubule"]:
+        if NN in ["Actin", "Microtubule", "Microtubule_tirf"]:
             self.normalize_px = 25 if self.normalize_px is None else self.normalize_px
 
             # Build CNN network with loaded pre-trained weights
             if not self.binary_mask:
-                self.cnn = Predictor(
-                    checkpoint=self.checkpoint[0],
-                    network=self.convolution_nn,
-                    subtype="32",
-                    model_type="microtubules_3d" if NN == "Microtubule" else "actin_3d",
-                    model_version=self.model_version,
-                    img_size=self.patch_size,
-                    sigmoid=False,
-                    device=self.device,
-                )
-
+                if NN in ["Actin", "Microtubule"]:
+                    self.cnn = Predictor(
+                        checkpoint=self.checkpoint[0],
+                        network=self.convolution_nn,
+                        subtype="32",
+                        model_type=(
+                            "microtubules_3d" if NN == "Microtubule" else "actin_3d"
+                        ),
+                        model_version=self.model_version,
+                        img_size=self.patch_size,
+                        sigmoid=False,
+                        device=self.device,
+                    )
+                else:
+                    self.cnn = Predictor(
+                        checkpoint=self.checkpoint[0],
+                        network=self.convolution_nn,
+                        subtype="32",
+                        model_type="microtubules_tirf",
+                        model_version=self.model_version,
+                        img_size=self.patch_size,
+                        sigmoid=False,
+                        _2d=True,
+                        device=self.device,
+                    )
             # Build DIST network with loaded pre-trained weights
             if not self.output_format.endswith("None"):
                 self.dist = Predictor(
@@ -466,7 +496,7 @@ class GeneralPredictor:
                 img_size=self.patch_size,
                 sigmoid=False,
                 device=self.device,
-                _2d=self.expect_2d
+                _2d=self.expect_2d,
             )
             if not self.output_format.endswith("None"):
                 if NN.endswith("filament"):
@@ -521,7 +551,7 @@ class GeneralPredictor:
                         assert assert_, msg
                 else:
                     self.amira_image = True
-                    self.image, self.px, _, self.transformation = import_am(
+                    self.image, self.px, _, self.transformation = load_am(
                         am_file=join(self.dir, id_name)
                     )
             else:
@@ -590,7 +620,7 @@ class GeneralPredictor:
             else:
                 assert assert_, msg
 
-        if self.image.ndim == 2:
+        if self.image.ndim == 2 or self.predict == "Microtubule_tirf":
             self.expect_2d = True
         else:
             self.expect_2d = False
@@ -647,7 +677,11 @@ class GeneralPredictor:
         if self.expect_2d:
             self.image = self.image_stitcher(
                 image_dir=self.output, mask=False, dtype=np.float32
-            )[: self.scale_shape[0], : self.scale_shape[1]]
+            )
+            if self.image.ndim == 3:
+                self.image = self.image[:, : self.scale_shape[0], : self.scale_shape[1]]
+            else:
+                self.image = self.image[: self.scale_shape[0], : self.scale_shape[1]]
         else:
             self.image = self.image_stitcher(
                 image_dir=self.output, mask=False, dtype=np.float32
@@ -692,7 +726,7 @@ class GeneralPredictor:
                 self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
                     image=self.image, down_sampling=5
                 )
-            elif self.predict in ["Membrane2D"]:
+            elif self.predict in ["Membrane2D", "Microtubule_tirf"]:
                 self.pc_hd, self.pc_ld = self.post_processes.build_point_cloud(
                     image=self.image, down_sampling=5, as_2d=True
                 )
@@ -711,6 +745,7 @@ class GeneralPredictor:
 
     def predict_DIST(self, id_: int, id_name: str):
         iter_time = int(round(len(self.coords_df) / 10))
+
         if iter_time == 0:
             iter_time = 1
         if iter_time >= len(self.coords_df):
@@ -742,7 +777,7 @@ class GeneralPredictor:
                 text_2=f"Device: {self.device}",
                 text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {id_name}",
                 text_4=f"Org. Pixel size: {self.px} A | Norm. Pixel size: {self.normalize_px}",
-                text_5=f"Point Cloud: {pc[0]}; NaN Segments",
+                text_5=f"Point Cloud: {self.pc_ld[-1].shape[0]}; NaN Segments",
                 text_7=f"Current Task: {self.predict} segmentation...",
             )
 
@@ -756,24 +791,30 @@ class GeneralPredictor:
         )
         self.pc_ld = self.pc_ld + self.transformation
 
-        if self.predict in ["Actin", "Microtubule", "General_filament"]:
+        if self.predict in [
+            "Actin",
+            "Microtubule",
+            "General_filament",
+            "Microtubule_tirf",
+        ]:
             self.log_tardis(id_, i, log_id=6.1)
         else:
             self.log_tardis(id_, i, log_id=6.2)
 
-        try:
-            if self.predict in [
-                "Actin",
-                "Microtubule",
-                "Membrane2D",
-                "General_filament",
-            ]:
-                sort = True
-                prune = 5
-            else:
-                sort = False
-                prune = 15
+        if self.predict in [
+            "Actin",
+            "Microtubule",
+            "Membrane2D",
+            "General_filament",
+            "Microtubule_tirf",
+        ]:
+            sort = True
+            prune = 5
+        else:
+            sort = False
+            prune = 15
 
+        try:
             self.segments = self.GraphToSegment.patch_to_segment(
                 graph=self.graphs,
                 coord=self.pc_ld,
@@ -818,7 +859,7 @@ class GeneralPredictor:
         self.output = join(self.dir, "temp", "Predictions")
         self.am_output = join(self.dir, "Predictions")
 
-        # Check if there is anything to predict in user indicated folder
+        # Check if there is anything to predict in the user-indicated folder
         msg = f"Given {self.dir} does not contain any recognizable file!"
         assert_ = len(self.predict_list) == 0
         if self.tardis_logo:
@@ -859,6 +900,8 @@ class GeneralPredictor:
             no_segments = "None"
 
         # Define text configurations for each log_id
+        pc_ld_shape = self.pc_ld.shape[0]
+
         text_configurations = {
             0: {
                 **common_text,
@@ -884,13 +927,13 @@ class GeneralPredictor:
             4: {
                 **common_text,
                 "text_4": f"Org. Pixel size: {self.px} A | Norm. Pixel size: {self.normalize_px}",
-                "text_5": f"Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments",
+                "text_5": f"Point Cloud: {pc_ld_shape} Nodes; NaN Segments",
                 "text_7": "Current Task: Preparing for instance segmentation...",
             },
             5: {
                 **common_text,
                 "text_4": f"Org. Pixel size: {self.px} A | Norm. Pixel size: {self.normalize_px}",
-                "text_5": f"Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments",
+                "text_5": f"Point Cloud: {pc_ld_shape} Nodes; NaN Segments",
                 "text_7": "Current Task: DIST prediction...",
                 "text_8": (
                     print_progress_bar(0, len(self.coords_df))
@@ -901,7 +944,7 @@ class GeneralPredictor:
             6.1: {
                 **common_text,
                 "text_4": f"Org. Pixel size: {self.px} A | Norm. Pixel size: {self.normalize_px}",
-                "text_5": f"Point Cloud: {self.pc_ld.shape[0]} Nodes; NaN Segments",
+                "text_5": f"Point Cloud: {pc_ld_shape} Nodes; NaN Segments",
                 "text_7": "Current Task: Instance Segmentation...",
                 "text_8": "Filament segmentation is fitted to:",
                 "text_9": f"pixel size: {self.px}; transformation: {self.transformation}",
@@ -909,13 +952,13 @@ class GeneralPredictor:
             6.2: {
                 **common_text,
                 "text_4": f"Org. Pixel size: {self.px} A | Norm. Pixel size: {self.normalize_px}",
-                "text_5": f"Point Cloud: {self.pc_ld.shape[0]}; NaN Segments",
+                "text_5": f"Point Cloud: {pc_ld_shape}; NaN Segments",
                 "text_7": "Current Task: Instance segmentation...",
             },
             7: {
                 **common_text,
                 "text_4": f"Org. Pixel size: {self.px} A | Norm. Pixel size: {self.normalize_px}",
-                "text_5": f"Point Cloud: {self.pc_ld.shape[0]} Nodes; {no_segments} Segments",
+                "text_5": f"Point Cloud: {pc_ld_shape} Nodes; {no_segments} Segments",
                 "text_7": "Current Task: Segmentation finished!",
             },
         }
@@ -931,6 +974,7 @@ class GeneralPredictor:
             f"Semantic Prediction: {i[:-self.in_format]}"
             f" | Number of pixels: {np.sum(self.image)}"
         )
+
         with open(join(self.am_output, "prediction_log.txt"), "w") as f:
             f.write(" \n".join(self.log_prediction))
 
@@ -966,6 +1010,21 @@ class GeneralPredictor:
         self.log_prediction.append(
             f"Instance Prediction: {i[:-self.in_format]}; Number of segments: {np.max(self.segments[:, 0])}"
         )
+
+        if self.predict in [
+            "Actin",
+            "Microtubule",
+            "General_filament",
+            "Microtubule_tirf",
+        ]:
+            self.segments_filter = self.filter_splines(segments=self.segments)
+            self.segments_filter = sort_by_length(self.segments_filter)
+
+            self.log_prediction.append(
+                f"Instance Prediction: {i[:-self.in_format]};"
+                f" Number of segments: {np.max(self.segments_filter[:, 0])}"
+            )
+
         with open(join(self.am_output, "prediction_log.txt"), "w") as f:
             f.write(" \n".join(self.log_prediction))
 
@@ -973,6 +1032,7 @@ class GeneralPredictor:
             "Actin",
             "Microtubule",
             "General_filament",
+            "Microtubule_tirf",
         ]:
             self.amira_file.export_amira(
                 coords=self.segments,
@@ -986,9 +1046,6 @@ class GeneralPredictor:
                     ],
                 ],
             )
-
-            self.segments_filter = self.filter_splines(segments=self.segments)
-            self.segments_filter = sort_by_length(self.segments_filter)
 
             self.amira_file.export_amira(
                 coords=self.segments_filter,
@@ -1043,12 +1100,12 @@ class GeneralPredictor:
             if self.predict in [
                 "Actin",
                 "Microtubule",
+                "Microtubule_tirf",
                 "Membrane2D",
                 "General_filament",
             ]:
-                self.segments = sort_by_length(self.filter_splines(self.segments))
-                self.segments = pd.DataFrame(self.segments)
-                self.segments.to_csv(
+                self.segments_filter = pd.DataFrame(self.segments_filter)
+                self.segments_filter.to_csv(
                     join(
                         self.am_output,
                         f"{i[:-self.in_format]}_instances_filter.csv",
@@ -1057,16 +1114,31 @@ class GeneralPredictor:
                     index=False,
                     sep=",",
                 )
-                self.segments = self.segments.to_numpy()
+                self.segments_filter = self.segments_filter.to_numpy()
         elif self.output_format.endswith(("mrc", "tif", "am")):
-            if self.predict in ["Membrane", "Membrane2D", "General_object"]:
+            if self.predict in [
+                "Membrane",
+                "Membrane2D",
+                "General_object",
+                "Microtubule_tirf",
+            ]:
                 self.mask_semantic = draw_semantic_membrane(
                     mask_size=self.org_shape,
                     coordinate=self.segments,
                     pixel_size=(
                         self.px if self.correct_px is None else self.correct_px
                     ),
-                    spline_size=60,
+                    spline_size=(
+                        60
+                        if self.predict
+                        not in [
+                            "Microtubule_tirf",
+                            "Microtubule",
+                            "General_filament",
+                            "Actin",
+                        ]
+                        else 25
+                    ),
                 )
             else:
                 self.segments[:, 1:] = (
@@ -1424,15 +1496,14 @@ class Predictor:
             weights = torch.load(
                 get_weights_aws(network, subtype, model_type, model_version),
                 map_location="cpu",
+                weights_only=False,
             )
         elif isinstance(checkpoint, dict):
             print("Loading weight dictionary...")
             weights = checkpoint
         else:
             print("Loading weight model...")
-            weights = torch.load(checkpoint, map_location="cpu")
-
-            # ToDo: Load onnx without any extra libraries
+            weights = torch.load(checkpoint, map_location="cpu", weights_only=False)
 
         # Load model
         if isinstance(weights, dict):  # Deprecated support for dictionary
@@ -1474,7 +1545,7 @@ class Predictor:
 
     def _build_model_from_checkpoint(self, structure: dict, sigmoid=True):
         """
-        Use checkpoint metadata to build compatible network
+        Use checkpoint metadata to build a compatible network
 
         Args:
             structure (dict): Metadata dictionary with network setting.

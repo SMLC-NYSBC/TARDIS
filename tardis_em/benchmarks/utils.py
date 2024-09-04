@@ -3,7 +3,7 @@ from sklearn.metrics import f1_score, precision_score, recall_score
 from tqdm.contrib import tzip
 
 
-def benchmark_cnn(logits: list, targets: list, reduce='mean', tqdm_=True):
+def benchmark_cnn(logits: list, targets: list, reduce="mean", tqdm_=True):
     all_precisions = []
     all_recall = []
     all_f1 = []
@@ -30,14 +30,16 @@ def benchmark_cnn(logits: list, targets: list, reduce='mean', tqdm_=True):
         print(all_precisions, all_recall, all_f1)
 
         # Average precision scores
-        AP_score, _, _, AP90 = AP(logits=[logit], targets=[target], AP90=True, reduce='mean')
+        AP_score, _, _, AP90 = AP(
+            logits=[logit], targets=[target], AP90=True, reduce="mean"
+        )
         all_AP.append(AP_score)
         all_AP90.append(AP90)
         print(all_AP, all_AP90)
-    if reduce == 'none':
+    if reduce == "none":
         return all_precisions, all_recall, all_f1, all_AP, all_AP90
     else:
-        assert reduce == 'mean'
+        assert reduce == "mean"
         return np.mean([all_precisions, all_recall, all_f1, all_AP, all_AP90], axis=1)
 
 
@@ -95,8 +97,8 @@ def precision_at_recall(precision, recall, all_th, level):
     # j = np.where(mask_2)[0][0]
 
     # Find the indices of the recall values just below and just above the desired level
-    i = np.searchsorted(recall, level, side='right') - 1
-    j = np.searchsorted(recall, level, side='left')
+    i = np.searchsorted(recall, level, side="right") - 1
+    j = np.searchsorted(recall, level, side="left")
 
     if i < 0:
         i = 0
@@ -119,7 +121,9 @@ def precision_at_recall(precision, recall, all_th, level):
 
 
 def AP(logits: list, targets: list, AP90=False, reduce="none"):
-    assert len(logits) == len(targets), "Length of logits and targets should be the same."
+    assert len(logits) == len(
+        targets
+    ), "Length of logits and targets should be the same."
     assert reduce in ["none", "mean", "median"]
 
     all_precisions = np.zeros_like(np.linspace(0, 1, 1000))
@@ -130,8 +134,7 @@ def AP(logits: list, targets: list, AP90=False, reduce="none"):
         target = np.where(target > 0, 1, 0).astype(np.uint8).flatten()
         logit = logit.flatten()
 
-        precision, recall, th = call_precision_at_recall(scores=logit,
-                                                         y=target)
+        precision, recall, th = call_precision_at_recall(scores=logit, y=target)
 
         all_precisions += precision
         all_recalls += recall

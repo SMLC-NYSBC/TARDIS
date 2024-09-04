@@ -46,9 +46,9 @@ class BuildPointCloud:
         """
         try:
             if isinstance(image, str):
-                from tardis_em.utils.load_data import import_tiff
+                from tardis_em.utils.load_data import load_tiff
 
-                image, _ = import_tiff(tiff=image)
+                image, _ = load_tiff(tiff=image)
         except RuntimeWarning:
             TardisError(
                 "121",

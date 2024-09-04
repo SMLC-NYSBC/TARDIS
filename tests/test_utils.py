@@ -8,7 +8,6 @@
 #  MIT License 2021 - 2024                                            #
 #######################################################################
 
-import io
 import os
 
 import numpy as np
@@ -20,8 +19,8 @@ from tardis_em.utils.device import get_device
 from tardis_em.utils.errors import TardisError
 from tardis_em.utils.export_data import NumpyToAmira
 from tardis_em.utils.load_data import (
-    import_am,
-    import_tiff,
+    load_am,
+    load_tiff,
     ImportDataFromAmira,
     load_mrc_file,
 )
@@ -120,10 +119,10 @@ def test_am_label_export():
 
 # TEST file readers
 def test_tif():
-    tif, px = import_tiff(tiff="./tests/test_data/data_type/tif2D.tif")
+    tif, px = load_tiff(tiff="./tests/test_data/data_type/tif2D.tif")
     assert tif.shape == (64, 32)
 
-    tif, px = import_tiff(tiff="./tests/test_data/data_type/tif3D.tif")
+    tif, px = load_tiff(tiff="./tests/test_data/data_type/tif3D.tif")
     assert tif.shape == (78, 64, 32)
 
 
@@ -146,14 +145,14 @@ def test_rec_mrc():
 
 
 def test_am():
-    am, px, ps, trans = import_am(am_file="./tests/test_data/data_type/am2D.am")
+    am, px, ps, trans = load_am(am_file="./tests/test_data/data_type/am2D.am")
 
     assert am.shape == (64, 32)
     assert am.dtype == np.uint8
     assert px == 23.2
     assert np.all(trans == np.array((0, 0, 4640)))
 
-    am, px, ps, trans = import_am(am_file="./tests/test_data/data_type/am3D.am")
+    am, px, ps, trans = load_am(am_file="./tests/test_data/data_type/am3D.am")
 
     assert am.shape == (8, 256, 256)
     assert am.dtype == np.uint8

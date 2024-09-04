@@ -7,8 +7,10 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2024                                            #
 #######################################################################
+import os
 import warnings
-from os import getcwd
+from os import getcwd, listdir
+from os.path import join
 
 import click
 
@@ -40,14 +42,6 @@ warnings.simplefilter("ignore", UserWarning)
     show_default=True,
 )
 @click.option(
-    "-px",
-    "--correct_px",
-    default=None,
-    type=float,
-    help="Correct pixel size values.",
-    show_default=True,
-)
-@click.option(
     "-ch",
     "--checkpoint",
     default="None|None",
@@ -74,7 +68,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-out",
     "--output_format",
-    default="None_amSG",
+    default="tif_csv",
     type=click.Choice(format_choices),
     help="Type of output files. The First optional output file is the binary mask "
     "which can be of type None [no output], am [Amira], mrc or tif. "
@@ -107,7 +101,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-ct",
     "--cnn_threshold",
-    default="0.25",
+    default="0.1",
     type=str,
     help="Threshold used for CNN prediction.",
     show_default=True,
@@ -131,41 +125,9 @@ warnings.simplefilter("ignore", UserWarning)
     show_default=True,
 )
 @click.option(
-    "-ap",
-    "--amira_prefix",
-    default=".CorrelationLines",
-    type=str,
-    help="If dir/amira foldr exist, TARDIS will search for files with "
-    "given prefix (e.g. file_name.CorrelationLines.am). If the correct "
-    "file is found, TARDIS will use its instance segmentation with "
-    "ZiB Amira prediction, and output additional file called "
-    "file_name_AmiraCompare.am.",
-    show_default=True,
-)
-@click.option(
-    "-acd",
-    "--amira_compare_distance",
-    default=175,
-    type=int,
-    help="The comparison with Amira prediction is done by evaluating"
-    "filaments distance between Amira and TARDIS. This parameter defines the maximum"
-    "distance to the similarity between two splines. Value given in Angstrom [A].",
-    show_default=True,
-)
-@click.option(
-    "-aip",
-    "--amira_inter_probability",
-    default=0.25,
-    type=float,
-    help="This parameter define normalize between 0 and 1 overlap"
-    "between filament from TARDIS na Amira sufficient to identifies microtubule as "
-    "a match between both software.",
-    show_default=True,
-)
-@click.option(
     "-fl",
     "--filter_by_length",
-    default=1000,
+    default=100,
     type=int,
     help="Filtering parameters for microtubules, defining maximum microtubule "
     "length in angstrom. All filaments shorter then this length "
@@ -175,7 +137,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-cs",
     "--connect_splines",
-    default=2500,
+    default=25,
     type=int,
     help="To address the issue where microtubules are mistakenly "
     "identified as two different filaments, we use a filtering technique. "
@@ -189,7 +151,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-cc",
     "--connect_cylinder",
-    default=250,
+    default=12,
     type=int,
     help="To minimize false positives when linking microtubules, we limit "
     "the search area to a cylindrical radius specified in angstroms. "
@@ -228,7 +190,6 @@ def main(
     output_format: str,
     patch_size: int,
     rotate: bool,
-    correct_px: float,
     convolution_nn: str,
     cnn_threshold: str,
     dist_threshold: float,
@@ -236,15 +197,14 @@ def main(
     filter_by_length: int,
     connect_splines: int,
     connect_cylinder: int,
-    amira_prefix: str,
-    amira_compare_distance: int,
-    amira_inter_probability: float,
     device: str,
     debug: bool,
 ):
     """
     MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
     """
+    analysis_files, cleanup_list = [], []
+
     if output_format.split("_")[1] == "None":
         instances = False
     else:
@@ -252,22 +212,34 @@ def main(
 
     checkpoint = checkpoint.split("|")
     if len(checkpoint) != 2:
-        TardisError(
-            id_="00",
-            py="tardis_em/predict_mt.py",
-            desc="Two checkpoint are expected!",
-        )
+        checkpoint.append(None)
     elif len(checkpoint) == 2:
         if checkpoint[0] == "None":
             checkpoint[0] = None
         if checkpoint[1] == "None":
             checkpoint[1] = None
 
+    nd2_files = [i for i in listdir(path) if i.endswith(".nd2")]
+    if len(nd2_files) > 0:
+        from tardis_em.utils.load_data import load_nd2_file
+        import tifffile.tifffile as save_tiff
+
+        for i in nd2_files:
+            image, _ = load_nd2_file(join(path, i), channels=True)
+
+            for j in range(image.shape[0]):
+                name_file = join(path, i[:-4]) + f"_{j}.tiff"
+                analysis_files.append(join(path, i[:-4]) + f"_{j}_instances_filter.csv")
+                cleanup_list.append(name_file)
+
+                save_tiff.imwrite(name_file, image[j, ...])
+
     predictor = GeneralPredictor(
-        predict="Microtubule",
+        predict="Microtubule_tirf",
         dir_=path,
         binary_mask=mask,
-        correct_px=correct_px,
+        correct_px=None,
+        normalize_px=1.0,
         convolution_nn=convolution_nn,
         checkpoint=checkpoint,
         model_version=model_version,
@@ -277,18 +249,25 @@ def main(
         dist_threshold=dist_threshold,
         points_in_patch=points_in_patch,
         predict_with_rotation=rotate,
-        amira_prefix=amira_prefix,
+        amira_prefix=None,
         filter_by_length=filter_by_length,
         connect_splines=connect_splines,
         connect_cylinder=connect_cylinder,
-        amira_compare_distance=amira_compare_distance,
-        amira_inter_probability=amira_inter_probability,
+        amira_compare_distance=None,
+        amira_inter_probability=None,
         instances=instances,
         device_=str(device),
         debug=debug,
     )
 
     predictor()
+    # Analyze length, average intensity along the spline,
+    for i in analysis_files:
+        pass
+
+    # Clean-up
+    for i in cleanup_list:
+        os.rmdir(i)
 
 
 if __name__ == "__main__":

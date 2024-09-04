@@ -64,15 +64,9 @@ def scale_image(
         mask = mask.astype(np.float32)
         mask = np.ascontiguousarray(mask)
 
-        if not np.all(scale == mask.shape):
-            mask = nn_scaling(img=mask, scale=scale)
-
-            # if scale[0] < mask.shape[0]:  # Down-sampling
-            #     mask = nn_scaling(img=mask, scale=scale)
-            # else:  # Up-sampling
-            #     mask = nn_scaling(
-            #         img=mask, scale=scale
-            #     )
+        if not np.all(scale == mask.shape[1:]):
+            for k in range(mask.shape[0]):
+                mask[k, ...] = nn_scaling(img=mask[k, ...], scale=scale)
 
     if image is not None and mask is not None:
         return image, mask, dim

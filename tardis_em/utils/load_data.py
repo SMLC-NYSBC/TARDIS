@@ -17,6 +17,12 @@ from typing import Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 import tifffile.tifffile as tif
+
+try:
+    import nd2
+except ImportError:
+    pass
+
 from numpy import ndarray
 from plyfile import PlyData
 from sklearn.neighbors import KDTree
@@ -28,6 +34,8 @@ from tardis_em.dist_pytorch.utils.utils import (
 from tardis_em.utils.errors import TardisError
 from tardis_em.utils.normalization import RescaleNormalize
 from tardis_em.utils import SCANNET_COLOR_MAP_20
+
+import importlib.util as lib_utils
 
 
 class ImportDataFromAmira:
@@ -74,7 +82,7 @@ class ImportDataFromAmira:
                     self.pixel_size,
                     self.physical_size,
                     self.transformation,
-                ) = import_am(src_img)
+                ) = load_am(src_img)
             except RuntimeWarning:
                 TardisError(
                     "130",
@@ -362,7 +370,7 @@ class ImportDataFromAmira:
         return self.pixel_size
 
 
-def import_tiff(tiff: str):
+def load_tiff(tiff: str) -> Tuple[np.ndarray, float]:
     """
     Function to load any tiff file.
 
@@ -564,7 +572,7 @@ def mrc_mode(mode: int, amin: int):
                 return name
 
 
-def import_am(am_file: str):
+def load_am(am_file: str):
     """
     Function to load Amira binary image data.
 
@@ -756,6 +764,44 @@ def load_mrc_file(mrc: str) -> Union[Tuple[np.ndarray, float], Tuple[None, float
     return image, pixel_size
 
 
+def load_nd2_file(
+    nd2_dir: str, channels=True
+) -> Union[Tuple[np.ndarray, float], Tuple[None, float]]:
+    try:
+        nd2.version("nd2")
+    except NameError:
+        TardisError(
+            id_="2",
+            py="tardis_em/utils/load_data.py",
+            desc="You are trying to load ND2 file. Please install nd2 library or "
+            'install tardis with nd2 by: pip install "tardis_em[nd2]"',
+        )
+        return None, 1.0
+
+    img = nd2.imread(nd2_dir)
+
+    if channels:
+        # Search for the smallest dim, which will indicate channels
+        dim0 = img[0, 0, ...]
+        dim0 = int(np.round(np.mean(dim0) / np.std(dim0), 0))
+
+        dim1 = img[0, 1, ...]
+        dim1 = int(np.round(np.mean(dim1) / np.std(dim1), 0))
+
+        dim2 = img[1, 0, ...]
+        dim2 = int(np.round(np.mean(dim2) / np.std(dim2), 0))
+
+        dim3 = img[1, 1, ...]
+        dim3 = int(np.round(np.mean(dim3) / np.std(dim3), 0))
+
+        if dim0 >= dim2 and dim0 > dim3 and dim1 > dim2 and dim1 >= dim3:
+            img = img[0 if dim0 > dim2 else 1, ...]
+        else:
+            img = img[:, 0 if dim0 > dim1 else 1, ...]
+
+    return img, 1.0
+
+
 def load_ply_scannet(
     ply: str, downscaling=0, color: Optional[str] = None
 ) -> Union[Tuple[ndarray, ndarray], ndarray]:
@@ -941,9 +987,13 @@ def load_s3dis_scene(
             return down_scale(coord=coord)
 
 
-def load_image(image: str, normalize=False, px_ = True) -> Union[np.ndarray, Tuple[np.ndarray, float]]:
+def load_image(
+    image: str,
+    normalize=False,
+    px_=True,
+) -> Union[np.ndarray, Tuple[np.ndarray, float]]:
     """
-    Quick wrapper for loading image data based on detected file format.
+    Quick wrapper for loading image data based on the detected file format.
 
     Args:
         image (str): Image file directory.
@@ -956,11 +1006,23 @@ def load_image(image: str, normalize=False, px_ = True) -> Union[np.ndarray, Tup
     px = 0.0
 
     if image.endswith((".tif", ".tiff")):
-        image, px = import_tiff(image)
+        image, px = load_tiff(image)
     elif image.endswith((".mrc", ".rec", ".map")):
         image, px = load_mrc_file(image)
     elif image.endswith(".am"):
-        image, px, _, _ = import_am(image)
+        image, px, _, _ = load_am(image)
+    elif image.endswith(".nd2"):
+        library_names = ["nd2"]
+        library_installed = False
+        for lib in library_names:
+            if lib_utils.find_spec(lib) is not None:
+                library_installed = True
+
+        assert library_installed, (
+            f"ND2 library is not installed." f'Run "pip install np2" to install it!'
+        )
+
+        image, px = load_nd2_file(image, channels=True)
 
     if normalize:
         norm = RescaleNormalize(clip_range=(1, 99))
