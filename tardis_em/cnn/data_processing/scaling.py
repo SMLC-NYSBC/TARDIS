@@ -34,8 +34,8 @@ def scale_image(
     Args:
         image (np.ndarray, Optional): image data
         mask (np.ndarray, Optional): Optional binary mask image data
-        scale (tuple): scale value for image
-        device (str):
+        scale (tuple): scale value for image.
+        device (torch.device):
     """
     dim = 1
 
@@ -76,7 +76,7 @@ def scale_image(
         return image, dim
 
 
-def nn_scaling(img: np.ndarray, scale: tuple, device="cpu", gauss=False) -> np.ndarray:
+def nn_scaling(img: np.ndarray, scale: tuple, device=torch.device("cpu"), gauss=False) -> np.ndarray:
     if gauss:
         filter_ = img.shape[0] / scale[0]  # Scaling factor
         img = gaussian_filter(img, filter_ / 2)
@@ -87,56 +87,14 @@ def nn_scaling(img: np.ndarray, scale: tuple, device="cpu", gauss=False) -> np.n
     return img.cpu().detach().numpy()
 
 
-def pil_LANCZOS(img: np.ndarray, scale: tuple) -> np.ndarray:
-    """
-    Scale a 3D image by first down-sampling in the XY direction and then in the Z direction.
-
-    Args:
-        img: image array.
-        scale: Scale array size.
-
-    Returns:
-        no.ndarray: Up or Down scale 3D array.
-    """
-    if len(scale) == 3:
-        new_depth, new_height, new_width = scale
-        scaled = []
-
-        # Down-sample each slice in the XY direction
-        for i in range(img.shape[0]):
-            image = Image.fromarray(img[i, ...])
-            scaled_image = image.resize((new_width, new_height), Image.LANCZOS)
-            scaled.append(np.asarray(scaled_image))
-
-        # Convert list to 3D array
-        img = np.array(scaled)
-
-        # Down-sample each slice in the Z direction if 3D
-        if len(scale) == 3:
-            scaled = np.zeros(scale)
-
-            for i in range(img.shape[2]):
-                image = Image.fromarray(img[..., i])
-                scaled[:, :, i] = np.asarray(
-                    image.resize((new_height, new_depth), Image.LANCZOS)
-                )
-            img = scaled
-    else:
-        new_height, new_width = scale
-        img = Image.fromarray(img)
-        img = np.asarray(img.resize((new_width, new_height), Image.LANCZOS))
-
-    return img
-
-
-def linear_scaling(img: np.ndarray, scale: tuple, device="cpu") -> np.ndarray:
+def linear_scaling(img: np.ndarray, scale: tuple, device=torch.device("cpu")) -> np.ndarray:
     """
     Scaling of 2D/3D array using trilinear method from pytorch
 
     Args:
         img: image array.
         scale: Scale array size.
-        device: Compute device
+        device (torch.device): Compute device
 
     Returns:
         no.ndarray: Up or Down scale 3D array.
@@ -242,14 +200,14 @@ def linear_scaling(img: np.ndarray, scale: tuple, device="cpu") -> np.ndarray:
     return img.detach().numpy()[0, 0, :]
 
 
-def area_scaling(img: np.ndarray, scale: tuple, device="cpu") -> np.ndarray:
+def area_scaling(img: np.ndarray, scale: tuple, device=torch.device("cpu")) -> np.ndarray:
     """
     Scaling of 3D array using area method from pytorch
 
     Args:
         img: 3D array.
         scale: Scale array size.
-        device: Compute device
+        device (torch.device): Compute device
 
     Returns:
         no.ndarray: Up or Down scale 3D array.
@@ -287,16 +245,15 @@ def area_scaling(img: np.ndarray, scale: tuple, device="cpu") -> np.ndarray:
     return img
 
 
-def fourier_scaling(img: np.ndarray, scale: tuple, device="cpu") -> np.ndarray:
+def fourier_scaling(img: np.ndarray, scale: tuple, device=torch.device("cpu")) -> np.ndarray:
     """
     Resize a 2D or 3D image using Fourier cropping.
-
-    Check in Topaz how
 
     Parameters:
     img (np.ndarray): 2D or 3D array representing the image.
     scale (tuple): Desired shape (for 2D: (height, width), for 3D: (depth, height, width)).
     dtype (np.dtype): Desired output data type.
+    device (torch.device): Torch device
 
     Returns:
         np.ndarray: Resized image in the desired data type.

@@ -9,6 +9,7 @@
 #######################################################################
 
 import inspect
+import sys
 from os.path import expanduser, join
 from typing import Tuple, Union, Any
 
@@ -82,7 +83,7 @@ class TardisError(Exception):
         str: TARDIS Error log
     """
 
-    def __init__(self, id_="0", py="NA", desc="Unknown exertion occurred!"):
+    def __init__(self, id_="0", py="NA", desc="Unknown exertion occurred!", warning_=False):
         super().__init__()
 
         self.WIDTH = None
@@ -107,8 +108,10 @@ class TardisError(Exception):
         desc_3, desc_4, desc_5, desc_6, desc_7, desc_8, desc_9, desc_10 = self.cut_desc(
             desc
         )
+        code = "ERROR" if not warning_ else "WARNING"
+
         self.tardis_error_rise(
-            title=f"TARDIS ERROR CODE {id_} {id_desc} \n",
+            title=f"TARDIS {code} CODE {id_} {id_desc} \n",
             text_1="Error accounted in:",
             text_2=f"{prev_frame.f_code.co_name}: {py}",
             text_3=desc_3,
@@ -120,6 +123,8 @@ class TardisError(Exception):
             text_9=desc_9,
             text_10=desc_10,
         )
+        if not warning_:
+            sys.exit()
 
     def cut_desc(self, desc: str) -> Tuple[str, str, str, str, str, str, str, str]:
         """
