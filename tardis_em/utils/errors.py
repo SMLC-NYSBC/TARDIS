@@ -83,7 +83,9 @@ class TardisError(Exception):
         str: TARDIS Error log
     """
 
-    def __init__(self, id_="0", py="NA", desc="Unknown exertion occurred!", warning_=False):
+    def __init__(
+        self, id_="0", py="NA", desc="Unknown exertion occurred!", warning_=True
+    ):
         super().__init__()
 
         self.WIDTH = None

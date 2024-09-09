@@ -10,12 +10,32 @@
 
 import random
 import shutil
+from glob import glob
 from os import listdir, mkdir
 from os.path import isdir, join
 from shutil import copyfile, copytree, move
 from typing import Optional
 
 from tardis_em.utils.errors import TardisError
+
+
+def find_filtered_files(directory, prefix="instances_filter", format_="csv"):
+    if prefix == "":
+        extension = "*"
+    else:
+        extension = "*_"
+    if isinstance(format_, list) or isinstance(format_, tuple):
+        search_pattern = join(directory, f"{extension}{prefix}.{format_}")
+
+        filtered_files = glob(search_pattern)
+    else:
+        filtered_files = []
+        for i in format_:
+            search_pattern = join(directory, f"{extension}{prefix}.{format_}")
+
+            filtered_files += glob(search_pattern)
+
+    return filtered_files
 
 
 def move_train_dataset(

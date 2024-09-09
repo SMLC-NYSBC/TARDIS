@@ -10,14 +10,15 @@
 import os
 import warnings
 from os import getcwd, listdir
-from os.path import join
+from os.path import join, dirname
 
 import click
+import numpy as np
 
 from tardis_em.utils.predictor import GeneralPredictor
-from tardis_em.utils.errors import TardisError
 from tardis_em._version import version
 from tardis_em import format_choices
+from tardis_em.utils.dataset import find_filtered_files
 
 # from tardis_em.utils.ota_update import ota_update
 # ota = ota_update()
@@ -31,6 +32,14 @@ warnings.simplefilter("ignore", UserWarning)
     default=getcwd(),
     type=str,
     help="Directory with images for prediction with CNN model.",
+    show_default=True,
+)
+@click.option(
+    "-ms",
+    "--mask",
+    default=False,
+    type=bool,
+    help="Define if you input tomograms images or binary mask with pre segmented microtubules.",
     show_default=True,
 )
 @click.option(
@@ -203,7 +212,7 @@ def main(
     """
     MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
     """
-    analysis_files, cleanup_list = [], []
+    cleanup_list = [], []
 
     if output_format.split("_")[1] == "None":
         instances = False
@@ -229,7 +238,6 @@ def main(
 
             for j in range(image.shape[0]):
                 name_file = join(path, i[:-4]) + f"_{j}.tiff"
-                analysis_files.append(join(path, i[:-4]) + f"_{j}_instances_filter.csv")
                 cleanup_list.append(name_file)
 
                 save_tiff.imwrite(name_file, image[j, ...])
@@ -261,13 +269,26 @@ def main(
     )
 
     predictor()
-    # Analyze length, average intensity along the spline,
-    for i in analysis_files:
-        pass
 
-    # Clean-up
+    # Cleanup move tiffs to the Predictions directory
     for i in cleanup_list:
-        os.rmdir(i)
+        f_name = dirname(i)
+
+        os.rename(i, join(f_name, "Predictions", cleanup_list[0][len(f_name) + 1 :]))
+
+    # Analyze length, average intensity along the spline,
+    name_ = find_filtered_files(
+        join(dirname(path), "Predictions"), prefix="instances_filter"
+    )
+    data = []
+    for d in name_:
+        d = np.genfromtxt(d, delimiter=",")
+
+        if str(d[0, 0]) == "nan":
+            d = d[1:, :]
+        data.append(d)
+
+    analise_filaments()
 
 
 if __name__ == "__main__":

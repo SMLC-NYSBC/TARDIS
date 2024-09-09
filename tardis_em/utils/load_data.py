@@ -916,8 +916,6 @@ def load_txt_s3dis(
         np.ndarray: Labeled point cloud coordinates.
     """
     coord = pd.read_csv(txt, sep=" ", on_bad_lines="skip").to_numpy()
-    # print(coord.shape)
-    # coord = np.genfromtxt(txt, invalid_raise=False)
 
     rgb_values = coord[:, 3:]
     coord = coord[:, :3]
@@ -1006,7 +1004,8 @@ def load_image(
     px = 0.0
 
     if image.endswith((".tif", ".tiff")):
-        image, px = load_tiff(image)
+        image, _ = load_tiff(image)
+        px = 1.0
     elif image.endswith((".mrc", ".rec", ".map")):
         image, px = load_mrc_file(image)
     elif image.endswith(".am"):

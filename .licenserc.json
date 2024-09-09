@@ -3,6 +3,7 @@
   "ignore": [
     "**/__init__.py",
     "tardis_em/__init__.py",
+    "tardis_em/analysis/__init__.py",
     "tardis_em/tardis/__init__.py",
     "tardis_em/scripts/__init__.py",
     "tardis_em/tardis_helper/__init__.py",

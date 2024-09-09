@@ -35,7 +35,7 @@ from tardis_em.cnn.data_processing.trim import trim_with_stride
 from tardis_em.cnn.datasets.dataloader import PredictionDataset
 from tardis_em.cnn.cnn import build_cnn_network
 from tardis_em.cnn.data_processing.scaling import scale_image
-from tardis_em.utils.aws import get_weights_aws
+from tardis_em.utils.aws import get_weights_aws, get_all_version_aws
 from tardis_em.utils.device import get_device
 from tardis_em.utils.errors import TardisError
 from tardis_em.utils.export_data import NumpyToAmira, to_am, to_mrc, to_stl
@@ -47,15 +47,14 @@ from tardis_em.utils.normalization import (
     adaptive_threshold,
 )
 from tardis_em.utils.setup_envir import build_temp_dir, clean_up
-from tardis_em.utils.spline_metric import (
+from tardis_em.analysis.spatial_graph_utils import (
     FilterSpatialGraph,
     FilterConnectedNearSegments,
     SpatialGraphCompare,
-    sort_by_length,
     ComputeConfidenceScore,
-    length_list,
-    resample_filament,
 )
+from tardis_em.analysis.filament_utils import sort_by_length, resample_filament
+from tardis_em.analysis.geometry_metrics import length_list
 from tardis_em._version import version
 
 # try:
@@ -263,6 +262,9 @@ class GeneralPredictor:
 
     def create_headers(self):
         dir_ = self.dir if isinstance(self.dir, str) else "np.ndarray"
+        if dir_ == ".":
+            dir_ = getcwd()
+
         main_ = [
             "# ASCII Spatial Graph",
             "# TARDIS - Transformer And Rapid Dimensionless Instance Segmentation (R)",
@@ -278,9 +280,35 @@ class GeneralPredictor:
             "",
         ]
 
+        if self.model_version is None:
+            model = self.predict
+
+            if model == "Actin":
+                model = "Microtubule"
+            elif model == "Microtubule":
+                model = "microtubules_3d"
+            elif model == "Microtubule_tirf":
+                model = "microtubules_tirf"
+            elif model == "Membrane":
+                model = "membrane_3d"
+            elif model == "Membrane2D":
+                model = "membrane_2d"
+            else:
+                model = "None"
+
+            if model != "None":
+                if self.model_version is None:
+                    model_version = get_all_version_aws(
+                        self.convolution_nn, "32", model
+                    )
+                else:
+                    model_version = self.model_version
+            else:
+                model_version = "None"
+
         self.semantic_header = [
             (
-                f"CNN type: {self.convolution_nn} V{self.model_version} "
+                f"CNN type: {self.convolution_nn} V_{model_version} "
                 if self.checkpoint[0] is None
                 else f"CNN model loaded from checkpoint: {self.checkpoint[0]}"
                 f"Image patch size used for CNN: {self.patch_size}"

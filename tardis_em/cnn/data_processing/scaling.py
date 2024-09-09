@@ -74,7 +74,9 @@ def scale_image(
         return image, dim
 
 
-def nn_scaling(img: np.ndarray, scale: tuple, device=torch.device("cpu"), gauss=False) -> np.ndarray:
+def nn_scaling(
+    img: np.ndarray, scale: tuple, device=torch.device("cpu"), gauss=False
+) -> np.ndarray:
     if gauss:
         filter_ = img.shape[0] / scale[0]  # Scaling factor
         img = gaussian_filter(img, filter_ / 2)
@@ -85,7 +87,9 @@ def nn_scaling(img: np.ndarray, scale: tuple, device=torch.device("cpu"), gauss=
     return img.cpu().detach().numpy()
 
 
-def linear_scaling(img: np.ndarray, scale: tuple, device=torch.device("cpu")) -> np.ndarray:
+def linear_scaling(
+    img: np.ndarray, scale: tuple, device=torch.device("cpu")
+) -> np.ndarray:
     """
     Scaling of 2D/3D array using trilinear method from pytorch
 
@@ -198,7 +202,9 @@ def linear_scaling(img: np.ndarray, scale: tuple, device=torch.device("cpu")) ->
     return img.detach().numpy()[0, 0, :]
 
 
-def area_scaling(img: np.ndarray, scale: tuple, device=torch.device("cpu")) -> np.ndarray:
+def area_scaling(
+    img: np.ndarray, scale: tuple, device=torch.device("cpu")
+) -> np.ndarray:
     """
     Scaling of 3D array using area method from pytorch
 
@@ -243,7 +249,9 @@ def area_scaling(img: np.ndarray, scale: tuple, device=torch.device("cpu")) -> n
     return img
 
 
-def fourier_scaling(img: np.ndarray, scale: tuple, device=torch.device("cpu")) -> np.ndarray:
+def fourier_scaling(
+    img: np.ndarray, scale: tuple, device=torch.device("cpu")
+) -> np.ndarray:
     """
     Resize a 2D or 3D image using Fourier cropping.
 

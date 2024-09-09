@@ -7,72 +7,23 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2024                                            #
 #######################################################################
-from typing import Optional, Tuple, Union
+from typing import Tuple
 
 import numpy as np
-from scipy.interpolate import splev, splprep
 from scipy.spatial.distance import cdist
-from sklearn.neighbors import KDTree
 
-from tardis_em.dist_pytorch.utils.utils import pc_median_dist
+from tardis_em.analysis.filament_utils import (
+    cut_150_degree,
+    reorder_segments_id,
+    sort_segment,
+)
+from tardis_em.analysis.geometry_metrics import total_length
 from tardis_em.utils.errors import TardisError
-
-
-def resample_filament(points, spacing_size):
-    """
-    Resamples points for each filament so they have the given spacing size.
-
-    Parameters:
-    points (np.array): Array of shape [N, 4] where each column is [ID, X, Y, Z].
-    spacing_size (float): Desired spacing size between points.
-
-    Returns:
-    np.array: Resampled array with the same structure.
-    """
-    unique_ids = np.unique(points[:, 0])
-    resampled_points = []
-
-    for filament_id in unique_ids:
-        filament_points = points[points[:, 0] == filament_id][:, 1:]
-        if filament_points.shape[0] < 2:
-            resampled_points.append(points[points[:, 0] == filament_id])
-            continue
-
-        cumulative_distances = np.cumsum(
-            np.sqrt(np.sum(np.diff(filament_points, axis=0) ** 2, axis=1))
-        )
-        cumulative_distances = np.insert(cumulative_distances, 0, 0)
-
-        num_new_points = int(cumulative_distances[-1] // spacing_size)
-        new_points = [filament_points[0]]
-
-        for i in range(1, num_new_points + 1):
-            target_distance = i * spacing_size
-            idx = np.searchsorted(cumulative_distances, target_distance)
-            if idx >= len(cumulative_distances):
-                continue
-
-            if cumulative_distances[idx] == target_distance:
-                new_points.append(filament_points[idx])
-            else:
-                ratio = (target_distance - cumulative_distances[idx - 1]) / (
-                    cumulative_distances[idx] - cumulative_distances[idx - 1]
-                )
-                new_point = filament_points[idx - 1] + ratio * (
-                    filament_points[idx] - filament_points[idx - 1]
-                )
-                new_points.append(new_point)
-
-        new_points = np.array(new_points)
-        filament_ids = np.full((new_points.shape[0], 1), filament_id)
-        resampled_points.append(np.hstack((filament_ids, new_points)))
-
-    return np.vstack(resampled_points)
 
 
 class FilterConnectedNearSegments:
     """
-    Connect splines based on spline trajectory and splines end distances.
+    Connect splines based on spline trajectory and spline end distances.
     """
 
     def __init__(self, distance_th=1000, cylinder_radius=150):
@@ -432,7 +383,7 @@ class FilterConnectedNearSegments:
             del splines_list[key]
             spline_id += 1
 
-        # Add last spline to the new list
+        # Add the last spline to the new list
         try:
             key = list(splines_list.keys())[0]
             merge_splines[spline_id] = splines_list[key]
@@ -464,10 +415,10 @@ class FilterConnectedNearSegments:
 
 class FilterSpatialGraph:
     """
-    Calculate length of each spline and distance between all splines ends.
+    Calculate the length of each spline and distance between all splines ends.
 
-    This clas iterate over all splines in array [ID, X, Y, Z] by given ID.
-    Firstly if specified during initialization, class calculate distance
+    This class iterates over all splines in array [ID, X, Y, Z] by given ID.
+    Firstly, if specified during initialization, the class calculates the distance
     between all splines ends and use it to define which splines are obviously
     broken.
     Then it calculate length of all the splines (also new one) and filter out
@@ -661,344 +612,6 @@ class SpatialGraphCompare:
         return spatial_graphs, label
 
 
-def compare_splines_probability(
-    spline_1: np.ndarray, spline_2: np.ndarray, threshold=100
-):
-    """
-    Compare two splines and calculate probability of how likely given two
-    splines are the same line given array of points for same or similar splines
-    with no matching coordinates of points.
-
-    Calculates the probability of two splines being similar by comparing
-    the distance between their points and taking the mean of the matching
-    points below a threshold.
-
-    Parameters:
-        spline_1 (np.ndarray): The first spline to compare, represented
-            as an array of points.
-        spline_2 (np.ndarray): The second spline to compare, represented
-            as an array of points.
-        threshold (int): The maximum distance between points for them to be
-            considered matching.
-
-    Returns:
-        float: The probability of the splines being similar, ranging from 0.0 to 1.0.
-    """
-    if len(spline_1) == 0 or len(spline_2) == 0:
-        return 0.0
-
-    # Calculating distance matrix between points of 2 splines
-    dist_matrix = cdist(spline_1, spline_2)
-
-    # Check how many points on spline1 match spline2
-    m_s1 = [1 if x < threshold else 0 for x in np.min(dist_matrix, axis=1)]
-
-    # If no matching points probability is 0
-    if sum(m_s1) == 0:
-        return 0.0
-
-    # Calculating intersection using % of the matching point below a threshold
-    probability = sum(m_s1) / len(spline_1)
-
-    return probability
-
-
-def smooth_spline(points: np.ndarray, s=0.5):
-    """
-    Spline smoothing given an 's' smoothness factor.
-
-    Args:
-        points (np.ndarray): Point array [(ID), X, Y, Z] with optional ID and Z
-        dimension.
-        s (float): Smoothness factor.
-
-    Returns:
-        Returns: Smooth spline
-    """
-    if points.shape[1] == 4:  # [ID, X, Y, Z]
-        id_ = int(points[0, 0])
-        points = points[:, 1:]
-        norm_pc = pc_median_dist(points)
-        points = points / norm_pc
-
-        t_before = tortuosity(points)
-        try:
-            tck, u = splprep(points.T, s=s)
-            spline = np.stack(splev(u, tck)).T
-        except ValueError:
-            spline = points
-
-        spline = spline * norm_pc
-        t_after = tortuosity(spline)
-        ids = np.zeros((len(spline), 1))
-        ids[:, 0] = id_
-
-        # Sanity check if spline smoothing failed
-        if t_after > t_before:
-            return np.hstack((ids, points * norm_pc))
-        return np.hstack((ids, spline))
-    else:  # [X, Y, Z]
-        tck, u = splprep(points.T)
-
-        return np.stack(splev(u, tck)).T
-
-
-def sort_segment(coord: np.ndarray) -> np.ndarray:
-    """
-    Sorting of the point cloud based on number of connections followed by
-    searching of the closest point with cdist.
-
-    Args:
-        coord (np.ndarray): Coordinates for each unsorted point idx.
-
-    Returns:
-        np.ndarray: Array of point in line order.
-    """
-    if len(coord) < 2:
-        return coord
-
-    new_c = []
-    for i in range(len(coord) - 1):
-        if i == 0:
-            id = np.where(
-                [sum(i) for i in cdist(coord, coord)]
-                == max([sum(i) for i in cdist(coord, coord)])
-            )[0]
-
-            new_c.append(coord[id[0]])
-            coord = np.delete(coord, id[0], 0)
-
-        kd = KDTree(coord)
-        points = kd.query(np.expand_dims(new_c[len(new_c) - 1], 0))[1][0][0]
-
-        new_c.append(coord[points])
-        coord = np.delete(coord, points, 0)
-
-    if len(new_c) > 0:
-        return np.stack(new_c)
-    else:
-        return coord
-
-
-def reorder_segments_id(
-    coord: np.ndarray,
-    order_range: Optional[list] = None,
-    order_list: Optional[Union[list, np.ndarray]] = None,
-) -> np.ndarray:
-    """
-    Reorder list of segments to remove missing IDs
-
-    E.g. Change IDs from [1, 2, 3, 5, 6, 8] to [1, 2, 3, 4, 5, 6]
-
-    Args:
-        coord: Array of points in 3D or 3D with their segment ID
-        order_range: Costume id range for reordering
-        order_list: List of reorder IDs to match to coord.
-
-    Returns:
-        np.ndarray: Array of points with reordered IDs values
-    """
-    df = np.unique(coord[:, 0])
-
-    if order_range is None:
-        df_range = np.asarray(range(0, len(df)), dtype=df.dtype)
-    else:
-        df_range = np.asarray(range(order_range[0], order_range[1]), dtype=df.dtype)
-
-    if order_list is None:
-        for id, i in enumerate(coord[:, 0]):
-            coord[id, 0] = df_range[np.where(df == i)[0][0]]
-    else:
-        ordered_coord = []
-        for i, new_id in zip(df, order_list):
-            line = coord[np.where(coord[:, 0] == i)[0], :]
-            line[:, 0] = new_id
-            ordered_coord.append(line)
-        coord = np.concatenate(ordered_coord)
-        coord = reorder_segments_id(coord)
-
-    return coord
-
-
-def tortuosity(coord: np.ndarray) -> float:
-    """
-    Calculate spline tortuosity.
-
-    Args:
-        coord (np.ndarray): Coordinates for each unsorted point idx.
-
-    Returns:
-        float: Spline curvature measured with tortuosity.
-    """
-    if len(coord) <= 1:
-        return 1.0
-
-    length = total_length(coord) + 1e-16
-    end_length = np.sqrt(np.sum((coord[0] - coord[-1]) ** 2) + 1e-16)
-
-    return length / end_length
-
-
-def total_length(coord: np.ndarray) -> float:
-    """
-    Calculate total length of the spline.
-
-    Args:
-        coord (np.ndarray): Coordinates for each unsorted point idx.
-
-    Returns:
-        float: Spline length.
-    """
-    length = 0
-    c_len = len(coord) - 1
-
-    for id, _ in enumerate(coord):
-        if id == c_len:
-            break
-
-        # sqrt((x2 - x1)2 + (y2 - y1)2 + (z2 - z1)2)
-        length += np.sqrt(np.sum((coord[id] - coord[id + 1]) ** 2))
-
-    return length
-
-
-def length_list(coord: np.ndarray) -> list:
-    """
-    Calculate total length of all splines and return it as a list.
-
-    Args:
-        coord (np.ndarray): Coordinates for each unsorted point idx.
-
-    Returns:
-        list: Spline length list.
-    """
-    spline_length_list = []
-
-    for i in np.unique(coord[:, 0]):
-        points = coord[np.where(coord[:, 0] == i)[0], 1:]
-        spline_length_list.append(total_length(points))
-
-    return spline_length_list
-
-
-def angle_between_vectors(v1, v2):
-    """
-    Calculate the angle in degrees between two vectors.
-
-    This function uses the dot product and the magnitudes of the vectors
-    to calculate the angle between them according to the formula:
-
-        cos(theta) = (A . B) / (||A|| ||B||)
-
-    Args:
-        v1(np.ndarray): First input vector.
-        v2(np.ndarray): Second input vector.
-
-    Returns:
-        float The angle in degrees between vector 'v1' and 'v2'.
-    """
-    # Calculate the dot product of vectors v1 and v2
-    dot_product = np.dot(v1, v2)
-
-    # Calculate the magnitude (norm) of vectors
-    magnitude_v1 = np.linalg.norm(v1) + 1e-16
-    magnitude_v2 = np.linalg.norm(v2) + 1e-16
-
-    # Calculate angle
-    cos_theta = dot_product / (magnitude_v1 * magnitude_v2)
-    angle = np.arccos(np.clip(cos_theta, -1.0, 1.0))
-
-    return np.degrees(angle)
-
-
-def cut_150_degree(segments_array: np.ndarray):
-    """
-    Cut segments based on angles between adjacent vectors.
-
-    Given an array of line segments, this function calculates angles between
-    adjacent vectors in each line. If the angle is less than or equal to 150
-    degrees, the segment is cut into two new segments.
-
-    Args:
-    segments_array(np. ndarray): Array of line segments where the first column
-    indicates the segment id and the remaining columns represent
-    the coordinates of points.
-
-    Args:
-        segments_array:
-
-    Returns:
-        Tuple[bool, np.ndarray]: Indicates whether any segment was cut,
-            and New array of cut segments.
-    """
-
-    cut_segments = []
-    loop_ = False
-
-    # Loop through unique segment IDs
-    for i in np.unique(segments_array[:, 0]):
-        pc_ = segments_array[np.where(segments_array[:, 0] == i)[0], 1:]
-
-        angles_ = [180]
-
-        # Calculate angles for each line segment
-        for j in range(len(pc_) - 2):
-            angles_.append(
-                angle_between_vectors(
-                    np.array(pc_[j]) - np.array(pc_[j + 1]),
-                    np.array(pc_[j + 2]) - np.array(pc_[j + 1]),
-                )
-            )
-        angles_.append(180)
-
-        # Check if any angle is less than or equal to 150 degrees
-        if len([id_ for id_, k in enumerate(angles_) if k <= 150]) > 0:
-            loop_ = True
-
-            # Find the minimum angle and cut the segment
-            min_angle_idx = np.where(angles_ == np.min(angles_))[0][0]
-            cut_segments.append(pc_[: min_angle_idx + 1, :])
-            cut_segments.append(pc_[min_angle_idx + 1 :, :])
-        else:
-            cut_segments.append(pc_)
-
-    # Filter out single-point segments
-    cut_segments = [c for c in cut_segments if len(c) > 1]
-
-    # Create the output array
-    return loop_, np.vstack(
-        [
-            np.hstack((np.repeat(id_, len(c)).reshape(-1, 1), c))
-            for id_, c in enumerate(cut_segments)
-        ]
-    )
-
-
-def sort_by_length(coord):
-    """
-    Sort all splines by their length.
-
-    Args:
-        coord: Array of coordinates.
-
-    Returns:
-        np.ndarray: sorted and reorder splines.
-    """
-    length_list = []
-    for i in np.unique(coord[:, 0]):
-        length_list.append(total_length(coord[np.where(coord[:, 0] == i)[0], 1:]))
-
-    sorted_id = np.argsort(length_list)
-
-    sorted_list = [coord[np.where(coord[:, 0] == i)[0], 1:] for i in sorted_id]
-    sorted_list = [
-        np.hstack((np.repeat(i, len(sorted_list[i])).reshape(-1, 1), sorted_list[i]))
-        for i in range(len(sorted_list))
-    ]
-
-    return np.concatenate(sorted_list)
-
-
 class ComputeConfidenceScore:
     @staticmethod
     def _angle_smoothness(tangents):
@@ -1075,7 +688,7 @@ class ComputeConfidenceScore:
         if segments.shape[1] != 4:
             TardisError(
                 "145",
-                "tardis_em.utils.spline_metric.py",
+                "tardis_em.analysis.spatial_graph_utils.py",
                 f"Not segmented array. Expected shape 4 got {segments.shape[1]}",
             )
         unique_ids = np.unique(segments[:, 0])
@@ -1090,3 +703,45 @@ class ComputeConfidenceScore:
             scores.append(self.combined_smoothness(points, min_l, max_l))
 
         return scores
+
+
+def compare_splines_probability(
+    spline_1: np.ndarray, spline_2: np.ndarray, threshold=100
+):
+    """
+    Compare two splines and calculate the probability of how likely given two
+    splines are the same line given array of points for same or similar splines
+    with no matching coordinates of points.
+
+    Calculates the probability of two splines being similar by comparing
+    the distance between their points and taking the mean of the matching
+    points below a threshold.
+
+    Parameters:
+        spline_1 (np.ndarray): The first spline to compare, represented
+            as an array of points.
+        spline_2 (np.ndarray): The second spline to compare, represented
+            as an array of points.
+        threshold (int): The maximum distance between points for them to be
+            considered matching.
+
+    Returns:
+        float: The probability of the splines being similar, ranging from 0.0 to 1.0.
+    """
+    if len(spline_1) == 0 or len(spline_2) == 0:
+        return 0.0
+
+    # Calculating distance matrix between points of 2 splines
+    dist_matrix = cdist(spline_1, spline_2)
+
+    # Check how many points on spline1 match spline2
+    m_s1 = [1 if x < threshold else 0 for x in np.min(dist_matrix, axis=1)]
+
+    # If no matching points probability is 0
+    if sum(m_s1) == 0:
+        return 0.0
+
+    # Calculating intersection using % of the matching point below a threshold
+    probability = sum(m_s1) / len(spline_1)
+
+    return probability

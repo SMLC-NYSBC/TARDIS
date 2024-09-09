@@ -14,7 +14,6 @@ import numpy as np
 import pytest
 import torch
 
-from tardis_em.utils.aws import get_weights_aws
 from tardis_em.utils.device import get_device
 from tardis_em.utils.errors import TardisError
 from tardis_em.utils.export_data import NumpyToAmira
@@ -25,15 +24,12 @@ from tardis_em.utils.load_data import (
     load_mrc_file,
 )
 from tardis_em.utils.logo import TardisLogo
-from tardis_em.utils.spline_metric import (
-    compare_splines_probability,
-    FilterConnectedNearSegments,
-    sort_segment,
+from tardis_em.analysis.filament_utils import sort_segment, cut_150_degree
+from tardis_em.analysis.spatial_graph_utils import compare_splines_probability
+from tardis_em.analysis.geometry_metrics import (
+    angle_between_vectors,
     tortuosity,
     total_length,
-    angle_between_vectors,
-    cut_150_degree,
-    sort_by_length,
 )
 from tardis_em.utils.utils import EarlyStopping
 
@@ -256,7 +252,7 @@ def test_compare_splines_probability():
     assert compare_splines_probability(spline_tardis, spline_amira, threshold) == 0.0
 
 
-# TEST spline_metric.py
+# TEST spatial_graph_utils.py
 def test_sort_segment():
     # Define an example point cloud with unsorted points
     unsorted_points = np.array([[1, 2, 3], [4, 5, 6], [2, 3, 4], [3, 4, 5]])

@@ -383,7 +383,6 @@ def main(
             "prediction": False,
         }
 
-    print(model_dict)
     """Run Training loop"""
     train_cnn(
         train_dataloader=train_DL,

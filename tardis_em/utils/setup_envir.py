@@ -37,10 +37,13 @@ def build_new_dir(dir_: str):
     if not isdir(output):
         mkdir(output)
     else:
-        print(
+        TardisError(
+            "12",
+            "tardis_em/utils/setup_envir.py",
             "Output directory already exist! Files moved to new output_old "
-            "directory."
+            "directory.",
         )
+
         rename(output, join(dir_, "output_old"))
         mkdir(output)
 

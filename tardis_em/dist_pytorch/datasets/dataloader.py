@@ -31,7 +31,7 @@ from tardis_em.dist_pytorch.utils.utils import (
 )
 from tardis_em.dist_pytorch.utils.utils import pc_median_dist
 from tardis_em.dist_pytorch.utils.build_point_cloud import create_simulated_dataset
-from tardis_em.utils.spline_metric import sort_segment
+from tardis_em.analysis.filament_utils import sort_segment
 
 
 class BasicDataset(Dataset):
