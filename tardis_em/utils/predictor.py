@@ -301,6 +301,7 @@ class GeneralPredictor:
                     model_version = get_all_version_aws(
                         self.convolution_nn, "32", model
                     )
+                    model_version = model_version[-1]
                 else:
                     model_version = self.model_version
             else:
@@ -320,7 +321,7 @@ class GeneralPredictor:
         self.instance_header = [
             (
                 "DIST 2D model"
-                if self.predict in ["Actin", "Microtubule", "Membrane2D"]
+                if self.predict in ["Actin", "Microtubule", "Membrane2D", "Microtubule_tirf"]
                 else "DIST 3D model"
             ),
             (
@@ -805,7 +806,7 @@ class GeneralPredictor:
                 text_2=f"Device: {self.device}",
                 text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {id_name}",
                 text_4=f"Org. Pixel size: {self.px} A | Norm. Pixel size: {self.normalize_px}",
-                text_5=f"Point Cloud: {self.pc_ld[-1].shape[0]}; NaN Segments",
+                text_5=f"Point Cloud: {self.pc_ld.shape[0]}; NaN Segments",
                 text_7=f"Current Task: {self.predict} segmentation...",
             )
 
@@ -1445,6 +1446,8 @@ class GeneralPredictor:
             # DIST prediction
             self.graphs = self.predict_DIST(id_=id_, id_name=i)
             self._debug(id_name=i, debug_id="graph")
+            # Save debugging check point
+            self._debug(id_name=i, debug_id="segment")
 
             # DIST Instance graph-cut
             self.postprocess_DIST(id_, i)
@@ -1454,9 +1457,6 @@ class GeneralPredictor:
                     instance_output.append(np.zeros((0, 4)))
                     instance_filter_output.append(np.zeros((0, 4)))
                 continue
-
-            # Save debugging check point
-            self._debug(id_name=i, debug_id="segment")
 
             self.log_tardis(id_, i, log_id=7)
 
@@ -1519,7 +1519,7 @@ class Predictor:
             assert checkpoint is not None and network is not None, msg
 
         if checkpoint is None:
-            print(f"Searching for weight file for {network}_{subtype}...")
+            print(f"Searching for weight file for {network}_{subtype} for {model_type}...")
 
             weights = torch.load(
                 get_weights_aws(network, subtype, model_type, model_version),

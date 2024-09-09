@@ -19,7 +19,6 @@ id_dict = {
     "0": "NO_ERROR",  # All good
     "01": "FEATURE_NOT_SUPPORTED_ASK_DEVELOPER",
     "1": "UNKNOWN_DATA_COMPATIBILITY_ERROR",  # Data compatibility
-    "2": "MISSING_LIBRARY",
     "10": "DATA_COMPATIBILITY_BUILDING_DATASET",
     "100": "DATA_COMPATIBILITY | NO_DATA_FOUND",
     "101": "MISSING_IMAGES_OR_MASK_FILES",
@@ -52,6 +51,7 @@ id_dict = {
     "151": "INCORRECT_PARAMETER_IN_MAIN",  # Main entry's
     "161": "MISSING_ARGUMENT",  # DIST model
     "19": "AWS_INCORRECT_VALUE",  # AWS
+    "2": "MISSING_LIBRARY",
     "20": "PYTEST_ERROR",
 }
 
@@ -78,6 +78,8 @@ class TardisError(Exception):
         id_ (str): Standardized error code. See more in documentation
         py (str): .py file location
         desc (str): Error description to pass to the shell
+        warning_ (bool): If True return error and terminate all processes, eles
+            show warning only.
 
     Returns:
         str: TARDIS Error log

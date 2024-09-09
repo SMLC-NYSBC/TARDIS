@@ -24,7 +24,8 @@ def find_filtered_files(directory, prefix="instances_filter", format_="csv"):
         extension = "*"
     else:
         extension = "*_"
-    if isinstance(format_, list) or isinstance(format_, tuple):
+
+    if not isinstance(format_, list) or not isinstance(format_, tuple):
         search_pattern = join(directory, f"{extension}{prefix}.{format_}")
 
         filtered_files = glob(search_pattern)

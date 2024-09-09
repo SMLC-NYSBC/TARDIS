@@ -10,11 +10,13 @@
 import os
 import warnings
 from os import getcwd, listdir
-from os.path import join, dirname
+from os.path import join, dirname, basename, splitext
 
 import click
 import numpy as np
+import tifffile.tifffile as tiff
 
+from tardis_em.analysis.analysis import analise_filaments_list
 from tardis_em.utils.predictor import GeneralPredictor
 from tardis_em._version import version
 from tardis_em import format_choices
@@ -212,7 +214,7 @@ def main(
     """
     MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
     """
-    cleanup_list = [], []
+    cleanup_list = []
 
     if output_format.split("_")[1] == "None":
         instances = False
@@ -271,10 +273,12 @@ def main(
     predictor()
 
     # Cleanup move tiffs to the Predictions directory
+    images = []
     for i in cleanup_list:
         f_name = dirname(i)
+        images.append(tiff.imread(i))
 
-        os.rename(i, join(f_name, "Predictions", cleanup_list[0][len(f_name) + 1 :]))
+        os.rename(i, join(f_name, "Predictions", splitext(basename(i))[0]) + ".tif")
 
     # Analyze length, average intensity along the spline,
     name_ = find_filtered_files(
@@ -288,7 +292,13 @@ def main(
             d = d[1:, :]
         data.append(d)
 
-    analise_filaments()
+    analise_filaments_list(
+        data=data,
+        names_=name_,
+        path=join(path, "Predictions"),
+        images=images,
+        px_=None,
+    )
 
 
 if __name__ == "__main__":
