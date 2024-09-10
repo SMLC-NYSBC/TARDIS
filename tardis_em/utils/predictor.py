@@ -764,8 +764,7 @@ class GeneralPredictor:
                     image=self.image, down_sampling=5, as_2d=True
                 )
 
-            if not self.output_format.startswith("return"):
-                self.image = None
+            self.image = None
             self._debug(id_name=id_name, debug_id="pc")
         else:
             self.pc_hd = resample_filament(self.pc_hd, self.px)
@@ -854,6 +853,25 @@ class GeneralPredictor:
             self.segments = sort_by_length(self.segments)
         except:
             self.segments = None
+
+        # Tardis progress bar update
+        if self.tardis_logo:
+            no_segments = ""
+            if self.segments is None:
+                no_segments = f"Point Cloud: {self.pc_ld.shape[0]}; None Segments"
+            else:
+                no_ = np.max(np.unique(self.segments[:, 0])).item(0)
+                no_segments = f"Point Cloud: {self.pc_ld.shape[0]}; {no_} Segments"
+
+            self.tardis_progress(
+                title=self.title,
+                text_1=f"Found {len(self.predict_list)} images to predict!",
+                text_2=f"Device: {self.device}",
+                text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
+                text_4=f"Org. Pixel size: {self.px} A | Norm. Pixel size: {self.normalize_px}",
+                text_5=no_segments,
+                text_7=f"Current Task: {self.predict} segmented...",
+            )
 
     def get_file_list(self):
         # Pickup files for the prediction
@@ -1453,15 +1471,26 @@ class GeneralPredictor:
             self.postprocess_DIST(id_, i)
 
             if self.segments is None:
-                if self.output_format.endswith("return"):
-                    instance_output.append(np.zeros((0, 4)))
-                    instance_filter_output.append(np.zeros((0, 4)))
                 continue
 
             self.log_tardis(id_, i, log_id=7)
 
             """Save as .am"""
             self.save_instance_PC(i)
+
+            if self.segments is None:
+                if self.output_format.endswith("return"):
+                    instance_output.append(np.zeros((0, 4)))
+                    instance_filter_output.append(np.zeros((0, 4)))
+            else:
+                instance_output.append(self.segments)
+                if self.predict in [
+                    "Actin",
+                    "Microtubule",
+                    "General_filament",
+                    "Microtubule_tirf",
+                ]:
+                    instance_filter_output.append(self.segments_filter)
 
             """Clean-up temp dir"""
             clean_up(dir_=self.dir)

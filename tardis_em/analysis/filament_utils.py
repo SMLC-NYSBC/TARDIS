@@ -70,6 +70,22 @@ def resample_filament(points, spacing_size):
     return np.vstack(resampled_points)
 
 
+def sort_segments(coord: np.ndarray) -> np.ndarray:
+    df = np.unique(coord[:, 0])
+
+    new_coord = []
+    for i in df:
+        c = coord[np.isin(coord[:, 0], [i]), 1:]
+        c = sort_segment(c)
+
+        id_ = np.repeat(i, len(c))
+        c = np.array((id_, c[:, 0], c[:, 1], c[:, 2])).T
+
+        new_coord.append(c)
+
+    return np.concatenate(new_coord)
+
+
 def sort_segment(coord: np.ndarray) -> np.ndarray:
     """
     Sorting of the point cloud based on number of connections followed by
