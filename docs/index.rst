@@ -16,6 +16,7 @@
    -  3D Actin Prediction <usage/3d_actin>
    -  3D Microtubules Prediction <usage/3d_mt>
    -  2D Microtubules Prediction <usage/2d_mt>
+   -  TIRF Microtubules Prediction <usage/tirf_mt>
 
    -  3D Membrane Prediction <usage/3d_membrane>
    -  2D Membrane Prediction <usage/2d_membrane>

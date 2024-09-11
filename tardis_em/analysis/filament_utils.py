@@ -14,7 +14,11 @@ from scipy.interpolate import splev, splprep
 from scipy.spatial.distance import cdist
 from sklearn.neighbors import KDTree
 
-from tardis_em.analysis.geometry_metrics import angle_between_vectors, total_length, tortuosity
+from tardis_em.analysis.geometry_metrics import (
+    angle_between_vectors,
+    total_length,
+    tortuosity,
+)
 from tardis_em.dist_pytorch.utils.utils import pc_median_dist
 
 

@@ -132,7 +132,7 @@ class TardisError(Exception):
 
     def cut_desc(self, desc: str) -> Tuple[str, str, str, str, str, str, str, str]:
         """
-        Cut string of text if too long to fit shell window.
+        Cut a string of text if too long to fit a shell window.
 
         Args:
             desc (str): Description text.
@@ -171,7 +171,7 @@ class TardisError(Exception):
     @staticmethod
     def _truncate_str(desc: str, width: int) -> Union[str, Any]:
         """
-        Truncate string text up to 8th strings of max width fitted to shell window.
+        Truncate string text up to 8th strings of max width fitted to the shell window.
         Args:
             desc (str): Description string.
             width (int): Shell width.

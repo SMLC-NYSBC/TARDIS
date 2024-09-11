@@ -26,10 +26,6 @@ from tardis_em.utils.logo import TardisLogo
 from tardis_em.utils.setup_envir import check_dir
 from tardis_em._version import version
 
-# from tardis_em.utils.ota_update import ota_update
-
-# ota = ota_update()
-
 
 @click.command()
 @click.option(

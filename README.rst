@@ -65,16 +65,9 @@ What's new?
 
 `Full History <https://smlc-nysbc.github.io/TARDIS/HISTORY.html>`__
 
-TARDIS-em v0.2.8 (2024-07-21):
-    * Fixed numpy v2.0.0 support
-    * Added general predictor for filament and object-type structures
-    * Added support for model versioning
-    * Users are now allowed to use starting from v0.2.8 new and old model version
-    * Added prediction metadata to all save files, including the prediction log file
-    * Fixes from v0.2.6 version
-    * Change scaling types for up- and down-scaling of images before/after predictions
-    * Added adaptive threshold as an optional cnn threshold
-    * Added model for actin
+TARDIS-em v0.3.0 (2024-09-11):
+    * Added general predictor for microtubule filaments from fluorescent microscopes [TIRF]
+    * Added Napari plugin support for training, predictions and corrections of filaments instances
 
 Quick Start
 ===========
@@ -150,6 +143,29 @@ Usage:
                              [-pv int] [-px float] ...
 
 
+TIRF Microtubule prediction
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Full tutorial: `TIRF Microtubules Prediction <https://smlc-nysbc.github.io/TARDIS/usage/tirf_mt.html>`__
+
+
+Example:
+""""""""
+
+.. image:: resources/tirf_mt.png
+
+Data source: RNDr. Cyril Bařinka, Ph.D, Biocev
+
+
+Usage:
+""""""
+
+.. code-block:: bash
+
+    recommended usage: tardis_mt_tirf [-dir path/to/folder/with/input/data]
+    advance usage: tardis_mt [-dir str] [-out str] [-ps int] [-ct float] [-dt float]
+                             [-pv int] ...
+
+
 Membrane Prediction
 -------------------
 
@@ -191,3 +207,5 @@ Usage:
 
     recommended usage: tardis_mem [-dir path/to/folder/with/input/tomogram] -out mrc_csv
     advance usage: tardis_mem [-dir str] [-out str] [-ps int] ...
+
+

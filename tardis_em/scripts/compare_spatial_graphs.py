@@ -23,8 +23,6 @@ from tardis_em.utils.logo import print_progress_bar, TardisLogo
 from tardis_em.analysis.spatial_graph_utils import SpatialGraphCompare
 from tardis_em._version import version
 
-# ota = ota_update(status=True)
-
 
 @click.command()
 @click.option(

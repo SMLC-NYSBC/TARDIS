@@ -22,8 +22,6 @@ from tardis_em._version import version
 from tardis_em import format_choices
 from tardis_em.utils.dataset import find_filtered_files
 
-# from tardis_em.utils.ota_update import ota_update
-# ota = ota_update()
 warnings.simplefilter("ignore", UserWarning)
 
 
@@ -34,14 +32,6 @@ warnings.simplefilter("ignore", UserWarning)
     default=getcwd(),
     type=str,
     help="Directory with images for prediction with CNN model.",
-    show_default=True,
-)
-@click.option(
-    "-ms",
-    "--mask",
-    default=False,
-    type=bool,
-    help="Define if you input tomograms images or binary mask with pre segmented microtubules.",
     show_default=True,
 )
 @click.option(

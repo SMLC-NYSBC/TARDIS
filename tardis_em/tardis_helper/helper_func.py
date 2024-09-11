@@ -9,12 +9,10 @@
 #######################################################################
 import numpy as np
 import os
-import click
 from os.path import join
 import tardis_em.utils.load_data as Loader
 import tardis_em.utils.export_data as Exporter
 import tifffile.tifffile as tiff
-from tardis_em.utils.export_data import to_am
 
 array_formats = (".csv", ".npy")
 

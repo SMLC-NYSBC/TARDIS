@@ -21,7 +21,7 @@ from tardis_em.utils.errors import TardisError
 
 def get_benchmark_aws() -> dict:
     """
-    Retrieve best benchmarking score for a given NN type
+    Retrieve the best benchmarking score for a given NN type
 
     Returns:
         dict: Dictionary with keys[network name] and values[list of scores]
@@ -43,7 +43,7 @@ def put_benchmark_aws(data: dict, network: Optional[str] = "", model=None) -> bo
 
     Args:
         data (dict): Dictionary with network the best metrics
-        network (Optional, str): Benchmarking network name [e.g. fnet_32_microtubules_id].
+        network (Optional, str): Benchmarking network name [e.g., fnet_32_microtubules_id].
         model (Optional, str): Optional dictionary to model.
 
     Returns:
@@ -234,13 +234,13 @@ def aws_check_with_temp(model_name: list) -> bool:
     """
     Module to check aws up-to data status.
 
-    Quick check if local file is exist is up-to data with aws server.
+    Quick check if the local file exists and is up-to data with aws server.
 
     Args:
         model_name (list): Name of the NN model.
 
     Returns:
-        bool: If True, local file is up-to-date.
+        bool: If True, the local file is up to date.
     """
     """Check if temp dir exist"""
     if not isdir(join(expanduser("~"), ".tardis_em")):
@@ -332,10 +332,10 @@ def aws_check_pkg_with_temp() -> bool:
     """
     Module to check aws up-to data status for OTA-Update.
 
-    Quick check if local pkg file exists and is up-to data with aws server.
+    Quick check if the local pkg file exists and is up-to data with aws server.
 
     Returns:
-        bool: If True, local file is up-to-date.
+        bool: If True, the local file is up to date.
     """
     """Check if temp dir exist"""
     if not isdir(join(expanduser("~"), ".tardis_em")):

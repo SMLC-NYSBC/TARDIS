@@ -24,7 +24,7 @@ from tardis_em._version import version
 
 
 def analise_filaments(
-        data: Union[np.ndarray, List, Tuple], image: Union[np.ndarray, List, Tuple] = None
+    data: Union[np.ndarray, List, Tuple], image: Union[np.ndarray, List, Tuple] = None
 ) -> tuple:
     """
 
@@ -72,15 +72,15 @@ def analise_filaments(
             avg_intensity,
             avg_length_intensity,
             sum_intensity,
-            sum_length_intensity)
+            sum_length_intensity,
+        )
     else:
         return length, curvature, tortuosity, None, None, None, None
 
 
-def save_analysis(names: Union[List, Tuple],
-                  analysis: Union[List, Tuple],
-                  px_=None,
-                  save: str = None):
+def save_analysis(
+    names: Union[List, Tuple], analysis: Union[List, Tuple], px_=None, save: str = None
+):
 
     length, curvature, tortuosity = analysis[0], analysis[1], analysis[2]
     avg_intensity, avg_length_intensity = analysis[3], analysis[4]
@@ -140,11 +140,11 @@ def save_analysis(names: Union[List, Tuple],
 
 
 def analise_filaments_list(
-        data: Union[List, Tuple],
-        names_: Union[List, Tuple],
-        path: str,
-        images: Union[List, Tuple] = None,
-        px_: Union[List, Tuple] = None,
+    data: Union[List, Tuple],
+    names_: Union[List, Tuple],
+    path: str,
+    images: Union[List, Tuple] = None,
+    px_: Union[List, Tuple] = None,
 ):
     """
     Arge:

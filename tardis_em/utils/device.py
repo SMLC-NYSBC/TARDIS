@@ -8,8 +8,6 @@
 #  MIT License 2021 - 2024                                            #
 #######################################################################
 
-from typing import Union
-
 import torch
 
 
@@ -48,7 +46,7 @@ def get_device(device: str = "0") -> torch.device:
 
 def device_is_str(device: str = "0") -> bool:
     """
-    Check if used device is convertible to int value
+    Check if the used device is convertible to int value
 
     Args:
         device (str, int): Device ID.

@@ -321,7 +321,8 @@ class GeneralPredictor:
         self.instance_header = [
             (
                 "DIST 2D model"
-                if self.predict in ["Actin", "Microtubule", "Membrane2D", "Microtubule_tirf"]
+                if self.predict
+                in ["Actin", "Microtubule", "Membrane2D", "Microtubule_tirf"]
                 else "DIST 3D model"
             ),
             (
@@ -1548,7 +1549,9 @@ class Predictor:
             assert checkpoint is not None and network is not None, msg
 
         if checkpoint is None:
-            print(f"Searching for weight file for {network}_{subtype} for {model_type}...")
+            print(
+                f"Searching for weight file for {network}_{subtype} for {model_type}..."
+            )
 
             weights = torch.load(
                 get_weights_aws(network, subtype, model_type, model_version),

@@ -93,9 +93,9 @@ def build_test_dataset(dataset_dir: str, dataset_no: int, stanford=False):
     """
     Standard builder for test datasets.
 
-    This module building a test dataset from training subset, by moving random
+    This module builds a test dataset from the training subset by moving random
     files from train to test directory.
-    Number of files is specified in %.
+    The number of files is specified in %.
 
     Files are saved in dir/test/imgs and dir/test/masks.
 

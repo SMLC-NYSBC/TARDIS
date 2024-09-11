@@ -5,6 +5,8 @@ build-backend = "setuptools.build_meta"
 [tool.isort]
 profile = "black"
 line_length = 100
+lines_between_types = 1
+combine_as_imports = true
 
 [tool.pytest.ini_options]
 testpaths = [

@@ -9,7 +9,6 @@
 #######################################################################
 import codecs
 import time
-from collections.abc import Iterable
 from datetime import datetime
 from io import BytesIO
 from typing import List, Optional, Union
@@ -27,7 +26,7 @@ import os
 
 class NumpyToAmira:
     """
-    Builder of Amira file from numpy array.
+    Builder of the Amira file from the numpy array.
     Support for 3D only! If 2D data, Z dim build with Z=0
     """
 
@@ -149,7 +148,7 @@ class NumpyToAmira:
         Args:
             coord (np.ndarray): 3D coordinate file.
             file_dir (str): Directory where the file should be saved.
-            label (int): If not 0, indicate number of labels.
+            label (int): If not 0, indicate the number of labels.
         """
         # Store common data for the header
         if self.as_point_cloud:
@@ -157,7 +156,7 @@ class NumpyToAmira:
             edge = 0
             point = 0
         else:
-            vertex = int(np.max(coord[:, 0]) + 1) * 2  # Number of splines ends
+            vertex = int(np.max(coord[:, 0]) + 1) * 2  # Number of spline ends
             edge = int(vertex / 2)  # Number of splines
             point = int(coord.shape[0])  # Total number of points
 
