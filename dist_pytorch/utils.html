@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DIST -&gt; Utils &mdash; TARDIS-em 0.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=e259d695"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Global -&gt; AWS Handlers" href="../utils/aws.html" />
+    <link rel="prev" title="DIST -&gt; DataLoader" href="data_loader.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TARDIS-em
+          </a>
+              <div class="version">
+                0.3.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../HISTORY.html">History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../instructions.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_actin.html">-  3D Actin Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/tirf_mt.html">-  TIRF Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_membrane.html">-  3D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/scripting.html">-  Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/fine_tune_model.html">Fine-Tune TARDIS models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html">CNN Module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../code_doc.html#dist-module">DIST Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dist.html">DIST</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html">DIST Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_loader.html">DataLoader</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Utils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.dist_pytorch.utils.build_point_cloud">Build point cloud from image</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.utils.build_point_cloud.BuildPointCloud"><code class="docutils literal notranslate"><span class="pre">BuildPointCloud</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.utils.build_point_cloud.draw_line"><code class="docutils literal notranslate"><span class="pre">draw_line()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.utils.build_point_cloud.quadratic_bezier"><code class="docutils literal notranslate"><span class="pre">quadratic_bezier()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.utils.build_point_cloud.draw_curved_line"><code class="docutils literal notranslate"><span class="pre">draw_curved_line()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.utils.build_point_cloud.draw_circle"><code class="docutils literal notranslate"><span class="pre">draw_circle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.utils.build_point_cloud.draw_sphere"><code class="docutils literal notranslate"><span class="pre">draw_sphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.utils.build_point_cloud.draw_sheet"><code class="docutils literal notranslate"><span class="pre">draw_sheet()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.utils.build_point_cloud.create_simulated_dataset"><code class="docutils literal notranslate"><span class="pre">create_simulated_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.dist_pytorch.utils.segment_point_cloud">Segment point cloud from graph</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.utils.segment_point_cloud.PropGreedyGraphCut"><code class="docutils literal notranslate"><span class="pre">PropGreedyGraphCut</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.dist_pytorch.utils.utils">General Utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.utils.utils.pc_median_dist"><code class="docutils literal notranslate"><span class="pre">pc_median_dist()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.utils.utils.point_in_bb"><code class="docutils literal notranslate"><span class="pre">point_in_bb()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.utils.utils.DownSampling"><code class="docutils literal notranslate"><span class="pre">DownSampling</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.utils.utils.VoxelDownSampling"><code class="docutils literal notranslate"><span class="pre">VoxelDownSampling</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.utils.utils.RandomDownSampling"><code class="docutils literal notranslate"><span class="pre">RandomDownSampling</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.utils.utils.check_model_dict"><code class="docutils literal notranslate"><span class="pre">check_model_dict()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#global-functions">Global Functions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../code_doc.html">CNN Module</a></li>
+      <li class="breadcrumb-item active">DIST -&gt; Utils</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/dist_pytorch/utils.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="dist-utils">
+<h1>DIST -&gt; Utils<a class="headerlink" href="#dist-utils" title="Link to this heading"></a></h1>
+<section id="module-tardis_em.dist_pytorch.utils.build_point_cloud">
+<span id="build-point-cloud-from-image"></span><h2>Build point cloud from image<a class="headerlink" href="#module-tardis_em.dist_pytorch.utils.build_point_cloud" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.utils.build_point_cloud.BuildPointCloud">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.utils.build_point_cloud.</span></span><span class="sig-name descname"><span class="pre">BuildPointCloud</span></span><a class="headerlink" href="#tardis_em.dist_pytorch.utils.build_point_cloud.BuildPointCloud" title="Link to this definition"></a></dt>
+<dd><p>MAIN MODULE FOR SEMANTIC MASK IMAGE DATA TRANSFORMATION INTO POINT CLOUD</p>
+<p>Module build point cloud from semantic mask based on skeletonization in 3D.
+Optionally, user can trigger point cloud correction with Euclidean distance
+transformation to correct for skeletonization artefact. It will not fix
+issue with heavily overlapping objects.</p>
+<dl class="simple">
+<dt>The workflows follows: optional(edt_2d -&gt; edt_thresholds -&gt; edt_binary) -&gt;</dt><dd><p>skeletonization_3d -&gt; output point cloud -&gt; (down-sampling)</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.utils.build_point_cloud.BuildPointCloud.check_data">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">check_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.utils.build_point_cloud.BuildPointCloud.check_data" title="Link to this definition"></a></dt>
+<dd><p>Check image data and correct it if needed to uint8 type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>image</strong> (<em>np.ndarray</em><em>, </em><em>str</em>) – 2D/3D image array</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Check and converted to uint8 data</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.utils.build_point_cloud.BuildPointCloud.build_point_cloud">
+<span class="sig-name descname"><span class="pre">build_point_cloud</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">down_sampling</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_2d</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.utils.build_point_cloud.BuildPointCloud.build_point_cloud" title="Link to this definition"></a></dt>
+<dd><p>Build point cloud data from semantic mask.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<em>np.ndarray</em>) – Predicted semantic mask.</p></li>
+<li><p><strong>down_sampling</strong> (<em>float</em><em>, </em><em>None</em>) – If not None, down-sample point cloud with open3d.</p></li>
+<li><p><strong>as_2d</strong> – Treat data as 2D not 3D.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Point cloud of 2D/3D
+semantic objects.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Union[Tuple[ndarray, ndarray], np.ndarray]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.utils.build_point_cloud.draw_line">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.utils.build_point_cloud.</span></span><span class="sig-name descname"><span class="pre">draw_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.utils.build_point_cloud.draw_line" title="Link to this definition"></a></dt>
+<dd><p>Draws a straight line in 3D space between two points.</p>
+<p>Args:
+p0 (tuple): (z0, y0, x0) representing the start point of the line.
+p1 (tuple): (z1, y1, x1) representing the end point of the line.
+line_id (int): An identifier for the line.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A numpy array containing points (line_id, x, y, z) along the line.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.utils.build_point_cloud.quadratic_bezier">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.utils.build_point_cloud.</span></span><span class="sig-name descname"><span class="pre">quadratic_bezier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.utils.build_point_cloud.quadratic_bezier" title="Link to this definition"></a></dt>
+<dd><p>Calculate a point on a quadratic Bézier curve.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p0</strong> (<em>np.ndarray</em>) – (z0, y0, x0) representing the start point of the Bézier curve.</p></li>
+<li><p><strong>p1</strong> (<em>np.ndarray</em>) – (z1, y1, x1) representing the control point of the Bézier curve.</p></li>
+<li><p><strong>p2</strong> (<em>np.ndarray</em>) – (z2, y2, x2) representing the end point of the Bézier curve.</p></li>
+<li><p><strong>t</strong> (<em>float</em>) – A float between 0 and 1, representing the parameter of the curve.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of integers [x, y, z], representing the calculated point on the curve.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.utils.build_point_cloud.draw_curved_line">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.utils.build_point_cloud.</span></span><span class="sig-name descname"><span class="pre">draw_curved_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.utils.build_point_cloud.draw_curved_line" title="Link to this definition"></a></dt>
+<dd><p>Draw a quadratic Bézier curve in a 3D array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p0</strong> (<em>np.ndarray</em>) – (z0, y0, x0) representing the start point of the curve.</p></li>
+<li><p><strong>p1</strong> (<em>np.ndarray</em>) – (z1, y1, x1) representing the control point of the curve.</p></li>
+<li><p><strong>p2</strong> (<em>np.ndarray</em>) – (z2, y2, x2) representing the end point of the curve.</p></li>
+<li><p><strong>line_id</strong> (<em>int</em>) – An identifier for the curve.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A numpy array containing points [line_id, z, y, x] along the curve.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.utils.build_point_cloud.draw_circle">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.utils.build_point_cloud.</span></span><span class="sig-name descname"><span class="pre">draw_circle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">circle_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_3d</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.utils.build_point_cloud.draw_circle" title="Link to this definition"></a></dt>
+<dd><p>Draw a circle in a 3D space.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>center</strong> (<em>np.ndarray</em>) – (z0, y0, x0) representing the center of the circle.</p></li>
+<li><p><strong>radius</strong> (<em>float</em>) – The radius of the circle.</p></li>
+<li><p><strong>circle_id</strong> (<em>int</em>) – An identifier for the circle.</p></li>
+<li><p><strong>_3d</strong> (<em>bool</em>) – True if 3D object.</p></li>
+<li><p><strong>size</strong> – Size of drawn mask</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A numpy array containing points [circle_id, z, y, x] on the circle.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.utils.build_point_cloud.draw_sphere">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.utils.build_point_cloud.</span></span><span class="sig-name descname"><span class="pre">draw_sphere</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">center</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sheet_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.utils.build_point_cloud.draw_sphere" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.utils.build_point_cloud.draw_sheet">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.utils.build_point_cloud.</span></span><span class="sig-name descname"><span class="pre">draw_sheet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sheet_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.utils.build_point_cloud.draw_sheet" title="Link to this definition"></a></dt>
+<dd><p>Generate n points on a 3D sheet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>center</strong> (<em>np.ndarray</em>) – (z0, y0, x0) representing the center of the circle.</p></li>
+<li><p><strong>size</strong> (<em>tuple</em>) – Max size to fit sheet.</p></li>
+<li><p><strong>sheet_id</strong> (<em>int</em>) – Sheet unique id.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A numpy array containing points [x, y, z] on the sheet.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.utils.build_point_cloud.create_simulated_dataset">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.utils.build_point_cloud.</span></span><span class="sig-name descname"><span class="pre">create_simulated_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.utils.build_point_cloud.create_simulated_dataset" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-tardis_em.dist_pytorch.utils.segment_point_cloud">
+<span id="segment-point-cloud-from-graph"></span><h2>Segment point cloud from graph<a class="headerlink" href="#module-tardis_em.dist_pytorch.utils.segment_point_cloud" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.utils.segment_point_cloud.PropGreedyGraphCut">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.utils.segment_point_cloud.</span></span><span class="sig-name descname"><span class="pre">PropGreedyGraphCut</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold=&lt;class</span> <span class="pre">'float'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connection=2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smooth=False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.utils.segment_point_cloud.PropGreedyGraphCut" title="Link to this definition"></a></dt>
+<dd><p>PROBABILITY DRIVEN GREEDY GRAPH CUT</p>
+<p>Perform graph cut on predicted point cloud graph representation using in-coming
+and out-coming edges probability.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold</strong> (<em>float</em>) – Edge connection threshold.</p></li>
+<li><p><strong>connection</strong> (<em>int</em>) – Max allowed number of connections per node.</p></li>
+<li><p><strong>smooth</strong> (<em>bool</em>) – If True, smooth splines.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.utils.segment_point_cloud.PropGreedyGraphCut.preprocess_connections">
+<span class="sig-name descname"><span class="pre">preprocess_connections</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adj_matrix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.utils.segment_point_cloud.PropGreedyGraphCut.preprocess_connections" title="Link to this definition"></a></dt>
+<dd><p>Preprocess the adjacency matrix to first ensure mutual connections and then
+limit each node to its top 8 connections based on connection probability.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.utils.segment_point_cloud.PropGreedyGraphCut.patch_to_segment">
+<span class="sig-name descname"><span class="pre">patch_to_segment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prune</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">visualize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.utils.segment_point_cloud.PropGreedyGraphCut.patch_to_segment" title="Link to this definition"></a></dt>
+<dd><p>Point cloud instance segmentation from graph representation</p>
+<p>From each point cloud (patch) first build adjacency matrix.
+Matrix is then used to iteratively search for new segments.
+For each initial node algorithm search for 2 edges with the highest prop.
+with given threshold. For each found edges, algorithm check if found
+node creates an edge with previous node within 2 highest probability.
+If not alg. search for new edge that fulfill the statement.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<em>list</em>) – Graph patch output from Dist.</p></li>
+<li><p><strong>coord</strong> (<em>np.ndarray</em>) – Coordinates for each unsorted point idx.</p></li>
+<li><p><strong>idx</strong> (<em>list</em>) – idx of point included in the segment.</p></li>
+<li><p><strong>prune</strong> (<em>int</em>) – Remove splines composed of number of node given by prune.</p></li>
+<li><p><strong>sort</strong> (<em>bool</em>) – If True sort output.</p></li>
+<li><p><strong>visualize</strong> (<em>str</em><em>, </em><em>None</em>) – If not None, visualize output with open3D.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-tardis_em.dist_pytorch.utils.utils">
+<span id="general-utils"></span><h2>General Utils<a class="headerlink" href="#module-tardis_em.dist_pytorch.utils.utils" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.utils.utils.pc_median_dist">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.utils.utils.</span></span><span class="sig-name descname"><span class="pre">pc_median_dist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">avg_over</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">box_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.15</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.utils.utils.pc_median_dist" title="Link to this definition"></a></dt>
+<dd><p>Calculate the median distance between KNN points in the point cloud.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pc</strong> (<em>np.ndarray</em>) – 2D/3D array of the point clouds.</p></li>
+<li><p><strong>avg_over</strong> (<em>bool</em>) – If True, calculate the median position of all points
+and calculate average k-NN for a selected set of points in that area
+(speed up for big point clouds).</p></li>
+<li><p><strong>box_size</strong> (<em>float</em>) – Boundary box size for ‘avg_over’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Median distance between points in given point cloud.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.utils.utils.point_in_bb">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.utils.utils.</span></span><span class="sig-name descname"><span class="pre">point_in_bb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_z</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float32</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_z</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float32</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.utils.utils.point_in_bb" title="Link to this definition"></a></dt>
+<dd><p>Compute a bounding_box filter on the given points</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> (<em>np.ndarray</em>) – (n,3) array.</p></li>
+<li><p><strong>min_i</strong> (<em>int</em>) – The bounding box limits for each coordinate.
+If some limits are missing, the default values are - infinite for
+the min_i and infinite for the max_i.</p></li>
+<li><p><strong>max_i</strong> (<em>int</em>) – The bounding box limits for each coordinate.
+If some limits are missing, the default values are - infinite for
+the min_i and infinite for the max_i.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>The boolean mask indicates wherever a point should be</dt><dd><p>kept or not.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[bool]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.utils.utils.DownSampling">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.utils.utils.</span></span><span class="sig-name descname"><span class="pre">DownSampling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">voxel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">KNN</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.utils.utils.DownSampling" title="Link to this definition"></a></dt>
+<dd><p>Base down sampling wrapper</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.utils.utils.DownSampling.pc_down_sample">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pc_down_sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rgb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.utils.utils.DownSampling.pc_down_sample" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.utils.utils.VoxelDownSampling">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.utils.utils.</span></span><span class="sig-name descname"><span class="pre">VoxelDownSampling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.utils.utils.VoxelDownSampling" title="Link to this definition"></a></dt>
+<dd><p>Wrapper for down sampling of the point cloud using voxel grid (Based on Open3d library)</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.utils.utils.VoxelDownSampling.pc_down_sample">
+<span class="sig-name descname"><span class="pre">pc_down_sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rgb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.utils.utils.VoxelDownSampling.pc_down_sample" title="Link to this definition"></a></dt>
+<dd><p>This function takes a set of 3D points and a voxel size and returns the centroids
+of the voxels in which the points are located.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coord</strong> (<em>np.ndarray</em>) – A numpy array of shape (N, 3) containing the 3D coordinates</p></li>
+<li><p><strong>points.</strong> (<em>of the input</em>)</p></li>
+<li><p><strong>rgb</strong> (<em>np.ndarray</em>) – A numpy array of shape (N, 3) containing RGB values of each point.</p></li>
+<li><p><strong>sampling</strong> (<em>float</em>) – The size of each voxel in each dimension.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A numpy array of shape (M, 3) containing the centroids
+of the voxels in which the points are located where M is the number
+of unique voxels.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>voxel_centers (np.ndarray)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.utils.utils.RandomDownSampling">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.utils.utils.</span></span><span class="sig-name descname"><span class="pre">RandomDownSampling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.utils.utils.RandomDownSampling" title="Link to this definition"></a></dt>
+<dd><p>Wrapper for random sampling of the point cloud</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.utils.utils.RandomDownSampling.pc_down_sample">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pc_down_sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rgb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.utils.utils.RandomDownSampling.pc_down_sample" title="Link to this definition"></a></dt>
+<dd><p>Random picked point to down sample point cloud.
+Return correctly preserve ID class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coord</strong> – Array of point to downs-sample</p></li>
+<li><p><strong>rgb</strong> – Extra node feature like e.g. RGB values do sample with coord.</p></li>
+<li><p><strong>sampling</strong> – Lambda function to calculate down-sampling rate or fixed float ratio.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Down-sample array of points.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>random_sample (np.ndarray)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.utils.utils.check_model_dict">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.utils.utils.</span></span><span class="sig-name descname"><span class="pre">check_model_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.utils.utils.check_model_dict" title="Link to this definition"></a></dt>
+<dd><p>Check and rebuild model structure dictionary to ensure back-compatibility.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model_dict</strong> (<em>dict</em>) – Model structure dictionary.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Standardize model structure dictionary.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="data_loader.html" class="btn btn-neutral float-left" title="DIST -&gt; DataLoader" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../utils/aws.html" class="btn btn-neutral float-right" title="Global -&gt; AWS Handlers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2024, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
