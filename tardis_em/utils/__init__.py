@@ -1,3 +1,6 @@
+import struct
+from collections import namedtuple
+
 SCANNET_COLOR_MAP_20 = {
     0: (0.0, 0.0, 0.0),
     1: (174.0, 199.0, 232.0),
@@ -39,3 +42,104 @@ SCANNET_COLOR_MAP_20 = {
     39: (82.0, 84.0, 163.0),
     40: (100.0, 85.0, 144.0),
 }
+
+# int nx
+# int ny
+# int nz
+fstr = "3i"
+names = "nx ny nz"
+
+# int mode
+fstr += "i"
+names += " mode"
+
+# int nxstart
+# int nystart
+# int nzstart
+fstr += "3i"
+names += " nxstart nystart nzstart"
+
+# int mx
+# int my
+# int mz
+fstr += "3i"
+names += " mx my mz"
+
+# float xlen
+# float ylen
+# float zlen
+fstr += "3f"
+names += " xlen ylen zlen"
+
+# float alpha
+# float beta
+# float gamma
+fstr += "3f"
+names += " alpha beta gamma"
+
+# int mapc
+# int mapr
+# int maps
+fstr += "3i"
+names += " mapc mapr maps"
+
+# float amin
+# float amax
+# float amean
+fstr += "3f"
+names += " amin amax amean"
+
+# int ispg
+# int next
+# short creatid
+fstr += "2ih"
+names += " ispg next creatid"
+
+# pad 30 (extra data)
+# [98:128]
+fstr += "30x"
+
+# short nint
+# short nreal
+fstr += "2h"
+names += " nint nreal"
+
+# pad 20 (extra data)
+# [132:152]
+fstr += "20x"
+
+# int imodStamp
+# int imodFlags
+fstr += "2i"
+names += " imodStamp imodFlags"
+
+# short idtype
+# short lens
+# short nd1
+# short nd2
+# short vd1
+# short vd2
+fstr += "6h"
+names += " idtype lens nd1 nd2 vd1 vd2"
+
+# float[6] tiltangles
+fstr += "6f"
+names += " tilt_ox tilt_oy tilt_oz tilt_cx tilt_cy tilt_cz"
+
+# NEW-STYLE MRC image2000 HEADER - IMOD 2.6.20 and above
+# float xorg
+# float yorg
+# float zorg
+# char[4] cmap
+# char[4] stamp
+# float rms
+fstr += "3f4s4sf"
+names += " xorg yorg zorg cmap stamp rms"
+
+# int nlabl
+# char[10][80] labels
+fstr += "i800s"
+names += " nlabl labels"
+
+header_struct = struct.Struct(fstr)
+MRCHeader = namedtuple("MRCHeader", names)

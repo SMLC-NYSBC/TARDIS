@@ -18,12 +18,16 @@ from tardis_em.analysis.geometry_metrics import (
     intensity_list,
 )
 
+from tardis_em.analysis.mt_classes import (
+    assign_filaments_to_poles,
+    pick_pole_to_surfaces,
+)
 from tardis_em.utils.errors import TardisError
 
 from tardis_em._version import version
 
 
-def analise_filaments(
+def analyse_filaments(
     data: Union[np.ndarray, List, Tuple], image: Union[np.ndarray, List, Tuple] = None
 ) -> tuple:
     """
@@ -139,7 +143,7 @@ def save_analysis(
     return analysis_file
 
 
-def analise_filaments_list(
+def analyse_filaments_list(
     data: Union[List, Tuple],
     names_: Union[List, Tuple],
     path: str,
@@ -171,4 +175,38 @@ def analise_filaments_list(
     if images is None:
         images = [None for _ in range(len(data))]
 
-    save_analysis(names_, analise_filaments(data, images), px_=px_, save=path)
+    save_analysis(names_, analyse_filaments(data, images), px_=px_, save=path)
+
+
+def analyse_mt_classes(
+    filaments: np.ndarray, poles: np.ndarray, vertices: list, triangles: list
+):
+    # Sort poles to surfaces
+    poles = pick_pole_to_surfaces(poles, vertices)
+    # Sort filaments to poles
+    filament_poles = assign_filaments_to_poles(filaments, poles)
+
+    """
+     Get plus and minus ends
+    """
+    plus_ends = []
+    minus_ends = []
+    for f in filament_poles:
+        _, first_indices = np.unique(f[:, 0], return_index=True)
+        first_points = first_indices
+
+        last_points = [i + len(f[f[:, 0] == i, :]) - 1 for i in first_points]
+
+        plus_ends.append(first_points)
+        minus_ends.append(last_points)
+
+    """
+    Return:
+        - List of filaments ID,X,Y,Z for each pole
+        - Indices of plus and minus ends per pole
+        - 
+    """
+    return (
+        filament_poles,
+        (plus_ends, minus_ends),
+    )

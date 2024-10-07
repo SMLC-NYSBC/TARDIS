@@ -8,7 +8,7 @@
 #  MIT License 2021 - 2024                                            #
 #######################################################################
 
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 try:
     import open3d as o3d
@@ -173,7 +173,9 @@ def _dataset_format(coord: np.ndarray, segmented: bool) -> Tuple[np.ndarray, boo
     return coord, check
 
 
-def _rgb(coord: np.ndarray, segmented: bool, ScanNet=False, color=False) -> np.ndarray:
+def _rgb(
+    coord: np.ndarray, segmented: bool, ScanNet=False, color=False, filaments=False
+) -> np.ndarray:
     """
     Convert float to RGB classes.
 
@@ -187,6 +189,13 @@ def _rgb(coord: np.ndarray, segmented: bool, ScanNet=False, color=False) -> np.n
     Returns:
         np.ndarray: 3D array with RGB values for each point.
     """
+    if filaments:
+        unique_ids = np.unique(coord[:, 0])
+        rgb_list = [
+            np.array((np.random.rand(), np.random.rand(), np.random.rand()))
+            for _ in unique_ids
+        ]
+        return rgb_list
     rgb = np.zeros((coord.shape[0], 3), dtype=np.float64)
 
     if segmented:
@@ -250,8 +259,38 @@ def segment_to_graph(coord: np.ndarray) -> list:
     return graph_list
 
 
+def rotate_view(vis):
+    """
+    Optional viewing parameter for open3D to constantly rotate scene.
+    Args:
+        vis: Open3D view control setting.
+    """
+    opt = vis.get_render_option()
+    opt.background_color = np.asarray([0, 0, 0])
+
+    ctr = vis.get_view_control()
+    ctr.rotate(2.0, 0.0)
+
+    return False
+
+
+def background_view(vis):
+    """
+    Optional viewing parameter for open3D to constantly rotate scene.
+    Args:
+        vis: Open3D view control setting.
+    """
+    opt = vis.get_render_option()
+    opt.background_color = np.asarray([0, 0, 0])
+    return False
+
+
 def VisualizePointCloud(
-    coord: np.ndarray, segmented: bool, rgb: Optional[np.ndarray] = None, animate=False
+    coord: np.ndarray,
+    segmented: bool,
+    rgb: Optional[np.ndarray] = None,
+    animate=False,
+    return_=False,
 ):
     """
     Visualized point cloud.
@@ -277,44 +316,19 @@ def VisualizePointCloud(
         if rgb is not None:
             if np.max(rgb) > 1:
                 rgb = rgb / 255
-            pcd.colors = o3d.utility.Vector3dVector(rgb)
+            pcd.paint_uniform_color(rgb)
         else:
             pcd.colors = o3d.utility.Vector3dVector(_rgb(coord, segmented))
 
-        if animate:
-            o3d.visualization.draw_geometries_with_animation_callback(
-                [pcd], rotate_view
-            )
-        else:
-            o3d.visualization.draw_geometries_with_animation_callback(
-                [pcd], background_view
-            )
+        if return_:
+            return pcd
+
+        VisualizeCompose(animate=animate, pcd=pcd)
 
 
-def rotate_view(vis):
-    """
-    Optional viewing parameter for open3D to constantly rotate scene.
-    Args:
-        vis: Open3D view control setting.
-    """
-    ctr = vis.get_view_control()
-    ctr.rotate(2.0, 0.0)
-
-    return False
-
-
-def background_view(vis):
-    """
-    Optional viewing parameter for open3D to constantly rotate scene.
-    Args:
-        vis: Open3D view control setting.
-    """
-    opt = vis.get_render_option()
-    opt.background_color = np.asarray([0, 0, 0])
-    return False
-
-
-def VisualizeFilaments(coord: np.ndarray, animate=True, with_node=True):
+def VisualizeFilaments(
+    coord: np.ndarray, animate=True, with_node=False, filament_color=None, return_=False
+):
     """
     Visualized filaments.
 
@@ -323,9 +337,14 @@ def VisualizeFilaments(coord: np.ndarray, animate=True, with_node=True):
     Args:
         coord (np.ndarray): 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y].
         animate (bool): Optional trigger to turn off animated rotation.
-        with_node (bool): Optional, If True show points on filament
+        with_node (bool): Optional, If True, show point on filaments
+        filament_color (None, list): Uniform filament color
+        return_ (bool): If True return open3d object
     """
     coord, check = _dataset_format(coord=coord, segmented=True)
+
+    if filament_color is None:
+        filament_color = [1, 1, 1]
 
     if check:
         if with_node:
@@ -338,27 +357,19 @@ def VisualizeFilaments(coord: np.ndarray, animate=True, with_node=True):
 
         line_set.points = o3d.utility.Vector3dVector(coord[:, 1:])
         line_set.lines = o3d.utility.Vector2iVector(graph)
-        line_set.colors = o3d.utility.Vector3dVector(_rgb(coord, True, True))
 
-        if animate:
-            if with_node:
-                o3d.visualization.draw_geometries_with_animation_callback(
-                    [pcd, line_set], rotate_view
-                )
-            else:
-                o3d.visualization.draw_geometries_with_animation_callback(
-                    [line_set], rotate_view
-                )
+        line_set.paint_uniform_color(filament_color)
+
+        if return_:
+            return line_set
+
+        if with_node:
+            VisualizeCompose(animate=animate, pcd=pcd, line_set=line_set)
         else:
-            if with_node:
-                o3d.visualization.draw_geometries_with_animation_callback(
-                    [pcd, line_set], background_view
-                )
-            else:
-                o3d.visualization.draw_geometries([line_set])
+            VisualizeCompose(animate=animate, line_set=line_set)
 
 
-def VisualizeScanNet(coord: np.ndarray, segmented: True):
+def VisualizeScanNet(coord: np.ndarray, segmented: True, return_=False):
     """
     Visualized scannet scene
 
@@ -379,4 +390,62 @@ def VisualizeScanNet(coord: np.ndarray, segmented: True):
             pcd.points = o3d.utility.Vector3dVector(coord)
         pcd.colors = o3d.utility.Vector3dVector(_rgb(coord, segmented, True))
 
-        o3d.visualization.draw_geometries([pcd])
+        if return_:
+            return pcd
+
+        VisualizeCompose(animate=False, meshes=pcd)
+
+
+def VisualizeSurface(
+    vertices: Union[tuple, list, np.ndarray],
+    triangles: Union[tuple, list, np.ndarray],
+    animate=False,
+    return_=False,
+):
+    if isinstance(vertices, np.ndarray):
+        vertices = [vertices]
+
+    if isinstance(triangles, np.ndarray):
+        triangles = [triangles]
+
+    meshes = []
+    for v, t in zip(vertices, triangles):
+        meshes.append(o3d.geometry.TriangleMesh())
+
+        meshes[-1].vertices = o3d.utility.Vector3dVector(v)
+        meshes[-1].triangles = o3d.utility.Vector3iVector(t)
+        meshes[-1].paint_uniform_color(list(np.random.random(3)))
+
+        # meshes[-1].simplify_quadric_decimation(len(v) // 100)
+        voxel_size = max(meshes[-1].get_max_bound() - meshes[-1].get_min_bound()) / 512
+        meshes[-1] = meshes[-1].simplify_vertex_clustering(
+            voxel_size=voxel_size,
+            contraction=o3d.geometry.SimplificationContraction.Average,
+        )
+
+        meshes[-1].compute_vertex_normals()
+
+    if return_:
+        return meshes
+
+    VisualizeCompose(animate, meshes=meshes)
+
+
+def VisualizeCompose(animate=False, **kwargs):
+    if all(value is None for value in kwargs.values()):
+        return
+
+    objects_ = []
+    for o in kwargs.values():
+        if isinstance(o, List):
+            for i in o:
+                objects_.append(i)
+        else:
+            objects_.append(o)
+
+    if animate:
+        o3d.visualization.draw_geometries_with_animation_callback(objects_, rotate_view)
+    else:
+        o3d.visualization.draw_geometries_with_animation_callback(
+            objects_, background_view
+        )

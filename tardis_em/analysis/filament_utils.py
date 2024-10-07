@@ -7,7 +7,7 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2024                                            #
 #######################################################################
-from typing import Optional, Tuple, Union
+from typing import Optional, Union
 
 import numpy as np
 from scipy.interpolate import splev, splprep

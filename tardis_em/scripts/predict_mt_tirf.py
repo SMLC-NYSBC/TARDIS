@@ -16,7 +16,7 @@ import click
 import numpy as np
 import tifffile.tifffile as tiff
 
-from tardis_em.analysis.analysis import analise_filaments_list
+from tardis_em.analysis.analysis import analyse_filaments_list
 from tardis_em.utils.predictor import GeneralPredictor
 from tardis_em._version import version
 from tardis_em import format_choices
@@ -282,7 +282,7 @@ def main(
             d = d[1:, :]
         data.append(d)
 
-    analise_filaments_list(
+    analyse_filaments_list(
         data=data,
         names_=name_,
         path=join(path, "Predictions"),

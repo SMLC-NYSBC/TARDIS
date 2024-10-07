@@ -214,8 +214,8 @@ class NumpyToAmira:
                 "POINT { float[3] EdgePointCoordinates } @4 \n"
             )
 
+            label_id = 5
             if not self.as_point_cloud:
-                label_id = 5
                 for i in label:
                     f.write("VERTEX { int " + f"{i}" + "} " + f"@{label_id} \n")
                     f.write("EDGE { int " + f"{i}" + "} " + f"@{label_id + 1} \n")
@@ -224,8 +224,8 @@ class NumpyToAmira:
             if score is not None:
                 for i in range(score[0]):
                     name_ = score[1][i]
-                    label_id = label_id + i
                     f.write("EDGE { float " + f"{name_}" + " } " + f"@{label_id} \n")
+                    label_id = label_id + i
 
             f.write("\n")
             f.write("# Data section follows")

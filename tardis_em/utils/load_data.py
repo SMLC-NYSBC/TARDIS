@@ -8,8 +8,7 @@
 #  MIT License 2021 - 2024                                            #
 #######################################################################
 
-import struct
-from collections import namedtuple
+import re
 from os import listdir
 from os.path import isfile, join
 from typing import Optional, Tuple, Union
@@ -17,6 +16,7 @@ from typing import Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 import tifffile.tifffile as tif
+from tardis_em.utils import MRCHeader, header_struct
 
 try:
     import nd2
@@ -55,9 +55,17 @@ class ImportDataFromAmira:
         src_img (str, optional): Amira binary or ASCII image file directory.
     """
 
-    def __init__(self, src_am: str, src_img: Optional[str] = None):
+    def __init__(
+        self, src_am: str, src_img: Optional[str] = None, src_surf: Optional[str] = None
+    ):
         self.src_img = src_img
         self.src_am = src_am
+        self.src_surf = src_surf
+
+        self.image = None
+        self.pixel_size = None
+        self.physical_size, self.transformation = None, None
+        self.surface = None
 
         # Read image and its property if existing
         if self.src_img is not None:
@@ -68,11 +76,11 @@ class ImportDataFromAmira:
                     f"{self.src_img} Not a .am file...",
                 )
 
-            if src_img.split("/")[-1:][:-3] != src_am.split("/")[-1:][:-20]:
+            if self.src_img.split("/")[-1:][:-3] != self.src_am.split("/")[-1:][:-20]:
                 TardisError(
                     "131",
                     "tardis_em/utils/load_data.py",
-                    f"Image file {src_img} has wrong extension for {src_am}!",
+                    f"Image file {self.src_img} has wrong extension for {self.src_img}!",
                 )
 
             try:
@@ -82,13 +90,35 @@ class ImportDataFromAmira:
                     self.pixel_size,
                     self.physical_size,
                     self.transformation,
-                ) = load_am(src_img)
+                ) = load_am(self.src_img)
             except RuntimeWarning:
                 TardisError(
                     "130",
                     "tardis_em/utils/load_data.py",
                     "Directory or input .am image file is not correct..."
-                    f"for given dir: {src_img}",
+                    f"for given dir: {self.src_img}",
+                )
+        else:
+            self.pixel_size = 1
+
+        # Read surface and its property if existing
+        if self.src_surf is not None:
+            if not self.src_surf[-5:] == ".surf":
+                TardisError(
+                    "130",
+                    "tardis_em/utils/load_data.py",
+                    f"{self.src_img} Not an Amira .surf file...",
+                )
+
+            try:
+                # Surface
+                self.surface = load_am_surf(self.src_surf)
+            except RuntimeWarning:
+                TardisError(
+                    "130",
+                    "tardis_em/utils/load_data.py",
+                    "Directory or input .am image file is not correct..."
+                    f"for given dir: {self.src_surf}",
                 )
         else:
             self.pixel_size = 1
@@ -232,6 +262,58 @@ class ImportDataFromAmira:
 
         return point_list
 
+    def __find_vertex(self) -> Union[np.ndarray, None]:
+        """
+        Helper class function to search for VERTEX in Amira file.
+
+        Returns:
+            np.ndarray: Set of all points.
+        """
+        if self.spatial_graph is None:
+            return None
+
+        # Find line starting with POINT { float[3] EdgePointCoordinates }
+        points = str(
+            [
+                word
+                for word in self.spatial_graph
+                if word.startswith("VERTEX { float[3] VertexCoordinates }")
+            ]
+        )
+
+        # Find in the line directory that starts with @..
+        points_start = "".join((ch if ch in "0123456789" else " ") for ch in points)
+        points_start = [int(i) for i in points_start.split()]
+
+        # Find line that start with the directory @... and select last one
+        try:
+            points_start = int(self.spatial_graph.index("@" + str(points_start[1]))) + 1
+        except ValueError:
+            points_start = (
+                int(self.spatial_graph.index("@" + str(points_start[1]) + " ")) + 1
+            )
+
+        # Find line define POINT ... <- number indicate number of points
+        points = str(
+            [word for word in self.spatial_graph if word.startswith("define VERTEX")]
+        )
+
+        points_finish = "".join((ch if ch in "0123456789" else " ") for ch in points)
+        points_finish = [int(i) for i in points_finish.split()][0]
+        points_no = points_finish
+        points_finish = points_start + points_finish
+
+        # Select all lines between @.. (-1) and number of points
+        points = self.spatial_graph[points_start:points_finish]
+
+        # return an array of all points coordinates in pixel
+        point_list = np.zeros((points_no, 3), dtype="float")
+        for j in range(3):
+            coord = [i.split(" ")[j] for i in points]
+            point_list[0:points_no, j] = [float(i) for i in coord]
+
+        return point_list
+
     def get_points(self) -> Union[np.ndarray, None]:
         """
         General class function to retrieve point cloud.
@@ -246,6 +328,41 @@ class ImportDataFromAmira:
         if self.src_img is None:
             self.transformation = [0, 0, 0]
         points_coord = self.__find_points()
+
+        points_coord[:, 0] = points_coord[:, 0] - self.transformation[0]
+        points_coord[:, 1] = points_coord[:, 1] - self.transformation[1]
+        points_coord[:, 2] = points_coord[:, 2] - self.transformation[2]
+
+        try:
+            coordinate = str(
+                [
+                    word
+                    for word in self.spatial_graph
+                    if word.startswith("        Coordinates")
+                ]
+            ).split(" ")[9][1:-3]
+
+            if coordinate == "nm":
+                return points_coord / (self.pixel_size / 10)
+        except IndexError:
+            pass
+
+        return points_coord / self.pixel_size
+
+    def get_vertex(self) -> Union[np.ndarray, None]:
+        """
+        General class function to retrieve point cloud.
+
+        Returns:
+            np.ndarray: Point cloud as [X, Y, Z] after transformation and
+                pixel size correction.
+        """
+        if self.spatial_graph is None:
+            return None
+
+        if self.src_img is None:
+            self.transformation = [0, 0, 0]
+        points_coord = self.__find_vertex()
 
         points_coord[:, 0] = points_coord[:, 0] - self.transformation[0]
         points_coord[:, 1] = points_coord[:, 1] - self.transformation[1]
@@ -369,6 +486,9 @@ class ImportDataFromAmira:
         """
         return self.pixel_size
 
+    def get_surface(self) -> Union[Tuple, None]:
+        return self.surface
+
 
 def load_tiff(tiff: str) -> Tuple[np.ndarray, float]:
     """
@@ -388,108 +508,6 @@ def load_tiff(tiff: str) -> Tuple[np.ndarray, float]:
         )
 
     return np.array(tif.imread(tiff)), 1.0
-
-
-# int nx
-# int ny
-# int nz
-fstr = "3i"
-names = "nx ny nz"
-
-# int mode
-fstr += "i"
-names += " mode"
-
-# int nxstart
-# int nystart
-# int nzstart
-fstr += "3i"
-names += " nxstart nystart nzstart"
-
-# int mx
-# int my
-# int mz
-fstr += "3i"
-names += " mx my mz"
-
-# float xlen
-# float ylen
-# float zlen
-fstr += "3f"
-names += " xlen ylen zlen"
-
-# float alpha
-# float beta
-# float gamma
-fstr += "3f"
-names += " alpha beta gamma"
-
-# int mapc
-# int mapr
-# int maps
-fstr += "3i"
-names += " mapc mapr maps"
-
-# float amin
-# float amax
-# float amean
-fstr += "3f"
-names += " amin amax amean"
-
-# int ispg
-# int next
-# short creatid
-fstr += "2ih"
-names += " ispg next creatid"
-
-# pad 30 (extra data)
-# [98:128]
-fstr += "30x"
-
-# short nint
-# short nreal
-fstr += "2h"
-names += " nint nreal"
-
-# pad 20 (extra data)
-# [132:152]
-fstr += "20x"
-
-# int imodStamp
-# int imodFlags
-fstr += "2i"
-names += " imodStamp imodFlags"
-
-# short idtype
-# short lens
-# short nd1
-# short nd2
-# short vd1
-# short vd2
-fstr += "6h"
-names += " idtype lens nd1 nd2 vd1 vd2"
-
-# float[6] tiltangles
-fstr += "6f"
-names += " tilt_ox tilt_oy tilt_oz tilt_cx tilt_cy tilt_cz"
-
-# NEW-STYLE MRC image2000 HEADER - IMOD 2.6.20 and above
-# float xorg
-# float yorg
-# float zorg
-# char[4] cmap
-# char[4] stamp
-# float rms
-fstr += "3f4s4sf"
-names += " xorg yorg zorg cmap stamp rms"
-
-# int nlabl
-# char[10][80] labels
-fstr += "i800s"
-names += " nlabl labels"
-
-header_struct = struct.Struct(fstr)
-MRCHeader = namedtuple("MRCHeader", names)
 
 
 def mrc_read_header(mrc: Union[str, bytes, None] = None):
@@ -694,6 +712,92 @@ def load_am(am_file: str):
             img = df_img.reshape((nz, ny, nx))
 
     return img, pixel_size, physical_size, transformation
+
+
+def load_am_surf(surf_file: str, simplify_=None) -> Tuple:
+    """
+
+    Args:
+        surf_file (str): File directory
+
+    Returns:
+        Tuple: List of Materials, bounding box, all vertices, list of triangles
+    """
+    surf_file = open(surf_file, "r", encoding="iso-8859-1").read()
+    assert surf_file.startswith("# HyperSurface"), "Not Amira surface file!"
+
+    # Regular expression to find material names
+    material_names = re.findall(
+        r"\b(\w+)\s*{",
+        re.search(r"Materials\s*{([\s\S]*?)\n\s*Units", surf_file, re.DOTALL).group(1),
+    )
+    material_names = [i for i in material_names if i not in ["Exterior", "Inside"]]
+
+    # Regular expression to extract GridBox values (numbers after 'GridBox')
+    gridbox_search = re.search(r"GridBox\s+([-\d\.eE\s]+)", surf_file)
+    gridbox = np.array(gridbox_search.group(1).strip().split(), dtype=float)
+
+    # Regular expression to extract GridSize values (numbers after 'GridSize')
+    gridsize_search = re.search(r"GridSize\s+([\d\s]+)", surf_file)
+    gridsize = np.array(gridsize_search.group(1).strip().split(), dtype=float)
+
+    vertices_search = (
+        re.search(
+            r"Vertices\s+\d+\n((?:\s*[-\d\.]+\s+[-\d\.]+\s+[-\d\.]+\n)+)",
+            surf_file,
+            re.DOTALL,
+        )
+        .group(1)
+        .strip()
+    )
+    vertices = np.array(
+        re.findall(r"([-\d\.]+)\s+([-\d\.]+)\s+([-\d\.]+)", vertices_search),
+        dtype=float,
+    )
+
+    triangles_list = []
+    for i in material_names:
+        pattern = rf"""\{{\s*InnerRegion\s+{re.escape(i)}.*?Triangles\s+\d+\n((?:\s*\d+\s+\d+\s+\d+\n)+)\}}"""
+
+        triangles_search = re.search(pattern, surf_file, re.DOTALL).group(1).strip()
+        triangles_list.append(
+            np.array(re.findall(r"(\d+)\s+(\d+)\s+(\d+)", triangles_search), dtype=int)
+        )
+
+    vertices_list = []
+    for i in range(len(triangles_list)):
+        vertices_list.append(
+            vertices[np.sort(np.unique(triangles_list[i].flatten())) - 1]
+        )
+
+        t_shape = triangles_list[i].shape
+
+        _, triangles_list[i] = np.unique(triangles_list[i], return_inverse=True)
+        triangles_list[i] = triangles_list[i].reshape(t_shape)
+
+    if simplify_ is not None:
+        try:
+            import open3d as o3d
+
+            for id_, (v, t) in enumerate(zip(vertices_list, triangles_list)):
+                mesh = o3d.geometry.TriangleMesh()
+
+                mesh.vertices = o3d.utility.Vector3dVector(v)
+                mesh.triangles = o3d.utility.Vector3iVector(t)
+
+                voxel_size = (
+                    max(mesh.get_max_bound() - mesh.get_min_bound()) / simplify_
+                )
+                mesh = mesh.simplify_vertex_clustering(
+                    voxel_size=voxel_size,
+                    contraction=o3d.geometry.SimplificationContraction.Average,
+                )
+                vertices_list[id_] = np.array(mesh.vertices)
+                triangles_list[id_] = np.array(mesh.triangles)
+
+        except ModuleNotFoundError:
+            pass
+    return material_names, [gridbox, gridsize], vertices_list, triangles_list
 
 
 def load_mrc_file(mrc: str) -> Union[Tuple[np.ndarray, float], Tuple[None, float]]:
