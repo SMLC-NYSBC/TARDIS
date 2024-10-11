@@ -14,8 +14,7 @@ try:
     import open3d as o3d
 except ModuleNotFoundError:
     pass
-from tardis_em.utils import SCANNET_COLOR_MAP_20
-
+from tardis_em.utils import SCANNET_COLOR_MAP_20, rgb_color
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -344,8 +343,12 @@ def VisualizeFilaments(
     coord, check = _dataset_format(coord=coord, segmented=True)
 
     if filament_color is None:
-        filament_color = [1, 1, 1]
-
+        filament_color = rgb_color["black"]
+    elif isinstance(filament_color, str):
+        assert (
+            filament_color in rgb_color.keys()
+        ), f"Color: {filament_color} suppoerted. Choose one of: {rgb_color}"
+        filament_color = rgb_color[filament_color]
     if check:
         if with_node:
             pcd = o3d.geometry.PointCloud()

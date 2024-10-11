@@ -143,3 +143,28 @@ names += " nlabl labels"
 
 header_struct = struct.Struct(fstr)
 MRCHeader = namedtuple("MRCHeader", names)
+
+rgb_color = {
+    "black": (0, 0, 0),
+    "white": (1, 1, 1),
+    "red": (1, 0, 0),
+    "green": (0, 1, 0),
+    "blue": (0, 0, 1),
+    "yellow": (1, 1, 0),
+    "cyan": (0, 1, 1),
+    "magenta": (1, 0, 1),
+    "gray": (0.5, 0.5, 0.5),
+    "grey": (0.5, 0.5, 0.5),
+    "light_gray": (0.75, 0.75, 0.75),
+    "light_grey": (0.75, 0.75, 0.75),
+    "dark_gray": (0.25, 0.25, 0.25),
+    "dark_grey": (0.25, 0.25, 0.25),
+    "orange": (1, 0.65, 0),
+    "purple": (0.5, 0, 0.5),
+    "pink": (1, 0.75, 0.8),
+    "brown": (0.6, 0.4, 0.2),
+    "lime": (0.75, 1, 0),
+    "navy": (0, 0, 0.5),
+    "olive": (0.5, 0.5, 0),
+    "teal": (0, 0.5, 0.5),
+}

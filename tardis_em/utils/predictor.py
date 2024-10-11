@@ -252,7 +252,7 @@ class GeneralPredictor:
 
         # Build handler to output amira file
         self.create_headers()
-        self.amira_file = NumpyToAmira(self.instance_header)
+        self.amira_file = NumpyToAmira()
 
         # Sanity error checks
         self.init_check()

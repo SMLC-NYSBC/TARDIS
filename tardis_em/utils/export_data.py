@@ -37,7 +37,7 @@ class NumpyToAmira:
             "# ASCII Spatial Graph \n",
             "# TARDIS - Transformer And Rapid Dimensionless "
             "Instance Segmentation (R) \n",
-            f"# tardis_em-pytorch v{version} \r\n",
+            f"# tardis_em v{version} \r\n",
             f"# MIT License * 2021-{datetime.now().year} * "
             "Robert Kiewisz & Tristan Bepler \n",
             "",
@@ -140,7 +140,7 @@ class NumpyToAmira:
         coord: np.ndarray,
         file_dir: str,
         label: Optional[list] = None,
-        score: Optional[list] = None,
+        score: Optional[list[int, list]] = None,
     ):
         """
         Standard Amira header builder
@@ -225,7 +225,7 @@ class NumpyToAmira:
                 for i in range(score[0]):
                     name_ = score[1][i]
                     f.write("EDGE { float " + f"{name_}" + " } " + f"@{label_id} \n")
-                    label_id = label_id + i
+                    label_id = label_id + 1
 
             f.write("\n")
             f.write("# Data section follows")
@@ -283,7 +283,8 @@ class NumpyToAmira:
                 TardisError(
                     id_="117",
                     py="tardis_em/utils/export_data.py",
-                    desc="Number of labels do not mach number of Arrays!",
+                    desc="Number of labels do not mach number of Arrays!"
+                    f"Labels: {len(labels)} != Coord: {len(coord_list)}",
                 )
 
         # Build Amira header
