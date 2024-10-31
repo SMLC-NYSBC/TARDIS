@@ -117,6 +117,7 @@ class MicrotubuleClassifier:
 
     @staticmethod
     def get_filament_file(dir_):
+
         return ImportDataFromAmira(src_am=dir_).get_segmented_points()
 
     @staticmethod
@@ -124,18 +125,15 @@ class MicrotubuleClassifier:
         return ImportDataFromAmira(src_am=dir_).get_vertex()
 
     def correct_data(self):
-        """Correct the coordinates based on pixel size."""
-        self.min_coords = self.filaments[:, 1:].min(axis=0)
-
         # Efficient normalization using broadcasting
-        self.filaments[:, 1:] = (self.filaments[:, 1:] -self. min_coords) / self.pixel_size
+        self.filaments[:, 1:] = self.filaments[:, 1:] / self.pixel_size
         self.filaments = resample_filament(self.filaments, 1)
 
         # Normalize vertices and poles
         for i in range(len(self.vertices)):
-            self.vertices[i] = (self.vertices[i] - self.min_coords) / self.pixel_size
+            self.vertices[i] = self.vertices[i] / self.pixel_size
 
-        self.poles = ((self.poles - self.min_coords) / self.pixel_size).astype(np.int32)
+        self.poles = (self.poles / self.pixel_size).astype(np.int32)
         self.poles = pick_pole_to_surfaces(self.poles, self.vertices)
 
         # Assign filaments to poles and reorder
@@ -413,6 +411,13 @@ class MicrotubuleClassifier:
 
         self.brg_mt_ids = self.assign_to_bridge_mt()
 
+        # Correct coordinates back to their original state
+        self.filaments[:, 1:] = self.filaments[:, 1:] * self.pixel_size
+        self.poles = self.poles * self.pixel_size
+
+        for i in range(len(self.vertices)):
+            self.vertices[i] = self.vertices[i] * self.pixel_size
+
         """Select SMTs"""
         self.smt_ids = (
             self.kmts_id_1
@@ -450,8 +455,6 @@ class MicrotubuleClassifier:
         ]
 
     def get_classified_fibers(self):
-        self.filaments[:, 1:] = (self.filaments[:, 1:] + self.min_coords) * self.pixel_size
-
         kmt_fiber_inside_1 = self.filaments[
             np.isin(self.filaments[:, 0], self.kmts_inside_id_1)
         ]

@@ -18,7 +18,7 @@ from tardis_em.analysis.geometry_metrics import (
     intensity_list,
 )
 
-from tardis_em.analysis.mt_classes import (
+from tardis_em.analysis.mt_classification.mt_classes import (
     assign_filaments_to_poles,
     pick_pole_to_surfaces,
 )

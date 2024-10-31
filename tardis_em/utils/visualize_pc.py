@@ -312,13 +312,15 @@ def VisualizePointCloud(
         else:
             pcd.points = o3d.utility.Vector3dVector(coord)
 
-        if rgb is not None:
-            if np.max(rgb) > 1:
-                rgb = rgb / 255
-            pcd.paint_uniform_color(rgb)
-        else:
-            pcd.colors = o3d.utility.Vector3dVector(_rgb(coord, segmented))
+        if rgb is None:
+            rgb = rgb_color["red"]
+        elif isinstance(rgb, str):
+            assert (
+                    rgb in rgb_color.keys()
+            ), f"Color: {rgb} suppoerted. Choose one of: {rgb_color}"
+            rgb = rgb_color[rgb]
 
+        pcd.paint_uniform_color(rgb)
         if return_:
             return pcd
 
@@ -349,6 +351,7 @@ def VisualizeFilaments(
             filament_color in rgb_color.keys()
         ), f"Color: {filament_color} suppoerted. Choose one of: {rgb_color}"
         filament_color = rgb_color[filament_color]
+
     if check:
         if with_node:
             pcd = o3d.geometry.PointCloud()
