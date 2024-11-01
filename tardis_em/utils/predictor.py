@@ -284,7 +284,7 @@ class GeneralPredictor:
             model = self.predict
 
             if model == "Actin":
-                model = "Microtubule"
+                model = "actin_3d"
             elif model == "Microtubule":
                 model = "microtubules_3d"
             elif model == "Microtubule_tirf":
