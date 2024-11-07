@@ -201,13 +201,15 @@ def angle_between_vectors(v1, v2):
     return np.degrees(angle)
 
 
-def intensity(data: np.ndarray, image: np.ndarray, thickness=1.0):
+def intensity(data: np.ndarray, image: np.ndarray, thickness=1):
     tck, u = splprep(data.T, s=0)
 
     data_fine = np.linspace(0, 1, int(total_length(data)))
     data_fine = np.array(splev(data_fine, tck)).T
 
     pixel_coords = np.rint(data_fine).astype(int)
+    if thickness > 1:
+        pixel_coords = thicken_line_coordinates(pixel_coords, thickness)
 
     # Extract the pixel values along the spline
     spline_intensity = pixel_intensity(pixel_coords, image)
@@ -253,7 +255,7 @@ def pixel_intensity(coord, image):
                 and 0 <= y < image.shape[1]
                 and 0 <= x < image.shape[2]
             ):
-                extracted_pixels.append(image[y, x])
+                extracted_pixels.append(image[z, y, x])
             else:
                 extracted_pixels.append(None)
 
@@ -268,7 +270,34 @@ def pixel_intensity(coord, image):
     return extracted_pixels
 
 
-def intensity_list(coord: np.ndarray, image: np.ndarray):
+def thicken_line_coordinates(coords, thickness):
+    """
+    Given a list of (x, y, z) coordinates defining a 1-pixel thick line,
+    generate additional coordinates to increase thickness.
+
+    Parameters:
+        coords (list of tuples): List of (x, y, z) coordinates.
+        thickness (int): Desired thickness in pixels (2, 3, 4, etc.).
+
+    Returns:
+        set of tuples: Expanded set of coordinates with the specified thickness.
+    """
+    thickened_coords = set()
+
+    # Radius for thickness (e.g., thickness=3 will add a 3x3 grid around each point)
+    radius = thickness // 2
+
+    for x, y, z in coords:
+        # Create a local grid around each coordinate
+        for dx in range(-radius, radius + 1):
+            for dy in range(-radius, radius + 1):
+                for dz in range(-radius, radius + 1):
+                    thickened_coords.add((x + dx, y + dy, z + dz))
+
+    return np.array(list(thickened_coords))
+
+
+def intensity_list(coord: np.ndarray, image: np.ndarray, thickness=1):
     """
     Calculate the total length of all splines and return it as a list.
 
@@ -284,7 +313,7 @@ def intensity_list(coord: np.ndarray, image: np.ndarray):
     for i in np.unique(coord[:, 0]):
         points = coord[np.where(coord[:, 0] == i)[0], 1:]
         if len(points) > 5:
-            spline_intensity_list.append(intensity(points, image))
+            spline_intensity_list.append(intensity(points, image, thickness))
         else:
             spline_intensity_list.append(0.0)
 

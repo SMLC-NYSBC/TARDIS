@@ -868,9 +868,10 @@ def load_mrc_file(mrc: str) -> Union[Tuple[np.ndarray, float], Tuple[None, float
     return image, pixel_size
 
 
-def load_nd2_file(
-    nd2_dir: str, channels=True
-) -> Union[Tuple[np.ndarray, float], Tuple[None, float]]:
+def load_nd2_file(nd2_dir: str) -> Tuple[np.ndarray, float]:
+    """
+    Load nd2 image format and return standard reshape [Channel x Frame x Time x Y x X]
+    """
     try:
         nd2.version("nd2")
     except NameError:
@@ -883,25 +884,20 @@ def load_nd2_file(
         return None, 1.0
 
     img = nd2.imread(nd2_dir)
+    if img.ndim == 5:
+        movie_ = True
+    else:
+        movie_ = False
 
-    if channels:
-        # Search for the smallest dim, which will indicate channels
-        dim0 = img[0, 0, ...]
-        dim0 = int(np.round(np.mean(dim0) / np.std(dim0), 0))
+    if movie_:
+        img = np.transpose(img, (2, 1, 0, 3, 4))
+    else:
+        img = np.transpose(img, (1, 0, 2, 3))
+        img = img[:, :, np.newaxis, ...]
 
-        dim1 = img[0, 1, ...]
-        dim1 = int(np.round(np.mean(dim1) / np.std(dim1), 0))
-
-        dim2 = img[1, 0, ...]
-        dim2 = int(np.round(np.mean(dim2) / np.std(dim2), 0))
-
-        dim3 = img[1, 1, ...]
-        dim3 = int(np.round(np.mean(dim3) / np.std(dim3), 0))
-
-        if dim0 >= dim2 and dim0 > dim3 and dim1 > dim2 and dim1 >= dim3:
-            img = img[0 if dim0 > dim2 else 1, ...]
-        else:
-            img = img[:, 0 if dim0 > dim1 else 1, ...]
+    criteria = [np.mean(i) / np.std(i) for i in img[:, 0, 0, ...]]
+    sorted_indices = np.argsort(criteria)[::-1]
+    img = img[sorted_indices, ...]
 
     return img, 1.0
 
@@ -1121,11 +1117,9 @@ def load_image(
             if lib_utils.find_spec(lib) is not None:
                 library_installed = True
 
-        assert library_installed, (
-            f"ND2 library is not installed." f'Run "pip install np2" to install it!'
-        )
+        assert library_installed, "ND2 library is not installed."
 
-        image, px = load_nd2_file(image, channels=True)
+        image, px = load_nd2_file(image)
 
     if normalize:
         norm = RescaleNormalize(clip_range=(1, 99))
@@ -1135,7 +1129,7 @@ def load_image(
         TardisError(
             "130",
             "tardis_em/utils/load_data.py",
-            f"Indicated .mrc {image} file does not exist...",
+            f"Indicated {image} file does not exist...",
         )
 
     if px_:

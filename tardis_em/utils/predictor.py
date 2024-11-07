@@ -309,7 +309,7 @@ class GeneralPredictor:
 
         self.semantic_header = [
             (
-                f"CNN type: {self.convolution_nn} V_{model_version} "
+                f"CNN type: {self.convolution_nn} {model_version} "
                 if self.checkpoint[0] is None
                 else f"CNN model loaded from checkpoint: {self.checkpoint[0]}"
                 f"Image patch size used for CNN: {self.patch_size}"
@@ -1054,7 +1054,7 @@ class GeneralPredictor:
                 join(self.am_output, f"{i[:-self.in_format]}_semantic.npy"), self.image
             )
 
-    def save_instance_PC(self, i):
+    def save_instance_PC(self, i, overwrite_save=False):
         self.log_prediction.append(
             f"Instance Prediction: {i[:-self.in_format]}; Number of segments: {np.max(self.segments[:, 0])}"
         )
@@ -1136,7 +1136,7 @@ class GeneralPredictor:
                                 labels=label_sg,
                                 scores=None,
                             )
-        elif self.output_format.endswith("csv"):
+        elif self.output_format.endswith("csv") or overwrite_save:
             segments = pd.DataFrame(self.segments)
             segments.to_csv(
                 join(self.am_output, f"{i[:-self.in_format]}_instances.csv"),
@@ -1317,7 +1317,7 @@ class GeneralPredictor:
                     self.mask_semantic,
                 )
 
-    def __call__(self):
+    def __call__(self, save_progres=False):
         """Process each image with CNN and DIST"""
         self.get_file_list()
 
@@ -1477,7 +1477,7 @@ class GeneralPredictor:
             self.log_tardis(id_, i, log_id=7)
 
             """Save as .am"""
-            self.save_instance_PC(i)
+            self.save_instance_PC(i, overwrite_save=save_progres)
 
             if self.segments is None:
                 if self.output_format.endswith("return"):

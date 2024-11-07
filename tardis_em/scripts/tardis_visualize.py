@@ -56,8 +56,22 @@ from tardis_em._version import version
     help="If visualizing filaments, show color codded filaments with nodes.",
     show_default=True,
 )
+@click.option(
+    "-c",
+    "--color",
+    type=str,
+    default=None,
+    help="Optional color. For example '1 1 1' define white color in RGB.",
+    show_default=True,
+)
 @click.version_option(version=version)
-def main(path: str, _2d: bool, type_: str, animate: bool, with_node: bool):
+def main(
+    path: str, _2d: bool, type_: str, animate: bool, with_node: bool, color: tuple
+):
+    if color is not None:
+        color = color.split(" ")
+        color = [float(c) for c in color]
+
     pc = None
 
     if path.endswith(".csv"):
@@ -82,17 +96,21 @@ def main(path: str, _2d: bool, type_: str, animate: bool, with_node: bool):
         if type_ == "p":
             if pc.shape[1] == 4 or pc.shape[1] == 3 and _2d:
                 VisualizePointCloud(pc, segmented=True, animate=animate)
-            elif pc.shape[1] == 6:
+            elif pc.shape[1] > 4:
                 VisualizePointCloud(
                     pc[:, :3], segmented=False, rgb=pc[:, 3:], animate=animate
                 )
-            else:
+            elif pc.shape[1] == 3:
                 VisualizePointCloud(pc, segmented=False, animate=animate)
+            else:
+                return
         else:
             assert (
                 pc.shape[1] == 4
             ), "Filament visualization require segmented point cloud"
-            VisualizeFilaments(pc, animate=animate, with_node=with_node)
+            VisualizeFilaments(
+                pc, filament_color=color, animate=animate, with_node=with_node
+            )
 
 
 def build_pc_from_img(img: np.ndarray):

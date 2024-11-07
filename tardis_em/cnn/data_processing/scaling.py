@@ -64,7 +64,7 @@ def scale_image(
         mask = np.ascontiguousarray(mask)
 
         if not np.all(scale == mask.shape):
-            mask = nn_scaling(img=mask, scale=scale)
+            mask = linear_scaling(img=mask, scale=scale)
 
     if image is not None and mask is not None:
         return image, mask, dim

@@ -11,6 +11,7 @@ from datetime import datetime
 from os.path import join
 from typing import Union, List, Tuple
 import numpy as np
+import pandas as pd
 
 from tardis_em.analysis.geometry_metrics import (
     length_list,
@@ -28,7 +29,7 @@ from tardis_em._version import version
 
 
 def analyse_filaments(
-    data: Union[np.ndarray, List, Tuple], image: Union[np.ndarray, List, Tuple] = None
+    data: Union[np.ndarray, List, Tuple], image: Union[np.ndarray, List, Tuple] = None, thickness = 1, px_=None
 ) -> tuple:
     """
 
@@ -47,14 +48,17 @@ def analyse_filaments(
     avg_length_intensity, sum_length_intensity = [], []
 
     for id_, d_ in enumerate(data):
-        length.append(length_list(d_))
+        if px_ is None:
+            length.append(length_list(d_))
+        else:
+            length.append([i * px_[id_] for i in length_list(d_)])  # length in nm
 
         curvature_, tortuosity_ = curvature_list(d_, tortuosity_=True, mean_=True)
         curvature.append(curvature_)
         tortuosity.append(tortuosity_)
 
         if image is not None:
-            intensity = intensity_list(d_, image[id_])
+            intensity = intensity_list(d_, image[id_], thickness)
 
             avg_intensity_ = [np.mean(i).item(0) for i in intensity]
             avg_intensity.append(avg_intensity_)
@@ -65,7 +69,9 @@ def analyse_filaments(
             sum_intensity_ = [np.sum(i).item(0) for i in intensity]
             sum_intensity.append(sum_intensity_)
 
-            sum_length_intensity_ = [i / l for l, i in zip(length[id_], sum_intensity_)]
+            sum_length_intensity_ = [
+                i / len_ for len_, i in zip(length[id_], sum_intensity_)
+            ]
             sum_length_intensity.append(sum_length_intensity_)
 
     if image is not None:
@@ -92,26 +98,14 @@ def save_analysis(
 
     rows = np.sum([len(i) for i in length]).item(0)
     analysis_file = np.zeros((rows, 10), dtype=object)
-    analysis_file[0, :] = [
-        "File_Name",
-        "No. of Filament",
-        "Pixel_Size [nm]",
-        "Length [nm]",
-        "Curvature [0-inf]",
-        "Tortuosity [1-inf]",
-        "Avg. Intensity [U]",
-        "Avg. Intensity / Length [U/nm]",
-        "Sum. Intensity [U]",
-        "Avg. Intensity / Length [U/nm]",
-    ]
 
     iter_ = 0
     for i in range(len(length)):  # Iterate throw every file
         for j in range(len(length[i])):
             analysis_file[iter_, :] = [
-                names[i][:-21],
+                names[i],
                 str(j),
-                str(1.0) if px_ is None else px_[i][j],
+                str(1.0) if px_ is None else px_[i],
                 str(length[i][j]),
                 str(curvature[i][j]),
                 str(tortuosity[i][j]),
@@ -136,9 +130,25 @@ def save_analysis(
 
         file_name = f"TARDIS_V{tardis_version}_{date.day}_{date.month}_{date.year}-{date.hour}_{date.minute}.csv"
 
-        np.savetxt(
-            join(save, file_name), analysis_file.astype(str), fmt="%s", delimiter=","
+        segments = pd.DataFrame(analysis_file)
+        segments.to_csv(
+            join(save, file_name),
+            header=[
+                "File_Name",
+                "No. of Filament",
+                "Pixel_Size [nm]",
+                "Length [nm]",
+                "Curvature [0-inf]",
+                "Tortuosity [1-inf]",
+                "Avg. Intensity [U]",
+                "Avg. Intensity / Length [U/nm]",
+                "Sum. Intensity [U]",
+                "Sum. Intensity / Length [U/nm]",
+            ],
+            index=False,
+            sep=",",
         )
+
         return
     return analysis_file
 
@@ -149,6 +159,7 @@ def analyse_filaments_list(
     path: str,
     images: Union[List, Tuple] = None,
     px_: Union[List, Tuple] = None,
+    thickness=1,
 ):
     """
     Arge:
@@ -175,7 +186,7 @@ def analyse_filaments_list(
     if images is None:
         images = [None for _ in range(len(data))]
 
-    save_analysis(names_, analyse_filaments(data, images), px_=px_, save=path)
+    save_analysis(names_, analyse_filaments(data, images, thickness, px_=px_), px_=px_, save=path)
 
 
 def analyse_mt_classes(

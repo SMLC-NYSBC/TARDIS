@@ -7,8 +7,12 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2024                                            #
 #######################################################################
-
+from collections import defaultdict
+from itertools import combinations
 from typing import List, Optional, Tuple, Union
+
+from rfc3986.abnf_regexp import segments
+from scipy.spatial import KDTree
 
 try:
     import open3d as o3d
@@ -258,6 +262,54 @@ def segment_to_graph(coord: np.ndarray) -> list:
     return graph_list
 
 
+def point_cloud_to_mesh(point_cloud, k=6):
+    # Initialize lists to store all vertices and faces across IDs
+    all_vertices = []
+    all_faces = []
+    vertex_offset = 0  # To keep track of the current vertex index across different IDs
+
+    # Group points by ID
+    point_groups = defaultdict(list)
+    for point in point_cloud:
+        point_id = point[0]
+        coordinates = point[1:]
+        point_groups[point_id].append(coordinates)
+
+    for point_id in point_groups.keys():
+        points = point_groups[point_id]
+        points = np.array(points)
+        if len(points) < 3:
+            print(f"Not enough points for triangulation with ID {point_id}")
+            continue
+
+        # Build a KDTree for finding nearest neighbors
+        kdtree = KDTree(points)
+        all_faces_set = set()
+
+        # For each point, find the k nearest neighbors and form triangles
+        neighbors = kdtree.query(points, k=k)[
+            1
+        ]  # Get all neighbors at once for efficiency
+
+        # Generate triangles by connecting each point with pairs of neighbors
+        for i, neighbor_indices in enumerate(neighbors):
+            for j, m in combinations(
+                neighbor_indices[1:], 2
+            ):  # Avoid using the point itself
+                face = tuple(sorted([i, j, m]))
+                all_faces_set.add(face)
+
+        # Convert set of faces to a NumPy array
+        faces = np.array(list(all_faces_set))
+
+        # Append the points and faces for this ID to the main lists
+        all_vertices.append(points)
+        all_faces.append(faces)
+        vertex_offset += len(points)  # Update offset for the next group
+
+    return all_vertices, all_faces
+
+
 def rotate_view(vis):
     """
     Optional viewing parameter for open3D to constantly rotate scene.
@@ -266,6 +318,7 @@ def rotate_view(vis):
     """
     opt = vis.get_render_option()
     opt.background_color = np.asarray([0, 0, 0])
+    opt.mesh_show_back_face = True
 
     ctr = vis.get_view_control()
     ctr.rotate(2.0, 0.0)
@@ -281,12 +334,13 @@ def background_view(vis):
     """
     opt = vis.get_render_option()
     opt.background_color = np.asarray([0, 0, 0])
+    opt.mesh_show_back_face = True
     return False
 
 
 def VisualizePointCloud(
     coord: np.ndarray,
-    segmented: bool,
+    segmented: bool = True,
     rgb: Optional[np.ndarray] = None,
     animate=False,
     return_=False,
@@ -312,15 +366,18 @@ def VisualizePointCloud(
         else:
             pcd.points = o3d.utility.Vector3dVector(coord)
 
-        if rgb is None:
+        if rgb is None and coord.shape[1] == 3:
             rgb = rgb_color["red"]
         elif isinstance(rgb, str):
             assert (
-                    rgb in rgb_color.keys()
+                rgb in rgb_color.keys()
             ), f"Color: {rgb} suppoerted. Choose one of: {rgb_color}"
             rgb = rgb_color[rgb]
 
-        pcd.paint_uniform_color(rgb)
+        if rgb is None:
+            pcd.colors = o3d.utility.Vector3dVector(_rgb(coord, True))
+        else:
+            pcd.paint_uniform_color(rgb)
         if return_:
             return pcd
 
@@ -403,16 +460,40 @@ def VisualizeScanNet(coord: np.ndarray, segmented: True, return_=False):
 
 
 def VisualizeSurface(
-    vertices: Union[tuple, list, np.ndarray],
-    triangles: Union[tuple, list, np.ndarray],
+    vertices: Union[tuple, list, np.ndarray] = None,
+    triangles: Union[tuple, list, np.ndarray] = None,
+    point_cloud=None,
     animate=False,
     return_=False,
 ):
+    if vertices is None and triangles is None and point_cloud is None:
+        return
+
     if isinstance(vertices, np.ndarray):
         vertices = [vertices]
 
     if isinstance(triangles, np.ndarray):
         triangles = [triangles]
+
+    if point_cloud is not None:
+        if point_cloud.shape[1] == 4:
+            pc = []
+            for id_ in np.unique(point_cloud[:, 0]):
+                pc.append(point_cloud[point_cloud[:, 0] == id_, 1:])
+        else:
+            pc = [point_cloud]
+
+        vertices, triangles = [], []
+        for i in pc:
+            pcd = VisualizePointCloud(i, segmented=False, return_=True)
+            pcd.estimate_normals()
+            # mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(pcd, linear_fit=True)[0]
+            mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(
+                pcd, scale=1
+            )[0]
+
+            vertices.append(mesh.vertices)
+            triangles.append(mesh.triangles)
 
     meshes = []
     for v, t in zip(vertices, triangles):
@@ -422,7 +503,7 @@ def VisualizeSurface(
         meshes[-1].triangles = o3d.utility.Vector3iVector(t)
         meshes[-1].paint_uniform_color(list(np.random.random(3)))
 
-        # meshes[-1].simplify_quadric_decimation(len(v) // 100)
+        # meshes[-1].filter_smooth_laplacian(5, )
         voxel_size = max(meshes[-1].get_max_bound() - meshes[-1].get_min_bound()) / 512
         meshes[-1] = meshes[-1].simplify_vertex_clustering(
             voxel_size=voxel_size,
