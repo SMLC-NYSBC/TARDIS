@@ -184,6 +184,14 @@ warnings.simplefilter("ignore", UserWarning)
     help=" If True, save the output from each step for debugging.",
     show_default=True,
 )
+@click.option(
+    "-continue",
+    "--continue_",
+    default=False,
+    type=bool,
+    help="If True, continue from the last tomogram that was successfully predicted.",
+    show_default=True,
+)
 @click.version_option(version=version)
 def main(
     path: str,
@@ -203,6 +211,7 @@ def main(
     connect_cylinder: int,
     device: str,
     debug: bool,
+    continue_: bool,
 ):
     """
     MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
@@ -245,6 +254,7 @@ def main(
         connect_cylinder=connect_cylinder,
         device_=str(device),
         debug=debug,
+        continue_=continue_
     )
     predictor()
 

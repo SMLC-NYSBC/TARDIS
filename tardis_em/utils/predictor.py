@@ -123,7 +123,9 @@ class GeneralPredictor:
         amira_compare_distance: int = None,
         amira_inter_probability: float = None,
         tardis_logo: bool = True,
+        continue_: bool = False
     ):
+        self.continue_ = continue_
         self.transformation, self.px, self.image = None, None, None
         self.tardis_logo = tardis_logo
         self.tardis_progress = None
@@ -907,6 +909,16 @@ class GeneralPredictor:
         self.output = join(self.dir, "temp", "Predictions")
         self.am_output = join(self.dir, "Predictions")
 
+        if self.continue_:
+            if isfile(join(self.am_output, "prediction_log.txt")):
+                logs = np.genfromtxt(join(self.am_output, "prediction_log.txt"), delimiter=',', dtype=str)
+                logs = logs[-1].split(' ')[2]
+                logs = [i for i, x in enumerate(self.predict_list) if x.startswith(logs)]
+
+            if logs > 0:
+                logs = logs[0]
+                self.predict_list = self.predict_list[logs:]
+
         # Check if there is anything to predict in the user-indicated folder
         msg = f"Given {self.dir} does not contain any recognizable file!"
         assert_ = len(self.predict_list) == 0
@@ -1056,7 +1068,7 @@ class GeneralPredictor:
 
     def save_instance_PC(self, i, overwrite_save=False):
         self.log_prediction.append(
-            f"Instance Prediction: {i[:-self.in_format]}; Number of segments: {np.max(self.segments[:, 0])}"
+            f"Instance Prediction: {i[:-self.in_format]}; Number of segments: {np.max(self.segments[:, 0])+1}"
         )
 
         if self.predict in [
@@ -1065,13 +1077,16 @@ class GeneralPredictor:
             "General_filament",
             "Microtubule_tirf",
         ]:
-            self.segments_filter = self.filter_splines(segments=self.segments)
-            self.segments_filter = sort_by_length(self.segments_filter)
+            try:
+                self.segments_filter = self.filter_splines(segments=self.segments)
+                self.segments_filter = sort_by_length(self.segments_filter)
 
-            self.log_prediction.append(
-                f"Instance Prediction: {i[:-self.in_format]};"
-                f" Number of segments: {np.max(self.segments_filter[:, 0])}"
-            )
+                self.log_prediction.append(
+                    f"Instance Prediction: {i[:-self.in_format]};"
+                    f" Number of segments: {np.max(self.segments_filter[:, 0])+1}"
+                )
+            except ValueError:
+                self.segments_filter = None
 
         with open(join(self.am_output, "prediction_log.txt"), "w") as f:
             f.write(" \n".join(self.log_prediction))
@@ -1095,21 +1110,22 @@ class GeneralPredictor:
                 ],
             )
 
-            self.amira_file.export_amira(
-                coords=self.segments_filter,
-                file_dir=join(
-                    self.am_output,
-                    f"{i[:-self.in_format]}_SpatialGraph_filter.am",
-                ),
-                labels=["TardisPrediction"],
-                scores=[
-                    ["EdgeLength", "EdgeConfidenceScore"],
-                    [
-                        length_list(self.segments_filter),
-                        self.score_splines(self.segments_filter),
+            if self.segments_filter is not None:
+                self.amira_file.export_amira(
+                    coords=self.segments_filter,
+                    file_dir=join(
+                        self.am_output,
+                        f"{i[:-self.in_format]}_SpatialGraph_filter.am",
+                    ),
+                    labels=["TardisPrediction"],
+                    scores=[
+                        ["EdgeLength", "EdgeConfidenceScore"],
+                        [
+                            length_list(self.segments_filter),
+                            self.score_splines(self.segments_filter),
+                        ],
                     ],
-                ],
-            )
+                )
 
             if self.amira_check and self.predict == "Microtubule":
                 dir_amira_file = join(
@@ -1122,9 +1138,14 @@ class GeneralPredictor:
                     amira_sg = amira_sg.get_segmented_points()
 
                     if amira_sg is not None:
-                        compare_sg, label_sg = self.compare_spline(
-                            amira_sg=amira_sg, tardis_sg=self.segments_filter
-                        )
+                        if self.segments_filter is not None:
+                            compare_sg, label_sg = self.compare_spline(
+                                amira_sg=amira_sg, tardis_sg=self.segments_filter
+                            )
+                        else:
+                            compare_sg, label_sg = self.compare_spline(
+                                amira_sg=amira_sg, tardis_sg=self.segments
+                            )
 
                         if self.output_format.endswith("amSG"):
                             self.amira_file.export_amira(
