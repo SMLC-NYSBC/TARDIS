@@ -123,7 +123,7 @@ class GeneralPredictor:
         amira_compare_distance: int = None,
         amira_inter_probability: float = None,
         tardis_logo: bool = True,
-        continue_: bool = False
+        continue_: bool = False,
     ):
         self.continue_ = continue_
         self.transformation, self.px, self.image = None, None, None
@@ -336,14 +336,20 @@ class GeneralPredictor:
             f"Maximum number of points used in single DIST run: {self.points_in_patch}",
         ]
 
-        self.log_prediction = (
-            main_
-            + ["----Semantic Segmentation----"]
-            + self.semantic_header
-            + ["", "----Instance Segmentation----"]
-            + self.instance_header
-            + [""]
-        )
+        if self.continue_:
+            self.log_prediction = np.genfromtxt(
+                join(self.am_output, "prediction_log.txt"), delimiter=",", dtype=str
+            )
+            self.log_prediction = [str(s) for s in self.log_prediction]
+        else:
+            self.log_prediction = (
+                main_
+                + ["----Semantic Segmentation----"]
+                + self.semantic_header
+                + ["", "----Instance Segmentation----"]
+                + self.instance_header
+                + [""]
+            )
 
     def init_check(self):
         """
@@ -911,9 +917,13 @@ class GeneralPredictor:
 
         if self.continue_:
             if isfile(join(self.am_output, "prediction_log.txt")):
-                logs = np.genfromtxt(join(self.am_output, "prediction_log.txt"), delimiter=',', dtype=str)
-                logs = logs[-1].split(' ')[2]
-                logs = [i for i, x in enumerate(self.predict_list) if x.startswith(logs)]
+                logs = np.genfromtxt(
+                    join(self.am_output, "prediction_log.txt"), delimiter=",", dtype=str
+                )
+                logs = logs[-1].split(" ")[2]
+                logs = [
+                    i for i, x in enumerate(self.predict_list) if x.startswith(logs)
+                ]
 
             if len(logs) > 0:
                 logs = logs[0]

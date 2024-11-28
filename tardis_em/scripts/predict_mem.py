@@ -223,7 +223,7 @@ def main(
         instances=instances,
         device_=str(device),
         debug=debug,
-        continue_=continue_
+        continue_=continue_,
     )
     predictor()
 

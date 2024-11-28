@@ -29,7 +29,10 @@ from tardis_em._version import version
 
 
 def analyse_filaments(
-    data: Union[np.ndarray, List, Tuple], image: Union[np.ndarray, List, Tuple] = None, thickness = 1, px_=None
+    data: Union[np.ndarray, List, Tuple],
+    image: Union[np.ndarray, List, Tuple] = None,
+    thickness=1,
+    px_=None,
 ) -> tuple:
     """
 
@@ -186,7 +189,9 @@ def analyse_filaments_list(
     if images is None:
         images = [None for _ in range(len(data))]
 
-    save_analysis(names_, analyse_filaments(data, images, thickness, px_=px_), px_=px_, save=path)
+    save_analysis(
+        names_, analyse_filaments(data, images, thickness, px_=px_), px_=px_, save=path
+    )
 
 
 def analyse_mt_classes(
