@@ -915,7 +915,7 @@ class GeneralPredictor:
                 logs = logs[-1].split(' ')[2]
                 logs = [i for i, x in enumerate(self.predict_list) if x.startswith(logs)]
 
-            if logs > 0:
+            if len(logs) > 0:
                 logs = logs[0]
                 self.predict_list = self.predict_list[logs:]
 
