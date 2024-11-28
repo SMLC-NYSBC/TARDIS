@@ -402,7 +402,7 @@ def VisualizeFilaments(
     coord, check = _dataset_format(coord=coord, segmented=True)
 
     if filament_color is None:
-        filament_color = rgb_color["black"]
+        filament_color = rgb_color["white"]
     elif isinstance(filament_color, str):
         assert (
             filament_color in rgb_color.keys()
