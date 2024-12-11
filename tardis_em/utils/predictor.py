@@ -308,6 +308,8 @@ class GeneralPredictor:
                     model_version = self.model_version
             else:
                 model_version = "None"
+        else:
+            model_version = self.model_version
 
         self.semantic_header = [
             (

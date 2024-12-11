@@ -22,7 +22,7 @@ from tardis_em.analysis.geometry_metrics import (
 from tardis_em.dist_pytorch.utils.utils import pc_median_dist
 
 
-def resample_filament(points, spacing_size):
+def resample_filament(points, spacing_size) -> np.ndarray:
     """
     Resamples points for each filament so they have the given spacing size.
 
@@ -33,45 +33,43 @@ def resample_filament(points, spacing_size):
     Returns:
     np.array: Resampled array with the same structure.
     """
-    unique_ids = np.unique(points[:, 0])
+    # Verify input format
+    if points.shape[1] != 4:
+        raise ValueError("Input `points` must have shape [N, 4] where columns represent [ID, X, Y, Z].")
+
+    # Initialize list for resampled points
     resampled_points = []
 
-    for filament_id in unique_ids:
-        filament_points = points[points[:, 0] == filament_id][:, 1:]
-        if filament_points.shape[0] < 2:
-            resampled_points.append(points[points[:, 0] == filament_id])
-            continue
+    # Get unique IDs
+    unique_ids = np.unique(points[:, 0])
 
-        cumulative_distances = np.cumsum(
-            np.sqrt(np.sum(np.diff(filament_points, axis=0) ** 2, axis=1))
-        )
-        cumulative_distances = np.insert(cumulative_distances, 0, 0)
+    # Loop over each unique ID
+    for unique_id in unique_ids:
+        # Extract points for the current ID
+        id_points = points[points[:, 0] == unique_id][:, 1:]  # Extract X, Y, Z coordinates
 
-        num_new_points = int(cumulative_distances[-1] // spacing_size)
-        new_points = [filament_points[0]]
+        # Calculate distances between consecutive points
+        distances = np.sqrt(np.sum(np.diff(id_points, axis=0) ** 2, axis=1))
+        cumulative_distances = np.insert(np.cumsum(distances), 0, 0)  # Start from 0
 
-        for i in range(1, num_new_points + 1):
-            target_distance = i * spacing_size
-            idx = np.searchsorted(cumulative_distances, target_distance)
-            if idx >= len(cumulative_distances):
-                continue
+        # Create a new range of distances for interpolation
+        new_distances = np.arange(0, cumulative_distances[-1] + spacing_size, spacing_size)
 
-            if cumulative_distances[idx] == target_distance:
-                new_points.append(filament_points[idx])
-            else:
-                ratio = (target_distance - cumulative_distances[idx - 1]) / (
-                    cumulative_distances[idx] - cumulative_distances[idx - 1]
-                )
-                new_point = filament_points[idx - 1] + ratio * (
-                    filament_points[idx] - filament_points[idx - 1]
-                )
-                new_points.append(new_point)
+        # Interpolate X, Y, Z coordinates along the new distance range
+        new_x = np.interp(new_distances, cumulative_distances, id_points[:, 0])
+        new_y = np.interp(new_distances, cumulative_distances, id_points[:, 1])
+        new_z = np.interp(new_distances, cumulative_distances, id_points[:, 2])
 
-        new_points = np.array(new_points)
-        filament_ids = np.full((new_points.shape[0], 1), filament_id)
-        resampled_points.append(np.hstack((filament_ids, new_points)))
+        # Combine the new points with their ID
+        new_points = np.column_stack((np.full_like(new_x, unique_id), new_x, new_y, new_z))
 
-    return np.vstack(resampled_points)
+        # Add the new points to the result list
+        resampled_points.append(new_points)
+
+    # Combine all resampled points into a single array
+    resampled_points = np.vstack(resampled_points)
+
+    return resampled_points
 
 
 def sort_segments(coord: np.ndarray) -> np.ndarray:
