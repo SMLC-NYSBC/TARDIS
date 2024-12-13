@@ -682,7 +682,9 @@ def load_am(am_file: str):
     elif "Lattice { sbyte Data }" in am:
         dtype_ = np.int8
         img = np.fromfile(am_file, dtype=dtype_)
-        img = img + 128
+        img = img.astype(np.uint8)
+
+        img += 128
     else:
         TardisError(
             "130",
