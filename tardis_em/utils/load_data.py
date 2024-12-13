@@ -120,8 +120,6 @@ class ImportDataFromAmira:
                     "Directory or input .am image file is not correct..."
                     f"for given dir: {self.src_surf}",
                 )
-        else:
-            self.pixel_size = 1
 
         # Read spatial graph
         am = ""
