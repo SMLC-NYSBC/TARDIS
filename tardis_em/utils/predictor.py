@@ -338,20 +338,26 @@ class GeneralPredictor:
             f"Maximum number of points used in single DIST run: {self.points_in_patch}",
         ]
         init_log = (
-                main_
-                + ["----Semantic Segmentation----"]
-                + self.semantic_header
-                + ["", "----Instance Segmentation----"]
-                + self.instance_header
-                + [""]
-            )
+            main_
+            + ["----Semantic Segmentation----"]
+            + self.semantic_header
+            + ["", "----Instance Segmentation----"]
+            + self.instance_header
+            + [""]
+        )
 
-        if self.continue_ and isfile(join(self.dir, "Predictions", "prediction_log.txt")):
+        if self.continue_ and isfile(
+            join(self.dir, "Predictions", "prediction_log.txt")
+        ):
             self.log_prediction = np.genfromtxt(
-                join(self.dir, "Predictions", "prediction_log.txt"), delimiter=",", dtype=str
+                join(self.dir, "Predictions", "prediction_log.txt"),
+                delimiter=",",
+                dtype=str,
             )
             self.log_prediction = [str(s) for s in self.log_prediction]
-            self.log_prediction = self.log_prediction + ["", "---Continue prediction---", ""] + init_log
+            self.log_prediction = (
+                self.log_prediction + ["", "---Continue prediction---", ""] + init_log
+            )
         else:
             self.log_prediction = init_log
 

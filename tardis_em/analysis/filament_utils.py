@@ -35,7 +35,9 @@ def resample_filament(points, spacing_size) -> np.ndarray:
     """
     # Verify input format
     if points.shape[1] != 4:
-        raise ValueError("Input `points` must have shape [N, 4] where columns represent [ID, X, Y, Z].")
+        raise ValueError(
+            "Input `points` must have shape [N, 4] where columns represent [ID, X, Y, Z]."
+        )
 
     # Initialize list for resampled points
     resampled_points = []
@@ -46,14 +48,18 @@ def resample_filament(points, spacing_size) -> np.ndarray:
     # Loop over each unique ID
     for unique_id in unique_ids:
         # Extract points for the current ID
-        id_points = points[points[:, 0] == unique_id][:, 1:]  # Extract X, Y, Z coordinates
+        id_points = points[points[:, 0] == unique_id][
+            :, 1:
+        ]  # Extract X, Y, Z coordinates
 
         # Calculate distances between consecutive points
         distances = np.sqrt(np.sum(np.diff(id_points, axis=0) ** 2, axis=1))
         cumulative_distances = np.insert(np.cumsum(distances), 0, 0)  # Start from 0
 
         # Create a new range of distances for interpolation
-        new_distances = np.arange(0, cumulative_distances[-1] + spacing_size, spacing_size)
+        new_distances = np.arange(
+            0, cumulative_distances[-1] + spacing_size, spacing_size
+        )
 
         # Interpolate X, Y, Z coordinates along the new distance range
         new_x = np.interp(new_distances, cumulative_distances, id_points[:, 0])
@@ -61,7 +67,9 @@ def resample_filament(points, spacing_size) -> np.ndarray:
         new_z = np.interp(new_distances, cumulative_distances, id_points[:, 2])
 
         # Combine the new points with their ID
-        new_points = np.column_stack((np.full_like(new_x, unique_id), new_x, new_y, new_z))
+        new_points = np.column_stack(
+            (np.full_like(new_x, unique_id), new_x, new_y, new_z)
+        )
 
         # Add the new points to the result list
         resampled_points.append(new_points)
