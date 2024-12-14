@@ -20,7 +20,6 @@ from tardis_em.cnn.data_processing.scaling import scale_image
 from tardis_em.utils.device import get_device
 from tardis_em.utils.export_data import to_mrc
 from tardis_em.utils.errors import TardisError
-from tardis_em.utils.normalization import MeanStdNormalize, RescaleNormalize
 
 
 def trim_with_stride(
@@ -60,10 +59,6 @@ def trim_with_stride(
         pixel_size (None, float): If not None, save mask as mrc with pixel size information.
         device (torch.device): Optional device.
     """
-    # Normalize histogram
-    normalize = RescaleNormalize(clip_range=(1, 99))
-    meanstd = MeanStdNormalize()
-
     img_dtype = np.float32
 
     if not isdir(join(output, "imgs")):
@@ -89,15 +84,6 @@ def trim_with_stride(
             )
     else:
         image, dim = scale_image(image=image, scale=scale, device=device)
-
-    # Rescale image intensity
-    image = normalize(meanstd(image)).astype(np.float32)
-    if not image.min() >= -1 or not image.max() <= 1:  # Image not between in -1 and 1
-        if image.min() >= 0 and image.max() <= 1:
-            image = (image - 0.5) * 2
-        elif image.min() >= 0 and image.max() <= 255:
-            image = image / 255  # move to 0 - 1
-            image = (image - 0.5) * 2
 
     if img_dtype != image.dtype:
         TardisError(
