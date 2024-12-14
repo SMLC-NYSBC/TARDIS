@@ -207,6 +207,8 @@ def trim_with_stride(
     count = len(range(x)) * len(range(y))
     if len(range(z)) > 0:
         count = count * len(range(z))
+    print(f'Found {count} patches...')
+
     count_save = 0
     if z == 0:
         z = 1

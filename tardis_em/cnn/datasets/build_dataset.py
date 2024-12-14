@@ -91,7 +91,7 @@ def build_train_dataset(
 
     """For each image find matching mask, pre-process, trim and save"""
     img_counter = 0
-    log_file = np.zeros((len(img_list) + 1, 9), dtype=object)
+    log_file = np.zeros((len(img_list) + 1, 10), dtype=object)
     log_file[0, :] = np.array(
         (
             "ID",
@@ -103,6 +103,7 @@ def build_train_dataset(
             "Image_Max",
             "Total_Patches_No",
             "Saved_Patches_No",
+            "Saved_Ratio [%]"
         )
     )
 
@@ -340,6 +341,8 @@ def build_train_dataset(
         img_counter += 1
         log_file[id_, 7] = str(count[0])
         log_file[id_, 8] = str(count[1])
+        log_file[id_, 9] = str(np.round(count[1] / count[0], 2)) + "%"
+
         np.savetxt(
             join(dataset_dir, "log.csv"), log_file.astype(str), fmt="%s", delimiter=","
         )
