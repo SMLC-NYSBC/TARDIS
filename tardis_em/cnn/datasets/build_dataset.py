@@ -19,6 +19,7 @@ from tardis_em.cnn.data_processing.trim import trim_with_stride
 from tardis_em.utils.errors import TardisError
 from tardis_em.utils.load_data import ImportDataFromAmira, load_image
 from tardis_em.utils.logo import print_progress_bar, TardisLogo
+from tardis_em.utils.normalization import RescaleNormalize, MeanStdNormalize
 
 
 def build_train_dataset(
@@ -163,6 +164,7 @@ def build_train_dataset(
 
         """Load files"""
         image, mask, pixel_size = load_img_mask_data(img_dir, mask_dir)
+
         if correct_pixel_size is not None:
             pixel_size = correct_pixel_size
 
@@ -376,10 +378,13 @@ def load_img_mask_data(
     coord = None
     img_px, mask_px = 1, 1
 
+    mean_std = MeanStdNormalize()
+    normalize = RescaleNormalize(clip_range=(1, 99))
+
     """Load Amira or MRC/REC image"""
     if image.endswith((".mrc", ".rec", ".map")):  # Image is MRC/REC(image)
         # Load image
-        image, img_px = load_image(image, normalize=True, px_=True)
+        image, img_px = load_image(image, normalize=False, px_=True)
     elif image.endswith(".am"):  # Image is Amira (image)
         if mask.endswith(".CorrelationLines.am"):  # Found Amira (coord)
             importer = ImportDataFromAmira(src_am=mask, src_img=image)
@@ -392,6 +397,8 @@ def load_img_mask_data(
             image, img_px = load_image(image)
     elif image.endswith((".tif", ".tiff")):
         image, img_px = load_image(image)
+
+    image = normalize(mean_std(image)).astype(np.float32)
 
     """Load Amira or MRC/REC or csv mask"""
     # Find maska file and load
