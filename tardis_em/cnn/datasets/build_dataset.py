@@ -341,7 +341,7 @@ def build_train_dataset(
         img_counter += 1
         log_file[id_, 7] = str(count[0])
         log_file[id_, 8] = str(count[1])
-        log_file[id_, 9] = str(np.round(count[1] / count[0], 2)) + "%"
+        log_file[id_, 9] = str(np.round(count[1] / count[0], 2) * 100) + "%"
 
         np.savetxt(
             join(dataset_dir, "log.csv"), log_file.astype(str), fmt="%s", delimiter=","
