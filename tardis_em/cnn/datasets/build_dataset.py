@@ -376,7 +376,7 @@ def load_img_mask_data(
     """Load Amira or MRC/REC image"""
     if image.endswith((".mrc", ".rec", ".map")):  # Image is MRC/REC(image)
         # Load image
-        image, img_px = load_image(image)
+        image, img_px = load_image(image, normalize=True, px_=True)
     elif image.endswith(".am"):  # Image is Amira (image)
         if mask.endswith(".CorrelationLines.am"):  # Found Amira (coord)
             importer = ImportDataFromAmira(src_am=mask, src_img=image)

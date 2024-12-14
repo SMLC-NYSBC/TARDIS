@@ -32,7 +32,7 @@ from tardis_em.dist_pytorch.utils.utils import (
     VoxelDownSampling,
 )
 from tardis_em.utils.errors import TardisError
-from tardis_em.utils.normalization import RescaleNormalize
+from tardis_em.utils.normalization import RescaleNormalize, MeanStdNormalize
 from tardis_em.utils import SCANNET_COLOR_MAP_20
 
 import importlib.util as lib_utils
@@ -1122,8 +1122,9 @@ def load_image(
         image, px = load_nd2_file(image)
 
     if normalize:
-        norm = RescaleNormalize(clip_range=(1, 99))
-        image = norm(image)
+        mean_std = MeanStdNormalize()
+        normalize = RescaleNormalize(clip_range=(1, 99))
+        image = normalize(mean_std(image)).astype(np.float32)
 
     if isinstance(image, str):
         TardisError(
