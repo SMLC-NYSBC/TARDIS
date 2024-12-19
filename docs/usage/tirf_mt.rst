@@ -5,7 +5,7 @@
 .. role:: guilabel
 
 Prediction of TIRF MT semantics/instances
----------------------------------------
+-----------------------------------------
 
 This guide provides detailed instructions to perform fully automatic microtubule
 segmentation on all of your images using our most up-to-date model.
@@ -13,7 +13,7 @@ segmentation on all of your images using our most up-to-date model.
 TARDIS can predict fully automatic microtubules as semantic labels, or
 instances [track, or labels].
 
-.. image:: ../resources/tirf_mt.jpg
+.. image:: ../resources/tirf_mt.png
 
 Data source: RNDr. Cyril Bařinka, Ph.D, Biocev
 
@@ -188,7 +188,7 @@ with the explanation for their functionality:
     - :guilabel:`default:` 1000
     - :guilabel:`Allowed options:` Int value between 250 and 5000.
 
-.. _filter:
+.. _filter_tirf:
 
 :bash:`-fl` or :bash:`--filter_by_length`: Minimum microtubule length
     - :guilabel:`Example:` Filtering parameters for microtubules, defining maximum microtubule

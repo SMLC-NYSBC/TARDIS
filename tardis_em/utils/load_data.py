@@ -396,9 +396,11 @@ class ImportDataFromAmira:
         segments = self.__get_segments()
 
         segmentation = np.zeros((points.shape[0],))
-        id_ = 0
-        idx = 0
+        id_ = int(0)
+        idx = int(0)
+
         for i in segments:
+            i = int(i) if not isinstance(i, np.ndarray) else int(i.item())
             segmentation[id_ : (id_ + int(i))] = idx
 
             idx += 1

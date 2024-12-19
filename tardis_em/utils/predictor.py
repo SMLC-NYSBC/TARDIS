@@ -212,6 +212,8 @@ class GeneralPredictor:
         self.image_stitcher = StitchImages()
         self.post_processes = BuildPointCloud()
 
+        self.get_file_list()
+
         # Build handler for DIST input and output
         if self.predict_instance:
             self.patch_pc = PatchDataSet(
@@ -714,7 +716,7 @@ class GeneralPredictor:
 
             tif.imwrite(join(self.output, f"{name}.tif"), input_)
 
-    def predict_cnn_napari(self, input_: torch.Tensor(), name: str):
+    def predict_cnn_napari(self, input_: torch.Tensor, name: str):
         input_ = self.cnn.predict(input_[None, :], rotate=self.rotate)
         tif.imwrite(join(self.output, f"{name}.tif"), input_)
 

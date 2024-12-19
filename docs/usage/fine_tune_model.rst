@@ -20,11 +20,13 @@ TARDIS requires a folder containing training datasets as input. The dataset shou
 in formats such as .tif, .mrc, .rec, or .am, and corresponding binary masks/labels in .tif, .mrc, .rec, .am, or .csv formats.
 The images and mask files must share the same names, with mask files having an additional _mask prefix.
 
+E.g. For example image.mrc and image_mask.mrc or image_mask.csv
+
 Tips:
-    - For .mrc files: Ensure your data is not flipped. You can verify this by loading
-        your file in Fiji and checking if the image and mask file overlap.
-    - Normalization: No normalization is required. It is best to use raw image files,
-        as TARDIS will handle all necessary normalizations.
+    - For .mrc files:
+        Ensure your data is not flipped. You can verify this by loading your file in Fiji and checking if the image and mask file overlap.
+    - Normalization:
+        No normalization is required. It is best to use raw image files, as TARDIS will handle all necessary normalizations.
 
 
 2. Training
@@ -35,6 +37,9 @@ To train a CNN model with TARDIS, use the following command to get detailed info
 .. code-block::
 
     tardis_cnn_train --help
+
+Basic usage:
+````````````
 
 To run training. To start training, use the following command:
 
@@ -104,7 +109,7 @@ with the explanation for their functionality:
 :bash:`-l` or :bash:`--cnn_loss`: Loss function use for training.
     - :guilabel:`default:` BCELoss
     - :guilabel:`type:` str
-    - :guilable:`options:` AdaptiveDiceLoss, BCELoss, WBCELoss, BCEDiceLoss, CELoss, DiceLoss, ClDiceLoss, ClBCELoss, SigmoidFocalLoss, LaplacianEigenmapsLoss, BCEMSELoss
+    - :guilabel:`options:` AdaptiveDiceLoss, BCELoss, WBCELoss, BCEDiceLoss, CELoss, DiceLoss, ClDiceLoss, ClBCELoss, SigmoidFocalLoss, LaplacianEigenmapsLoss, BCEMSELoss
 
 :bash:`-lr` or :bash:`--loss_lr_rate`: Learning rate for NN.
     - :guilabel:`default:` 0.0005
@@ -117,7 +122,7 @@ with the explanation for their functionality:
 :bash:`-dv` or :bash:`--device`: Define which device use for training:
     - :guilabel:`default:` 0
     - :guilabel:`type:` str
-    - :guilable:`options:` gpu - Use ID 0 gpus;  cpu - Usa CPU; mps - Apple silicon; 0-9 - specified gpu device id to use
+    - :guilabel:`options:` gpu - Use ID 0 gpus;  cpu - Usa CPU; mps - Apple silicon; 0-9 - specified gpu device id to use
 
 :bash:`-w` or :bash:`--warmup`: Number of warmup steps.
     - :guilabel:`default:` 100
@@ -139,8 +144,8 @@ with the explanation for their functionality:
     - :guilabel:`default:` 0.5
     - :guilabel:`type:` float
 
-3. Pre-train model
-~~~~~~~~~~~~~~~~~~
+3.1 Pre-train model from scratch
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To run re-training:
 
@@ -148,7 +153,25 @@ To run re-training:
 
     tardis_cnn_train -dir <path-to-your-dataset; str> -ps <patch_size; int> -cnn <cnn_type; str> -b <batch_size> -cch <checkpoint.pth_file_dir>
 
-3. Predict with train model
+3.2 Fine-tune existing models
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+All TARDIS models are stored locally in ~/tardis_em/
+
+For example a default model for membrane segmentation can be found in
+
+.. code-block::
+
+    ./tardis_em/fnet_attn_32/membrane_3d/model_weights.pth
+
+In order to fine-tune it on your existing data:
+
+.. code-block::
+
+    tardis_cnn_train ... -cch ./tardis_em/fnet_attn_32/membrane_3d/model_weights.pth
+
+
+4. Predict with train model
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To predict images with your newly train model, you can use the following command:

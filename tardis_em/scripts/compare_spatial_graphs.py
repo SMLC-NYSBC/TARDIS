@@ -44,7 +44,7 @@ from tardis_em._version import version
 @click.option(
     "-pf_a",
     "--amira_prefix",
-    default=None,
+    default=".CorrelationLines",
     type=str,
     help="Prefix name for amira spatial graph.",
     show_default=True,
@@ -52,7 +52,7 @@ from tardis_em._version import version
 @click.option(
     "-pf_t",
     "--tardis_prefix",
-    default=None,
+    default="_instance_segments",
     type=str,
     help="Prefix name for tardis_em spatial graph.",
     show_default=True,
@@ -103,9 +103,6 @@ def main(
     else:
         str_debug = ""
 
-    with open(join(output, "log.txt"), "w") as f:
-        f.write(f"Spline matching module {datetime.now()}")
-
     tardis_progress = TardisLogo()
     tardis_progress(
         title=f"Spline matching module {str_debug}",
@@ -138,14 +135,17 @@ def main(
             while not isdir(output):
                 output = click.prompt("Type new directory", type=str)
 
-    if dir is None:
+    with open(join(output, "log.txt"), "w") as f:
+        f.write(f"Spline matching module {datetime.now()}")
+
+    if path is None:
         TardisError(
             id_="122",
             py="tardis_em/compare_spatial_graphs.py",
             desc="Indicated Amira and Tardis prefixes but " "not directory!",
         )
 
-    dir_list = [d for d in listdir(dir) if d != ".DS_Store"]
+    dir_list = [d for d in listdir(path) if d != ".DS_Store"]
     amira_files = [d for d in dir_list if d.endswith(amira_prefix + ".am")]
     tardis_files = [d for d in dir_list if d.endswith(tardis_prefix + ".am")]
 
@@ -261,6 +261,9 @@ def main(
                     f"{datetime.now()}"
                     f"Skipped comparison - not matching pixel size!"
                 )
+
+    if len(amira_files) == 0:
+        amira_files = ['test']
 
     tardis_progress(
         title=f"Spline matching module {str_debug}",

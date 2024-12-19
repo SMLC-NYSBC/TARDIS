@@ -65,7 +65,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-ch",
     "--checkpoint",
-    default="",
+    default="None|None",
     type=str,
     help="Optional list of pre-trained weights",
     show_default=True,
@@ -157,6 +157,12 @@ warnings.simplefilter("ignore", UserWarning)
     help="If True, save the output from each step for debugging.",
     show_default=True,
 )
+@click.option(
+    "-test_click",
+    "--test_click",
+    default=False,
+    hidden=True
+)
 @click.version_option(version=version)
 def main(
     path: str,
@@ -174,6 +180,7 @@ def main(
     points_in_patch: int,
     device: str,
     debug: bool,
+    test_click=False,
 ):
     """
     MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
@@ -187,7 +194,7 @@ def main(
     if len(checkpoint) != 2:
         TardisError(
             id_="00",
-            py="tardis_em/predict_mt.py",
+            py="tardis_em/predict.py",
             desc="Two checkpoint are expected!",
         )
     elif len(checkpoint) == 2:
@@ -225,7 +232,8 @@ def main(
     else:
         predictor.expect_2d = True
 
-    predictor()
+    if not test_click:
+        predictor()
 
 
 if __name__ == "__main__":

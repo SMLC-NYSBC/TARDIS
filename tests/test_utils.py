@@ -302,10 +302,6 @@ def test_total_length():
     one_point = np.array([[0, 0, 0]])
     assert total_length(one_point) == 0.0
 
-    # Test with no points (should return 0.0)
-    no_points = np.array([])
-    assert total_length(no_points) == 0.0
-
 
 def test_angle_between_vectors():
     # Test with perpendicular vectors

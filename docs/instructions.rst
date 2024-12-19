@@ -17,15 +17,11 @@ Install TARDIS using the newest released package from `Github <https://github.co
 
 or
 
-.. coda-block:: bash
+-  Install pytorch with GPU support as per Pytorch official website: https://pytorch.org/get-started/locally/
+
+.. code-block:: bash
 
     pip install tardis-em
-
-or
-
-.. coda-block:: bash
-
-    conda install tardis-em -c rrobert92 -c open3d-admin -c pytorch -c nvidia
 
 And jump to `Validate`_.
 

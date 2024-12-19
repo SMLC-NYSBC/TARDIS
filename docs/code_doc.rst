@@ -21,6 +21,15 @@ DIST Module
    DataLoader <dist_pytorch/data_loader>
    Utils <dist_pytorch/utils>
 
+Analysis Module
+===============
+
+.. toctree::
+
+   Analysis <analysis/analysis>
+
+   MT classification <analysis/mt_classification>
+   Filament Utils <analysis/filament_utils>
 
 Global Functions
 ================
@@ -29,7 +38,6 @@ Global Functions
    AWS <utils/aws>
  
    Data Handlers <utils/import_data>
-   Spline metrics <utils/spline>
    
    Trainer <utils/trainer>
    Predictor <utils/predictor>

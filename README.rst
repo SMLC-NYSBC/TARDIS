@@ -76,15 +76,11 @@ For more examples and advanced usage please find more details in our `Documentat
 
 1) Install TARDIS-em:
 
+ Install pytorch with GPU support as per Pytorch official website: https://pytorch.org/get-started/locally/
+
 .. code-block:: bash
 
     pip install tardis-em
-
-or
-
-.. code-block:: bash
-
-    conda install tardis-em -c rrobert92 -c open3d-admin
 
 2) Verifies installation:
 

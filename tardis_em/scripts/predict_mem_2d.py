@@ -192,6 +192,12 @@ warnings.simplefilter("ignore", UserWarning)
     help="If True, continue from the last tomogram that was successfully predicted.",
     show_default=True,
 )
+@click.option(
+    "-test_click",
+    "--test_click",
+    default=False,
+    hidden=True
+)
 @click.version_option(version=version)
 def main(
     path: str,
@@ -212,6 +218,7 @@ def main(
     device: str,
     debug: bool,
     continue_: bool,
+    test_click=False,
 ):
     """
     MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
@@ -256,7 +263,9 @@ def main(
         debug=debug,
         continue_=continue_,
     )
-    predictor()
+
+    if not test_click:
+        predictor()
 
 
 if __name__ == "__main__":

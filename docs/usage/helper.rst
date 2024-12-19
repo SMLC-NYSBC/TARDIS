@@ -16,7 +16,7 @@ If you have any specific need contact us on `Slack Channel <https://tardis-em.sl
 Conversion
 __________
 
-Convert between csv and  Amira .am format
+Convert between csv and Amira .am format
 `````````````````````````````````````````
 TARDIS will help you to convert between csv and am file format. Simply use:
 

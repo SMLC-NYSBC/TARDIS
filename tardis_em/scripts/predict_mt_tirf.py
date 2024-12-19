@@ -190,6 +190,12 @@ warnings.simplefilter("ignore", UserWarning)
     help="If True, continue from the last tomogram that was successfully predicted.",
     show_default=True,
 )
+@click.option(
+    "-test_click",
+    "--test_click",
+    default=False,
+    hidden=True,
+)
 @click.version_option(version=version)
 def main(
     path: str,
@@ -209,6 +215,7 @@ def main(
     device: str,
     debug: bool,
     continue_: bool,
+    test_click=False,
 ):
     """
     MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
@@ -270,35 +277,36 @@ def main(
         continue_=continue_,
     )
 
-    predictor()
+    if not test_click:
+        predictor()
 
-    # Cleanup move tiffs to the Predictions directory
-    images = []
-    for i in cleanup_list:
-        f_name = dirname(i)
-        images.append(tiff.imread(i))
+        # Cleanup move tiffs to the Predictions directory
+        images = []
+        for i in cleanup_list:
+            f_name = dirname(i)
+            images.append(tiff.imread(i))
 
-        os.rename(i, join(f_name, "Predictions", splitext(basename(i))[0]) + ".tif")
+            os.rename(i, join(f_name, "Predictions", splitext(basename(i))[0]) + ".tif")
 
-    # Analyze length, average intensity along the spline,
-    name_ = find_filtered_files(
-        join(dirname(path), "Predictions"), prefix="instances_filter"
-    )
-    data = []
-    for d in name_:
-        d = np.genfromtxt(d, delimiter=",")
+        # Analyze length, average intensity along the spline,
+        name_ = find_filtered_files(
+            join(dirname(path), "Predictions"), prefix="instances_filter"
+        )
+        data = []
+        for d in name_:
+            d = np.genfromtxt(d, delimiter=",")
 
-        if str(d[0, 0]) == "nan":
-            d = d[1:, :]
-        data.append(d)
+            if str(d[0, 0]) == "nan":
+                d = d[1:, :]
+            data.append(d)
 
-    analyse_filaments_list(
-        data=data,
-        names_=name_,
-        path=join(path, "Predictions"),
-        images=images,
-        px_=None,
-    )
+        analyse_filaments_list(
+            data=data,
+            names_=name_,
+            path=join(path, "Predictions"),
+            images=images,
+            px_=None,
+        )
 
 
 if __name__ == "__main__":

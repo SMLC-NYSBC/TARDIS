@@ -26,12 +26,12 @@ def resample_filament(points, spacing_size) -> np.ndarray:
     """
     Resamples points for each filament so they have the given spacing size.
 
-    Parameters:
-    points (np.array): Array of shape [N, 4] where each column is [ID, X, Y, Z].
-    spacing_size (float): Desired spacing size between points.
+    Args:
+        points (np.array): Array of shape [N, 4] where each column is [ID, X, Y, Z].
+        spacing_size (float): Desired spacing size between points.
 
     Returns:
-    np.array: Resampled array with the same structure.
+        np.array: Resampled array with the same structure.
     """
     # Verify input format
     if points.shape[1] != 4:
@@ -81,6 +81,21 @@ def resample_filament(points, spacing_size) -> np.ndarray:
 
 
 def sort_segments(coord: np.ndarray) -> np.ndarray:
+    """
+    Sorts the input segments of coordinates based on their x-values while keeping
+    the grouping by the first element of each coordinate consistent. It ensures
+    that for every unique value in the first column of the input, their corresponding
+    segments in other columns are sorted and reconstructed into the final structure.
+
+    Args:
+        coord (np.ndarray): A two-dimensional numpy array with shape (n, 4), where `coord[:, 0]`
+            corresponds to the grouping column and the remaining columns `coord[:, 1:]`
+            represent coordinate segments that need to be sorted.
+
+    Returns:
+        np.ndarray: A two-dimensional numpy array where all rows are sorted based on the
+        provided logic while maintaining the grouping specified by the first column.
+    """
     df = np.unique(coord[:, 0])
 
     new_coord = []
@@ -223,6 +238,8 @@ def sort_by_length(coord):
     Returns:
         np.ndarray: sorted and reorder splines.
     """
+    coord = reorder_segments_id(coord)
+
     length_list = []
     for i in np.unique(coord[:, 0]):
         length_list.append(total_length(coord[np.where(coord[:, 0] == i)[0], 1:]))
@@ -230,6 +247,7 @@ def sort_by_length(coord):
     sorted_id = np.argsort(length_list)
 
     sorted_list = [coord[np.where(coord[:, 0] == i)[0], 1:] for i in sorted_id]
+
     sorted_list = [
         np.hstack((np.repeat(i, len(sorted_list[i])).reshape(-1, 1), sorted_list[i]))
         for i in range(len(sorted_list))

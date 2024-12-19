@@ -182,3 +182,7 @@ def main(
             )
         except ModuleNotFoundError:
             pass
+
+
+if __name__ == "__main__":
+    main()

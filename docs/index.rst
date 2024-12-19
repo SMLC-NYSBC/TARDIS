@@ -5,7 +5,6 @@
 
    Start <README>
    History <HISTORY>
-   Citation <citation>
 
 
 .. toctree::
@@ -26,6 +25,7 @@
    Visualization <usage/visualization>
    Fine-Tune TARDIS models <usage/fine_tune_model>
    Troubleshooting <usage/troubleshooting>
+   TARDIS helper-functions <usage/helper>
 
 .. toctree::
    :caption: Documentation:

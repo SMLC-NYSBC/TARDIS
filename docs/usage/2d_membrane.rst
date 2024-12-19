@@ -179,21 +179,21 @@ with the explanation for their functionality:
 
 :bash:`-cc` or :bash:`--connect_cylinder`: Cylinder radius used to filter unconnected components.
     - :guilabel:`Example:` To minimize false positives when linking membranes,
-    we limit the search area to a cylindrical radius specified in angstroms. For each spline,
-    we find the direction the filament end is pointing in and look for another
-    filament that is oriented in the same direction. The ends of these filaments
-    must be located within this cylinder to be considered connected.
+        we limit the search area to a cylindrical radius specified in angstroms. For each spline,
+        we find the direction the filament end is pointing in and look for another
+        filament that is oriented in the same direction. The ends of these filaments
+        must be located within this cylinder to be considered connected.
 
     - :guilabel:`default:` 40
     - :guilabel:`Allowed options:` Float value between 0 - inf
 
 :bash:`-cm` or :bash:`--connect_membranes`: Cylinder radius used to filter unconnected components.
     - :guilabel:`Example:` To address the issue where membrane are mistakenly
-    identified as two different filaments, we use a filtering technique. This involves
-    identifying the direction each membranes end points and then linking any membranes
-    that are facing the same direction and are within a certain distance from each other,
-    measured in angstroms. This distance threshold determines how far apart two membranes can be,
-    while still being considered as a single unit if they are oriented in the same direction.
+        identified as two different filaments, we use a filtering technique. This involves
+        identifying the direction each membranes end points and then linking any membranes
+        that are facing the same direction and are within a certain distance from each other,
+        measured in angstroms. This distance threshold determines how far apart two membranes can be,
+        while still being considered as a single unit if they are oriented in the same direction.
 
     - :guilabel:`default:` 1000
     - :guilabel:`Allowed options:` Float value between 0 - inf

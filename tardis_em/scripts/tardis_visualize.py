@@ -66,7 +66,12 @@ from tardis_em._version import version
 )
 @click.version_option(version=version)
 def main(
-    path: str, _2d: bool, type_: str, animate: bool, with_node: bool, color: tuple
+    path: str,
+    _2d: bool,
+    type_: str,
+    animate: bool,
+    with_node: bool,
+    color: tuple,
 ):
     if color is not None:
         color = color.split(" ")

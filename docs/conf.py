@@ -22,7 +22,10 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
     "sphinx.ext.autosectionlabel",
+    "sphinx_rtd_dark_mode",
 ]
+
+default_dark_mode = True
 
 myst_enable_extensions = ["colon_fence"]
 

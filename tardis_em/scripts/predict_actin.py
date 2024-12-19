@@ -193,6 +193,12 @@ warnings.simplefilter("ignore", UserWarning)
     help="If True, continue from the last tomogram that was successfully predicted.",
     show_default=True,
 )
+@click.option(
+    "-test_click",
+    "--test_click",
+    default=False,
+    hidden=True
+)
 @click.version_option(version=version)
 def main(
     path: str,
@@ -213,6 +219,7 @@ def main(
     device: str,
     debug: bool,
     continue_: bool,
+    test_click=False,
 ):
     """
     MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
@@ -226,7 +233,7 @@ def main(
     if len(checkpoint) != 2:
         TardisError(
             id_="00",
-            py="tardis_em/predict_mt.py",
+            py="tardis_em/predict_actin.py",
             desc="Two checkpoint are expected!",
         )
     elif len(checkpoint) == 2:
@@ -258,7 +265,8 @@ def main(
         continue_=continue_,
     )
 
-    predictor()
+    if not test_click:
+        predictor()
 
 
 if __name__ == "__main__":

@@ -221,6 +221,12 @@ from tardis_em._version import version
     help="If indicated, value of dropout for CNN.",
     show_default=True,
 )
+@click.option(
+    "-test_click",
+    "--test_click",
+    default=False,
+    hidden=True
+)
 @click.version_option(version=version)
 def main(
     path: str,
@@ -245,6 +251,7 @@ def main(
     early_stop: int,
     cnn_checkpoint: Optional[str] = None,
     dropout_rate: Optional[float] = None,
+    test_click=False,
 ):
     """
     MAIN MODULE FOR TRAINING CNN UNET/RESUNET/UNET3PLUS MODELS
@@ -318,30 +325,31 @@ def main(
         build_test_dataset(dataset_dir=path, dataset_no=no_dataset)
 
     """Build training and test dataset 2D/3D"""
-    train_DL = DataLoader(
-        dataset=CNNDataset(
-            img_dir=TRAIN_IMAGE_DIR,
-            mask_dir=TRAIN_MASK_DIR,
-            size=patch_size,
-            out_channels=cnn_out_channel,
-        ),
-        batch_size=training_batch_size,
-        shuffle=True,
-        num_workers=8,
-        pin_memory=True,
-    )
+    if not test_click:
+        train_DL = DataLoader(
+            dataset=CNNDataset(
+                img_dir=TRAIN_IMAGE_DIR,
+                mask_dir=TRAIN_MASK_DIR,
+                size=patch_size,
+                out_channels=cnn_out_channel,
+            ),
+            batch_size=training_batch_size,
+            shuffle=True,
+            num_workers=8,
+            pin_memory=True,
+        )
 
-    test_DL = DataLoader(
-        dataset=CNNDataset(
-            img_dir=TEST_IMAGE_DIR,
-            mask_dir=TEST_MASK_DIR,
-            size=patch_size,
-            out_channels=cnn_out_channel,
-        ),
-        shuffle=True,
-        num_workers=8,
-        pin_memory=True,
-    )
+        test_DL = DataLoader(
+            dataset=CNNDataset(
+                img_dir=TEST_IMAGE_DIR,
+                mask_dir=TEST_MASK_DIR,
+                size=patch_size,
+                out_channels=cnn_out_channel,
+            ),
+            shuffle=True,
+            num_workers=8,
+            pin_memory=True,
+        )
 
     if cnn_out_channel > 1:
         cnn_loss = "CELoss"
@@ -381,19 +389,23 @@ def main(
         }
 
     """Run Training loop"""
-    train_cnn(
-        train_dataloader=train_DL,
-        test_dataloader=test_DL,
-        model_structure=model_dict,
-        checkpoint=cnn_checkpoint,
-        loss_function=cnn_loss,
-        learning_rate=loss_lr_rate,
-        learning_rate_scheduler=lr_rate_schedule,
-        early_stop_rate=early_stop,
-        device=device,
-        warmup=warmup,
-        epochs=epochs,
-    )
+    if not test_click:
+        train_cnn(
+            train_dataloader=train_DL,
+            test_dataloader=test_DL,
+            model_structure=model_dict,
+            checkpoint=cnn_checkpoint,
+            loss_function=cnn_loss,
+            learning_rate=loss_lr_rate,
+            learning_rate_scheduler=lr_rate_schedule,
+            early_stop_rate=early_stop,
+            device=device,
+            warmup=warmup,
+            epochs=epochs,
+        )
+    else:
+        rmtree(join(path, "train"))
+        rmtree(join(path, "test"))
 
 
 if __name__ == "__main__":

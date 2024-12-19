@@ -216,6 +216,12 @@ from tardis_em._version import version
     help="Number or epoch's without improvement, " "after which training is stopped.",
     show_default=True,
 )
+@click.option(
+    "-test_click",
+    "--test_click",
+    default=False,
+    hidden=True
+)
 @click.version_option(version=version)
 def main(
     path: str,
@@ -241,6 +247,7 @@ def main(
     device: str,
     epochs: int,
     early_stop: int,
+    test_click=False,
 ):
     """Initialize TARDIS progress bar"""
     tardis_logo = TardisLogo()
@@ -390,20 +397,26 @@ def main(
             "structure": structure,
         }
 
-    train_dist(
-        dataset_type=dataset_type,
-        edge_angles=edge_angles,
-        train_dataloader=dl_train_graph,
-        test_dataloader=dl_test_graph,
-        model_structure=model_dict,
-        checkpoint=checkpoint,
-        loss_function=loss,
-        learning_rate=loss_lr,
-        lr_scheduler=lr_rate_schedule,
-        early_stop_rate=early_stop,
-        device=device,
-        epochs=epochs,
-    )
+    if not test_click:
+        train_dist(
+            dataset_type=dataset_type,
+            edge_angles=edge_angles,
+            train_dataloader=dl_train_graph,
+            test_dataloader=dl_test_graph,
+            model_structure=model_dict,
+            checkpoint=checkpoint,
+            loss_function=loss,
+            learning_rate=loss_lr,
+            lr_scheduler=lr_rate_schedule,
+            early_stop_rate=early_stop,
+            device=device,
+            epochs=epochs,
+        )
+    else:
+        rmtree(join(path, "train"))
+        rmtree(join(path, "temp_train"))
+        rmtree(join(path, "test"))
+        rmtree(join(path, "temp_test"))
 
 
 if __name__ == "__main__":

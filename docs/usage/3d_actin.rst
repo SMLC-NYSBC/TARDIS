@@ -5,7 +5,7 @@
 .. role:: guilabel
 
 Prediction of 3D Actin semantics/instances
----------------------------------------
+------------------------------------------
 
 This guide provides detailed instructions to perform fully automatic actin
 segmentation on all of your tomograms using our most up-to-date model.
@@ -13,7 +13,7 @@ segmentation on all of your tomograms using our most up-to-date model.
 TARDIS can predict fully automatic actin as semantic labels, or
 instances [track, or labels].
 
-.. image:: ../resources/3d_actin.jpg
+.. image:: ../resources/3d_actin.png
 
 Data source: 10002 dataset, CZI Cryo-EM Data Portal
 

@@ -72,7 +72,7 @@ _______
     - :guilabel:`Allowed options:` float
 
 :bash:`-points_in_patch`: Maximum number of points per patched point cloud.
-    - :guilabel:`Tip`: About 1000 points require ~ 12Gb of GPU or RAM (if device_ == 'cpu')
+    - :guilabel:`Tip`: About 1000 points require ~ 12Gb of GPU or RAM (if device == 'cpu')
     - :guilabel:`Allowed options:` int
 
 :bash:`-predict_with_rotation`: If True, CNN predict with 4 90* rotations.

@@ -36,7 +36,7 @@ def curvature(coord: np.ndarray, tortuosity_=False) -> Union[float, tuple]:
     r2 = np.vstack(der2).T  # Second derivative (acceleration)
 
     # Calculate curvature
-    curvature = (
+    curvature_value = (
         np.linalg.norm(np.cross(r1, r2), axis=1) / np.linalg.norm(r1, axis=1) ** 3
     )
 
@@ -50,10 +50,10 @@ def curvature(coord: np.ndarray, tortuosity_=False) -> Union[float, tuple]:
         straight_line_distance = np.linalg.norm(end_point - start_point)
 
         # Calculate tortuosity
-        tortuosity = arc_length / straight_line_distance
+        tortuosity_value = arc_length / straight_line_distance
 
-        return curvature, tortuosity
-    return curvature
+        return curvature_value, tortuosity_value
+    return curvature_value
 
 
 def curvature_list(
@@ -171,7 +171,7 @@ def length_list(coord: np.ndarray) -> list:
     return [float(x) for x in spline_length_list]
 
 
-def angle_between_vectors(v1, v2):
+def angle_between_vectors(v1: np.ndarray, v2: np.ndarray) -> float:
     """
     Calculate the angle in degrees between two vectors.
 
@@ -181,8 +181,8 @@ def angle_between_vectors(v1, v2):
         cos(theta) = (A . B) / (||A|| ||B||)
 
     Args:
-        v1(np.ndarray): First input vector.
-        v2(np.ndarray): Second input vector.
+        v1 (np.ndarray): First input vector.
+        v2 (np.ndarray): Second input vector.
 
     Returns:
         float The angle in degrees between vector 'v1' and 'v2'.
@@ -201,13 +201,30 @@ def angle_between_vectors(v1, v2):
     return np.degrees(angle)
 
 
-def intensity(data: np.ndarray, image: np.ndarray, thickness=1):
+def intensity(data: np.ndarray, image: np.ndarray, thickness=1) -> np.ndarray:
+    """
+    This function computes the intensity difference along a spline defined by the input `data`
+    on a given `image`. The function creates a smoothed spline using the input data coordinates.
+    It calculates pixel intensity values along the spline and compares them with background levels
+    computed from adjacent pixels above and below the spline. The difference between the spline's
+    intensity and the background is then returned.
+
+    Args:
+        data (np.ndarray): The coordinates of the points defining the spline. Input should be a 2D array
+            where each row represents a point in the form [x, y].
+        image (np.ndarray): The input image from which pixel intensities are extracted. Input should be a
+            2D array representing grayscale pixel intensities.
+        thickness (int): Thickness of the spline line for intensity computation. A value greater
+            than 1 expands the spline's pixel coordinates laterally to include additional neighboring
+            pixels, enhancing the result for thicker lines. Defaults to 1.
+    """
     tck, u = splprep(data.T, s=0)
 
-    data_fine = np.linspace(0, 1, int(total_length(data)))
+    data_fine = np.linspace(0, 1, 2 * int(total_length(data)))
     data_fine = np.array(splev(data_fine, tck)).T
 
     pixel_coords = np.rint(data_fine).astype(int)
+    pixel_coords = np.unique(pixel_coords, axis=0)
     if thickness > 1:
         pixel_coords = thicken_line_coordinates(pixel_coords, thickness)
 
@@ -239,7 +256,22 @@ def intensity(data: np.ndarray, image: np.ndarray, thickness=1):
     return np.array(spline_intensity) - np.array(spline_background)
 
 
-def pixel_intensity(coord, image):
+def pixel_intensity(coord: np.ndarray, image: np.ndarray) -> Union[list, None]:
+    """
+    Extracts pixel intensity values from a given image for specified coordinates.
+
+    The function retrieves the intensity values from the provided 2D or 3D image array
+    based on the array of coordinates. If the coordinate is out of the image bounds,
+    a placeholder value is used initially (`None`). If any such placeholder exists,
+    it is replaced with the minimum intensity value found in the image for valid
+    coordinates. If no valid values exist, the return value is `None`.
+
+    Args:
+        coord (np.ndarray): An array of coordinates representing pixel locations. For 2D images,
+            each coordinate should be in the form (x, y, _), and for 3D images, (x, y, z).
+        image (np.ndarray): A 2D or 3D array representing the image from which pixel intensities
+            are extracted.
+    """
     extracted_pixels = []
 
     if image.ndim == 2:
@@ -270,7 +302,7 @@ def pixel_intensity(coord, image):
     return extracted_pixels
 
 
-def thicken_line_coordinates(coords, thickness):
+def thicken_line_coordinates(coords: np.ndarray, thickness: int):
     """
     Given a list of (x, y, z) coordinates defining a 1-pixel thick line,
     generate additional coordinates to increase thickness.
@@ -304,6 +336,7 @@ def intensity_list(coord: np.ndarray, image: np.ndarray, thickness=1):
     Args:
         coord (np.ndarray): Coordinates for each unsorted point idx.
         image (np.ndarray): Associated image.
+        thickness (int): Thickness of the spline.
 
     Returns:
         list: Spline length list.
