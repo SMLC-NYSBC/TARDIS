@@ -40,19 +40,32 @@ import importlib.util as lib_utils
 
 class ImportDataFromAmira:
     """
-    LOADER FOR AMIRA SPATIAL GRAPH FILES
+    Class for importing and handling data from Amira files.
 
-    This class read any .am file and if the spatial graph is recognized it is converted
-    into a numpy array as (N, 4) with class ids and coordinates for XYZ.
-    Also, due to Amira's design, file properties are encoded only in the image file
-    therefore in order to properly ready spatial graph, class optionally requires
-    amira binary or ASCII image file which contains transformation properties and
-    pixel size. If the image file is not included, the spatial graph is returned without
-    corrections.
+    Provides functionality to extract spatial graphs, segment data, points, and
+    vertices from Amira files. This class also handles image and surface data if
+    provided, performing validation for Amira-specific file formats. It is designed
+    to assist in loading Amira Mesh 3D models and extracting relevant graphical
+    and spatial data for further processing.
 
-    Args:
-        src_am (str): Amira spatial graph directory.
-        src_img (str, optional): Amira binary or ASCII image file directory.
+    :ivar src_img: Path to the source image file.
+    :type src_img: str or None
+    :ivar src_am: Path to the source Amira Mesh file.
+    :type src_am: str
+    :ivar src_surf: Path to the source Amira surface file.
+    :type src_surf: str or None
+    :ivar image: Loaded image data as a multi-dimensional array.
+    :type image: numpy.ndarray or None
+    :ivar pixel_size: Pixel size of the image.
+    :type pixel_size: float or None
+    :ivar physical_size: Physical size of the image in appropriate units.
+    :type physical_size: float or None
+    :ivar transformation: Transformation matrix applied to the image.
+    :type transformation: numpy.ndarray or None
+    :ivar surface: Loaded surface data.
+    :type surface: Any or None
+    :ivar spatial_graph: Spatial graph data extracted from the Amira file.
+    :type spatial_graph: list of str or None
     """
 
     def __init__(
@@ -159,10 +172,19 @@ class ImportDataFromAmira:
 
     def __get_segments(self) -> Union[np.ndarray, None]:
         """
-        Helper class function to read segment data from amira file.
+        This function processes a spatial graph to extract segments and their respective
+        number of points. It begins by locating specific markers in the spatial graph
+        to determine the range of relevant segments. Using these markers, it isolates
+        the lines in the spatial graph that define each segment and calculates the
+        number of points corresponding to each segment. The result is returned as a
+        NumPy array, where each entry represents the number of points in a segment.
+        If no spatial graph is available, it returns None.
 
-        Returns:
-            np.ndarray: Array (N, 1) indicating a number of points per segment.
+        :param self: The current instance of the class containing the spatial graph data.
+        :type self: object
+        :return: A NumPy array representing the number of points in each segment, or
+            None if no spatial graph is provided.
+        :rtype: Union[np.ndarray, None]
         """
         if self.spatial_graph is None:
             return None
@@ -211,10 +233,19 @@ class ImportDataFromAmira:
 
     def __find_points(self) -> Union[np.ndarray, None]:
         """
-        Helper class function to search for points in Amira file.
+        Extracts and returns coordinates of points defined in the spatial graph.
 
-        Returns:
-            np.ndarray: Set of all points.
+        This method processes a `spatial_graph` object (list of strings) to
+        identify and extract 3D coordinate points defined within it. The points
+        are extracted from specific lines and parsed into a numerical array for
+        further usage. If no spatial graph is set, the function returns `None`.
+
+        :return: A 2D NumPy array where each row represents the 3D coordinates
+            (x, y, z) of a point in the spatial graph. If `spatial_graph` is
+            not provided or points cannot be found, returns `None`.
+        :rtype: Union[np.ndarray, None]
+        :raises ValueError: When the index for extracting points fails due to
+            invalid input format in the `spatial_graph`.
         """
         if self.spatial_graph is None:
             return None
@@ -262,10 +293,16 @@ class ImportDataFromAmira:
 
     def __find_vertex(self) -> Union[np.ndarray, None]:
         """
-        Helper class function to search for VERTEX in Amira file.
+        Finds and retrieves the vertex coordinates from the `spatial_graph` attribute. The method
+        parses a specific textual structure to locate and extract vertex data. It then processes
+        this data into a NumPy array containing coordinate points.
 
-        Returns:
-            np.ndarray: Set of all points.
+        :raises ValueError: If the expected vertex structure is not properly indexed in the
+            spatial_graph or there is an inconsistency in parsing the vertex data.
+
+        :return: NumPy array containing vertex coordinates as floats in pixel space, or None
+            if no `spatial_graph` is provided.
+        :rtype: Union[np.ndarray, None]
         """
         if self.spatial_graph is None:
             return None
@@ -314,11 +351,19 @@ class ImportDataFromAmira:
 
     def get_points(self) -> Union[np.ndarray, None]:
         """
-        General class function to retrieve point cloud.
+        Computes and returns the transformed points' coordinates based on the
+        spatial graph and image properties.
 
-        Returns:
-            np.ndarray: Point cloud as [X, Y, Z] after transformation and
-                pixel size correction.
+        If the `spatial_graph` is None, it returns None. The method calculates
+        the transformed coordinates of points, adjusting for spatial shifts and
+        applying scaling based on the pixel size or other specified factors.
+
+        :raises IndexError: Raised if the extraction of 'Coordinate' information
+            from the `spatial_graph` fails due to lack of expected content or
+            format.
+        :rtype: Union[numpy.ndarray, None]
+        :return: A numpy array of transformed point coordinates or None if the
+            `spatial_graph` attribute is unset.
         """
         if self.spatial_graph is None:
             return None
@@ -349,11 +394,25 @@ class ImportDataFromAmira:
 
     def get_vertex(self) -> Union[np.ndarray, None]:
         """
-        General class function to retrieve point cloud.
+        Retrieves the adjusted vertex coordinates from the spatial graph considering
+        the transformation and the scale parameter. If the spatial graph or source
+        image data is unavailable, it accounts for these conditions and returns
+        appropriate results.
 
-        Returns:
-            np.ndarray: Point cloud as [X, Y, Z] after transformation and
-                pixel size correction.
+        :param np.ndarray | None self.spatial_graph: The spatial graph data structure
+            containing coordinate information in string format. If None, the method
+            returns None.
+        :param np.ndarray | None self.src_img: Input source image data. If None, uses
+            zero as transformation values.
+        :param list[float] self.transformation: Transformation offsets for the x, y,
+            and z coordinates, initialized or updated during the computation.
+        :param float self.pixel_size: Pixel size value used for scaling the
+            coordinates.
+        :return: Adjusted vertex coordinates as a NumPy array or None if spatial
+            graph is not available.
+        :rtype: np.ndarray | None
+        :raises IndexError: May be raised if the coordinates information in the
+            spatial graph is not found or formatted unexpectedly.
         """
         if self.spatial_graph is None:
             return None
@@ -384,10 +443,22 @@ class ImportDataFromAmira:
 
     def get_segmented_points(self) -> Union[np.ndarray, None]:
         """
-        General class function to retrieve segmented point cloud.
+        Generates segmented points based on the spatial graph and the computed
+        segments. The segmentation assigns an index to each point in the graph,
+        indicating which segment it belongs to.
 
-        Returns:
-            np.ndarray:  Point cloud as [ID, X, Y, Z].
+        :raises TypeError: Raised if `spatial_graph` is not of the expected
+            type or does not provide the necessary functionality.
+
+        :raises ValueError: Raised if the computed segments or points have
+            inconsistent shapes or invalid values.
+
+        :return: A numpy array of shape (N, 4) where each row represents a
+            point with its corresponding segment index as the first element.
+            The columns correspond to:
+            [segment_index, x_coordinate, y_coordinate, z_coordinate].
+            Returns None if the spatial_graph is None.
+        :rtype: Union[numpy.ndarray, None]
         """
         if self.spatial_graph is None:
             return None
@@ -410,10 +481,17 @@ class ImportDataFromAmira:
 
     def get_labels(self) -> Union[dict, None]:
         """
-        General class function to read all labels from amira file.
+        Determines and returns a dictionary representing labels and their corresponding
+        segment points from the spatial graph, if available. The method first identifies
+        label lines and segment definitions within the `spatial_graph`. It calculates
+        ranges for each label and extracts associated data points. If no `spatial_graph`
+        exists, it will return None.
 
-        Returns:
-            dict: Dictionary with label IDs
+        :raises ValueError: If a label identifier is not found in the `spatial_graph`.
+
+        :return: A dictionary mapping label names to points belonging to each segment
+            or None if `spatial_graph` is not defined.
+        :rtype: dict or None
         """
         if self.spatial_graph is None:
             return None
@@ -470,35 +548,55 @@ class ImportDataFromAmira:
 
     def get_image(self):
         """
-        General class function to return image file.
+        Retrieves the image and its corresponding pixel size. The method returns
+        a tuple containing the image and its respective pixel size. This function
+        is utilized to access an image alongside its metadata.
 
-        Returns:
-            np.ndarray, float: Image and if available pixel size data.
+        :return: A tuple where the first element is the image and the second
+            element is the pixel size.
+        :rtype: tuple
         """
         return self.image, self.pixel_size
 
     def get_pixel_size(self) -> float:
         """
-        Catch pixel size value from image.
+        Retrieves the size of a single pixel.
 
-        Returns:
-            float: Pixel size.
+        This method is used to return the size of a pixel in the unit of measurement
+        being used. It is particularly useful in contexts where precise graphical
+        or spatial calculations are required. The pixel size ensures that detailed
+        rendering or object measurements in the relevant domain maintain accuracy.
+
+        :return: The size of the pixel.
+        :rtype: float
         """
         return self.pixel_size
 
     def get_surface(self) -> Union[Tuple, None]:
+        """
+        Provides functionality to return the surface attribute of an object.
+
+        :return: Either the surface object or None if unavailable
+        :rtype: Union[Tuple, None]
+        """
         return self.surface
 
 
 def load_tiff(tiff: str) -> Tuple[np.ndarray, float]:
     """
-    Function to load any tiff file.
+    Load a TIFF file and return its data as a NumPy array along with an intensity scale
+    factor.
 
-    Args:
-        tiff (str): Tiff file directory.
+    This function checks if the specified TIFF file exists and reads its contents as a
+    NumPy array. If the file does not exist, it raises a TardisError. The function also
+    returns a fixed intensity scale factor of 1.0 for the loaded TIFF file.
 
-    Returns:
-        np.ndarray, float: Image data and unified pixel size.
+    :param tiff: The path to the TIFF file to be loaded.
+    :type tiff: str
+    :return: A tuple containing the NumPy array representation of the TIFF file and a
+        float representing the intensity scale factor.
+    :rtype: Tuple[np.ndarray, float]
+    :raises TardisError: If the specified TIFF file does not exist.
     """
     if not isfile(tiff):
         TardisError(
@@ -512,13 +610,14 @@ def load_tiff(tiff: str) -> Tuple[np.ndarray, float]:
 
 def mrc_read_header(mrc: Union[str, bytes, None] = None):
     """
-    Helper function to read MRC header.
+    Reads the header of an MRC file and returns it as a named tuple. This function
+    supports input as a file path or raw bytes. If a string is provided, the
+    function will open the file in binary mode and read the first 1024 bytes as
+    the header. If raw bytes are passed directly, it processes them as the
+    header.
 
-    Args:
-        mrc (str): MRC file directory.
-
-    Returns:
-        class: MRC header.
+    :param mrc: The MRC file path as a string, raw header bytes, or None.
+    :return: Named tuple representing the parsed header of the MRC file.
     """
     if isinstance(mrc, str):
         with open(mrc, "rb") as f:
@@ -530,19 +629,35 @@ def mrc_read_header(mrc: Union[str, bytes, None] = None):
 
 
 def mrc_write_header(*args) -> bytes:
+    """
+    Constructs an MRC file header.
+
+    :param args: The arguments required to initialize an `MRCHeader` object.
+    :return: Packed binary data representing the MRC header.
+    :rtype: bytes
+    """
     header = MRCHeader(*args)
     return header_struct.pack(*list(header))
 
 
 def mrc_mode(mode: int, amin: int):
     """
-    Helper function to decode MRC mode type.
+    Determines and returns the appropriate data type or mode based on the
+    provided mode and amin values. The function maps image modes to their respective
+    data types, handling specific cases for input mode and amin values and also validates
+    if the mode corresponds to known types.
 
-    mode int: MRC mode from mrc header.
-    amin int: MRC minimum pixel value.
-
-    Returns:
-        np.dtype: Mode as np.dtype.
+    :param mode: The mode to evaluate. It can be either an integer or a specific
+        type matching one of the predefined dtype values.
+    :type mode: int
+    :param amin: Minimum amplitude or intensity value used to refine the data type
+        determination for the provided mode. Applicable when the mode is 0.
+    :type amin: int
+    :return: Returns the corresponding data type or mode index based on the
+        provided parameters. For integer mode inputs, it will return the dtype
+        associated with the mode or an error will be raised for unsupported modes.
+        For non-integer type matching, it will return the corresponding mode index.
+    :rtype: Union[numpy.dtype, str, int]
     """
     dtype_ = {
         0: np.uint8,
@@ -592,13 +707,25 @@ def mrc_mode(mode: int, amin: int):
 
 def load_am(am_file: str):
     """
-    Function to load Amira binary image data.
+    Loads data from an AmiraMesh (.am) 3D image file and extracts image,
+    pixel size, physical dimensions, and transformation details.
 
-    Args:
-        am_file (str): Amira binary image .am file.
+    Loads the content of the `.am` file, determines the data type (ASCII or binary),
+    and parses metadata such as physical size, bounding box, pixel size, and
+    coordinate system. The function processes binary/ASCII data from the file,
+    reshapes it into suitable dimensions, and handles any missing or incomplete data
+    by correcting or filling it as necessitated by the `.am` file format.
 
-    Returns:
-        np.ndarray, float, float, list: Image file as well images parameters.
+    :param am_file: File path of the .am file to be loaded.
+    :type am_file: str
+    :return: A tuple containing:
+        - Numpy array of the image.
+        - Pixel size in angstrom units.
+        - Physical size of the image.
+        - Transformation (offsets) in the bounding box.
+    :rtype: tuple[np.ndarray, float, float, np.ndarray]
+    :raises TardisError: If the file does not exist, is of unsupported format,
+        or contains missing or invalid metadata.
     """
     if not isfile(am_file):
         TardisError(
@@ -718,12 +845,26 @@ def load_am(am_file: str):
 
 def load_am_surf(surf_file: str, simplify_=None) -> Tuple:
     """
+    Parses an Amira surface file and extracts material names, grid properties, vertex data,
+    and triangle data. It also optionally simplifies the geometry using Open3D.
 
-    Args:
-        surf_file (str): File directory
+    This function reads the content of an Amira surface file, retrieves Material names,
+    GridBox, GridSize, Vertices, and Triangle data. It organizes these data into structured
+    formats and optionally simplifies vertex and triangle meshes if the `simplify_` argument
+    is supplied. It is designed to assist in reading and processing surface geometry data
+    from Amira format.
 
-    Returns:
-        Tuple: List of Materials, bounding box, all vertices, list of triangles
+    :param surf_file: Path to the Amira surface file.
+    :type surf_file: str
+    :param simplify_: Level of simplification to apply to the mesh geometry. If None, no
+                      simplification is performed.
+    :type simplify_: Optional[int]
+    :return: A 4-tuple containing:
+             - A list of material names extracted from the file.
+             - A list comprising GridBox and GridSize arrays.
+             - A list of vertex arrays for each material's geometry.
+             - A list of triangle arrays for each material's geometry.
+    :rtype: Tuple[List[str], List[np.ndarray], List[np.ndarray], List[np.ndarray]]
     """
     surf_file = open(surf_file, "r", encoding="iso-8859-1").read()
     assert surf_file.startswith("# HyperSurface"), "Not Amira surface file!"
@@ -804,13 +945,17 @@ def load_am_surf(surf_file: str, simplify_=None) -> Tuple:
 
 def load_mrc_file(mrc: str) -> Union[Tuple[np.ndarray, float], Tuple[None, float]]:
     """
-    Function to load MRC 2014 file format.
+    Loads and processes an .mrc file to extract image data and pixel size. The function checks for
+    the existence of the .mrc file, reads its header, and computes the appropriate pixel size based
+    on dimensions in the header. It attempts to load the image data, ensures file integrity by
+    mitigating corrupted file instances, and performs dimensional reshaping where necessary.
 
-    Args:
-        mrc (str): MRC file directory.
-
-    Returns:
-        np.ndarray, float: Image data and pixel size.
+    :param mrc: The file path to the .mrc file to be loaded.
+    :type mrc: str
+    :return: A tuple containing the loaded image data and the pixel size (in Angstroms).
+             If the file is corrupted and no valid image data can be retrieved, returns
+             a tuple where the image data is None and pixel size is set to 1.0.
+    :rtype: Tuple[np.ndarray | None, float]
     """
     if not isfile(mrc):
         TardisError(
@@ -872,7 +1017,17 @@ def load_mrc_file(mrc: str) -> Union[Tuple[np.ndarray, float], Tuple[None, float
 
 def load_nd2_file(nd2_dir: str) -> Tuple[np.ndarray, float]:
     """
-    Load nd2 image format and return standard reshape [Channel x Frame x Time x Y x X]
+    Loads an ND2 file and processes the image into a specific format. This function
+    is designed to read images from ND2 files, which may include movies or still
+    images. It checks the dimensionality of the image and applies transformations
+    to standardize the format before calculating certain statistical criteria to
+    sort them. The result is the sorted image array and a scaling factor.
+
+    :param nd2_dir: Path to the ND2 file to load.
+    :type nd2_dir: str
+    :return: A tuple consisting of the processed image data as a numpy array and
+        the scaling factor (float).
+    :rtype: Tuple[np.ndarray, float]
     """
     try:
         nd2.version("nd2")
@@ -908,14 +1063,22 @@ def load_ply_scannet(
     ply: str, downscaling=0, color: Optional[str] = None
 ) -> Union[Tuple[ndarray, ndarray], ndarray]:
     """
-    Function to read .ply files.
-    Args:
-        ply (str): File directory.
-        downscaling (float): Downscaling point cloud by fixing voxel size defaults to 0.1.
-        color (str, optional): Optional color feature defaults to None.
-    Returns:
-        np.ndarray: Label point cloud coordinates and optionally RGB value for
-            each point.
+    Load and process a .ply file of the ScanNet dataset. This function reads the input
+    .ply file, extracts point cloud data, and optionally loads RGB features or applies
+    downscaling. It also maps ScanNet v2 labels to corresponding classes, if applicable.
+
+    :param ply: Path to the .ply file containing point cloud data.
+    :type ply: str
+    :param downscaling: Voxel size for downscaling the point cloud. If set to 0, no
+        downscaling is applied.
+    :type downscaling: int, optional
+    :param color: Optional path to a secondary .ply file containing RGB features
+        for the point cloud.
+    :type color: str, optional
+    :return: Either a tuple containing the downsampled point cloud coordinates and RGB
+        features, or the downsampled point cloud coordinates only, depending on whether
+        a color file was provided.
+    :rtype: Union[Tuple[ndarray, ndarray], ndarray]
     """
     # Load .ply scannet file
     ply = PlyData.read(ply)["vertex"]
@@ -967,12 +1130,16 @@ def load_ply_scannet(
 
 def load_ply_partnet(ply, downscaling=0) -> np.ndarray:
     """
-    Function to read .ply files.
-    Args:
-        ply (str): File directory.
-        downscaling (float): Downscaling point cloud by fixing voxel size.
-    Returns:
-        np.ndarray: Labeled point cloud coordinates.
+    Loads a .ply file in the PartNet format and processes its point cloud by extracting coordinates and color information.
+    Optionally performs downscaling of the point cloud and assigns unique labels to points based on their colors.
+
+    :param ply: The path or file-like object referring to the .ply file to be loaded.
+    :type ply: str or file-like
+    :param downscaling: The voxel size used for downscaling the point cloud. If 0, no downscaling is applied.
+    :type downscaling: int
+    :return: A NumPy array containing the processed point cloud. The array consists of assigned label IDs and the
+        downscaled or original coordinates.
+    :rtype: np.ndarray
     """
     # Load .ply scannet file
     ply = PlyData.read(ply)["vertex"]
@@ -1007,15 +1174,35 @@ def load_txt_s3dis(
     txt: str, rgb=False, downscaling=0
 ) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
     """
-    Function to read .txt Stanford 3D instance scene file.
+    Loads a point cloud dataset in `.txt` format and optionally applies
+    downscaling and extracts RGB color information if present.
 
-    Args:
-        txt (str): File directory.
-        rgb (bool): If True return RGB value.
-        downscaling (float): Downscaling point cloud by fixing voxel size.
+    The function interprets the `.txt` file specified by the ``txt`` parameter
+    as a space-separated file containing point cloud data. The first three
+    columns are assumed to be the X, Y, and Z coordinates. Any additional
+    columns are interpreted as RGB values. Users can optionally apply voxel-based
+    downscaling to reduce the resolution of the point cloud.
 
-    Returns:
-        np.ndarray: Labeled point cloud coordinates.
+    The function returns either the coordinates of the point cloud or a tuple
+    containing the coordinates and their corresponding RGB values, depending on
+    the value of the ``rgb`` argument.
+
+    :param txt: Path to the `.txt` file containing the point cloud data.
+    :type txt: str
+    :param rgb: A flag indicating whether the RGB values should be extracted.
+                 If set to True, the RGB values, if available, are returned along
+                 with the coordinates. Defaults to False.
+    :type rgb: bool
+    :param downscaling: Voxel size for downscaling the point cloud. If set to a
+                        value greater than 0, the point cloud will be downsampled
+                        to reduce resolution using a voxel-based approach.
+                        Defaults to 0 (no downscaling).
+    :type downscaling: int
+    :return: If ``rgb`` is True, returns a tuple of two numpy arrays:
+             the first array containing the downscaled coordinates and the
+             second array containing RGB values. If ``rgb`` is False, returns
+             a single numpy array containing only the downscaled coordinates.
+    :rtype: Union[Tuple[np.ndarray, np.ndarray], np.ndarray]
     """
     coord = pd.read_csv(txt, sep=" ", on_bad_lines="skip").to_numpy()
 
@@ -1039,16 +1226,28 @@ def load_s3dis_scene(
     dir_: str, downscaling=0, random_ds=None, rgb=False
 ) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
     """
-    Function to read .txt Stanford 3D instance scene files.
+    Loads and processes a Stanford Large-Scale 3D Indoor Spaces (S3DIS) scene from a specified
+    directory. This function creates a scene containing 3D spatial coordinates and optionally
+    RGB color data. It also allows for downscaling of the scene, either with a fixed downscaling
+    factor or a random downsampling threshold. The output format depends on whether RGB data
+    is included and whether any downscaling is applied.
 
-    Args:
-        dir_ (str): Folder directory with all instances.
-        downscaling (float): Downscaling point cloud by fixing voxel size.
-        random_ds (None, float): If not None, indicate ration of point to keep.
-        rgb (bool): If True, load rgb value.
-
-    Returns:
-        np.ndarray: Labeled point cloud coordinates.
+    :param dir_: Directory containing the S3DIS scene files.
+    :type dir_: str
+    :param downscaling: Downscaling factor to reduce the scene resolution by voxelizing.
+        Default is 0, meaning no downscaling is applied.
+    :type downscaling: int, optional
+    :param random_ds: Random downsampling threshold. Overrides ``downscaling`` if provided.
+        Default is None, meaning no random downsampling is applied.
+    :type random_ds: float, optional
+    :param rgb: Boolean indicating whether to include RGB color data in the output.
+        If True, extracts [R, G, B] values along with spatial coordinates. Defaults to False.
+    :type rgb: bool, optional
+    :return: If ``rgb`` is True, returns a tuple containing the processed coordinate array
+        and normalized RGB data as numpy arrays. If ``rgb`` is False, returns only the
+        processed coordinate array. If downscaling or random downsampling is applied, the
+        data is downscaled accordingly.
+    :rtype: Union[Tuple[np.ndarray, np.ndarray], np.ndarray]
     """
     dir_list = [x for x in listdir(dir_) if x not in [".DS_Store", "Icon"]]
 
@@ -1090,28 +1289,36 @@ def load_s3dis_scene(
 def load_image(
     image: str,
     normalize=False,
-    px_=True,
+    px=True,
 ) -> Union[np.ndarray, Tuple[np.ndarray, float]]:
     """
-    Quick wrapper for loading image data based on the detected file format.
+    Loads an image file and processes it based on its type. The function supports
+    several image formats including TIFF, MRC, AM, and ND2. Depending on the file
+    type, the image is loaded using the respective file-loader function, and
+    optional normalization can be applied. Pixel size information may be returned
+    for some file types.
 
-    Args:
-        image (str): Image file directory.
-        normalize (bool): Rescale histogram to 1% - 99% percentile.
-        px_ (bool): Return px if True
-
-    Returns:
-        np.ndarray, float: Image array and associated pixel size.
+    :param image: Path to the image file to be loaded.
+    :type image: str
+    :param normalize: Flag indicating whether to apply normalization to the
+        loaded image. Defaults to False.
+    :type normalize: bool
+    :param px: Flag indicating whether to return pixel size information
+        along with the image. Defaults to True.
+    :type px: bool
+    :return: The loaded image and optionally the pixel size information as a
+        float if `px` is True. If `px` is False, only the image is returned.
+    :rtype: Union[np.ndarray, Tuple[np.ndarray, float]]
     """
-    px = 0.0
+    px_value = 0.0
 
     if image.endswith((".tif", ".tiff")):
         image, _ = load_tiff(image)
-        px = 1.0
+        px_value = 1.0
     elif image.endswith((".mrc", ".rec", ".map")):
-        image, px = load_mrc_file(image)
+        image, px_value = load_mrc_file(image)
     elif image.endswith(".am"):
-        image, px, _, _ = load_am(image)
+        image, px_value, _, _ = load_am(image)
     elif image.endswith(".nd2"):
         library_names = ["nd2"]
         library_installed = False
@@ -1121,7 +1328,7 @@ def load_image(
 
         assert library_installed, "ND2 library is not installed."
 
-        image, px = load_nd2_file(image)
+        image, px_value = load_nd2_file(image)
 
     if normalize:
         mean_std = MeanStdNormalize()
@@ -1135,6 +1342,6 @@ def load_image(
             f"Indicated {image} file does not exist...",
         )
 
-    if px_:
-        return image, px
+    if px:
+        return image, px_value
     return image

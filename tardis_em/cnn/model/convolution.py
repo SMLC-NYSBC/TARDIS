@@ -19,13 +19,31 @@ from tardis_em.utils.errors import TardisError
 
 class GeLU(nn.Module):
     """
-    CUSTOM GAUSSIAN ERROR LINEAR UNITS ACTIVATION FUNCTION
+    Applies the Gaussian Error Linear Unit (GeLU) activation function.
 
-    Args:
-        tanh (float): hyperbolic tangent value for GeLU
+    The GeLU activation function is a smooth approximation to the ReLU activation function.
+    This implementation provides an optional `tanh` parameter that can be used to scale the
+    input argument to the standard mathematical error function (erf). It is primarily used
+    in neural networks to introduce non-linearity.
+
+    :ivar tanh: A scaling factor applied to the input tensor during the forward pass.
+    :type tanh: float
     """
 
     def __init__(self, tanh: Optional[float] = None):
+        """
+        Represents the Gaussian Error Linear Unit (GeLU) function used as an activation function
+        in machine learning models. This implementation contains an optional tangent hyperbolic
+        approximation factor that alters the behavior of the GeLU computation.
+
+        :ivar tanh: The precomputed value of the square root of the given tangent hyperbolic
+            approximation factor. If not provided during initialization, defaults to the
+            square root of 2.
+
+        :param tanh: Optional tangent hyperbolic approximation factor. If provided, its square
+            root is calculated and stored as an attribute.
+        :type tanh: float or None
+        """
         super(GeLU, self).__init__()
 
         if tanh is not None:
@@ -35,13 +53,15 @@ class GeLU(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Forward GeLu transformation.
+        Applies a transformation to the input tensor using the hyperbolic tangent error function,
+        scaling the result accordingly. This method is commonly utilized in machine learning models
+        and functions by smoothing input data values into a specified scaling range.
 
-        Args:
-            x (torch.Tensor): Image tensor to transform.
+        :param x: Input tensor on which the transformation is applied.
+        :type x: torch.Tensor
 
-        Returns:
-            torch.Tensor: Transformed image tensor.
+        :return: Transformed tensor after applying the scaled error function operation.
+        :rtype: torch.Tensor
         """
         return x * 0.5 * (1.0 + torch.erf(x / self.tanh))
 
@@ -55,24 +75,35 @@ def convolution(
     num_group=None,
 ) -> list:
     """
-    Customizable convolution block builder.
+    Builds a neural network block by assembling components specified in the given
+    string. This function enables the construction of customizable CNN layers
+    based on the input parameters and component configurations. The components
+    can consist of various operations such as convolutions (2D or 3D), normalization
+    techniques (GroupNorm, BatchNorm), and activation functions (ReLU, LeakyReLU,
+    GeLU, PReLU). These components are added sequentially to the module list based
+    on their order in the `components` string.
 
-    Build an convolution block with a specified components and order:
-    dimension (2 or 3), conv (c),
-    ReLu (r), LeakyReLu (l), GeLu (e), PReLu (p),
-    GroupNorm (g), BatchNorm (b).
+    :param in_ch: Number of input channels for the convolutional layers.
+    :type in_ch: int
+    :param out_ch: Number of output channels for the convolutional layers.
+    :type out_ch: int
+    :param components: A string that specifies the sequence of operations for the
+                       CNN block. Each character or group represents a specific
+                       operation such as convolution, normalization, or activation.
+    :type components: str
+    :param kernel: Kernel size for the convolution. Can be an integer or a tuple
+                   representing the size.
+    :type kernel: int or tuple
+    :param padding: Padding size for the convolution. Can be an integer or a tuple
+                    representing the size.
+    :type padding: int or tuple
+    :param num_group: Number of groups for Group Normalization. Required if
+                      GroupNorm is included in the components. Defaults to None.
+    :type num_group: int, optional
 
-    Args:
-        in_ch (int): Number of input channels.
-        out_ch (int): Number of output channels.
-        components (str): Components that are used for conv. block.
-        kernel (int, tuple): Kernel size for the convolution.
-        padding (int, tuple): Padding size for the convolution.
-        num_group (int): Num. of groups for the nn.GroupNorm.
-            None -> if nn.GroupNorm is not used.
-
-    Returns:
-        list: Ordered nn.Module list.
+    :return: A list of tuples representing the layers in the CNN block.
+             Each tuple contains a layer name and its corresponding module.
+    :rtype: list
     """
     modules = []
     conv = False
@@ -191,22 +222,18 @@ def convolution(
 
 class SingleConvolution(nn.Sequential):
     """
-    STANDARD SINGLE 3D CONVOLUTION BLOCK
+    Represents a sequential layer that contains a single convolution operation.
 
-    Output single convolution composed of conv, normalization and relu in order
-    defined by components variable.
+    This class is a part of a neural network building process, specifically for
+    performing either 2D or 3D convolutional operations. It inherits from
+    `nn.Sequential` to combine multiple convolutional modules into a sequence
+    based on the specified dimensionality of the operation. It dynamically
+    constructs convolutional layers considering the input parameters.
 
-    Args:
-        in_ch (int): Number of input channels.
-        out_ch (int): Number of output channels.
-        block_type (str): Define encode or decoder path e.g.
-            - 'encoder': Encoder convolution path
-            - 'decoder': Decoder convolution path
-        components (str): Components that are used for conv. block.
-        kernel (int, tuple): Kernel size for the convolution.
-        padding (int, tuple): Padding size for the convolution.
-        num_group (int): Num. of groups for the nn.GroupNorm.
-            None -> if nn.GroupNorm is not used.
+    :ivar _modules: Contains ordered child modules of the sequential
+                    structure, populated with the convolutional layers
+                    defined during initialization.
+    :type _modules: collections.OrderedDict
     """
 
     def __init__(
@@ -219,6 +246,33 @@ class SingleConvolution(nn.Sequential):
         num_group=None,
         block_type="any",
     ):
+        """
+        Represents a single convolution operation, supporting 2D or 3D convolution
+        based on the input arguments. The class dynamically constructs and assigns
+        the convolution modules during initialization for efficient and modular
+        integration.
+
+        :param in_ch: Number of input channels for the convolution operation.
+        :type in_ch: int
+        :param out_ch: Number of output channels from the convolution operation.
+        :type out_ch: int
+        :param components: Specification for the components to be utilized,
+            determining if 2D or 3D convolution is applied. It should include
+            '2' for 2D and '3' for 3D components processing.
+        :type components: str
+        :param kernel: Size of the convolution kernel. Accepts either an int or a
+            tuple reflecting the dimensionality of the kernel.
+        :type kernel: int or tuple
+        :param padding: Padding value applied to the input, configurable by
+            integer or tuple for kernel dimension matching.
+        :type padding: int or tuple
+        :param num_group: Optional grouping parameter for grouped convolution,
+            defaults to None implying standard convolution behavior.
+        :type num_group: int, optional
+        :param block_type: An optional string parameter to define the specific
+            block type functionality. Defaults to "any".
+        :type block_type: str, optional
+        """
         super(SingleConvolution, self).__init__()
 
         """Build single Conv3D"""
@@ -252,19 +306,28 @@ class SingleConvolution(nn.Sequential):
 
 class DoubleConvolution(nn.Sequential):
     """
-    DOUBLE CONVOLUTION BLOCK
+    Implements a double convolutional block feature in a neural network.
 
-    Args:
-        in_ch (int): Number of input channels.
-        out_ch (int): Number of output channels.
-        block_type (str): Define encode or decoder path e.g.
-            - 'encoder': Encoder convolution path
-            - 'decoder': Decoder convolution path
-        components (str): Components that are used for conv. block.
-        kernel (int, tuple): Kernel size for the convolution.
-        padding (int, tuple): Padding size for the convolution.
-        num_group (int): Num. of groups for the nn.GroupNorm.
-            None -> if nn.GroupNorm is not used.
+    This class is a specialized neural network module implementing a double
+    convolutional operation, designed either as an encoder block for reducing
+    spatial resolution while increasing the number of features or as a decoder
+    block for recovering spatial resolution with retained channel properties.
+    It supports two block types - "encoder" and "decoder", leveraging the
+    flexibility of defining kernel size, padding, and customizable components.
+    The concept of group convolutions is enabled for enhanced modularity via
+    `num_group`.
+
+    :ivar block_type: The type of the block, either "encoder" or "decoder".
+    :type block_type: str
+    :ivar kernel: The size of the filter kernels used for convolutions.
+    :type kernel: int or tuple
+    :ivar padding: The padding applied to maintain desired convolution dimensions.
+    :type padding: int or tuple
+    :ivar components: The configuration of convolutional layers, activation
+                      functions, and normalization defined as string characters.
+    :type components: str
+    :ivar num_group: The number of groups for group convolutions. Defaults to None.
+    :type num_group: int or None
     """
 
     def __init__(
@@ -277,6 +340,22 @@ class DoubleConvolution(nn.Sequential):
         components="cgr",
         num_group=None,
     ):
+        """
+        This class initializes a double convolution block by chaining two convolutional layers
+        using the specified input and output channel characteristics, block type, kernel properties,
+        and other optional configurations. It dynamically computes the input and output channels
+        for each convolution layer based on the block type.
+
+        :param in_ch: The number of input channels for the convolution block.
+        :param out_ch: The number of output channels for the convolution block.
+        :param block_type: Specifies the type of block, either "encoder" or "decoder".
+        :param kernel: The kernel size(s) for the convolution layers. Can be an integer or a tuple.
+        :param padding: The padding size(s) for the convolution layers. Can be an integer or a tuple.
+        :param components: Components to include in the convolution (default: "cgr").
+        :param num_group: The number of groups for grouped convolutions (optional).
+
+        :raises TardisError: Raised if the block type is not "encoder" or "decoder".
+        """
         super(DoubleConvolution, self).__init__()
 
         # Define in and out channels for 1st and 2nd convolutions
@@ -323,19 +402,22 @@ class DoubleConvolution(nn.Sequential):
 
 class RecurrentDoubleConvolution(nn.Module):
     """
-    RECURRENT DOUBLE CONVOLUTION BLOCK
+    Defines the RecurrentDoubleConvolution class, which implements a customized
+    recurrent double convolution block designed for encoder and decoder
+    operations in convolutional neural networks (CNN). The block consists of
+    three consecutive single convolution operations with different configurations.
+    It incorporates residual connections and supports various non-linearity
+    components such as LeakyReLU, ReLU, and PReLU, making it suitable for
+    flexible deep learning architectures.
 
-    Args:
-        in_ch (int): Number of input channels.
-        out_ch (int): Number of output channels.
-        block_type (str): Define encode or decoder path e.g.
-            - 'encoder': Encoder convolution path
-            - 'decoder': Decoder convolution path
-        components (str): Components that are used for conv. block.
-        kernel (int, tuple): Kernel size for the convolution.
-        padding (int, tuple): Padding size for the convolution.
-        num_group (int): Num. of groups for the nn.GroupNorm.
-            None -> if nn.GroupNorm is not used.
+    :ivar conv1: First single convolution layer with specific in/out channels.
+    :type conv1: SingleConvolution
+    :ivar conv2: Second single convolution layer with specific in/out channels.
+    :type conv2: SingleConvolution
+    :ivar conv3: Third single convolution layer designed with identity mapping.
+    :type conv3: SingleConvolution
+    :ivar non_linearity: Non-linear activation function applied after convolutions.
+    :type non_linearity: torch.nn.Module
     """
 
     def __init__(
@@ -348,6 +430,34 @@ class RecurrentDoubleConvolution(nn.Module):
         components="cgr",
         num_group=None,
     ):
+        """
+        Represents a recurrent double convolution block used in constructing
+        neural network architectures. This block can be configured as either
+        an encoder or decoder block, transforming input feature maps into
+        output feature maps through a sequence of convolutions and optional
+        non-linearity.
+
+        The structure adapts based on the block type to maintain flexibility
+        for various deep learning tasks, such as image reconstruction or
+        semantic segmentation.
+
+        :param in_ch: Number of input channels.
+        :type in_ch: int
+        :param out_ch: Number of output channels.
+        :type out_ch: int
+        :param block_type: Specifies the type of convolution block ('encoder' or 'decoder').
+        :type block_type: str
+        :param kernel: Kernel size for the convolutional layers.
+        :type kernel: int or tuple
+        :param padding: Padding value for the convolutional layers.
+        :type padding: int or tuple
+        :param components: Components for the convolution operations ('c', 'g', 'r' or their combinations).
+                           Defaults to "cgr".
+        :type components: str
+        :param num_group: Number of groups for group convolution. Defaults to None.
+        :type num_group: int, optional
+        :raises ValueError: If block_type is not 'encoder' or 'decoder'.
+        """
         super(RecurrentDoubleConvolution, self).__init__()
 
         # Define in and out channels for 1st and 2nd convolutions
@@ -402,12 +512,16 @@ class RecurrentDoubleConvolution(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Forward function for customized convolution
-        Args:
-            x: Image patch.
+        Processes input tensor through multiple convolutional layers and applies a
+        non-linearity function. Implements a residual connection between intermediate
+        convolutions and the final output computation.
 
-        Returns:
-            torch.Tensor: Up or down convoluted image patch.
+        :param x: Input tensor to process through the defined convolutional layers.
+        :type x: torch.Tensor
+
+        :return: Transformed tensor after applying convolutional layers, residual
+            connection, and non-linearity.
+        :rtype: torch.Tensor
         """
         out = self.conv1(x)
         out = self.conv2(out)

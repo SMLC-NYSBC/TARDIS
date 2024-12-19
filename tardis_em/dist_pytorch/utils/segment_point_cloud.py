@@ -20,18 +20,43 @@ from tardis_em.analysis.filament_utils import smooth_spline, sort_segment
 
 class PropGreedyGraphCut:
     """
-    PROBABILITY DRIVEN GREEDY GRAPH CUT
+    Manages the process of stitching graph patches and their associated
+    attributes, performing adjacency operations to create a cohesive graph
+    network, and preprocessing connections to ensure consistency and limit
+    redundant associations.
 
-    Perform graph cut on predicted point cloud graph representation using in-coming
-    and out-coming edges probability.
+    This class is designed for scenarios where graph predictions and corresponding
+    node attributes (e.g., coordinates and class probabilities) are generated in patches
+    and need to be combined into a unified representation. The provided methods allow
+    for detailed control over graph stitching, class and coordinate merging, adjacency
+    list construction, and preconditioning of connection data.
 
-    Args:
-        threshold (float): Edge connection threshold.
-        connection (int): Max allowed number of connections per node.
-        smooth (bool): If True, smooth splines.
+    :ivar threshold: Threshold value for limiting connections in constructed adjacency
+                     matrices and ensuring relevant associations.
+    :type threshold: float
+    :ivar connection: Maximum number of connections per node. Defaults to a very high
+                      number if not specified or improperly defined.
+    :type connection: int
+    :ivar smooth: Boolean flag indicating if smoothing functionality should be applied
+                  during processing.
+    :type smooth: bool
     """
 
-    def __init__(self, threshold=float, connection=2, smooth=False):
+    def __init__(self, threshold=0.5, connection=2, smooth=False):
+        """
+        A class that initializes configuration settings for threshold, connection,
+        and smooth properties. The `threshold` represents a critical point for
+        operations, `connection` determines the connectivity parameter, and
+        `smooth` works as a flag to enable or disable additional processing.
+
+        :param threshold: The threshold value for operations (default: 0.5).
+        :type threshold: float
+        :param connection: Connection metric; defines allowable connectivity or
+            fallback default if the input is not an integer (default: 2).
+        :type connection: int
+        :param smooth: Enables or disables smooth processing (default: False).
+        :type smooth: bool
+        """
         self.threshold = threshold
         if isinstance(connection, int):
             self.connection = connection
@@ -42,14 +67,16 @@ class PropGreedyGraphCut:
     @staticmethod
     def _stitch_graph(graph_pred: list, idx: list) -> np.ndarray:
         """
-        Stitcher for graph representation
+        Builds a complete adjacency graph by stitching together smaller subgraphs.
 
-        Args:
-            graph_pred (list): Patches of graph predictions
-            idx (list): Idx for each node in patches
+        This method takes predictions for graph structure (`graph_pred`) and their corresponding
+        indices (`idx`) and combines them into a complete adjacency matrix. The process involves merging
+        graph segments by averaging edge weights when overlapping subgraph edges exist.
 
-        Returns:
-             np.ndarray: Stitched graph.
+        :param graph_pred: List of adjacency matrices representing predicted subgraphs.
+        :param idx: List of lists, where each sublist contains indices corresponding to
+            the nodes in a subgraph.
+        :return: A complete adjacency matrix as a NumPy ndarray.
         """
         # Build empty graph
         graph = max([max(f) for f in idx]) + 1
@@ -85,14 +112,18 @@ class PropGreedyGraphCut:
     @staticmethod
     def _stitch_coord(coord: list, idx: list) -> np.ndarray:
         """
-        Stitcher for coord in patches.
+        Stitches a list of coordinate arrays and their corresponding indices into a
+        single numpy array, maintaining their positional relationship.
 
-        Args:
-            coord (list): Coords in each patch.
-            idx (list): Idx for each node in patches.
-
-        Returns:
-             np.ndarray: Stitched coordinates.
+        :param coord: A list where each element is a 2D array-like or PyTorch tensor
+            containing coordinates with shape `(n, m)`. If the elements are PyTorch
+            tensors, they are converted to numpy arrays.
+        :param idx: A list of 1D arrays where each array provides indices corresponding
+            to the rows of each coordinate patch in `coord`.
+        :return: A numpy array of shape `(max_idx, dim)` where `max_idx` is the maximum
+            index value across all elements of `idx` plus one, and `dim` is the second
+            dimension of the coordinate arrays.
+        :rtype: np.ndarray
         """
         # Conversion to Torch
         if isinstance(coord[0], torch.Tensor):
@@ -112,14 +143,23 @@ class PropGreedyGraphCut:
     @staticmethod
     def _stitch_cls(cls: list, idx: list) -> np.ndarray:
         """
-        Stitcher for nodes in patches.
+        Stitches together class prediction arrays based on provided index mappings.
 
-        Args:
-            cls (list): Predicted class in each patch.
-            idx (list): Idx for each node in patches.
+        This method combines multiple predicted class arrays into a single
+        comprehensive array using the given index mappings. Input arrays may
+        be either PyTorch tensors or NumPy arrays. If the input is in Tensor
+        form, it is converted to a NumPy array. The method creates the resulting
+        array by initializing an empty array and iteratively populating it based
+        on the index mappings and corresponding class values.
 
-        Returns:
-             np.ndarray: Stitched classed id's.
+        :param cls: A list of class prediction arrays, each array corresponding
+            to a partition of the overall data. The arrays may be PyTorch tensors
+            or NumPy arrays.
+        :param idx: A list of index arrays, where each index array specifies
+            the indices in the resulting array corresponding to the elements
+            in the matching `cls` array.
+        :return: A NumPy array containing combined class data. The resultant
+            array has the same size as the range of indices provided via `idx`.
         """
         # Conversion to Torch
         if isinstance(cls[0], torch.Tensor):
@@ -144,17 +184,38 @@ class PropGreedyGraphCut:
         threshold=0.5,
     ) -> Optional[list]:
         """
-        Builder of adjacency matrix from stitched coord and graph voxels
-        The output of the adjacency matrix is list containing:
-        [id][coord][interactions][interaction probability]
+        Generates an adjacency list representation for the input graphs based on
+        threshold filtering and additional conditions. This method computes
+        connections for nodes within the provided graphs, applying filters for
+        probabilities and removing self-connections. The function also merges
+        duplicate connections, aggregates probabilities, and sorts them in
+        descending order where applicable.
 
-        Args:
-            graphs (list[np.ndarray]): Graph patch output from DIST.
-            coord (np.ndarray): Stitched coord output from DIST.
-            output_idx (list[list], None): Index lists from DIST.
+        :param graphs: A list of adjacency matrices, where each entry `g[i][j]`
+            represents the probability or strength of a connection between node
+            `i` and node `j`.
+        :type graphs: list
 
-        Returns:
-            list: Adjacency list of all bind graph connections.
+        :param coord: Numpy array containing coordinates or properties of each
+            node. The shape of the array must correspond to the number of nodes.
+        :type coord: np.ndarray
+
+        :param output_idx: Optional list specifying the indexing for output
+            nodes. If `None`, it is inferred based on the provided graphs. The
+            length must align with the graph dimensions.
+        :type output_idx: Optional[list]
+
+        :param threshold: A float value specifying a filtering threshold for
+            connections based on probabilities. Connections with probabilities
+            below this value are ignored. Default is 0.5.
+        :type threshold: float
+
+        :return: A list of adjacency properties for each node in the input.
+            Each item contains a list where the first element is the node index,
+            the second is the original coordinate values, the third is the list
+            of connected node indices, and the fourth is the list of corresponding
+            probabilities. Returns None if the input configuration is invalid.
+        :rtype: Optional[list]
         """
         if output_idx is None:
             if len(graphs) == 1:
@@ -223,8 +284,21 @@ class PropGreedyGraphCut:
 
     def preprocess_connections(self, adj_matrix):
         """
-        Preprocess the adjacency matrix to first ensure mutual connections and then
-        limit each node to its top 8 connections based on connection probability.
+        Preprocess the adjacency matrix to ensure mutual connections and limit the number of top
+        connections for each node based on their probabilities.
+
+        This method processes the given adjacency matrix by first identifying potential top
+        connections for each node, ensuring mutual connections exist between nodes, and finally
+        limiting the connections to the top N based on their probability values. The updated
+        adjacency matrix is returned with these modifications.
+
+        :param adj_matrix: A list of rows, where each row contains information about a node.
+                           Each row is represented as a tuple of four elements:
+                           - (node index, other metadata, list of connections, list of probabilities).
+                           Connections are represented as indices of connected nodes, and probabilities indicate
+                           the strength of these connections.
+        :return: Modified adjacency matrix with mutual connections and top connections limited
+                 to a specific number.
         """
         # Step 1: Identify potential top connections without immediately limiting to top 8
         potential_top_connections = {}
@@ -258,8 +332,18 @@ class PropGreedyGraphCut:
 
     def _find_segment_matrix_fast(self, adj_matrix: list) -> list:
         """
-        Find a segment of connected nodes considering the connection strength and
-        limiting each node to a maximum of 8 connections.
+        Finds a segment matrix quickly using a depth-first-like approach for traversing
+        a graph provided as an adjacency matrix. The method starts with the first node
+        that has connections and continues to explore its neighbors, ensuring mutual
+        strong connections are met based on a predefined connection limit.
+
+        This algorithm identifies and returns the subset of nodes that are interconnected
+        based on the connection rules specified.
+
+        :param adj_matrix: The adjacency matrix represented as a list of tuples, where
+            each tuple contains four elements: metadata, metadata, connections (list of
+            neighbor indices), and metadata.
+        :return: A list of indices of nodes that are non-empty and interconnected.
         """
         visited = set()
         to_visit = set()
@@ -293,15 +377,21 @@ class PropGreedyGraphCut:
 
     def _find_segment_matrix(self, adj_matrix: list) -> list:
         """
-        !Deprecated!
-        Iterative search mechanism that search for connected points in the
-        adjacency list.
+        Find a segment matrix based on connectivity rules in the adjacency matrix.
 
-        Args:
-            adj_matrix (list): adjacency matrix of graph connections
+        The function starts by identifying an initial point from the adjacency matrix
+        and iteratively collects associated points following specific connection
+        rules. The iteration continues until no new connections are found. The final
+        list of associated points respects the constraints defined by the
+        `self.connection` attribute.
 
-        Returns:
-            list: List of connected nodes.
+        :param adj_matrix: The adjacency matrix representing interactions between nodes
+            where each element contains a list of connected nodes and their metadata.
+        :type adj_matrix: list
+        :return: A list of indices representing the nodes that are part of the segment
+            matrix and satisfy the given connection rules. Returns an empty list if no
+            suitable initial point is found.
+        :rtype: list
         """
         idx_df = [0]
         x = 0
@@ -346,13 +436,18 @@ class PropGreedyGraphCut:
     @staticmethod
     def _smooth_segments(coord: np.ndarray) -> np.ndarray:
         """
-        Smooth spline by fixed factor.
+        Smooths segments of coordinates using a spline fitting method.
 
-        Args:
-            coord (np.ndarray): Splines in array [ID, X, Y, (Z)].
+        The function processes a numpy array of coordinates and applies a smoothing
+        spline to segments of the array where adequate points are available. It first
+        groups the coordinates by the first column's values. For each unique group, if
+        the group contains more than four points, the data is smoothed using a spline
+        fitting method; otherwise, the original points are kept intact. The result is
+        a concatenation of all smoothed and/or original segments.
 
-        Returns:
-            np.ndarray: Smooth splines.
+        :param coord: A numpy array containing the input coordinates to be processed.
+        :return: A numpy array representing the smoothed coordinates after the spline
+            fitting process or original values when smoothing criteria are not met.
         """
         splines = []
 
@@ -377,22 +472,43 @@ class PropGreedyGraphCut:
         visualize: Optional[str] = None,
     ) -> np.ndarray:
         """
-        Point cloud instance segmentation from graph representation
+        Converts a patch of graph data into segments based on geometric and adjacency
+        relationships within the input data. This function processes spatial graph
+        representations and outputs segmented components based on provided criteria
+        like pruning and optional visualization.
 
-        From each point cloud (patch) first build adjacency matrix.
-        Matrix is then used to iteratively search for new segments.
-        For each initial node algorithm search for 2 edges with the highest prop.
-        with given threshold. For each found edges, algorithm check if found
-        node creates an edge with previous node within 2 highest probability.
-        If not alg. search for new edge that fulfill the statement.
+        :param graph: Input graph representation(s), which can be a numpy array, a Torch
+                      tensor, or a list of these types. Represents the connectivity
+                      information of the graph data.
+        :type graph: list
 
-        Args:
-            graph (list): Graph patch output from Dist.
-            coord (np.ndarray): Coordinates for each unsorted point idx.
-            idx (list): idx of point included in the segment.
-            prune (int): Remove splines composed of number of node given by prune.
-            sort (bool): If True sort output.
-            visualize (str, None): If not None, visualize output with open3D.
+        :param coord: Coordinate data of the graph nodes in either numpy array or list
+                      format. Contains spatial locations of nodes in the graph.
+        :type coord: Union[np.ndarray, list]
+
+        :param idx: Index information about the selected components of the graph
+                    (e.g., subclusters of a larger graph) to be processed.
+        :type idx: list
+
+        :param prune: Minimum threshold for the number of points required in a segment to
+                      be considered valid. Segments smaller than this threshold
+                      will be ignored.
+        :type prune: int
+
+        :param sort: A flag that determines whether the output points in each segment
+                     should be sorted geometrically. Defaults to True.
+        :type sort: bool
+
+        :param visualize: An optional flag indicating whether the resulting segmented
+                          data should be visualized and in what mode (e.g.,
+                          point cloud view or filament view). Accepts values
+                          like "f" or "p".
+        :type visualize: Optional[str]
+
+        :return: Segmented graph components, represented as a numpy array, where each
+                 row corresponds to a node and includes attributes like
+                 segment ID and spatial coordinates.
+        :rtype: np.ndarray
         """
         """Check data"""
         if isinstance(graph, np.ndarray):

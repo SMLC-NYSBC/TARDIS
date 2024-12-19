@@ -25,18 +25,18 @@ from tardis_em.dist_pytorch.model.modules import (
 
 class DistStack(nn.Module):
     """
-    WRAPPER FOR DIST LAYER
+    A neural network module for applying a stack of DistLayer layers to process
+    edge and optional node features, typically for graph-based tasks.
 
-    This wrapper defines a number of layer for the DIST.
+    The DistStack class is a part of a Transformer-like architecture designed
+    for graphs, where the stack is composed of multiple DistLayer layers. It
+    provides an easy way to apply the stack sequentially on graph-related data,
+    with the ability to handle optional node features and customizable edge
+    masks for input feature attention.
 
-    Args:
-        node_dim (int): Number of input dimensions for node features.
-        pairs_dim (int, optional): Number of input dimensions for pairs features.
-        num_layers (int): Number of GraphFormer layers. Min. 1.
-        dropout (float): Dropout rate.
-        ff_factor (int): Feed forward factor.
-        num_heads: Number of heads in multi-head attention.
-        structure (str): Define DIST structure.
+    :ivar layers: A list containing individual layers (DistLayer) that make
+        up the DistStack.
+    :type layers: torch.nn.ModuleList
     """
 
     def __init__(
@@ -49,6 +49,20 @@ class DistStack(nn.Module):
         num_heads=8,
         structure="full",
     ):
+        """
+        Initializes a sequence of distributed layers for neural network processing.
+        This class defines a module that creates and stores a series of layers, where
+        each layer encapsulates various customizable parameters such as input dimensions,
+        dropout rate, number of heads, and structural configuration.
+
+        :param pairs_dim: The dimensional size of the pair-wise inputs for each layer.
+        :param node_dim: Optional. The dimensional size of node-wise inputs for each layer. If not provided, defaults to `None`.
+        :param num_layers: The total number of layers to instantiate. Defaults to `1`.
+        :param dropout: Dropout probability for regularization within each layer. Defaults to `0`.
+        :param ff_factor: Factor for feed-forward network scaling inside each layer. Defaults to `4`.
+        :param num_heads: Number of attention heads to be used in each layer. Defaults to `8`.
+        :param structure: Specifies the type/structure of the interaction within layers. Defaults to `"full"`.
+        """
         super().__init__()
         self.layers = nn.ModuleList()
         for _ in range(num_layers):
@@ -76,20 +90,22 @@ class DistStack(nn.Module):
         src_key_padding_mask=None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        Forward throw individual DIST layer.
+        Processes input edge features and optionally node features through multiple layers, applying
+        transformations to generate updated tensors for nodes and edges.
 
-        Args:
-            edge_features (torch.Tensor): Edge features as a tensor of shape
-                [Batch x Length x Length x Channels].
-            node_features (torch.Tensor, optional): Optional node features as a
-                tensor of shape [Batch x Length x Channels].
-            src_mask (torch.Tensor, optional): Optional source mask for masking
-                over batches.
-            src_key_padding_mask (torch.Tensor, optional): Optional mask use for
-                feature padding.
+        The forward method iterates through all available layers, transforming the input features.
+        Each layer processes the given feature sets (nodes and edges), along with optional masks
+        (src_mask and src_key_padding_mask) as part of the computation. The output is updated node
+        features and edge features after the transformations.
 
-        Returns:
-            Tuple[torch.Tensor, torch.Tensor]: Updated graph representation.
+        :param edge_features: Input edge features as a tensor.
+        :param node_features: Optional input node features, provided as a tensor.
+                              Defaults to None.
+        :param src_mask: Optional source mask for attention-based computations.
+        :param src_key_padding_mask: Optional key padding mask for attention-based computations.
+        :return: A tuple consisting of two tensors:
+                 - Updated node features
+                 - Updated edge features
         """
         for layer in self.layers:
             node_features, edge_features = layer(
@@ -104,23 +120,25 @@ class DistStack(nn.Module):
 
 class DistLayer(nn.Module):
     """
-    MAIN DIST LAYER
+    DistLayer class is designed for hierarchical processing of node and pair
+    representations using multi-head attention and feed-forward mechanisms.
+    The class supports various structures for interaction layers such as
+    triangular, quadratic, dual triangular updates, or full attention-based
+    architectures. It extends PyTorch's nn.Module and incorporates mechanisms
+    to handle input features, as well as dropout for regularization.
 
-    DistLayer takes an embedded input and performs the paired bias
-    self-attention (modified multi-head attention), followed by GeLu feed-forward
-    normalization to update node-embedded information. Then update from
-    the GeLu is summed with the edge feature map. As an output, DIST outputs
-    an attention vector for given input that encodes attention between nodes and
-    pairs (edges).
+    DistLayer allows for versatile interaction between node and pair features
+    through specific update routines that depend on the chosen structure.
 
-    Args:
-        pairs_dim (int): Output feature for pairs and nodes representation.
-        node_dim (int): Input feature for pairs and nodes representation.
-        dropout (float): Dropout rate.
-        ff_factor (int): Feedforward factor used for GeLuFFN.
-        num_heads (int): Number of heads in self-attention
-        structure (str): Structure of layer ['full', 'full_af', 'self_attn',
-            'triang', 'dualtriang', 'quad'].
+    :ivar pairs_dim: Dimensionality of the pair features input.
+    :type pairs_dim: int
+    :ivar channel_dim: Internal dimensionality for the interaction channels computed as a fraction of pairs_dim.
+    :type channel_dim: int
+    :ivar node_dim: Optional dimensionality for the node features input.
+    :type node_dim: Optional[int]
+    :ivar structure: Specification of the structural interaction type. Options include
+        "full", "full_af", "self_attn", "triang", "quad", and "dualtriang".
+    :type structure: str
     """
 
     def __init__(
@@ -132,6 +150,27 @@ class DistLayer(nn.Module):
         num_heads=8,
         structure="full",
     ):
+        """
+        Initializes the class with parameters for edge and node feature updates, defining
+        transformations and attention mechanisms based on a specified structure type. The
+        structure defines how the relationships between pairs of data points and optional node
+        features are updated and refined, ensuring flexibility in design and functionality.
+
+        :param pairs_dim: Dimensionality of the pair features.
+        :type pairs_dim: int
+        :param node_dim: Optional dimensionality of node features. If None, node features are not used.
+        :type node_dim: int or None
+        :param dropout: Dropout probability applied to attention layers.
+        :type dropout: float
+        :param ff_factor: Feed-forward expansion factor. Defines the scaling for intermediate
+                          linear dimensions in feed-forward layers.
+        :type ff_factor: int
+        :param num_heads: Number of attention heads for multi-head attention.
+        :type num_heads: int
+        :param structure: The type of structural update to apply. Must be one of the following:
+                          "full", "full_af", "self_attn", "triang", "quad", or "dualtriang".
+        :type structure: str
+        """
         super().__init__()
         self.pairs_dim = pairs_dim
         self.channel_dim = int(pairs_dim / 4)
@@ -217,23 +256,24 @@ class DistLayer(nn.Module):
         src_key_padding_mask=None,
     ) -> torch.Tensor:
         """
-        Transformer on the input weighted by the pair representations
+        Updates the node representations based on pair embeddings and self-attention
+        mechanism. This function combines the provided node embeddings and pair
+        embeddings through an attention mechanism and applies a feed-forward network
+        for further transformation. The updated node representation is returned.
 
-        Input:
-            h_paris -> Batch x Length x Length x Channels
-            h_nodes -> Length x Batch x Channels
-
-        Output:
-            h_nodes -> Length x Batch x Channels
-
-        Args:
-            h_pairs (torch.Tensor): Edge features.
-            h_nodes (torch.Tensor): Node features.
-            src_mask (torch.Tensor): Attention mask used for mask over batch.
-            src_key_padding_mask (torch.Tensor): Attention key padding mask.
-
-        Returns:
-             torch.Tensor: Updated node features.
+        :param h_pairs: Pairwise embeddings. A tensor that provides information about
+            pair dependencies between nodes.
+        :param h_nodes: Optional initial node embeddings. If provided, these will be
+            updated using the attention mechanism and feed-forward network.
+        :param src_mask: Attention mask used during the attention computation to
+            indicate valid positions. This allows selective attention and prevents
+            unwanted information flow.
+        :param src_key_padding_mask: Key padding mask used to indicate valid and
+            invalid tokens or nodes for each sample in a batch. Useful during
+            variable-length sequence handling.
+        :return: Updated node representations after attention computation and
+            feed-forward network application.
+        :rtype: torch.Tensor
         """
         h_nodes = h_nodes + self.input_attn(
             query=h_nodes,
@@ -253,23 +293,23 @@ class DistLayer(nn.Module):
         src_key_padding_mask=None,
     ) -> torch.Tensor:
         """
-        Update the edge representations based on nodes.
+        Updates the edge features in a graph based on the chosen structural configuration
+        and optionally includes node features or masking conditions. The method modifies
+        the input edge features by applying a variety of attentions, feature updates,
+        and feedforward transformations, depending on the structure type.
 
-        Input:
-            h_pairs -> Batch x Length x Length x Channels
-            h_nodes -> Length x Batch x Channels
-
-        Output:
-            h_pairs -> Batch x Length x Length x Channels
-
-        Args:
-            h_pairs: Edge features.
-            h_nodes: Node features.
-            mask: Attention mask.
-            src_key_padding_mask: Attention key padding mask.
-
-        Returns:
-            torch.Tensor: Updated edge features.
+        :param h_pairs: Tensor containing initial edge features, of shape
+            `(batch_size, num_nodes, num_nodes, feature_dim)`.
+        :param h_nodes: Optional tensor containing node features, of shape
+            `(batch_size, num_nodes, feature_dim)`. If provided, the function incorporates
+            these features into the edge features during the update process.
+        :param mask: Optional tensor of shape `(batch_size, num_nodes, num_nodes)`. Acts
+            as an attention mask or structural constraint for the feature update process.
+        :param src_key_padding_mask: Optional tensor of shape `(batch_size, num_nodes)`. If
+            provided, it is used to generate a mask to ignore certain nodes by expanding it
+            along the necessary dimensions.
+        :return: A tensor of the same shape as `h_pairs`, representing the updated edge
+            features after applying the selected transformations.
         """
         # Convert node features to edge shape
         if h_nodes is not None:
@@ -326,16 +366,19 @@ class DistLayer(nn.Module):
         src_key_padding_mask=None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        Wrapped forward throw all DIST layers.
+        Processes and updates node and edge features using provided input tensors.
+        The function advances the transformation of node and edge features by applying
+        update operations on input tensors, including optional masking of source inputs.
 
-        Args:
-            h_pairs: Pairs representation.
-            h_nodes: Node feature representation.
-            src_mask: Optional attention mask.
-            src_key_padding_mask: Optional padding mask for attention.
+        :param h_pairs: Tensor representing the edge features in the graph.
+        :param h_nodes: Tensor representing the node features in the graph. It can
+            be optionally None, in which case no node updates will be performed.
+        :param src_mask: Optional mask applied at the source level during node update.
+        :param src_key_padding_mask: Optional mask to specify which elements should be
+            ignored in the computation, typically used for padded sequences.
 
-        Returns:
-            Tuple[torch,Tensor, torch.Tensor]:
+        :return: Tuple of two tensors, the updated node features and the updated edge
+            features in the graph.
         """
         # Update node features and convert to edge shape
         if h_nodes is not None:

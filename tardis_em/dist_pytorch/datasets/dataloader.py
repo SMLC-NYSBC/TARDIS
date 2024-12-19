@@ -36,13 +36,47 @@ from tardis_em.analysis.filament_utils import sort_segment
 
 class BasicDataset(Dataset):
     """
-    BASIC CLASS FOR STANDARD DATASET CONSTRUCTION
+    BasicDataset is a dataset handling class, mainly designed to manage and preprocess
+    coordinate data for tasks requiring large-scale numerical data handling. This
+    class initializes the dataset environment, processes input data, and provides
+    several utility functions to save, load, and transform data efficiently.
 
-    Args:
-        coord_dir (str): Dataset directory.
-        coord_format (tuple, str): A tuple of allowed coord formats.
-        patch_if (int): Max number of points per patch.
-        train (bool): If True, compute as for training dataset, else test.
+    This class is particularly useful for managing coordinate files, setting
+    downscaled versions of files, and utility methods for temporary storage of
+    preprocessed data.
+
+    :ivar coord_dir: Path to the directory containing coordinate files.
+    :type coord_dir: Optional[str]
+    :ivar coord_format: File format of the coordinate files. Default is `.csv`.
+    :type coord_format: str
+    :ivar patch_if: Maximum number of points allowed in a patch.
+    :type patch_if: int
+    :ivar downscale: Downscale factor applied to the dataset, if any.
+    :type downscale: Optional[Any]
+    :ivar rgb: Boolean flag to indicate whether input data includes RGB values.
+    :type rgb: bool
+    :ivar benchmark: Boolean flag indicating if the dataset is used for evaluation
+        or benchmarking purposes.
+    :type benchmark: bool
+    :ivar train: Boolean flag to specify whether the dataset is used for training.
+    :type train: bool
+    :ivar cwd: The current working directory where the dataset is initialized.
+    :type cwd: str
+    :ivar temp: Name of the temporary directory used for storing processed data.
+    :type temp: str
+    :ivar ids: List of detected coordinate file names matching the defined file
+        format from the `coord_dir`.
+    :type ids: List[str]
+    :ivar patch_size: Predefined patch size values for faster computations. Initialized
+        as zeros, shaped by the number of detected coordinate files.
+    :type patch_size: np.ndarray
+    :ivar VD: Reserved for storing additional dataset-specific values. Currently unused.
+    :type VD: Optional[Any]
+    :ivar max_point_in_patch: The maximum number of datapoints allowed in each patch,
+        used for building patched datasets.
+    :type max_point_in_patch: int
+    :ivar l_: Number of detected files or dataset instances.
+    :type l_: int
     """
 
     def __init__(
@@ -55,6 +89,22 @@ class BasicDataset(Dataset):
         benchmark=False,
         train=True,
     ):
+        """
+        Initializes the object with parameters to set up the coordinate directory, format,
+        patch size, downscale setting, RGB flag, benchmark flag, and train flag. It also
+        handles creation and clearing of temporary directories for training or testing
+        based on the provided train flag. Additionally, prepares lists of coordinate files
+        and configurations for future processing.
+
+        :param coord_dir: Directory path containing coordinate files.
+        :type coord_dir: str or None
+        :param coord_format: Specific file format for coordinate files. Defaults to ".csv".
+        :param patch_if: Maximum number of points allowed in a patch. Defaults to 500.
+        :param downscale: Parameters for downscaling the input. Defaults to None.
+        :param rgb: Flag indicating if RGB mode is activated. Defaults to False.
+        :param benchmark: Flag to enable or disable benchmark mode. Defaults to False.
+        :param train: Flag indicating whether to set up a training or testing environment. Defaults to True.
+        """
         # Coord setting
         self.coord_dir = coord_dir
         self.coord_format = coord_format
@@ -101,11 +151,17 @@ class BasicDataset(Dataset):
 
     def save_temp(self, i: int, **kwargs):
         """
-        General class function to save temp data.
+        Saves temporary data to numpy files.
 
-        Args:
-            i (int): Temp index value.
-            kwargs (np.ndarray): Dictionary of all arrays to save.
+        This method takes an integer identifier `i` and saves temporary data
+        provided in `kwargs` to `.npy` files within a specified directory. Files
+        are named using the format `<key>_<i>.npy`.
+
+        :param i: An integer used in naming the saved files.
+        :param kwargs: Keyword arguments where keys represent file name prefixes,
+            and values are the data to be saved in the numpy files. Each value
+            is converted to a numpy array with `object` dtype before saving.
+        :return: None
         """
 
         for key, values in kwargs.items():
@@ -116,14 +172,19 @@ class BasicDataset(Dataset):
 
     def load_temp(self, i: int, **kwargs) -> List[np.ndarray]:
         """
-        General class function to load temp data
+        Loads temporary numpy array files from the disk. The function can load a single file
+        or multiple files depending on the provided keyword arguments. If one keyword
+        argument is given, it will load the corresponding file directly. Otherwise, it will
+        load all files corresponding to the provided keyword arguments in a list.
 
-        Args:
-            i (int): Temp index value.
-            kwargs (bool): Dictionary of all arrays to load.
-
-        Returns:
-            List (list[np.ndarray]): List of kwargs arrays as a tensor arrays.
+        :param i: Index used to identify the file(s) to be loaded.
+        :type i: int
+        :param kwargs: A set of keyword arguments where the keys represent the prefix of the
+            filename(s) to be loaded. Each key corresponds to a possible file.
+        :type kwargs: dict
+        :return: A list of numpy ndarray objects if multiple keyword arguments are provided,
+            or a single numpy ndarray object if only one keyword argument is given.
+        :rtype: List[np.ndarray]
         """
         if len(kwargs.items()) == 1:
             return np.load(
@@ -136,16 +197,19 @@ class BasicDataset(Dataset):
         ]
 
     @staticmethod
-    def list_to_tensor(**kwargs) -> List[List[np.ndarray]]:
+    def list_to_tensor(**kwargs) -> List:
         """
-        Static class function to transform a list of numpy arrays to a list of
-        tensor arrays.
+        Converts a list of numerical dataframes into a list of PyTorch tensors. This method
+        takes variable keyword arguments, where each value is expected to be a list of
+        dataframes. It processes each dataframe in these lists to convert them into
+        PyTorch tensors with a float32 data type, preserving the structure of the input.
 
-        Args:
-            kwargs (np.ndarray): Dictionary of all files to transform into a tensor.
-
-        Returns:
-            List (list[torch.Tensor]): List of kwargs arrays as a tensor array.
+        :param kwargs: Variable keyword arguments where each key corresponds to a list of
+            pandas DataFrames. Each dataframe is processed and converted to a PyTorch
+            tensor with dtype set to `float32`.
+        :return: A list of lists containing the converted PyTorch tensors. The structure
+            of the returned list parallels the structure of the input keyword arguments.
+        :rtype: List
         """
         return [
             [torch.Tensor(df.astype(np.float32)).type(torch.float32) for df in value]
@@ -158,22 +222,37 @@ class BasicDataset(Dataset):
 
 class FilamentSimulateDataset(BasicDataset):
     """
-    SIMULATED FILAMENT-TYPE DATASET CONSTRUCTION
+    Simulates and manages a filament dataset for machine learning tasks.
 
-    Returns:
-        Tuple (list[np.ndarray]):
-        coords_idx: Numpy or Tensor list of coordinates (N, (2, 3)).
+    This class extends the BasicDataset and provides functionality to generate,
+    preprocess, and retrieve synthetic filament data. It supports multiple
+    filament simulation types, dataset down-sampling, and patch-based data
+    processing. The dataset can be used for training, testing, or validation
+    workflows, depending on the configuration.
 
-        df_idx: Normalize zero-out output for standardized dummy.
-
-        graph_idx: Numpy or Tensor list of 2D GT graphs.
-
-        output_idx: Numpy or Tensor list (N, 1) of output index value.
-
-        df_idx: Normalize zero-out output for standardized dummy.
+    :ivar sample_count: Number of samples in the dataset.
+    :type sample_count: int
+    :ivar type: Type of filament simulation, such as 'mix3d' or 'membranes'.
+    :type type: str
+    :ivar VD: An instance of the PatchDataSet class used for patch-based
+              dataset processing.
+    :type VD: PatchDataSet
     """
 
     def __init__(self, type_: str, sample_count=50, **kwargs):
+        """
+        Initializes the FilamentSimulateDataset instance.
+
+        This constructor sets the sample count and type of the dataset instance, and
+        initializes the internal PatchDataSet instance with specific parameters for
+        point, overlap, drop rate, and graph support. The instance represents the
+        structure and configuration for filament simulation dataset generation.
+
+        :param type_: Specifies the type of the dataset.
+        :param sample_count: The number of samples required in the dataset. Defaults to 50.
+        :param kwargs: Additional keyword arguments passed to the parent class's
+            initialization method.
+        """
         super(FilamentSimulateDataset, self).__init__(**kwargs)
 
         self.sample_count = sample_count
@@ -191,7 +270,22 @@ class FilamentSimulateDataset(BasicDataset):
         return self.sample_count
 
     def __getitem__(self, i: int) -> Tuple[list, list, list, list, list]:
-        """Get list of all coordinates and image patches"""
+        """
+        Retrieves a data sample based on the provided index. The method is designed to work with
+        simulated datasets, preprocess the data, perform optional downsampling, and construct
+        patched datasets for training or evaluation purposes. The returned data includes various
+        features for graph-based learning models.
+
+        :param i: The index of the required sample in the dataset.
+        :type i: int
+        :return: A tuple containing processed data which includes the following:
+                 - coords_idx: Coordinates of the node feature indices.
+                 - df_idx: Node features for the data.
+                 - graph_idx: Graph connectivity information.
+                 - output_idx: Node indices for the dataset patch.
+                 - df_idx: Class labels for the respective nodes.
+        :rtype: Tuple[list, list, list, list, list]
+        """
         if self.train:
             self.temp = "temp_train"
         else:
@@ -269,22 +363,29 @@ class FilamentSimulateDataset(BasicDataset):
 
 class FilamentDataset(BasicDataset):
     """
-    FILAMENT-TYPE DATASET CONSTRUCTION
+    FilamentDataset class for handling filament data processing.
 
-    Returns:
-        Tuple (list[np.ndarray]):
-        coords_idx: Numpy or Tensor list of coordinates (N, (2, 3)).
+    This class is designed to process filament datasets, including pre-processing of
+    coordinate data, image patch creation, and handling normalized data points. It is
+    useful for machine learning tasks requiring patched datasets, graph representations,
+    and customized preprocessing.
 
-        df_idx: Normalize zero-out output for standardized dummy.
-
-        graph_idx: Numpy or Tensor list of 2D GT graphs.
-
-        output_idx: Numpy or Tensor list (N, 1) of output index value.
-
-        df_idx: Normalize zero-out output for standardized dummy.
+    :ivar VD: Instance of `PatchDataSet`, responsible for managing patched datasets with
+        specified configurations.
+    :type VD: PatchDataSet
     """
 
     def __init__(self, **kwargs):
+        """
+        Initializes an instance of the FilamentDataset class.
+
+        The constructor sets up the dataset with provided parameters and initializes the
+        VD attribute to an instance of PatchDataSet. The PatchDataSet instance uses
+        configuration parameters such as `max_number_of_points`, `overlap`, `drop_rate`,
+        `graph`, and `tensor`.
+
+        :param kwargs: Optional keyword arguments passed to the parent class constructor.
+        """
         super(FilamentDataset, self).__init__(**kwargs)
         self.VD = PatchDataSet(
             max_number_of_points=self.max_point_in_patch,
@@ -295,7 +396,24 @@ class FilamentDataset(BasicDataset):
         )
 
     def __getitem__(self, i: int) -> Tuple[list, list, list, list, list]:
-        """Get list of all coordinates and image patches"""
+        """
+        Retrieve pre-processed data or processes point cloud data on-the-fly based
+        on the provided index, and returns relevant datasets related to graph
+        generation, node features, and connectivity.
+
+        This method primarily handles the normalization of point cloud data,
+        determining scales, preprocessing coordinates, and caching pre-processed data
+        for efficiency. If data for the given index is not pre-processed and cached,
+        it is pre-processed and stored. Otherwise, cached data is loaded for quicker
+        access. The processed data is further converted into tensors as the final output
+        format.
+
+        :param i: Index to retrieve or process the point cloud and associated datasets.
+        :type i: int
+        :returns: A tuple of lists representing processed dataset components:
+                  (coords_index, data_frame_index, graph_index, output_index, data_frame_index).
+        :rtype: Tuple[list, list, list, list, list]
+        """
         idx = self.ids[i]
 
         if self.train:
@@ -351,19 +469,34 @@ class FilamentDataset(BasicDataset):
 
 class PartnetDataset(BasicDataset):
     """
-    PARTNET TYPE DATASET CONSTRUCTION
+    PartnetDataset is a specialized dataset class designed to work with 3D point clouds
+    and graph representations. It integrates functionalities to preprocess, manage, and
+    retrieve data efficiently. This includes handling downscaling, patch generation, and
+    dynamic data loading for both training and testing.
 
-    Returns:
-        Tuple (list[np.ndarray]):
-        coords_idx: Numpy or Tensor list of coordinates (N, (2, 3)).
+    The class leverages the PatchDataSet to create patches of data points with specified
+    parameters like maximum points, overlap, and drop rate. Additionally, it supports
+    temporary storage and loading for optimized access.
 
-        df_idx: Normalize zero-out output for standardized dummy.
-
-        graph_idx: Numpy or Tensor list of 2D GT graphs.
-
-        output_idx: Numpy or Tensor list (N, 1) of output index value.
-
-        df_idx: Normalize zero-out output for standardized dummy.
+    :ivar VD: PatchDataSet instance responsible for processing data into patches,
+        managing downscaling, and converting data into tensors.
+    :type VD: PatchDataSet
+    :ivar train: Boolean indicating whether the dataset is used for training mode.
+    :type train: bool
+    :ivar temp: Temporary directory used to save or load pre-processed data.
+    :type temp: str
+    :ivar max_point_in_patch: Maximum number of points allowed in a patch.
+    :type max_point_in_patch: int
+    :ivar coord_dir: Directory containing coordinate files.
+    :type coord_dir: str
+    :ivar ids: List of identifiers for each dataset entry.
+    :type ids: list
+    :ivar benchmark: Flag indicating if the dataset is running in benchmark mode.
+    :type benchmark: bool
+    :ivar downscale: Factor for downscaling coordinate data.
+    :type downscale: float or None
+    :ivar patch_size: Array to store the initial patch size for each data entry.
+    :type patch_size: numpy.ndarray
     """
 
     def __init__(self, **kwargs):
@@ -377,7 +510,26 @@ class PartnetDataset(BasicDataset):
         )
 
     def __getitem__(self, i: int) -> Tuple[list, list, list, list, list]:
-        """Get list of all coordinates and image patches"""
+        """
+        Retrieve and process data based on the specified index. This function handles the
+        loading or computational creation of data patches required for further processing.
+        It manages data scaling, duplication removal, and pre-processing for coordinates
+        and graphs. Depending on the patch size and given configurations, it either
+        generates the relevant data or loads pre-processed data that was saved earlier
+        for efficiency.
+
+        :param i: The index of the dataset to be accessed.
+        :type i: int
+        :returns: A tuple containing processed data:
+            - coords_idx: Processed coordinates indexed tensor.
+            - df_idx: Dataframe index tensor.
+            - graph_idx: Indexed tensor representation of the graph.
+            - output_idx: Indexed tensor for output node identification.
+            - df_idx: Dataframe index tensor again for consistency.
+        :rtype: Tuple[list, list, list, list, list]
+        :raises FileNotFoundError: If the coordinate file for the specified dataset index
+            cannot be located in the provided directory.
+        """
         idx = self.ids[i]
 
         if self.train:
@@ -425,19 +577,20 @@ class PartnetDataset(BasicDataset):
 
 class ScannetDataset(BasicDataset):
     """
-    SCANNET V2 TYPE DATASET CONSTRUCTION
+    ScannetDataset handles loading and processing of 3D scan data,
+    specifically for tasks involving graph and patch-based methods
+    in the context of 3D scene understanding.
 
-    Returns:
-        Tuple (list[np.ndarray]):
-        coords_idx: Numpy or Tensor list of coordinates (N, (2, 3)).
+    This class is a specialized dataset loader that extends the
+    BasicDataset. It can handle a range of tasks including
+    preprocessing of scan data, handling coordinate formats,
+    and managing batch-level operations for training and testing
+    workflows. The class also supports saving and retrieving
+    preprocessed temporary data for faster data loading.
 
-        df_idx: Normalize zero-out output for standardized dummy.
-
-        graph_idx: Numpy or Tensor list of 2D GT graphs.
-
-        output_idx: Numpy or Tensor list (N, 1) of output index value.
-
-        df_idx: Normalize zero-out output for standardized dummy.
+    :ivar VD: Instance of PatchDataSet used for splitting the
+              full dataset into smaller structured patches.
+    :type VD: PatchDataSet
     """
 
     def __init__(self, **kwargs):
@@ -451,7 +604,22 @@ class ScannetDataset(BasicDataset):
         )
 
     def __getitem__(self, i: int) -> Tuple[list, list, list, list, list]:
-        """Get list of all coordinates and image patches"""
+        """
+        Retrieves an indexed sample from the dataset and processes it for use in training
+        or testing. The processing includes scaling, coordinate handling, patch generation,
+        and caching for efficiency. Returns various processed components of the dataset
+        including nodes, edges, graph structure, indexes, and classes.
+
+        :param i: The index of the sample to retrieve and process.
+        :type i: int
+        :return: A tuple containing the following elements:
+            - coords_idx (Tensor): Processed coordinates of nodes.
+            - df_idx (Tensor): Feature data for each node in the graph.
+            - graph_idx (Tensor): Graph structure defining edges and connectivity.
+            - output_idx (Tensor): Indexes of nodes relevant for output computation.
+            - cls_idx (Tensor): Classes or labels associated with each node.
+        :rtype: Tuple[Tensor, Tensor, Tensor, Tensor, Tensor]
+        """
         idx = self.ids[i]
 
         if self.train:
@@ -509,19 +677,21 @@ class ScannetDataset(BasicDataset):
 
 class ScannetColorDataset(BasicDataset):
     """
-    SCANNET V2 + COLORS TYPE DATASET CONSTRUCTION
+    Represents a dataset for Scannet, inheriting functionalities from the
+    BasicDataset. It supports handling of color information, coordination
+    files, and patch-based data processing.
 
-    Returns:
-        Tuple (list[np.ndarray]):
-        coords_idx: Numpy or Tensor list of coordinates (N, (2, 3)).
+    This dataset class processes 3D point cloud data and corresponding color
+    information from Scannet using various custom functionalities, including
+    coordinate scaling, patch-based segmentation, and preprocessed data
+    caching for efficient usage. It also incorporates graph-based dataset
+    representations.
 
-        rgb_idx: Numpy or Tensor list of RGB values (N, 3).
-
-        graph_idx: Numpy or Tensor list of 2D GT graphs.
-
-        output_idx: Numpy or Tensor list (N, 1) of output index value.
-
-        df_idx: Normalize zero-out output for standardized dummy.
+    :ivar color_dir: Path to the directory containing color data for the dataset.
+    :type color_dir: str
+    :ivar VD: The internal PatchDataSet object used for managing patch-based
+        segmentation and processing within the dataset.
+    :type VD: PatchDataSet
     """
 
     def __init__(self, **kwargs):
@@ -536,6 +706,25 @@ class ScannetColorDataset(BasicDataset):
         )
 
     def __getitem__(self, i: int) -> Tuple[list, list, list, list, list]:
+        """
+        Retrieves a set of pre-processed coordinates, image patches, graph data,
+        and labels (including classes) for a specific index in the dataset. This
+        allows access to data such as spatial coordinates, corresponding RGB
+        values, and graph-related information. The dataset can handle training and
+        testing variations, apply downscaling, and load or save intermediate results
+        for efficiency. The function supports transformations from list-based to
+        tensor-based formats and removes duplicates during pre-processing.
+
+        :param i: Index of the dataset item to retrieve data for.
+        :type i: int
+        :return: A tuple containing:
+            - Coordinates tensor (list): Spatial coordinates tensor for the graph.
+            - RGB tensor (list): Color information tensor corresponding to coordinates.
+            - Graph tensor (list): Graph adjacency or connectivity tensor for the given dataset item.
+            - Node index tensor (list): Tensor representing various node indices.
+            - Node class tensor (list): Tensor with the class labels of the nodes.
+        :rtype: Tuple[list, list, list, list, list]
+        """
         # Check if color folder exist
         if not isdir(self.color_dir):
             TardisError(
@@ -611,22 +800,42 @@ class ScannetColorDataset(BasicDataset):
 
 class Stanford3DDataset(BasicDataset):
     """
-    S3DIS TYPE DATASET CONSTRUCTION
+    This class represents the Stanford 3D dataset, which handles dataset processing, room identification,
+    and patch data preparation. It is responsible for organizing room data from directories and subdirectories,
+    preprocessing 3D point cloud data for machine learning tasks, and optimizing computational resources
+    by leveraging patches. The class integrates with the PatchDataSet for patch extraction and manipulation.
 
-    Returns:
-        Tuple (list[np.ndarray]):
-        coords_idx: Numpy or Tensor list of coordinates (N, (2, 3)).
-
-        rgb_idx: Numpy or Tensor list of RGB values (N, 3).
-
-        graph_idx: Numpy or Tensor list of 2D GT graphs.
-
-        output_idx: Numpy or Tensor list (N, 1) of output index value.
-
-        df_idx: Normalize zero-out output for standardized dummy.
+    :ivar coord_dir: Directory path containing the coordinate data for the Stanford 3D dataset.
+    :type coord_dir: str
+    :ivar ids: List of paths to specific room folders found within the `coord_dir` structure, excluding hidden files or directories.
+    :type ids: list
+    :ivar patch_size: Numpy array storing sizes for patches associated with each room data, enabling efficient processing.
+    :type patch_size: numpy.ndarray
+    :ivar VD: An instance of the `PatchDataSet` class used for creating and handling point cloud patches with configurations such as maximum points per patch, overlap, and drop rate.
+    :type VD: PatchDataSet
     """
 
     def __init__(self, **kwargs):
+        """
+        Represents a dataset class designed for processing and managing 3D Stanford
+        dataset files. This class initializes parameters related to directories,
+        processes folder structures to recognize valid dataset areas and rooms, and
+        builds dataset identifiers. Moreover, it initializes a PatchDataSet instance
+        to assist in handling patches with defined configurations for future usage.
+
+        :param kwargs: Arbitrary keyword arguments passed during initialization.
+
+        :ivar self.ids: List of identifiers representing valid datasets. Each
+            identifier corresponds to a specific room within recognized areas from the
+            dataset directory structure.
+        :ivar self.patch_size: Array of zeros with dimensions matching the number of
+            dataset identifiers. Used to store and manage patch sizes for the
+            respective data to optimize performance.
+        :ivar self.VD: An instance of the `PatchDataSet` class, initialized with
+            predefined arguments to handle point patches, overlap behavior, dropping
+            mechanisms, and specific configurations (e.g., graph-based and tensor-based
+            options).
+        """
         super(Stanford3DDataset, self).__init__(**kwargs)
 
         # Modified self.ids to recognize folder for .txt
@@ -656,7 +865,25 @@ class Stanford3DDataset(BasicDataset):
         )
 
     def __getitem__(self, i: int):
-        """Get list of all coordinates and image patches"""
+        """
+        Get the item corresponding to the provided index. This method handles loading
+        and processing of S3DIS scene data, including coordinate and optional RGB
+        features.
+
+        Depending on whether the train mode is enabled, data is preprocessed or loaded
+        from previously saved temporary files. The method either directly loads or
+        downscales the data with different scaling approaches. It further splits and
+        converts the data into tensors suitable for model input.
+
+        :param i: Index of the item to be retrieved.
+        :type i: int
+        :return: Depending on context, returns either:
+            - idx, coord, coords_idx, node_idx, graph_idx, output_idx, cls_idx (if
+              benchmark is enabled)
+            - coordinates index tensor, node index tensor, graph tensor, output
+              tensor, and class index tensor (if benchmark is disabled).
+        :rtype: Tuple containing the described return values.
+        """
         idx = self.ids[i]
 
         if self.train:
@@ -781,21 +1008,32 @@ def build_dataset(
     benchmark=False,
 ):
     """
-    Wrapper for DataLoader
+    Build dataset objects and corresponding data loaders based on the specified dataset
+    type and configurations. Supports various dataset types for training and testing such
+    as simulated datasets, Filament datasets, PartNet, ScanNet, Stanford datasets, and more.
+    The function also handles benchmark mode for testing datasets only. Depending on the
+    `dataset_type`, appropriate dataset classes are instantiated, configured with training
+    and testing attributes, and wrapped in data loaders for model consumption.
 
-    Function that wraps all data loaders and outputs only one asked for depending
-    on a dataset
+    :param dataset_type: Specifies the type of dataset to load. Can be either a string or
+        a list. If it is a list, it must define simulation-related metadata. For strings,
+        supported values include "filament", "MT", "Mem", "partnet", "scannet",
+        "stanford", and their variations (e.g., "scannet_rgb", "stanford_rgb").
+    :param dirs: A list containing directory paths to load training and testing dataset
+        files from. The directories depend on the specific type of dataset being used.
+    :param max_points_per_patch: The maximum number of points that a single patch within
+        the dataset can contain. This value is used to configure dataset-specific patch
+        loading and processing.
+    :param downscale: Defines optional downscaling operations to be applied during
+        dataset loading to alter point cloud resolution. If not provided, defaults are
+        used based on the dataset type.
+    :param benchmark: If set to True, indicates benchmark testing mode. In this mode,
+        only the test dataset loader is returned, and the training loader setup is bypassed.
 
-    Args:
-        dataset_type (str): Ask to recognize and process the dataset.
-        dirs (list): Ask for a list with the directory given as [train, test].
-        max_points_per_patch (int): Max number of points per patch.
-        downscale (None, float): Overweight downscale factor
-        benchmark (bool): If True construct data for benchmark
+    :return: For non-benchmark mode, returns a tuple where the first element is the
+        training dataset loader instance and the second element is the testing dataset
+        loader instance. For benchmark mode, only the testing dataset loader is returned.
 
-    Returns:
-        Tuple[torch.DataLoader, torch.DataLoader]: Output DataLoader with
-        the specified dataset for training and evaluation.
     """
 
     if isinstance(dataset_type, list):

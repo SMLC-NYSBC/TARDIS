@@ -19,27 +19,29 @@ from tardis_em.utils.errors import TardisError
 
 class PatchDataSet:
     """
-    BUILD PATCHED DATASET
+    Represents a class designed for configuring and processing point cloud data. This includes
+    functionalities for down-sampling points, defining overlapping feature patches, and specifying
+    output formats such as tensor representation or graph structure. It also initializes and manages
+    patch size configurations.
 
-    Main change in v0.1.0RC3
-        - Build moved to 3D patches
-
-    Class for computing optimal patch size for a maximum number of points per patch.
-    The optimal size of the patch is determined by max number of points. It works by first
-    calculating boundary box which is used to build 3D voxels. Voxel size is initiate
-    and reduced to optimize voxel sizes fo point cloud can be cut fo patches with
-    specified 'max_number_of_points'.
-    In the end, patches with a smaller number of points are marge with their neighbor
-    in a way that will respect 'max_number_of_points' policy.
-
-    Output is given as a list of arrays as torch.Tensor or np.ndarray.
-
-    Args:
-        max_number_of_points (int): Maximum allowed a number of points per patch.
-        overlap (float): Percentage of overlapping voxel size
-        drop_rate (float): Optimizer step size for reducing the size of patches.
-        graph (bool): If True output computed graph for each patch of point cloud.
-        tensor (bool): If True output all datasets as torch.Tensor.
+    Attributes:
+    ------------
+    :ivar DOWNSAMPLING_TH: Threshold for the maximum number of points for down-sampling.
+    :type DOWNSAMPLING_TH: int
+    :ivar voxel: Placeholder for voxel setting, initially unused (defaults to None).
+    :type voxel: NoneType
+    :ivar drop_rate: Defines the probability of dropping features during patch processing.
+    :type drop_rate: float, optional
+    :ivar TORCH_OUTPUT: Indicates whether tensor-based output functionality is enabled.
+    :type TORCH_OUTPUT: bool
+    :ivar GRAPH_OUTPUT: Indicates whether graph-based output functionality is enabled.
+    :type GRAPH_OUTPUT: bool
+    :ivar EXPAND: Specifies the degree to extend bounding box dimensions during processing.
+    :type EXPAND: float
+    :ivar STRIDE: Overlapping ratio between feature patches.
+    :type STRIDE: float
+    :ivar INIT_PATCH_SIZE: Initializes an array to store patch dimensions defined as a 2x3 matrix.
+    :type INIT_PATCH_SIZE: np.ndarray
     """
 
     def __init__(
@@ -50,6 +52,30 @@ class PatchDataSet:
         graph=True,
         tensor=True,
     ):
+        """
+        Class that initializes the configuration for point cloud down-sampling and patch processing. It sets up
+        parameters for down-sampling the point cloud, configuring the feature patches, and determining output
+        formats such as tensor or graph. It also provides initial space for the patch size in the configuration.
+
+        Attributes:
+        ------------
+        :max_number_of_points: The threshold for the maximum number of points allowed for point cloud
+           down-sampling. Points exceeding this limit will be reduced.
+        :overlap: The overlap ratio between patches to specify the stride when creating patches.
+        :drop_rate: Probability of dropping features during processing. Determines the fraction of features
+           to disregard.
+        :graph: Boolean value indicating whether graph-based outputs are enabled or not.
+        :tensor: Boolean value indicating whether tensor-based outputs are enabled or not.
+
+        Parameters:
+        -----------
+        :param max_number_of_points: The maximum number of points for point cloud down-sampling.
+        :param overlap: A floating-point value specifying the overlap percentage
+            for creating patches.
+        :param drop_rate: Floating-point value representing the drop rate for feature reduction.
+        :param graph: Boolean to enable or disable graph-based output processing.
+        :param tensor: Boolean to enable or disable tensor-based output processing.
+        """
         # Point cloud down-sampling setting
         self.DOWNSAMPLING_TH = max_number_of_points
 
@@ -66,10 +92,22 @@ class PatchDataSet:
 
     def boundary_box(self, coord, offset=None) -> np.ndarray:
         """
-        Utile class function to compute boundary box in 2D or 3D
+        Calculate the boundary box for the given coordinates, optionally applying an
+        offset. The function computes the minimum and maximum dimensions along each
+        axis (x, y, z if applicable). If the offset is provided, the boundary box is
+        expanded proportionally around the center. The result is a NumPy array
+        representing the boundary box with two points: the lower and upper bounds.
 
-        Returns:
-            np.ndarray: Boundary box dimensions
+        :param coord: The input array of coordinates where rows represent points, and
+                      columns represent dimensional axes (x, y, and optionally z).
+        :type coord: np.ndarray
+        :param offset: An optional expansion multiplier for the bounding box dimensions.
+                       If provided, it scales the boundary box's size relative to its
+                       center.
+        :type offset: float, optional
+        :return: A NumPy array representing the boundary box with two rows: the minimum
+                 (x, y, z) coordinates and the maximum (x, y, z) coordinates.
+        :rtype: np.ndarray
         """
         # Define x,y and (z) min and m
         # ax sizes
@@ -102,15 +140,19 @@ class PatchDataSet:
     @staticmethod
     def center_patch(bbox, voxel_size=1) -> np.ndarray:
         """
-        Creates a regular grid within a bounding box.
+        Calculates the coordinates for the centers of voxels within a given bounding box.
+        The bounding box is divided into a three-dimensional grid using the specified voxel size.
+        The method ensures a minimum of 2 voxels along each axis to avoid degenerate cases.
+        The voxel centers are returned as a NumPy array containing their coordinates.
 
-        Args:
-            bbox: list or tuple of 6 floats representing the bounding box as
-                (xmin, ymin, zmin, xmax, ymax, zmax)
-            voxel_size: float representing the size of each voxel
-
-        Returns:
-            np.ndarray: Of shape (N, 3) representing the center coordinates of each voxel
+        :param bbox: The bounding box defined as a 2x3 NumPy array where the first row contains
+            the minimum x, y, z coordinates and the second row contains the maximum x, y, z
+            coordinates.
+        :type bbox: np.ndarray
+        :param voxel_size: The size of each voxel along all dimensions. Defaults to 1.
+        :type voxel_size: float
+        :return: A NumPy array with the coordinates of all voxel centers as rows.
+        :rtype: np.ndarray
         """
         # Calculate the number of voxels along each axis
         n_x = int(np.ceil((bbox[1, 0] - bbox[0, 0]) / voxel_size))
@@ -137,15 +179,18 @@ class PatchDataSet:
 
     def points_in_patch(self, coord: np.ndarray, patch_center: np.ndarray) -> bool:
         """
-        Utile class function for filtering point cloud and output only point in
-        patch.
+        Determines if specific points represented by their coordinates are located within a
+        defined patch based on the patch's center and pre-defined size. The patch is modeled
+        as a cuboid, and each coordinate is verified to be within the patch bounds along
+        all axes.
 
-        Args:
-            coord (np.ndarray): 3D coordinate array.
-            patch_center (np.ndarray): Array (1, 3) for the given patch center.
-
-        Returns:
-            tuple(bool): Array of all points that are enclosed in the given patch.
+        :param coord: A numpy array of shape (N, 3), where N is the number of points,
+            and each row represents the x, y, z coordinates of a point.
+        :param patch_center: A numpy array of shape (3,), representing the x, y, z
+            coordinates of the patch center.
+        :return: A boolean array of shape (N,), where each element signifies whether
+            the corresponding point in `coord` is located within the defined patch limits.
+        :rtype: np.ndarray
         """
         patch_size_x = self.INIT_PATCH_SIZE[0]
         patch_size_y = self.INIT_PATCH_SIZE[1]
@@ -170,15 +215,27 @@ class PatchDataSet:
 
     def optimal_patches(self, coord: np.ndarray, random=False) -> List[bool]:
         """
-        Main class function to compute optimal patch size.
+        The `optimal_patches` function calculates and returns a list of boolean
+        values representing whether specific patches within a given coordinate
+        space contain points that meet certain criteria. It operates in two
+        modes: random patch selection or systematic grid-based patch calculation.
 
-        The function takes init stored variable and iteratively searches for voxel size
-        small enough that allow for all patches to have an equal or less max number
-        of points.
+        This function first calculates a bounding box for the input coordinates.
+        It determines voxel sizes dynamically based on the bounding box dimensions,
+        applies strategies for patch creation, and evaluates patches for spatial
+        distribution of points. The two modes allow either randomly selected patches
+        or systematic patches using voxel downscaling until a threshold is satisfied.
 
-        Args:
-            coord (np.ndarray): List of coordinates for voxelize
-            random:
+        :param coord: The spatial coordinate input as a numpy array.
+        :type coord: np.ndarray
+
+        :param random: Determines if the patch selection should follow
+            a random process or systematic method. Default is False.
+        :type random: bool, optional
+
+        :return: A list of boolean values indicating which patches meet
+            the specific criteria.
+        :rtype: List[bool]
         """
         bbox = self.boundary_box(coord)
         if self.voxel is not None:
@@ -363,14 +420,15 @@ class PatchDataSet:
     @staticmethod
     def normalize_idx(coord_with_idx: np.ndarray) -> np.ndarray:
         """
-        Utile class function to replace ids with ordered output ID values for
-        each point in patches. In other words, it produces a standardized ID for each
-        point, so it can be identified with the source.
+        Normalizes the index values of coordinates in the given array. The method updates the array
+        such that indices in the first column are replaced with normalized indices, starting from zero.
+        The normalization process maps unique indices to a consecutive range of indices.
 
-        Args:
-            coord_with_idx (np.ndarray): Coordinate id value i.
-        Returns:
-            np.ndarray: An array all points in a patch with corrected ID value.
+        :param coord_with_idx: A numpy array where the first column contains coordinate indices to be
+            normalized.
+        :type coord_with_idx: np.ndarray
+        :return: The input array with normalized indices in its first column.
+        :rtype: np.ndarray
         """
         unique_idx, inverse_idx = np.unique(coord_with_idx[:, 0], return_inverse=True)
         # Hot-fix for numpy 2.0.0
@@ -386,13 +444,16 @@ class PatchDataSet:
 
     def output_format(self, data: np.ndarray) -> Union[np.ndarray, torch.Tensor]:
         """
-        Utile class function to output an array in the correct format (numpy or tensor)
+        Converts the given data into the desired output format. If the `TORCH_OUTPUT`
+        flag is set, the input NumPy array is converted to a PyTorch tensor of type
+        `torch.float32`.
 
-        Args:
-            data (np.ndarray): Input data for format change.
-
-        Returns:
-            np.ndarray: Array in file format specified by self.torch_output.
+        :param data: Input data as a NumPy array.
+        :type data: np.ndarray
+        :return: The input data converted to the desired format. Returns a PyTorch
+            tensor if `TORCH_OUTPUT` is enabled, otherwise returns the original
+            NumPy array.
+        :rtype: Union[np.ndarray, torch.Tensor]
         """
         if self.TORCH_OUTPUT:
             data = torch.from_numpy(data).type(torch.float32)
@@ -407,6 +468,33 @@ class PatchDataSet:
         random=False,
         voxel_size=None,
     ) -> Union[Tuple[List, List, List, List, List], Tuple[List, List, List, List]]:
+        """
+        Generates patches of spatial data and optional associated properties (class labels,
+        graph structures, and RGB values) for deep learning tasks. This function processes
+        input spatial coordinates to divide them into smaller, manageable patches, and
+        conditionally builds graph structures or assigns additional information like class
+        labels and RGB values for each patch. This method supports either a 2D-to-3D
+        transformation or segmented and raw data processing, depending on the provided input
+        configurations.
+
+        :param coord: An array of spatial coordinates, potentially in 2D, 3D, or segmented
+            4D form.
+        :param label_cls: Optional array of class labels for spatial coordinates.
+        :param rgb: Optional array of RGB values for spatial coordinates.
+        :param mesh: An integer indicating the scale or structure of graph connectivity
+            (e.g., K in a K-Nearest Neighbors graph).
+        :param random: Boolean indicating whether to randomly segment patches or determine
+            them based on an optimization algorithm.
+        :param voxel_size: Optional numeric value specifying the desired voxel size
+            for downsampling spatial data.
+
+        :return: A tuple of lists with various outputs segmented into patches:
+            - Point cloud patches for input coordinates.
+            - RGB data patches if available.
+            - Graph patches if graph output is configured.
+            - Indices of original data points corresponding to each patch.
+            - Optional class label patches if `label_cls` is provided.
+        """
         coord_patch = []
         graph_patch = []
         output_idx = []

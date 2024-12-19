@@ -18,6 +18,28 @@ array_formats = (".csv", ".npy")
 
 
 def tardis_helper(func: str, dir_=None, px: float = None):
+    """
+    This function assists in the format-specific processing and conversion of files
+    within a specified directory. It determines the required operations based on
+    the function name format, identifying the file type and output format. The
+    function handles both coordinate data and image files, ensuring that requisite
+    conversions are performed successfully.
+
+    :param func: A string specifying the operation and file type format, structured
+        as 'inputFileType_outputFileType'. This determines both the expected input
+        file format and the desired output file format (e.g., 'csv_am', 'mrc_tiff').
+    :type func: str
+    :param dir_: The directory path containing files to process. If None, the
+        function will not operate on any files.
+    :type dir_: Optional[str]
+    :param px: A float representing the pixel size, which is necessary for certain
+        operations involving image files. Can be optionally passed or initially set
+        to None.
+    :type px: Optional[float]
+    :return: None. The processed files are saved directly in the specified
+        directory with the converted output format.
+    :rtype: None
+    """
     function = func.split("_")  # Expect e.g: csv_am
     in_files = [f for f in os.listdir(dir_) if f.endswith(function[0])]
 

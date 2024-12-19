@@ -15,6 +15,22 @@ from skimage import exposure
 
 
 def adaptive_threshold(img: np.ndarray):
+    """
+    Perform adaptive thresholding on an image array using mean and standard deviation.
+
+    This function calculates the standard deviation and mean of the input image.
+    If the image is multi-channel (e.g., RGB), it processes each channel independently.
+    The threshold is determined by dividing the mean by the standard deviation.
+    The resulting image is binarized by comparing pixel values to the thresholded
+    value.
+
+    :param img: Input image as a NumPy array. For multi-channel images, each channel
+        is processed independently.
+    :type img: np.ndarray
+    :return: A binarized image as a NumPy array with values set to 1 for pixels
+        meeting the threshold criteria and 0 otherwise.
+    :rtype: np.ndarray
+    """
     if img.ndim == 3:
         std_ = np.std(img, axis=(1, 2), keepdims=True)
         mean_ = np.mean(img, axis=(1, 2), keepdims=True)
@@ -28,21 +44,31 @@ def adaptive_threshold(img: np.ndarray):
 
 class SimpleNormalize:
     """
-    SIMPLE IMAGE NORMALIZATION
+    SimpleNormalize class provides functionality for normalizing image data arrays to
+    floating-point representations within the range of 0 to 1. The class aims to handle
+    multiple types of integer-based image data, adjusting ranges based on the specific
+    data type to ensure proper normalization.
 
-    Take int8-int32 image file with 0 - 255 value. All image value are spread
-    between 0 - 1.
+    :ivar scalars: Mapping of data types to their normalization scalar values or
+        specific shifts for signed data types.
+    :type scalars: dict
     """
 
     def __call__(self, x: np.ndarray) -> np.ndarray:
         """
-        Call for image normalization.
+        Applies normalization to the input NumPy array based on its data type. This is
+        particularly useful for converting array values from various integer formats
+        to a normalized floating-point range (0 to 1). The normalization process
+        ensures consistency across different input data types by applying appropriate
+        scaling and offset adjustments to the input values.
 
-        Args:
-            x (np.ndarray): Image array.
-
-        Returns:
-            np.ndarray: Normalized image.
+        :param x: Input NumPy array to be normalized. The normalization depends on
+                  the data type of the array. Supported data types include
+                  np.uint8, np.int8, np.uint16, np.int16, np.uint32, and np.int32.
+                  Other data types are not handled explicitly.
+        :return: A normalized NumPy array of type np.float32, where all values are scaled
+                 to the range [0, 1].
+        :rtype: np.ndarray
         """
         if x.dtype == np.uint8:
             x = x / 255
@@ -62,18 +88,32 @@ class SimpleNormalize:
 
 class MinMaxNormalize:
     """
-    IMAGE NORMALIZATION BETWEEN MIN AND MAX VALUE
+    Performs Min-Max normalization on input data.
+
+    This class normalizes input data to the range [0, 1] by scaling the values
+    proportionally within this range using the minimum and maximum values of
+    the input array. If the maximum value is less than or equal to zero, the
+    normalization adjusts the input data before scaling by adding the absolute
+    value of the minimum.
+
+    :ivar MIN: Minimum value within the input array after computation.
+    :type MIN: float
+    :ivar MAX: Maximum value within the input array after computation.
+    :type MAX: float
     """
 
     def __call__(self, x: np.ndarray) -> np.ndarray:
         """
-        Call for normalization.
+        Normalizes the input numpy array to a range of [0, 1]. If the maximum value
+        of the array is less than or equal to zero, the array is first shifted by
+        adding the absolute value of its minimum. The normalization ensures that
+        the minimum value becomes 0 and the maximum value becomes 1. The result
+        is then cast to a float32 numpy array.
 
-        Args:
-            x (np.ndarray): Image data.
-
-        Returns:
-            np.ndarray: Normalized array.
+        :param x: Input numpy array to be normalized.
+        :type x: np.ndarray
+        :return: A numpy array normalized to the range [0, 1] with dtype np.float32.
+        :rtype: np.ndarray
         """
         MIN = np.min(x)
         MAX = np.max(x)
@@ -87,18 +127,33 @@ class MinMaxNormalize:
 
 class MeanStdNormalize:
     """
-    IMAGE NORMALIZATION BASED ON MEAN AND STD
+    A class for normalizing input data using mean and standard deviation.
+
+    This class standardizes input data by centering it to have a mean of zero
+    and scaling it to have a standard deviation of one. It is designed for use
+    in preprocessing image data or other numerical datasets to improve
+    performance in machine learning models.
+
+    :ivar MEAN: Mean value of the input data used for standardization.
+    :type MEAN: float
+    :ivar STD: Standard deviation of the input data used for standardization.
+    :type STD: float
     """
 
     def __call__(self, x: np.ndarray) -> np.ndarray:
         """
-        Call for standardization.
+        Normalize the input NumPy array to have zero mean and unit variance.
 
-        Args:
-            x (np.ndarray): Image data.
+        This callable object normalizes the input NumPy array by subtracting its mean
+        and dividing by its standard deviation to ensure that the transformed data
+        has a mean of 0 and a standard deviation of 1. The result is returned as a
+        NumPy array of type float32.
 
-        Returns:
-            np.ndarray: Standardized array.
+        :param x: Input NumPy array to be normalized.
+        :type x: np.ndarray
+        :return: A normalized NumPy array with zero mean and unit variance, cast to
+            float32.
+        :rtype: np.ndarray
         """
         MEAN = float(x.mean())
         STD = float(x.std())
@@ -109,12 +164,15 @@ class MeanStdNormalize:
 
 class RescaleNormalize:
     """
-    NORMALIZE IMAGE VALUE USING Skimage
+    Performs rescale normalization on a given array.
 
-    Rescale intensity with top% and bottom% percentiles as default
+    This class is designed to normalize image or label mask input based on the
+    specified clipping range using a percentile-based approach. It is particularly
+    useful for preprocessing image data in various computer vision tasks, ensuring
+    that output values fall within a defined intensity range.
 
-    Args:
-        clip_range: Histogram percentiles range crop.
+    :ivar range: A tuple that specifies the percentile range used for clipping.
+    :type range: tuple[int, int]
     """
 
     def __init__(self, clip_range=(2, 98)):
@@ -122,13 +180,16 @@ class RescaleNormalize:
 
     def __call__(self, x: np.ndarray) -> np.ndarray:
         """
-        Call for normalization.
+        Normalize the pixel intensity values of an input numpy array by rescaling them
+        to a specified range defined by percentiles. The operation ensures that the
+        output values are adjusted to enhance the contrast within the given range.
 
-        Args:
-            x (np.ndarray): Image or label mask.
-
-        Returns:
-            np.ndarray: Normalized array.
+        :param x: A numpy array representing the input image data to be normalized. Values
+           should fall within the range that aligns with the data type of the array. For
+           example, if `x` is of `np.uint8`, values are in the range [0, 255].
+        :return: A numpy array with pixel intensity values normalized to the specified
+           percentile range. The datatype and shape of the returned array will match the
+           input array.
         """
         p2, p98 = np.percentile(x, self.range)
         if x.dtype == np.uint8:
@@ -150,6 +211,22 @@ class FFTNormalize:
         sample=1,
         use_cuda=False,
     ):
+        """
+        Initializes an object with transformations and normalization options.
+
+        The class constructor sets the parameters for defining the transformation
+        method, coefficients for transformation weight and regulation, iteration
+        count, sampling options, CUDA acceleration, and standard mean-variance
+        normalization. These values influence the behavior and computational
+        efficiency of the intended transformation or process.
+
+        :param method: Transformation method. Default is "affine".
+        :param alpha: Weighting factor for transformations.
+        :param beta_: Regularization factor.
+        :param num_iters: Number of iterations to be performed.
+        :param sample: Sampling rate or number of samples.
+        :param use_cuda: Indicator to use CUDA (Boolean).
+        """
         self.method = method
         self.alpha = alpha
         self.beta = beta_
@@ -172,6 +249,39 @@ class FFTNormalize:
         share_var=True,
         verbose=False,
     ):
+        """
+        Performs Expectation-Maximization (EM) fitting of a two-component Gaussian Mixture
+        Model (GMM) with a Beta distribution prior on the mixing coefficient. This function
+        estimates the parameters of the GMM (means, variances, and mixing coefficients) and
+        returns the log-likelihood and other model parameters.
+
+        The method begins with an initial parameter assignment based on a threshold or
+        quantile cut-off and iteratively optimizes the model parameters using EM until the
+        log-likelihood converges or the maximum number of iterations is reached.
+
+        :param x: Input tensor for the data to be modeled.
+        :param pi: Initial mixing coefficient for the Gaussian components. Defaults to 0.5.
+        :param split: Threshold value for initializing component assignments. If None, defaults
+            to a quantile-based value computed from the data.
+        :param alpha: Parameter for the Beta distribution prior on the mixing coefficient.
+            Defaults to 0.5.
+        :param beta_: Parameter for the Beta distribution prior on the mixing coefficient.
+            Defaults to 0.5.
+        :param scale: Scaling factor for the log-likelihood computation. Defaults to 1.0.
+        :param tol: Convergence tolerance for the log-likelihood difference between iteration
+            steps. Defaults to 1e-3.
+        :param num_iters: Maximum number of iterations for the EM algorithm. Defaults to 100.
+        :param share_var: Boolean indicating whether the Gaussian components share a single
+            variance value. Defaults to True.
+        :param verbose: Boolean to enable printing of the log-likelihood at each iteration.
+            Defaults to False.
+
+        :return: A tuple containing:
+            1. Final log-likelihood of the fitted model.
+            2. Estimated mean of the first Gaussian component.
+            3. Estimated mean of the second Gaussian component.
+            4. Estimated variance of the second Gaussian component.
+        """
         # fit 2-component GMM
         # put a beta distribution prior on pi
 
@@ -285,6 +395,34 @@ class FFTNormalize:
         return logp, mu0, mu1, var1
 
     def norm_fit(self, x, alpha=900, beta_=1, scale=1.0, num_iters=100, use_cuda=False):
+        """
+        Fits a normalization model to the input data by iteratively evaluating different
+        probability mixtures while maximizing a log-likelihood measure. The function tries
+        multiple initializations of probabilities for Gaussian Mixture Models (GMM) and
+        evaluates their effectiveness using a combination of beta-prior distribution and
+        the data's log-likelihood. Optimization terminates when the initialization with the
+        maximum likelihood is found.
+
+        The function allows either single-component fitting (pi=1) or GMM-based multip-component
+        fitting (pi<1). It incorporates optional GPU acceleration for computations and utilizes
+        a blend of Torch and Scipy statistical tools.
+
+        :param x: Input data as a 1-dimensional array or tensor.
+        :type x: numpy.ndarray or torch.Tensor
+        :param alpha: Shape parameter for the beta prior distribution.
+        :type alpha: int
+        :param beta_: Second shape parameter for the beta prior distribution.
+        :type beta_: int
+        :param scale: Scaling factor for the likelihood computation.
+        :type scale: float
+        :param num_iters: Number of iterations allowed for the GMM fitting process.
+        :type num_iters: int
+        :param use_cuda: Boolean flag to determine if computations should run on GPU.
+        :type use_cuda: bool
+        :return: Tuple containing the mean (mu) and standard deviation (std) of the best-fit
+            normalization parameters optimized for maximum log-likelihood (-logp).
+        :rtype: tuple[float, float]
+        """
         # try multiple initializations of pi
         pis = np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.98, 1])
         splits = np.quantile(x, 1 - pis)
@@ -326,6 +464,17 @@ class FFTNormalize:
         return mus[i], stds[i]
 
     def __call__(self, x: np.ndarray):
+        """
+        Processes the input numpy array `x` using a normalization technique based on the
+        predefined method and parameters. The method performs either "affine" normalization
+        or utilizes sampling and an iterative normalization-fitting process to compute
+        the mean and standard deviation. Normalized results are returned as single-precision floats.
+
+        :param x: The input numpy array to be normalized.
+        :type x: numpy.ndarray
+        :return: The normalized numpy array as single-precision floats.
+        :rtype: numpy.ndarray
+        """
         if self.method == "affine":
             return self.mean_std(x)
 

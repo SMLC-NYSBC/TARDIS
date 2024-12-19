@@ -25,6 +25,21 @@ import numpy as np
 
 
 def img_is_color(img):
+    """
+    Determines if a given image is colored or grayscale by examining its color
+    channels. The function checks whether all three color channels (red, green,
+    and blue) are identical. If they are identical, the image is considered
+    grayscale.
+
+    :param img: A NumPy array representing an image. The input must have three
+        dimensions (height, width, channels). The first two dimensions represent
+        the image height and width, while the third dimension represents the
+        color channels.
+    :type img: numpy.ndarray
+    :return: A boolean value. Returns `True` if the image is grayscale (all
+        color channels are identical), `False` otherwise.
+    :rtype: bool
+    """
     if len(img.shape) == 3:
         # Check the color channels to see if they're all the same.
         c1, c2, c3 = img[:, :, 0], img[:, :, 1], img[:, :, 2]
@@ -47,21 +62,25 @@ def show_image_list(
     dpi=100,
 ):
     """
-    Shows a grid of images, where each image is a Numpy array. The images can be either
-    RGB or grayscale.
+    Displays a list of images in a grid format, with optional customization for titles,
+    colormaps, masks, and layout settings. Each image can be individually styled by
+    providing corresponding lists for titles, colormaps, or masks.
 
-    Args:
-        list_images (list): List of the images to be displayed.
-        list_titles (list or None): Optional list of titles to be shown for each image.
-        list_cmaps (list, str or None): Optional list of cmap values for each image.
-            If None, then cmap will be automatically inferred.
-        list_mask_cmaps (list, str or None):
-        grid (boolean): If True, show a grid over each image
-        num_cols (int): Number of columns to show.
-        figsize (tuple): Value to be passed to pyplot.figure()
-        title_fontsize (int): Value to be passed to set_title()
-        list_masks(list, None):
-        dpi (int):
+    :param list_images: List of numpy arrays representing the images to be displayed.
+    :param list_titles: Optional list of titles corresponding to each image.
+    :param list_cmaps: Optional colormap setting for images. Can be a single colormap
+        (str) applied to all images, or a list specifying a colormap for each image.
+    :param list_mask_cmaps: Optional colormap setting for overlay masks. Can be a
+        single colormap (str) applied to all masks, or a list specifying a colormap
+        for each mask.
+    :param grid: Boolean flag to enable or disable gridlines over images.
+    :param num_cols: Number of columns in the grid layout.
+    :param figsize: Tuple specifying the size of the overall figure in inches.
+    :param title_fontsize: Font size for the optional titles for each subplot.
+    :param list_masks: Optional list of masks that overlay the corresponding images.
+        Each mask should have the same dimensions as the corresponding image.
+    :param dpi: Resolution of the figure in dots per inch.
+    :return: None.
     """
     assert isinstance(list_images, list)
     assert len(list_images) > 0
@@ -142,15 +161,22 @@ def show_image_list(
 
 def _dataset_format(coord: np.ndarray, segmented: bool) -> Tuple[np.ndarray, bool]:
     """
-    Silently check for an array format and correct 2D datasets to 3D.
+    Formats the dataset coordinate array based on the dimensionality and segmentation status.
+    This function ensures that input `coord` is in appropriate dimensions (2D or 3D) by fixing
+    the missing dimensions when necessary, depending on whether the dataset is segmented or not.
+    Additionally, it validates the compatibility of the input dimensions and outputs a
+    boolean flag indicating the validation status.
 
-    Args:
-        coord (np.ndarray): 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y].
-        segmented (bool): If True expect (s) in a data format as segmented values.
-
-    Returns:
-        Tuple[np.ndarray, bool]: Checked and corrected coord array with boolean
-        statement if array is compatible.
+    :param coord: A numpy array containing coordinates of the dataset. Should be 2D or 3D
+        with or without labels depending on the segmentation status.
+    :type coord: np.ndarray
+    :param segmented: A boolean flag indicating whether the dataset is segmented or not.
+        If True, the `coord` is expected to contain labels for each data point.
+    :type segmented: bool
+    :return: A tuple containing a transformed numpy array and a boolean flag.
+        The first element is the corrected `coord` dataset and the second element
+        indicates whether the input data passed validation checks (`True` or `False`).
+    :rtype: Tuple[np.ndarray, bool]
     """
     check = True
 
@@ -180,17 +206,31 @@ def _rgb(
     coord: np.ndarray, segmented: bool, ScanNet=False, color=False, filaments=False
 ) -> np.ndarray:
     """
-    Convert float to RGB classes.
+    Generates an RGB color representation based on input coordinates and optional parameters
+    such as segmented, ScanNet compatibility, color flag, and filament processing. The function
+    produces color mapping for each unique identifier in the input coordinates array. Depending
+    on the options provided, it can assign random colors, predefined ScanNet colors, or default
+    red for non-segmented data. It handles additional functionality for filament-specific
+    processing if activated.
 
-    Use predefined Scannet V2 RBG classes or random RGB classes.
+    :param coord: The input ndarray containing data, where the first column typically represents
+        unique IDs to map to RGB colors. The size and format of the array depend on the specific
+        input data.
+    :param segmented: Boolean flag to indicate whether the input data is segmented. Segmented
+        data triggers unique RGB assignment to distinct segments or IDs.
+    :param ScanNet: Optional boolean flag. If True and `segmented` is enabled, assigns predefined
+        RGB values from SCANNET_COLOR_MAP_20 to each unique ID. Defaults to False.
+    :param color: Optional boolean flag. If True, creates an initial uniform zero RGB list for
+        unique IDs when `segmented` is enabled. If False, assigns random RGB values to the unique
+        IDs. Defaults to False.
+    :param filaments: Boolean flag. If True, processes data specifically for unique filament IDs
+        in the coordinates array. Generates a list of random RGB values for each unique filament.
+        Defaults to False.
 
-    Args:
-        coord (np.ndarray): 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y].
-        segmented (bool): If True expect (s) in a data format as segmented values.
-        ScanNet (bool): If True output scannet v2 classes.
-
-    Returns:
-        np.ndarray: 3D array with RGB values for each point.
+    :return: A numpy array with shape (N, 3), where N is the number of rows in the input
+        `coord`. Each row contains the assigned RGB color values for the respective ID in the
+        input data. If `filaments` is enabled, returns a list of RGB values for the unique
+        elements in `coord`.
     """
     if filaments:
         unique_ids = np.unique(coord[:, 0])
@@ -228,13 +268,24 @@ def _rgb(
 
 def segment_to_graph(coord: np.ndarray) -> list:
     """
-    Build filament vector lines for open3D.
+    Generates a graph list representation from an array of segment coordinates.
 
-    Args:
-        coord (np.ndarray): 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y].
+    The function accepts a 2D NumPy array containing segments defined by their
+    start and end points. For each segment, the function assigns indices to
+    nodes and converts the segments into a list of directed edges. The result
+    is a list of directed edges, where each edge is a pair of indices referring
+    to the connected nodes.
 
-    Returns:
-        list: list of segments converted for open3D
+    The graph representation is suitable for use in algorithms like pathfinding
+    or connectivity analysis based on segments.
+
+    :param coord: Input 2D array representing segments. Each row corresponds to a
+        segment, with columns indicating specific segment attributes (e.g., start
+        and end coordinates).
+    :type coord: np.ndarray
+    :return: A list of directed edges representing the graph. Each edge is a pair
+        of indices denoting a connection between nodes.
+    :rtype: list
     """
     graph_list = []
     stop = 0
@@ -263,6 +314,19 @@ def segment_to_graph(coord: np.ndarray) -> list:
 
 
 def point_cloud_to_mesh(point_cloud, k=6):
+    """
+    Converts a 3D point cloud into a triangular mesh representation by grouping points
+    based on their IDs, constructing a KDTree for nearest neighbor search, and forming
+    triangular faces using the k nearest neighbors of each point in the cloud. If a group
+    contains fewer than three points, it will be skipped.
+
+    :param point_cloud: A list of points, where each point includes an ID as the first element
+        and its 3D coordinates (x, y, z) as the remaining elements.
+    :type point_cloud: list[list[float]]
+
+    :param k: The number of nearest neighbors used for forming triangles. Defaults to 6 if not specified.
+    :type k: int
+    """
     # Initialize lists to store all vertices and faces across IDs
     all_vertices = []
     all_faces = []
@@ -312,9 +376,15 @@ def point_cloud_to_mesh(point_cloud, k=6):
 
 def rotate_view(vis):
     """
-    Optional viewing parameter for open3D to constantly rotate scene.
-    Args:
-        vis: Open3D view control setting.
+    Rotates the view of the visualization. This function adjusts the render
+    options for the visualization object by setting the background color to
+    black and enabling the option to show back faces of the mesh. Additionally,
+    it rotates the view slightly along the horizontal axis.
+
+    :param vis: Visualization object to manipulate.
+    :type vis: open3d.visualization.Visualizer
+    :return: False
+    :rtype: bool
     """
     opt = vis.get_render_option()
     opt.background_color = np.asarray([0, 0, 0])
@@ -328,9 +398,17 @@ def rotate_view(vis):
 
 def background_view(vis):
     """
-    Optional viewing parameter for open3D to constantly rotate scene.
-    Args:
-        vis: Open3D view control setting.
+    Sets the background color of the visualization to black and enables displaying
+    back faces of the mesh in the visualizer. This function modifies the
+    RenderOption object associated with the visualizer instance and returns
+    a boolean value.
+
+    :param vis: Visualization object for which the background and mesh rendering
+        options are to be set.
+    :type vis: Visualizer
+    :return: Returns False after successfully setting the background color and
+        enabling back face rendering for the mesh.
+    :rtype: bool
     """
     opt = vis.get_render_option()
     opt.background_color = np.asarray([0, 0, 0])
@@ -343,18 +421,32 @@ def VisualizePointCloud(
     segmented: bool = True,
     rgb: Optional[np.ndarray] = None,
     animate=False,
-    return_=False,
+    return_b=False,
 ):
     """
-    Visualized point cloud.
+    Visualize a point cloud given its coordinates and optional additional parameters.
 
-    Output color coded point cloud. Color values indicate individual segments.
+    This function prepares and visualizes 3D point cloud data using Open3D. It allows
+    for the visualization of segmented and RGB-colored point clouds. Users can also
+    choose to animate the visualization and return the prepared Open3D point cloud
+    object instead of directly displaying it.
 
-    Args:
-        coord (np.ndarray): 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y].
-        segmented (bool): If True expect (s) in a data format as segmented values.
-        rgb (np.ndarray): Optional, indicate rgb values.
-        animate (bool): Optional trigger to turn off animated rotation.
+    :param coord: A NumPy array representing the 3D coordinates of the point cloud.
+    :param segmented: A boolean flag indicating whether the input coordinates are
+        segmented or not. If True, the visualization will process the input as
+        segmented data. Default is True.
+    :param rgb: Optional parameter specifying RGB color data for the point cloud.
+        If an array is provided, it will be used as the RGB data. If a string is
+        provided, it must match a predefined color key. If None, default colors
+        will be applied. Default is None.
+    :param animate: A boolean flag determining if the visualization should
+        include an animation. Default is False.
+    :param return_b: A boolean flag indicating whether to return the generated
+        Open3D PointCloud object. If True, the function will return the object
+        instead of visualizing immediately. Default is False.
+
+    :return: Returns an Open3D PointCloud object if ``return_b`` is set to True.
+        No return otherwise.
     """
     coord, check = _dataset_format(coord=coord, segmented=segmented)
 
@@ -378,26 +470,39 @@ def VisualizePointCloud(
             pcd.colors = o3d.utility.Vector3dVector(_rgb(coord, True))
         else:
             pcd.paint_uniform_color(rgb)
-        if return_:
+        if return_b:
             return pcd
 
         VisualizeCompose(animate=animate, pcd=pcd)
 
 
 def VisualizeFilaments(
-    coord: np.ndarray, animate=True, with_node=False, filament_color=None, return_=False
+    coord: np.ndarray,
+    animate=True,
+    with_node=False,
+    filament_color=None,
+    return_b=False,
 ):
     """
-    Visualized filaments.
+    Visualizes filament structures based on the provided coordinates and additional options.
 
-    Output color coded point cloud. Color values indicate individual segments.
+    This function takes 3D coordinate data, processes it into a visualizable format, and optionally
+    renders it with animations along with node visualizations. It supports configurable filament colors
+    and offers the ability to return the visualized LineSet for further use.
 
-    Args:
-        coord (np.ndarray): 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y].
-        animate (bool): Optional trigger to turn off animated rotation.
-        with_node (bool): Optional, If True, show point on filaments
-        filament_color (None, list): Uniform filament color
-        return_ (bool): If True return open3d object
+    :param coord: The 3D coordinate data array representing the filament geometry. Must follow the
+        segmented dataset format.
+    :param animate: A boolean flag to indicate whether the visualization should include animation.
+        Defaults to True.
+    :param with_node: A boolean indicating whether to include node points in the visualization.
+        Defaults to False.
+    :param filament_color: A string representing the color of the filament, or None to use the default
+        white color. The string must correspond to one of the supported color keys in `rgb_color`.
+    :param return_b: A boolean specifying whether to return the visualized LineSet object instead of
+        rendering it. Defaults to False.
+    :return: Returns an Open3D `LineSet` object representing the visualized filament if `return_b` is
+        True. Otherwise, no return value.
+    :rtype: Optional[o3d.geometry.LineSet]
     """
     coord, check = _dataset_format(coord=coord, segmented=True)
 
@@ -423,7 +528,7 @@ def VisualizeFilaments(
 
         line_set.paint_uniform_color(filament_color)
 
-        if return_:
+        if return_b:
             return line_set
 
         if with_node:
@@ -432,15 +537,25 @@ def VisualizeFilaments(
             VisualizeCompose(animate=animate, line_set=line_set)
 
 
-def VisualizeScanNet(coord: np.ndarray, segmented: True, return_=False):
+def VisualizeScanNet(coord: np.ndarray, segmented: True, return_b=False):
     """
-    Visualized scannet scene
+    Visualizes a ScanNet point cloud dataset with the ability to handle segmented and
+    non-segmented data. The method can be used to generate and visualize 3D point
+    clouds with or without colors based on segmentation. Optionally, the point cloud
+    can be returned instead of directly visualizing it.
 
-    Output color-coded point cloud. Color values indicate individual segments.
+    :param coord: The input coordinate array representing the point cloud data. The
+                  shape and structure depend on whether the data is segmented or
+                  non-segmented.
+    :param segmented: A boolean indicating whether the input data is segmented. If
+                      True, the coordinates include segment information that
+                      modifies the visualization process.
+    :param return_b: A boolean specifying if the function should return the processed
+                    point cloud object. If False, the point cloud is visualized
+                    directly without returning the object.
 
-    Args:
-        coord (np.ndarray): 2D or 3D array of shape [(s) x X x Y x Z] or [(s) x X x Y].
-        segmented (bool): If True expect (s) in a data format as segmented values.
+    :return: Optionally returns an Open3D point cloud object if `return_b` is set to
+             True.
     """
     coord, check = _dataset_format(coord=coord, segmented=segmented)
 
@@ -453,7 +568,7 @@ def VisualizeScanNet(coord: np.ndarray, segmented: True, return_=False):
             pcd.points = o3d.utility.Vector3dVector(coord)
         pcd.colors = o3d.utility.Vector3dVector(_rgb(coord, segmented, True))
 
-        if return_:
+        if return_b:
             return pcd
 
         VisualizeCompose(animate=False, meshes=pcd)
@@ -464,8 +579,22 @@ def VisualizeSurface(
     triangles: Union[tuple, list, np.ndarray] = None,
     point_cloud=None,
     animate=False,
-    return_=False,
+    return_b=False,
 ):
+    """
+    Visualizes a 3D surface using vertex and triangle data or a point cloud. The function
+    supports optional animation and returns processed meshes when specified.
+
+    :param vertices: The vertices of the surface. Can be a tuple, list, or numpy ndarray.
+        If not provided, must provide triangles or point_cloud.
+    :param triangles: The triangles composing the surface. Can be a tuple, list, or numpy ndarray.
+        If not provided, must provide vertices or point_cloud.
+    :param point_cloud: A point cloud array. If provided, vertices and triangles will be
+        generated from the point cloud data.
+    :param animate: Boolean. If True, animates the composed visualization.
+    :param return_b: Boolean. If True, returns the generated mesh objects.
+    :return: A list of Open3D TriangleMesh objects if `return_b` is set to True.
+    """
     if vertices is None and triangles is None and point_cloud is None:
         return
 
@@ -485,7 +614,7 @@ def VisualizeSurface(
 
         vertices, triangles = [], []
         for i in pc:
-            pcd = VisualizePointCloud(i, segmented=False, return_=True)
+            pcd = VisualizePointCloud(i, segmented=False, return_b=True)
             pcd.estimate_normals()
             # mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(pcd, linear_fit=True)[0]
             mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(
@@ -512,13 +641,27 @@ def VisualizeSurface(
 
         meshes[-1].compute_vertex_normals()
 
-    if return_:
+    if return_b:
         return meshes
 
     VisualizeCompose(animate, meshes=meshes)
 
 
 def VisualizeCompose(animate=False, **kwargs):
+    """
+    Visualize a collection of 3D objects with optional animation.
+
+    This function takes a collection of 3D objects, processes them,
+    and visualizes them using appropriate functionalities. The visualization
+    can optionally include animation, triggered based on the `animate` parameter.
+
+    :param animate: A boolean indicating whether to enable animation during
+                    visualization.
+    :param kwargs: A dictionary of keyword arguments containing 3D objects
+                   to be visualized. Values in the dictionary can be either
+                   lists of objects or individual 3D objects.
+    :return: None
+    """
     if all(value is None for value in kwargs.values()):
         return
 

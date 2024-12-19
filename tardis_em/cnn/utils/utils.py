@@ -13,18 +13,18 @@ import numpy as np
 
 def number_of_features_per_level(channel_scaler: int, num_levels: int) -> list:
     """
-    Compute list of output channels for CNN.
+    Calculates the number of features per level in a hierarchical structure, where the feature count
+    doubles at each subsequent level starting from the initial level. The initial feature count is
+    specified by `channel_scaler`, and the total number of levels is defined by `num_levels`.
 
-    Features = channel_scaler * 2^k
-        where:
-        - k is layer number
+    :param channel_scaler: Initial feature count at the first level.
+    :type channel_scaler: int
+    :param num_levels: Total number of levels in the hierarchical structure.
+    :type num_levels: int
 
-    Args:
-        channel_scaler (int): Number of initial input channels for CNN.
-        num_levels (int): Number of channels from max_number_of_conv_layer().
-
-    Returns:
-        list: List of output channels.
+    :return: A list containing the feature counts for each level, starting from the
+             initial level up to the final level.
+    :rtype: list
     """
     return [channel_scaler * 2**k for k in range(num_levels)]
 
@@ -41,32 +41,32 @@ def max_number_of_conv_layer(
     first_max_pool=False,
 ) -> int:
     """
-    Calculate maximum possible number of layers given image size.
+    Calculates the maximum possible number of convolutional layers in a neural
+    network, given specific image dimensions, convolution parameters, and pooling
+    parameters. If an image is provided, the calculation uses the smallest
+    dimension of the image for the computation.
 
-    Based on the torch input automatically select number of convolution blocks,
-    based on a standard settings.
+    :param img: An optional input tensor of image data, which may be a 4D
+        (batch_size, channels, height, width) or 5D (batch_size, time, channels,
+        height, width) tensor. If provided, the computational dimension will be
+        chosen based on the smallest spatial value.
+    :param input_volume: The input volume size (spatial dimension) for the
+        computation, if no image is provided. This is the starting dimension for
+        estimating possible convolutional layers.
+    :param max_out: The minimum allowable output volume size that determines when
+        computation for convolutional layers should end.
+    :param kernel_size: The size of the convolutional kernel/filter.
+    :param padding: The number of zero-padding pixels added around each
+        convolutional operation.
+    :param stride: The stride size for the convolutional operation.
+    :param pool_size: The size of the pooling window for down-sampling.
+    :param pool_stride: The stride size for pooling.
+    :param first_max_pool: A flag determining whether the first max-pooling
+        operation should be applied. If set to True, the number of layers is
+        reduced by one to account for the absence of a pooling step.
 
-        I = [(W - K + 2*P) / S] + 1
-        Out_size = [(I - F) / S] + 1
-        - W is the input volume
-        - K is the Kernel size
-        - P is the padding
-        - S is the stride
-        - F is the max pooling kernel size
-
-    Args:
-        img (np.ndarray, Optional): Tensor data from which size of is calculated.
-        input_volume (int): Size of the multiplayer for the convolution.
-        max_out (int): Maximal output dimension after max_pooling.
-        kernel_size (int): Kernel size for the convolution.
-        padding (int): Padding size for the convolution blocks.
-        stride: (int) Stride for the convolution blocks.
-        pool_size (int) Max Pooling kernel size.
-        pool_stride (int): Max Pooling stride size.
-        first_max_pool (bool): If first CNN block has max pooling.
-
-    Returns:
-        int: Maximum number of CNN layers.
+    :return: The maximum possible number of convolutional layers as an integer
+        that can fit within the specified dimensions and parameters.
     """
     if img is not None:
         # In case of anisotropic image select smallest size
@@ -96,13 +96,15 @@ def max_number_of_conv_layer(
 
 def normalize_image(image: np.ndarray) -> np.ndarray:
     """
-    Simple image data normalizer between 0,1.
+    Normalizes the given image by checking its minimum and maximum values. The
+    function ensures that the image is either normalized between 0 and 1 or
+    converted into a binary representation based on the pixel intensity.
 
-    Args:
-        image: Image data set.
+    :param image: An array representing the image to be normalized.
+    :type image: np.ndarray
 
-    Returns:
-        np.ndarray: Normalized image between 0 and 1 values.
+    :return: A normalized image array.
+    :rtype: np.ndarray
     """
     image_min = np.min(image)
     image_max = np.max(image)
@@ -120,13 +122,20 @@ def normalize_image(image: np.ndarray) -> np.ndarray:
 
 def check_model_dict(model_dict: dict) -> dict:
     """
-    Check and rebuild model structure dictionary to ensure back-compatibility.
+    Analyzes the provided dictionary containing model configuration and maps its keys to
+    a standardized format for further processing. This function ensures that specific key
+    patterns in the input dictionary are identified and their corresponding values are
+    transferred into a new dictionary with standardized key names.
 
-    Args:
-        model_dict (dict): Model structure dictionary.
+    :param model_dict: The input dictionary containing model configuration settings.
+                       Keys may represent various model attributes and must conform to
+                       specific naming patterns to be mapped accordingly.
+    :type model_dict: dict
 
-    Returns:
-        dict: Standardize model structure dictionary.
+    :return: A new dictionary containing remapped key-value pairs, where keys follow a
+             standardized naming convention. Only keys matching the predefined patterns
+             are included in the output dictionary.
+    :rtype: dict
     """
     new_dict = {}
 

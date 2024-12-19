@@ -20,20 +20,39 @@ from tardis_em.utils.errors import TardisError
 
 class BasicDIST(nn.Module):
     """
-    General DIST FOR DIMENSIONLESS INSTANCE SEGMENTATION TRANSFORMER
+    This class implements the BasicDIST model, a graph-based transformer designed for the
+    prediction of graph edges from input node and edge features. The model can handle node
+    and edge embedding, layer stacking, and decoding mechanisms to provide predictions.
 
-    Args:
-        n_out (int): Number of channels in the output layer.
-        node_input (int): Length of the flattened image file.
-        node_dim (int, None): In features of image for linear transformation.
-        edge_dim (int): In feature of coord for linear transformation.
-        num_layers (int): Number of DIST layers to initialize.
-        num_heads (int): Number of heads for MHA.
-        num_cls (int, None): Number of predicted classes.
-        coord_embed_sigma (float): Sigma value used to embed coordinate distance features.
-        dropout_rate (float): Dropout factor used in MHA dropout layer.
-        structure (str): DIST network structure. (full, triang, dualtriang, quad, attn)
-        predict (bool): If True sigmoid output.
+    The main purpose of this class is to act as a flexible and modular framework for
+    processing graph-like structures with transformer-based operations. It supports
+    different configurations including embeddings, number of layers, heads, and the ability
+    to predict outputs using a sigmoid activation.
+
+    :ivar n_out: Number of output features per edge.
+    :type n_out: int
+    :ivar node_input: Input dimension of node features (if any).
+    :type node_input: int
+    :ivar node_dim: The embedding size for the nodes.
+    :type node_dim: int or None
+    :ivar edge_dim: The embedding size for the edges.
+    :type edge_dim: int
+    :ivar num_layers: Number of layers in the transformer stack.
+    :type num_layers: int
+    :ivar num_heads: Number of attention heads for the transformer.
+    :type num_heads: int
+    :ivar num_cls: Number of classification outputs, if applicable.
+    :type num_cls: int or None
+    :ivar node_sigma: Standard deviation for the RGB-based node embedding.
+    :type node_sigma: float
+    :ivar edge_sigma: Standard deviation for the coordinate-based edge embedding.
+    :type edge_sigma: float
+    :ivar dropout_rate: Dropout rate used in transformer layers.
+    :type dropout_rate: float
+    :ivar structure: Type of transformer structure configuration (e.g., "full").
+    :type structure: str
+    :ivar predict: Flag to indicate if sigmoid is applied to the output for predictions.
+    :type predict: bool
     """
 
     def __init__(
@@ -52,6 +71,48 @@ class BasicDIST(nn.Module):
         predict=False,
         edge_angles=False,
     ):
+        """
+        A class to construct a modular BasicDIST architecture incorporating node and edge
+        embeddings, transformer-based layers for relational reasoning, and a final
+        decoder for prediction.
+
+        This class supports embeddings for node features and positional encodings,
+        multi-head attention-based stacked layers for processing relational data,
+        and an optional sigmoid activation layer for prediction.
+
+        :param n_out: The dimensionality of the output layer of the network.
+        :type n_out: int, optional
+        :param node_input: The input dimension of node embeddings. If zero,
+                           node embeddings are not initialized.
+        :type node_input: int, optional
+        :param node_dim: The output dimension of the node embeddings. If None,
+                         node embeddings are not used.
+        :type node_dim: int, optional
+        :param edge_dim: The output dimension of the edge embeddings.
+        :type edge_dim: int, optional
+        :param num_layers: The number of transformer layers in the stack.
+        :type num_layers: int, optional
+        :param num_heads: The number of attention heads in each transformer layer.
+        :type num_heads: int, optional
+        :param num_cls: The number of classes to classify. Can be None for regression models.
+        :type num_cls: int, optional
+        :param rgb_embed_sigma: The scaling factor for RGB-based node embedding.
+        :type rgb_embed_sigma: float, optional
+        :param coord_embed_sigma: The scaling factor for coordinate-based edge embedding.
+        :type coord_embed_sigma: float, optional
+        :param dropout_rate: Dropout probability applied within transformer layers.
+        :type dropout_rate: float, optional
+        :param structure: The topological structure of the transformer, e.g., 'full' or other schemes.
+        :type structure: str, optional
+        :param predict: Boolean flag indicating whether the output predictions require
+                        the sigmoid activation function.
+        :type predict: bool, optional
+        :param edge_angles: Boolean flag indicating whether edge embeddings should
+                            account for angular relations between nodes.
+        :type edge_angles: bool, optional
+
+        :raises ValueError: If `node_dim` is not None but `node_input` is zero.
+        """
         super(BasicDIST, self).__init__()
 
         self.n_out = n_out
@@ -93,14 +154,18 @@ class BasicDIST(nn.Module):
         self, coords: torch.Tensor, node_features: Optional[torch.Tensor] = None
     ):
         """
-        Embedding features
+        Embeds input coordinates and optional node features using separate embedding mechanisms.
 
-        Args:
-            coords (torch.Tensor): Coordinate features.
-            node_features (torch.Tensor, None): Optional Node features.
-
-        Returns:
-            torch.tensor: Embedded features for prediction.
+        :param coords: A tensor representing the input coordinates of shape
+            [Batch x Length x Coordinate_Dim].
+        :param node_features: An optional tensor representing the input node features
+            of shape [Batch x Length x Feature_Dim]. If None, no node features are
+            used in embedding.
+        :return: A tuple containing the embedded node features and the embedded
+            coordinates. The first element represents the embedded node features
+            of shape [Batch x Length x Embedded_Dim], or None if `node_features`
+            is not provided. The second element represents the embedded coordinates
+            of shape [Batch x Length x Length x Channels].
         """
         if node_features is not None:
             """Batch x Length x Embedded_Dim"""
@@ -116,13 +181,20 @@ class BasicDIST(nn.Module):
         self, coords: torch.Tensor, node_features=None
     ) -> Union[Tuple[torch.Tensor, torch.Tensor], torch.Tensor]:
         """
-        Forward DIST model.
+        Processes input node and edge features through a transformer-based architecture
+        to predict the graph edges.
 
-        Args:
-            coords (torch.Tensor): Coordinates input of a shape
-                [Batch x Length x Channels].
-            node_features (torch.Tensor, None): Image patch input of a shape
-                [Batch x Length x Channels].
+        The method takes as input the coordinates and optional node features of a graph
+        and embeds them. It applies transformer layers for encoding, followed by decoding
+        to predict the graph edges. The predictions are based on the transformed edge
+        features, optionally applying a sigmoid function for binary prediction.
+
+        :param coords: Coordinates of the nodes in the graph.
+        :param node_features: Optional features of the nodes in the graph.
+        :type node_features: torch.Tensor or None
+        :return: Predicted logits for the graph edges. If `predict` is True, returns
+            logits processed through a sigmoid function for binary prediction.
+        :rtype: Union[Tuple[torch.Tensor, torch.Tensor], torch.Tensor]
         """
         node, edge = self.embed_input(coords=coords, node_features=node_features)
 
@@ -162,17 +234,21 @@ class BasicDIST(nn.Module):
 
 class DIST(BasicDIST):
     """
-    MAIN DIST FOR DIMENSIONLESS INSTANCE SEGMENTATION TRANSFORMER
+    DIST class, a specialized subclass of BasicDIST.
 
-    This transformer taking into the account the positional encoding of each
-    coordinate point and attend them with patch image to which this coordinate
-    is corresponding. This attention is aiming to training the transformer in
-    outputting a graph from which point cloud can be segmented.
+    The DIST class inherits from the BasicDIST class and provides additional
+    functionality or modifications as per its design. It is a flexible
+    implementation that accepts various keyword arguments during instantiation
+    to customize its behavior or configuration. This class is intended as part
+    of a larger system and builds upon the foundational functionality provided
+    by its superclass, BasicDIST. The implementation utilizes keyword arguments
+    to allow dynamic initialization of class attributes or properties in a
+    flexible manner.
 
-
-    Returns:
-        torch.Tensor: DIST prediction after sigmoid (prediction) or last
-            linear layer (training).
+    :ivar attribute1: Description of attribute1.
+    :type attribute1: type
+    :ivar attribute2: Description of attribute2.
+    :type attribute2: type
     """
 
     def __init__(self, **kwargs):
@@ -181,16 +257,21 @@ class DIST(BasicDIST):
 
 class CDIST(BasicDIST):
     """
-    MAIN DIST FOR CLASSIFYING DIMENSIONLESS INSTANCE SEGMENTATION TRANSFORMER
+    CDIST class inherits from BasicDIST and is used for constructing a classification
+    neural network. It dynamically creates layers based on input arguments and handles
+    functionalities related to logits and predictions. This class serves as a foundational
+    component for classification tasks, ensuring that proper configurations are enforced.
 
-    This transformer taking into the account the positional encoding of each
-    coordinate point and attend them with patch image to which this coordinate
-    is corresponding. This attention is aiming to training the transformer in
-    outputting a graph from which point cloud can be segmented.
-
-    Returns:
-        torch.Tensor: DIST prediction as well as DIST class prediction, after
-            sigmoid (prediction) or last linear layer (training).
+    :ivar decoder_cls: Linear layer that acts as the final classification layer of
+        the network. Maps input features to the number of classes.
+    :type decoder_cls: nn.Linear
+    :ivar logits_sigmoid: Applies a sigmoid activation to logits when predictions
+        are enabled, used for scenarios requiring binary classification outputs.
+    :type logits_sigmoid: nn.Sigmoid
+    :ivar logits_cls_softmax: Applies a softmax activation function to logits along
+        the class dimension, which converts network outputs into probabilities for
+        multi-class classification tasks.
+    :type logits_cls_softmax: nn.Softmax
     """
 
     def __init__(self, **kwargs):
@@ -213,18 +294,30 @@ class CDIST(BasicDIST):
 
 def build_dist_network(network_type: str, structure: dict, prediction: bool):
     """
-    Wrapper for building DIST model
+    Builds a DISTRIBUTED instance or semantic neural network based on the
+    specified network type, structure parameters, and prediction mode.
 
-    Wrapper take DIST parameter and predefined network type (e.g. DIST, C_DIST),
-    and build DIST model.
+    This function creates a network object, either `DIST` for instance
+    segmentation tasks or `CDIST` for semantic segmentation tasks, depending
+    on the provided `network_type`. The network is configured dynamically
+    using the provided `structure` dictionary and the `prediction` flag,
+    which determines whether the network will operate in prediction mode
+    or not.
 
-    Args:
-        network_type (str): Network type name.
-        structure (dict):  Dictionary with all network setting.
-        prediction (bool): If True, build network in prediction path.
-
-    Returns:
-        DIST: DIST network structure.
+    :param network_type: Specifies the type of the network to be built. Accepted
+        values are "instance" or "semantic". An error is raised if an unsupported
+        value is provided.
+    :type network_type: str
+    :param structure: Dictionary containing all the configuration parameters
+        required for creating the network. These parameters are passed as
+        arguments when instantiating the `DIST` or `CDIST` objects.
+    :type structure: dict
+    :param prediction: Boolean flag indicating whether the network should be set up
+        in prediction mode.
+    :type prediction: bool
+    :return: An instantiated network object of type `DIST` or `CDIST`. If an invalid
+        `network_type` is provided, `None` is returned.
+    :rtype: DIST or CDIST or None
     """
     if network_type not in ["instance", "semantic"]:
         TardisError(

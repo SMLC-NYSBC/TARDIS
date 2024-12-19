@@ -24,14 +24,20 @@ from tardis_em.dist_pytorch.utils.utils import pc_median_dist
 
 def resample_filament(points, spacing_size) -> np.ndarray:
     """
-    Resamples points for each filament so they have the given spacing size.
+    Resample a collection of 3D coordinates (X, Y, Z) associated with unique IDs to
+    uniform spacing along their paths. The input points are grouped by their IDs, and
+    each group is interpolated based on the specified spacing size.
 
-    Args:
-        points (np.array): Array of shape [N, 4] where each column is [ID, X, Y, Z].
-        spacing_size (float): Desired spacing size between points.
+    :param points: A numpy array of shape [N, 4], where each row contains [ID, X, Y, Z].
+                   The 'ID' column is used to differentiate between different groups of
+                   points, while the remaining columns represent the 3D coordinates.
+    :param spacing_size: A float specifying the uniform spacing distance to be applied
+                         when resampling the 3D points within each group.
 
-    Returns:
-        np.array: Resampled array with the same structure.
+    :return: A numpy array of resampled points with shape [M, 4], where each row contains
+             [ID, X, Y, Z]. The output maintains the ID for each group, along with its
+             uniformly-spaced coordinates.
+    :rtype: numpy.ndarray
     """
     # Verify input format
     if points.shape[1] != 4:
@@ -82,19 +88,17 @@ def resample_filament(points, spacing_size) -> np.ndarray:
 
 def sort_segments(coord: np.ndarray) -> np.ndarray:
     """
-    Sorts the input segments of coordinates based on their x-values while keeping
-    the grouping by the first element of each coordinate consistent. It ensures
-    that for every unique value in the first column of the input, their corresponding
-    segments in other columns are sorted and reconstructed into the final structure.
+    Sorts 3D segments by their coordinates. The function first identifies unique
+    segment identifiers in the first column of the array. It then collects and
+    sorts the associated segments for each unique identifier, constructing a
+    final 2D array combining the sorted results.
 
-    Args:
-        coord (np.ndarray): A two-dimensional numpy array with shape (n, 4), where `coord[:, 0]`
-            corresponds to the grouping column and the remaining columns `coord[:, 1:]`
-            represent coordinate segments that need to be sorted.
+    :param coord: Input 2D array where each row represents a 3D segment. The first
+        column contains unique segment identifiers, and the remaining columns
+        contain the segment coordinates.
 
-    Returns:
-        np.ndarray: A two-dimensional numpy array where all rows are sorted based on the
-        provided logic while maintaining the grouping specified by the first column.
+    :return: A sorted 2D array of the same shape as the input, where the rows
+        are sorted segment-wise based on their coordinates.
     """
     df = np.unique(coord[:, 0])
 
@@ -113,14 +117,20 @@ def sort_segments(coord: np.ndarray) -> np.ndarray:
 
 def sort_segment(coord: np.ndarray) -> np.ndarray:
     """
-    Sorting of the point cloud based on number of connections followed by
-    searching of the closest point with cdist.
+    Sorts a set of coordinates in a specific sequence by iteratively selecting the farthest point
+    and proceeding to find the nearest neighbors in subsequent steps.
 
-    Args:
-        coord (np.ndarray): Coordinates for each unsorted point idx.
+    This function is designed to work with a two-dimensional array of coordinates. It uses a
+    combination of distance calculations (using `cdist`) and nearest-neighbor search (using
+    `scipy.spatial.KDTree`) to determine the order in which coordinates are rearranged. The
+    process starts by identifying the farthest pair of points in the set and continues from
+    the first point in the sequence, progressively adding the nearest neighbor to the sequence.
 
-    Returns:
-        np.ndarray: Array of point in line order.
+    :param coord: A numpy array of two-dimensional coordinates. Shape is expected as
+                  (n, 2), where n is the number of coordinates provided.
+
+    :return: A numpy array of sorted coordinates in the order as per the described procedure.
+    :rtype: np.ndarray
     """
     if len(coord) < 2:
         return coord
@@ -154,17 +164,27 @@ def reorder_segments_id(
     order_list: Optional[Union[list, np.ndarray]] = None,
 ) -> np.ndarray:
     """
-    Reorder list of segments to remove missing IDs
+    Reorders segment IDs within the provided coordinate array based on the given
+    range or a specific order list. This function modifies the segment IDs in the
+    coordinate data to either follow a sequence defined by a range or an explicitly
+    provided order. If no range or list is provided, default ordering is applied
+    based on the unique segment IDs.
 
-    E.g. Change IDs from [1, 2, 3, 5, 6, 8] to [1, 2, 3, 4, 5, 6]
+    :param coord: A 2D numpy array where the first column contains the segment IDs
+        to be reordered.
+    :type coord: np.ndarray
+    :param order_range: An optional list defining the range of values to be used
+        when reordering segment IDs. If None, the IDs are reordered into a default
+        range sequence.
+    :type order_range: Optional[list]
+    :param order_list: An optional list or numpy array defining the specific new
+        order of segment IDs. If None, the IDs are reordered using a default range
+        sequence.
+    :type order_list: Optional[Union[list, np.ndarray]]
 
-    Args:
-        coord: Array of points in 3D or 3D with their segment ID
-        order_range: Costume id range for reordering
-        order_list: List of reorder IDs to match to coord.
-
-    Returns:
-        np.ndarray: Array of points with reordered IDs values
+    :return: A numpy array with updated segment IDs, reflecting the reordering as
+        per the provided range or specific order list.
+    :rtype: np.ndarray
     """
     df = np.unique(coord[:, 0])
 
@@ -190,15 +210,27 @@ def reorder_segments_id(
 
 def smooth_spline(points: np.ndarray, s=0.5):
     """
-    Spline smoothing given an 's' smoothness factor.
+    Smoothens a given set of 3D points using spline interpolation to reduce variations and noise while
+    maintaining the overall shape of the point cloud.
 
-    Args:
-        points (np.ndarray): Point array [(ID), X, Y, Z] with optional ID and Z
-        dimension.
-        s (float): Smoothness factor.
+    If the points array includes an identifier column (ID), the function normalizes the coordinates,
+    computes the pre- and post-smoothing tortuosity of the points, and ensures that the smoothed spline
+    does not increase tortuosity excessively, serving as a failure check for the smoothing process.
 
-    Returns:
-        Returns: Smooth spline
+    If the points array contains only the 3D coordinates ([X, Y, Z]), it directly computes the spline
+    without any tortuosity checks or normalization.
+
+    :param points:
+        The array of input 3D points to be smoothened. The input array should have a shape of either
+        (N, 3) for 3D points without identifiers, or (N, 4) for 3D points prefixed with an identifier column.
+    :param s:
+        The smoothness factor for spline interpolation. A smaller value ensures the spline closely conforms
+        to the input points, while a larger value produces a smoother spline. Default is 0.5.
+
+    :return:
+        An array of smoothened 3D point coordinates. If an identifier column is present, it is preserved
+        in the returned result. The output shape is consistent with the input, either (N, 4) for points
+        with identifiers or (N, 3) for points without identifiers.
     """
     if points.shape[1] == 4:  # [ID, X, Y, Z]
         id_ = int(points[0, 0])
@@ -230,13 +262,20 @@ def smooth_spline(points: np.ndarray, s=0.5):
 
 def sort_by_length(coord):
     """
-    Sort all splines by their length.
+    Sorts and reorders segments in the coordinate array by their total length in ascending order.
 
-    Args:
-        coord: Array of coordinates.
+    This function takes an input array of coordinates, identifies unique segment IDs,
+    calculates the total length of each segment, and then sorts the segments by length.
+    The output is the reordered array with updated segment IDs, maintaining their relative
+    order after sorting.
 
-    Returns:
-        np.ndarray: sorted and reorder splines.
+    :param coord: A numpy array where the first column represents segment IDs and the
+        subsequent columns represent coordinates.
+    :type coord: numpy.ndarray
+
+    :return: A numpy array with segments reordered by their total length, where segment IDs
+        are updated and assigned sequentially in the sorted order.
+    :rtype: numpy.ndarray
     """
     coord = reorder_segments_id(coord)
 
@@ -258,23 +297,20 @@ def sort_by_length(coord):
 
 def cut_150_degree(segments_array: np.ndarray):
     """
-    Cut segments based on angles between adjacent vectors.
+    Cuts segments based on angles between consecutive line segments and reassigns IDs
+    to the newly split segments. The function calculates angles between vectors
+    within provided segments, and if any angle is less than or equal to 150 degrees,
+    the segment is split at the point with the smallest angle. Single-point segments
+    are excluded from the output.
 
-    Given an array of line segments, this function calculates angles between
-    adjacent vectors in each line. If the angle is less than or equal to 150
-    degrees, the segment is cut into two new segments.
+    :param segments_array: A numpy ndarray where each row represents a segment point.
+        The first column contains segment IDs, and the remaining columns contain
+        point coordinates.
+    :type segments_array: numpy.ndarray
 
-    Args:
-    segments_array(np. ndarray): Array of line segments where the first column
-    indicates the segment id and the remaining columns represent
-    the coordinates of points.
-
-    Args:
-        segments_array:
-
-    Returns:
-        Tuple[bool, np.ndarray]: Indicates whether any segment was cut,
-            and New array of cut segments.
+    :return: A tuple containing a boolean indicating whether any segments were split,
+        and a numpy array of the updated segments with reassigned segment IDs.
+    :rtype: tuple
     """
 
     cut_segments = []

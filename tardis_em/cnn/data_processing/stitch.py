@@ -20,14 +20,31 @@ from tardis_em.utils.errors import TardisError
 
 class StitchImages:
     """
-    MAIN MODULE TO STITCH IMAGE FROM IMAGE PATCHES
+    A class for stitching multiple image patches into a single image.
 
-    Class object to stitch cut date into one big image. Object recognize images
-    with naming 0_1_1_1_25_pf where:
-    - 0 indicate id of image
-    - 1 indicate xyz position
-    - 25 indicate stride value for overlap
-    - pf indicate optional prefix in file name
+    This class is utilized to process and combine multiple small image patches
+    into a large cohesive image. The images are expected to follow a specific
+    naming convention that includes indices and dimensions, which the class
+    uses for computation. This functionality is useful in domains such as
+    image processing and machine learning, where use of segmented image parts
+    during preprocessing and their subsequent recombination is common.
+
+    :ivar idx: Track the number of image groups/files for stitching.
+    :type idx: int
+    :ivar nx: Store the x-dimension size of the image patch.
+    :type nx: int
+    :ivar ny: Store the y-dimension size of the image patch.
+    :type ny: int
+    :ivar nz: Store the z-dimension size of the image patch (if applicable).
+    :type nz: int
+    :ivar x: Store the number of overlapping patches in the x-dimension.
+    :type x: int
+    :ivar y: Store the number of overlapping patches in the y-dimension.
+    :type y: int
+    :ivar z: Store the number of overlapping patches in the z-dimension.
+    :type z: int
+    :ivar stride: Step size (or stride) designated for overlapping patches.
+    :type stride: int
     """
 
     def __init__(self):
@@ -42,14 +59,19 @@ class StitchImages:
 
     def _find_xyz(self, file_list: list, idx: int):
         """
-        Find index from for stitching image patches into one file.
+        Find and set the maximum values of `x`, `y`, `z`, and `stride` attributes from the
+        provided `file_list` based on the specified index `idx`. The attributes are determined
+        by extracting components of file names that match the given index and calculating
+        the maximum of their respective numeric values.
 
-        Args:
-            file_list (list): List of files.
-            idx: Find file index number.
+        :param file_list: A list of strings representing file names, where each file name
+                          contains underscore-separated values encoding attributes such as
+                          `z`, `y`, `x`, and `stride` in specific positions.
+        :param idx: An integer representing the index used to filter files starting with this
+                    value in their names.
 
-        Returns:
-            Update global class values.
+        :return: None. This is a setter method that updates the attributes `x`, `y`, `z`,
+                 and `stride` in the class instance based on the processed `file_list` and `idx`.
         """
         self.z = (
             max(
@@ -111,13 +133,15 @@ class StitchImages:
 
     def _calculate_dim(self, image: np.ndarray):
         """
-        Find and update image patch size from array.
+        Calculates and assigns the dimensions of a given image based on its array shape.
+        This method distinguishes between 2D and 3D arrays and updates the class attributes
+        `nz`, `ny`, and `nx` accordingly. For 3D arrays, all three attributes are derived
+        from the array's shape, while for 2D arrays, `nx` and `ny` are derived, and `nz` is
+        set to 0.
 
-        Args:
-            image (np.ndarray): Image array.
-
-        Returns:
-            Update global class values.
+        :param image: The input image represented as a NumPy array. It could be either a
+            2D or 3D array.
+        :type image: numpy.ndarray
         """
         if image.ndim == 3:
             self.nz, self.ny, self.nx = image.shape
@@ -134,19 +158,33 @@ class StitchImages:
         dtype=np.uint8,
     ) -> np.ndarray:
         """
-        STITCH IMAGE FROM IMAGE PATCHES
+        Calls the object as a function to process and stitch images from the specified
+        directory, applying optional masking, and saving or returning the stitched output.
 
-        Args:
-            image_dir (str): Directory where all images are stored.
-            mask (np.ndarray): If True treat image as binary mask and sum-up overlay
-                zones, else do replacement.
-            output (str, Optional): Optional, output directory.
-            dtype (np.dtype): Numpy dtype for output
-            prefix (str): Prefix name if available.
+        This method reads and processes `.tif` image files from the provided directory.
+        It stitches them together based on defined dimensions, overlaps, strides, and
+        optional masking behavior. If specified, the stitched image is saved to the
+        output directory; otherwise, it returns the result as a NumPy array.
 
-        Returns:
-            np.ndarray: If indicated output, image is saved in output directory
-            else stitch images is return as array.
+        :param image_dir:
+            The path to the directory containing the `.tif` image files to be stitched.
+        :param mask:
+            A boolean flag to enable masking. If True, overlapping regions of the stitched
+            image are handled with binary mask operations.
+        :param output:
+            Optional path to save the stitched image. If None, the method returns the
+            resulting stitched image as a NumPy array.
+        :param prefix:
+            A string prefix used to identify `.tif` image filenames for processing.
+        :param dtype:
+            The data type of the resulting stitched image. Defaults to `np.uint8`.
+
+        :return:
+            A NumPy array representing the stitched image(s) if `output` is None. The
+            array can have 2D (if `nz` equals 0) or 3D (if `nz` is greater than 0) shape,
+            and its dimensions depend on the stitcher's configuration and the images in
+            the input directory.
+
         """
         """Extract information about images in dir_path"""
         file_list = [f for f in listdir(image_dir) if isfile(join(image_dir, f))]
@@ -295,19 +333,28 @@ class StitchImages:
 
 def generate_grid(image_size: tuple, patch_size: list, grid_size: list, stride: int):
     """
-    Generates grid coordinates for either 2D or 3D images.
+    Generates grid coordinates for a given image, with support for both 2D and 3D images. The
+    method computes overlapping patch regions for an image based on the specified patch size, grid
+    size, and stride. For 2D images, the function generates grid points for rows and columns,
+    and for 3D images, it extends the functionality by incorporating depth information. Output
+    grid coordinates serve as indexing patterns for segmenting images into smaller patches or
+    for analyzing specific grid areas.
 
-    Args:
-        image_size (list): The dimensions of the image.
-            For 3D, it should be [z, y, x], and for 2D, [y, x].
-        patch_size (list): The dimensions of each patch.
-            For 3D, [nz, ny, nx], and for 2D, [ny, nx].
-        grid_size (list): The grid size.
-            For 3D, [gz, gy, gx], and for 2D, [gy, gx].
-        stride (int): The stride for grid generation.
+    :param image_size: Tuple representing dimensions of the image. For a 2D image,
+        it takes the form (height, width). For a 3D image, it takes the form
+        (depth, height, width).
+    :param patch_size: List representing the size of the patches for either a 2D or 3D image.
+        For a 2D image, it should be [patch_height, patch_width]. For a 3D image,
+        [patch_depth, patch_height, patch_width].
+    :param grid_size: List defining the number of grid steps along each dimension.
+        For a 2D image, it is [grid_rows, grid_columns]. For a 3D image, it is
+        [grid_depth, grid_rows, grid_columns].
+    :param stride: Integer specifying the step size or overlap between the patch regions.
 
-    Returns:
-        Tuple[list]: A tuple of numpy arrays with coordinates of the grid.
+    :return: If the input image is 2D, returns two arrays containing the y-coordinates
+        and x-coordinates of the grid. If the input image is 3D, returns three arrays:
+        (1) a 2D array of coordinates for depth and rows, (2) a 2D array of coordinates
+        for depth and columns, and (3) a 1D array of z-coordinates grid.
     """
     # Determine if the image is 2D based on the length of image_size
     D2 = len(image_size) == 2

@@ -72,29 +72,121 @@ if torch.cuda.is_available():
 
 class GeneralPredictor:
     """
-    MAIN WRAPPER FOR PREDICTION MT/MEM WITH TARDIS-PYTORCH
+    Summary of what the class does.
 
-    Args:
-        predict (str): Dataset type name.
-        dir_ (str, np.ndarray): Dataset directory.
-        output_format (str): Two output format for semantic and instance prediction.
-        patch_size (int): Image 3D crop size.
-        cnn_threshold (str): Threshold for CNN model.
-        dist_threshold (float): Threshold for DIST model.
-        points_in_patch (int): Maximum number of points per patched point cloud.
-        predict_with_rotation (bool): If True, CNN predict with 4 90* rotations.
-        amira_prefix (str): Optional, Amira file prefix used for spatial graph comparison.
-        filter_by_length (float): Optional, filter setting for filtering short splines.
-        connect_splines (int): Optional, filter setting for connecting near splines.
-        connect_cylinder (int): Optional, filter setting for connecting splines
-            withing cylinder radius.
-        amira_compare_distance (int): Optional, compare setting, max distance between two splines
-        to consider them as the same.
-        amira_inter_probability (float): Optional, compare setting, portability threshold
-        to define comparison class.
-        instances (bool): If True, run instance segmentation after semantic.
-        device_ (str): Define a computation device.
-        debug (bool): If True, run in debugging mode.
+    The GeneralPredictor class is designed for handling image-based predictions
+    using various neural network architectures. It provides functionalities
+    to set up the environment, preprocess data, run predictions with or
+    without rotation, and post-process the results for further usage or
+    analysis. This class also includes methods to handle different file formats,
+    apply various normalization techniques, and output results in specified formats.
+    The class is modular enough to work with instances, semantic predictions, and
+    custom settings based on the input parameters and configurations.
+
+    :ivar continue_: Specifies whether to continue from a previous state.
+    :type continue_: bool
+    :ivar transformation: Stores transformation parameters for the image data.
+    :type transformation: list | None
+    :ivar px: The pixel resolution of the image data.
+    :type px: float | None
+    :ivar image: The image data to be processed.
+    :type image: ndarray | None
+    :ivar tardis_logo: Determines whether to include the TARDIS logo in outputs.
+    :type tardis_logo: bool
+    :ivar tardis_progress: Tracks the progress of TARDIS processing.
+    :type tardis_progress: Any | None
+    :ivar title: Stores any title or label associated with the process.
+    :type title: str | None
+    :ivar dir: Input directory or data to be processed.
+    :type dir: str | tuple | np.ndarray
+    :ivar output_format: Specifies the desired output format for predictions.
+    :type output_format: str
+    :ivar predict: Indicates the type of prediction to perform.
+    :type predict: str
+    :ivar expect_2d: Indicates whether the expected input data is 2D.
+    :type expect_2d: bool
+    :ivar amira_prefix: Prefix for Amira file outputs.
+    :type amira_prefix: str | None
+    :ivar checkpoint: Stores model checkpoint information.
+    :type checkpoint: list | None
+    :ivar model_version: Version of the model to use for predictions.
+    :type model_version: int | None
+    :ivar correct_px: Pixel value correction factor.
+    :type correct_px: float | None
+    :ivar normalize_px: Pixel value normalization factor.
+    :type normalize_px: float | None
+    :ivar cnn: The convolutional neural network to be used.
+    :type cnn: Any | None
+    :ivar dist: The distance threshold settings.
+    :type dist: Any | None
+    :ivar patch_size: Size of the image patches for CNN.
+    :type patch_size: int
+    :ivar points_in_patch: Maximum number of points in a patch for DIST processing.
+    :type points_in_patch: int
+    :ivar pc_hd: Points cloud in high-definition format.
+    :type pc_hd: numpy.ndarray
+    :ivar pc_ld: Points cloud in low-definition format.
+    :type pc_ld: numpy.ndarray
+    :ivar coords_df: Coordinates dataframe for additional computations.
+    :type coords_df: numpy.ndarray
+    :ivar segments: Stores segmented data.
+    :type segments: Any | None
+    :ivar segments_filter: Filtered segments for post-processing.
+    :type segments_filter: Any | None
+    :ivar convolution_nn: Type of convolutional neural network to use.
+    :type convolution_nn: str
+    :ivar cnn_threshold: Threshold value for CNN predictions.
+    :type cnn_threshold: str
+    :ivar dist_threshold: Threshold value for DIST predictions.
+    :type dist_threshold: float
+    :ivar rotate: Specifies prediction with rotation.
+    :type rotate: bool
+    :ivar binary_mask: Indicates whether to use binary masks in processing.
+    :type binary_mask: bool
+    :ivar predict_instance: Indicates whether to predict individual instances.
+    :type predict_instance: bool
+    :ivar device: Hardware device to use for predictions.
+    :type device: str
+    :ivar debug: Indicates if debugging mode is enabled.
+    :type debug: bool
+    :ivar semantic_header: Stores metadata for semantic predictions.
+    :type semantic_header: list
+    :ivar instance_header: Stores metadata for instance predictions.
+    :type instance_header: list
+    :ivar log_prediction: Tracks logs of predictions.
+    :type log_prediction: list
+    :ivar str_debug: String flag to append debug information in logs.
+    :type str_debug: str
+    :ivar amira_check: Checks if the input folder contains Amira-compatible files.
+    :type amira_check: bool
+    :ivar dir_amira: Stores Amira file directory if available.
+    :type dir_amira: str
+    :ivar available_format: File formats available for prediction.
+    :type available_format: tuple
+    :ivar omit_format: File formats to omit during predictions.
+    :type omit_format: tuple
+    :ivar normalize: Instance for normalizing input data.
+    :type normalize: RescaleNormalize
+    :ivar mean_std: Instance for standardizing data using mean and standard deviation.
+    :type mean_std: MeanStdNormalize
+    :ivar sigmoid: Sigmoid activation for predicted images.
+    :type sigmoid: torch.nn.Sigmoid
+    :ivar image_stitcher: Instance to handle image stitching.
+    :type image_stitcher: StitchImages
+    :ivar post_processes: Instance responsible for post-processing point clouds.
+    :type post_processes: BuildPointCloud
+    :ivar patch_pc: Instance to manage PATCH data for DIST processing.
+    :type patch_pc: PatchDataSet | None
+    :ivar GraphToSegment: Instance to process graph based on input models.
+    :type GraphToSegment: PropGreedyGraphCut | None
+    :ivar filter_splines: Instance to handle spline filtering.
+    :type filter_splines: FilterConnectedNearSegments | FilterSpatialGraph | None
+    :ivar compare_spline: Instance to compare spatial graphs.
+    :type compare_spline: SpatialGraphCompare | None
+    :ivar score_splines: Instance to compute confidence scores for splines.
+    :type score_splines: ComputeConfidenceScore | None
+    :ivar amira_file: Instance to handle Amira file output.
+    :type amira_file: NumpyToAmira
     """
 
     def __init__(
@@ -125,6 +217,41 @@ class GeneralPredictor:
         tardis_logo: bool = True,
         continue_: bool = False,
     ):
+        """
+        This class initializes the configuration and parameters required for predictive models
+        based on convolutional neural networks and builds the necessary handlers to process,
+        transform, and analyze the provided data and predictions. It handles pre-processing,
+        prediction, and post-processing steps, including normalization, stitching, spatial graph
+        comparison, and various filters.
+
+        :param predict: The predictive model type to be used.
+        :param dir_: The directory path or dataset array for input data processing.
+        :param binary_mask: Flag indicating if a binary mask will be used.
+        :param output_format: Specifies the output format for results.
+        :param patch_size: Size of the patches in the image dataset.
+        :param convolution_nn: Type of convolution neural network to use.
+        :param cnn_threshold: Threshold value for CNN predictions.
+        :param dist_threshold: Distance threshold used in graph segmentation.
+        :param points_in_patch: Maximum number of points to include in a patch.
+        :param predict_with_rotation: Flag to determine if prediction should consider rotations.
+        :param instances: Flag to enable instance-based predictions.
+        :param device_: The computation device (CPU/GPU) to be used.
+        :param debug: Flag to enable debugging mode.
+        :param checkpoint: Optional, list of checkpoints for loading model weights.
+        :param model_version: Optional, model version identifier.
+        :param correct_px: Optional, value to correct pixel dimensions if needed.
+        :param normalize_px: Optional, value to normalize pixel dimensions if required.
+        :param amira_prefix: Optional, prefix for Amira file formats.
+        :param filter_by_length: Optional, specifies filter to exclude segments of short lengths.
+        :param connect_splines: Optional, parameter for connecting splines at close distances.
+        :param connect_cylinder: Optional, radius for connecting cylindrical regions.
+        :param amira_compare_distance: Optional, distance threshold for spatial graph comparison.
+        :param amira_inter_probability: Optional, interaction threshold for Amira spatial graph probabilities.
+        :param tardis_logo: Flag to handle tardis logo processing.
+        :param continue_: Flag to indicate if processing should resume from previous state.
+
+        :raises: Raises errors for various invalid configurations or unsupported operation parameters.
+        """
         self.continue_ = continue_
         self.transformation, self.px, self.image = None, None, None
         self.tardis_logo = tardis_logo
@@ -265,6 +392,20 @@ class GeneralPredictor:
         self.build_NN(NN=self.predict)
 
     def create_headers(self):
+        """
+        Creates ASCII headers and initializes logging information for a spatial graph
+        prediction process. The headers include project details, directory setup,
+        neural network configurations for semantic and instance segmentation, and
+        other metadata. It verifies paths, logs prediction states appropriately,
+        and dynamically determines the model version depending on the predictive
+        needs and available checkpoints.
+
+        :raises: None
+        :parameter self.dir: Directory path for file output or processing.
+            Default is retrieved current working directory if unset.
+        :parameter self.output_format: Format of the output data produced during
+           prediction, e.g as,send LabelSetsivet nn
+        """
         dir_ = self.dir if isinstance(self.dir, str) else "np.ndarray"
         if dir_ == ".":
             dir_ = getcwd()
@@ -365,7 +506,26 @@ class GeneralPredictor:
 
     def init_check(self):
         """
-        All sanities check before TARDIS initialize prediction
+        Initializes and validates the TARDIS segmentation configuration for the specified
+        prediction type and output format, ensuring compatibility and correctness per
+        system constraints. If any error occurs, handles it with error description and
+        validation termination.
+
+        :raises AssertionError: Raised when the prediction structure type or output
+                                 format is invalid.
+        :raises SystemExit: Raised when encountering critical errors requiring process
+                            termination.
+
+        :attributes tardis_logo: Boolean flag to indicate whether TARDIS visualization
+                                 or logo activity is enabled.
+        :attributes tardis_progress: Initialized with TardisLogo instance to handle
+                                     TARDIS-related progress output or title.
+        :attributes title: Formatted segmentation configuration title based on input
+                           prediction types, output, and debug mode.
+        :attributes output_format: Output configuration for segmentation, must not
+                                   violate format constraints.
+        :attributes device: Computation device in use, displayed in progress text of
+                            TARDIS logo.
         """
         msg = f"TARDIS v.{version} supports only MT and Mem segmentation!"
         assert_ = self.predict in [
@@ -447,6 +607,18 @@ class GeneralPredictor:
                 assert not assert_, msg
 
     def build_NN(self, NN: str):
+        """
+        Builds the neural network and distance prediction modules based on the specified
+        neural network (NN) type. Depending on the NN type, the appropriate configurations
+        and pre-trained weights are loaded for CNN and DIST networks. This method supports
+        multiple NN types, including Actin, Microtubule, Membrane, and General models.
+        Additionally, configurations for 2D, 3D, and other specialized models are supported.
+
+        :param NN: A string denoting the neural network type. Supported types include
+            "Actin", "Microtubule", "Microtubule_tirf", "Membrane2D", "Membrane",
+            or any type starting with "General".
+        :type NN: str
+        """
         if NN in ["Actin", "Microtubule", "Microtubule_tirf"]:
             self.normalize_px = 25 if self.normalize_px is None else self.normalize_px
 
@@ -569,6 +741,29 @@ class GeneralPredictor:
                     )
 
     def load_data(self, id_name: Union[str, np.ndarray]):
+        """
+        Loads and processes image data or point cloud data from a specified file or array. Depending on the
+        input type, the function determines if the data is an AmiraMesh 3D ASCII file, a general image file,
+        or a pre-loaded array. It performs normalization, sanity checks, and prepares the data for further
+        processing.
+
+        :param id_name:
+            Specifies either the path to the file to be loaded or an already loaded numpy array.
+            Can be a string filename or a numpy array.
+
+        :raises AssertionError:
+            - If the Amira Spatial Graph has dimensions other than 4.
+            - If the loaded image's dtype is not `float32` after normalization.
+            - If the processed binary mask dtype is not `int8` or `uint8`.
+
+        :raises TardisError:
+            - If `tardis_logo` is True and any of the aforementioned conditions fail.
+
+        :raises SystemExit:
+            - If certain errors occur during processing and `tardis_logo` is True.
+
+        :return: None
+        """
         # Build temp dir
         build_temp_dir(dir_=self.dir)
 
@@ -676,6 +871,22 @@ class GeneralPredictor:
             self.expect_2d = False
 
     def predict_cnn(self, id_: int, id_name: str, dataloader):
+        """
+        Predict images using a Convolutional Neural Network (CNN) with options for image rotation
+        and progress tracking integrated with the Tardis progress bar interface.
+
+        This method iterates over a dataloader to retrieve images, predicts their output using
+        a CNN model (optionally with four 90° rotations), and writes the output to `.tif` files.
+        The method supports progress tracking with Tardis interface updates
+        and dynamically optimizes the progress bar refresh rate based on initial iteration timing.
+
+        :param id_: Integer representing the ID of the image being processed.
+        :type id_: int
+        :param id_name: The name of the image being processed.
+        :type id_name: str
+        :param dataloader: An iterable object that provides access to image data and corresponding names.
+        :return: None
+        """
         iter_time = 1
         if self.rotate:
             pred_title = f"CNN prediction with four 90 degree rotations with {self.convolution_nn}"
@@ -717,12 +928,41 @@ class GeneralPredictor:
             tif.imwrite(join(self.output, f"{name}.tif"), input_)
 
     def predict_cnn_napari(self, input_: torch.Tensor, name: str):
+        """
+        Predicts an output using the CNN model on the provided input tensor, saves the
+        result in TIFF format, and returns the output tensor.
+
+        This function performs a prediction using the Convolutional Neural Network
+        (CNN) model on the given input tensor. The result is saved as a TIFF file
+        using the provided file name in the specified output directory.
+
+        :param input_:
+            Input tensor on which prediction needs to be performed, should follow
+            the required input format for the CNN model.
+        :param name:
+            Name of the output file to save the predicted result.
+
+        :return:
+            The output tensor resulting from the CNN prediction, after processing
+            with the input tensor.
+        """
         input_ = self.cnn.predict(input_[None, :], rotate=self.rotate)
         tif.imwrite(join(self.output, f"{name}.tif"), input_)
 
         return input_
 
     def postprocess_CNN(self, id_name: str):
+        """
+        Post-processes the CNN prediction by stitching predicted image patches,
+        restoring the original pixel size, applying a threshold, and optionally
+        saving the results in the specified format. This function also performs
+        clean-up of temporary directories after processing.
+
+        :param id_name: Identifier of the input data used to track and log the
+            processed output.
+        :type id_name: str
+        :return: None
+        """
         # Stitch predicted image patches
         if self.expect_2d:
             self.image = self.image_stitcher(
@@ -770,6 +1010,19 @@ class GeneralPredictor:
         clean_up(dir_=self.dir)
 
     def preprocess_DIST(self, id_name: str):
+        """
+        Preprocesses a given dataset identifier (id_name) to produce and manipulate
+        high-density and low-density point clouds, typically used for structural or
+        image data analysis. Depending on the prediction type and the presence of
+        an Amira image, this function either post-processes predicted image patches
+        to construct point clouds using provided processing utilities or applies
+        optimization methods like voxel down-sampling for refining existing point
+        clouds.
+
+        :param id_name: The unique dataset identifier used in debugging and processing.
+        :type id_name: str
+        :return: None
+        """
         if self.amira_image:
             # Post-process predicted image patches
             if self.predict in ["Actin", "Microtubule", "General_filament"]:
@@ -793,6 +1046,18 @@ class GeneralPredictor:
             self.pc_ld = down_sample(coord=self.pc_hd[:, 1:])
 
     def predict_DIST(self, id_: int, id_name: str):
+        """
+        Predicts DIST graphs for the given coordinates using the provided DIST prediction
+        model. The method processes coordinate data in chunks and updates the progress bar
+        if visual feedback is enabled. The progress bar reflects the current task,
+        the percentage of completion, and relevant details of the segmentation process.
+        The function ensures predictive modeling for the total images with a
+        controlled iteration mechanism.
+
+        :param id_: An integer representing the identifier of the image to be processed.
+        :param id_name: A string denoting the name of the image corresponding to the ID.
+        :return: A list of predicted graph representations for each coordinate dataset.
+        """
         iter_time = int(round(len(self.coords_df) / 10))
 
         if iter_time == 0:
@@ -833,6 +1098,25 @@ class GeneralPredictor:
         return graphs
 
     def postprocess_DIST(self, id_, i):
+        """
+        Processes and postprocesses data based on given inputs.
+
+        This function adjusts the pixel data, logs information based
+        on specific prediction types, and handles the transformation
+        of graphs to segments. Additionally, updates the Tardis
+        progress bar to provide task-specific updates.
+
+        :param id_: Identification number for the current image
+            being processed.
+        :type id_: int
+
+        :param i: Index of the current image.
+        :type i: int
+
+        :return: None, modifies instance attributes based
+            on the processing steps.
+        :rtype: None
+        """
         self.pc_ld = (
             self.pc_ld * self.px
             if self.correct_px is None
@@ -895,6 +1179,27 @@ class GeneralPredictor:
             )
 
     def get_file_list(self):
+        """
+        Retrieves and processes a list of files to be used for prediction based on the directory
+        or input provided. Filters files according to specified formats, handles input as either
+        single directories or lists/tuples, and logs the processed files. Additionally, performs
+        setup tasks for the prediction workflow, including generating paths for output directories
+        and checking prediction readiness.
+
+        :param self: The instance of the object that contains attributes such as directory paths,
+                     filtering formats, continuation settings, and progress handlers for processing.
+        :type self: Object containing attributes: `dir`, `available_format`, `omit_format`,
+                    `continue_`, `tardis_logo`, `tardis_progress`, `output`, `am_output`,
+                    `predict_list`, `device`, `title`.
+
+        :raises AssertionError: Raised when no recognizable files exist in the provided directory
+                                structure, based on specified formats, and appropriate progress
+                                handling or error logging is not enabled.
+        :raises Exception: Additional exceptions may occur if environmental setup or file reading
+                           operations fail, depending on external utilities used and provided paths.
+
+        :return: None
+        """
         # Pickup files for the prediction
         if not isinstance(self.dir, str):
             if isinstance(self.dir, tuple) or isinstance(self.dir, list):
@@ -964,6 +1269,25 @@ class GeneralPredictor:
             assert not assert_, msg
 
     def log_tardis(self, id_: int, i: Union[str, np.ndarray], log_id: float):
+        """
+        Logs various states and processing stages of the TARDIS application based on the
+        provided `log_id` and input data. Depending on the log ID and input type, it generates
+        log messages showcasing the progress of various computational tasks and updates a
+        progress bar accordingly.
+
+        :param id_: Identifier for the current image being processed in the list
+            of input images.
+        :type id_: int
+        :param i: Input data for logging, representing either a string description
+            or a numpy array. If a numpy array is passed, it is converted into a
+            string representation.
+        :type i: Union[str, numpy.ndarray]
+        :param log_id: Numeric identifier specifying the current task or processing
+            stage. Determines the type of logging information generated, and can
+            optionally include different subtasks.
+        :type log_id: float
+        :return: None
+        """
         if isinstance(i, np.ndarray):
             i = "Numpy array"
 
@@ -1053,6 +1377,18 @@ class GeneralPredictor:
         self.tardis_progress(title=self.title, **config)
 
     def save_semantic_mask(self, i):
+        """
+        Saves a semantic mask prediction in a specified format and logs the prediction
+        details. Supported formats include MRC, TIF, AM, and NPY. The function also
+        updates a log file with prediction details and writes the semantic mask output
+        to the appropriate directory in the chosen format.
+
+        :param i: The input file name used to derive the output file name.
+        :type i: str
+
+        :raises IOError: If there are issues writing the output files or logs.
+        :raises ValueError: If the specified output format is unsupported.
+        """
         self.log_prediction.append(
             f"Semantic Prediction: {i[:-self.in_format]}"
             f" | Number of pixels: {np.sum(self.image)}"
@@ -1090,6 +1426,22 @@ class GeneralPredictor:
             )
 
     def save_instance_PC(self, i, overwrite_save=False):
+        """
+        Save processed prediction instance data to disk in various formats. This method handles
+        logging, filtering, and outputting of prediction data based on the specified output format
+        or other input parameters. It supports multiple output types like CSV, MRC, TIF, AM, STL,
+        and NPY for different prediction types such as "Actin", "Microtubule", "Membrane",
+        and general filaments or objects. Depending on the output format, it can further refine
+        data through filtering, save semantic masks, or interface with Amira for spatial graph
+        comparison and exportation.
+
+        :param i: The identifier for the instance being saved.
+        :type i: str
+        :param overwrite_save: A flag to denote whether an existing file should be overwritten.
+                               Defaults to False.
+        :type overwrite_save: bool
+        :return: None
+        """
         self.log_prediction.append(
             f"Instance Prediction: {i[:-self.in_format]}; Number of segments: {np.max(self.segments[:, 0])+1}"
         )
@@ -1287,6 +1639,18 @@ class GeneralPredictor:
             )
 
     def _debug(self, id_name: str, debug_id: str):
+        """
+        Executes specific debug procedures based on the provided debug identifier. Depending
+        on the `debug_id` and other instance properties, it processes and writes files
+        including TIFF images, NPY arrays, or other data outputs to the defined output
+        directory.
+
+        :param id_name: Name or identifier for the current operation or file being processed.
+        :param debug_id: Debug identifier to specify the type of debug operation to perform.
+                         Acceptable values include "cnn", "pc", "graph", "segment", and
+                         "instance_mask".
+        :return: None
+        """
         if self.debug:
             if debug_id == "cnn":
                 tif.imwrite(
@@ -1362,7 +1726,27 @@ class GeneralPredictor:
                 )
 
     def __call__(self, save_progres=False):
-        """Process each image with CNN and DIST"""
+        """
+        Executes the object as a callable, processing and predicting on a dataset of files
+        using a combination of semantic segmentation and instance segmentation workflows.
+        The function involves data loading, pre-processing, neural network (CNN) inference,
+        post-processing, and saving results. Predictions can be returned optionally if
+        specified in the output format.
+
+        The function supports multiple input formats and provides options for binary masks,
+        instance-level predictions, and debug checkpoints. Additionally, it handles errors,
+        progress updates via a Tardis logger, and optional clean-up of temporary directories.
+        Intermediate and final results, like semantic masks or instance segmentations
+        from DIST predictions, are saved and optionally returned for further analysis.
+
+        :param save_progres: Boolean flag indicating whether to overwrite and save the
+            progress of processing for each file. Default is False.
+        :type save_progres: bool
+        :return: Depending on the output format, returns semantic segmentation outputs,
+            instance segmentation outputs, and instance-filtered outputs in the form
+            of lists, where each list entry corresponds to the prediction of an individual file.
+        :rtype: tuple or list
+        """
         self.get_file_list()
 
         semantic_output, instance_output, instance_filter_output = [], [], []
@@ -1549,17 +1933,39 @@ class GeneralPredictor:
 
 class Predictor:
     """
-    WRAPPER FOR PREDICTION
+    Handles model prediction workflows for neural networks, including loading pretrained
+    weights, configuring model architectures dynamically, and predicting data. The
+    purpose of this class is to abstract away the complexities of network setup and
+    enhance user focus on utilizing pre-trained networks, streamlining predictions.
 
-     Args:
-         device (torch.device): Device on which to predict.
-         checkpoint (str, Optional): Local weights files.
-         network (str, Optional): Optional network type name.
-         subtype (str, Optional): Optional model subtype name.
-         model_type (str, Optional): Optional model type name.
-         model_version (int, Optional): Optional model version.
-         img_size (int, Optional): Optional image patch size.
-         sigmoid (bool): Predict output with sigmoid.
+    The class ensures compatibility with various deep learning frameworks, supports
+    CNNs and distance-based networks dynamically, and provides inference-time adjustments like
+    rotations for robustness.
+
+    :ivar logo: Flag indicating whether to display logo or not.
+    :type logo: bool
+    :ivar device: The computational device to run the network (e.g., CUDA or CPU).
+    :type device: torch.device
+    :ivar img_size: The image size expected by the input model.
+    :type img_size: int, optional
+    :ivar network: Name of the network architecture.
+    :type network: str, None for autodetection
+    :ivar checkpoint: Path or dict containing network checkpoint for loading pre-trained weights.
+    :type checkpoint: str, dict, None
+    :ivar subtype: Sub-type of the network, if needed for weight fetching.
+    :type subtype: str, None
+    :ivar model_version: Version of the model to load.
+    :type model_version: int, None
+    :ivar model_type: Type of the model to determine specific configurations.
+    :type model_type: str, None
+    :ivar sigma: Sigma value for adjusting model configuration (if applicable).
+    :type sigma: float, None
+    :ivar sigmoid: Flag to enable sigmoid prediction output.
+    :type sigmoid: bool
+    :ivar _2d: Indicates if the model operates in 2D or 3D space.
+    :type _2d: bool
+    :ivar model: The loaded PyTorch model for inference.
+    :type model: PyTorch model object
     """
 
     def __init__(
@@ -1576,6 +1982,55 @@ class Predictor:
         _2d=False,
         logo=True,
     ):
+        """
+        This class initializer is responsible for setting up a model in the
+        TARDIS framework. It includes initializing the model's structure,
+        loading weights from a checkpoint or AWS, configuring model parameters,
+        and setting up essential model properties like sigmoid activation,
+        coordinate embeddings, and device placement.
+
+        :param device: Specifies the torch device (e.g., CPU or GPU)
+                       on which the model will be loaded.
+        :type device: torch.device
+        :param network: The name of the network to be used. If None, the
+                        function will automatically determine it based on
+                        the model structure.
+        :type network: Optional[str]
+        :param checkpoint: Specifies the path to the model checkpoint file or
+                           directly a preloaded weights dictionary. If not
+                           provided, it attempts to find weights on AWS.
+        :type checkpoint: Optional[str]
+        :param subtype: Defines the network subtype to search specific weights.
+                        This is typically used to distinguish between variants
+                        of the same base network.
+        :type subtype: Optional[str]
+        :param model_version: Indicates the model version to use for locating
+                              specific weights on AWS.
+        :type model_version: Optional[int]
+        :param img_size: Determines the image size to which the model will
+                         process input. This is primarily for patch-based CNNs.
+        :type img_size: Optional[int]
+        :param model_type: The type or category of the model (e.g., cnn or dist).
+        :type model_type: Optional[str]
+        :param sigma: Used for setting the sigma value for coordinate embedding
+                      if provided. It can also overwrite the value in weights
+                      dictionary.
+        :type sigma: Optional[float]
+        :param sigmoid: A boolean flag to determine whether sigmoid activation
+                        should be applied to the model's output.
+        :type sigmoid: bool
+        :param _2d: Indicates whether the model processes 2D data (True) or
+                    3D data (False).
+        :type _2d: bool
+        :param logo: A flag that controls whether to enforce specific checks
+                     like model network and weights validation on initialization.
+        :type logo: bool
+
+        :raises TardisError: Custom TARDIS-related error when neither network
+                             nor checkpoint is provided in certain scenarios.
+        :raises AssertionError: Raised when logo is False and both network and
+                                checkpoint parameters are not defined.
+        """
         self.logo = logo
 
         self.device = device
@@ -1649,14 +2104,28 @@ class Predictor:
 
     def _build_model_from_checkpoint(self, structure: dict, sigmoid=True):
         """
-        Use checkpoint metadata to build a compatible network
+        Builds a model from the given checkpoint structure.
 
-        Args:
-            structure (dict): Metadata dictionary with network setting.
-            sigmoid (bool): Predict output with sigmoid.
+        This method constructs a machine learning model based on a provided
+        configuration dictionary. The configuration can specify different
+        types of networks such as `dist_type` or `cnn_type`. In case the
+        structure does not match these options, it will return `None`.
+        For `dist_type`, it creates a distribution-based network, while for
+        `cnn_type`, it constructs a CNN-based network.
 
-        Returns:
-            pytorch model: NN pytorch model.
+        :param structure: A dictionary containing the model configuration
+                          blueprint, including the type of network
+                          (`dist_type` or `cnn_type`) and other necessary
+                          parameters.
+        :type structure: dict
+        :param sigmoid: A boolean indicating whether the model's final
+                        output should apply a sigmoid function or not.
+                        Defaults to ``True``.
+        :type sigmoid: bool
+        :return: A constructed model instance based on the specified
+                 structure and type, or ``None`` if no valid network type
+                 is provided.
+        :rtype: object | None
         """
         if "dist_type" in structure:
             model = build_dist_network(
@@ -1680,15 +2149,28 @@ class Predictor:
         self, x: torch.Tensor, y: Optional[torch.Tensor] = None, rotate=False
     ) -> np.ndarray:
         """
-        General predictor.
+        Predicts an output based on given input data using a trained model. The method supports
+        various modes of operation, including computing outputs for specific network types or
+        applying rotations to the input for models with two-dimensional or three-dimensional
+        spatial components. This function can handle data provided as PyTorch tensors or convert
+        NumPy arrays into tensors internally. Outputs are generated either in a transformed or
+        direct form according to the network type and additional parameters provided.
 
-        Args:
-            x (torch.Tensor): Main feature used for prediction.
-            y (torch.Tensor, None): Optional feature used for prediction.
-            rotate (bool): Optional flag for CNN to output avg. From 4x 90* rotation
-
-        Returns:
-            np.ndarray: Predicted features.
+        :param x: Input tensor containing the primary data for prediction. Expected to have
+                  shapes conforming to the model's requirements.
+        :type x: torch.Tensor
+        :param y: Optional secondary input tensor containing additional data or node features.
+                  Defaults to None. Expected to match the compatible input feature dimensions
+                  of the model if provided.
+        :type y: Optional[torch.Tensor]
+        :param rotate: Boolean flag indicating whether rotations should be applied to the input
+                       tensor to generate averaged transformed outputs. Defaults to False.
+        :type rotate: bool
+        :return: The processed output from the model, structured as a NumPy array. Its dimensions
+                 and content correspond to the defined task of the provided trained model. Output
+                 is adjusted according to whether rotations were applied or if specific
+                 computations are required by the network type.
+        :rtype: np.ndarray
         """
         if isinstance(x, np.ndarray):
             x = torch.Tensor(x)

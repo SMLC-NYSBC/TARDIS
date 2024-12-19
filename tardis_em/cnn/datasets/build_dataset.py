@@ -32,35 +32,30 @@ def build_train_dataset(
     correct_pixel_size=None,
 ):
     """
-    Module for building train datasets from compatible files.
+    Build a training dataset by processing image files and their corresponding masks.
 
-    This module builds a train dataset from each file in the specified dir.
-    Module working on the file as .tif/.mrc/.rec/.am and mask in image format
-    of .csv and .am:
-    - If mask is .csv, module expect image file in format of .tif/.mrc/.rec/.am
-    - If mask is .am, module expect image file in format of .am
+    This function performs a series of data pre-processing steps, including file validation,
+    loading images and masks, calculating scaling factors based on pixel size, handling different
+    mask formats, and generating the required training dataset with any necessary transformations.
+    Logs the progress and any encountered errors into a log file during processing.
 
-    For the given dir, module recognizes file, and then for each file couple
-    (e.g. image and mask) if needed (e.g. mask is not .tif) it's build mask from
-    the point cloud. For this module, expect that mask file (.csv, .am) contains
-    coordinates values. Then for each point module draws 2D label.
+    :param dataset_dir: Directory path containing the dataset files
+    :type dataset_dir: str
+    :param circle_size: Size of the circle used for mask drawing
+    :type circle_size: int
+    :param resize_pixel_size: Target pixel size for resizing the images, if specified
+    :type resize_pixel_size: Union[float, NoneType]
+    :param trim_xy: Number of pixels to trim from the x and y dimensions during processing
+    :type trim_xy: int
+    :param trim_z: Number of pixels to trim from the z dimension during processing
+    :type trim_z: int
+    :param benchmark: Flag indicating whether to keep certain processing details for benchmark datasets
+    :type benchmark: bool
+    :param correct_pixel_size: Optional, explicitly specifies the correct pixel size to be used
+    :type correct_pixel_size: Union[float, NoneType]
 
-    These image arrays are then scaled up or down to fit given pixel size, and
-    finally arrays are trimmed with overlay (stride) for specific size.
-
-    Files are saved in ./dir/train/imgs and ./dir/train/masks.
-
-    Mask is computed as np.uint8 arrays and images as np.float64 normalized image
-    value between 0 and 1.
-
-    Args:
-        dataset_dir (str): Directory with train test folders.
-        circle_size (int): Size of the segmented object in A.
-        resize_pixel_size (float, None): Pixel size for image resizing.
-        trim_xy (int): Voxel size of output image in x and y dimension.
-        trim_z (int): Voxel size of output image in z dimension.
-        benchmark (bool): If True construct data for benchmark.
-        correct_pixel_size (float, None): Optionally, correction for pixel size value.
+    :return: None
+    :rtype: NoneType
     """
     """Setup"""
     # Activate Tardis progress bar
@@ -68,7 +63,7 @@ def build_train_dataset(
     tardis_progress(title="Data pre-processing for CNN")
 
     # Builder for point cloud
-    b_pc = BuildPointCloud()
+    # b_pc = BuildPointCloud()
 
     clean_empty = not benchmark
 
@@ -355,25 +350,24 @@ def load_img_mask_data(
     image: str, mask: str
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
-    Define file format and load adequately image and mask/coordinate file.
+    Load image and mask data from various supported file formats (e.g., MRC, REC, Amira, TIFF, CSV).
+    The function also processes correlated data from mask coordinate files where necessary.
+    It supports Amira, TIFF, and MRC/REC file formats for flexibility in scientific imaging workflows.
+    Normalization and scaling are optionally applied to the image as part of the loading process.
+    The function returns the processed image, mask or coordinate data, and pixel size information.
 
-    Expected combination are:
-        - Amira (image) + Amira (coord)
-        - Amira (image) + csv (coord)
-        - Amira (image) + Amira (mask) or MRC/REC (mask)
-        - Amira (image) + tif (mask)
+    :param image: Path to the image file. Supported formats are `.mrc`, `.rec`,
+                  `.map`, `.am`, `.tif`, and `.tiff`.
+    :type image: str
+    :param mask: Path to the mask file. Supported formats are `_mask.mrc`,
+                 `_mask.rec`, `_mask.am`, `_mask.csv`, `.CorrelationLines.am`,
+                 and `_mask.tif`.
+    :type mask: str
 
-        - MRC/REC(image) + Amira (coord)! Need to check if coordinate is not transformed!
-        - MRC/REC(image) + csv (coord)
-        - MRC/REC(image) + Amira (mask) or MRC/REC (mask)
-        - MRC/REC (image) + tif (mask)
-
-    Args:
-        image (str): Directory address to the image file
-        mask(str): Directory address to the mask/coordinate file
-
-    Returns:
-        Tuple[np.ndarray, np.ndarray, np.ndarray]: Ndarray of image, mask, and pixel size
+    :return: A tuple containing the normalized image, loaded mask or coordinate
+             data (if applicable), and the pixel size as either a float (for pixel
+             size) or None.
+    :rtype: Tuple[numpy.ndarray, numpy.ndarray or numpy.ndarray, float or None]
     """
     coord = None
     img_px, mask_px = 1, 1
@@ -384,7 +378,7 @@ def load_img_mask_data(
     """Load Amira or MRC/REC image"""
     if image.endswith((".mrc", ".rec", ".map")):  # Image is MRC/REC(image)
         # Load image
-        image, img_px = load_image(image, normalize=False, px_=True)
+        image, img_px = load_image(image, normalize=False, px=True)
     elif image.endswith(".am"):  # Image is Amira (image)
         if mask.endswith(".CorrelationLines.am"):  # Found Amira (coord)
             importer = ImportDataFromAmira(src_am=mask, src_img=image)
@@ -437,16 +431,27 @@ def error_log_build_data(
     dir_: str, log_file: np.ndarray, id_: int, i: str
 ) -> np.ndarray:
     """
-    Update log file with error for data that could not be loaded
+    Stores error data into a log file and saves the updated log file.
 
-    Args:
-        dir_ (str): Save directory.
-        log_file (np.ndarray): Current log file list.
-        id_ (int): Data id.
-        i (Str): Data name.
+    This function updates the specified log file with error data corresponding
+    to a given ID and an identifier string. After updating the log file, it
+    saves the file in the specified directory.
 
-    Returns:
-        list: List of updated logfile
+    :param dir_: The directory location where the updated log file should be
+        saved.
+    :type dir_: str
+    :param log_file: A two-dimensional NumPy array representing the log file
+        where error information will be stored.
+    :type log_file: np.ndarray
+    :param id_: The integer identifier used to locate and store error data
+        within the log file.
+    :type id_: int
+    :param i: The identifier string associated with the specific error or
+        data entry being logged.
+    :type i: str
+    :return: The updated log file as a two-dimensional NumPy array after
+        storing the new data.
+    :rtype: np.ndarray
     """
 
     # Store fail in the log file

@@ -21,6 +21,23 @@ import time
 
 
 def ota_update(status=False):
+    """
+    Check for Over-The-Air (OTA) updates and handle notifications for available updates.
+
+    This function performs a check to determine whether a new version of the application
+    is available. The function periodically checks for updates based on a saved timestamp.
+    If an update check has not occurred in the last 24 hours, it consults AWS for new updates.
+    Based on the `status` parameter, it either returns a simple message or displays a
+    detailed notification about the availability of a new version.
+
+    :param status: A boolean indicating the type of response. If True, returns a simple
+                   notification message. If False, displays a graphical notification about
+                   the update.
+    :type status: bool
+    :return: If `status` is True and a new version is available, returns a string indicating
+             that a new version is available. Otherwise, returns an empty string.
+    :rtype: str
+    """
     if not isdir(join(expanduser("~"), ".tardis_em")):
         mkdir(join(expanduser("~"), ".tardis_em"))
 
@@ -83,6 +100,14 @@ def ota_update(status=False):
 
 
 def main():
+    """
+    The `main` function performs an Over-The-Air (OTA) update for the Tardis-EM package.
+    It checks or creates a directory for the update, retrieves the new package, saves
+    the package locally, uninstalls previous versions of the package, installs the
+    new one, and provides update-related instructions to the user via a visual display.
+
+    :return: None
+    """
     if not isdir(join(expanduser("~"), ".tardis_em")):
         mkdir(join(expanduser("~"), ".tardis_em"))
 

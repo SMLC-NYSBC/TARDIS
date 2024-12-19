@@ -25,15 +25,30 @@ from tardis_em.utils.normalization import MinMaxNormalize
 
 class CNNDataset(Dataset):
     """
-    DATASET BUILDER FOR IMAGES AND SEMANTIC LABEL MASKS FOR TRAINING
+    Handles dataset creation and processing for Convolutional Neural Network (CNN) training and inference.
 
-    Args:
-        img_dir (str): Source of the 2D/3D .tif file.
-        mask_dir (str): Source of the 2D/3D .tif  images masks.
-        size (int): Output patch size for image and mask.
-        mask_suffix (str): Suffix name for mask images.
-        transform (bool): Call for random transformation on img and mask.
-        out_channels (int): Number of output channels.
+    This class manages the loading, processing, and formatting of image and mask data
+    needed for training CNN models. It includes normalization, size adjustments,
+    and optional transformations to prepare data for further model usage.
+
+    :ivar img_dir: Directory containing images for the dataset.
+    :type img_dir: str
+    :ivar mask_dir: Directory containing corresponding masks for the dataset.
+    :type mask_dir: str
+    :ivar size: Size to which images and masks should be resized.
+    :type size: int
+    :ivar mask_suffix: Suffix appended to file names to identify respective masks.
+    :type mask_suffix: str
+    :ivar transform: Boolean flag to specify whether transformations are applied.
+    :type transform: bool
+    :ivar out_channels: Number of output mask channels for the dataset.
+    :type out_channels: int
+    :ivar minmax: Instance of the MinMax normalization class used to normalize image data.
+    :type minmax: MinMaxNormalize
+    :ivar ids: List of image IDs extracted from the input image directory.
+    :type ids: list
+    :ivar format: File extension/format of the images in the directory.
+    :type format: str
     """
 
     def __init__(
@@ -45,6 +60,33 @@ class CNNDataset(Dataset):
         transform=True,
         out_channels=1,
     ):
+        """
+        Represents a dataset class designed to accommodate image and mask directories for image
+        processing tasks. This class initializes various properties including image and
+        mask directories, normalization strategies, and options for transformation. It manages
+        the internal identifiers for files in the directories and detects the file format
+        based on sample files from the image directory.
+
+        :ivar img_dir: Directory path containing input images.
+        :ivar mask_dir: Directory path containing masks corresponding to the input images.
+        :ivar size: Target size to which input images and masks are resized.
+        :ivar mask_suffix: Suffix used to associate masks with their input images.
+        :ivar transform: Boolean flag to apply transformations to images and masks.
+        :ivar out_channels: Number of output channels for image processing (e.g., for segmentation tasks).
+        :ivar minmax: Instance of the MinMaxNormalize class to normalize the input images.
+        :ivar ids: List of identifiers derived from filenames in the image directory.
+        :ivar format: File format (extension) deduced from samples in the image directory.
+
+        :param img_dir: Path to the directory containing the input images.
+        :param mask_dir: Path to the directory containing the masks for the input images.
+        :param size: Desired size of the images and masks after resizing. Defaults to 64.
+        :param mask_suffix: Suffix added to the filenames of masks to associate them
+            with corresponding input images. Defaults to "_mask".
+        :param transform: Boolean value indicating whether to apply transformations
+            to the images and masks. Defaults to True.
+        :param out_channels: Number of output channels for processed data.
+            Typically used in segmentation tasks. Defaults to 1.
+        """
         self.img_dir = img_dir
         self.mask_dir = mask_dir
         self.size = size
@@ -67,13 +109,19 @@ class CNNDataset(Dataset):
 
     def __getitem__(self, i: int) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        Select and process dataset for CNN.
+        Retrieves the image and corresponding label mask located at the specified index.
+        The function performs the following steps:
+        1. Identifies image and mask filenames using the given index.
+        2. Loads the image and its associated mask.
+        3. Validates their data types and ensures a proper binary range for the image.
+        4. Preprocesses the image and mask into the desired format and size.
+        5. Returns both as PyTorch tensors.
 
-        Args:
-            i (int): Image ID number.
+        :param i: Index of the desired image-mask pair within the dataset.
+        :type i: int
 
-        Returns:
-            torch.Tensor, torch.Tensor: Tensor of processed image and mask.
+        :return: Tuple containing a preprocessed image tensor and the corresponding mask tensor.
+        :rtype: Tuple[torch.Tensor, torch.Tensor]
         """
         # Find next image and corresponding label mask image
         idx = self.ids[i]
@@ -120,16 +168,35 @@ class CNNDataset(Dataset):
 
 class PredictionDataset(Dataset):
     """
-    DATASET BUILDER FOR IMAGES AND SEMANTIC LABEL MASKS FOR PREDICTION
+    Manages loading, processing, and serving of datasets for image prediction tasks.
 
-    Module has turn off all transformations.
+    This class provides methods to load images from a specified directory, preprocess
+    and format them into tensors compatible with convolutional neural networks. It also
+    facilitates retrieval by a specific index. Used for predictive model input preparation.
 
-    Args:
-        img_dir (str): Source of the 2D/3D .tif file.
-        out_channels (int): Number of output channels.
+    :ivar img_dir: The directory containing the image files.
+    :type img_dir: str
+    :ivar out_channels: Number of output channels for processed masks.
+    :type out_channels: int
+    :ivar ids: List of image IDs (extracted from filenames) in the directory.
+    :type ids: list of str
     """
 
     def __init__(self, img_dir: str, out_channels=1):
+        """
+        This class initializes with the specified image directory path and output channel
+        configuration. It lists all the files in the directory, excluding hidden files,
+        and extracts their base names (without extension).
+
+        :param img_dir: Path to the directory containing images. Represents the input
+            directory from which image files' names will be retrieved and stored.
+        :param out_channels: An integer representing the number of output channels to
+            be used or processed. Default value is set to 1.
+
+        :ivar img_dir: Path to the directory containing images.
+        :ivar out_channels: Number of output channels for processing.
+        :ivar ids: A list of base names of all non-hidden files in the `img_dir`.
+        """
         self.img_dir = img_dir
         self.out_channels = out_channels
 
@@ -142,13 +209,16 @@ class PredictionDataset(Dataset):
 
     def __getitem__(self, i: int):
         """
-        Select and process dataset for CNN.
+        Access an item from the dataset by its index. This method retrieves an image
+        given its index from the dataset, processes it, and returns the preprocessed
+        image along with the corresponding index.
 
-        Args:
-            i (int): Image ID number.
+        :param i: An integer index of the image to retrieve from the dataset.
+        :type i: int
 
-        Returns:
-            torch.Tensor, str: Tensor of processed image and image file name.
+        :return: A tuple containing the preprocessed image as a tensor and the
+                 corresponding index of the image in the dataset.
+        :rtype: Tuple[torch.Tensor, int]
         """
         idx = self.ids[i]
         img_file = join(self.img_dir, str(idx) + ".tif")

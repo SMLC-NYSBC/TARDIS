@@ -13,21 +13,58 @@ import torch.nn as nn
 
 class SparsTriangularUpdate(nn.Module):
     """
-    Module for updating a sparse tensor in a triangular fashion.
+    Implements a neural network module for sparsely updating tensors using a triangular update rule.
 
-    This class applies a sequence of transformations, including normalization,
-    sigmoid activation, linear transformations, and a triangular multiplication update.
-    The transformations are designed to update the input tensor while preserving its sparsity.
+    The SparsTriangularUpdate class provides a mechanism to apply sparse triangular updates on
+    coordinate tensors, enabling efficient computations for specific data structures or patterns.
+    The module includes normalization layers, linear transformations, and gating mechanisms
+    to modulate and compute updates. It supports customizable parameters for dimensions
+    and the axis of operations, as well as a k-nearest-neighbor (knn) connectivity.
+
+    :ivar input_dim: Dimensionality of the input data.
+    :type input_dim: int
+    :ivar channel_dim: Number of channels in the transformation output.
+    :type channel_dim: int
+    :ivar axis: The axis along which the triangular update rule is applied.
+    :type axis: int
+    :ivar init_scaling: Scaling factor for parameter initialization.
+    :type init_scaling: float
+    :ivar knn: Number of nearest neighbors for the sparse computations.
+    :type knn: int
+    :ivar norm_input: Layer normalization applied to the input data.
+    :type norm_input: nn.LayerNorm
+    :ivar linear_a: Linear layer for transformation A.
+    :type linear_a: nn.Linear
+    :ivar gate_a: Gating layer for modulating transformation A.
+    :type gate_a: nn.Linear
+    :ivar linear_b: Linear layer for transformation B.
+    :type linear_b: nn.Linear
+    :ivar gate_b: Gating layer for modulating transformation B.
+    :type gate_b: nn.Linear
+    :ivar norm_o: Layer normalization applied to the output data.
+    :type norm_o: nn.LayerNorm
+    :ivar gate_o: Gating layer for modulating the output.
+    :type gate_o: nn.Linear
+    :ivar linear_o: Linear layer to compute the output transformation.
+    :type linear_o: nn.Linear
     """
 
     def __init__(self, input_dim: int, channel_dim=128, axis=1, knn=8):
         """
-        Initializes the SparsTriangularUpdate.
+        Class instantiates and configures layers and parameters for a neural network
+        module. The layers include LayerNorm and Linear transformations applied to
+        inputs based on dimensions specified during initialization. The class
+        also ensures proper initialization of parameters to achieve stability.
 
-        Args:
-            input_dim (int): The dimensionality of the input data.
-            channel_dim (int): The number of channels in the output from some transformations.
-            axis (int): The axis to be used in the triangular update rule.
+        :param input_dim: Input feature dimension for the given data.
+        :type input_dim: int
+        :param channel_dim: Number of output channels for the linear layers. Defaults to 128.
+        :type channel_dim: int, optional
+        :param axis: Axis along which normalization will be performed. Defaults to 1.
+        :type axis: int, optional
+        :param knn: Number of nearest neighbors to consider for operations (specific
+                    use case dependent). Defaults to 8.
+        :type knn: int, optional
         """
         super().__init__()
         self.input_dim = input_dim
@@ -66,14 +103,27 @@ class SparsTriangularUpdate(nn.Module):
 
     def forward(self, x: torch.tensor, indices: list) -> torch.tensor:
         """
-        Forward pass for SparsTriangularUpdate.
+        Processes input tensor `x` using gated linear transformations and triangular
+        multiplication updates with specified row-wise or column-wise operations,
+        returning the updated tensor as a result.
 
-        Args:
-            x (torch.tensor): A sparse coordinate tensor containing the input data.
-            indices (list): List of all indices
+        This function applies the following transformations:
+        1. Normalizes the input tensor `x`.
+        2. Computes intermediate transformations `a` and `b` using sigmoid activations
+           and a combination of gate layers (`gate_a`, `gate_b`) along with linear
+           layers (`linear_a`, `linear_b`).
+        3. Depending on the specified axis, computes either a row-wise or column-wise
+           multiplication update using the indices provided.
+        4. Applies a final sigmoid activation combined with gated output
+           transformation using `gate_o` and `linear_o`.
 
-        Returns:
-            torch.tensor, list: A sparse coordinate tensor representing the updated tensor.
+        :param x: The input tensor. Shape `[N, Ch]` representing
+            batch size (`N`) by the number of channels (`Ch`).
+        :param indices: List of index tensors used to specify the
+            range for row-wise or column-wise updates. For row updates,
+            indices[0] is used, and for column updates, indices[1] is used.
+        :return: Updated tensor after applying gated transformations
+            and triangular multiplication updates. Shape `[N, Ch]`.
         """
         x = self.norm_input(x)  # Batch x Length x Channels [N, Ch]
 

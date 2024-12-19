@@ -58,10 +58,16 @@ id_dict = {
 
 def standard_error_id(id_: str):
     """
-    Helper function to read MRC header.
+    Fetches the standard error message corresponding to the provided ID.
 
-    Args:
-        id_ (str): Tardis error id.
+    This function attempts to look up an error ID in a predefined dictionary
+    and returns the associated error message. If the ID does not exist in the
+    dictionary, it falls back to a default string indicating an unknown error.
+
+    :param id_: The identifier string for the error to search in the dictionary.
+    :type id_: str
+    :return: Corresponding error message if the ID is found, else "UNKNOWN_ERROR".
+    :rtype: str
     """
 
     try:
@@ -72,17 +78,18 @@ def standard_error_id(id_: str):
 
 class TardisError(Exception):
     """
-    MAIN ERROR HANDLER
+    Handles errors specific to the TARDIS framework and provides mechanisms for
+    standardized error logging, message formatting, and interactive displays.
 
-    Args:
-        id_ (str): Standardized error code. See more in documentation
-        py (str): .py file location
-        desc (str): Error description to pass to the shell
-        warning_ (bool): If True return error and terminate all processes, eles
-            show warning only.
+    The class allows the creation of custom error messages with standardized identifiers,
+    logs error-related information to a file, and supports formatted, error-specific console
+    notifications. It also facilitates the truncation of long error descriptions to fit
+    within terminal display constraints.
 
-    Returns:
-        str: TARDIS Error log
+    :ivar WIDTH: The width of the shell/terminal to adjust error message display formatting.
+    :type WIDTH: int or None
+    :ivar tardis_error_rise: Instance of TardisLogo used for rendering error visuals.
+    :type tardis_error_rise: TardisLogo
     """
 
     def __init__(
@@ -132,13 +139,18 @@ class TardisError(Exception):
 
     def cut_desc(self, desc: str) -> Tuple[str, str, str, str, str, str, str, str]:
         """
-        Cut a string of text if too long to fit a shell window.
+        Splits the given string `desc` into multiple smaller strings, ensuring each
+        split string does not exceed the defined width. The method first retrieves
+        the available width for truncation and then decides whether the input string
+        needs splitting. If the string is shorter than or equal to the width, no
+        splitting is done; otherwise, the string is truncated into multiple parts
+        using the `_truncate_str` method.
 
-        Args:
-            desc (str): Description text.
-
-        Returns:
-            list[str]: list of cut string
+        :param desc: The input string to be truncated and split into smaller parts.
+        :type desc: str
+        :return: A tuple containing up to eight parts of the truncated string.
+            Parts that are not used remain as empty strings.
+        :rtype: Tuple[str, str, str, str, str, str, str, str]
         """
         self.tardis_error_rise.cell_width()
 
@@ -171,13 +183,17 @@ class TardisError(Exception):
     @staticmethod
     def _truncate_str(desc: str, width: int) -> Union[str, Any]:
         """
-        Truncate string text up to 8th strings of max width fitted to the shell window.
-        Args:
-            desc (str): Description string.
-            width (int): Shell width.
+        Static method that truncates the given string into segments of a specified width.
+        It iteratively processes the string and splits it into chunks of a defined
+        width, limiting the total number of chunks to a maximum predefined count.
 
-        Returns:
-            Tuple[str, str, str, str, str, str, str, str]: Truncate string.
+        :param desc: Input string to be truncated.
+        :type desc: str
+        :param width: Width of each truncated segment.
+        :type width: int
+        :return: A list containing truncated segments of the string, or any fallback
+            result in case of unexpected conditions.
+        :rtype: Union[str, Any]
         """
         MAX_TRUNC = 8
         iter_i = 0

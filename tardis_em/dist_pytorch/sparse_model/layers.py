@@ -20,22 +20,32 @@ from tardis_em.dist_pytorch.model.modules import GeluFeedForward
 
 class SparseDistStack(nn.Module):
     """
-    Module that stacks multiple layers of SparseDistLayer modules.
+    Represents a stack of SparseDistLayer modules. Each layer in the stack processes input data
+    based on pairwise features and nearest neighbor interactions. The stack enables cascading
+    computations in multiple layers to enhance the representation of the input.
 
-    This class allows you to define a deep architecture where each layer is a SparseDistLayer.
-    The input to each layer is the output from the previous layer,
-    and the output from the final layer is the output of the SparseDistStack.
+    This class is designed for processing pairwise relationships with sparse data structures,
+    particularly in machine learning frameworks where modular and scalable architecture is needed.
+    It allows easy modification of the number of layers and their properties.
+
+    :ivar layers: A list of SparseDistLayer modules forming the stack.
+    :type layers: nn.ModuleList
     """
 
     def __init__(self, pairs_dim: int, num_layers=1, ff_factor=4, knn=8):
         """
-        Initializes the SparseDistStack.
+        Initializes the class with specified parameters and creates a module list containing
+        multiple SparseDistLayer instances. Each layer is initialized with the specified
+        parameters for pairs dimension, feed-forward factor, and k-nearest neighbors.
 
-        Args:
-            pairs_dim (int): The dimensionality of the pairs in each layer.
-            num_layers (int): The number of layers in the stack.
-            ff_factor (int): The scale factor for the feed forward network in each layer.
-            knn (int): The number of nearest neighbors to consider in each layer.
+        :param pairs_dim: The dimension of the input pairwise data.
+        :type pairs_dim: int
+        :param num_layers: The number of layers to instantiate. Defaults to 1.
+        :type num_layers: int, optional
+        :param ff_factor: The multiplication factor for the feed-forward layer. Defaults to 4.
+        :type ff_factor: int, optional
+        :param knn: The number of k-nearest neighbors to use. Defaults to 8.
+        :type knn: int, optional
         """
         super().__init__()
         self.layers = nn.ModuleList()
@@ -52,13 +62,17 @@ class SparseDistStack(nn.Module):
 
     def __getitem__(self, i: int):
         """
-        Returns the layer at the specified index.
+        Retrieves the layer at the given index from the collection of layers.
 
-        Args:
-            i (int): The index of the layer to return.
+        This method provides access to a specific layer object, based on the provided
+        index. The index corresponds to the position of the layer within the internal
+        list. If the index is out of the range of the collection, an exception will be
+        raised.
 
-        Returns:
-            The layer at the specified index.
+        :param i: The index of the layer to retrieve.
+        :type i: int
+        :return: The layer object at the specified index.
+        :rtype: Any
         """
         return self.layers[i]
 
@@ -66,16 +80,15 @@ class SparseDistStack(nn.Module):
         self, edge_features: torch.tensor, indices: list
     ) -> Union[torch.tensor, list]:
         """
-        Forward pass for the SparseDistStack.
+        Processes the given edge features and indices through a sequence of layers, updating the edge features
+        at each step by passing them through the corresponding layer along with the provided indices. The
+        resulting edge features after processing through all layers are returned.
 
-        Args:
-            edge_features (torch.sparse_coo_tensor): A sparse coordinate
-                tensor containing the input data.
-            indices (list): List of all indices
-
-        Returns:
-            torch.sparse_coo_tensor: A sparse coordinate tensor representing
-                the output from the final layer in the stack.
+        :param edge_features: A tensor containing the features associated with the edges. Each layer uses this
+            tensor during its processing step to compute the updated edge features.
+        :param indices: A list of indices corresponding to the edges. These indices are used during the
+            computation in each layer when processing the edge features.
+        :return: A tensor containing the updated edge features after processing through all layers sequentially.
         """
         for layer in self.layers:
             edge_features = layer(h_pairs=edge_features, indices=indices)
@@ -85,22 +98,43 @@ class SparseDistStack(nn.Module):
 
 class SparseDistLayer(nn.Module):
     """
-    The main sparse distance layer in a PyTorch Module.
+    SparseDistLayer is a neural network module designed for updating sparse edge
+    features, leveraging nearest neighbors, feed-forward networks, and triangular
+    updates. The main purpose of this layer is to process and transform sparse
+    relationships while effectively handling computational efficiencies for
+    large-scale data representations in sparse tensor formats.
 
-    This class implements a layer in a deep learning model that operates on sparse
-    coordinate tensors. It applies updates to the edge features of the input data,
-    and has placeholder methods for future updates to the node features.
-    The edge updates include a row update, a column update, and a feed-forward network.
+    This class serves as an essential component in advanced neural network
+    architectures and is particularly tailored for sparse data processing,
+    supporting updates for both edges and potentially nodes in future iterations.
+
+    :ivar pairs_dim: Dimensionality of the edge pair features used as an input
+        for the model.
+    :type pairs_dim: int
+    :ivar channel_dim: Channel dimensionality, derived as a quarter of the
+        ``pairs_dim`` or set to 1 if the value is non-positive.
+    :type channel_dim: int
+    :ivar row_update: Instance of ``SparsTriangularUpdate`` for applying triangular
+        updates along rows, specifically constructed with the input dimensionality,
+        channel dimensionality, axis, and number of nearest neighbors.
+    :type row_update: SparsTriangularUpdate
+    :ivar col_update: Instance of ``SparsTriangularUpdate`` for applying triangular
+        updates along columns, inheriting the same initialization parameters as
+        ``row_update`` with a different axis specification.
+    :type col_update: SparsTriangularUpdate
+    :ivar pair_ffn: Instance of ``GeluFeedForward`` representing the feed-forward
+        network for processing edge feature representations after updates.
+    :type pair_ffn: GeluFeedForward
     """
 
     def __init__(self, pairs_dim: int, ff_factor=4, knn=8):
         """
-        Initializes the SparseDistLayer.
+        Initializes an object with configuration for edge updates and feed-forward normalization.
 
-        Args:
-            pairs_dim (int): The dimensionality of the pairs in the layer.
-            ff_factor (int): The scale factor for the feed forward network.
-            knn (int): The number of nearest neighbors to consider in each update.
+        :param pairs_dim: The dimensionality of input pairs.
+        :param ff_factor: The factor determining the hidden layer dimensionality in the
+                          feed-forward network. Defaults to 4.
+        :param knn: The number of nearest neighbors for sparse triangular updates. Defaults to 8.
         """
         super().__init__()
         self.pairs_dim = pairs_dim
@@ -135,17 +169,18 @@ class SparseDistLayer(nn.Module):
         self, h_pairs: torch.tensor, indices: list
     ) -> Union[torch.tensor, list]:
         """
-        Updates edge features by applying row and column updates,
-        then applying a feed-forward network.
+        Updates the edge features by applying transformations to the input node
+        feature pair tensor. These transformations include row-wise, column-wise
+        updates, and a feed-forward network applied on the node pairs. The method
+        returns the modified tensor, representing updated edge features.
 
-        Args:
-            h_pairs (torch.sparse_coo_tensor): A sparse coordinate tensor
-                containing the edge features to be updated.
-            indices (list): List of indices
-
-        Returns:
-            torch.sparse_coo_tensor: A sparse coordinate tensor
-                containing the updated edge features.
+        :param h_pairs: Tensor representing the features of node pairs that
+            need to be updated.
+        :param indices: List of indices used for performing updates on the
+            edge features.
+        :return: Tensor representing the updated edge features, which includes
+            the applied transformations.
+        :rtype: Union[torch.tensor, list]
         """
         # ToDo Convert node features to edge shape
 
@@ -162,15 +197,17 @@ class SparseDistLayer(nn.Module):
         self, h_pairs: torch.tensor, indices: list
     ) -> Union[torch.tensor, list]:
         """
-        Forward pass for the SparseDistLayer.
+        Updates the features of input nodes and reshapes them to have the required edge
+        shape. This method first updates the edge features based on the given pairs and
+        indices, then returns the updated features.
 
-        Args:
-            h_pairs (torch.sparse_coo_tensor): A sparse coordinate tensor containing the input data.
-            indices (list): List of indices
-
-        Returns:
-            torch.sparse_coo_tensor: A sparse coordinate tensor
-                representing the output from the edge updates.
+        :param h_pairs: A tensor representing the input node features. Dimensions and
+            meaning depend on the tensor's context within the model.
+        :param indices: A list of indices used to update the edge features. The indices
+            specify how the input tensor `h_pairs` is altered.
+        :return: A tensor or list with updated edge features, containing the transformed
+            input node values based on the specified indices. The return type is dependent
+            on the implementation of `update_edges`.
         """
         # ToDo Update node features and convert to edge shape
 

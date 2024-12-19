@@ -27,18 +27,25 @@ def draw_instances(
     dtype=None,
 ) -> np.ndarray:
     """
-    Module to build semantic mask from corresponding coordinates
+    Draws labeled or binary masks based on the input coordinates, mask size, and additional parameters.
 
-    Args:
-        mask_size (tuple): Size of array that will hold created mask.
-        coordinate (np.ndarray): Segmented coordinates of a shape [Label x X x Y x (Z)].
-        pixel_size (float): Pixel size in Angstrom.
-        circle_size (int): Size of a circle the label mask in Angstrom.
-        label (bool): If True, expect label point cloud.
-        dtype (dtype):
+    This function generates either 2D or 3D masks, depending on the shape of the provided coordinates. If label generation is enabled, unique segment labels are created to distinguish between different segments. Circles centered around specific points are drawn in the masks, with sizes determined by the input circle size and pixel size. Input parameters related to the shape, size, and type of the mask, as well as the labeling behavior, are fully customizable. This function is suitable for constructing semantic or instance masks.
 
-    Returns:
-        np.ndarray: Binary mask with drawn all coordinates as lines.
+    :param mask_size: The dimensions of the mask to be created.
+    :type mask_size: list | tuple
+    :param coordinate: An array of coordinates specifying the locations to draw the mask. Coordinates can include optional labels as the first column.
+    :type coordinate: np.ndarray
+    :param pixel_size: Size of a pixel in the mask, used to scale the mask appropriately.
+    :type pixel_size: float
+    :param circle_size: Diameter of the circle to be drawn at each coordinate point. Defaults to 250.
+    :type circle_size: int, optional
+    :param label: Flag indicating whether a labeled mask or a binary mask should be created. Defaults to True.
+    :type label: bool, optional
+    :param dtype: Data type for the output mask. If not provided, defaults to np.uint16 for labeled masks or np.uint8 for binary masks.
+    :type dtype: str | None, optional
+
+    :return: A 2D or 3D mask generated based on the input parameters.
+    :rtype: np.ndarray
     """
     if label:
         if coordinate.ndim != 2 and coordinate.shape[1] not in [3, 4]:
@@ -150,18 +157,22 @@ def draw_semantic_membrane(
     mask_size: tuple, coordinate: np.ndarray, pixel_size: float, spline_size=70
 ) -> np.ndarray:
     """
-    Draw semantic membrane
+    Draws a semantic membrane mask based on given coordinates, pixel size, and spline size.
+    The function generates a mask of the specified size and marks regions centered
+    around the provided coordinates. The region size is determined by the given spline size,
+    adjusted by the pixel size.
 
-    For each Z pick individual instance and draw a fitted spline of given thickness.
+    :param mask_size: The dimensions of the output mask, specified as a tuple of integers (z, y, x).
+    :type mask_size: tuple
+    :param coordinate: A numpy array of coordinates specifying the center points of each region to be drawn in the mask.
+    :type coordinate: np.ndarray
+    :param pixel_size: Resolution of the mask, defining the relationship between spline size and the mask grid.
+    :type pixel_size: float
+    :param spline_size: The diameter of the spline in real-world size, measured in the same unit as pixel_size. Default is 70.
+    :type spline_size: int, optional
 
-    Args:
-        mask_size (tuple): Size of array that will hold created mask.
-        coordinate (np.ndarray): Segmented coordinates of a shape [Label x X x Y x (Z)].
-        pixel_size (float): Pixel size in Angstrom.
-        spline_size (int): Size of a circle the label mask in Angstrom.
-
-    Returns:
-        np.ndarray: Binary mask with drawn all coordinates as lines.
+    :return: A numpy ndarray representing the mask, where regions centered at the provided coordinates are filled.
+    :rtype: np.ndarray
     """
     # Ensure ints
     coordinate = coordinate.astype(np.int32)
@@ -187,18 +198,28 @@ def draw_instances_membrane(
     mask_size: tuple, coordinate: np.ndarray, pixel_size: float, spline_size=70
 ) -> np.ndarray:
     """
-    Draw instances membrane
+    Draws the instances of membranes on a specified mask by iterating through given
+    coordinates, creating circular "stamp"-like regions based on the spline size and
+    pixel size, and assigning unique identifiers to each region in the mask.
 
-    For each Z pick individual instance and draw a fitted spline of given thickness.
+    The mask is a 3D array where each element corresponds to a region assigned to a
+    specific identifier. The process converts coordinates to integers, calculates a
+    radius from the given spline and pixel sizes, and applies the circular regions
+    to the mask for each set of input coordinates.
 
-    Args:
-        mask_size (tuple): Size of array that will hold created mask.
-        coordinate (np.ndarray): Segmented coordinates of a shape [Label x X x Y x (Z)].
-        pixel_size (float): Pixel size in Angstrom.
-        spline_size (int): Size of a circle the label mask in Angstrom.
+    :param mask_size: A tuple representing the size of the mask, typically in 3D, that
+        specifies its spatial dimensions.
+    :param coordinate: A 2D numpy array where each row corresponds to an instance,
+        containing the identifier in the first column and the coordinates in the remaining
+        columns.
+    :param pixel_size: A float representing the physical distance represented by
+        a single pixel in the spatial dimensions of the mask.
+    :param spline_size: An integer specifying the base size of the "stamped" mask
+        regions. Optional, default value is 70.
 
-    Returns:
-        np.ndarray: Binary mask with drawn all coordinates as lines.
+    :return: A 3D numpy array with the same dimensions as the input mask, containing
+        unique identifiers based on the given coordinate for each "stamped" membrane region.
+    :rtype: numpy.ndarray
     """
     # Ensure ints
     coordinate = coordinate.astype(np.int32)
@@ -225,16 +246,21 @@ def draw_mask(
     r: int, c: np.ndarray, label_mask: np.ndarray, segment_shape: str
 ) -> Union[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray, np.ndarray]]:
     """
-    Module draw_mask to construct sphere shape of a label
+    Draws a mask on the given label array by creating a circle or sphere depending
+    on the specified shape. The method can handle both 2D and 3D label masks.
 
-    Args:
-        r (int): radius of a circle in Angstrom.
-        c (np.ndarray): point in 3D indicating center of a circle [X x Y x Z].
-        label_mask (np.ndarray): array of a mask on which circle is drawn.
-        segment_shape (str): Type of shape to draw. Expect ['s', 'c'].
+    :param r: The radius of the circle (2D) or sphere (3D) to be drawn.
+    :param c: A numpy array containing the center coordinates of the shape,
+        where the length of the input determines if it is 2D or 3D.
+    :param label_mask: A numpy array representing the label mask where
+        the circle or sphere will be drawn. Must have 2 or 3 dimensions.
+    :param segment_shape: A string specifying the shape to draw; `"c"` for
+        circle (default) or `"s"` for sphere.
 
-    Returns:
-        np.ndarray: Binary mask.
+    :return: A tuple of numpy arrays representing the coordinates of the
+        drawn mask shape. For 3D shapes, the tuple will include `z`, `y`,
+        and `x` arrays. For 2D shapes, the tuple will include `y` and `x`
+        arrays, omitting the `z` array.
     """
     if label_mask.ndim not in [2, 3]:
         TardisError(
@@ -273,15 +299,22 @@ def draw_circle(
     r: int, c: tuple, shape: tuple
 ) -> Union[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray, np.ndarray]]:
     """
-    Draw a circle and shift coordinate to c position.
+    Generates the coordinates of pixels to draw a filled circle in a given array shape.
+    Depending on the input `c` (2D or 3D), it generates either 2D (y, x) or 3D (z, y, x)
+    coordinates restricted within the specified shape.
 
-    Args:
-        r (int): radius of a circle in Angstrom.
-        c (tuple): point in 3D indicating center of a circle [(Z), Y, X].
-        shape (tuple): Shape of mask to eliminated ofe-flowed pixel.
+    The method uses the `skimage.draw.disk` function to calculate the circular region
+    and adjusts for its position in the provided coordinate frame `c`. It ensures
+    that all pixels remain within the bounds of the array defined by `shape`.
 
-    Returns:
-        Tuple[np.ndarray, np.ndarray, np.ndarray]: Tuple of array's with zyx coordinates
+    :param r: Radius of the circle to be drawn.
+    :param c: Tuple representing the center coordinates of the circle. In 2D, it requires (y, x),
+        and for 3D, it requires (z, y, x).
+    :param shape: Tuple representing the shape of the frame or array where the circle needs to be
+        drawn. For 2D: (rows, columns). For 3D: (depth, rows, columns).
+
+    :return: Coordinates of pixels forming the circle. A tuple of arrays (y, x) for 2D or
+        (z, y, x) for 3D representing the indices of the circle's pixels.
     """
     r_dim = round(r * 3)
     c_frame = round(r)
@@ -323,15 +356,20 @@ def draw_sphere(
     r: int, c: tuple, shape: tuple
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
-    Draw a sphere and shift coordinate to c position.
+    Generates the coordinates of a 3D spherical structure within a volume of specified shape.
+    This function simulates a sphere using a 3D binary array, applies trimming to the sphere,
+    and shifts its position within a given coordinate frame. The output consists of the
+    adjusted coordinates of the sphere within the specified 3D volume.
 
-    Args:
-        r (int): radius of a sphere in Angstrom.
-        c (tuple): point in 3D indicating center of a sphere [Z, Y, X].
-        shape (tuple): Shape of mask to eliminated ofe-flowed pixel.
+    :param r: Radius of the sphere
+    :type r: int
+    :param c: Center coordinates of the sphere in the 3D volume
+    :type c: tuple
+    :param shape: Shape of the 3D volume to contain the sphere
+    :type shape: tuple
 
-    Returns:
-        Tuple[np.ndarray, np.ndarray, np.ndarray]: Tuple of array's with zyx coordinates
+    :return: Coordinates of the sphere within the 3D volume along z, y, and x axes
+    :rtype: tuple of numpy.ndarray
     """
     r_dim = round(r * 2)
     sphere_frame = np.zeros((r_dim, r_dim, r_dim), dtype=np.int8)

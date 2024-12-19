@@ -17,14 +17,16 @@ from tardis_em.utils.errors import TardisError
 
 def interpolate_generator(points: np.ndarray) -> Iterable:
     """
-    Generator for 3D array interpolation
+    Generates interpolated points between two given 2D or 3D points. The function
+    determines the interpolation path in a pixel-grid-like manner between the start
+    and end points, based on Bresenham-like algorithms. Interpolation supports
+    only 2D and 3D coordinate systems, and exactly two points must be provided for
+    interpolation.
 
-    Args:
-        points: Expect array of 2 point in 3D as [X x Y x (Z)] of [2, 3] shape
-
-    Returns:
-        Iterable: Iterable object to generate 3D list of points between given 2
-        points as [X x Y x (Z)]
+    :param points: An array of shape (2, 2) for 2D points or (2, 3) for 3D points.
+                   Defines the two points between which interpolation is performed.
+    :return: An iterable generator that yields tuples representing (x, y) in 2D
+             space and (x, y, z) in 3D space.
     """
     if points.shape not in [(2, 3), (2, 2)]:
         TardisError(
@@ -154,14 +156,15 @@ def interpolate_generator(points: np.ndarray) -> Iterable:
 
 def interpolation(points: np.ndarray) -> np.ndarray:
     """
-    3D INTERPOLATION FOR BUILDING SEMANTIC MASK
+    Performs 3D interpolation for XYZ coordinates using a given interpolation
+    generator over sequential point pairs, and appends the last point to the
+    output in integer format. The function creates a continuous series of
+    interpolated points connecting all input coordinates.
 
-    Args:
-        points (np.ndarray): numpy array with points belonging to individual segments
-            given by x, y, (z) coordinates.
+    :param points: An array of shape (N, 3) representing a sequence of 3D points.
 
-    Returns:
-        np.ndarray: Interpolated 2 or 3D array
+    :return: An array of shape (M, 3) containing the interpolated 3D coordinates,
+             where M >= N due to newly generated intermediate points.
     """
     new_coord = []
     for i in range(0, len(points) - 1):

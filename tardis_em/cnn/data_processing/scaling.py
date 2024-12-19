@@ -13,7 +13,6 @@ from typing import Optional, Tuple, Union
 import numpy as np
 import torch
 import torch.nn.functional as F
-from PIL import Image
 from torch.fft import fftn, ifftn, fftshift, ifftshift
 from scipy.ndimage import gaussian_filter
 
@@ -27,15 +26,27 @@ def scale_image(
     Tuple[np.ndarray, np.ndarray, int], Tuple[np.ndarray, int], Tuple[None, int]
 ]:
     """
-    Scale image module using torch GPU interpolation
+    Scales the input image and/or mask to the specified dimensions. Depending on the sizes
+    given in `scale` compared to the original dimensions of the image or mask, down-sampling
+    or up-sampling is applied. When both image and mask are provided, both are processed
+    and returned along with the dimensional value. If only one of them (image or mask) is
+    provided, it is scaled and returned with the dimensional value. If neither is provided,
+    a `None` result is returned with the dimensional value.
 
-    Expect 2D (XY/YX), 3D (ZYX)
+    :param scale: A tuple of integers specifying the desired dimensions for scaling. Can
+        be of length 2 (height and width) or 3 (height, width, and depth).
+    :param image: Optional. A NumPy array representing the image to be scaled. If
+        provided, it is processed and scaled according to the provided `scale`.
+    :param mask: Optional. A NumPy array representing the mask to be scaled. If
+        provided, it is processed and scaled according to the provided `scale`.
+    :param device: An optional argument specifying the device to perform scaling
+        operations (e.g., `torch.device('cpu')` or `torch.device('cuda')`).
 
-    Args:
-        image (np.ndarray, Optional): image data
-        mask (np.ndarray, Optional): Optional binary mask image data
-        scale (tuple): scale value for image.
-        device (torch.device):
+    :return: A tuple containing either:
+        - `(image, mask, dim)` if both `image` and `mask` are provided and processed.
+        - `(image, dim)` if only `image` is provided and processed.
+        - `(mask, dim)` if only `mask` is provided and processed.
+        - `(None, dim)` if neither `image` nor `mask` are provided.
     """
     dim = 1
 
@@ -77,6 +88,21 @@ def scale_image(
 def nn_scaling(
     img: np.ndarray, scale: tuple, device=torch.device("cpu"), gauss=False
 ) -> np.ndarray:
+    """
+    Scale an image using nearest-neighbor interpolation, with an optional Gaussian
+    filter applied before scaling.
+
+    This function performs image resizing using PyTorch's interpolation method
+    with mode set to "nearest". If the `gauss` parameter is set to True, a Gaussian
+    filter is applied before resizing to smoothen the image.
+
+    :param img: Input image as a NumPy array.
+    :param scale: New dimensions for the image as a tuple (height, width).
+    :param device: PyTorch device to perform operations on. Defaults to "cpu".
+    :param gauss: Optional boolean flag to apply Gaussian filtering before scaling.
+                  Defaults to False.
+    :return: Rescaled image as a NumPy array.
+    """
     if gauss:
         filter_ = img.shape[0] / scale[0]  # Scaling factor
         img = gaussian_filter(img, filter_ / 2)
@@ -91,15 +117,22 @@ def linear_scaling(
     img: np.ndarray, scale: tuple, device=torch.device("cpu")
 ) -> np.ndarray:
     """
-    Scaling of 2D/3D array using trilinear method from pytorch
+    Scales a 2D or 3D image to a desired resolution using trilinear or bilinear
+    interpolation. The function performs the scaling in multiple steps, doubling or
+    halving dimensions at each step, until the desired resolution is achieved or
+    exceeded.
 
-    Args:
-        img: image array.
-        scale: Scale array size.
-        device (torch.device): Compute device
+    :param img: Input image to be scaled. Can be 2D or 3D. Should be provided as
+        a NumPy array.
+    :param scale: Target resolution as a tuple of integers representing the
+        desired dimensions. Must correspond to either (depth, height, width) for 3D
+        images or (height, width) for 2D images.
+    :param device: Device to use for the tensor operations (default is
+        `torch.device("cpu")`). It accepts GPU devices (e.g., `torch.device("cuda")`).
 
-    Returns:
-        no.ndarray: Up or Down scale 3D array.
+    :return: A NumPy array representing the resized image, scaled to the target
+        resolution.
+
     """
     if img.ndim == 3:
         current_depth, current_height, current_width = (
@@ -206,15 +239,23 @@ def area_scaling(
     img: np.ndarray, scale: tuple, device=torch.device("cpu")
 ) -> np.ndarray:
     """
-    Scaling of 3D array using area method from pytorch
+    Scales a 3D image array to a specified size along all axes using area-based
+    interpolation. The function uses PyTorch's interpolation functionality to
+    rescale the image accurately. This process first adjusts the Z-axis size,
+    then scales along the XY plane to match the target scale. The function assumes
+    input and output images to be 3D arrays. It takes a device parameter that
+    leverages GPU acceleration if specified.
 
-    Args:
-        img: 3D array.
-        scale: Scale array size.
-        device (torch.device): Compute device
+    :param img: Input 3D numpy array representing the image data to be scaled.
+    :type img: np.ndarray
+    :param scale: A tuple specifying the desired size of the scaled image
+        (depth, height, width).
+    :type scale: tuple
+    :param device: The computation device to perform scaling. Defaults to CPU.
+    :type device: torch.device
 
-    Returns:
-        no.ndarray: Up or Down scale 3D array.
+    :return: A scaled 3D numpy array.
+    :rtype: np.ndarray
     """
 
     size_Z = [scale[0], img.shape[1], img.shape[2]]
@@ -253,16 +294,22 @@ def fourier_scaling(
     img: np.ndarray, scale: tuple, device=torch.device("cpu")
 ) -> np.ndarray:
     """
-    Resize a 2D or 3D image using Fourier cropping.
+    Rescales the given image in the frequency domain to the specified spatial dimensions
+    using Fourier Transform. The function accepts an image as a NumPy array, performs
+    Fourier Transform, adjusts the frequency components to fit the target scale, and
+    reconstructs the resized image via inverse Fourier Transform. The scaling is performed
+    directly in the frequency domain, which helps preserve spatial details in the resized
+    image.
 
-    Parameters:
-    img (np.ndarray): 2D or 3D array representing the image.
-    scale (tuple): Desired shape (for 2D: (height, width), for 3D: (depth, height, width)).
-    dtype (np.dtype): Desired output data type.
-    device (torch.device): Torch device
+    :param img: 2D or 3D image array to be processed.
+    :type img: np.ndarray
+    :param scale: Target dimensions for scaling the image. Must be a tuple.
+    :type scale: tuple
+    :param device: Computing device to perform the Fourier Transform operations.
+    :type device: torch.device
 
-    Returns:
-        np.ndarray: Resized image in the desired data type.
+    :return: Resized image array with dimensions matching the specified scale.
+    :rtype: np.ndarray
     """
     if not isinstance(scale, tuple):
         scale = tuple(scale)

@@ -33,29 +33,44 @@ def analyse_filaments(
     data: Union[np.ndarray, List, Tuple],
     image: Union[np.ndarray, List, Tuple] = None,
     thickness=1,
-    px_=None,
+    px=None,
 ) -> tuple:
     """
-    Analyzes the morphological and intensity-related properties of filaments in data.
+    Analyzes filament data to compute various attributes including length, curvature,
+    tortuosity, and intensity-related metrics. If image data is provided, intensity
+    metrics such as average intensity, average length intensity, total intensity,
+    and total length intensity are computed. Lengths can be scaled based on pixel size
+    (px) if specified.
 
-    This function takes filament data and optionally associated images to calculate
-    various geometric and intensity-based metrics. It computes the length, curvature,
-    and tortuosity of the filaments. If images are provided, it can also calculate
-    average and sum intensity values along filaments, as well as intensity metrics
-    normalized by length. The function supports processing of multiple datasets and
-    images at once.
+    :param data: Filament data used for analysis. Can be a numpy array or a sequence
+        containing numpy arrays.
+    :type data: Union[np.ndarray, List, Tuple]
+    :param image: Optional image data corresponding to the filaments. Used for
+        computing intensity metrics. Can be a numpy array or a sequence containing
+        numpy arrays.
+    :type image: Union[np.ndarray, List, Tuple], optional
+    :param thickness: Thickness of filaments used for intensity calculation.
+        Defaults to 1.
+    :type thickness: int, optional
+    :param px: Scaling factors for pixel size to convert lengths into physical
+        units. If None, lengths are computed directly without scaling. Defaults to
+        None.
+    :type px: Sequence, optional
 
-    Args:
-        data (np.ndarray, List, Tuple): A list, tuple, or NumPy array representing filament data.
-        image (np.ndarray, List, Tuple): A list, tuple, or NumPy array representing associated image data, optional.
-        thickness (int): Thickness of the filaments to consider during processing, optional.
-        px_ (float, None): Scaling factors for the filament lengths.
+    :return: A tuple containing:
 
-    Returns:
-        tuple: A tuple containing calculated metrics for the filaments, including
-        (length, curvature, tortuosity, avg_intensity, avg_length_intensity,
-        sum_intensity, sum_length_intensity). If no image is provided, intensity-related
-        metrics will be returned as None.
+        - length (list): Computed lengths of the filaments.
+        - curvature (list): Computed mean curvatures of the filaments.
+        - tortuosity (list): Computed mean tortuosity of the filaments.
+        - avg_intensity (list): Computed average intensity per filament, or None
+          if no image data is provided.
+        - avg_length_intensity (list): Computed average filament intensity
+          normalized by filament length, or None if no image data is provided.
+        - sum_intensity (list): Computed total intensity per filament, or None
+          if no image data is provided.
+        - sum_length_intensity (list): Computed total filament intensity normalized
+          by filament length, or None if no image data is provided.
+    :rtype: tuple
     """
     if isinstance(data, np.ndarray):
         data = [data]
@@ -68,12 +83,12 @@ def analyse_filaments(
     avg_length_intensity, sum_length_intensity = [], []
 
     for id_, d_ in enumerate(data):
-        if px_ is None:
+        if px is None:
             length.append(length_list(d_))
         else:
-            length.append([i * px_[id_] for i in length_list(d_)])  # length in A
+            length.append([i * px[id_] for i in length_list(d_)])  # length in A
 
-        curvature_, tortuosity_ = curvature_list(d_, tortuosity_=True, mean_=True)
+        curvature_, tortuosity_ = curvature_list(d_, tortuosity_b=True, mean_b=True)
         curvature.append(curvature_)
         tortuosity.append(tortuosity_)
 
@@ -109,28 +124,27 @@ def analyse_filaments(
 
 
 def save_analysis(
-    names: Union[List, Tuple], analysis: Union[List, Tuple], px_=None, save: str = None
+    names: Union[List, Tuple], analysis: Union[List, Tuple], px=None, save: str = None
 ) -> Union[None, np.ndarray]:
     """
-    Saves or returns a structured analysis of filaments. The function processes data
-    such as length, curvature, tortuosity, and intensity-related metrics from given
-    analysis input. Results are either returned as a NumPy array or saved as a CSV file
-    at the specified location. The CSV file includes detailed headers for each analysis
-    metric and is named with the current date and TARDIS version.
+    Saves or generates a detailed analysis file from the given `analysis` data. The function
+    is capable of saving the processed analysis to a CSV file if a save path is provided
+    or alternatively returns the processed analysis as a NumPy array. The analysis includes
+    details such as filament lengths, curvatures, tortuosities, and intensity-related data. It
+    is designed to handle multiple files and their corresponding filament data.
 
-    Args:
-        names (List, Tuple): List or tuple of file names corresponding to filament data.
-        analysis (List, Tuple): A tuple or list containing the following filament analysis metrics:
-            (lengths, curvatures, tortuosities, avg_intensities, avg_length_intensities,
-            sum_intensities, sum_length_intensities), respectively.
-        px_ (List, Tuple): Optional. List or tuple representing pixel sizes for given files. If not provided,
-            the pixel size is assumed to be 1.0.
-        save (str): Optional. The directory path to save the analysis as a CSV file. If not provided,
-            the processed analysis is returned as an output.
+    :param names: List or tuple containing the names of the files being analyzed.
+    :param analysis: Tuple or list containing multiple analysis metrics such as
+        length, curvature, tortuosity, intensity, and their derivatives. Each metric
+        corresponds to a specific aspect of the filament data.
+    :param px: Optional parameter containing pixel size for each file, which is used
+        to calculate some metrics. If not specified, a default value is assumed.
+    :param save: Optional parameter specifying the path where the CSV file will be
+        saved. If not provided, the function will not save the file and returns the
+        analysis as a NumPy array.
 
-    Returns:
-        np.ndarray: Returns a structured NumPy array with filament analysis data if `save` is not
-            provided. Otherwise, no return value (None) when the CSV file is successfully saved.
+    :return: Returns a NumPy array containing the processed analysis, or None if the
+        analysis is saved to a CSV file.
     """
 
     length, curvature, tortuosity = analysis[0], analysis[1], analysis[2]
@@ -146,7 +160,7 @@ def save_analysis(
             analysis_file[iter_, :] = [
                 names[i],
                 str(j),
-                str(1.0) if px_ is None else px_[i],
+                str(1.0) if px is None else px[i],
                 str(length[i][j]),
                 str(curvature[i][j]),
                 str(tortuosity[i][j]),
@@ -199,20 +213,34 @@ def analyse_filaments_list(
     names_: Union[List, Tuple],
     path: str,
     images: Union[List, Tuple] = None,
-    px_: Union[List, Tuple] = None,
+    px: Union[List, Tuple] = None,
     thickness=1,
 ):
     """
-    Analyzes a list of filaments data and performs operations such as matching data with
-    provided images, checking their validity, and saving the processed analysis results.
+    Analyzes and processes a list of filament data along with optional corresponding images.
+    The function validates the input to ensure consistency between the length of the data
+    and images before analyzing the filaments. The processed analysis is then saved to the
+    specified path.
 
-    Args:
-        data (List, Tuple): List or tuple containing the data to be analyzed.
-        names_ (List, Tuple): List or tuple of names corresponding to the data items.
-        path (str): Output path where the analysis results will be saved.
-        images (List, Tuple): (Optional) List or tuple of images associated with the data.
-        px_ (List, Tuple): (Optional) List or tuple of pixel values for each data item.
-        thickness (int): Integer indicating the thickness to be used in analysis.
+    :param data: A collection of data representing filament structures. It must be a list
+        or tuple.
+    :type data: Union[List, Tuple]
+    :param names_: A collection of filenames or identifiers corresponding to each set of data.
+        It must be a list or tuple.
+    :type names_: Union[List, Tuple]
+    :param path: A string representing the file path where the analysis results will be saved.
+    :type path: str
+    :param images: Optional collection of images corresponding to the data, where each
+        image represents the visual context of the filament. Default is None.
+    :type images: Optional[Union[List, Tuple]]
+    :param px: Optional collection indicating pixel calibration or scaling of the images,
+        if provided. Default is None.
+    :type px: Optional[Union[List, Tuple]]
+    :param thickness: An integer specifying the thickness parameter used during filament
+        analysis. Default is 1.
+    :type thickness: int
+
+    :return: None
     """
 
     if images is not None:
@@ -232,7 +260,7 @@ def analyse_filaments_list(
         images = [None for _ in range(len(data))]
 
     save_analysis(
-        names_, analyse_filaments(data, images, thickness, px_=px_), px_=px_, save=path
+        names_, analyse_filaments(data, images, thickness, px=px), px=px, save=path
     )
 
 
@@ -240,34 +268,19 @@ def analyse_mt_classes(
     filaments: np.ndarray, poles: np.ndarray, vertices: list
 ) -> tuple:
     """
-    Analyzes microtubule (MT) classes by assigning filaments to specific poles
-    and identifying plus and minus ends of filaments. This function processes
-    input data, which includes filaments, pole points, vertices, and triangulated
-    surfaces, to categorize and evaluate relationships among these structures.
+    Analyzes microtubule (MT) classes by assigning filaments to poles, then categorizing
+    their ends as plus or minus ends. The process involves sorting poles relative to
+    defined vertices, assigning filaments to corresponding poles, and subsequently
+    determining the extremities of the filaments.
 
-    The procedure includes:
-    - Assigning poles to relevant vertices and surfaces.
-    - Associating filaments with the poles.
-    - Identifying and calculating indices for "plus" and "minus" ends of
-      filaments for each pole.
+    :param filaments: A NumPy array of filaments where each filament is defined as a
+        collection of points.
+    :param poles: A NumPy array containing pole positions.
+    :param vertices: A list of vertex points used to determine pole-to-surface assignments.
 
-    This analysis is essential for structural and spatial interpretations of
-    microtubules within specific configurations.
-
-    Args:
-        filaments (np.ndarray): A numpy ndarray representing the filaments data. Each row
-            should represent a filament with its associated properties such as
-            position and metadata.
-        poles (np.ndarray): A numpy ndarray representing the points or coordinates of
-            poles.
-        vertices (List): A list of vertices representing polygonal meshes
-            associated with structural representations.
-
-    Returns:
-        A tuple where the first element is a list representing associations
-        of filaments with poles. The second element is a tuple containing two
-        lists: indices of plus ends and minus ends of the filaments for each
-        pole.
+    :return: A tuple where the first element contains the mapping of filaments to poles
+        and the second element is a tuple with two lists: one for the plus ends and
+        another for the minus ends of the filaments.
     """
     # Sort poles to surfaces
     poles = pick_pole_to_surfaces(poles, vertices)

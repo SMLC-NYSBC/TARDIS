@@ -7,23 +7,28 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2024                                            #
 #######################################################################
-from typing import Union
-
 import numpy as np
-from scipy.interpolate import splev, splprep
 
 
 def assign_filaments_to_poles(filaments, poles):
     """
-    Assign filaments to the nearest pole based on the minimal distance from filament endpoints to poles,
-    and flip filaments (if needed) so that the end closest to the assigned pole is always at the bottom.
+    Assigns filaments to the closest poles and potentially flips their orientation to maintain consistency
+    based on proximity to the assigned pole.
 
-    Args:
-        filaments (np.ndarray): Array of shape (n, 4) with columns [ID, X, Y, Z].
-        poles (np.ndarray): Array of shape (2, 3) with coordinates of the two poles.
+    The function processes a set of filaments, identified by unique IDs, and calculates their start and end points.
+    Distances from these points to given poles are computed, and each filament is assigned to the nearest pole.
+    If needed, the points of a filament are reordered to ensure that their orientation starts closer to their assigned pole.
+    Filaments are then grouped according to their assigned pole.
 
-    Returns:
-        filament_pole1, filament_pole2 (np.ndarray): Array containing filaments assigned to Pole 1, 2.
+    :param filaments: A 2D NumPy array where each row contains information about an individual
+        point of a filament. The first column represents the filament ID, and the
+        remaining columns represent the position coordinates of the point.
+    :param poles: A 2D NumPy array where each row contains the coordinates of a pole.
+    :return: A tuple containing two arrays. The first array represents the filaments assigned
+        to the first pole, while the second array represents the filaments assigned to the
+        second pole. Each filament is listed with its points in correct order to maintain
+        proximity to the assigned pole.
+    :rtype: Tuple[np.ndarray, np.ndarray]
     """
     # Extract filament IDs
     ids = filaments[:, 0]

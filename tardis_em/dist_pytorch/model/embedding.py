@@ -17,14 +17,47 @@ import torch.nn.functional as F
 
 class NodeEmbedding(nn.Module):
     """
-    NODE FEATURE EMBEDDING
+    NodeEmbedding class for transforming node features using either a learned
+    linear mapping or a randomized cosine transformation, depending on the
+    value of sigma.
 
-    Args:
-        n_in (int): Number of input features.
-        n_out (int): Number of output features.
+    This class is used to embed input node features (e.g., RGB values or image
+    patches) into a desired output dimension. If sigma is 0, a trainable linear
+    layer is applied. Otherwise, a fixed random projection is utilized with
+    a cosine activation.
+
+    :ivar linear: Trainable linear layer, used when sigma is set to 0.
+                  Defaults to None otherwise.
+    :type linear: Optional[torch.nn.Linear]
+    :ivar n_in: Input dimension of the node features, used when sigma is
+                non-zero.
+    :type n_in: int
+    :ivar sigma: Scale factor for the randomized cosine transformation, used
+                 when sigma is non-zero.
+    :type sigma: torch.Tensor
+    :ivar weight: Weight matrix used in the cosine transformation, initialized
+                  randomly and stored in the module buffer.
+    :type weight: torch.Tensor
+    :ivar bias: Bias term used in the cosine transformation, initialized
+                randomly and stored in the module buffer.
+    :type bias: torch.Tensor
     """
 
     def __init__(self, n_in: int, n_out: int, sigma=1):
+        """
+        This class initializes a custom layer with weights and biases. Depending on the
+        value of sigma, it either initializes a traditional linear layer without a bias
+        or computes weights and biases for a custom mathematical operation. It also
+        registers these parameters as buffers for later use if sigma is not zero.
+
+        :param n_in: Number of input features.
+        :type n_in: int
+        :param n_out: Number of output features.
+        :type n_out: int
+        :param sigma: Standard deviation used for weight initialization. If zero,
+            a standard linear layer is initialized instead. Defaults to 1.
+        :type sigma: float
+        """
         super().__init__()
 
         self.linear = None
@@ -44,16 +77,15 @@ class NodeEmbedding(nn.Module):
         self, input_node: Optional[torch.Tensor] = None
     ) -> Optional[torch.Tensor]:
         """
-        Forward node feature embedding.
+        Performs the forward pass of the module. If an input tensor is provided, it processes
+        it through the defined `linear` layer if available, otherwise applies a specific
+        transformation involving the cosine function and linear operation.
 
-        Input: Batch x Length x Dim
-        Output: Batch x Length x Dim
-
-        Args:
-            input_node (torch.Tensor): Node features (RGB or image patches).
-
-        Returns:
-            torch.Tensor: Embedded features.
+        :param input_node: Input tensor to process. If None, returns None.
+        :type input_node: Optional[torch.Tensor]
+        :return: A tensor where the processed input is transformed and scaled into the
+            range [0, 1], or None if no input was provided.
+        :rtype: Optional[torch.Tensor]
         """
         if input_node is None:
             return None
@@ -68,18 +100,24 @@ class NodeEmbedding(nn.Module):
 
 class EdgeEmbedding(nn.Module):
     """
-    COORDINATE EMBEDDING INTO GRAPH
+    EdgeEmbedding layer encapsulates the functionality of computing edge-based
+    representations within a graph, leveraging Gaussian radial basis functions (RBF)
+    as embedding mechanisms. This module enables the transformation of edge distances
+    into either fixed-dimensional encodings or dynamically adjustable encodings
+    based on input configurations.
 
-    Set of coordinates is used to build distance matrix which is then
-    normalized using negative parabolic function.
+    EdgeEmbedding computes Gaussian kernel representations of edge distances
+    and optionally applies a linear transformation to produce embeddings
+    of a specified dimensionality. It supports both fixed sigma values (as single
+    or iterable ranges) and learns to dynamically adjust their dimensions
+    via linear layers.
 
-    Input: Batch x Length x Dim
-    Output: Batch x Length x Length x Dim
-
-    Args:
-        n_out (int): Number of features to output.
-        sigma (int, optional tuple): Sigma value for an exponential function is
-            used to normalize distances.
+    :ivar n_out: The number of output features produced by the embedding layer.
+    :type n_out: int
+    :ivar sigma: Specifies the Gaussian bandwidth(s) for the embedding. It can
+        either be a fixed value (int or float) or a range (list or tuple)
+        for generating Gaussian RBFs.
+    :type sigma: Union[int, float, list]
     """
 
     def __init__(self, n_out: int, sigma: Union[int, float, list]):
@@ -106,14 +144,21 @@ class EdgeEmbedding(nn.Module):
 
     def forward(self, input_coord: torch.Tensor) -> torch.Tensor:
         """
-        Forward node feature embedding.
+        Computes a transformation of pairwise distances between input coordinates
+            and applies an optional linear transformation. The specific transformation
+            depends on the configuration, such as whether a fixed `sigma` value or
+            varying `_range` values are provided. Handles missing values robustly by
+            replacing NaN distance values with zeros.
 
-        Args:
-            input_coord (torch.Tensor): Edge features ([N, 2] or [N, 3]
-                coordinates array).
+        :param input_coord: Tensor of shape (..., L, D) where L is the number of
+            coordinate points and D is the dimensionality of each point. It represents
+            the input feature coordinates for which pairwise distances will be computed.
+        :type input_coord: torch.Tensor
 
-        Returns:
-            torch.Tensor: Embedded features.
+        :return: Tensor of shape (..., L, L, K) where K is either 1 or the length of the `_range` attribute.
+            Represents the transformed pairwise distances. If `self.linear` is provided, the returned tensor
+            is further transformed using the linear layer.
+        :rtype: torch.Tensor
         """
         g_len = input_coord.shape[-2]
         g_range = range(g_len)

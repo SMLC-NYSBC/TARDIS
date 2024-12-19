@@ -22,27 +22,37 @@ from tardis_em.utils.errors import TardisError
 
 class BuildPointCloud:
     """
-    MAIN MODULE FOR SEMANTIC MASK IMAGE DATA TRANSFORMATION INTO POINT CLOUD
-
-    Module build point cloud from semantic mask based on skeletonization in 3D.
-    Optionally, user can trigger point cloud correction with Euclidean distance
-    transformation to correct for skeletonization artefact. It will not fix
-    issue with heavily overlapping objects.
-
-    The workflows follows: optional(edt_2d -> edt_thresholds -> edt_binary) ->
-        skeletonization_3d -> output point cloud -> (down-sampling)
+    A utility class for handling and processing images to build point cloud data, typically from semantic masks.
+    This class includes functions to validate and adjust input image data, as well as convert binary semantic
+    masks into point cloud data. The generated point cloud data can be represented in 2D or 3D space.
     """
 
     @staticmethod
     def check_data(image: Union[str, np.ndarray]) -> Union[np.ndarray, None]:
         """
-        Check image data and correct it if needed to uint8 type.
+        Checks and processes a binary input image to ensure it meets the required conditions
+        for a semantic mask. The function supports input as a file path to a .tiff image or a
+        numpy array, and it returns the processed image if all conditions are satisfied.
 
-        Args:
-            image (np.ndarray, str): 2D/3D image array
+        The function performs the following checks and adjustments:
+        - Reads the image from a file path if a string is provided as input.
+        - Validates that the image has either 2 or 3 dimensions.
+        - Ensures the image is binary (contains only 0 and 1 values).
+        - Converts the binary image values appropriately to ensure consistency.
+        - Normalizes the image if necessary.
 
-        Returns:
-            np.ndarray: Check and converted to uint8 data
+        :param image: Input image that can be either a string representing a file path to a
+                      .tiff image or a numpy array. The input file or array is checked and
+                      formatted as required.
+        :type image: Union[str, np.ndarray]
+
+        :return: Processed numpy array representing the validated binary image, or None if the
+                 image fails the binary or formatting checks.
+        :rtype: Union[np.ndarray, None]
+
+        :raises RuntimeWarning: If the input directory or .tiff image file is incorrect.
+        :raises TardisError: If the input image fails any validation checks, such as having
+                             incorrect dimensions or not being binary.
         """
         try:
             if isinstance(image, str):
@@ -106,16 +116,32 @@ class BuildPointCloud:
         as_2d=False,
     ) -> Union[Tuple[ndarray, ndarray], np.ndarray]:
         """
-        Build point cloud data from semantic mask.
+        Generates a point cloud from an input image through skeletonization, with optional
+        down-sampling and control of dimensionality reduction to 2D.
 
-        Args:
-            image (np.ndarray): Predicted semantic mask.
-            down_sampling (float, None): If not None, down-sample point cloud with open3d.
-            as_2d: Treat data as 2D not 3D.
+        The function processes the input image by skeletonizing it to extract
+        the pixel-wise skeleton. Depending on the image dimensions or user-provided
+        parameters, a 2D or 3D spatial representation of the skeleton is then
+        constructed. The point cloud data is returned in a structured format
+        after optional down-sampling.
 
-        Returns:
-            Union[Tuple[ndarray, ndarray], np.ndarray]: Point cloud of 2D/3D
-            semantic objects.
+        :param image: The input data to generate the point cloud from. It can be
+                      a string representing the file path to an image or a numpy
+                      array of the input data.
+        :type image: Union[str, np.ndarray]
+        :param down_sampling: Optional down-sampling factor to reduce the point cloud
+                              density. If provided, it defines the voxel size for
+                              filtering points in 3D space.
+        :type down_sampling: Union[float, None]
+        :param as_2d: Boolean flag for forcing the representation of the point cloud
+                      in two dimensions irrespective of the dimensionality of the
+                      input data.
+        :type as_2d: bool
+        :return: Returns a tuple containing (1) the generated point cloud as a numpy
+                 array with X, Y (and optionally Z) coordinates, and (2) the reduced
+                 point cloud if down-sampling is applied. If no down-sampling is applied,
+                 only the point cloud is returned without being wrapped in a tuple.
+        :rtype: Union[Tuple[ndarray, ndarray], np.ndarray]
         """
         image = self.check_data(image)
         if image is None:
@@ -164,15 +190,22 @@ class BuildPointCloud:
 
 def draw_line(p0: np.ndarray, p1: np.ndarray, line_id: int) -> np.ndarray:
     """
-    Draws a straight line in 3D space between two points.
+    Generates a sequence of 3D coordinates between two specified points using an incremental
+    line drawing algorithm. The method determines the dominant axis of movement and computes
+    intermediate points accordingly while maintaining resolution and alignment in 3D space.
 
-    Args:
-    p0 (tuple): (z0, y0, x0) representing the start point of the line.
-    p1 (tuple): (z1, y1, x1) representing the end point of the line.
-    line_id (int): An identifier for the line.
+    This is a computationally efficient implementation of a generalized Bresenham's algorithm
+    adapted for 3D space. Each generated coordinate is stored along with its corresponding
+    line ID.
 
-    Returns:
-        np.ndarray: A numpy array containing points (line_id, x, y, z) along the line.
+    :param p0: Starting point in the form of a NumPy array with [z, y, x] coordinates.
+    :type p0: np.ndarray
+    :param p1: Ending point in the form of a NumPy array with [z, y, x] coordinates.
+    :type p1: np.ndarray
+    :param line_id: Identifier associated with the generated line.
+    :type line_id: int
+    :return: The generated line as a NumPy 2D array where each row consists of [line_id, x, y, z].
+    :rtype: np.ndarray
     """
     xyz = []
     z0, y0, x0 = p0
@@ -237,16 +270,20 @@ def draw_line(p0: np.ndarray, p1: np.ndarray, line_id: int) -> np.ndarray:
 
 def quadratic_bezier(p0: np.ndarray, p1: np.ndarray, p2: np.ndarray, t: float) -> list:
     """
-    Calculate a point on a quadratic Bézier curve.
+    Calculate the position on a quadratic Bézier curve at a given parameter t.
 
-    Args:
-        p0 (np.ndarray): (z0, y0, x0) representing the start point of the Bézier curve.
-        p1 (np.ndarray): (z1, y1, x1) representing the control point of the Bézier curve.
-        p2 (np.ndarray): (z2, y2, x2) representing the end point of the Bézier curve.
-        t (float): A float between 0 and 1, representing the parameter of the curve.
+    The function computes the coordinates of a point on a quadratic Bézier curve using
+    the given control points: p0, p1, and p2, and the parameter t. Quadratic Bézier
+    curves are a common representation of smooth curves in computer graphics and
+    geometry. The computed point is returned as a list of rounded integer coordinates.
 
-    Returns:
-        list: A list of integers [x, y, z], representing the calculated point on the curve.
+    :param p0: The first control point of the Bézier curve as a NumPy array.
+    :param p1: The second control point of the Bézier curve as a NumPy array.
+    :param p2: The third control point of the Bézier curve as a NumPy array.
+    :param t: The parameter value along the curve where the computation is to be
+        performed. The value of t must lie within the interval [0, 1].
+    :return: A list of integers representing the coordinates of the computed
+        point on the Bézier curve.
     """
     x_ = float((1 - t) ** 2 * p0[2] + 2 * (1 - t) * t * p1[2] + t**2 * p2[2])
     y_ = float((1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * p1[1] + t**2 * p2[1])
@@ -259,16 +296,18 @@ def draw_curved_line(
     p0: np.ndarray, p1: np.ndarray, p2: np.ndarray, line_id: int
 ) -> np.ndarray:
     """
-    Draw a quadratic Bézier curve in a 3D array.
+    Draws a quadratic Bézier curve using three control points and returns the resultant points
+    concatenated with a line identifier. The method calculates an approximate number of points
+    required to represent the curve based on distances between the given control points and
+    generates evenly distributed points along the curve.
 
-    Args:
-        p0 (np.ndarray): (z0, y0, x0) representing the start point of the curve.
-        p1 (np.ndarray): (z1, y1, x1) representing the control point of the curve.
-        p2 (np.ndarray): (z2, y2, x2) representing the end point of the curve.
-        line_id (int): An identifier for the curve.
-
-    Returns:
-        np.ndarray: A numpy array containing points [line_id, z, y, x] along the curve.
+    :param p0: The first control point as a NumPy array.
+    :param p1: The second control point as a NumPy array.
+    :param p2: The third control point as a NumPy array.
+    :param line_id: The identifier to prepend to each point in the resultant curve.
+    :return: A NumPy array containing the computed points of the curve. Each row represents
+             a point with the structure [line_id, x, y], where x and y are the coordinates
+             of the curve point.
     """
     curve_points = []
 
@@ -292,17 +331,33 @@ def draw_circle(
     size=None,
 ) -> np.ndarray:
     """
-    Draw a circle in a 3D space.
+    Generates the points of a circle in 2D or a sphere in 3D by calculating the coordinates
+    of points lying on their respective perimeters based on the given center and radius.
 
-    Args:
-        center (np.ndarray): (z0, y0, x0) representing the center of the circle.
-        radius (float): The radius of the circle.
-        circle_id (int): An identifier for the circle.
-        _3d (bool): True if 3D object.
-        size: Size of drawn mask
+    This function supports both 2D and 3D spaces. If the parameter `_3d` is set to True,
+    it calculates the points of a 3D sphere within the specified bounds (`size`). Otherwise,
+    it computes the 2D circle points with XY and optional Z-plane configurations.
 
-    Returns:
-        np.ndarray: A numpy array containing points [circle_id, z, y, x] on the circle.
+    :param center:
+        The center of the circle or sphere. Should be a numpy array with either
+        2 or 3 components (x, y[, z]).
+    :param radius:
+        The radius of the circle or sphere.
+    :param circle_id:
+        An identifier assigned to each point in the circle/sphere. This value
+        will be included as the first element in each resulting coordinate.
+    :param _3d:
+        A boolean to determine whether to compute a 3D sphere (True) or a 2D
+        circle (False). Defaults to False.
+    :param size:
+        Optional size constraints for the 3D sphere (e.g., bounding box
+        dimensions). This parameter is only used when `_3d` is True.
+    :return:
+        An array of point coordinates, each including the `circle_id`. For 2D,
+        the coordinates are in (circle_id, x, y, z) format. For 3D, they are in
+        (circle_id, z, y, x) format.
+    :rtype:
+        numpy.ndarray
     """
     circle_points = []
 
@@ -372,6 +427,20 @@ def draw_circle(
 
 
 def draw_sphere(center, radius, sheet_id):
+    """
+    Generates a set of points on the surface of a sphere with a specified radius and center
+    and associates them with a given sheet ID. The points are approximately evenly
+    distributed across the surface of the sphere.
+
+    :param center: The 3D coordinates of the center of the sphere. Should be an array-like
+        structure of three numeric values representing (x, y, z).
+    :param radius: The radius of the sphere. A non-negative float value.
+    :param sheet_id: An identifier for the generated points, typically a numeric or string
+        value. Each point will be associated with this ID.
+    :return: A 2D NumPy array where each row represents a point. The first column contains
+        the sheet ID, and the subsequent columns contain the 3D coordinates
+        (x, y, z) of the point.
+    """
     # Approximate surface area of the sphere
     surface_area = 4 * np.pi * radius**2
     # Desired distance between points, roughly
@@ -400,15 +469,17 @@ def draw_sphere(center, radius, sheet_id):
 
 def draw_sheet(center: np.ndarray, size: tuple, sheet_id: int) -> np.ndarray:
     """
-    Generate n points on a 3D sheet.
+    Generates a 3D representation of a sheet with specified size, position, and a
+    unique identifier. The generated sheet includes transformations and rotations
+    to simulate a more varied geometric structure, and filters out points outside
+    the specified bounds.
 
-    Args:
-        center (np.ndarray): (z0, y0, x0) representing the center of the circle.
-        size (tuple): Max size to fit sheet.
-        sheet_id (int): Sheet unique id.
-
-    Returns:
-        np.ndarray: A numpy array containing points [x, y, z] on the sheet.
+    :param center: A 3D ndarray representing the center point of the sheet.
+    :param size: A tuple defining the 3D dimensions (depth, height, width) of the sheet.
+    :param sheet_id: An integer unique identifier for the sheet being generated.
+    :return: A ndarray containing the generated points of the sheet. Each row
+        includes the sheet ID and the coordinates (x, y, z) of a point. If no points
+        lie within the bounds, an empty ndarray is returned.
     """
     x_range = (0, 100)
     y_range = (0, 100)
@@ -484,6 +555,19 @@ def draw_sheet(center: np.ndarray, size: tuple, sheet_id: int) -> np.ndarray:
 
 
 def create_simulated_dataset(size, sim_type: str):
+    """
+    Generates a simulated dataset based on parameters specifying the type of simulation
+    and the size of the dataset. The function creates different geometric shapes, such as
+    lines, curves, circles, and spheres, depending on the specified simulation type.
+
+    :param size: The dimensions of the dataset as a tuple of integers, representing its
+        shape (e.g., (height, width, depth)).
+    :param sim_type: A string specifying the type of simulation to create. Must be one of
+        the following valid options: "mix3d", "mix2d", "filaments", "membranes",
+        "membranes2d".
+    :return: The generated dataset. The output is a NumPy array where each row represents
+        a coordinate or shape in the simulated space.
+    """
     assert sim_type in ["mix3d", "mix2d", "filaments", "membranes", "membranes2d"]
     coord = []
     i = 0

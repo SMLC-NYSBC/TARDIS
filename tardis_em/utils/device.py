@@ -13,13 +13,20 @@ import torch
 
 def get_device(device: str = "0") -> torch.device:
     """
-    Return a device that can be used for training or predictions
+    Determines and returns a PyTorch device based on the specified input.
 
-    Args:
-        device (str, int): Device name or ID.
+    This function assesses the provided device string and determines which
+    PyTorch device to use. Supported inputs include "gpu", "cpu", "mps", or
+    specific GPU device indices. If the specified GPU or MPS devices are
+    unavailable, it defaults to using the CPU device. The function
+    ensures compatibility with the hardware and backend availability.
 
-    Returns:
-        torch.device: Device type.
+    :param device: A string representing the desired computational device.
+        It can be "gpu", "cpu", "mps", or a string specifying a GPU index.
+    :type device: str
+    :return: A PyTorch device object representing the availability and
+        compatibility of the requested device.
+    :rtype: torch.device
     """
     if device == "gpu":  # Load GPU ID 0
         if torch.cuda.is_available():
@@ -46,13 +53,20 @@ def get_device(device: str = "0") -> torch.device:
 
 def device_is_str(device: str = "0") -> bool:
     """
-    Check if the used device is convertible to int value
+    Checks if the provided device identifier string represents a valid integer and determines
+    if the input can be interpreted as a valid device representation.
 
-    Args:
-        device (str, int): Device ID.
+    This function attempts to convert the provided string into an integer. If successful,
+    the function confirms whether the converted value is an integer type and returns the
+    result accordingly. If the string cannot be converted into an integer, it explicitly
+    returns False.
 
-    Returns:
-        bool: Check for input string/int
+    :param device: The device identifier as a string. Defaults to "0".
+    :type device: str
+
+    :return: True if the input string can be cast to an integer and is a valid integer type;
+        otherwise, False.
+    :rtype: bool
     """
     try:
         int(device)

@@ -19,10 +19,15 @@ from tardis_em.utils.errors import TardisError
 
 def build_new_dir(dir_: str):
     """
-    Standard set-up for creating new directory for storing all data.
+    Builds a directory for temporary output files and ensures required files
+    are present within the specified directory. If the required conditions
+    are not met or the output directory already exists, appropriate actions
+    are taken.
 
-    Args:
-        dir_ (str): Directory where folder will be build.
+    :param dir_: Path to the base directory where the temporary directory will
+                 be created.
+    :type dir_: str
+    :return: None
     """
     """ Build temp files directory """
     output = join(dir_, "output")
@@ -50,10 +55,16 @@ def build_new_dir(dir_: str):
 
 def build_temp_dir(dir_: str):
     """
-    Standard set-up for creating new temp dir for cnn prediction.
+    Creates necessary directories in the specified base directory to ensure the required
+    structure for processing is in place. The function first checks for the existence of
+    a "temp" subdirectory and its nested structure within the provided `dir_`. If the
+    "temp" and respective subdirectories already exist, they will be reset to a clean
+    state. If not, proper directories will be created as needed. Additionally, verifies
+    and creates a top-level "Predictions" directory if it doesn't exist.
 
-    Args:
-        dir_ (str): Directory where folder will be build.
+    :param dir_: The base directory where the directories need to be created or reset.
+    :type dir_: str
+    :return: None
     """
     if isdir(join(dir_, "temp")):
         if isdir(join(dir_, "temp", "Patches")) or isdir(
@@ -78,10 +89,16 @@ def build_temp_dir(dir_: str):
 
 def clean_up(dir_: str):
     """
-    Clean-up all temp files.
+    Removes a directory named "temp" and its subdirectories, including
+    "Patches" and "Predictions", from the specified directory path. Ensures
+    recursive deletion of all files and subdirectories inside the "temp"
+    directory.
 
-    Args:
-        dir_ (str): Main directory where temp dir is located.
+    :param dir_: The path to the parent directory containing the "temp"
+        directory to be cleaned up. The directory path must be provided as a
+        string.
+    :return: None. The function performs cleanup operations without
+        returning a value.
     """
     if isdir(join(dir_, "temp")):
         if isdir(join(dir_, "temp", "Patches")):
@@ -104,20 +121,36 @@ def check_dir(
     mask_format: Union[tuple, str, None],
 ) -> bool:
     """
-    Check the list used to evaluate if directory containing dataset for CNN.
+    Validates the structure and contents of a dataset directory to ensure proper
+    organization for training and testing processes. This function checks for
+    the existence of specific subdirectories (`train` and `test`), as well as for
+    the presence and consistency of files (both images and masks) in the dataset.
+    It ensures that the number of image files matches the number of mask files,
+    and optionally validates file formats.
 
-    Args:
-        dir_ (str): Main directory with all files.
-        train_img (str): Directory name with images for training.
-        train_mask (str): Directory name with mask images for training.
-        img_format (tuple, str): Allowed image format.
-        test_img (str): Directory name with images for validation.
-        test_mask (str): Directory name with mask images for validation.
-        mask_format (tuple, str): Allowed mask image format.
-        with_img (bool): GraphFormer bool value for training with/without images.
-
-    Returns:
-        bool: Bool value indicating detection of the correct structure dataset
+    :param dir_: Root directory of the dataset to validate.
+    :type dir_: str
+    :param train_img: Path to the subdirectory containing training images.
+    :type train_img: str
+    :param train_mask: Path to the subdirectory containing training masks.
+    :type train_mask: str
+    :param test_img: Path to the subdirectory containing test images.
+    :type test_img: str
+    :param test_mask: Path to the subdirectory containing test masks.
+    :type test_mask: str
+    :param with_img: Indicates whether the validation should check for the
+        presence of both images and masks, or just masks alone.
+    :type with_img: bool
+    :param img_format: File extension(s) for image files. It can be either
+        a tuple of extensions or a single extension as a string.
+    :type img_format: Union[tuple, str]
+    :param mask_format: File extension(s) for mask files. It can be a tuple
+        of extensions, a single extension as a string, or None to disable
+        mask format validation.
+    :type mask_format: Union[tuple, str, None]
+    :return: A boolean indicating whether the directory structure and
+        contents meet the validation criteria.
+    :rtype: bool
     """
     if mask_format is None:
         return True

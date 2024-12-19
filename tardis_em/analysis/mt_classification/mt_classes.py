@@ -28,15 +28,76 @@ from tardis_em.utils.logo import TardisLogo
 
 class MicrotubuleClassifier:
     """
-    MicrotubuleClassifier is responsible for analyzing and classifying microtubule (MT)
-    filaments using input data related to spatial graph files, surfaces, and poles.
+    Manages the classification and preprocessing of data related to Microtubule (MT)
+    analysis, including processing of surfaces, filaments, and poles. This class aims
+    to facilitate segmentation and feature extraction for MT datasets, enabling further
+    analysis tasks such as classification and structural evaluations.
 
-    This class performs various preprocessing steps such as loading and correcting
-    data, classifying microtubules into different categories like Kinetochore
-    Microtubules (KMTs), bridging microtubules, and spindle microtubules, among others.
-    Additionally, it visualizes progress with optional logging via the TardisLogo feature.
+    It initializes with critical parameters, loads and corrects processed data, and
+    offers methods to extract relevant structural information from the provided files.
 
-    :ivar triangles: Stores triangle"""
+    :ivar triangle: Stores triangle mesh data extracted during vertex processing.
+    :type triangle: any
+    :ivar tardis_logo: Boolean indicating whether the TARDIS logo and progress output
+        is displayed during execution.
+    :type tardis_logo: bool
+    :ivar main_logo: Object used for configuring and controlling the TARDIS logo.
+    :type main_logo: TardisLogo
+    :ivar pixel_size: Represents the scaling factor between raw coordinate systems and
+        real-world measurements.
+    :type pixel_size: float or int
+    :ivar gap_size: The threshold distance used for gaps between objects during spatial
+        computations.
+    :type gap_size: int
+    :ivar kmt_dist_to_surf: The predefined threshold distance from kinetochore MT
+        segments to surfaces.
+    :type kmt_dist_to_surf: int
+    :ivar surfaces: Path to surface data file input by the user.
+    :type surfaces: str
+    :ivar vertices: Contains normalized vertices derived during surface processing.
+    :type vertices: list
+    :ivar filaments: Contains resampled and preprocessed filament information.
+    :type filaments: np.ndarray
+    :ivar filament_pole1: Tracks filament segments associated with the first pole
+        structure.
+    :type filament_pole1: any
+    :ivar filament_pole2: Tracks filament segments assigned to the secondary pole
+        structure.
+    :type filament_pole2: any
+    :ivar poles: Contains spatially corrected pole data.
+    :type poles: np.ndarray
+    :ivar min_coords: Placeholder variable, representing the approximate bounding
+        region minimum coordinates extracted from the dataset.
+    :type min_coords: any
+    :ivar f_1: The count of unique filaments associated with pole 1.
+    :type f_1: int
+    :ivar f_2: The count of unique filaments associated with pole 2.
+    :type f_2: int
+    :ivar plus_end_id: Identifier for the plus-end MT classification group.
+    :type plus_end_id: any
+    :ivar minus_end_id: Identifier for the minus-end MT classification group.
+    :type minus_end_id: any
+    :ivar kmts_id_1: List of kinetochore MTs associated with the first pole region.
+    :type kmts_id_1: any
+    :ivar kmts_id_2: List of kinetochore MTs associated with the second pole region.
+    :type kmts_id_2: any
+    :ivar kmts_inside_id_1: List of kinetochore MTs inside the first pole’s bounds.
+    :type kmts_inside_id_1: any
+    :ivar kmts_outside_id_1: List of kinetochore MTs outside the first pole region.
+    :type kmts_outside_id_1: any
+    :ivar kmts_inside_id_2: List of kinetochore MTs inside the second pole’s bounds.
+    :type kmts_inside_id_2: any
+    :ivar kmts_outside_id_2: List of kinetochore MTs outside the second pole region.
+    :type kmts_outside_id_2: any
+    :ivar mid_mt_ids: List holding mid-region MT identities.
+    :type mid_mt_ids: any
+    :ivar int_mt_ids: List denoting interdigitating MT elements.
+    :type int_mt_ids: any
+    :ivar brg_mt_ids: List denoting bridging MT elements.
+    :type brg_mt_ids: any
+    :ivar smt_ids: Identifiers for single-microtubule classifications.
+    :type smt_ids: any
+    """
 
     def __init__(
         self,
@@ -49,17 +110,26 @@ class MicrotubuleClassifier:
         tardis_logo=True,
     ):
         """
-        Initializes the Microtubule Classifier with the necessary data.
+        Initialize the class with parameters needed for data preprocessing and classification
+        related to Microtubule (MT) analysis.
 
-        Args:
-            filaments (str): File directory with amira spatial graph.
-            surfaces (str): File directory with amira surface.
-            poles (str): File directory with amira spatial graph for poles
-            pixel_size (float): Pixel size value.
-            gaps_size (int): Gap size to be fill out in case of detected
-                uneven surface crossing.
-            kmt_dist_to_surf (int): Distance of plus end MT to the surface in A
-                to be considered as KMT.
+        :param surfaces: Path to the surface data file required for the analysis.
+        :type surfaces: str
+        :param filaments: Path to the filament data file required for the analysis.
+        :type filaments: str
+        :param poles: Path to the file containing poles information required for the analysis.
+        :type poles: str
+        :param pixel_size: Size of the pixels used in the data grid. Type is implied from usage.
+        :type pixel_size: float or int
+        :param gaps_size: The default size of gaps in the data grid (e.g., for separation); defaults
+            to 100.
+        :type gaps_size: int
+        :param kmt_dist_to_surf: Distance of kinetochore microtubules from the surface grid
+            in nanometers. Defaults to 1000.
+        :type kmt_dist_to_surf: int
+        :param tardis_logo: A boolean flag to toggle the display of the TARDIS logo and
+            progress messages. Defaults to True.
+        :type tardis_logo: bool
         """
 
         self.triangles = None
@@ -127,14 +197,19 @@ class MicrotubuleClassifier:
 
     def get_vertices_file(self, dir_: str, simplify: bool = None) -> list:
         """
-        Retrieve the vertices from a file within a specified directory. This function
-        is responsible for invoking the `load_am_surf` function to load vertex data
-        from a given directory and optionally simplifying it, based on the supplied
-        parameters.
+        Extracts and returns the vertices information from a given directory containing
+        data for an AM surface file. This method utilizes the `load_am_surf` function
+        to process the data in the specified directory. Optionally, the simplification
+        param can be used to streamline the vertices extraction process.
 
-        Args:
-            dir_ (str): The directory containing the file used to load the surface data.
-            simplify (bool): A flag indicating whether to simplify the retrieved vertex data.
+        :param dir_: The directory containing the AM surface file.
+        :type dir_: str
+        :param simplify: Defines whether simplification is applied during the loading
+            process. This parameter is optional.
+        :type simplify: bool, optional
+
+        :return: A list of vertices extracted from the surface file.
+        :rtype: list
         """
         _, _, vertices, self.triangles = load_am_surf(dir_, simplify_=simplify)
 
@@ -143,21 +218,48 @@ class MicrotubuleClassifier:
     @staticmethod
     def get_filament_file(dir_) -> np.ndarray:
         """
-        Retrieves and returns the filament file data based on the specified directory.
+        Extracts and returns segmented points from the specified directory using the
+        ImportDataFromAmira class. This function is a static method and does not rely
+        on class instance attributes.
+
+        :param dir_: Directory path to the source AM file
+        :type dir_: str
+
+        :return: Numpy array of segmented points extracted from the specified directory
+        :rtype: np.ndarray
         """
         return ImportDataFromAmira(src_am=dir_).get_segmented_points()
 
     @staticmethod
     def get_poles_file(dir_) -> np.ndarray:
         """
-        This static method retrieves the poles file from a specified directory.
+        Retrieve pole positions from a specified directory and returns them as a NumPy array.
+
+        This method uses the `ImportDataFromAmira` class to access data associated with vertex
+        positions in the specified directory. It processes the data to extract pole positions and
+        return them in a structured format suitable for further computations or analysis.
+
+        The directory passed must contain the required data structure that is compatible with
+        `ImportDataFromAmira` functionality. The output is formatted as a NumPy array.
+
+        :param dir_: The file path to the directory containing the Amira data files
+        :type dir_: str
+
+        :return: A NumPy array containing the vertex data representing pole positions
+        :rtype: np.ndarray
         """
         return ImportDataFromAmira(src_am=dir_).get_vertex()
 
     def correct_data(self):
         """
-        Efficiently normalizes filament data and reorganizes pole assignment for a more structured setup.
-        The normalized and corrected filament data are consolidated into a single array.
+        Normalizes and processes filament data based on pixel size and assigned poles.
+
+        This method performs several operations including:
+        - Normalization of filament coordinates using the pixel size.
+        - Resampling of the filament data.
+        - Normalization of vertex and pole coordinates.
+        - Assignment of filaments to poles and subsequent reordering.
+        - Stacking of corrected filaments into a unified structure.
         """
         # Efficient normalization using broadcasting
         self.filaments[:, 1:] = self.filaments[:, 1:] / self.pixel_size
@@ -183,10 +285,14 @@ class MicrotubuleClassifier:
 
     def get_filament_endpoints(self) -> tuple[int, int]:
         """
-        Returns the start and end points of each filament.
+        Computes and returns the start and end indices of the unique filament IDs
+        in the dataset. This function identifies unique filament IDs and uses them
+        to derive the corresponding starting and ending positional indices.
 
-        This function identifies the start and end indices for each filament
-        based on their unique identifiers.
+        :return: A tuple containing two integers:
+                 - The starting index of the first unique filament ID.
+                 - The ending index of the last unique filament ID.
+        :rtype: tuple[int, int]
         """
         ids = self.filaments[:, 0]
         unique_ids, index_starts, counts = np.unique(
@@ -198,17 +304,18 @@ class MicrotubuleClassifier:
 
     def assign_to_kmts(self, filaments, id_=0) -> list:
         """
-        Assign filaments to kinetochore microtubules (KMTs) based on their distances,
-        surface crossing criteria, and proximity to cellular structures.
+        Assigns filaments to kinetochores (KMTs) based on spatial and distance criteria.
 
-        This function identifies microtubules (MTs) that belong to KMTs by analyzing
-        geometrical properties and relationships between MT endpoints, surface vertices,
-        and poles of cellular structures.
+        The function performs several steps to identify filaments, represented by their
+        unique IDs, that meet specific conditions relative to bounding boxes, surfaces,
+        and distance thresholds. It uses unique identification, filtering within bounding
+        boxes, various distance measurements, and thresholds to determine the final set
+        of KMT-associated filaments.
 
-        Args:
-            filaments: An array containing filament data.
-            id_: The identifier index for selecting the cellular structure
-            vertices and poles from the corresponding data.
+        :param filaments: A NumPy array representing the set of filaments.
+        :param id_: An integer representing the index of the vertices and poles
+            being processed. Defaults to 0.
+        :return: A list of unique filament IDs assigned to KMTs.
         """
         _, unique_indices = np.unique(filaments[:, 0], return_index=True)
         plus_end = filaments[unique_indices, :]
@@ -243,23 +350,18 @@ class MicrotubuleClassifier:
 
     def kmts_inside_outside(self, kmt_proposal, id_=0) -> tuple[np.ndarray, np.ndarray]:
         """
-        Evaluates whether given kinetochore-microtubule (KMT) proposals are located
-        inside or outside the defined surface. The classification is based on the
-        distances between ends of the KMT proposals and the specified surface, where
-        each proposal corresponds to unique kinetochore identifiers.
+        Determines whether the k-MTs (kinetochore MicroTubules) are inside or outside based
+        on their distance to the surface. The function computes unique k-MTs and evaluates
+        the proximity of their plus ends in comparison to a given pole surface. The result
+        is segregated into k-MTs considered inside and outside.
 
-        This method aims to provide classified identifiers of KMTs that are either
-        inside or outside, enabling further analysis or tracking of microtubule
-        dynamics and interactions with defined structures.
-
-        Args:
-            kmt_proposal (np.ndarray): Array containing KMT proposals.
-            id_ (int): Optional identifier, defaulting to 0, which specifies the surface
-                    or context against which distances are calculated.
-
-        Return:
-            - First array contains unique identifiers of KMTs classified as inside.
-            - Second array contains unique identifiers of KMTs classified as outside.
+        :param kmt_proposal: A 2D numpy array where each row corresponds to an association
+            of k-MTs, with the first column representing k-MT identifiers.
+        :param id_: An integer representing the identifier of the current vertex and pole
+            configuration to be used for computations. Defaults to 0.
+        :return: A tuple containing two numpy arrays. The first array contains unique k-MT
+            identifiers classified as inside, while the second array contains unique k-MT
+            identifiers classified as outside.
         """
         _, unique_indices = np.unique(kmt_proposal[:, 0], return_index=True)
         plus_ends = kmt_proposal[unique_indices, :]
@@ -286,16 +388,16 @@ class MicrotubuleClassifier:
 
     def assign_to_mid_mt(self) -> list:
         """
-        Assigns microtubules (MTs) to the middle region based on specific geometric and
-        structural conditions.
+        Assigns microtubules (MTs) to a middle set based on specific conditions and filters.
 
-        This function filters and assigns microtubules whose trajectory or position qualifies
-        them for inclusion in the middle region. The function utilizes input filaments, vertices,
-        and poles to compute the selection. The MTs are specifically filtered based on their
-        crossing status and proximity to the vertices and poles.
+        The function identifies MTs which are not part of specific pre-defined ID sets and
+        selects candidate MTs with no more than one crossing. It further filters these selected
+        MTs based on their distance to a defined set of vertices in comparison to poles. The
+        final IDs of the specific MTs that meet all conditions are returned as a list.
 
-        Returns:
-            list: A list of identifiers corresponding to microtubules assigned to the middle region.
+        :return: A list of MT IDs that belong to the middle set. These are filtered based on
+            their geometric properties and crossing conditions.
+        :rtype: list
         """
         mts_plus = np.vstack(
             [
@@ -341,12 +443,18 @@ class MicrotubuleClassifier:
 
     def assign_to_int_mt(self) -> list:
         """
-        Assigns microtubules (MTs) to the intersection class through filtering and reclassification.
-        The method isolates MTs that are not part of known groups such as kmts_id_1, kmts_id_2, and mid_mt_ids,
-        determines those within bounding boxes, and further refines the classification based on crossing.
+        Assigns intermediate microtubule IDs based on specific criteria.
 
-        Returns:
-            list: A list of IDs for microtubules assigned to the intersection class.
+        This function identifies intermediate microtubules (MTs) from given input data,
+        excluding specific MT IDs and using bounding boxes to further select relevant
+        MTs. It then reassigns the identified MTs based on crossing criteria and returns
+        their IDs as a list.
+
+        :raises ValueError: If the provided data structures have inconsistent shapes or types.
+
+        :return: A list of assigned intermediate microtubule IDs. If no IDs are found or
+                 assigned, an empty list is returned.
+        :rtype: list
         """
         mts_plus = np.vstack(
             [
@@ -373,13 +481,13 @@ class MicrotubuleClassifier:
 
     def assign_to_bridge_mt(self) -> list:
         """
-        Assigns filaments to bridge microtubules (MTs) based on specified classification
-        parameters and conditions. Filaments that do not belong to kinetochore, middle,
-        or interpolar MTs are filtered and assigned as bridge MTs after matching their
-        properties with the respective vertices and classes provided.
+        Assigns microtubules to the bridge class based on their ID exclusions and their spatial
+        crossings with assigned vertices. It first filters out specific filament IDs that belong
+        to other microtubule classes and then assigns remaining filaments to the bridge if they
+        meet crossing conditions.
 
-        Return:
-            list: A list of IDs corresponding to the filaments assigned as bridge MTs.
+        :returns: A list of microtubule IDs assigned to the bridge class.
+        :rtype: list
         """
         brg_mt_fibers = self.filaments[
             ~np.isin(
@@ -406,25 +514,25 @@ class MicrotubuleClassifier:
 
     def assign_mt_with_crossing(self, filaments, vertices_, class_=[1]) -> np.ndarray:
         """
-        Calculate microtubules crossing a surface based on specified criteria.
+        Assigns microtubule (MT) IDs based on whether or not they cross a specific surface
+        and belong to a specified class of interest.
 
-        This function identifies microtubules (MT) that cross a defined surface and
-        categorizes them based on their crossing patterns. It evaluates each MT to
-        determine if it satisfies the conditions of belonging to certain specified
-        classes based on the number of crossing groups. If the `class_` parameter
-        includes 0, MTs that do not cross the surface are also added to the result.
+        The function evaluates a set of segmented microtubules (filaments) and determines
+        to which class each should belong. This classification is based on their crossing
+        behavior with a given surface defined by vertices, as well as a specified class
+        parameter. It ensures that MTs crossing specific surfaces or having other
+        characteristics are correctly classified.
 
-        Args:
-            filaments (np.ndarray): A 2D NumPy array with the first column representing the
-                microtubule IDs and the other columns representing their coordinates.
-            vertices_ (np.ndarray): A 2D NumPy array representing the vertices of the surface
-                mesh to evaluate crossing points against.
-            class_ (list): A list of integers representing the classification of MTs
-                based on the number of crossing groups they exhibit.
-
-        Return:
-            np.ndarray: A 1D NumPy array containing the IDs of the microtubules (MT) that
-                meet the crossing criteria.
+        :param filaments: A 2D numpy array where each row represents a segment of a
+            microtubule. The first column contains microtubule IDs (integers), while
+            the subsequent columns correspond to the spatial coordinates (e.g., x, y, z).
+        :param vertices_: A 2D numpy array representing the vertices of the surface for
+            comparison, each row specifying a spatial coordinate (e.g., x, y, z).
+        :param class_: A list of integers representing the microtubule classification
+            criteria. Default is [1], which selects microtubules matching the threshold
+            condition.
+        :return: A numpy array containing IDs of microtubules that intersect the surface
+            and fit the classification criteria specified by the `class_` parameter.
         """
         all_ids = np.unique(filaments[:, 0])
 
@@ -464,20 +572,19 @@ class MicrotubuleClassifier:
 
     def classified_MTs(self):
         """
-        Classifies microtubules (MTs) into distinct categories based on their spatial characteristics and association
-        with structural regions. The function performs multiple steps of analysis, including identifying the ends of
-        filaments, categorizing Kinetochore MTs (KMTs), and further segregating filaments into Mid-MTs,
-        Interdigitating-MTs, Bridging-MTs, and Single Microtubules (SMTs).
+        Classifies microtubules (MTs) into different categories based on spatial properties, assignments to poles,
+        and other criteria. The classification includes Kinetochore Microtubules (KMTs), Mid-MTs, Interdigitating-MTs,
+        Bridging-MTs, and Standard Microtubules (SMTs). Coordinates are corrected to the original scale after assignments.
+        Contains options for a logo display summarizing the classification process. This function integrates multiple
+        steps such as endpoint determination, pole classifications, and other custom classifications.
 
-        Notes:
-            The classification workflow includes multiple stages:
+        :param self: The object instance invoking the method.
 
-            1. Endpoint identification for filaments.
-            2. Determination of associated KMTs based on filament-pole orientation, divided into separate pole-derived sets.
-            3. Segregation of KMTs into inside and outside regions within each pole group.
-            4. Assignment of non-KMTs into categories including Mid-MTs, Interdigitating-MTs, and Bridging-MTs.
-            5. Selection of SMTs as the remaining microtubules after prior classifications.
-            6. Correction of coordinate transformations to pixel size units for visualization.
+        :raises ValueError: If any invalid indices are encountered during processing.
+        :raises TypeError: If inputs to certain classification methods have mismatched types.
+        :raises AttributeError: If required attributes are missing from the self instance.
+
+        :return: None
         """
         """Get indices for ends"""
         self.plus_end_id, self.minus_end_id = self.get_filament_endpoints()
@@ -581,11 +688,12 @@ class MicrotubuleClassifier:
 
     def get_classified_indices(self) -> list:
         """
-        Retrieves a structured list of classified indices based on specific criteria
-        used within the object.
+        Returns a list of classified indices, grouped into specific categories
+        representing various groups of IDs. These categories include inside and
+        outside IDs, mid-point IDs, intermediate IDs, bridge IDs, and SMT IDs.
 
-        Return:
-            list: A list containing grouped classified indices.
+        :return: List containing groups of classified indices.
+        :rtype: list
         """
         return [
             [self.kmts_inside_id_1, self.kmts_outside_id_1],
@@ -598,13 +706,17 @@ class MicrotubuleClassifier:
 
     def get_classified_fibers(self) -> list:
         """
-        Classifies and categorizes fibers based on their identification within specific regions
-        or categories. The filtering is performed using the `np.isin` method to check
-        membership of the provided filament IDs against specific ID lists.
+        Classifies and retrieves fibers based on their categories and identifiers. This method
+        divides the fibers into multiple subcategories including kinetochore microtubules
+        (kMT) for two different states (inside and outside), midplane microtubules
+        (mid_MT), interpolar microtubules (int_MT), bridging microtubules (brg_MT),
+        and other spindle microtubules (smt_MT). The classification is performed
+        by checking the fiber identifiers against predefined ID collections.
 
-
-        Return:
-            list: A list of lists and arrays corresponding to different classified fibers.
+        :return: A nested list where each element represents a specific category or subcategory
+                 of classified fibers. It includes a list of kMT fibers for each state
+                 (inside, outside), and other categorized fibers (mid_MT, int_MT, brg_MT, smt_MT).
+        :rtype: list
         """
         kmt_fiber_inside_1 = self.filaments[
             np.isin(self.filaments[:, 0], self.kmts_inside_id_1)
@@ -634,22 +746,31 @@ class MicrotubuleClassifier:
 
     def get_filaments(self) -> np.ndarray:
         """
-        Retrieves the filaments.
+        Returns the filaments stored in the object.
 
-        Return:
-            np.ndarray: A numpy array containing the filaments.
+        The function provides direct access to the filaments as a
+        numpy array. It is useful for retrieving the stored filaments
+        data for further processing or analysis purposes.
+
+        :return: A numpy array containing filaments data.
+        :rtype: np.ndarray
         """
         return self.filaments
 
     def get_vertices(self, simplify=128) -> tuple[list, list]:
         """
-        Retrieves the vertices and triangles of a 3D surface.
+        Retrieve the vertices and triangles of the object, with optional simplification.
 
-        Args:
-            simplify (int): Value used to simplify the vertices and triangles data. If None, retrieves data from file.
+        The method allows fetching the vertices and triangles that represent the geometry
+        of the object. By default, an optional simplification value can be provided to
+        reduce the complexity of the vertices. If the `simplify` parameter is `None`,
+        an alternative retrieval process is utilized.
 
-        Return:
-            tuple: A tuple containing a list of vertices and triangles.
+        :param simplify: Specifies the simplification factor for reducing vertex complexity.
+                         If `None`, returns the detailed geometry without simplification.
+        :type simplify: int or None
+        :return: A tuple containing a list of vertices and a list of triangles.
+        :rtype: tuple[list, list]
         """
         if simplify is not None:
             return self.vertices, self.triangles
@@ -661,10 +782,13 @@ class MicrotubuleClassifier:
 
     def get_poles(self) -> np.ndarray:
         """
-        This method retrieves the poles coordinates.
+        Retrieves the poles data of a given instance and returns it as a NumPy array.
+        Poles typically represent key computation parameters or specific physical
+        characteristics depending on the context of implementation.
 
-        Return:
-            np.ndarray: The poles coordinates
+        :return: An array containing the poles of the current instance.
+
+        :rtype: numpy.ndarray
         """
 
         return self.poles

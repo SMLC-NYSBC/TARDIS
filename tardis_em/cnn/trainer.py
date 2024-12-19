@@ -16,7 +16,13 @@ from tardis_em.utils.trainer import BasicTrainer
 
 class CNNTrainer(BasicTrainer):
     """
-    GENERAL CNN TRAINER
+    Class for training and validation of a Convolutional Neural Network (CNN).
+
+    Handles the entire process of training and validating a CNN model, including
+    data loading, forward and backward passes, evaluation, progress tracking, and
+    parameter updates. Designed to work with various configurations such as
+    classification tasks, learning rate scheduling, and early stopping based on
+    evaluation metrics.
     """
 
     def __init__(self, **kwargs):
@@ -24,7 +30,10 @@ class CNNTrainer(BasicTrainer):
 
     def _train(self):
         """
-        Run model training.
+        Manages the training loop for a CNN model, including forward pass,
+        backward pass, loss computation, optimizer step, and learning rate tracking.
+        Handles intermediate evaluations, progress monitoring, and loss tracking
+        for each training batch.
         """
         # Update progress bar
         self._update_progress_bar(loss_desc="Training: (loss 1.000)", idx=0)
@@ -66,7 +75,14 @@ class CNNTrainer(BasicTrainer):
 
     def _validate(self):
         """
-        Test model against validation dataset.
+        Validates the performance of the model on the validation dataset during training.
+
+        This method computes various evaluation metrics such as accuracy, precision, recall,
+        F1-score, and thresholding performance for each batch in the validation dataset. It
+        uses the model to predict outputs on validation data, calculates the loss using the
+        specified criterion, and updates the appropriate metrics for performance analysis.
+        Additionally, it maintains and compares evaluation loss over epochs to decide on early
+        stopping.
         """
         valid_losses = []
         accuracy_mean = []

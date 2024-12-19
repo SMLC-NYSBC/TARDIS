@@ -13,16 +13,23 @@ import numpy as np
 from scipy.interpolate import splev, splprep
 
 
-def curvature(coord: np.ndarray, tortuosity_=False) -> Union[float, tuple]:
+def curvature(coord: np.ndarray, tortuosity_b=False) -> Union[float, tuple]:
     """
-    Calculate spline curvature.
+    Computes the curvature of a curve specified by input coordinates. Optionally, it can also compute
+    the tortuosity of the curve if the `tortuosity_` parameter is set to True. The curvature is calculated
+    as the norm of the cross product of the first and second derivatives divided by the norm of the first
+    derivative raised to the power of three. Tortuosity is defined as the ratio of the curve's arc length
+    to the straight-line distance between its endpoints.
 
-    Args:
-        coord (np.ndarray): Coordinates for each unsorted point idx.
-        tortuosity_ (bool): Optional, if True calculates the tortuosity.
+    :param coord: A NumPy array representing the coordinates of the curve where curvature calculations
+        are performed.
+    :param tortuosity_b: A boolean flag indicating whether to calculate the tortuosity value in addition
+        to the curvature. If True, tortuosity is calculated as the ratio of the curve length to the
+        straight-line distance between the endpoints.
 
-    Returns:
-        float: Spline tortuosity measured with tortuosity.
+    :return: If `tortuosity_b` is False, a single float is returned representing the average curvature;
+        if `tortuosity_b` is True, a tuple is returned containing the average curvature as the first
+        element and the tortuosity value as the second element.
     """
 
     tck, u = splprep(coord.T, s=0)
@@ -40,7 +47,7 @@ def curvature(coord: np.ndarray, tortuosity_=False) -> Union[float, tuple]:
         np.linalg.norm(np.cross(r1, r2), axis=1) / np.linalg.norm(r1, axis=1) ** 3
     )
 
-    if tortuosity_:
+    if tortuosity_b:
         # Calculate the curve length (arc length) using the fine points
         arc_length = np.sum(np.linalg.norm(np.diff(coord, axis=0), axis=1))
 
@@ -57,18 +64,25 @@ def curvature(coord: np.ndarray, tortuosity_=False) -> Union[float, tuple]:
 
 
 def curvature_list(
-    coord: np.ndarray, tortuosity_=False, mean_=False
+    coord: np.ndarray, tortuosity_b=False, mean_b=False
 ) -> Union[list, tuple]:
     """
-    Calculate the curvature of all splines and return it as a list.
+    Computes curvature and optionally tortuosity of splines corresponding to unique
+    coordinate groups in a given array. The input consists of a 2D array where the
+    first column represents group identifiers and the subsequent columns represent
+    the coordinates of points in each group. Curvature computation is based on groups
+    with at least six points.
 
-    Args:
-        coord (np.ndarray): Coordinates for each unsorted point idx.
-        tortuosity_ (bool): Optional, if True calculates the tortuosity.
-        mean_ (bool): If true, return an average curvature.
+    :param coord: A 2D numpy array where the first column indicates grouping identifiers
+        and the remaining columns represent coordinates of points.
+    :param tortuosity_b: A boolean indicating whether to compute and return the tortuosity
+        for each group. Default is False.
+    :param mean_b: A boolean flag. When set to True, the mean curvature value for each
+        group is computed instead of returning individual curvatures. Default is False.
 
-    Returns:
-        list: Spline curvature list.
+    :return: If tortuosity_b is False, returns a list of curvatures for each unique group.
+        If tortuosity_b is True, returns a tuple containing two elements: a list of curvatures
+        and a list of tortuosity values (as floats) for each group.
     """
 
     spline_curvature_list, spline_tortuosity_list = [], []
@@ -77,10 +91,10 @@ def curvature_list(
         points = coord[np.where(coord[:, 0] == i)[0], 1:]
 
         if len(points) > 5:
-            if tortuosity_:
-                c, t = curvature(points, tortuosity_=True)
+            if tortuosity_b:
+                c, t = curvature(points, tortuosity_b=True)
 
-                if mean_:
+                if mean_b:
                     c = np.mean(c).item(0)
                 spline_curvature_list.append(c)
                 spline_tortuosity_list.append(t)
@@ -90,7 +104,7 @@ def curvature_list(
             spline_curvature_list.append(0.0)
             spline_tortuosity_list.append(1.0)
 
-    if tortuosity_:
+    if tortuosity_b:
         return spline_curvature_list, [float(x) for x in spline_tortuosity_list]
     else:
         return spline_curvature_list
@@ -98,13 +112,19 @@ def curvature_list(
 
 def tortuosity(coord: np.ndarray) -> float:
     """
-    Calculate spline tortuosity.
+    Calculates the tortuosity of a curve.
 
-    Args:
-        coord (np.ndarray): Coordinates for each unsorted point idx.
+    This function computes the ratio of the total length of a curve defined by a
+    series of coordinates to the straight-line distance between the first and
+    last points of the curve. If there is only one coordinate or none, it
+    returns a default value of 1.0 as the tortuosity cannot be defined.
 
-    Returns:
-        float: Spline tortuosity measured with tortuosity.
+    :param coord: A numpy array containing the coordinates of the curve, where
+                  each coordinate is a point in n-dimensional space.
+
+    :return: A float representing the tortuosity, which is computed as the ratio
+             of the total length of the curve to the straight-line distance
+             between the start and end points.
     """
     if len(coord) <= 1:
         return 1.0
@@ -119,13 +139,18 @@ def tortuosity(coord: np.ndarray) -> float:
 
 def tortuosity_list(coord: np.ndarray) -> list:
     """
-    Calculate the tortuosity of all splines and return it as a list.
+    Calculates the tortuosity for each unique coordinate id in the provided array.
+    The function groups the input coordinates by their unique first column values,
+    computes the tortuosity for each group, and returns the results as a list of
+    floats.
 
-    Args:
-        coord (np.ndarray): Coordinates for each unsorted point idx.
+    :param coord: A 2-dimensional numpy array where the first column represents
+        unique ids and the subsequent columns represent coordinates.
+    :type coord: numpy.ndarray
 
-    Returns:
-        list: Spline tortuosity list.
+    :return: A list of tortuosity values as floats, each corresponding to a
+        unique id from the first column of input.
+    :rtype: list
     """
 
     spline_tortuosity_list = []
@@ -139,13 +164,18 @@ def tortuosity_list(coord: np.ndarray) -> list:
 
 def total_length(coord: np.ndarray) -> float:
     """
-    Calculate the total length of the spline.
+    Computes the total length of a path defined by a sequence of coordinates.
 
-    Args:
-        coord (np.ndarray): Coordinates for each unsorted point idx.
+    This function calculates the total distance between consecutive points
+    in a path represented by an array of coordinates. The distance is computed
+    using the Euclidean norm.
 
-    Returns:
-        float: Spline length.
+    :param coord: A numpy array where each row represents a point's coordinates
+                  in the path.
+
+    :return: Sum of the Euclidean distances between consecutive points
+             in the path.
+    :rtype: float
     """
     length = np.sum(np.linalg.norm(np.diff(coord, axis=0), axis=1))
 
@@ -154,13 +184,20 @@ def total_length(coord: np.ndarray) -> float:
 
 def length_list(coord: np.ndarray) -> list:
     """
-    Calculate the total length of all splines and return it as a list.
+    Calculate the total lengths of grouped coordinates and return them as a list.
 
-    Args:
-        coord (np.ndarray): Coordinates for each unsorted point idx.
+    This function processes a numpy array of coordinates, groups them based on the
+    unique values in the first column, calculates the lengths of each group of coordinates
+    using an external `total_length` function, and returns the lengths of these
+    groups as a list of floats.
 
-    Returns:
-        list: Spline length list.
+    :param coord: A numpy array of shape (N, M) where the first column describes a
+        grouping attribute, and the remaining columns define the coordinates for
+        which the lengths are calculated.
+
+    :return: A list of float values representing the calculated lengths for each
+        group of coordinates based on the unique grouping from the first column
+        of the input array.
     """
     spline_length_list = []
 
@@ -173,19 +210,20 @@ def length_list(coord: np.ndarray) -> list:
 
 def angle_between_vectors(v1: np.ndarray, v2: np.ndarray) -> float:
     """
-    Calculate the angle in degrees between two vectors.
+    Calculates the angle between two vectors in degrees. This function computes the
+    angle based on the dot product and magnitudes of the input vectors. The arc cosine
+    of the cosine similarity is calculated to derive the angle between the vectors.
+    A small value is added to the magnitudes to prevent division by zero.
 
-    This function uses the dot product and the magnitudes of the vectors
-    to calculate the angle between them according to the formula:
+    cos(theta) = (A . B) / (||A|| ||B||)
 
-        cos(theta) = (A . B) / (||A|| ||B||)
+    :param v1: The first vector represented as a numpy array.
+    :type v1: np.ndarray
+    :param v2: The second vector represented as a numpy array.
+    :type v2: np.ndarray
 
-    Args:
-        v1 (np.ndarray): First input vector.
-        v2 (np.ndarray): Second input vector.
-
-    Returns:
-        float The angle in degrees between vector 'v1' and 'v2'.
+    :return: The angle between `v1` and `v2` in degrees.
+    :rtype: float
     """
     # Calculate the dot product of vectors v1 and v2
     dot_product = np.dot(v1, v2)
@@ -203,20 +241,22 @@ def angle_between_vectors(v1: np.ndarray, v2: np.ndarray) -> float:
 
 def intensity(data: np.ndarray, image: np.ndarray, thickness=1) -> np.ndarray:
     """
-    This function computes the intensity difference along a spline defined by the input `data`
-    on a given `image`. The function creates a smoothed spline using the input data coordinates.
-    It calculates pixel intensity values along the spline and compares them with background levels
-    computed from adjacent pixels above and below the spline. The difference between the spline's
-    intensity and the background is then returned.
+    Computes the intensity values along a parametric spline through a given dataset and subtracts
+    the background intensity estimated from parallel shifted spline paths. This function is designed
+    specifically for tasks involving intensity extraction in image processing.
 
-    Args:
-        data (np.ndarray): The coordinates of the points defining the spline. Input should be a 2D array
-            where each row represents a point in the form [x, y].
-        image (np.ndarray): The input image from which pixel intensities are extracted. Input should be a
-            2D array representing grayscale pixel intensities.
-        thickness (int): Thickness of the spline line for intensity computation. A value greater
-            than 1 expands the spline's pixel coordinates laterally to include additional neighboring
-            pixels, enhancing the result for thicker lines. Defaults to 1.
+    :param data: 2D array containing the coordinates corresponding to the data points the spline
+                 is fitted to.
+    :type data: np.ndarray
+    :param image: 2D image array from which pixel intensity values will be extracted.
+    :type image: np.ndarray
+    :param thickness: Integer denoting the thickness of the line for which pixel intensities will
+                      be aggregated. Default value is 1.
+    :type thickness: int, optional
+
+    :return: 1D array containing the adjusted intensity values along the spline after background
+             subtraction.
+    :rtype: np.ndarray
     """
     tck, u = splprep(data.T, s=0)
 
@@ -258,19 +298,21 @@ def intensity(data: np.ndarray, image: np.ndarray, thickness=1) -> np.ndarray:
 
 def pixel_intensity(coord: np.ndarray, image: np.ndarray) -> Union[list, None]:
     """
-    Extracts pixel intensity values from a given image for specified coordinates.
+    Extracts pixel intensities from an image at specified coordinates. The function
+    supports both 2D and 3D images and handles out-of-bound coordinates with `None`.
+    If any extracted pixel value is `None`, it replaces them with the minimum valid
+    pixel value present in the list. If no valid pixel values are found, it returns
+    `None`.
 
-    The function retrieves the intensity values from the provided 2D or 3D image array
-    based on the array of coordinates. If the coordinate is out of the image bounds,
-    a placeholder value is used initially (`None`). If any such placeholder exists,
-    it is replaced with the minimum intensity value found in the image for valid
-    coordinates. If no valid values exist, the return value is `None`.
+    :param coord: A numpy array of shape (N, 3) for 3D or (N, 2) for 2D, containing
+        the coordinates where pixel intensities are to be extracted.
+    :param image: A numpy array representing the image from which pixel intensities
+        are to be extracted. Can be either 2D or 3D.
 
-    Args:
-        coord (np.ndarray): An array of coordinates representing pixel locations. For 2D images,
-            each coordinate should be in the form (x, y, _), and for 3D images, (x, y, z).
-        image (np.ndarray): A 2D or 3D array representing the image from which pixel intensities
-            are extracted.
+    :return: A list of extracted pixel intensities. If any coordinate is invalid,
+        its corresponding intensity is initially `None` but replaced with the
+        minimum valid pixel value in the list. Returns `None` if no valid pixel
+        values exist.
     """
     extracted_pixels = []
 
@@ -304,15 +346,21 @@ def pixel_intensity(coord: np.ndarray, image: np.ndarray) -> Union[list, None]:
 
 def thicken_line_coordinates(coords: np.ndarray, thickness: int):
     """
-    Given a list of (x, y, z) coordinates defining a 1-pixel thick line,
-    generate additional coordinates to increase thickness.
+    Expands the thickness of a set of 3D coordinates to represent a line or shape with a specified
+    thickness. This is achieved by creating a grid of points around each coordinate based on the
+    specified thickness.
 
-    Parameters:
-        coords (list of tuples): List of (x, y, z) coordinates.
-        thickness (int): Desired thickness in pixels (2, 3, 4, etc.).
+    This function is useful for visualizing or processing lines/shapes in three-dimensional space
+    with a specific thickness, often needed in environments like 3D geometry processing or
+    voxel-based computations.
 
-    Returns:
-        set of tuples: Expanded set of coordinates with the specified thickness.
+    :param coords: A NumPy array containing 3D coordinates to be thickened. Each coordinate is
+        represented as a tuple (x, y, z).
+    :param thickness: An integer that defines the extent of expansion around the input coordinates.
+        The thickness is centered on each coordinate, producing a local grid.
+
+    :return: A NumPy array containing the updated set of 3D coordinates, including all points
+        within the specified thickness range.
     """
     thickened_coords = set()
 
@@ -331,15 +379,25 @@ def thicken_line_coordinates(coords: np.ndarray, thickness: int):
 
 def intensity_list(coord: np.ndarray, image: np.ndarray, thickness=1):
     """
-    Calculate the total length of all splines and return it as a list.
+    Extracts intensity values along spline coordinates from the given image.
 
-    Args:
-        coord (np.ndarray): Coordinates for each unsorted point idx.
-        image (np.ndarray): Associated image.
-        thickness (int): Thickness of the spline.
+    This function computes the intensity values along a set of spline coordinates
+    within a given image, using the specified thickness for sampling. It iterates
+    through unique spline identifiers in the coordinate array, processes points
+    associated with each identifier, and computes the intensity or returns a zero
+    value if there are insufficient points.
 
-    Returns:
-        list: Spline length list.
+    :param coord: A 2D array containing the spline coordinates. The first column
+        represents unique identifiers for each spline, and the remaining columns
+        represent the spatial coordinates of each point.
+    :param image: A 2D numpy array representing the image from which intensity
+        values are to be extracted.
+    :param thickness: An optional parameter specifying the thickness used for
+        sampling intensity values. Defaults to 1.
+
+    :return: A list of intensity values computed for each unique spline identifier.
+        The list contains a computed intensity value for identifiers with sufficient
+        points and 0.0 for those with insufficient points.
     """
     spline_intensity_list = []
 

@@ -24,37 +24,52 @@ from tardis_em.cnn.utils.utils import number_of_features_per_level
 
 class BasicCNN(nn.Module):
     """
-    Basic CNN MODEL
+    A neural network model class for constructing and managing a customizable Convolutional Neural Network (CNN)
+    and its variations.
 
-    Back-compatible with old CNN builder method. New functionality allows packaging
-    the model in onnx format and rapidly re-use/deploy.
+    This class serves as a flexible framework for building encoder and decoder pipelines, defining the architecture
+    of convolutional layers, and configuring associated parameters. It allows for adaptable hyperparameter settings
+    to tailor the neural network model to specific tasks, including image patch processing and segmentation tasks.
+    Additionally, it manages activation functions and final layer outputs suitable for either classification or
+    prediction purposes.
 
-    Args:
-        in_channels (int): Number of input channels for the first convolution.
-        out_channels (int): Number of output channels for the last deconvolution.
-        sigmoid (bool): If True, use nn.Sigmoid or nn.Softmax if False. Use True if
-            nn.BCELoss is used as a loss function for (two-class segmentation).
-        num_conv_layer (int): Number of convolution and deconvolution steps. A number of
-            input channels for convolution is calculated as a linear progression.
-            E.g. [64, 128, 256, 512].
-        conv_layer_scaler (int): Scaler for the output feature channels.
-        conv_kernel (int): Kernel size for the convolution.
-        padding (int): Padding size for convolution.
-        pool_kernel (int): kernel size for max_pooling.
-        img_patch_size (int): Image patch size used for calculation network structure.
-        layer_components (str): Convolution module used for building network.
-        dropout (float, optional): If float, the dropout layer is built with a given drop-out rate.
-        num_group (int): Number of groups for nn.GroupNorm.
-        prediction (bool): If True, prediction mode is on.
-
-    Returns if Training:
-        torch.tensor: 5D torch without final activation.
-
-    Returns if Prediction:
-        If sigmoid is True:
-            torch.tensor: 5D torch with final activation from nn.Sigmoid().
-        If sigmoid is False:
-            torch.tensor: 5D torch with final activation from nn.Softmax(dim=1).
+    :ivar prediction: Indicates whether the model is in prediction mode.
+    :type prediction: bool
+    :ivar model: The type of model to be built, e.g., 'CNN' or 'RCNN'.
+    :type model: str
+    :ivar encoder: The encoder component of the CNN model.
+    :type encoder: Optional[nn.Module]
+    :ivar decoder: The decoder component of the CNN model.
+    :type decoder: Optional[nn.Module]
+    :ivar patch_sizes: The sizes of image patches through the layers of the network.
+    :type patch_sizes: list[int]
+    :ivar in_channels: The number of input channels in the network.
+    :type in_channels: int
+    :ivar out_channels: The number of output channels of the final layer.
+    :type out_channels: int
+    :ivar num_conv_layer: The total number of convolutional layers in the model.
+    :type num_conv_layer: int
+    :ivar conv_layer_scaler: Multiplier to scale the number of output channels in convolutional layers.
+    :type conv_layer_scaler: int
+    :ivar conv_kernel: The size of the kernel for convolution operations.
+    :type conv_kernel: int
+    :ivar padding: The amount of zero-padding around input tensors during convolution.
+    :type padding: int
+    :ivar dropout: Dropout probability for regularizing the network.
+    :type dropout: Optional[float]
+    :ivar num_group: The number of groups for group convolutions in the network.
+    :type num_group: int
+    :ivar layer_components: The composition of layer types, e.g., '3gcl' for 3D group convolutions with concatenation
+                            and linear activations.
+    :type layer_components: str
+    :ivar pool_kernel: The kernel size used for pooling operations.
+    :type pool_kernel: int
+    :ivar final_conv_layer: The final convolutional layer of the network.
+    :type final_conv_layer: Optional[Union[nn.Conv2d, nn.Conv3d]]
+    :ivar sigmoid: Indicates whether the sigmoid activation is used in the final layer.
+    :type sigmoid: bool
+    :ivar activation: The activation function applied to the final layer (e.g., Sigmoid, Softmax).
+    :type activation: Optional[nn.Module]
     """
 
     def __init__(

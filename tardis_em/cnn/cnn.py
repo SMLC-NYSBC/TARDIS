@@ -16,16 +16,26 @@ def build_cnn_network(
     network_type: str, structure: dict, img_size: int, prediction: bool
 ):
     """
-    Wrapper for building CNN model
+    Builds and returns an instance of a CNN-based network based on the provided
+    network type and configuration structure. The function supports various types
+    of networks such as UNet, ResUNet, UNet3Plus, FNet, and FNet with attention
+    mechanism. Each network type is associated with specific architectural
+    parameters outlined in the structure dictionary. The function validates the
+    input network type and configures the network based on the given attributes.
 
-    Wrapper take CNN parameter and predefined network type (e.g. unet, etc.),
-    and build CNN model.
+    :param network_type: The type of CNN network to build. Possible values are
+        "unet", "resunet", "unet3plus", "fnet", or "fnet_attn".
+    :param structure: A dictionary containing the structural parameters for the
+        network, including attributes like in_channel, out_channel, dropout,
+        conv_kernel, etc.
+    :param img_size: An integer specifying the image patch size used in the
+        network. It defines the dimensions of the input image patches.
+    :param prediction: A boolean indicating whether the network is used in
+        prediction mode or not. Affects specific layers or configurations in
+        the network instance.
 
-    Args:
-        network_type (str): Name of network [unet, resunet, unet3plus, fnet].
-        structure (dict): Dictionary with all setting to build CNN.
-        img_size (int): Image patch size used for CNN.
-        prediction (bool): If true, build CNN in prediction patch.
+    :return: An instance of the specified CNN network configured with the
+        provided attributes. Returns None if the input network type is invalid.
     """
     if network_type not in ["unet", "resunet", "unet3plus", "fnet", "fnet_attn"]:
         TardisError(

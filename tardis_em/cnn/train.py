@@ -44,21 +44,57 @@ def train_cnn(
     epochs=1000,
 ):
     """
-    Wrapper for CNN models.
+    This function trains a Convolutional Neural Network (CNN) using the provided
+    data loaders, model structure, and training parameters. It initializes the
+    model, sets up the training pipeline, and manages checkpoints, learning rate
+    schedulers, and optimization steps. The function supports retraining from
+    checkpoints and includes a variety of loss functions for customization.
 
-    Args:
-        train_dataloader (torch.DataLoader): DataLoader with train dataset.
-        test_dataloader (torch.DataLoader): DataLoader with test dataset.
-        model_structure (dict): Dictionary with model setting.
-        checkpoint (None, optional): Optional, CNN model checkpoint.
-        loss_function (str): Type of loss function.
-        learning_rate (float): Learning rate.
-        learning_rate_scheduler (bool): If True, LR_scheduler is used with training.
-        early_stop_rate (int): Define max. number of epoch's without improvements
-        after which training is stopped.
-        device (torch.device): Device on which model is trained.
-        warmup (int): Number of warm-up steps.
-        epochs (int): Max number of epoch's.
+    :param train_dataloader: A DataLoader used for training the CNN, containing
+        the training dataset.
+    :type train_dataloader: torch.utils.data.DataLoader
+
+    :param test_dataloader: A DataLoader used for validation/testing the CNN,
+        containing the test dataset.
+    :type test_dataloader: torch.utils.data.DataLoader
+
+    :param model_structure: A dictionary defining the model's structure, including
+        network type, input/output channels, and CNN configurations.
+    :type model_structure: dict
+
+    :param checkpoint: Optional path to a checkpoint file for retraining a
+        pre-existing model.
+    :type checkpoint: Optional[str]
+
+    :param loss_function: Specifies the loss function to be used during training.
+        Defaults to "bce" (Binary Cross-Entropy). Available options include
+        AdaptiveDiceLoss, BCELoss, and others.
+    :type loss_function: str
+
+    :param learning_rate: The initial learning rate for the optimizer. Defaults
+        to 1. Higher or lower values can impact model convergence.
+    :type learning_rate: float
+
+    :param learning_rate_scheduler: Boolean flag indicating whether to use a
+        learning rate scheduler during training. Defaults to False.
+    :type learning_rate_scheduler: bool
+
+    :param early_stop_rate: The number of consecutive epochs of non-improvement
+        in validation metrics before early stopping occurs. Defaults to 10.
+    :type early_stop_rate: int
+
+    :param device: The computational device to run the training on. Can be "gpu",
+        "cpu", or a torch.device instance. Defaults to "gpu".
+    :type device: Union[str, torch.device]
+
+    :param warmup: The number of warmup steps for the optimizer, used when
+        a learning rate scheduler is enabled. Defaults to 100.
+    :type warmup: int
+
+    :param epochs: The maximum number of training epochs. Defaults to 1000.
+    :type epochs: int
+
+    :return: None
     """
     """Losses"""
     loss_functions = [

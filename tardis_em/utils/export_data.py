@@ -26,8 +26,20 @@ import os
 
 class NumpyToAmira:
     """
-    Builder of the Amira file from the numpy array.
-    Support for 3D only! If 2D data, Z dim build with Z=0
+    Handles the conversion of numpy arrays into Amira-compatible format for analysis
+    or visualization. This class supports functionalities for exporting 3D spline
+    data, point clouds, or spatial graphs. It also provides utilities to validate
+    and format data for Amira. The header and data formats are customizable
+    via options or additional input parameters.
+
+    Detailed description of the class, its purpose, and usage.
+
+    :ivar as_point_cloud: Whether to treat the data as a point cloud instead of
+                          other possible structures.
+    :type as_point_cloud: bool
+    :ivar tardis_header: Header information for the Amira file, including metadata
+                         relevant to TARDIS usage and customization.
+    :type tardis_header: list
     """
 
     def __init__(self, as_point_cloud=False, header: list = None):
@@ -53,13 +65,23 @@ class NumpyToAmira:
         self, coord: Optional[np.ndarray] = List
     ) -> Union[List[np.ndarray], np.ndarray]:
         """
-        Check and correct if needed to 3D
+        Check and process the given 3D coordinate data ensuring it adheres to specific
+        requirements. Depending on the input type and its shape, transformations are applied
+        to make data compatible with the expected format. The method supports numpy arrays
+        and iterables like lists or tuples containing numpy arrays. It adjusts or validates
+        dimensions where necessary and applies an optional reordering operation for segment
+        identifiers.
 
-        Args:
-            coord (np.ndarray, list): Coordinate file to check for 3D.
-
-        Returns:
-            Union[np.ndarray, List[np.ndarray]]: The same or converted to 3D coordinates.
+        :param coord: The input coordinate data array, which can be a numpy array
+            or an iterable (list or tuple) containing numpy arrays. It must have
+            specific dimensional properties depending on the processing logic.
+        :type coord: Optional[np.ndarray], optional List
+        :return: Processed coordinate data. The output type depends on the
+            `as_point_cloud` attribute. It returns a numpy array if the input
+            is a numpy array and `as_point_cloud` is enabled. Otherwise, it
+            returns a list of numpy arrays where reordering based on segment
+            identifiers has been applied.
+        :rtype: Union[List[np.ndarray], np.ndarray]
         """
         if isinstance(coord, np.ndarray):
             if coord.shape[1] == 3 and not self.as_point_cloud:
@@ -115,13 +137,16 @@ class NumpyToAmira:
     @staticmethod
     def _build_labels(labels: Optional[tuple] = None) -> list:
         """
-        Build label list
+        Builds a list of labels based on the provided input. The method determines
+        the label structure depending on whether the input is a tuple of numpy
+        arrays or strings. If no input is provided, a default structure is
+        returned.
 
-        Args:
-            labels (tuple, None): List of labels.
-
-        Returns:
-            list: Set of labels.
+        :param labels: Optional; A tuple that can contain either numpy arrays
+            or strings, influencing the generated labels.
+        :type labels: Optional[tuple]
+        :return: A list of labels generated based on the provided input.
+        :rtype: list
         """
         label = ["LabelGroup"]
 
@@ -143,12 +168,32 @@ class NumpyToAmira:
         score: Optional[list[int, list]] = None,
     ):
         """
-        Standard Amira header builder
+        Constructs and writes the header section of a Tardis file based on provided
+        graph structure data, such as vertex, edges, and point attributes.
 
-        Args:
-            coord (np.ndarray): 3D coordinate file.
-            file_dir (str): Directory where the file should be saved.
-            label (int): If not 0, indicate the number of labels.
+        The method computes basic graph statistics like the number of vertices, edges,
+        and points depending on the structure of the coordinate array and whether the
+        graph is a point cloud or not. It writes these statistics and other specified
+        attributes into the file header formatted according to the Tardis specification.
+
+        :param coord: Coordinate array defining the spatial structure of graph or point
+            cloud data. It is a NumPy array, where its shape[0] represents either the
+            number of points or other meaningful data describing the graph structure.
+        :type coord: numpy.ndarray
+        :param file_dir: File path where the header with graph data will be saved.
+            This should be a valid path in the form of a string.
+        :type file_dir: str
+        :param label: Optional list of labels used to classify or annotate vertices
+            and/or edges in the graph. Each label can represent a unique attribute or
+            property of the entities within the graph.
+        :type label: Optional[list]
+        :param score: Optional score or metric-related data, potentially describing
+            additional attributes of the structure. It can be a list with an integer
+            and additional nested list corresponding to the score types or categories.
+        :type score: Optional[list[int, list]]
+        :return: The function does not return anything as its purpose is to handle
+            file operations and save the header data directly to the specified file.
+        :rtype: None
         """
         # Store common data for the header
         if self.as_point_cloud:
@@ -233,11 +278,16 @@ class NumpyToAmira:
     @staticmethod
     def _write_to_amira(data: list, file_dir: str):
         """
-        Recursively write all coordinates point
+        Writes the provided data to an Amira file format. The method appends the data to
+        the specified file and ensures the file has the correct `.am` extension. If the
+        file does not have an `.am` extension, an error will be raised.
 
-        Args:
-            data (list): List of item's to save recursively.
-            file_dir (str): Directory where the file should be saved.
+        :param data: List of strings or elements to be written to the file.
+        :type data: list
+        :param file_dir: Path to the file where the data will be written.
+        :type file_dir: str
+        :return: None
+        :rtype: None
         """
         if not file_dir.endswith(".am"):
             TardisError(
@@ -261,14 +311,28 @@ class NumpyToAmira:
         header: list = None,
     ):
         """
-        Save Amira file with all filaments without any labels
+        Exports 3D coordinates data into a format compatible with Amira visualization software. This
+        function supports exporting point clouds or data with edge and vertex relationships, optionally
+        including labels and scores for additional metadata. If exporting as a point cloud, only the coordinates
+        are processed and written into the file. In the case of segments, vertices and edges, along with their
+        related attributes, are written into structured sections of the Amira file format.
 
-        Args:
-            file_dir (str): Directory where the file should be saved.
-            coords (np.ndarray, tuple): 3D coordinate file.
-            labels (tuple, list, None): Labels names.
-            scores (list, None): List of confidence scores for each instance.
-            header(list): Optional header information.
+        :param file_dir: Path to the output file where the data will be written.
+        :type file_dir: str
+        :param coords: Coordinates of 3D points as a tuple, list, or numpy array. When exporting as segments,
+            each segment is identified by its index.
+        :type coords: Union[tuple, list, np.ndarray]
+        :param labels: Optional labels for the coordinates. Labels should align with the number of arrays
+            in `coords`. Strings or a list of strings can be provided.
+        :type labels: Union[tuple, list, None]
+        :param scores: Optional score information for the edges. Can include a list where the second element
+            contains scores for corresponding edges.
+        :type scores: Optional[list]
+        :param header: Optional header information for the Amira file format. It can hold a list of custom
+            definitions as per the Amira requirements.
+        :type header: list
+        :return: Returns None. The output is written to the file at the specified `file_dir`.
+        :rtype: None
         """
         coord_list = self.check_3d(coord=coords)
 
@@ -418,14 +482,22 @@ def to_mrc(
     label: List = None,
 ):
     """
-    Save MRC image file
+    Converts numerical array data into an MRC file format and writes it to the specified
+    directory. Allows optional parameters for setting the pixel size, header, and label
+    information. Handles both 2D and 3D array data for creating appropriate headers
+    and labels.
 
-    Args:
-        data (np.ndarray): Image file.
-        pixel_size (float): Image original pixel size.
-        file_dir (str): Directory where the file should be saved.
-        org_header(MRCHeader): Optional original header
-        label(list): Optional costume label for header
+    :param data: The numerical array data to be saved in MRC format.
+    :type data: np.ndarray
+    :param pixel_size: Size of the pixel in the data.
+    :type pixel_size: float
+    :param file_dir: Directory or file path where the MRC file will be saved.
+    :type file_dir: str
+    :param org_header: Optional MRC header to use as a reference when creating the new file.
+    :type org_header: MRCHeader, optional
+    :param label: Optional list of labels or metadata to be included in the MRC file.
+    :type label: List, optional
+    :return: None
     """
     mode = mrc_mode(mode=data.dtype, amin=data.min())
     time_ = time.asctime()
@@ -529,13 +601,23 @@ def to_mrc(
 
 def to_am(data: np.ndarray, pixel_size: float, file_dir: str, header: list = None):
     """
-    Save image to binary Amira image file.
+    Converts a 3D NumPy array into AmiraMesh format and writes it to a specified file.
+    The function generates a header describing the dataset and its attributes,
+    alongside the binary data.
 
-    Args:
-        data (np.ndarray): Image file.
-        pixel_size (float): Image original pixel size.
-        file_dir (str): Directory where the file should be saved.
-        header(list): Optional header in to form of list(str)
+    :param data: A 3-dimensional NumPy array representing the lattice data.
+    :type data: np.ndarray
+    :param pixel_size: Size of the pixel in the dataset. Used to calculate
+        bounding box dimensions.
+    :type pixel_size: float
+    :param file_dir: Path to save the AmiraMesh file.
+    :type file_dir: str
+    :param header: Optional. A list of additional headers to include in the
+        AmiraMesh file. Items not starting with "#" will be prefixed with "#".
+        Defaults to None.
+    :type header: list or None
+    :return: None
+    :rtype: NoneType
     """
     nz, ny, nx = data.shape
     xLen, yLen, zLen = nx * pixel_size, ny * pixel_size, nz * pixel_size
@@ -583,11 +665,19 @@ def to_am(data: np.ndarray, pixel_size: float, file_dir: str, header: list = Non
 
 def to_stl(data: np.ndarray, file_dir: str):
     """
-    Save a point cloud as a PLY file.
+    Converts a given numpy.ndarray data to an STL file and saves it to the specified
+    directory. The function processes a MultiBlock dataset, creates separate .stl
+    files for each data part, merges them all, and outputs it as a single STL file.
+    Helper functions are used to save individual STL files and process the first
+    line to include solid names.
 
-    Parameters:
-        data (np.ndarray): The name of the PLY file to create.
-        file_dir (str): Output file location.
+    :param data: The point cloud data as a numpy.ndarray. Each unique value in
+        the first column is treated as a separate entity to convert into 3D geometry.
+    :type data: numpy.ndarray
+    :param file_dir: The path to the directory where the combined STL file will
+        be saved.
+    :type file_dir: str
+    :return: None
     """
     # STL save exception for Arm64 machines
     try:

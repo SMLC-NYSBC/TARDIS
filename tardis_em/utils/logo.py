@@ -21,11 +21,22 @@ from tardis_em._version import version
 
 def print_progress_bar(value: int, max_v: int):
     """
-    Builder for ASCII type progress bar.
+    Displays a progress bar indicating the percentage of completion. The progress
+    bar is dynamically adjusted based on the terminal's width in interactive
+    mode. In non-interactive environments or in case of error, a default width
+    is used.
 
-    Args:
-        value (int): Current value for the progress bar.
-        max_v (int): Maximum number of iterations.
+    The progress bar will fill proportionally to the progress made, and shows the
+    textual representation of the current proportion and the total values passed.
+
+    :param value: The current progress value. Must be a non-negative integer
+                  less than or equal to `max_v`.
+    :param max_v: The maximum value for the progress bar, representing 100%
+                  progress. Must be a positive integer greater than 0.
+
+    :return: A formatted string representation of a progress bar including the
+             current percentage of completion and value status.
+    :rtype: str
     """
     if is_interactive():
         n_bar = 50
@@ -53,23 +64,26 @@ def is_interactive():
 
 class TardisLogo:
     """
-    BUILDER FOR LOG OUTPUT
+    Class for managing TARDIS logo display and formatting within a console or
+    Jupyter environment.
 
-    The log output is built to fit into the given window (cmd or Jupyter)
-    The side Logo is optional and can be removed upon; set the logo to False
-    The title and text are optional.
+    The TardisLogo class provides functionality for printing a formatted TARDIS
+    logo in either an interactive or non-interactive terminal environment. It
+    includes methods for clearing the console output, adjusting console width,
+    and formatting text to display within predefined dimensions.
 
-    Example:
-
-    log = Tardis_Logo()
-
-    log(title='Example',
-
-    text_1='Progress bar:',
-
-    text_2=printProgressBar(value=i, max=len(range(10))),
-
-    ....)
+    :ivar title: The title or heading to display with the logo.
+    :type title: str
+    :ivar CLEAR: A platform-specific function to clear the console window.
+    :type CLEAR: callable or None
+    :ivar WIDTH: The width of the console window in characters.
+    :type WIDTH: int or None
+    :ivar FN: General footer text information used in the logo display.
+    :type FN: str
+    :ivar C: Copyright information for the TARDIS project.
+    :type C: str
+    :ivar logo: Boolean to indicate whether the logo is enabled for display.
+    :type logo: bool
     """
 
     def __init__(self, logo=True):
@@ -94,15 +108,21 @@ class TardisLogo:
     @staticmethod
     def _build_text(max_=80, text="", repeat=False) -> str:
         """
-        Format text input to fit the pre-define window size.
+        Constructs a formatted text string based on the maximum length,
+        given text, and repeat flag. The function ensures the constructed
+        string is either truncated or adjusted to match the specified
+        maximum length.
 
-        Args:
-            max_ (int): Width of the console window. Defaults to 80.
-            text (str): Text value to be included in the output.
-            repeat (bool): If True repeat text input till the end of max value.
-
-        Returns:
-            str: Formatted text string with max number of characters.
+        :param max_: Maximum length of the resulting string.
+        :type max_: int
+        :param text: Input text to format.
+        :type text: str
+        :param repeat: Flag indicating whether the input text should
+            be repeated to fill the maximum length.
+        :type repeat: bool
+        :return: A formatted text string of exact length `max_`. The
+            string is either truncated or padded with spaces as needed.
+        :rtype: str
         """
         if repeat:
             text = text * max_
@@ -112,11 +132,15 @@ class TardisLogo:
     @staticmethod
     def clear_output(wait=True):
         """
-        Clear window output other Jupyter of the command line window.
+        Clears the current output displayed in the terminal or within an interactive
+        environment. This function determines if an interactive shell environment
+        is initialized and clears the output accordingly. If no interactive shell
+        is found, it manually clears the console output using escape sequences.
 
-        Args:
-            wait (bool):  Wait to clear the output until the new output is
-                available to replace it.
+        :param wait: Determines whether the clearing of the output should wait
+            for the display to be updated. The functionality of this parameter
+            applies specifically when an interactive shell is being used.
+        :type wait: bool
         """
         if InteractiveShell.initialized():
             InteractiveShell.instance().display_pub.clear_output(wait)
@@ -128,7 +152,14 @@ class TardisLogo:
 
     def cell_width(self):
         """
-        Ask for current shell window width
+        Adjusts the cell width based on the environment and terminal properties. The method dynamically
+        calculates and sets the `WIDTH` attribute to tailor output formatting. If the code is running in
+        an interactive Jupyter environment, a fixed width value is used, otherwise, it attempts to retrieve
+        the terminal width. In case of failure, a default width value is applied.
+
+        :raises OSError: If unable to determine terminal size and no fallback mechanism is defined.
+
+        :return: None
         """
         if is_interactive():  # Jupyter
             self.WIDTH = 90
@@ -155,25 +186,39 @@ class TardisLogo:
         text_11=" ",
     ):
         """
-        Builder call function to output nice looking progress bar.
+        Executes the callable logic for rendering a visual text representation of a logo
+        or textual information depending on the configuration. It adjusts variables such
+        as title and checks window size compatibility before displaying the output. The
+        logo and textual components are formatted based on predefined templates, with
+        customizable fields like texts and titles.
 
-        Args:
-            title (str, optional): Any text string.
-            text_1 (str, optional): Any text string.
-            text_2 (str, optional): Any text string.
-            text_3 (str, optional): Any text string.
-            text_4 (str, optional): Any text string.
-            text_5 (str, optional): Any text string.
-            text_6 (str, optional): Any text string.
-            text_7 (str, optional): Any text string.
-            text_8 (str, optional): Any text string.
-            text_9 (str, optional): Any text string.
-            text_10 (str, optional): Any text string.
-
-            text_0, text_11 (str, Optional). Any top and bottom text padding.
-        Returns:
-            print: Print progress bar with all text options into cmd commend line
-                window or jupyter notebook.
+        :param title: Title to display on top of the text or logo, defaults to an empty string.
+        :type title: str
+        :param text_0: Customizable text field number 0, defaults to an empty string with a space.
+        :type text_0: str
+        :param text_1: Customizable text field number 1, defaults to an empty string.
+        :type text_1: str
+        :param text_2: Customizable text field number 2, defaults to an empty string.
+        :type text_2: str
+        :param text_3: Customizable text field number 3, defaults to an empty string.
+        :type text_3: str
+        :param text_4: Customizable text field number 4, defaults to an empty string.
+        :type text_4: str
+        :param text_5: Customizable text field number 5, defaults to an empty string.
+        :type text_5: str
+        :param text_6: Customizable text field number 6, defaults to an empty string.
+        :type text_6: str
+        :param text_7: Customizable text field number 7, defaults to an empty string.
+        :type text_7: str
+        :param text_8: Customizable text field number 8, defaults to an empty string.
+        :type text_8: str
+        :param text_9: Customizable text field number 9, defaults to an empty string.
+        :type text_9: str
+        :param text_10: Customizable text field number 10, defaults to an empty string.
+        :type text_10: str
+        :param text_11: Customizable text field number 11, defaults to an empty string with a space.
+        :type text_11: str
+        :return: None
         """
         if title != "":
             self.title = title

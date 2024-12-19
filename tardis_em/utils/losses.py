@@ -17,17 +17,27 @@ import torch.nn.functional as F
 class AbstractLoss(nn.Module):
     def __init__(self, smooth=1e-16, reduction="mean", diagonal=False, sigmoid=True):
         """
-        Initializes the abstract loss function with the given parameters.
+        Initializes an abstract loss function object.
 
-        Args:
-            smooth (float): Smoothing factor to ensure no division by 0.
-            reduction (str): The reduction to apply to the output: 'none' | 'mean' | 'sum'.
-                'none': no reduction will be applied.
-                'mean': output would be a mean values.
-                'sum': the output will be summed.
-            diagonal (bool): If True, the diagonal of the adjacency matrix
-                is removed in graph predictions.
-            sigmoid (bool): If True, compute sigmoid before loss.
+        The constructor defines the essential parameters required for the computation
+        of a specific loss function. These parameters include smooth values to avoid
+        numerical instability, the type of reduction to be applied on the computed
+        loss, whether the diagonal elements should be considered, and whether to
+        apply a sigmoid operation on the inputs. It also validates that the reduction
+        method is one of the accepted types.
+
+        :param smooth: A small constant value added to avoid division by zero or
+            numerical instability.
+        :type smooth: float
+        :param reduction: Specifies the type of reduction applied to the computed
+            loss. Accepted values are: "sum", "mean", or "none".
+        :type reduction: str
+        :param diagonal: Boolean flag indicating whether diagonal elements are
+            considered in the computation of the loss.
+        :type diagonal: bool
+        :param sigmoid: Boolean flag indicating whether sigmoid activation function
+            is applied to the inputs before computing the loss.
+        :type sigmoid: bool
         """
         super(AbstractLoss, self).__init__()
         self.smooth = smooth
@@ -43,6 +53,21 @@ class AbstractLoss(nn.Module):
         return logits
 
     def ignor_diagonal(self, logits, targets, mask=False):
+        """
+        Applies processing to logits and targets to ignore the diagonal entries when
+        the ``diagonal`` condition is set. The behavior changes based on the value
+        of the ``mask`` parameter. If masking is enabled, the diagonal entries of
+        logits and targets are nullified. Without masking, the diagonal entries of
+        logits and targets are set to 1.
+
+        :param logits: A tensor representing unnormalized log probabilities of
+            predicted classes.
+        :param targets: A tensor representing the actual target classes.
+        :param mask: A boolean indicating whether to apply zero masking
+            on the diagonal elements of `logits` and `targets`.
+        :return: A tuple containing the processed logits and targets tensors, with
+            the diagonal entries adjusted based on the `mask` parameter.
+        """
         if self.diagonal:
             g_range = range(logits.shape[-1])
 
@@ -59,6 +84,21 @@ class AbstractLoss(nn.Module):
         return logits, targets
 
     def initialize_tensors(self, logits, targets, mask):
+        """
+        Initializes tensors by applying activation to the logits and optionally ignoring
+        diagonal in graph structures.
+
+        :param logits: The input tensor representing logits which undergo activation.
+        :type logits: Tensor
+        :param targets: A tensor representing target values.
+        :type targets: Tensor
+        :param mask: A boolean tensor to apply masking for ignoring specific elements,
+            such as diagonal values in graphs.
+        :type mask: Tensor
+        :return: Activated logits tensor with potential diagonal values ignored based
+            on the provided mask.
+        :rtype: Tensor
+        """
         # Activation and optionally ignore diagonal for graphs
         logits = self.activate(logits)
 
@@ -67,37 +107,49 @@ class AbstractLoss(nn.Module):
     @abstractmethod
     def forward(self, logits: torch.Tensor, targets: torch.Tensor, mask=False):
         """
+        Computes the forward pass of the layer.
 
-        Args:
-            logits (torch.Tensor): The predicted logits. Shape: [Batch x Channels x ...].
-            targets (torch.Tensor): The target values. Shape: [Batch x Channels x ...].
-            mask (bool): If Ture, output mask diagonal axis.
+        This method calculates the output based on the given logits, targets, and an
+        optional mask. It is abstract and must be implemented by all subclasses.
 
-        Return:
-            torch.Tensor: Computed loss function.
+        :param logits: The predicted logits represented as a PyTorch Tensor.
+        :param targets: The ground-truth values represented as a PyTorch Tensor.
+        :param mask: A boolean flag. If set to True, a mask will be applied during
+            computation. Defaults to False.
+        :return: The computed result as a PyTorch Tensor.
         """
         pass
 
 
 class AdaptiveDiceLoss(AbstractLoss):
     """
-    Implements an adaptive Dice loss function, which gives more weight to false negatives.
+    Computes the Adaptive Dice Loss, a metric commonly used in image segmentation that combines the concept of Dice
+    loss with an adaptive exponent to control the weight given to false negatives. The method calculates the similarity
+    between predicted outputs (logits) and target values while considering class imbalance.
 
-    The AdaptiveDiceLoss loss function is a variant of the standard Dice loss,
-    with an additional adaptive term (1 - logits) ** self.alpha applied to logits.
-    This term will give higher weight to false negatives (i.e., the cases where
-    the prediction is low but the ground truth is high),
-    which can be useful in cases where these are particularly costly.
+    This loss function is particularly useful in medical image analysis or other scenarios where the regions of interest
+    can be very small compared to the overall image size, making it difficult for traditional loss functions to perform well.
+
+    :ivar alpha: Scaling factor for the adaptive term. The exponent applied to false negatives; higher values prioritize
+        false negatives in the optimization process.
+    :type alpha: float
+    :ivar smooth: A constant added to the numerator and denominator to avoid division by zero and stabilize the
+        computation.
+    :type smooth: float
     """
 
     def __init__(self, alpha=0.1, **kwargs):
         """
-        Initializes the AdaptiveDiceLoss with the given parameters.
+        This class implements an adaptive version of the Dice Loss function, commonly
+        used in segmentation tasks. It allows dynamically adjusting the trade-off
+        parameter, `alpha`, which helps control its sensitivity to the precision
+        and recall of predictions.
 
-        Args:
-            alpha (float): The scaling factor for the adaptive term.
-                Higher values give more weight to false negatives.
-            smooth (float): A small constant to avoid division by zero.
+        :param alpha: A float that determines the weight given to the precision versus
+                      the recall in the Dice Loss calculation.
+                      Lower values prioritize recall over precision while higher
+                      values emphasize precision.
+        :param kwargs: Additional keyword arguments to be passed to the base class.
         """
         super(AdaptiveDiceLoss, self).__init__(**kwargs)
         self.alpha = alpha
@@ -106,7 +158,25 @@ class AdaptiveDiceLoss(AbstractLoss):
         self, logits: torch.Tensor, targets: torch.Tensor, mask=False
     ) -> torch.Tensor:
         """
-        Computes the adaptive Dice loss between the logits and targets.
+        Computes the Soft Weighted Dice Loss between a predicted tensor (logits) and a target
+        tensor. This implementation includes a weighting factor controlled by the value of
+        alpha, which emphasizes certain components of the prediction loss. This loss function
+        is particularly useful for tasks involving unbalanced datasets or segmentation models.
+        The smooth parameter is a small constant added to both the numerator and denominator
+        to avoid numerical instability.
+
+        :param logits: Predicted tensor. It represents the model's output probabilities or
+            scores before applying thresholding or binarization.
+        :type logits: torch.Tensor
+        :param targets: Target tensor. It contains the ground truth binary values (e.g., 0 or 1).
+        :type targets: torch.Tensor
+        :param mask: A boolean flag that determines whether masking is applied to the input
+            tensors to ignore certain values during loss computation. Default is False.
+        :type mask: bool
+        :return: The Dice loss computed as a scalar tensor. It outputs a normalized value
+            ranging in `[0, 1]`, where `0` indicates a perfect overlap and `1` indicates
+            maximum dissimilarity.
+        :rtype: torch.Tensor
         """
         logits, targets = self.initialize_tensors(logits, targets, mask)
 
@@ -126,10 +196,20 @@ class AdaptiveDiceLoss(AbstractLoss):
 
 class BCELoss(AbstractLoss):
     """
-    Implements the Binary Cross-Entropy loss function with an option to ignore
-    the diagonal elements.
+    Binary Cross-Entropy Loss (BCELoss) class.
 
-    The BCELoss class can be used for training where pixel-level accuracy is important.
+    This class is responsible for computing the binary cross-entropy loss
+    between predicted logits and target values. It inherits from the
+    AbstractLoss class and uses PyTorch's nn.BCELoss.
+
+    The purpose of this class is to provide a specialized loss computation
+    for binary classification tasks or similar problems where binary
+    labels are involved. It supports masking functionality to handle
+    specific use cases where part of the data needs to be ignored during
+    loss calculation.
+
+    :ivar loss: The PyTorch BCELoss instance used for loss calculation.
+    :type loss: nn.BCELoss
     """
 
     def __init__(self, **kwargs):
@@ -153,10 +233,16 @@ class BCELoss(AbstractLoss):
 
 class BCEGraphWiseLoss(AbstractLoss):
     """
-    Implements the Binary Cross-Entropy loss function with an option to ignore
-    the diagonal elements.
+    Handles binary cross-entropy loss computation on a graph-wise level.
 
-    The BCELoss class can be used for training where pixel-level accuracy is important.
+    This class extends AbstractLoss and is designed to compute binary cross-entropy
+    (BCE) loss with specific functionality for handling graph-based input and output.
+    It applies BCE loss separately to positive and negative targets, allowing for
+    different treatment of these cases. The loss is calculated using a mask to focus
+    only on specific parts of the logits and targets.
+
+    :ivar loss: Predefined BCE loss function from PyTorch.
+    :type loss: nn.BCELoss
     """
 
     def __init__(self, **kwargs):
@@ -171,7 +257,21 @@ class BCEGraphWiseLoss(AbstractLoss):
         self, logits: torch.Tensor, targets: torch.Tensor, mask=True
     ) -> torch.Tensor:
         """
-        Computes the BCE loss between the logits and targets.
+        Computes and returns the combined loss for positive and negative examples.
+
+        The method computes separate losses for positive and negative samples
+        using the provided logits and targets, and subsequently aggregates the
+        loss values. The targets are used to segregate these samples based on
+        their classes, with a mask optionally applied for selective processing.
+
+        :param logits: A tensor containing the model's raw output values, used
+            to compute the loss.
+        :param targets: A tensor representing the ground truth values for
+            computing the loss.
+        :param mask: A boolean indicating whether to apply pre-defined
+            selective tensor initialization with masking. Defaults to `True`.
+        :return: A tensor representing the final aggregated loss value as a
+            combination of losses over positive and negative samples.
         """
         logits, targets = self.initialize_tensors(logits, targets, mask)
         idx_1 = torch.where(targets > 0)
@@ -184,7 +284,19 @@ class BCEGraphWiseLoss(AbstractLoss):
 
 class BCEDiceLoss(AbstractLoss):
     """
-    DICE + BCE LOSS FUNCTION
+    The BCEDiceLoss class combines Binary Cross-Entropy (BCE) loss and Dice loss
+    to support both pixel-wise classification and segmentation tasks. It is designed
+    to accommodate weighted or masked losses and is particularly useful in applications
+    such as medical image segmentation where overlapping metric-based losses are
+    advantageous.
+
+    This class serves as a wrapper for both BCE and Dice loss functions and combines
+    them into a single loss calculation during the forward pass.
+
+    :ivar bce: Binary Cross-Entropy loss function for pixel-wise classification tasks.
+    :type bce: BCELoss
+    :ivar dice: Dice loss function for measuring segmentation overlap.
+    :type dice: DiceLoss
     """
 
     def __init__(self, **kwargs):
@@ -199,7 +311,21 @@ class BCEDiceLoss(AbstractLoss):
         self, logits: torch.Tensor, targets: torch.Tensor, mask=False
     ) -> torch.Tensor:
         """
-        Forward loos function
+        Computes the combined loss by summing Binary Cross-Entropy (BCE) loss and Dice loss.
+        If the Dice loss calculation fails or returns None, a fallback value of (BCE loss + 1)
+        is used. This function accepts logits, targets, and an optional mask to apply during
+        loss computation.
+
+        :param logits: Model output logits.
+        :type logits: torch.Tensor
+        :param targets: Ground truth target values.
+        :type targets: torch.Tensor
+        :param mask: Optional boolean flag indicating if masking should be applied during
+            loss calculation.
+        :type mask: bool
+        :return: The computed combined BCE and Dice loss, or BCE loss with a fallback value
+            if Dice loss isn't computed.
+        :rtype: torch.Tensor
         """
         bce_loss = self.bce(logits, targets, mask)
         dice_loss = self.dice(logits, targets, mask)
@@ -212,7 +338,16 @@ class BCEDiceLoss(AbstractLoss):
 
 class CELoss(AbstractLoss):
     """
-    STANDARD CROSS-ENTROPY LOSS FUNCTION
+    Implements a Cross-Entropy Loss (CELoss) for neural networks.
+
+    Cross-Entropy loss is commonly used in classification problems as a
+    measure of how well the predicted probability distribution aligns with the
+    actual distribution. This implementation supports optional masking for
+    specific elements during the computation of the loss.
+
+    :ivar loss: The PyTorch CrossEntropyLoss object with a specified reduction
+        method.
+    :type loss: nn.CrossEntropyLoss
     """
 
     def __init__(self, **kwargs):
@@ -236,14 +371,17 @@ class CELoss(AbstractLoss):
 
 class DiceLoss(AbstractLoss):
     """
-    Dice coefficient loss function.
+    Computes the Dice Loss, primarily used for image segmentation tasks.
 
-    Dice=2(A∩B)(A)+(B);
-    where 'A∩B' represents the common elements between sets A and B
-    'A' ann 'B' represents the number of elements in set A ans set B
+    This loss function is frequently used to evaluate the overlap between
+    predicted segmentations and ground truth segmentations. It is designed
+    to penalize predictions that deviate from the ground truth, especially
+    in situations where the classes are imbalanced. Dice Loss is defined
+    as 1 - Dice Coefficient and is differentiable, making it useful for
+    optimization in deep learning models.
 
-    This loss effectively zero-out any pixels from our prediction which
-    are not "activated" in the target mask.
+    :ivar smooth: Smooth factor to avoid division by 0 in the Dice calculation.
+    :type smooth: float
     """
 
     def __init__(self, **kwargs):
@@ -278,9 +416,17 @@ class DiceLoss(AbstractLoss):
 
 class LaplacianEigenmapsLoss(AbstractLoss):
     """
-    A loss function for deep learning models that computes the mean squared error
-    between the first non-zero eigenvectors of the Laplacian matrices of the
-    ground truth and predicted adjacency matrices.
+    Implements a loss function based on Laplacian Eigenmaps. This loss function compares
+    the smallest non-zero eigenvectors of Laplacian matrices derived from true and
+    predicted adjacency matrices. It uses mean squared error to quantify the discrepancy.
+
+    This class leverages `nn.MSELoss` internally to compute the error between eigenvectors.
+    The Laplacian matrix is computed as the degree matrix minus the adjacency matrix.
+    The loss is primarily designed for graph-structured data.
+
+    :ivar mse_loss: Instance of Mean Squared Error loss, configured with the reduction
+        specified during initialization.
+    :type mse_loss: nn.MSELoss
     """
 
     def __init__(self, **kwargs):
@@ -330,7 +476,15 @@ class LaplacianEigenmapsLoss(AbstractLoss):
 
 class SoftSkeletonization(AbstractLoss):
     """
-    General soft skeletonization with DICE loss function
+    Implements a loss function based on soft skeletonization.
+
+    This class provides a mechanism to compute a specific type of loss by applying
+    soft morphological operations (erosion, dilation, opening) iteratively to extract
+    soft skeletal representations of binary target masks. Primarily used for tasks
+    requiring representation of skeletonized structures in binary masks.
+
+    :ivar iter: Number of iterations for skeletonization.
+    :type iter: int
     """
 
     def __init__(self, _iter=5, **kwargs):
@@ -404,12 +558,18 @@ class SoftSkeletonization(AbstractLoss):
 
 class ClBCELoss(SoftSkeletonization):
     """
-    Soft skeletonization with BCE loss function
+    Computes a combined Binary Cross-Entropy (BCE) loss and soft skeletonization-
+    based class-sensitive loss. This class extends SoftSkeletonization and aims
+    to address challenges in pixel-based confidence predictions for segmentation tasks.
 
-    Implements a custom version of the Binary Cross Entropy (BCE) loss,
-    where an additional term is added to the standard BCE loss.
-    This additional term is a kind of F1 score calculated on the soft-skeletonized version
-    of the predicted and target masks.
+    The main purpose of this loss function is to enhance performance by integrating
+    standard BCE loss with a sensitivity and precision balance derived from skeletonized
+    inputs. It calculates a harmonized ClBCE loss by prioritizing critical regions of the
+    predictions while maintaining global and structural integrity.
+
+    :ivar bce: Instance of `BCELoss` that encapsulates BCE computation with activation
+               settings for the diagonal and sigmoid transformations.
+    :type bce: BCELoss
     """
 
     def __init__(self, **kwargs):
@@ -446,12 +606,16 @@ class ClBCELoss(SoftSkeletonization):
 
 class ClDiceLoss(SoftSkeletonization):
     """
-    Soft skeletonization with DICE loss function
+    The ClDiceLoss class combines Soft Dice Loss with a topology-preserving loss based
+    on soft skeletonization, referred to as clDice loss.
 
-    Implements a custom version of the Dice loss,
-    where an additional term is added to the standard BCE loss.
-    This additional term is a kind of F1 score calculated on the soft-skeletonized version
-    of the predicted and target masks.
+    This class is designed to compute the clDice loss, which aligns with the Dice Loss
+    for pixel-wise accuracy while incorporating additional terms to preserve the topology
+    of structures in binary segmentation tasks. The clDice loss employs soft skeletonization
+    techniques to evaluate the similarity between skeletonized predictions and ground truth.
+
+    :ivar soft_dice: Instance of DiceLoss, used to compute the Soft Dice Loss component.
+    :type soft_dice: DiceLoss
     """
 
     def __init__(self, **kwargs):
@@ -486,13 +650,18 @@ class ClDiceLoss(SoftSkeletonization):
 
 class SigmoidFocalLoss(AbstractLoss):
     """
-    Implements the Sigmoid Focal Loss function with an option to ignore the diagonal elements.
+    Implements the Sigmoid Focal Loss function, a type of loss function often
+    used for addressing class imbalance problems in classification tasks.
 
-    The SigmoidFocalLoss class implements the Focal Loss, which was proposed
-    as a method for focusing the model on hard examples during the training of an object detector.
-    It provides an option to ignore the diagonal elements of the input matrices.
+    The function applies a modulating factor to the standard cross-entropy
+    criterion to focus learning more on hard-to-classify examples. It includes
+    parameters like `gamma` for focusing and an optional `alpha` for
+    handling class imbalance.
 
-    References: 10.1088/1742-6596/1229/1/012045
+    :ivar gamma: The focusing parameter for the loss function.
+    :type gamma: float
+    :ivar alpha: Optional alpha balancing parameter for class weights.
+    :type alpha: float or None
     """
 
     def __init__(self, gamma=0.25, alpha=None, **kwargs):
@@ -538,15 +707,19 @@ class SigmoidFocalLoss(AbstractLoss):
 
 class WBCELoss(AbstractLoss):
     """
-    Implements a weighted Binary Cross-Entropy loss function with an option
-    to ignore the diagonal elements.
+    Defines the WBCELoss class which calculates a Weighted Binary Cross-Entropy (BCE)
+    loss. This loss function is useful in scenarios where there is a significant class
+    imbalance, as it allows for custom weighting of positive and negative classes. The
+    loss calculation takes into account the logits (predicted probabilities), the target
+    values, and optional parameters for masking and adjusting class weights.
 
-    The WBCELoss class can help to balance the contribution of positive and
-    negative samples in datasets
-    where one class significantly outnumbers the other.
-    It provides an option to ignore the diagonal elements of the input matrices,
-    which could be useful for applications like graph prediction
-    where self-connections might not be meaningful.
+    Its primary purpose is to compute a more flexible BCE loss that accommodates
+    customizable weight scaling for positive and negative classes, especially in datasets
+    with imbalanced distributions.
+
+    :ivar reduction: Specifies the reduction to apply to the output. Should be one of
+        "mean", "sum", or "none".
+    :type reduction: str
     """
 
     def __init__(self, **kwargs):
@@ -592,11 +765,22 @@ class WBCELoss(AbstractLoss):
 
 class BCEMSELoss(AbstractLoss):
     """
-    Implements the Binary Cross-Entropy over MSE loss function with an option
-    to ignore the diagonal elements.
+    Combines Binary Cross Entropy (BCE) loss and Mean Squared Error (MSE) loss
+    for enhanced predictive modeling.
 
-    The BCELoss class can be used for training where pixel-level accuracy is important.
-    The MSE loos is used over continues Z slices to ensure smooth segmentation accuracy.
+    This class is designed to compute a loss function that combines BCE
+    for binary classification tasks and MSE for additional temporal consistency
+    by penalizing differences between adjacent frames. The `mse_weight` parameter
+    controls the relative contribution of the MSE to the final loss value.
+
+    :ivar mse_weight: Weight applied to the Mean Squared Error component of the loss.
+    :type mse_weight: float
+    :ivar bce_loss: Instance of the BCELoss function from PyTorch for computing
+        Binary Cross Entropy loss.
+    :type bce_loss: nn.BCELoss
+    :ivar mse_loss: Instance of the MSELoss function from PyTorch for computing
+        Mean Squared Error loss.
+    :type mse_loss: nn.MSELoss
     """
 
     def __init__(self, mse_weight=0.1, **kwargs):

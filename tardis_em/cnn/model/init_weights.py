@@ -15,10 +15,19 @@ from tardis_em.utils.errors import TardisError
 
 def weights_init_kaiming(m):
     """
-    Kaiming weight and bias initialization.
+    Initializes the weights of layers in a neural network module using the Kaiming
+    initialization technique. This function checks the type of layer contained in
+    the passed module and applies different initialization strategies depending on
+    the layer type. Specifically, it adjusts the weights and biases for convolutional
+    layers, batch normalization layers, and group normalization layers. This function
+    is commonly used for improving the convergence of deep learning models with
+    ReLU activation functions.
 
-    Args:
-        m: CNN block.
+    :param m: The module whose weights need to be initialized. It is expected
+              to be an instance of a layer or a module class such as Conv2d,
+              Conv3d, BatchNorm, or GroupNorm.
+
+    :return: None
     """
     class_name = m.__class__.__name__
 
@@ -36,14 +45,15 @@ def weights_init_kaiming(m):
 
 def init_weights(net, init_type="kaiming"):
     """
-    Wrapper for network module initialization.
+    Initializes the weights of a neural network based on the specified initialization
+    type. The function applies the kaiming initialization if `init_type` is set to
+    "kaiming". If the provided `init_type` is not implemented, an error is raised.
 
-    Args:
-        net: Network to initialized.
-        init_type (str): type of initialization.
+    :param net: The neural network whose weights need to be initialized.
+    :param init_type: A string specifying the type of weight initialization to be used.
+        Defaults to "kaiming". Must be one of the implemented initialization methods.
 
-    Raises:
-        NotImplementedError: _description_
+    :return: None
     """
     if init_type == "kaiming":
         net.apply(weights_init_kaiming)

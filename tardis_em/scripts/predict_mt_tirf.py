@@ -305,7 +305,7 @@ def main(
             names_=name_,
             path=join(path, "Predictions"),
             images=images,
-            px_=None,
+            px=None,
         )
 
 

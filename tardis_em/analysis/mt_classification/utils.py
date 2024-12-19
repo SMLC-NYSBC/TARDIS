@@ -13,13 +13,16 @@ from sklearn.neighbors import NearestNeighbors
 
 def count_true_groups(bool_list) -> int:
     """
-    Counts the number of consecutive groups of `True` values in a list.
+    Counts the number of 'True' groups in a list of booleans. A 'True' group is defined
+    as a contiguous sequence of 'True' values, separated by at least one 'False' value
+    or the start/end of the list non-'True' regions. This function iterates through the
+    given list and counts distinct 'True' groups.
 
-    Args:
-        bool_list (list): A list of boolean values where groups of `True` values are to be counted.
+    :param bool_list: A list of boolean values.
+    :type bool_list: list[bool]
 
-    Return:
-        int: The total number of groups of `True` values in the input list.
+    :return: The number of 'True' groups identified in the boolean list.
+    :rtype: int
     """
     count = 0
     in_group = False
@@ -34,25 +37,31 @@ def count_true_groups(bool_list) -> int:
 
 
 def distances_of_ends_to_surface(
-    vertices_, pole_, ends, d1_to_surf=False
+    vertices_: np.ndarray, pole_: np.ndarray, ends: np.ndarray, d1_to_surf=False
 ) -> tuple[np.ndarray, np.ndarray]:
     """
-    Calculates the distances of the specified endpoints to the nearest points on the
-    surface represented by the given vertices and pole. The function offers flexibility
-    via the `d1_to_surf` parameter to include vertex-referenced nearest neighbors
-    calculation if required.
+    Compute the distances from specified end points to a surface and optionally
+    to a reference pole.
 
-    Args:
-        vertices_ (np.ndarray): An array of points defining the surface.
-        pole_ (np.ndarray): A single point coordinates for distance calculations.
-        ends (np.ndarray): An array of endpoints for which the distance is to be calculated.
-        d1_to_surf (bool): A boolean flag that, when set to True, calculates the nearest neighbor distances
-            for the first column of `ends` specifically to `vertices_` and then finds the distance to `pole_`.
+    This function determines the distances of provided end points to the nearest
+    vertex on a specified surface and optionally the further distance to a
+    prespecified pole. The function makes use of the Nearest Neighbors algorithm
+    for distance computation. If the additional parameter `d1_to_surf` is set,
+    the calculated distances include intermediate computations involving the
+    nearest neighbors of end points on the surface.
 
-    Returns:
-        tuple: A tuple containing two arrays:
-            - Distances of the endpoints to the vertices or adjusted surface.
-            - Distances of the endpoints to the pole.
+    :param vertices_: Array of coordinates of the vertices defining the surface.
+    :param pole_: Array of coordinates representing the reference pole position.
+    :param ends: Array of coordinates of the end points for which distances are to
+        be calculated.
+    :param d1_to_surf: Boolean flag. If True, distances from the end points to the
+        surface include intermediate computations involving the nearest neighbors
+        of specified vertices on the surface. Defaults to False.
+
+    :return: A tuple of two distance arrays. The first array represents distances
+        computed involving `d1_to_surf` logic if True, otherwise from ends to
+        the nearest vertices. The second array contains distances from end points
+        to the reference pole.
     """
     knn_v = NearestNeighbors(n_neighbors=1, algorithm="auto").fit(vertices_)
     knn_e = NearestNeighbors(n_neighbors=1, algorithm="auto").fit(pole_.reshape(1, -1))
@@ -69,14 +78,21 @@ def distances_of_ends_to_surface(
 
 def distance_to_the_pole(points: np.ndarray, distance_to: np.ndarray) -> np.ndarray:
     """
-    Calculates the Euclidean distance of given points from a reference point.
+    Compute the Euclidean distances between each point and a reference point.
 
-    Args:
-        points (np.ndarray): Array of points for which the distance needs to be calculated.
-        distance_to (np.ndarray): Array representing the reference point.
+    This function calculates the Euclidean distance from a given set of points
+    to a specific reference point. The points and the reference point must be
+    provided as numpy arrays. The expected shapes of the input arrays ensure
+    that each row in the `points` array represents a single point in the same
+    dimensional space as the `distance_to` point.
 
-    Return:
-         A numpy array of distances for each point in the input array..
+    :param points: A numpy array of shape (n, m) where `n` is the number of
+        points and `m` is the dimensionality of the points.
+    :param distance_to: A numpy array of shape (m,) that specifies the
+        reference point in the m-dimensional space.
+
+    :return: A numpy array of shape (n,) representing the computed distances
+        for each point to the given reference point.
     """
     distances = np.sqrt(np.sum((points - distance_to) ** 2, axis=1))
 
@@ -85,10 +101,16 @@ def distance_to_the_pole(points: np.ndarray, distance_to: np.ndarray) -> np.ndar
 
 def divide_into_sequences(arr) -> list[list[int]]:
     """
-    Divides a list of integers into sequences of consecutive numbers.
+    Divides a list of integers into contiguous subsequences, where each subsequence
+    contains consecutive numbers. The method processes the input list and groups
+    elements into separate lists based on consecutive relationships.
 
-    Args:
-        arr (list): The input list of integers to be divided into sequences.
+    :param arr: A list of integers to be divided into sequences. Must be non-empty.
+    :type arr: list[int]
+
+    :return: A list of lists, where each internal list represents a contiguous
+             subsequence of consecutive integers from the input list.
+    :rtype: list[list[int]]
     """
     sequences = []
     current_sequence = [arr[0]]  # Start with the first element
@@ -110,16 +132,21 @@ def divide_into_sequences(arr) -> list[list[int]]:
 
 def fill_gaps(float_list: list, n: float) -> np.ndarray:
     """
-    Fills the gaps in a list of floating-point numbers by iteratively inserting
-    intermediate values between consecutive elements if the difference between
-    them exceeds a given threshold `n`.
+    Fill gaps between consecutive elements in a list with evenly spaced values.
 
-    The filled list is then returned with unique values in ascending order.
+    This function takes a list of floats and a threshold value, `n`, to determine
+    the gap size between consecutive elements. If the gap between two consecutive
+    elements is smaller than or equal to `n`, it fills the gap with evenly spaced
+    values. The resulting list is then returned as a sorted NumPy array with unique
+    values.
 
-    Args:
-        float_list (list): A list of floating-point numbers where gaps need to be filled.
-        n (float): A float representing the threshold for the maximum allowable
-              difference between consecutive elements in the list.
+    :param float_list: A list of float numbers to process.
+    :type float_list: list
+    :param n: A float threshold value for determining the maximum gap size.
+    :type n: float
+
+    :return: A NumPy array with gaps filled by evenly spaced unique values.
+    :rtype: numpy.ndarray
     """
     filled_list = []
 
@@ -143,18 +170,19 @@ def fill_gaps(float_list: list, n: float) -> np.ndarray:
 
 def pick_pole_to_surfaces(poles, vertices) -> np.ndarray:
     """
-    Computes and selects the order of poles relative to the centroid of the
-    first set of vertices by comparing the distances of each pole to the
-    centroid. Returns the poles in the order determined by their proximity
-    to the centroid.
+    Determine the order of poles based on their distance to the centroid of provided vertices.
 
-    Args:
-        poles (np.ndarray): 2D numpy array of shape (2, n) representing two poles.
-        vertices (np.ndarray): 3D numpy array with shape (m, k, n), where m represents
-            the number of vertex groups, k the number of vertices per group,
-            and n the dimensions of vertices. The array represents the set of
-            vertices organized in groups, with this function using only the
-            first group of vertices for computation.
+    This function calculates the centroid of the given vertices, computes the Euclidean distance
+    of the two poles from the centroid, and orders the poles based on which is closer to the centroid.
+    If the second pole is closer to the centroid than the first pole, their positions are swapped
+    in the returned array.
+
+    :param poles: A 2D NumPy array with shape (2, N), where each row represents a pole's coordinates.
+    :param vertices: A NumPy array with shape (1, M, N), where M represents the number of vertices
+        and N represents the dimensions (e.g., 2D, 3D) of each vertex's coordinates.
+
+    :return: A NumPy array containing the reordered poles based on their distance to the centroid
+        of the vertices.
     """
     v_centroid = np.mean(vertices[0], axis=0)
 
@@ -171,13 +199,22 @@ def points_on_mesh_knn(
     points: np.ndarray, vertices: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
     """
-    Calculate distances from given points to the nearest vertices on a mesh and
-    determine whether these distances fall within a defined threshold of the
-    mean inter-vertex distance of the mesh.
+    Computes the distances of points to a mesh and identifies if the distances are within a
+    threshold.
 
-    Args:
-        points (np.ndarray): An array of 3D coordinates representing the points to be checked against the mesh.
-        vertices (np.ndarray): An array of 3D coordinates representing the vertices of the mesh.
+    The function calculates the nearest distances from given points to the provided mesh vertices
+    using k-nearest neighbors. It also determines whether the points lie within a computed distance
+    based on the mean edge length of the mesh (mean distance between vertices multiplied by 2). The
+    output includes the actual distances and a boolean array indicating if the threshold was met.
+
+    :param points: Coordinates of the points that need to be tested against the mesh vertices.
+        Expected to be a 2D NumPy array with each row representing a point in space.
+    :param vertices: Coordinates of the mesh vertices. Expected to be a 2D NumPy array with each
+        row representing a vertex in space.
+
+    :return: A tuple containing two elements:
+        - A NumPy array of distances from each point to the nearest mesh vertex.
+        - A NumPy boolean array indicating whether each distance falls within the computed threshold.
     """
     knn = NearestNeighbors(n_neighbors=2, algorithm="auto").fit(vertices)
     distances, _ = knn.kneighbors(vertices)
@@ -193,26 +230,19 @@ def select_mt_ids_within_bb(
     vertices_: np.ndarray, mt_ends1: np.ndarray, mt_ends2=None
 ) -> np.ndarray:
     """
-    Selects microtubule (MT) IDs whose endpoints fall within the 3D bounding box defined
-    by the provided vertices. The function checks if the MT endpoints in ``mt_ends1`` and
-    potentially ``mt_ends2`` lie within the 3D range defined by the minimum and maximum
-    coordinates of the vertices. If ``mt_ends2`` is provided, cross-referencing is performed
-    to refine the list of MT IDs.
+    Finds microtubule (MT) IDs whose end-points lie within a 3D bounding box defined by the vertices.
+    If `mt_ends2` is provided, it performs the filtering on this additional set of MT end-points as well.
 
-    Args:
-        vertices_ (np.ndarray): 3D vertices array of shape (N, 3), where N is the number of vertices.
-            Each row represents the (x, y, z) coordinates of a vertex.
-        mt_ends1 (np.ndarray): Array containing microtubule endpoint data of shape (M, 4), where M is
-            the number of endpoints. Each row represents one endpoint in the format
-            [MT_ID, x, y, z], where MT_ID is the identifier of the microtubule.
-        mt_ends2 (np.ndarray): Optional array similar to ``mt_ends1`` containing additional
-            microtubule endpoint data to be cross-referenced with the filtered MT IDs from
-            ``mt_ends1``. If provided, it undergoes additional filtering to refine results.
+    :param vertices_: A 2D numpy array of shape (n, 3) representing the vertices of a 3D bounding box. Each vertex is
+        expected to have x, y, and z coordinates.
+    :param mt_ends1: A 2D numpy array where each row represents an MT end-point. Column 0 should contain MT IDs, and
+        columns 1, 2, and 3 should correspond to x, y, and z coordinates of the end-points, respectively.
+    :param mt_ends2: Optional. A 2D numpy array structured similarly to `mt_ends1`. Each row represents an additional
+        set of MT end-points. Default is None.
 
-    Returns:
-        np.ndarray: Array of unique MT IDs whose endpoints fall within the 3D bounding box defined by
-        the provided vertices. If ``mt_ends2`` is provided, the IDs are further filtered using
-        cross-referencing between ``mt_ends1`` and ``mt_ends2``.
+    :return: A 1D numpy array containing unique MT IDs whose end-points lie within the 3D bounding box defined by
+        `vertices_`. If `mt_ends2` is provided, the function updates its result set to include filtered IDs from
+        `mt_ends2` as well.
     """
     # Vertices 3D bounding box
     min_x, max_x = np.min(vertices_[:, 0]), np.max(vertices_[:, 0])
@@ -241,15 +271,26 @@ def select_mt_ids_within_bb(
 
 def assign_filaments_to_poles(filaments, poles) -> tuple[np.ndarray, np.ndarray]:
     """
-    Assign filaments to the nearest pole based on the minimal distance from filament endpoints to poles,
-    and flip filaments (if needed) so that the end closest to the assigned pole is always at the bottom.
+    Assigns filaments to the closest of two poles based on their minimal distance and
+    reverses filament orientation if necessary to ensure the correct assignment.
 
-    Args:
-        filaments (np.ndarray): Array of shape (n, 4) with columns [ID, X, Y, Z].
-        poles (np.ndarray): Array of shape (2, 3) with coordinates of the two poles.
+    The function calculates the minimal distance between each filament endpoint and
+    two given poles, and assigns filaments to the pole they are closest to. If the
+    start point of a filament is farther from the assigned pole than the endpoint,
+    the function flips the filament orientation. The result is a tuple of two arrays,
+    where each array contains the filaments assigned to a particular pole.
 
-    Returns:
-        filament_pole1, filament_pole2 (np.ndarray): Array containing filaments assigned to Pole 1, 2.
+    :param filaments: A 2D numpy array of filaments where each row represents a
+        point in a filament. The first column contains filament IDs, and the
+        remaining columns represent the coordinates of the points.
+    :param poles: A 2D numpy array of two poles, where each row corresponds to a
+        pole, and the columns represent the coordinates of the pole.
+
+    :return: A tuple of two numpy arrays. The first element contains all filaments
+        assigned to pole 1, and the second element contains all filaments assigned
+        to pole 2. Each array has rows corresponding to filament points, with the
+        first column representing the filament ID and the remaining columns
+        representing the coordinates of the filament point.
     """
     # Extract filament IDs
     ids = filaments[:, 0]

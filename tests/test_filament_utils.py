@@ -193,7 +193,7 @@ def test_curvature_tortuosity():
             [3, 0, 1],
         ]
     )
-    curvature_value, tortuosity_value = curvature(points, tortuosity_=True)
+    curvature_value, tortuosity_value = curvature(points, tortuosity_b=True)
     assert tortuosity_value >= 1  # Tortuosity must be >= 1
     assert len(curvature_value) == len(points)  # Curvature for each point
 

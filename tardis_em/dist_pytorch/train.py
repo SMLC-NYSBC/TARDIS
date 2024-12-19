@@ -62,22 +62,27 @@ def train_dist(
     epochs=1000,
 ):
     """
-    Wrapper for DIST or C_DIST models.
+    Train a DIST (Dimensionless Instance Segmentation via Transformers) model using the provided configurations
+    and hyperparameters. This function supports multiple types of DIST models, including instance,
+    instance-sparse, and semantic segmentation. The training process involves setting up the model,
+    optimizer, loss function, and optionally loading checkpoints before initiating the trainer for
+    the specified number of epochs. The function allows for flexibility in dataset types, device selection,
+    learning rate schedulers, and custom loss functions.
 
-    Args:
-        dataset_type (str): Type of input dataset.
-        edge_angles(bool): If True, use an angle for embedding.
-        train_dataloader (torch.DataLoader): DataLoader with train dataset.
-        test_dataloader (torch.DataLoader): DataLoader with test dataset.
-        model_structure (dict): Dictionary with model setting.
-        checkpoint (None, optional): Optional, DIST model checkpoint.
-        loss_function (str): Type of loss function.
-        learning_rate (float): Learning rate.
-        lr_scheduler (bool): If True, LR_scheduler is used with training.
-        early_stop_rate (int): Define max. number of epoch's without improvements
-        after which training is stopped.
-        device (torch.device): Device on which model is trained.
-        epochs (int): Max number of epoch's.
+    :param dataset_type: The type of dataset to be trained on; determines coverage calculation strategy
+    :param edge_angles: A boolean indicating whether edge angles are considered in the model
+    :param train_dataloader: DataLoader object for the training dataset
+    :param test_dataloader: DataLoader object for the testing/validation dataset
+    :param model_structure: Dictionary containing the structural specifications for the DIST model
+    :param checkpoint: Optional string specifying the path to a checkpoint file for resuming training
+    :param loss_function: String specifying the name of the loss function to be used, defaults to "bce"
+    :param learning_rate: Float value for the learning rate of the model optimizer, default is 0.001
+    :param lr_scheduler: Boolean indicating whether to use a learning rate scheduler, defaults to False
+    :param early_stop_rate: Integer value for the patience of early stopping mechanism, defaults to 10
+    :param device: String or torch.device indicating which device (e.g., "gpu" or "cpu") to use for training
+    :param epochs: Integer specifying the number of epochs to train the model, default is 1000
+
+    :return: None
     """
     """Losses"""
     loss_functions = [

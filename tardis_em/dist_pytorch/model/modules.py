@@ -17,9 +17,50 @@ import torch.nn.functional as F
 
 class PairBiasSelfAttention(nn.Module):
     """
-    SELF-ATTENTION WITH EDGE FEATURE-BASED BIAS AND PRE-LAYER NORMALIZATION
+    Implements self-attention mechanism that incorporates pairwise features
+    for multi-head attention. This class is designed for scenarios where
+    attention bias is calculated based on edge features alongside the node
+    embeddings. The module allows adjustable parameters including the number
+    of heads, embedding dimensions, and initial scaling factors.
 
-    Self-attention block that attends coordinate and image patches or RGB.
+    The attention mechanism applies normalization and linear projections to
+    both node and edge features, calculates attention weights, and uses those
+    weights to compute weighted combinations of feature representations.
+
+    :ivar embed_dim: Number of dimensions for node embeddings.
+    :type embed_dim: int
+    :ivar kdim: The same as embed_dim, used for keys.
+    :type kdim: int
+    :ivar vdim: The same as embed_dim, used for values.
+    :type vdim: int
+    :ivar qkv_same_dim: Indicates whether key and value dimensions are
+        the same as the embedding dimensions.
+    :type qkv_same_dim: bool
+    :ivar num_heads: Number of heads used in multi-head attention.
+    :type num_heads: int
+    :ivar head_dim: Dimensional size of each attention head.
+    :type head_dim: int
+    :ivar scaling: Scaling factor applied during attention computation.
+    :type scaling: float
+    :ivar init_scaling: The factor used for initializing weights.
+    :type init_scaling: float
+    :ivar norm_input: Layer normalization module applied to node embeddings.
+    :type norm_input: nn.LayerNorm
+    :ivar q_proj: Linear projection layer for the query input.
+    :type q_proj: nn.Linear
+    :ivar k_proj: Linear projection layer for the key input.
+    :type k_proj: nn.Linear
+    :ivar v_proj: Linear projection layer for the value input.
+    :type v_proj: nn.Linear
+    :ivar out_proj: Linear projection layer for output embeddings.
+    :type out_proj: nn.Linear
+    :ivar pairs_dim: Number of dimensions for pairwise features.
+    :type pairs_dim: int
+    :ivar norm_pairs: Layer normalization module applied to pairwise features.
+    :type norm_pairs: nn.LayerNorm
+    :ivar pairs_proj: Linear projection layer for pairwise features
+        to generate attention biases.
+    :type pairs_proj: nn.Linear
     """
 
     def __init__(
@@ -30,12 +71,19 @@ class PairBiasSelfAttention(nn.Module):
         init_scaling=1 / 1.4142135623730951,
     ):
         """
+        Initializes the multi-head attention module with the specified embedding dimensions,
+        number of attention heads, and scaling factors. The module creates the required
+        linear layers for processing query, key, value embeddings, and additional
+        pairs embeddings.
 
-        Args:
-            embed_dim (int): Number of embedded dimensions for node dimensions.
-            pairs_dim (int): Number of pairs dimensions.
-            num_heads (int): Number of heads for multi-head attention.
-            init_scaling (float): Initial scaling factor used for reset parameters.
+        :param embed_dim:
+            The dimensionality of the embedding space for queries, keys, and values.
+        :param pairs_dim:
+            The dimensionality of the additional pairs embeddings used as input.
+        :param num_heads:
+            The number of attention heads used in the multi-head attention mechanism.
+        :param init_scaling:
+            The initial scaling factor for weights' initialization.
         """
         super().__init__()
         # Embedding setting
@@ -67,7 +115,19 @@ class PairBiasSelfAttention(nn.Module):
 
     def _reset_parameters(self):
         """
-        Initial parameter and bias scaling.
+        Initializes the parameters of the network layers using the Xavier uniform
+        distribution and constants for better convergence during training.
+
+        This method resets the weights and biases of specific layers in the
+        network as per the defined initialization strategies. The Xavier uniform
+        distribution is applied to certain weights, while constants are used for
+        biases and selected weights. If a bias exists for the output projection
+        layer, it is initialized to zero.
+
+        :raises AttributeError: If any of the required layer attributes
+            (e.g., q_proj, k_proj, v_proj, out_proj, pairs_proj) are not present
+            in the current instance.
+        :return: None
         """
         nn.init.xavier_uniform_(self.q_proj.weight, gain=self.init_scaling)
         nn.init.xavier_uniform_(self.k_proj.weight, gain=self.init_scaling)
@@ -89,23 +149,31 @@ class PairBiasSelfAttention(nn.Module):
         need_head_weights: bool = False,
     ) -> Union[Tuple[torch.Tensor, torch.Tensor], torch.Tensor]:
         """
-        Forward attention over node features.
+        Computes the forward pass of a multi-head attention module with additional pairwise
+        positional weighting. This function first processes the query tensor through normalization
+        and projection, prepares the attention weights using pair and masked components, applies
+        the attention and then combines attended outputs with pairwise positional contributions.
+        It optionally provides attention weights for inference or analysis.
 
-        Args:
-            query (torch.Tensor): Nodes features  [Length x Batch x Channel].
-            pairs (torch.Tensor): Edges features [Batch x Length x Length x Channel].
-            attn_mask (torch.Tensor): Typically used to implement causal attention,
-                where the mask prevents the attention from looking forward in time.
-            key_padding_mask (torch.Tensor): Mask to exclude keys that are pads,
-                of shape [Batch, src_len]
-            need_weights (bool): If True, return the attention weights,
-                and averaged overheads.
-            need_head_weights (bool): If True, return the attention weights
-                for each head.
+        This method supports key padding masks for excluding irrelevant tokens from attention calculations,
+        as well as optional attention masks for customizing attention strength in multi-head
+        contexts. The function includes the necessary transformations to prepare query,
+        key, and value tensors for batched multi-head operations.
 
-        Returns:
-            Union[Tuple[torch.Tensor, torch.Tensor], torch.Tensor]: Attention tensor
-            for node features.
+        :param query: The input tensor of shape (target length, batch size, embedding dimension).
+        :param pairs: Pairwise positional tensor of shape (batch size, sequence length,
+                      sequence length, number of heads).
+        :param attn_mask: Optional mask tensor of shape (target length, source length) to
+                          apply additional additive masking to the attention weights.
+        :param key_padding_mask: Optional binary tensor of shape (batch size, source length)
+                                 indicating padded positions.
+        :param need_weights: Boolean flag to indicate whether to return the attention weights
+                             alongside the output tensor.
+        :param need_head_weights: Boolean flag to indicate whether individual head weights
+                                  should be returned. Overrides `need_weights` when True.
+        :return: The output tensor of shape (target length, batch size, embedding dimension).
+                 If `need_weights` is True, also returns attention weights; the shape of weights
+                 depends on the `need_head_weights` parameter.
         """
         if need_head_weights:
             need_weights = True
@@ -189,19 +257,42 @@ class PairBiasSelfAttention(nn.Module):
 
 class ComparisonLayer(nn.Module):
     """
-    COMPARISON MODULE BETWEEN PAIRS AND NODE INPUTS
+    Defines the ComparisonLayer class, which is used to process and transform node
+    features into a specific tensor shape. The class includes normalization and
+    linear transformations for enhanced data manipulation.
 
-    This module converts pairs representation of dim (Length x Batch x Channels)
-    into (Batch x Length x Length x Channels) representation that can be compared
-    with node representation.
+    This layer takes as input node features and performs a series of transformations
+    to generate a tensor that is compatible with specific downstream tasks in deep
+    learning models. It leverages PyTorch's `nn.Module` for implementing
+    customized neural network layers.
 
-    Args:
-        input_dim (int): Input dimension as in pairs features.
-        output_dim (int): Output dimension as in node features.
-        channel_dim (int): Number of output channels.
+    :ivar norm: LayerNorm for normalizing input features.
+    :type norm: nn.LayerNorm
+    :ivar linear1: Linear transformation for the first input pathway with optional bias.
+    :type linear1: nn.Linear
+    :ivar linear2: Linear transformation for the second input pathway with optional bias.
+    :type linear2: nn.Linear
+    :ivar linear3: Linear transformation for the output pathway with bias initialized to zero.
+    :type linear3: nn.Linear
+    :ivar linear4: Linear transformation for the output pathway without bias and initialized
+        with zeroes.
+    :type linear4: nn.Linear
     """
 
     def __init__(self, input_dim: int, output_dim: int, channel_dim=128):
+        """
+        This class initializes a module that transforms input node features into edge-specific
+        features. It includes a sequence of linear transformations and normalization layers,
+        with explicit weight and bias initialization.
+
+        :param input_dim: Specifies the dimension of the input node feature vector.
+        :type input_dim: int
+        :param output_dim: Specifies the desired output dimension of the edge feature vector.
+        :type output_dim: int
+        :param channel_dim: Specifies the intermediate channel dimension used in transformations.
+        Defaults to 128 if not provided.
+        :type channel_dim: int
+        """
         super().__init__()
         # Linear layer for converting pairs node futures to edge shape.
         self.norm = nn.LayerNorm(input_dim)
@@ -218,14 +309,16 @@ class ComparisonLayer(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Forward node compatible layer.
+        Performs a forward pass through the computational graph built for the operation.
+        The method applies specific transformations on the input tensor such as transposition,
+        normalization, and linear transformations to generate the final output. The computation
+        includes element-wise multiplication and subtraction of transformed tensors, followed
+        by additional linear transformations.
 
-        Args:
-            x (torch.Tensor): Node features after attention layer.
-
-        Returns:
-            torch.Tensor: Converted Node features to [Batch x Length x Length x
-            Out_Channels] shape.
+        :param x: Input tensor with shape (Batch, Length, Feature_Dimensions)
+        :type x: torch.Tensor
+        :return: Transformed tensor with shape (Batch, Length, Length, Out_Channels)
+        :rtype: torch.Tensor
         """
         x = x.transpose(0, 1)
         x = self.norm(x)
@@ -240,18 +333,58 @@ class ComparisonLayer(nn.Module):
 
 class TriangularEdgeUpdate(nn.Module):
     """
-    TRIANGULAR UPDATE MODEL FOR NODES FEATURES
+    The TriangularEdgeUpdate class implements a neural network module that performs
+    triangular edge updates for edge feature tensors. This is primarily designed for
+    processing relational or structural data, where edge updates between nodes in a
+    triangular relationship must be computed.
 
-    This module takes node feature representation and performs triangular
-    attention for each point. Similar to in Alphafold2 approach.
+    The class takes input and processes it using linear layers, layer normalization,
+    and gating mechanisms. It supports optional masking and performs updates
+    based on a defined axis. The resulting features are computed via einsum operations,
+    allowing for flexible interaction across specified dimensions.
 
-    Args:
-        input_dim (int): Number of input channels.
-        channel_dim (int): Number of output channels.
-        axis (int): Indicate the axis around which the attention is given.
+    :ivar input_dim: Dimension of the input features.
+    :type input_dim: int
+    :ivar channel_dim: Dimension of the intermediate channel, default is 128.
+    :type channel_dim: int
+    :ivar axis: Axis for einsum computation, determines the relationship direction
+                for triangular updates. Defaults to 1.
+    :type axis: int
+    :ivar norm_input: Layer normalization module to normalize the input tensor.
+    :type norm_input: torch.nn.LayerNorm
+    :ivar linear_a: Linear layer for the first set of edge features.
+    :type linear_a: torch.nn.Linear
+    :ivar gate_a: Gating layer for the first set of edge features.
+    :type gate_a: torch.nn.Linear
+    :ivar linear_b: Linear layer for the second set of edge features.
+    :type linear_b: torch.nn.Linear
+    :ivar gate_b: Gating layer for the second set of edge features.
+    :type gate_b: torch.nn.Linear
+    :ivar norm_o: Layer normalization module applied to output tensors.
+    :type norm_o: torch.nn.LayerNorm
+    :ivar gate_o: Gating layer applied to the combined triangular updates.
+    :type gate_o: torch.nn.Linear
+    :ivar linear_o: Linear layer for final edge updates back into the input dimension space.
+    :type linear_o: torch.nn.Linear
+    :ivar init_scaling: Initialization scaling factor for weights.
+    :type init_scaling: float
     """
 
     def __init__(self, input_dim, channel_dim=128, axis=1):
+        """
+        Initializes the custom class with specified input dimensions, channel dimensions,
+        and axis for performing linear operations and gating mechanisms.
+
+        :param input_dim: Dimensionality of input features, used to define the shape for
+            layers and transformations.
+        :type input_dim: int
+        :param channel_dim: Dimensionality of the intermediate channel, used for operations
+            in the linear and gating mechanisms. Defaults to 128 if not provided.
+        :type channel_dim: int, optional
+        :param axis: Axis along which the operations are performed. Defaults to 1 if
+            not explicitly specified.
+        :type axis: int, optional
+        """
         super().__init__()
         self.input_dim = input_dim
         self.channel_dim = channel_dim
@@ -274,7 +407,17 @@ class TriangularEdgeUpdate(nn.Module):
 
     def _reset_parameters(self):
         """
-        Initial parameter and bias scaling.
+        Resets the parameters of the network layers to their initial values.
+
+        The method initializes the weights and biases of the linear layers `linear_a`,
+        `linear_b`, and `linear_o` using specific initialization techniques. For
+        `linear_a` and `linear_b`, the weights are initialized using Xavier uniform
+        initialization, scaled by the `init_scaling` value, and their biases are set
+        to a constant value of 0. For `linear_o`, both weights and biases are set
+        to a constant value of 0.
+
+        :rtype: None
+        :return: The method does not return any value.
         """
         nn.init.xavier_uniform_(self.linear_a.weight, gain=self.init_scaling)
         nn.init.constant_(self.linear_a.bias, 0.0)
@@ -289,14 +432,15 @@ class TriangularEdgeUpdate(nn.Module):
         self, z: torch.Tensor, mask: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
         """
-        Forward Triangular edge update.
+        Processes the input tensor `z` using gated mechanisms and performs tensor operations to produce the output.
+        It applies normalization, gating, and optionally masks certain elements based on the provided mask tensor.
+        The computation involves einsum operations and a final gating mechanism for the output tensor.
 
-        Args:
-            z (torch.Tensor): Edge features.
-            mask (torch.Tensor, optional): Optional mask torch.Tensor layer.
-
-        Returns:
-            torch.Tensor: Updated edge features.
+        :param z: Input tensor with dimensions suitable for processing by the forward method.
+        :param mask: Optional tensor used to mask specific elements of the input tensor during processing.
+            If provided, elements are masked where the mask tensor indicates.
+        :return: Processed tensor after applying the normalization, gating, masking (if applicable),
+            and tensor manipulation operations.
         """
         z = self.norm_input(z)
 
@@ -321,18 +465,85 @@ class TriangularEdgeUpdate(nn.Module):
 
 class QuadraticEdgeUpdate(nn.Module):
     """
-    QUADRATIC UPDATE MODEL FOR NODES FEATURES
+    A neural network module for quadratic edge updates with gated linear units and layer normalization.
 
-    This module takes node feature representation and performs quadratic
-    attention for each point. This is a modified Alphafold2 solution.
+    This module processes edge features through a series of transformations, including gated linear
+    layer calculations, layer normalization, and tensor manipulation using the einsum operation. It
+    supports masking for optional selective computation over input tensors and provides flexible
+    dimensional configurations.
 
-    Args:
-        input_dim (int): Number of input channels.
-        channel_dim (int): Number of output channels.
-        axis (int): Indicate the axis around which the attention is given.
+    The input is normalized first and then transformed via multiple linear and gating operations.
+    The outputs are combined through einsum-based operations based on the configured axis, enabling
+    contextual computations for edge features. The final results are subjected to normalization and
+    linear transformations to produce the output tensor.
+
+    :ivar input_dim: Dimensionality of the input tensor to the module.
+    :type input_dim: int
+    :ivar channel_dim: Number of intermediate channels for computations.
+    :type channel_dim: int
+    :ivar axis: Tensor axis for einsum transformations.
+    :type axis: int
+    :ivar init_scaling: Scaling factor for initializing weights.
+    :type init_scaling: float
+    :ivar norm_input: nn.LayerNorm layer for input normalization.
+    :type norm_input: nn.LayerNorm
+    :ivar linear_a: Linear transformation layer for intermediate computations.
+    :type linear_a: nn.Linear
+    :ivar gate_a: Gating mechanism associated with linear_a.
+    :type gate_a: nn.Linear
+    :ivar linear_b: Linear transformation layer for intermediate computations.
+    :type linear_b: nn.Linear
+    :ivar gate_b: Gating mechanism associated with linear_b.
+    :type gate_b: nn.Linear
+    :ivar linear_c: Linear transformation layer for intermediate computations.
+    :type linear_c: nn.Linear
+    :ivar gate_c: Gating mechanism associated with linear_c.
+    :type gate_c: nn.Linear
+    :ivar linear_d: Linear transformation layer for intermediate computations.
+    :type linear_d: nn.Linear
+    :ivar gate_d: Gating mechanism associated with linear_d.
+    :type gate_d: nn.Linear
+    :ivar norm_o: nn.LayerNorm layer for normalizing intermediate outputs.
+    :type norm_o: nn.LayerNorm
+    :ivar gate_o: Gating mechanism for the final output layer.
+    :type gate_o: nn.Linear
+    :ivar linear_o: Linear transformation for producing the final output tensor.
+    :type linear_o: nn.Linear
     """
 
     def __init__(self, input_dim, channel_dim=128, axis=1):
+        """
+        A class for implementing a neural network transformation with gated linear units
+        (GLU) and layer normalization applied for dimensional transformations.
+
+        This module performs operations through a multi-step pipeline, where inputs
+        undergo normalization, linear transformation, gating mechanisms, and then
+        final output layer adjustments. It leverages nn.LayerNorm and nn.Linear layers
+        to process inputs with custom dimensions and scales. Parameters for dimensions
+        and specific operational axes are configurable.
+
+        The class encapsulates parameter initialization and ensures stable training
+        through default scaling techniques.
+
+        Attributes:
+            input_dim: Dimensionality of input data.
+            channel_dim: Number of channels used in intermediate computations.
+            axis: The tensor axis over which transformations are computed.
+            init_scaling: Scaling factor for parameter initialization.
+            norm_input: LayerNorm operation applied to the input.
+            linear_a, linear_b, linear_c, linear_d: Linear transformation layers.
+            gate_a, gate_b, gate_c, gate_d: Gating layers to condition tensor values.
+            norm_o: LayerNorm operation applied after intermediate processing.
+            gate_o: Final gating layer for output adjustments.
+            linear_o: Final linear transformation for generating output.
+
+        :param input_dim: Dimensionality of the input tensor to the module.
+        :type input_dim: int
+        :param channel_dim: Number of channels for intermediate transformation, defaults to 128.
+        :type channel_dim: int
+        :param axis: Axis for dimensional transformation, defaults to 1.
+        :type axis: int
+        """
         super().__init__()
         self.input_dim = input_dim
         self.channel_dim = channel_dim
@@ -361,7 +572,14 @@ class QuadraticEdgeUpdate(nn.Module):
 
     def _reset_parameters(self):
         """
-        Initial parameter and bias scaling.
+        Resets the parameters of the module by initializing weights and biases for all
+        linear layers. All weights are initialized using Xavier uniform initialization
+        with the respective gain, and all biases are initialized to zero.
+
+        :raises RuntimeError: If the module attributes `linear_a`, `linear_b`,
+           `linear_c`, `linear_d`, or `linear_o` are not properly initialized
+           as ``torch.nn.Linear`` objects before calling this method.
+        :return: None
         """
         nn.init.xavier_uniform_(self.linear_a.weight, gain=self.init_scaling)
         nn.init.constant_(self.linear_a.bias, 0.0)
@@ -382,14 +600,18 @@ class QuadraticEdgeUpdate(nn.Module):
         self, z: torch.Tensor, mask: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
         """
-        Forward Quadratic edge update.
+        Computes the forward pass of the layer by applying gated transformations to the input tensor,
+        optionally considering an input mask. It applies a series of linear transformations and
+        element-wise sigmoid activations to generate intermediate tensors, followed by a tensor contraction
+        using Einstein summation notation for specific axes. The output is further transformed by gating
+        and normalization operations.
 
-        Args:
-            z (torch.Tensor): Edge features.
-            mask (torch.Tensor, optional): Optional mask torch.Tensor layer.
-
-        Returns:
-            torch.Tensor: Updated edge features.
+        :param z: The input tensor with shape (B x L x D) where B is the batch size, L is the sequence length,
+            and D is the input dimension.
+        :param mask: An optional binary mask tensor with shape (B x L x L) where masked positions are indicated
+            with `1` and unmasked positions with `0`. If provided, it will nullify specific computations in the output.
+        :return: A tensor with shape (B x L x L x O), representing the transformed outputs after gating,
+            linear transformation, normalization, and contraction operations.
         """
         z = self.norm_input(z)
 
@@ -418,23 +640,66 @@ class QuadraticEdgeUpdate(nn.Module):
 
 class MultiHeadAttention(nn.Module):
     """
-    MULTI-HEADED ATTENTION
+    Represents a Multi-Head Attention (MHA) mechanism that enables self-attention
+    or cross-attention in neural networks, primarily used in transformers.
+    MHA facilitates attention over multiple heads, allowing the model to focus
+    on different parts of the sequence simultaneously. This module supports
+    various options such as encoder-decoder attention, dropout, bias customization,
+    and scaling initialization.
 
-    See "Attention Is All You Need" for more details. Modified from 'fairseq'.
+    Multi-Head Attention is a key building block for many Natural Language
+    Processing (NLP) and computer vision tasks, enabling the model to capture
+    contextual dependencies efficiently.
 
-    Args:
-        embed_dim (int): Number of embedded dimensions for node features.
-        num_heads (int): Number of heads for multi-head attention.
-        kdim: Key dimensions.
-        vdim: Values dimensions.
-        dropout (float): Dropout probability.
-        bias (bool): If True add bias.
-        add_bias_kv (bool): If True add bias for keys and values.
-        add_zero_attn (bool): If True replace attention with a zero-out mask.
-        self_attention (bool): If True self-attention is used.
-        encoder_decoder_attention (bool): If True self-attention over
-            encode/decoder is used.
-        init_scaling (float): The initial scaling factor used for reset parameters.
+    The module expects inputs in the form of query, key, and value tensors and
+    provides attention outputs for further processing in the neural network.
+
+    :ivar embed_dim: Dimensionality of input embedding.
+    :type embed_dim: int
+    :ivar kdim: Dimensionality of key representations. Defaults to embed_dim.
+    :type kdim: Optional[int]
+    :ivar vdim: Dimensionality of value representations. Defaults to embed_dim.
+    :type vdim: Optional[int]
+    :ivar num_heads: The number of independent attention heads.
+    :type num_heads: int
+    :ivar head_dim: Dimensionality per head, derived as embed_dim // num_heads.
+    :type head_dim: int
+    :ivar scaling: Scaling factor for queries to stabilize computations.
+    :type scaling: float
+    :ivar self_attention: Indicates if the module operates as self-attention.
+    :type self_attention: bool
+    :ivar encoder_decoder_attention: Indicates if cross-attention is
+        implemented between encoder and decoder.
+    :type encoder_decoder_attention: bool
+    :ivar add_bias_kv: Adds learnable bias for key and value projections,
+        if True.
+    :type add_bias_kv: bool
+    :ivar add_zero_attn: Enables zero-padding to enforce attention computation
+        at specific positions.
+    :type add_zero_attn: bool
+    :ivar init_scaling: Scaling factor for initialization of projections.
+    :type init_scaling: float
+    :ivar onnx_trace: Used to facilitate conversion of the model to ONNX.
+    :type onnx_trace: bool
+    :ivar tpu: Indicates TPU compatibility for this module.
+    :type tpu: bool
+    :ivar dropout_module: Dropout layer applied to attention weights.
+    :type dropout_module: nn.Dropout
+    :ivar bias_k: Bias tensor for key projections, when add_bias_kv is True.
+    :type bias_k: Optional[nn.Parameter]
+    :ivar bias_v: Bias tensor for value projections, when add_bias_kv is True.
+    :type bias_v: Optional[nn.Parameter]
+    :ivar v_proj: Linear layer for value projections.
+    :type v_proj: nn.Linear
+    :ivar q_proj: Linear layer for query projections.
+    :type q_proj: nn.Linear
+    :ivar k_proj: Linear layer for key projections.
+    :type k_proj: nn.Linear
+    :ivar out_proj: Linear layer for output projections after attention.
+    :type out_proj: nn.Linear
+    :ivar qkv_same_dim: Indicates if query, key, and value dimensions are
+        identical, simplifying projection setup.
+    :type qkv_same_dim: bool
     """
 
     def __init__(
@@ -451,6 +716,47 @@ class MultiHeadAttention(nn.Module):
         encoder_decoder_attention=False,
         init_scaling=1 / sqrt(2),
     ):
+        """
+        Initializes the multi-head attention layer. This layer is designed to process
+        queries, keys, and values, providing flexibility for variable input sizes
+        depending on the use case, whether it's self-attention, encoder-decoder
+        attention, or general multi-head attention mechanisms. It configures key
+        components such as projection layers, dropout, and optional biases for keys and
+        values.
+
+        :param embed_dim: Embedding dimension of the model.
+        :type embed_dim: int
+
+        :param num_heads: Number of attention heads.
+        :type num_heads: int
+
+        :param kdim: Key dimension. If None, defaults to the value of embed_dim.
+        :type kdim: Optional[int]
+
+        :param vdim: Value dimension. If None, defaults to the value of embed_dim.
+        :type vdim: Optional[int]
+
+        :param dropout: Dropout probability applied during attention.
+        :type dropout: float
+
+        :param bias: If True, includes a bias term in projection layers.
+        :type bias: bool
+
+        :param add_bias_kv: If True, adds learnable bias to keys and values.
+        :type add_bias_kv: bool
+
+        :param add_zero_attn: If True, adds an additional all-zero attention frame.
+        :type add_zero_attn: bool
+
+        :param self_attention: If True, configures layer for self-attention.
+        :type self_attention: bool
+
+        :param encoder_decoder_attention: If True, configures layer for encoder-decoder attention.
+        :type encoder_decoder_attention: bool
+
+        :param init_scaling: Scaling factor applied during initialization.
+        :type init_scaling: float
+        """
         super().__init__()
 
         self.embed_dim = embed_dim
@@ -495,7 +801,17 @@ class MultiHeadAttention(nn.Module):
 
     def reset_parameters(self):
         """
-        Initial parameter and bias scaling.
+        Initializes model parameters with specific initialization methods.
+
+        This method resets the weights and biases of the key, value, query, and output
+        projection layers in the neural network to ensure consistent training results
+        and proper initialization of the model. It uses Xavier uniform initialization
+        for the weights and constant initialization for specific components such as
+        biases. If optional biases `bias_k` or `bias_v` exist, they are also reset to
+        constant values.
+
+        :raises TypeError: An exception is raised if the model components are not
+                           properly initialized or invalid attribute references occur.
         """
         nn.init.xavier_uniform_(self.k_proj.weight, gain=self.init_scaling)
         nn.init.xavier_uniform_(self.v_proj.weight, gain=self.init_scaling)
@@ -521,22 +837,36 @@ class MultiHeadAttention(nn.Module):
         need_head_weights: bool = False,
     ) -> Union[Tuple[torch.Tensor, torch.Tensor], torch.Tensor]:
         """
-        Forward for MHA.
+        Computes the forward pass through a multi-head attention mechanism with
+        support for self-attention, encoder-decoder attention, and custom input
+        masks. The function supports options to include or exclude weights,
+        apply dropout, and handle special cases such as biases and padding.
 
-        Args:
-            query (torch.Tensor): Query input.
-            key (torch.Tensor, optional): Key input.
-            value (torch.Tensor, optional): Value input.
-            key_padding_mask (torch.Tensor, optional): Mask to exclude keys that
-                are pads, of shape `(batch, src_len)`.
-            need_weights (bool, optional): Return the attention weights,
-                averaged overheads.
-            attn_mask (torch.Tensor, optional): Typically used to implement
-                causal attention.
-            before_softmax (bool, optional): Return the raw attention weights and
-                values before the attention softmax.
-            need_head_weights (bool, optional): Return the attention weights for
-                each head. Implies *need_weights*.
+        :param query: Tensor representing the input sequence to compute attention for,
+            with dimensions (target length, batch size, embedding dimension).
+        :param key: Optional tensor representing the key in the attention mechanism,
+            with dimensions (source length, batch size, embedding dimension). If None,
+            it assumes self-attention or other specialized attention types.
+        :param value: Optional tensor representing the value in the attention mechanism,
+            with dimensions (source length, batch size, embedding dimension). If None,
+            it assumes self-attention or other specialized attention types.
+        :param key_padding_mask: Optional boolean tensor used to specify padding on
+            certain input positions, with dimensions (batch size, source length). Non-zero
+            values denote positions to be masked.
+        :param need_weights: Boolean flag indicating whether the function should return
+            attention weights along with the computed output.
+        :param attn_mask: Optional tensor representing a mask to restrict attention to
+            specific positions, with dimensions (target length, source length). Typical
+            for causal masking in transformer models.
+        :param before_softmax: Boolean flag to determine if attention weights are returned
+            before or after the softmax operation is applied.
+        :param need_head_weights: Boolean flag indicating whether attention weights per
+            head are needed (as opposed to aggregated weights across heads).
+        :return: A tuple consisting of the attention output (tensor with dimensions
+            (target length, batch size, embedding dimension)) and, if requested, the
+            attention weights (as a tensor with details depending on the head weights
+            selection). If weights are not requested, only the attention output is returned.
+
         """
         if need_head_weights:
             need_weights = True
@@ -693,22 +1023,44 @@ class MultiHeadAttention(nn.Module):
 
 class SelfAttention2D(MultiHeadAttention):
     """
-    COMPUTE SELF-ATTENTION OVER 2D INPUT
+    Implements 2D self-attention mechanism.
 
-    Perform self-attention over 2D input for node features using multi-head
-    attention.
+    This class extends the MultiHeadAttention module to perform self-attention
+    specifically over 2D edge features. It provides functionality to reshape
+    the input features depending on the axis mode (rows or columns) and enables
+    efficient computation of attention by considering memory constraints via
+    batching.
 
-    Args:
-        embed_dim (int): Number of embedded dimensions for node features.
-        num_heads (int): Number of heads for multi-head attention.
-        axis (int): Indicate the axis over which the attention is performed.
-        dropout (float): Dropout probability.
-        max_size (int): Maximum size of the batch.
+    :ivar axis: Attention axis. If None, computes full N\*M\*N\*M attention; otherwise,
+        computes row-wise or column-wise attention.
+    :type axis: int or None
+    :ivar max_size: Maximum size limit for the attention computation to handle
+        memory constraints effectively.
+    :type max_size: int
     """
 
     def __init__(
         self, embed_dim: int, num_heads: int, axis=None, dropout=0.0, max_size=4194304
     ):
+        """
+        Represents a 2D self-attention mechanism with configurable embedding dimensions,
+        number of attention heads, and other parameters.
+
+        This class is designed to extend the functionality of the
+        multi-head self-attention mechanism, with additional control over specific
+        axes and maximum size constraints.
+
+        :param embed_dim: The dimensionality of the input embeddings.
+        :type embed_dim: int
+        :param num_heads: The number of attention heads.
+        :type num_heads: int
+        :param axis: The axis or axes along which attention is applied.
+        :type axis: Optional or defined type of the axis
+        :param dropout: The dropout rate applied during training.
+        :type dropout: float
+        :param max_size: The maximum size of the attention mechanism. Defaults to 4194304.
+        :type max_size: int
+        """
         super(SelfAttention2D, self).__init__(
             embed_dim, num_heads, dropout=dropout, self_attention=True
         )
@@ -717,16 +1069,19 @@ class SelfAttention2D(MultiHeadAttention):
 
     def forward(self, x: torch.Tensor, padding_mask=None) -> torch.Tensor:
         """
-        Forward self-attention over 2D-edge features.
+        Processes input tensor through a 2D self-attention mechanism and adjusts its shape
+        based on the specified axis. Handles padding masks if provided, allowing optional
+        batching for memory-efficient computation when the attention matrix size exceeds
+        a specified maximum.
 
-        Reshape X depending on the axis attention mode!
-        flatten over rows and cols for full N*M*N*M attention.
-
-        Args:
-            x (torch.Tensor): Edge feature self-attention update.
-                [num_rows X num_cols X batch_size X embed_dim].
-            padding_mask (torch.Tensor): Optional padding mask.
-                [batch_size X num_rows X num_cols].
+        :param x: Input tensor containing the features to be processed using 2D self-attention.
+        :type x: torch.Tensor
+        :param padding_mask: Optional mask used to ignore certain positions during the
+            attention computation.
+        :type padding_mask: torch.Tensor or None
+        :return: Transformed tensor with the same spatial dimensions as the input but
+            adjusted for the attention weights applied.
+        :rtype: torch.Tensor
         """
 
         R, C, B, DIM = x.size()
@@ -791,17 +1146,35 @@ class SelfAttention2D(MultiHeadAttention):
 
 class GeluFeedForward(nn.Module):
     """
-    FEED-FORWARD TRANSFORMER MODULE USING GELU
+    Applies a GELU-based feedforward transformation to the input tensor.
 
-    Input: Batch x ... x Dim
-    Output: Batch x ... x Dim
+    GeluFeedForward is a neural network module that normalizes the input tensor
+    and applies a two-layer feedforward network with GELU activation. This is
+    commonly used in transformer architectures or other deep learning models
+    to enhance the representational power of the model.
 
-    Args:
-        input_dim (int): Number of input dimensions for linear transformation.
-        ff_dim (int): Number of feed-forward dimensions in linear transformation.
+    :ivar norm: Layer normalization applied to the input tensor.
+    :type norm: nn.LayerNorm
+    :ivar linear1: First linear transformation that projects the tensor to a
+        higher-dimensional space.
+    :type linear1: nn.Linear
+    :ivar linear2: Second linear transformation that projects the tensor back
+        to the original input dimension. The weights and biases of this layer
+        are initialized to zero.
+    :type linear2: nn.Linear
     """
 
     def __init__(self, input_dim: int, ff_dim: int):
+        """
+        A class that represents a feedforward neural network module. This module includes
+        a layer normalization, a two-layer feedforward mechanism, and initialization
+        of weights and biases for the second linear layer to all zeros.
+
+        :param input_dim:
+            The dimension of the input features.
+        :param ff_dim:
+            The dimension of the intermediate feedforward layer.
+        """
         super().__init__()
         self.norm = nn.LayerNorm(input_dim)
         self.linear1 = nn.Linear(input_dim, ff_dim)
@@ -812,13 +1185,21 @@ class GeluFeedForward(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Forward Gelu normalized tensor.
+        Applies a forward pass through the sequence of operations which includes
+        normalization, two linear transformations, and the application of GELU
+        activation function.
 
-        Args:
-            x (torch.Tensor): Any Tensor of shape [B x ... x D].
+        This method processes the input tensor by first normalizing it using the
+        `self.norm` function. It then applies the first linear transformation
+        (`self.linear1`), followed by the GELU activation, and finally the
+        second linear transformation (`self.linear2`). The output is returned
+        as a transformed tensor.
 
-        Returns:
-            torch.Tensor: Gelu normalized tensor.
+        :param x: Input tensor to the forward pass.
+        :type x: torch.Tensor
+        :return: Transformed tensor after normalization, linear transformations,
+            and activation function.
+        :rtype: torch.Tensor
         """
         x = self.norm(x)
         x = self.linear1(x)
@@ -830,12 +1211,17 @@ class GeluFeedForward(nn.Module):
 @torch.jit.script
 def gelu(x: torch.Tensor) -> torch.Tensor:
     """
-    CUSTOM GAUSSIAN ERROR LINEAR UNITS ACTIVATION FUNCTION
+    Applies the Gaussian Error Linear Unit (GELU) activation function on the
+    input tensor. GELU is a smoother approximation to the rectified linear
+    activation function and allows the model to retain more information in
+    its input data. The function adds non-linearity, making it especially
+    useful in deep learning architectures.
 
-    Args:
-        x (torch.Tensor): Tensor input for activation.
-
-    Returns:
-        torch.Tensor: Gelu transform Tensor.
+    :param x: Input tensor.
+    :type x: torch.Tensor
+    :return: A tensor resulting from the application of the GELU activation
+        function to the input tensor. The returned tensor has the same shape
+        as the input tensor.
+    :rtype: torch.Tensor
     """
     return x * 0.5 * (1.0 + torch.erf(x / sqrt(2)))

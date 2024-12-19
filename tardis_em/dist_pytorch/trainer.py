@@ -21,7 +21,37 @@ from tardis_em.utils.trainer import BasicTrainer
 
 class SparseDistTrainer(BasicTrainer):
     """
-    DIST MODEL TRAINER
+    SparseDistTrainer Class
+
+    The SparseDistTrainer class is designed for training models with a focus on
+    graph-based data structures and various optimization pipelines. It extends
+    the BasicTrainer class and introduces specific functionalities, such as
+    graph-based thresholding and metrics tracking. The class includes utilities
+    to save metrics, train the model, and validate its performance. It is
+    tailored for models requiring graph propagation and metric-driven checkpoints.
+
+    Initialization involves setting up key components and thresholds for
+    various graph configurations. Training and validation methods are provided
+    to execute these processes on loaded datasets. The class incorporates
+    functions to save metrics, display progress updates, and manage checkpoints
+    based on improvements in tracked metrics.
+
+    :ivar node_input: The input nodes extracted from the structure.
+    :type node_input: dict
+    :ivar Graph_gt: Greedy graph cut instance for ground truth with a threshold of 0.5.
+    :type Graph_gt: PropGreedyGraphCut
+    :ivar Graph0_25: Greedy graph cut instance with 0.25 threshold and instance coverage.
+    :type Graph0_25: PropGreedyGraphCut
+    :ivar Graph0_5: Greedy graph cut instance with 0.5 threshold and instance coverage.
+    :type Graph0_5: PropGreedyGraphCut
+    :ivar Graph0_9: Greedy graph cut instance with 0.9 threshold and instance coverage.
+    :type Graph0_9: PropGreedyGraphCut
+    :ivar mCov0_25: List to store evaluation metrics for 0.25 threshold-based mCov.
+    :type mCov0_25: list
+    :ivar mCov0_5: List to store evaluation metrics for 0.5 threshold-based mCov.
+    :type mCov0_5: list
+    :ivar mCov0_9: List to store evaluation metrics for 0.9 threshold-based mCov.
+    :type mCov0_9: list
     """
 
     def __init__(self, **kwargs):
@@ -41,14 +71,18 @@ class SparseDistTrainer(BasicTrainer):
     @staticmethod
     def _update_desc(stop_count: int, metric: list) -> str:
         """
-        Utility function to update progress bar description.
+        Constructs a formatted string describing metrics for early stopping, F1 score, and coverage metrics.
 
-        Args:
-            stop_count (int): Early stop count.
-            metric (list): Best f1 and mCov score.
+        This static method generates a detailed string based on the given stop count and a list of metrics.
+        Each metric in the list corresponds to a specific evaluation indicator. The method formats these
+        metrics to two decimal places for consistent readability.
 
-        Returns:
-            str: Updated progress bar status.
+        :param stop_count: Number of consecutive epochs where early stopping has occurred.
+        :param metric: List containing evaluation metrics in the following order:
+                       F1 score (min, max), coverage at 0.5 threshold (min, max),
+                       and coverage at 0.9 threshold (min, max).
+        :return: A formatted description string summarizing the stop count and metrics.
+        :rtype: str
         """
         desc = (
             f"Epochs: early_stop: {stop_count}; "
@@ -59,6 +93,12 @@ class SparseDistTrainer(BasicTrainer):
         return desc
 
     def _update_epoch_desc(self):
+        """
+        Updates the epoch description based on the current state, including early stopping
+        counter and performance metrics. The function utilizes information about F1 scores
+        and other metrics (e.g., mCov0_5, mCov0_9) to set a human-readable description
+        of training progress. If it is the first epoch, a default description is assigned.
+        """
         # For each Epoch load be t model from previous run
         if self.id == 0:
             self.epoch_desc = "Epochs: early_stop: 0; best F1: NaN"
@@ -76,7 +116,23 @@ class SparseDistTrainer(BasicTrainer):
             )
 
     def _save_metric(self) -> bool:
-        """Save training metrics"""
+        """
+        Saves metrics and model weights, including training and evaluation metrics,
+        model structure, model state, optimizer state, and learning rate. It creates
+        CSV files to log training losses, validation losses, evaluation metrics,
+        and learning rates in a checkpoint directory. Additionally, it saves model
+        checkpoints conditionally based on evaluation criteria such as F1 score and
+        mCov score.
+
+        :returns:
+            A boolean indicating if early stopping is triggered.
+        :rtype: bool
+
+        :raises:
+            FileNotFoundError: If specified directories or paths do not exist while
+            saving files.
+            RuntimeError: If any issue occurs during saving the model or metrics.
+        """
         if len(self.training_loss) > 0:
             np.savetxt(
                 join(
@@ -169,7 +225,12 @@ class SparseDistTrainer(BasicTrainer):
 
     def _train(self):
         """
-        Run model training.
+        Trains the DIST model using the specified training DataLoader, optimizer, and criterion.
+        Includes progress bar updates, mid-training evaluation, and tracking of training metrics
+        such as loss and learning rate. For each batch, the model updates weights through backpropagation
+        and optionally adjusts learning rates using the provided scheduler.
+
+        :return: None
         """
         # Update progress bar
         self._update_progress_bar(
@@ -217,7 +278,18 @@ class SparseDistTrainer(BasicTrainer):
 
     def _validate(self):
         """
-        Test model against validation dataset.
+        _validates the performance and metrics for the validation dataset.
+
+        This private method performs several computations on the validation dataset
+        to evaluate the model's performance. It computes validation losses, accuracy,
+        precision, recall, F1-score, and additional custom metrics, such as mean
+        coverage (mCov) at various thresholds. The method iterates through the
+        validation dataset, conducts predictions, calculates metrics, updates the
+        progress bar, computes aggregation statistics, and triggers early stopping
+        evaluation.
+
+        :return: None
+        :rtype: None
         """
         valid_losses = []
         accuracy_mean = []
@@ -346,7 +418,34 @@ class SparseDistTrainer(BasicTrainer):
 
 class DistTrainer(BasicTrainer):
     """
-    DIST MODEL TRAINER
+    Handles the training process for a distributed graph-based model leveraging
+    different segmentation thresholds. This class is designed to optimize the
+    training and checkpointing process for models that utilize graph-based
+    representations.
+
+    The class uses various greedy graph cut algorithms with different thresholds
+    to generate segmentations. Metrics and model states are saved during training
+    to ensure progress tracking and checkpointing for better model reproducibility.
+
+    :ivar node_input: The input node structure used in the graph calculations.
+    :ivar Graph_gt: Greedy graph cut instance with a threshold of 0.5 and a
+        connection limit of 1000.
+    :type Graph_gt: PropGreedyGraphCut
+    :ivar Graph0_25: Greedy graph cut instance with a threshold of 0.25 and a
+        connection limit based on instance coverage.
+    :type Graph0_25: PropGreedyGraphCut
+    :ivar Graph0_5: Greedy graph cut instance with a threshold of 0.5 and a
+        connection limit based on instance coverage.
+    :type Graph0_5: PropGreedyGraphCut
+    :ivar Graph0_9: Greedy graph cut instance with a threshold of 0.9 and a
+        connection limit based on instance coverage.
+    :type Graph0_9: PropGreedyGraphCut
+    :ivar mCov0_25: List of coverage metrics for graphs with a threshold of 0.25.
+    :type mCov0_25: list
+    :ivar mCov0_5: List of coverage metrics for graphs with a threshold of 0.5.
+    :type mCov0_5: list
+    :ivar mCov0_9: List of coverage metrics for graphs with a threshold of 0.9.
+    :type mCov0_9: list
     """
 
     def __init__(self, **kwargs):
@@ -366,14 +465,23 @@ class DistTrainer(BasicTrainer):
     @staticmethod
     def _update_desc(stop_count: int, metric: list) -> str:
         """
-        Utility function to update progress bar description.
+        Constructs a descriptive string summarizing the early stopping count and a set of
+        performance metrics. The description includes specific metrics formatted for easier
+        interpretation of the results, such as F1 scores and mCoverage at thresholds 0.5 and
+        0.9, respectively.
 
-        Args:
-            stop_count (int): Early stop count.
-            metric (list): Best f1 and mCov score.
+        :param stop_count: Early stopping count indicating the number of epochs without
+            improvement that triggers early stopping in a training loop.
+        :type stop_count: int
+        :param metric: A list containing performance metrics formatted to be included in the
+            description string. The first two elements represent F1 scores, while the next
+            four represent mCoverage metrics at thresholds 0.5 and 0.9, respectively.
+        :type metric: list
 
-        Returns:
-            str: Updated progress bar status.
+        :return: A formatted string summarizing the provided early stopping count and
+            performance metrics, designed for output or logging purposes.
+        :rtype: str
+
         """
         desc = (
             f"Epochs: early_stop: {stop_count}; "
@@ -384,6 +492,19 @@ class DistTrainer(BasicTrainer):
         return desc
 
     def _update_epoch_desc(self):
+        """
+        Updates the epoch description with relevant metrics and stopping information.
+
+        This method updates the `epoch_desc` attribute for the current epoch, calculating
+        and incorporating various metrics (e.g., F1 scores, mCov0_5, mCov0_9) and the state
+        of early stopping. For the first epoch (when `self.id == 0`), it sets a default
+        description. For subsequent epochs, it computes the metrics and formats the
+        description using `_update_desc`.
+
+        :param self: Instance of the class containing attributes `id`, `early_stopping`,
+            `f1`, `mCov0_5`, and `mCov0_9` required for building `epoch_desc`.
+        :type self: Class instance
+        """
         # For each Epoch load be t model from previous run
         if self.id == 0:
             self.epoch_desc = "Epochs: early_stop: 0; best F1: NaN"
@@ -401,7 +522,23 @@ class DistTrainer(BasicTrainer):
             )
 
     def _save_metric(self) -> bool:
-        """Save training metrics"""
+        """
+        Saves various training metrics, evaluation metrics, learning rates, and
+        model weights to files, and updates checkpoint files based on evaluation
+        criteria. The method validates conditions to save different checkpoints and
+        the final model weights. It also determines if training should be stopped
+        early.
+
+        :param self: The instance of the class that contains the metrics, learning
+            rate, and other checkpoint parameters.
+
+        :raises OSError: Raised if the file save operation fails.
+        :raises AttributeError: Raised if required attributes are missing in the
+            input object.
+
+        :return: A boolean indicating whether early stopping conditions are met.
+        :rtype: bool
+        """
         if len(self.training_loss) > 0:
             np.savetxt(
                 join(
@@ -494,7 +631,16 @@ class DistTrainer(BasicTrainer):
 
     def _train(self):
         """
-        Run model training.
+        Trains the model using the provided DataLoader and updates metrics such as
+        training loss and learning rate. The training process supports mid-training
+        evaluations, dynamic learning rate adjustments, and progress bar updates
+        for better monitoring.
+
+        Raises errors if required components or methods like the DataLoader, device,
+        optimizer, criterion, model, or progress bar are not properly configured or
+        defined.
+
+        :return: None
         """
         # Update progress bar
         self._update_progress_bar(
@@ -544,6 +690,26 @@ class DistTrainer(BasicTrainer):
 
     @staticmethod
     def _greedy_segmenter(graph: np.ndarray, coord: np.ndarray, th: float):
+        """
+        Segments a graph into distinct components based on the provided threshold value.
+        This method employs a greedy approach to cluster nodes into segments
+        by iteratively grouping connected nodes that exceed the defined
+        threshold. Each node belongs to one and only one segment, and the
+        resulting segments are returned with their corresponding coordinates.
+
+        :param graph: 2D numpy array representing the adjacency matrix of the
+            graph. Each value in the matrix indicates the weight of the edge
+            between nodes, with zero indicating no connection.
+        :param coord: 2D numpy array containing the coordinates of the graph nodes.
+            Each row corresponds to a node, and columns store the spatial
+            information (e.g., [x, y]).
+        :param th: A float representing the threshold value. Only edges with
+            weights greater than or equal to this value are considered for
+            segmenting the graph.
+        :return: A 2D numpy array where each row corresponds to a node. The first
+            column contains the segment identifiers, and the remaining columns
+            contain the coordinates of the corresponding nodes.
+        """
         node = dict()
         for j in range(len(graph)):
             df = [[id_, i] for id_, i in enumerate(graph[j]) if i >= th and id != j]
@@ -582,7 +748,27 @@ class DistTrainer(BasicTrainer):
 
     def _validate(self):
         """
-        Test model against validation dataset.
+        Validates the model using the provided validation DataLoader. Measures and calculates several
+        metrics during the validation process, including validation loss, accuracy, precision, recall,
+        F1 score, thresholds, and mCov metrics. Updates progress bars during validation and performs
+        early stopping checks based on the latest F1 score.
+
+        :raises Exception: If an error occurs while calculating mCov values for thresholds 0.25, 0.5,
+                           or 0.9. This is handled with a fallback value of 0.0.
+
+        :param self: The class instance containing the necessary data and attributes for validation.
+
+        :ivar validation_loss: A list to store the average validation loss for each epoch.
+        :ivar accuracy: A list to store the average accuracy values for each epoch.
+        :ivar precision: A list to store the average precision values for each epoch.
+        :ivar recall: A list to store the average recall values for each epoch.
+        :ivar threshold: A list to store the average threshold values for each epoch.
+        :ivar f1: A list to store the average F1 score values for each epoch.
+        :ivar mCov0_25: A list to store mean coverage (mCov) metrics at a threshold of 0.25 for each epoch.
+        :ivar mCov0_5: A list to store mean coverage (mCov) metrics at a threshold of 0.5 for each epoch.
+        :ivar mCov0_9: A list to store mean coverage (mCov) metrics at a threshold of 0.9 for each epoch.
+
+        :return: Updates the class instance with the validation metrics calculated for the current epoch.
         """
         valid_losses = []
         accuracy_mean = []
@@ -704,7 +890,48 @@ class DistTrainer(BasicTrainer):
 
 class CDistTrainer(BasicTrainer):
     """
-    C_DIST MODEL TRAINER
+    Trainer class for implementing a custom distance-based training strategy.
+
+    The CDistTrainer class extends the BasicTrainer and provides
+    functionality for training and validating a model with a specific
+    distance-based loss criterion and evaluation metrics. This trainer is
+    designed for node and edge-based input, handling mid-training evaluations,
+    early stopping based on F1-score, and updating performance metrics such
+    as loss, accuracy, precision, recall, F1 score, and threshold. It supports
+    both training and validation phases using DataLoader objects for respective
+    datasets.
+
+    :ivar structure: Configuration defining the distance type and other related
+        parameters for the trainer.
+    :type structure: dict
+    :ivar criterion_cls: A classification loss function (e.g., CrossEntropyLoss)
+        used for evaluating the semantic similarities.
+    :type criterion_cls: torch.nn.modules.loss
+    :ivar node_input: Indicates whether node features are utilized as an input to
+        the model.
+    :type node_input: bool
+    :ivar optimizer: Optimizer used for model parameter updates during training.
+    :type optimizer: torch.optim.Optimizer
+    :ivar training_DataLoader: DataLoader object containing the training dataset.
+    :type training_DataLoader: torch.utils.data.DataLoader
+    :ivar validation_DataLoader: DataLoader object containing the validation dataset.
+    :type validation_DataLoader: torch.utils.data.DataLoader
+    :ivar training_loss: List storing training loss for each iteration.
+    :type training_loss: list[float]
+    :ivar validation_loss: List storing validation loss for each iteration.
+    :type validation_loss: list[float]
+    :ivar accuracy: List tracking accuracy scores during validation.
+    :type accuracy: list[float]
+    :ivar precision: List tracking precision scores during validation.
+    :type precision: list[float]
+    :ivar recall: List tracking recall scores during validation.
+    :type recall: list[float]
+    :ivar f1: List tracking F1 scores during validation.
+    :type f1: list[float]
+    :ivar threshold: List tracking threshold values during validation.
+    :type threshold: list[float]
+    :ivar device: Specifies the computational device (CPU/GPU) for processing.
+    :type device: torch.device
     """
 
     def __init__(self, **kwargs):
@@ -715,7 +942,15 @@ class CDistTrainer(BasicTrainer):
 
     def _train(self):
         """
-        Run model training.
+        Trains the model using the data provided by the `training_DataLoader`. This method
+        performs forward passes of the model, computes losses using provided criterion
+        functions, and back-propagates those losses to update model parameters. The training
+        progress and losses are displayed using a progress bar.
+
+        Detailed operations such as mid-training evaluation and progress bar updates are
+        handled within this method.
+
+        :param self: The instance of the class calling this method.
         """
         # Update progress bar
         self._update_progress_bar(loss_desc="Training: (loss 1.000)", idx=0)
@@ -753,7 +988,16 @@ class CDistTrainer(BasicTrainer):
 
     def _validate(self):
         """
-        Test model against validation dataset.
+        Validates the performance of the model on the provided validation dataset. This
+        method computes the validation loss, accuracy, precision, recall, F1-measure, and
+        threshold for the model using the given evaluation metrics. It updates the progress
+        bar during the computation and tracks the results over multiple batches. The early
+        stopping mechanism is also utilized based on the average F1 score.
+
+        :raises ValueError: If `self.validation_DataLoader` is not properly loaded.
+        :raises RuntimeError: If the model or the tensors are not properly transferred to the
+            specified device before evaluation.
+        :raises AttributeError: If `criterion`, `criterion_cls`, or other attributes are undefined.
         """
         valid_losses = []
         accuracy_mean = []

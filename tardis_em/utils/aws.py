@@ -21,10 +21,20 @@ from tardis_em.utils.errors import TardisError
 
 def get_benchmark_aws() -> dict:
     """
-    Retrieve the best benchmarking score for a given NN type
+    Fetch benchmark data from a specified AWS endpoint.
 
-    Returns:
-        dict: Dictionary with keys[network name] and values[list of scores]
+    This function sends a GET request to the specified AWS S3 URL to fetch the latest network
+    benchmark data. If the request is successful (HTTP status code 200), it decodes the
+    JSON content from the response and returns it as a Python dictionary. The function
+    handles the request with a specific timeout configuration.
+
+    :raises requests.exceptions.RequestException: If there are any issues with the network
+        request, such as timeouts, connection errors, or invalid URLs.
+    :raises json.JSONDecodeError: If the response content is not valid JSON format.
+
+    :return: A dictionary containing the benchmark data fetched from the AWS endpoint if
+        the request is successful and content is valid JSON.
+    :rtype: dict
     """
     network_benchmark = requests.get(
         "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/benchmark/best_scores.json",
@@ -39,15 +49,23 @@ def get_benchmark_aws() -> dict:
 
 def put_benchmark_aws(data: dict, network: Optional[str] = "", model=None) -> bool:
     """
-    Upload new or update dictionary stored on S3
+    Sends benchmark data and optional model weights to an AWS S3 bucket.
 
-    Args:
-        data (dict): Dictionary with network the best metrics
-        network (Optional, str): Benchmarking network name [e.g., fnet_32_microtubules_id].
-        model (Optional, str): Optional dictionary to model.
+    This function uploads provided benchmark data as a JSON file to a predefined
+    location in an AWS S3 bucket. Optionally, if a model file is provided, it
+    uploads the model weights to a corresponding directory in the bucket based on
+    the network name. The function ensures appropriate HTTP status codes are checked
+    to confirm successful uploads.
 
-    Returns:
-        bool: True if save correctly
+    :param data: The benchmark data to upload. It should be a dictionary containing
+        the relevant information.
+    :param network: The name of the network associated with the uploaded model. This
+        serves as part of the model file name. Defaults to an empty string if not
+        provided.
+    :param model: The path to the model's file to upload. If provided, the function
+        will attempt to upload the model to the AWS S3 bucket.
+    :return: A boolean value indicating whether the data upload (and optionally,
+        the model upload) was successful.
     """
     r = requests.put(
         "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/"
@@ -70,6 +88,22 @@ def put_benchmark_aws(data: dict, network: Optional[str] = "", model=None) -> bo
 
 
 def get_all_version_aws(network: str, subtype: str, model: str):
+    """
+    Fetches all available version strings of a specific model from the AWS Tardis weights bucket.
+
+    This function communicates with an AWS S3 bucket to retrieve version information
+    for specified network, subtype, and model. It parses the response to extract
+    all relevant versions that match the expected format.
+
+    :param network: The name of the network being queried.
+    :type network: str
+    :param subtype: The specific subtype of the network.
+    :type subtype: str
+    :param model: The model identifier within the specified network and subtype.
+    :type model: str
+    :return: A list of version strings that match the query parameters, starting with "V".
+    :rtype: list[str]
+    """
     r = requests.get(
         "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/",
     )
@@ -83,6 +117,18 @@ def get_all_version_aws(network: str, subtype: str, model: str):
 
 
 def get_model_aws(https: str):
+    """
+    Fetches a model from AWS by sending a GET request to the provided URL.
+
+    This function uses the `requests` library to fetch the model from the specified
+    HTTPS URL. It includes a timeout parameter where the connection timeout is set
+    to 5 seconds.
+
+    :param https: The HTTPS URL string to fetch the model from.
+    :type https: str
+    :return: The response object from the GET request.
+    :rtype: requests.Response
+    """
     return requests.get(
         https,
         timeout=(5, None),
@@ -96,23 +142,28 @@ def get_weights_aws(
     version: Optional[int] = None,
 ):
     """
-    Module to download pre-train weights from S3 AWS bucket.
+    Retrieve the weights of a specified deep learning model architecture and subtype,
+    optionally specifying the model and version, from AWS or locally cached storage if
+    available. The function handles directory setup, input validation, and either fetching
+    or downloading the required weights.
 
-    Model weight stored on S3 bucket with the naming convention
-    network_subtype/model/model_weights.pth
-    References.:
-    - fnet_32/microtubules_3d/V_XX/model_weights.pth
-    - dist_triang/microtubules_3d/V_XX/model_weights.pth
-
-    Weights are stored in ~/.tardis_em with the same convention and .txt
-    file with file header information to identified update status for local file
-    if the network connection can be established.
-
-    Args:
-        network (str): Type of network for which weights are requested.
-        subtype (str): Sub-name of the network or sub-parameter for the network.
-        model (str): Additional dataset name used for the DIST.
-        version (int): Version of the model, be defaults we fetch the newest model
+    :param network: Name of the neural network model to retrieve. Must be one of the
+        predefined valid model types from 'ALL_MODELS'.
+    :type network: str
+    :param subtype: Specific subtype or configuration of the network. Must be one of
+        the predefined valid subtype values from 'ALL_SUBTYPE'.
+    :type subtype: str
+    :param model: Dataset or model specification for the given network and subtype. Defaults
+        to None. Relevant only for certain network types.
+    :type model: Optional[str]
+    :param version: Version of the model to retrieve. Defaults to None, which automatically
+        selects the latest version available for the given network, subtype, and model.
+    :type version: Optional[int]
+    :return: Path to the weights file if available locally or a file-like buffer containing
+        the downloaded weights if fetched from AWS.
+    :rtype: Union[str, io.BytesIO]
+    :raises TardisError: If invalid network, subtype, or model is specified, or if the
+        requested version is unavailable.
     """
     ALL_MODELS = ["unet", "unet3plus", "fnet_attn", "dist"]
     ALL_SUBTYPE = ["16", "32", "64", "96", "128", "triang", "full"]
@@ -232,15 +283,20 @@ def get_weights_aws(
 
 def aws_check_with_temp(model_name: list) -> bool:
     """
-    Module to check aws up-to data status.
+    Check the existence and validity of locally stored model weights and their headers
+    against the files available on AWS. The function verifies if required weights for a
+    specific model are stored locally and compares metadata to ensure the local copy
+    is up-to-date. If discrepancies are found or files are missing, it suggests a
+    download from AWS.
 
-    Quick check if the local file exists and is up-to data with aws server.
-
-    Args:
-        model_name (list): Name of the NN model.
-
-    Returns:
-        bool: If True, the local file is up to date.
+    :param model_name: A list detailing the model's organization, subgroup, version,
+        and optionally, a model variant or additional identifier. The format is
+        [organization, subgroup, version, variant or None].
+    :return: A boolean value indicating whether the locally stored weights and associated
+        header files are valid and up-to-date. Returns ``True`` if they are valid or
+        if the function was unable to verify the AWS state due to connectivity issues
+        but local files are present. Returns ``False`` if local files are missing,
+        outdated, or otherwise invalid.
     """
     """Check if temp dir exist"""
     if not isdir(join(expanduser("~"), ".tardis_em")):
@@ -330,12 +386,20 @@ def aws_check_with_temp(model_name: list) -> bool:
 
 def aws_check_pkg_with_temp() -> bool:
     """
-    Module to check aws up-to data status for OTA-Update.
+    Checks if the package required for Tardis execution exists locally and verifies its
+    version against the package stored on AWS. This function ensures that a package update
+    is fetched from AWS if the local package is outdated or missing.
 
-    Quick check if the local pkg file exists and is up-to data with aws server.
+    :return:
+        A boolean value indicating the status of the package:
+        - True: The package is present locally and is up to date.
+        - False: The package is either missing, corrupted, or an update is available on AWS.
 
-    Returns:
-        bool: If True, the local file is up to date.
+    :raises:
+        This function may encounter `KeyError` when accessing headers stored in the
+        downloaded JSON content or AWS headers, and it may also face exceptions related
+        to file operations or HTTP requests. Error handling specific to these exceptions
+        is managed within the function.
     """
     """Check if temp dir exist"""
     if not isdir(join(expanduser("~"), ".tardis_em")):

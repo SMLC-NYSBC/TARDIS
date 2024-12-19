@@ -23,18 +23,28 @@ from tardis_em.utils.errors import TardisError
 
 class FilterConnectedNearSegments:
     """
-    Connect splines based on spline trajectory and spline end distances.
+    This class is used to manage and process splines in a point cloud by
+    connecting nearby segments based on specific cylindrical geometry
+    criteria. It handles operations such as determining cylindrical overlap,
+    removing duplicates, and merging splines.
+
+    :ivar distance_th: Maximum allowable distance threshold for operations.
+    :type distance_th: float
+    :ivar cylinder_radius: Radius of the cylinder used in calculations.
+    :type cylinder_radius: float
     """
 
     def __init__(self, distance_th=1000, cylinder_radius=150):
         """
-        Initialize the class with the distance threshold and cylinder radius parameters.
+        This class is used to configure the parameters for a specific cylindrical
+        geometry operation. It allows specifying a distance threshold and a cylinder
+        radius to be utilized in the process or calculations related to a cylindrical
+        configuration.
 
-        Args:
-            distance_th (int): Maximum distance between two spline endpoints for them
-            to be considered for merging.
-            cylinder_radius (int): Maximum distance between spline endpoint and the line
-            connecting its neighboring endpoints for them to be considered for merging.
+        :param distance_th: The threshold distance parameter used for operations,
+            which defines the maximum allowable distance.
+        :param cylinder_radius: The radius of the cylinder, used for calculations
+            related to the cylindrical geometry.
         """
         self.distance_th = distance_th
         self.cylinder_radius = cylinder_radius
@@ -42,17 +52,20 @@ class FilterConnectedNearSegments:
     @staticmethod
     def _in_cylinder(point: np.ndarray, axis: tuple, r: int, h: int) -> bool:
         """
-        Fast check if point is inside a cylinder by projecting point on cylinder
-        volume in 3D.
+        Determines whether a given point lies within a cylinder defined by an axis,
+        a radius, and a height. This static method projects the point onto the
+        cylinder's axis, checks if it lies within the height boundaries, and
+        calculates the perpendicular distance from the axis to verify if it
+        is within the radius.
 
-        Args:
-            point (np.ndarray): Point in 3D to project on cylinder.
-            axis (tuple): Cylinder axis of orientation.
-            r (int): Cylinder radius.
-            h (int): Cylinder length.
+        :param point: A NumPy array representing the point to be checked.
+        :param axis: A tuple containing two endpoints of the cylinder's axis,
+            where each endpoint is a NumPy array.
+        :param r: The cylinder's radius as an integer.
+        :param h: The cylinder's height as an integer.
 
-        Returns:
-            bool: If True, given point can be found in a cylinder.
+        :return: A boolean value indicating whether the point lies within
+            the cylinder.
         """
         # project the point onto the axis
         ax1 = (point - axis[0]) + 1e-16
@@ -73,13 +86,19 @@ class FilterConnectedNearSegments:
     @staticmethod
     def _remove_duplicates(d: dict) -> dict:
         """
-        Remove duplicate splines
+        Removes duplicate values in a given dictionary by converting the values to
+        lists and ensuring only unique lists are retained. The method iterates through
+        the provided dictionary, converts each value into a list, and updates a new
+        dictionary with key-value pairs only if the list version of the value is not
+        already present in the new dictionary.
 
-        Args:
-            d (dict): Dictionary containing splines.
+        :param d: A dictionary where values are to be checked for uniqueness after
+            conversion to lists.
+        :type d: dict
 
-        Returns:
-            dict: dictionary containing unique splines.
+        :return: A new dictionary containing only unique key-value pairs from the
+            original dictionary, based on the uniqueness of the list-converted values.
+        :rtype: dict
         """
         new_d = {}
         [
@@ -92,15 +111,18 @@ class FilterConnectedNearSegments:
 
     def splines_direction(self, spline1: list, spline2: list) -> bool:
         """
-        Check if two splines facing the same direction. Knowing that spline1 facing
-        a direction of spline2, check if spline2 also face a direction of spline1.
+        Determines whether two splines are facing the same direction within specific spatial
+        constraints. This function evaluates the positional relationships of two splines based
+        on predefined conditions involving distance and orientation in a cylindrical coordinate
+        system.
 
-        Args:
-            spline1 (list): Sorted array of point with 3D coordinates.
-            spline2 (list): Sorted array of point with 3D coordinates.
+        :param spline1: The first spline represented as a list of points, where each point is a
+            coordinate in 2D or 3D space.
+        :param spline2: The second spline represented as a list of points, where each point is
+            a coordinate in 2D or 3D space.
 
-        Returns:
-            bool: If true, given splines facing the same direction
+        :return: A boolean value indicating whether the two splines face in the same direction
+            based on the specified criteria.
         """
         # Check 01 - 01 & Check 01 - 10
         ax = [
@@ -135,49 +157,32 @@ class FilterConnectedNearSegments:
         self, point_cloud: np.ndarray, omit_border: int, initial: bool
     ) -> np.ndarray:
         """
-        Connect splines in the point_cloud that are close enough to each other
-         and return the reordered splines.
+        Merge splines from a given point cloud dataset based on certain distance and
+        alignment criteria. Each spline in the point cloud is analyzed and combined
+        with other splines if they satisfy conditions such as proximity, alignment,
+        and not being within a border exclusion zone. The function returns the
+        merged splines as a numpy array.
 
-        Example:
-            - Get dictionary with {id: [sorted list of points]}
+        :param point_cloud: A numpy array representing the point cloud data, where
+            each row corresponds to a point with information such as spline ID,
+            x-coordinate, y-coordinate, and z-coordinate.
+        :type point_cloud: numpy.ndarray
 
-            - While there is more than 1 spline in the dict:
-                - Pick first spline in a dict.
-                - Select all ends
-                - Calc. end distance to all other ends.
+        :param omit_border: An integer value specifying the range from the minimum
+            and maximum along the z-axis for excluding points at borders, used to
+            eliminate spurious connections near boundaries.
+        :type omit_border: int
 
-                - If any ends within threshold distance:
-                    - Calculate initial end vector
-                    - Calculate distance to the cylinder
+        :param initial: A boolean indicating whether to process and create an
+            initial dictionary of splines based on unique spline IDs. Controls the
+            creation and initialization of spline data structures.
+        :type initial: bool
 
-                    - If any picked ends are within cylinder radius
-                        - Pick one with the smallest distance
-                        - Save two spline IDs to connected
-
-                - If Connected ID list not empty:
-                    - Marge and sort points from two IDs
-                    - Check tortuosity
-
-                    - If tortuosity <= 1.5:
-                        - Add to the connected dict
-                        - Remove from dict
-                        - start over
-
-                - If connected ID list is empty or tortuosity > 1.5:
-                    - Add only initial spline to the connected dict
-                    - Remove from dict
-                    - start over
-
-        Args:
-            point_cloud (np.ndarray): Array with segmented and sorted point cloud
-                of a shape [ID, X, Y, Z].
-            omit_border (int): In A, distance from the border as a limit not to
-                connect splines.
-            initial (bool): Initial run for the operation.
-
-        Returns:
-            np.ndarray: Array of segmented point cloud with connected splines
-            that fit the criteria
+        :return: A numpy array representing the merged splines, where each row
+            corresponds to a point with updated spline IDs, x-coordinate,
+            y-coordinate, and z-coordinate. The merged splines preserve the
+            consistency of segment continuity and alignment.
+        :rtype: numpy.ndarray
         """
         # Find Z bordered to filter out MT connection at the borders
         MIN_Z, MAX_Z = np.min(point_cloud[:, 3]), np.max(point_cloud[:, 3])
@@ -398,6 +403,21 @@ class FilterConnectedNearSegments:
         )
 
     def __call__(self, point_cloud: np.ndarray, omit_border=0):
+        """
+        Process and refine a given point cloud to merge splines iteratively until no further
+        unique changes occur in the first dimension of the coordinates. The method takes
+        in a point cloud and an optional parameter to omit border constraints. It applies
+        the `marge_splines` function, starting with an initial pass, followed by iterative
+        processing of the data.
+
+        :param point_cloud: A 2D numpy array where each row represents a point
+            in the point cloud, and columns represent the spatial dimensions.
+        :param omit_border: An integer specifying the level of border omission
+            during spline merging. Default value is 0.
+
+        :return: A modified numpy array representing the updated point cloud
+            after iterative refinement and spline merging.
+        """
         past_l = 0
         while len(np.unique(point_cloud[:, 0])) != past_l:
             if past_l == 0:
@@ -415,14 +435,22 @@ class FilterConnectedNearSegments:
 
 class FilterSpatialGraph:
     """
-    Calculate the length of each spline and distance between all splines ends.
+    A class for filtering and refining spatial graphs by connecting nearby
+    segments and removing short segments.
 
-    This class iterates over all splines in array [ID, X, Y, Z] by given ID.
-    Firstly, if specified during initialization, the class calculates the distance
-    between all splines ends and use it to define which splines are obviously
-    broken.
-    Then it calculate length of all the splines (also new one) and filter out
-    ones that are too short.
+    This class is designed to process a given array of segments representing
+    spatial structures, such as microtubules or similar graph-based
+    representations. The primary tasks include connecting splines with
+    endpoints within a specified distance and removing splines that are below
+    a defined length threshold. Additionally, iterative optimization is
+    performed to split connections at sharp angles.
+
+    :ivar connect_seg_if_closer_then: Maximum distance threshold for connecting
+        segment endpoints. Segments closer than this threshold will be merged.
+    :type connect_seg_if_closer_then: int
+    :ivar filter_short_segments: Minimum length threshold below which segments
+        will be removed.
+    :type filter_short_segments: int
     """
 
     def __init__(
@@ -431,6 +459,20 @@ class FilterSpatialGraph:
         cylinder_radius=200,
         filter_short_segments=1000,
     ):
+        """
+        This class defines the initialization process for configuring parameters related
+        to filtering and merging connected segments. It includes settings for connection
+        thresholds, segment filtering, and spline merging operations.
+
+        :param connect_seg_if_closer_then: Threshold distance for considering segments
+            close enough to connect.
+        :type connect_seg_if_closer_then: int
+        :param cylinder_radius: Radius of the cylinder used in the connection operation.
+        :type cylinder_radius: int
+        :param filter_short_segments: Minimum length of segments to retain during the
+            filtering process.
+        :type filter_short_segments: int
+        """
         self.connect_seg_if_closer_then = connect_seg_if_closer_then
         self.filter_short_segments = filter_short_segments
 
@@ -440,14 +482,16 @@ class FilterSpatialGraph:
 
     def __call__(self, segments: np.ndarray) -> np.ndarray:
         """
-        Connect splines that have their end's in close distance and remove
-        splines that are too short.
+        Performs iterative optimization to modify input segments by applying a series of transformations,
+        such as cutting connections at specific angles, merging close segment ends, and filtering short
+        segments. The process is repeated to adjust the segments iteratively based on defined criteria.
 
-        Args:
-            segments (np.ndarray): Array of points with ID label of shape [ID, X, Y, Z]
+        :param segments: The input array of segments, where each row represents segment information
+                         and typically includes segment ID and its coordinates.
+        :type segments: np.ndarray
 
-        Returns:
-            np.ndarray: Filtered array of connected MTs
+        :return: The modified segments array after optimization transformations have been applied.
+        :rtype: np.ndarray
         """
         """Do iterative optimization split 150 degree connection / marge"""
         # Split 150 degree connections
@@ -493,23 +537,35 @@ class FilterSpatialGraph:
 
 class SpatialGraphCompare:
     """
-    Compare two spatial graphs and output filtered-out array's of splines based
-    on similarity.
+    Compares spatial graphs to identify matching microtubules (MTs) and classify
+    them based on specific criteria.
 
-    This class take as na input two arrays of shape [n, 3 or 4] for 2D or 3D
-    point cloud. This arrays contain [ID x X x Y x Z] dimensions.
+    This class is designed to analyze and compare spatial graphs, which represent
+    microtubule structures, based on user-defined thresholds. It identifies matching
+    microtubules between two spatial graphs by calculating probabilities of alignment.
+    The class is used for both comparing spatial structures and filtering instances
+    based on pre-defined distance and interaction thresholds.
 
-    The comparison is archived by calculating cdist for all splines from one spatial
-    graph to all splines from second spatial graph. And for each spline it output
-    probability of similarity and splines id's.
-
-    The Probability is calculated as a ration of points (in threshold contact)
-    to all points in spline.
-
-    The selection threshold for the spline interaction is given between 0 and 1.
+    :ivar dist_th: Minimum distance threshold used for comparing splines from two
+        spatial graphs.
+    :type dist_th: int
+    :ivar inter_th: Interaction probability threshold to determine matches between
+        splines of the graphs.
+    :type inter_th: float
     """
 
     def __init__(self, distance_threshold: int, interaction_threshold: float):
+        """
+        A class to define thresholds for distance and interaction, typically used for
+        evaluating data or enforcing certain constraints in various applications. The
+        thresholds are initialized during the creation of the class instance and are
+        used as fundamental parameters throughout the class usage.
+
+        :param distance_threshold: A distance value that acts as a limiting measure,
+                                   specified as an integer.
+        :param interaction_threshold: A floating-point value representing the interaction
+                                       threshold, used to determine limits or criteria.
+        """
         self.dist_th = distance_threshold
         self.inter_th = interaction_threshold
 
@@ -517,14 +573,25 @@ class SpatialGraphCompare:
         self, spatial_graph_1: np.ndarray, spatial_graph_2: np.ndarray
     ) -> list:
         """
-        Wrapper to compare all MT's between two spatial graphs
+        Compares two spatial graphs and matches the splines based on the given
+        distance and intersection thresholds. For each unique spline in the first
+        spatial graph, the function computes the probability of matching splines
+        in the second spatial graph. Spline pairs are compared using the
+        `compare_splines_probability` function, and matches are recorded if they
+        meet the specified thresholds.
 
-        Args:
-            spatial_graph_1 (np.ndarray): Spatial graph 1.
-            spatial_graph_2 (np.ndarray): Spatial graph 2.
+        :param spatial_graph_1: A numpy array representing the first spatial
+            graph. Each row should contain information about a single spline,
+            with the first column indicating the spline index and the remaining
+            columns containing spatial data.
+        :param spatial_graph_2: A numpy array representing the second spatial
+            graph. Each row should contain information about a single spline,
+            with the first column indicating the spline index and the remaining
+            columns containing spatial data.
 
-        Returns:
-            list: List of MT from spatial graph 1 that match spatial graph 2.
+        :return: A list of lists, where each inner list contains the
+            spline index from `spatial_graph_1` and the corresponding
+            indices of splines in `spatial_graph_2` that meet the match criteria.
         """
         match_sg1_sg2 = []
 
@@ -551,19 +618,22 @@ class SpatialGraphCompare:
         self, amira_sg: np.ndarray, tardis_sg: np.ndarray
     ) -> Tuple[list, list]:
         """
-        Compute comparison of Amira and Tardis spatial graphs and output tuple of
-        arrays with different selected MTs:
-            - Label1: MT taken from the Tardis (matches Amira)
-            - Label2: MT taken from the Amira (matches Tardis)
-            - Label3: MT in Tardis without match
-            - Label4: MT in Amira without match
+        Compares spatial graphs from Amira and Tardis, categorizing their components into
+        matched and noise groups based on mutual comparisons. The function processes the
+        spatial graphs to output lists of matched and unmatched elements for both input sets.
 
-        Args:
-            amira_sg (np.ndarray): Spatial graph [ID, X, Y, Z] from Amira.
-            tardis_sg (np.ndarray): Spatial graph [ID, X, Y, Z] from tardis_em.
+        :param amira_sg: A numpy array representing the spatial graph data from the
+            Amira system.
+        :type amira_sg: np.ndarray
+        :param tardis_sg: A numpy array representing the spatial graph data from the
+            Tardis system.
+        :type tardis_sg: np.ndarray
 
-        Returns:
-            Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]: Tuple of all arrays
+        :return: A tuple containing two lists:
+            1. A list of numpy arrays, where each array holds the categorized spatial
+               graph components (e.g., matched and noise data for Tardis and Amira).
+            2. A list of labels corresponding to each categorized array.
+        :rtype: Tuple[list, list]
         """
         label = [
             "TardisFilterBasedOnAmira",
@@ -616,23 +686,21 @@ class ComputeConfidenceScore:
     @staticmethod
     def _angle_smoothness(tangents):
         """
-        Calculate the smoothness of a sequence of vectors based on the angles
-        between consecutive vectors.
+        Computes the smoothness of the given array of tangents based on their angular
+        deviation. The smoothness is calculated as `1 - standard deviation of angles
+        between consecutive tangent vectors`. If the array of tangents is invalid, all
+        values are zero, or nearly zero, the method will return 1.0 indicating maximum
+        smoothness.
 
-        The smoothness is computed as 1 minus the standard deviation of the angles between
-        consecutive vectors. The angles are calculated using the dot product and
-        magnitude of the vectors. A higher smoothness value indicates a more
-        consistent alignment between consecutive vectors, whereas a lower smoothness value
-        indicates more variability in the alignment.
+        :param tangents: A 2D numpy array of shape (n, m) where `n` is the number of
+            tangent vectors, each in `m` dimensions. Represents the tangents whose
+            smoothness will be evaluated.
+        :type tangents: numpy.ndarray
 
-        Args:
-            tangents (np.ndarray): A 2D numpy array of shape (n, m), where n is
-            the number of vectors and m is the dimension of each vector.
-            Each row in the array represents a vector.
-
-        Returns:
-            float: A scalar value representing the smoothness of the sequence of vectors.
-                Ranges from 0 to 1, with higher values indicating a smoother sequence.
+        :return: A float value representing the smoothness of the tangent directions.
+            A value close to 1.0 indicates high smoothness (low angular deviation),
+            while values closer to 0 indicate low smoothness (high angular deviation).
+        :rtype: float
         """
         if (
             not isinstance(tangents, np.ndarray)
@@ -661,20 +729,34 @@ class ComputeConfidenceScore:
     @staticmethod
     def normalized_length(points: np.ndarray, min_l: float, max_l: float):
         """
-        Calculate and normalize the total length of a sequence of points.
-        The total length is calculated using the `total_length` function.
-        The result is then normalized to a value between 0 and 1 based on the provided
-        minimum and maximum length values.
+        Calculates the normalized length of a path defined by a sequence of points. The normalization
+        is based on the minimum and maximum lengths provided. It utilizes the total_length function
+        to compute the original length of the path. The returned normalized value lies between 0 and 1.
 
-        Args:
-            points (np.ndarray):
-            min_l (float): The minimum length value.
-            max_l (float): The maximum length value.
+        :param points: A numpy array representing the sequence of points
+            that defines the path.
+        :param min_l: The minimum length to be used for normalization.
+        :param max_l: The maximum length to be used for normalization.
+
+        :return: Normalized length of the path as a float value.
         """
         length = total_length(points)
         return (length - min_l) / (max_l - min_l + 1e-16)
 
     def combined_smoothness(self, points: np.ndarray, min_l: float, max_l: float):
+        """
+        Computes the combined smoothness score for a series of points based on both
+        angle-based smoothness and normalized length. The method integrates these
+        two metrics into a single smoothness score by averaging their values.
+
+        :param points: The array of points representing a series of coordinates.
+                       It should have shape (n, m) where n is the number of points
+                       and m is the dimensionality of each point.
+        :param min_l: The minimum length used for normalization.
+        :param max_l: The maximum length used for normalization.
+
+        :return: The combined smoothness score as a float value.
+        """
         tangents = np.diff(points, axis=0)
 
         scores = [
@@ -685,6 +767,22 @@ class ComputeConfidenceScore:
         return np.mean(scores)
 
     def __call__(self, segments: np.ndarray):
+        """
+        Analyze and compute the combined smoothness scores for segmented arrays.
+        The method processes a segmented array and calculates smoothness scores
+        for each segment based on its geometry relative to the minimum and maximum
+        segment lengths. The lengths are determined by the first and last segments.
+
+        :param segments: A 2D numpy.ndarray representing the segmented array.
+                         The first column contains segment ids, and the
+                         remaining columns represent spatial coordinates.
+        :type segments: numpy.ndarray
+
+        :return: A list of smoothness scores for each unique segment.
+        :rtype: list[float]
+        :raises ValueError: If the input array does not have the required shape
+                            where the second dimension size must equal 4.
+        """
         if segments.shape[1] != 4:
             TardisError(
                 "145",
@@ -709,24 +807,19 @@ def compare_splines_probability(
     spline_1: np.ndarray, spline_2: np.ndarray, threshold=100
 ):
     """
-    Compare two splines and calculate the probability of how likely given two
-    splines are the same line given array of points for same or similar splines
-    with no matching coordinates of points.
+    Compares the similarity of two splines based on a distance threshold and returns a
+    probability measure of their intersection. The comparison is performed by calculating
+    the distances between points on the splines and determining the proportion of
+    points on the first spline that match the second spline, within the specified threshold.
 
-    Calculates the probability of two splines being similar by comparing
-    the distance between their points and taking the mean of the matching
-    points below a threshold.
+    :param spline_1: A numpy array representing the first spline.
+    :param spline_2: A numpy array representing the second spline.
+    :param threshold: A numeric value representing the distance threshold below which points on
+                      the splines are considered matching. Default is 100.
 
-    Parameters:
-        spline_1 (np.ndarray): The first spline to compare, represented
-            as an array of points.
-        spline_2 (np.ndarray): The second spline to compare, represented
-            as an array of points.
-        threshold (int): The maximum distance between points for them to be
-            considered matching.
-
-    Returns:
-        float: The probability of the splines being similar, ranging from 0.0 to 1.0.
+    :return: A floating-point value representing the probability of intersection, i.e., the
+             proportion of points on the first spline that match the second spline within
+             the specified threshold.
     """
     if len(spline_1) == 0 or len(spline_2) == 0:
         return 0.0

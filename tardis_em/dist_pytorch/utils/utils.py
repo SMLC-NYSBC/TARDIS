@@ -19,17 +19,25 @@ from tardis_em.utils.errors import TardisError
 
 def pc_median_dist(pc: np.ndarray, avg_over=False, box_size=0.15) -> float:
     """
-    Calculate the median distance between KNN points in the point cloud.
+    Computes the median nearest neighbor distance for a given point cloud.
 
-    Args:
-        pc (np.ndarray): 2D/3D array of the point clouds.
-        avg_over (bool): If True, calculate the median position of all points
-            and calculate average k-NN for a selected set of points in that area
-            (speed up for big point clouds).
-        box_size (float): Boundary box size for 'avg_over'.
+    This function calculates the median nearest neighbor distance between points
+    in a given 2D or 3D point cloud array. Optionally, it can restrict the computation
+    to a subset of points that are within a bounding box region centered around the
+    median position of the point cloud. The bounding box dimensions can be scaled
+    based on a user-defined `box_size`.
 
-    Returns:
-        float: Median distance between points in given point cloud.
+    :param pc: A 2D or 3D point cloud array of shape (N, D), where N is the number
+        of points and D is the spatial dimensionality (2 or 3).
+    :type pc: np.ndarray
+    :param avg_over: Flag to indicate whether to compute the distances over a
+        subset of the point cloud within a bounding box. Defaults to False.
+    :type avg_over: bool, optional
+    :param box_size: Fraction of the bounding box size relative to the point cloud
+        extents. Only applicable when `avg_over` is True. Defaults to 0.15.
+    :type box_size: float, optional
+    :return: The mean of the median nearest neighbor distances.
+    :rtype: float
     """
     if isinstance(pc, torch.Tensor):
         pc = pc.cpu().detach().numpy()
@@ -98,17 +106,29 @@ def point_in_bb(
     max_z: Optional[np.float32] = None,
 ) -> np.ndarray:
     """
-    Compute a bounding_box filter on the given points
+    Determines whether points in a given array fall within a specified bounding box.
 
-    Args:
-        points (np.ndarray): (n,3) array.
-        min_i, max_i (int): The bounding box limits for each coordinate.
-            If some limits are missing, the default values are - infinite for
-            the min_i and infinite for the max_i.
+    The function evaluates if points, provided as an array, lie within the
+    boundaries defined by minimum and maximum values for x, y, and optionally z coordinates.
+    It enables the filtering of points based on inclusion within a 2D or 3D bounding box.
 
-    Returns:
-        np.ndarray[bool]: The boolean mask indicates wherever a point should be
-            kept or not.
+    :param points: Array representing the coordinates of points, where each row is a point
+        and columns correspond to x, y, and optionally z coordinates.
+    :type points: numpy.ndarray
+    :param min_x: Minimum x-coordinate boundary of the bounding box.
+    :type min_x: int
+    :param max_x: Maximum x-coordinate boundary of the bounding box.
+    :type max_x: int
+    :param min_y: Minimum y-coordinate boundary of the bounding box.
+    :type min_y: int
+    :param max_y: Maximum y-coordinate boundary of the bounding box.
+    :type max_y: int
+    :param min_z: Optional, minimum z-coordinate boundary of the bounding box.
+    :type min_z: numpy.float32, optional
+    :param max_z: Optional, maximum z-coordinate boundary of the bounding box.
+    :type max_z: numpy.float32, optional
+    :return: A boolean array where each element corresponds to the inclusion of a point in the bounding box.
+    :return type: numpy.ndarray
     """
     bound_x = np.logical_and(points[:, 0] > min_x, points[:, 0] < max_x)
     bound_y = np.logical_and(points[:, 1] > min_y, points[:, 1] < max_y)
@@ -128,10 +148,40 @@ def point_in_bb(
 
 class DownSampling:
     """
-    Base down sampling wrapper
+    Provides functionality for downsampling point cloud data, allowing optional inclusion of RGB values and
+    support for various data formats.
+
+    The class is designed to aid in voxel downsampling operations on point cloud data. It supports two
+    primary methods of operation: processing the entire point cloud at once or downsampling each index
+    when the input is a list. Additional features include support for sampling point clouds with or
+    without assigned class IDs (labels) and optional K-Nearest Neighbors (KNN) consideration.
+
+    :ivar sample: Defines the sampling strategy, either based on voxel size or threshold.
+    :type sample: int
+    :ivar labels: If true, data is assumed to include class IDs and expects coordinate arrays of shape
+        [[N, 3] or [N, 4]] (ID followed by coordinates). If false, coordinate arrays are expected in
+        shape [[N, 2] or [N, 3]] (coordinates only).
+    :type labels: bool
+    :ivar KNN: Defines whether K-Nearest Neighbors (KNN) consideration should be applied during
+        downsampling.
+    :type KNN: bool
     """
 
     def __init__(self, voxel=None, threshold=None, labels=True, KNN=False):
+        """
+        Initializes a parameterized object with configurable sample source, labeling preference,
+        and K-Nearest Neighbors (KNN) usage.
+
+        This class is designed to handle voxel data with a specified threshold for sampling.
+        Optionally, labeling of class IDs and KNN can be enabled to tailor the behavior
+        of the object according to user requirements.
+
+        :param voxel: Sampling data to be used. If None, the threshold value is employed instead.
+        :param threshold: Fallback sampling value when no voxel data is provided.
+        :param labels: Specifies whether to assign class IDs during down sampling. Expects input
+            in formats [ID x X x Y x (Z)] or [[N, 3], [N, 4]]. Defaults to True.
+        :param KNN: Determines whether K-Nearest Neighbors (KNN) is utilized. Defaults to False.
+        """
         if voxel is None:
             self.sample = threshold
         else:
@@ -147,6 +197,20 @@ class DownSampling:
         sampling,
         rgb=None,
     ) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
+        """
+        Perform down-sampling for the given coordinates and optionally their corresponding
+        RGB values. If RGB values are provided, the method returns both the downsampled
+        coordinates and their RGB values. Otherwise, only the downsampled coordinates
+        are returned.
+
+        :param coord: Coordinates to down-sample.
+        :type coord: np.ndarray
+        :param sampling: Sampling parameters or logic to apply.
+        :param rgb: Optional RGB values corresponding to the input coordinates.
+        :type rgb: np.ndarray, optional
+        :return: Down-sampled coordinates, and optionally RGB values if provided.
+        :rtype: Union[Tuple[np.ndarray, np.ndarray], np.ndarray]
+        """
         if rgb is not None:
             return coord, rgb
         return coord
@@ -157,8 +221,28 @@ class DownSampling:
         rgb: Optional[Union[np.ndarray, list]] = None,
     ) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
         """
-        Compute voxel down sampling for entire point cloud at once or if coord is a list
-        compute voxel down sampling for each list index.
+        Processes and downsamples the provided point cloud and associated RGB data. This
+        method accepts either a single point cloud or a list of point clouds and can also
+        accommodate associated RGB data if provided. The intent of the method is to reduce
+        the size of the input data through down-sampling, while optionally attaching
+        unique identifiers or RGB information to the point cloud.
+
+        If the input is a list of point clouds, each point cloud will be processed
+        individually and then combined into a unified structure.
+
+        :param coord:
+            A point cloud coordinate array or a list of coordinate arrays. For individual
+            arrays, expected dimensions are [N, 2], [N, 3], [N, 4] depending on the context. If a list
+            is provided, all elements should adhere to the described dimensional rules.
+        :param rgb:
+            Optional RGB array or list of RGB arrays corresponding to the input point clouds.
+            Must have a compatible structure with the provided coordinate arrays, or a list
+            of such RGB arrays if a list of point clouds is passed.
+        :return:
+            A tuple containing the down-sampled point cloud and corresponding down-sampled RGB
+            data if RGB data is provided. If RGB data is not included, only the down-sampled
+            point cloud is returned. If the input is a list, the output will be a unified
+            structure combining the processed instances.
         """
         ds_pc = []
         ds_rgb = []
@@ -221,7 +305,17 @@ class DownSampling:
 
 class VoxelDownSampling(DownSampling):
     """
-    Wrapper for down sampling of the point cloud using voxel grid (Based on Open3d library)
+    Provides functionality for down-sampling 3D point clouds by grouping points into voxels
+    of a specified size and computing the centroid of each voxel. Optionally supports operations
+    with RGB data, labels, and nearest neighbor search using KDTree.
+
+    Useful for reducing the size of large point clouds for computational efficiency while
+    preserving their spatial structure.
+
+    :ivar labels: Indicates whether labels are provided for the points in the point cloud.
+    :type labels: bool
+    :ivar KNN: Indicates whether nearest neighbor search is applied in the down-sampling process.
+    :type KNN: bool
     """
 
     def __init__(self, **kwargs):
@@ -231,19 +325,30 @@ class VoxelDownSampling(DownSampling):
         self, coord: np.ndarray, sampling: float, rgb: Optional[np.ndarray] = None
     ) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
         """
-        This function takes a set of 3D points and a voxel size and returns the centroids
-        of the voxels in which the points are located.
+        Down-sample a point cloud using a voxel-based approach.
 
-        Args:
-            coord (np.ndarray): A numpy array of shape (N, 3) containing the 3D coordinates
-            of the input points.
-            rgb (np.ndarray): A numpy array of shape (N, 3) containing RGB values of each point.
-            sampling (float): The size of each voxel in each dimension.
+        This function performs down-sampling of a point cloud by dividing the point cloud
+        space into uniformly spaced 3D grid cells (voxels) and representing each voxel by
+        its centroid. Optionally, it associates additional information such as color or
+        label attributes to the down-sampled points.
 
-        Returns:
-            voxel_centers (np.ndarray): A numpy array of shape (M, 3) containing the centroids
-            of the voxels in which the points are located where M is the number
-            of unique voxels.
+        :param coord: The 3D coordinates of the input point cloud. It is expected to
+                      be a NumPy array with shape (N, 3) where N is the number of points.
+        :param sampling: The size of the voxel grid's cube edge. A smaller value results
+                         in a finer resolution, retaining more detail.
+        :param rgb: Optional. If provided, it should be a NumPy array with shape (N, 3)
+                    representing the RGB colors of the input point cloud. The colors
+                    of down-sampled points will be computed accordingly.
+        :return:
+            - If `rgb` is not None, returns a tuple:
+                - First element is a NumPy array with shape (M, 3) or (M, 4), where M is
+                  the number of down-sampled points. Contains the 3D coordinates of the
+                  down-sampled points. If `self.labels` is true, an additional label
+                  column is included.
+                - Second element is a NumPy array with shape (M, 3), representing the RGB
+                  colors associated with the down-sampled points.
+            - If `rgb` is None, returns only the down-sampled 3D coordinates as a NumPy
+              array with shape (M, 3) or (M, 4) depending on `self.labels`.
         """
         if self.labels:
             coord_label = coord
@@ -300,7 +405,14 @@ class VoxelDownSampling(DownSampling):
 
 class RandomDownSampling(DownSampling):
     """
-    Wrapper for random sampling of the point cloud
+    A subclass of DownSampling that implements random down-sampling of a point cloud.
+
+    This class leverages random selection to down-sample point cloud data. It is suitable for
+    reducing the size of datasets while maintaining a random subset of points. The class retains
+    compatibility with additional node features such as RGB values during the down-sampling process.
+
+    :ivar sampling_rate: Description of the attribute related to sampling rate or method.
+    :type sampling_rate: Function or float
     """
 
     def __init__(self, **kwargs):
@@ -311,16 +423,26 @@ class RandomDownSampling(DownSampling):
         coord: np.ndarray, sampling, rgb: Optional[np.ndarray] = None
     ) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
         """
-        Random picked point to down sample point cloud.
-        Return correctly preserve ID class.
+        Downsamples a point cloud represented by coordinates and optional RGB values based
+        on a provided sampling strategy. The function either retains a fraction of the points
+        or selects points based on a callable sampling strategy.
 
-        Args:
-            coord: Array of point to downs-sample
-            rgb: Extra node feature like e.g. RGB values do sample with coord.
-            sampling: Lambda function to calculate down-sampling rate or fixed float ratio.
-
-        Returns:
-            random_sample (np.ndarray): Down-sample array of points.
+        :param coord: The input point cloud coordinates. Each row represents a point.
+                       The shape of the numpy array is (N, D), where N is the number
+                       of points and D is the dimensionality of each point.
+        :type coord: np.ndarray
+        :param sampling: The sampling strategy. Can be an integer, float, or callable.
+                         If an integer or float, specifies the fraction of points to keep.
+                         If a callable, it determines which points to keep dynamically.
+        :type sampling: Union[int, float, Callable]
+        :param rgb: Optional array representing the RGB colors for each point in the
+                    point cloud. It has the same number of rows as `coord`, where each
+                    row corresponds to a point's color.
+        :type rgb: Optional[np.ndarray]
+        :return: A subset of the point cloud coordinates. If `rgb` is provided,
+                 the function also returns a subset of the RGB values corresponding
+                 to the retained points.
+        :rtype: Union[Tuple[np.ndarray, np.ndarray], np.ndarray]
         """
         if isinstance(sampling, int) or isinstance(sampling, float):
             rand_keep = int(len(coord) * sampling)
@@ -342,13 +464,19 @@ class RandomDownSampling(DownSampling):
 
 def check_model_dict(model_dict: dict) -> dict:
     """
-    Check and rebuild model structure dictionary to ensure back-compatibility.
+    Processes the provided `model_dict` by mapping specific key patterns to predefined normalized keys
+    and extracting their corresponding values into a new dictionary. This function simplifies the
+    original dictionary representation into a standardized configuration dictionary that is ready
+    for further use. Default values are also assigned to certain keys if they are not present in the
+    provided dictionary.
 
-    Args:
-        model_dict (dict): Model structure dictionary.
-
-    Returns:
-        dict: Standardize model structure dictionary.
+    :param model_dict: A dictionary containing model configuration parameters with keys following
+        specific naming conventions.
+    :type model_dict: dict
+    :return: A standardized dictionary that includes key-value pairs extracted based on the specified
+        naming conventions, along with default values for missing keys such as "num_cls",
+        "rgb_embed_sigma", and "num_knn".
+    :rtype: dict
     """
     new_dict = {}
 

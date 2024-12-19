@@ -17,15 +17,17 @@ from sklearn.metrics import auc, average_precision_score, roc_curve
 
 def compare_dict_metrics(last_best_dict: dict, new_dict: dict) -> bool:
     """
-    Compares two metric dictionaries and returns the one with the highest
-    average metric values.
+    Compare the average metric values of two dictionaries and return whether the new
+    dictionary has a higher average than the last best dictionary. The metric
+    comparison is performed by calculating the average of the dictionary values.
 
-    Args:
-        last_best_dict (dict): The previous best metric dictionary.
-        new_dict (dict): The new metric dictionary to compare.
-
-    Returns:
-        bool: True if the new dictionary has a higher average metric value.
+    :param last_best_dict: A dictionary representing the last best metrics. Values must
+                           be numeric and will be used to compute their average.
+    :param new_dict: A dictionary representing the new metrics. Values must be numeric
+                     and will be used to compute their average.
+    :return: A boolean indicating whether the average value of metrics in the new
+             dictionary is greater than the average value of the last best
+             dictionary.
     """
     compare_dict_metric = lambda metric_dict: sum(metric_dict.values()) / len(
         metric_dict
@@ -42,15 +44,21 @@ def eval_graph_f1(
     logits: torch.Tensor, targets: torch.Tensor, threshold: float, soft=False
 ):
     """
-    Module used for calculating training metrics
+    Evaluates the Graph-F1 metric for given logits and targets using a threshold-based
+    approach with an option to calculate the soft variant.
 
-    Works with torch a numpy dataset.
+    The function supports both soft approximation and threshold-based calculation
+    to determine precision, recall, accuracy, and F1-score of predictions. It uses
+    specific configurations for masking the diagonal elements and applies varied
+    thresholds to optimize performance metrics. This is particularly useful in
+    evaluating graph-based predictions.
 
-    Args:
-        logits (np.ndarray, torch.Tensor): Prediction output from the model.
-        targets (np.ndarray, torch.Tensor): Ground truth mask.
-        threshold (float):
-        soft:
+    :param logits: Prediction scores or probabilities from the model (e.g., output of a neural network).
+    :param targets: True binary labels corresponding to the predictions.
+    :param threshold: A threshold value for converting logits into binary predictions. Determines decision boundaries.
+    :param soft: If True, computes a soft approximation of metrics; otherwise, uses threshold-based evaluation.
+    :return: If `soft` is True, returns precision cost, recall cost, and F1 cost as tensors.
+             Otherwise, returns averaged accuracy score, precision score, recall score, F1 score, and selected threshold.
     """
     """Mask Diagonal as TP"""
     g_len = logits.shape[1]
@@ -170,15 +178,21 @@ def calculate_f1(
     best_f1=True,
 ):
     """
-    Module used for calculating training metrics
+    Calculates evaluation metrics for binary classification tasks, such as F1 score,
+    precision, recall, and accuracy. Depending on the `best_f1` flag, the function
+    either computes metrics for a specific threshold or iteratively finds the
+    threshold yielding the best F1 score.
 
-    Works with torch a numpy dataset.
-
-    Args:
-        logits (np.ndarray, torch.Tensor): Prediction output from the model.
-        targets (np.ndarray, torch.Tensor): Ground truth mask.
-        best_f1 (bool): If True an expected inputs is probability of classes and
-            measured metrics is soft-f1.
+    :param logits: Predictions or model outputs, either as probabilities or logits.
+    :type logits: Union[numpy.ndarray, torch.Tensor]
+    :param targets: Ground-truth binary targets for the classification task.
+    :type targets: Union[numpy.ndarray, torch.Tensor]
+    :param best_f1: Flag to enable iterative calculation to find the threshold
+        for the highest F1 score. If False, metrics are calculated directly.
+    :type best_f1: bool
+    :return: A tuple containing metrics - accuracy, precision, recall, F1 score,
+        and (if applicable) the best threshold.
+    :rtype: Tuple[float, float, float, float, Optional[float]]
     """
     """Find best f1 based on variation threshold"""
     if best_f1:
@@ -250,6 +264,20 @@ def AP(logits: np.ndarray, targets: np.ndarray) -> float:
 
 
 def AP_instance(input_: np.ndarray, targets: np.ndarray) -> float:
+    """
+    Compute the average precision (AP) for the given input and target instances. The function
+    compares the input predictions with ground truth instances and calculates precision values
+    based on the best matches. Precision is evaluated as the ratio of true positives to the total
+    number of positive detections. The final AP is normalized by the total number of unique target
+    instances.
+
+    :param input_: A 2D numpy array representing predicted instances, where the first column
+        corresponds to instance labels and the remaining columns represent associated features.
+    :param targets: A 2D numpy array representing ground truth (GT) instances, where the first
+        column corresponds to instance labels and the remaining columns represent associated features.
+    :return: The computed average precision (AP) as a float, normalized across all unique GT
+        instances in the targets dataset.
+    """
     prec = 0
 
     # Get GT instances, compute IoU for best mache between GT and input
@@ -271,6 +299,25 @@ def AP_instance(input_: np.ndarray, targets: np.ndarray) -> float:
 
 
 def AUC(logits: np.ndarray, targets: np.ndarray, diagonal=False) -> float:
+    """
+    Computes the Area Under the Curve (AUC) for given logits and targets.
+
+    This function calculates the AUC score, which is a measure of the performance
+    of a classification model. It uses logits and targets as input and computes
+    the Receiver Operating Characteristic (ROC) curve for evaluation. If the
+    `diagonal` parameter is set to True, it modifies the diagonal of the input
+    logits and targets matrices to ensure specific conditions before calculating
+    the AUC.
+
+    :param logits: The predicted scores or probabilities as a numpy
+        array. Can be 2D or 3D.
+    :param targets: Ground truth binary labels as a numpy array. Must
+        match the shape of `logits`.
+    :param diagonal: A boolean indicating if the diagonal elements of
+        logits/targets matrices should be altered before computation.
+        Default is `False`.
+    :return: The computed AUC metric as a float.
+    """
     if diagonal:
         g_len = logits.shape[1]
         g_range = range(g_len)
@@ -290,6 +337,22 @@ def AUC(logits: np.ndarray, targets: np.ndarray, diagonal=False) -> float:
 
 
 def IoU(input_: np.ndarray, targets: np.ndarray, diagonal=False):
+    """
+    Compute the Intersection Over Union (IoU) metric for given input and targets.
+
+    The IoU is a performance metric commonly used for evaluating segmentation models
+    in computer vision. It measures the overlap between the ground-truth target
+    and predicted values. The optional 'diagonal' parameter allows modifications
+    by excluding diagonal elements in the computation, particularly useful in
+    multi-class datasets.
+
+    :param input_: Input numpy array, typically model predictions. Can be a 2D or 3D array.
+    :param targets: Target numpy array, representing the ground-truth labels. Must match
+        the shape of the input.
+    :param diagonal: Flag to enforce diagonal elements to be 1. If True, modifies the
+        diagonal elements in the input and targets arrays.
+    :return: Computed IoU value as a floating-point number.
+    """
     if diagonal:
         g_len = input_.shape[1]
         g_range = range(g_len)
@@ -314,14 +377,22 @@ def mcov(
     targets,
 ):
     """
-    Mean Coverage metric
+    Calculate the mean Coverage (mCov) and weighted mean Coverage (mwCov) for given input and target data.
 
-    Args:
-        input_ (np.ndarray, torch.Tensor): _description_
-        targets (np.ndarray, torch.Tensor): _description_
+    This function computes the coverage metrics evaluating how well given input instances match with
+    ground truth (GT) instances based on Intersection over Union (IoU). It considers both the ratio of
+    the instance size (w_g) relative to the total size and overall mean matching.
 
-    Returns:
-        float: _description_
+    :param input_: Input point cloud data where the first column identifies instance labels and the remaining
+        columns represent corresponding coordinates or features.
+    :type input_: numpy.ndarray
+    :param targets: Ground truth (GT) point cloud data with the first column identifying instance labels
+        and the remaining columns representing corresponding coordinates or features.
+    :type targets: numpy.ndarray
+    :return: A tuple containing:
+        - mCov (float): Mean Coverage across all GT instances.
+        - mwCov (float): Weighted Mean Coverage based on instance ratio.
+    :rtype: tuple[float, float]
     """
     mCov = 0
     mwCov = 0
@@ -363,6 +434,21 @@ def confusion_matrix(
     logits: Union[np.ndarray, torch.Tensor],
     targets: Union[np.ndarray, torch.Tensor],
 ):
+    """
+    Calculates the confusion matrix components for the provided logits and targets.
+    The confusion matrix consists of True Positives (TP), False Positives (FP),
+    True Negatives (TN), and False Negatives (FN). This function handles both
+    PyTorch tensors and NumPy arrays as input for logits and targets.
+
+    :num-param logits: The predicted values, supporting either PyTorch tensors or
+        NumPy arrays.
+    :num-param targets: The ground-truth values, supporting either PyTorch tensors
+        or NumPy arrays.
+    :return: A tuple containing four integer values representing True Positives
+        (TP), False Positives (FP), True Negatives (TN), and False Negatives (FN),
+        computed based on the provided logits and targets.
+    :rtype: Tuple[int, int, int, int]
+    """
     if torch.is_tensor(logits):
         confusion_vector = logits / targets
 
@@ -387,10 +473,17 @@ def confusion_matrix(
 
 def normalize_image(image: np.ndarray):
     """
-    Simple image data normalizer between 0,1
+    Normalizes a given image represented as a NumPy array.
 
-    Args:
-        image (np.ndarray): Image data set.
+    This function ensures that the input image array falls within the defined
+    binary normalization context. If the image has minimum and maximum values
+    already set to 0 and 1, respectively, it is returned unchanged. Otherwise,
+    based on the minimum and maximum values, the image is normalized to binary
+    values (0 or 1).
+
+    :param image: The input image to be normalized, represented as a NumPy array.
+    :return: The normalized image array with binary values, where pixel values are
+        either 0 or 1.
     """
     image_min = np.min(image)
     image_max = np.max(image)

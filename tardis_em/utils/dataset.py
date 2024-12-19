@@ -20,6 +20,24 @@ from tardis_em.utils.errors import TardisError
 
 
 def find_filtered_files(directory, prefix="instances_filter", format_="csv"):
+    """
+    Finds and retrieves a list of files in the specified directory based on a given
+    prefix and format(s). This function can search for files matching the prefix
+    along with a single format or multiple formats, returning a list of filtered
+    file paths.
+
+    :param directory: The directory path in which the search will be performed.
+    :type directory: str
+    :param prefix: The prefix that filtered files should match.
+        Defaults to 'instances_filter'.
+    :type prefix: str, optional
+    :param format_: The format or formats (as string or a list/tuple of strings)
+        to search for matching files. Defaults to 'csv'.
+    :type format_: str or list or tuple, optional
+    :return: A list of file paths that match the specified prefix and format(s) in
+        the directory.
+    :rtype: list
+    """
     if prefix == "":
         extension = "*"
     else:
@@ -43,17 +61,26 @@ def move_train_dataset(
     dir_: str, coord_format: tuple, with_img: bool, img_format: Optional[tuple] = None
 ):
     """
-    Detect and copy all date to new train directory.
+    Moves and organizes a training dataset by placing coordinate files and optionally
+    image files into appropriate subdirectories.
 
-    Train dataset builder. Detected files of specific format and moved to:
-    - dir/train/masks
-    - dir/train/imgs [optional]
+    :param dir_: The directory containing dataset files to be moved.
+    :type dir_: str
+    :param coord_format: The file extension or format of coordinate files to be processed.
+    :type coord_format: tuple
+    :param with_img: A flag indicating whether to include associated image files during
+        dataset organization.
+    :type with_img: bool
+    :param img_format: The file extension or format of image files to be processed if
+        `with_img` is True. Optional.
+    :type img_format: tuple, optional
+    :return: None
+    :rtype: None
 
-    Args:
-        dir_ (str): Directory where the file should be output.
-        coord_format (tuple): Format of the coordinate files.
-        with_img (bool): If True, expect corresponding image files.
-        img_format (tuple, optional): Allowed format that can be used.
+    :raises TardisError: If no coordinate files matching `coord_format` are found in the
+        given directory.
+    :raises TardisError: If `with_img` is True but no image files matching `img_format`
+        are found in the given directory.
     """
     if coord_format == ".txt":
         area_list = [d for d in listdir(dir_) if isdir(join(dir_, d))]
@@ -91,18 +118,20 @@ def move_train_dataset(
 
 def build_test_dataset(dataset_dir: str, dataset_no: int, stanford=False):
     """
-    Standard builder for test datasets.
+    Builds a test dataset by reorganizing and moving files from the train dataset directory
+    to a test dataset directory based on specific selection logic. This function handles
+    dataset creation for both the general case and a special case for Stanford datasets.
+    Images and corresponding masks are moved into a new test directory, ensuring the train
+    directory is properly split into train and test datasets.
 
-    This module builds a test dataset from the training subset by moving random
-    files from train to test directory.
-    The number of files is specified in %.
-
-    Files are saved in dir/test/imgs and dir/test/masks.
-
-    Args:
-        dataset_dir (str): Directory with train test folders.
-        dataset_no (int): Number of datasets to iterate throw.
-        stanford (bool): Marker for stanford S3DIS dataset
+    :param dataset_dir: Path to the directory containing the dataset.
+    :type dataset_dir: str
+    :param dataset_no: Number of datasets or partitions to consider when splitting for test data.
+    :type dataset_no: int
+    :param stanford: If True, applies specific folder organization and file movement logic
+                     for Stanford datasets. Defaults to False.
+    :type stanford: bool
+    :return: None
     """
     if "test" not in listdir(dataset_dir) and "train" not in listdir(dataset_dir):
         TardisError(

@@ -47,9 +47,11 @@ To run training. To start training, use the following command:
 
     tardis_cnn_train -dir <path-to-your-dataset; str> -ps <patch_size; int> -cnn <cnn_type; str> -b <batch_size> -cs 3gcl <or 2gcl for 2D>
 
-TARDIS will create a folder named cnn_model_checkpoint, containing files named *_checkpoint.pth and model_weights.pth.
-    - For re-training the model, use the *_checkpoint.pth file.
-    - For predictions with TARDIS-em, use the model_weights.pth file.
+
+TARDIS will create a folder named cnn_model_checkpoint, containing files named `*_checkpoint.pth` and `model_weights.pth`.
+
+- For re-training the model, use the `*_checkpoint.pth` file.
+- For predictions with TARDIS-em, use the `model_weights.pth` file.
 
 Advance usage:
 ``````````````

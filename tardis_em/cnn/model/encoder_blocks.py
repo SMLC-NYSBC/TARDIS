@@ -19,22 +19,27 @@ from tardis_em.cnn.utils.utils import number_of_features_per_level
 
 class EncoderBlock(nn.Module):
     """
-    ENCODER BUILDER
+    Represents an encoder block with convolutional modules, optional max-pooling, dropout, and
+    attention features for deep learning architectures.
 
-    Single encoder module composed of nn.MaxPool and convolution module.
+    This class constructs a configurable encoder block. The encoder block supports max-pooling
+    layers, dropout layers, attention features, and employs convolutional modules with specific
+    kernel sizes and padding. The components used in the block can be customized through
+    component identifiers.
 
-    Args:
-        in_ch (int): Number of input channels.
-        out_ch (int): Number of output channels.
-        conv_module (conv_module): Single, Double or RCNN convolution block.
-        conv_kernel (int): Convolution kernel size.
-        max_pool (int): If True nn.MaxPool is applied.
-        pool_kernel (int): Kernel size for max pooling.
-        dropout (float, optional): Optionals, dropout rate.
-        padding (int): Padding size for the convolution.
-        components (str): Components that are used for conv. block.
-        num_group (int): Num. of groups for the nn.GroupNorm.
-            None -> if nn.GroupNorm is not used.
+    :ivar attn_features: Indicates if attention features are enabled for this block.
+    :type attn_features: bool
+    :ivar dropout: Dropout rate used in the block. If None, dropout is not applied.
+    :type dropout: float or None
+    :ivar maxpool: Max pooling layer. If max pooling is disabled, this is set to None.
+    :type maxpool: torch.nn.Module or None
+    :ivar dropout_layer: Dropout layer used in the block. Initialized if dropout is provided.
+    :type dropout_layer: torch.nn.Module or None
+    :ivar conv_module: Convolutional module used as the core of the encoder block.
+    :type conv_module: torch.nn.Module
+    :ivar attn_conv: Attention-based convolutional module. Initialized if attention features
+        are enabled.
+    :type attn_conv: torch.nn.Module or None
     """
 
     def __init__(
@@ -51,6 +56,39 @@ class EncoderBlock(nn.Module):
         num_group=8,
         attn_features=False,
     ):
+        """
+        Initializes an encoder block with optional max pooling, dropout, and convolutional
+        modules. The encoder block can also support attention features when enabled. The
+        constructor sets up the required modules, components, and parameters based on the
+        provided input arguments.
+
+        :param in_ch: Number of input channels for this encoder block.
+        :type in_ch: int
+        :param out_ch: Number of output channels for this encoder block.
+        :type out_ch: int
+        :param conv_module: A convolutional module or block used within the encoder.
+        :param conv_kernel: Size of the convolutional kernel (default is 3).
+        :type conv_kernel: int, optional
+        :param max_pool: If True, adds a max-pooling layer to the block (default is True).
+        :type max_pool: bool, optional
+        :param dropout: Dropout rate to be applied. If None, no dropout layer is added.
+        :type dropout: float, optional
+        :param pool_kernel: Size of the kernel for max-pooling operations (default is 2).
+        :type pool_kernel: int, optional
+        :param padding: Amount of padding to apply in convolutional layers (default is 1).
+        :type padding: int, optional
+        :param components: String identifier defining specific layer components to use
+            (e.g., "3gcr").
+        :type components: str
+        :param num_group: Number of groups for grouped convolutions (default is 8).
+        :type num_group: int, optional
+        :param attn_features: Enables the attention feature if set to True (default is False).
+        :type attn_features: bool, optional
+
+        :raises TypeError: If `conv_module` is not callable.
+        :raises ValueError: If incorrect component identifiers are provided in `components` or
+            if arguments are incompatible with the selected configuration.
+        """
         super(EncoderBlock, self).__init__()
 
         self.attn_features = attn_features
@@ -97,13 +135,15 @@ class EncoderBlock(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Forward CNN encoder block.
+        Processes input tensor through layers including convolutional, attention mechanisms,
+        optional pooling, and dropout, returning the transformed tensor. This method serves as
+        the key forward computation logic for the module.
 
-        Args:
-            x (torch.Tensor): Image torch before convolution.
+        :param x: Input tensor to be processed.
+        :type x: torch.Tensor
 
-        Returns:
-            torch.Tensor: Image after convolution.
+        :return: Processed output tensor.
+        :rtype: torch.Tensor
         """
         if self.maxpool is not None:
             x = self.maxpool(x)
@@ -133,27 +173,34 @@ def build_encoder(
     attn_features=False,
 ) -> nn.ModuleList:
     """
-    Encoder wrapper for entire CNN model.
+    Constructs and returns a sequence of encoder blocks as a module list. Each encoder block
+    is defined based on the provided parameters and forms a hierarchical structure of
+    feature extraction layers. The first encoder block does not use max pooling, while
+    subsequent layers include max pooling operations as specified. The method also
+    accommodates advanced features such as attention mechanisms and grouped convolutions.
 
-    Create encoder block from feature map and convolution modules. Number of
-    encoder layers is indicated by number of features.
+    :param in_ch: Number of input image channels for the first encoder block. Each subsequent
+        block adapts based on feature scaling.
+    :param conv_layers: Number of convolutional layers to create in the encoder architecture.
+    :param conv_layer_scaler: Multiplier to compute the number of feature maps at each level
+        of the encoder.
+    :param conv_kernel: Kernel size for convolution operations in the encoder blocks. Can be
+        an integer or tuple.
+    :param padding: Padding value for the convolutional layers. Accepts integer or tuple for
+        specific layer configurations.
+    :param num_group: Number of groups for grouped convolution operations.
+    :param components: String identifier or configuration for additional encoder components
+        such as normalization layers or activation functions.
+    :param pool_kernel: Kernel size used for max pooling operations across encoder blocks
+        except the first block. Accepts integer or tuple.
+    :param conv_module: A callable or module defining the specific implementation for
+        convolutional operations.
+    :param dropout: Optional dropout probability to apply regularization in each encoder
+        block. Defaults to None, disabling dropout.
+    :param attn_features: Boolean flag to enable or disable attention mechanisms in the encoder
+        blocks. Defaults to False.
 
-    Args:
-        in_ch (int): Number of input channels.
-        conv_layers (int): Number of convolution layers.
-        conv_layer_scaler (int): Number of channel by which each CNN block is scaled up.
-        conv_module (conv_module): Single, Double or RCNN convolution block.
-        conv_kernel (int): Convolution kernel size.
-        pool_kernel (int): Kernel size for max pooling.
-        dropout (float, optional): Optionals, dropout rate.
-        padding (int): Padding size for the convolution.
-        components (str): Components that are used for conv. block.
-        num_group (int): Num. of groups for the nn.GroupNorm.
-            None -> if nn.GroupNorm is not used.
-        attn_features (bool):
-
-    Returns:
-        nn.ModuleList: Encoder block.
+    :return: Returns a `nn.ModuleList` containing the constructed encoder blocks.
     """
     encoders = []
     feature_map = number_of_features_per_level(

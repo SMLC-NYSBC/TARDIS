@@ -38,26 +38,57 @@ def trim_with_stride(
     device=get_device("cpu"),
 ):
     """
-    Function to patch image and mask to specified patch size with overlying area
+    Trim a 2D/3D image with optional masking into smaller patches with a specific stride
+    and size. This function is designed for preprocessing image data for machine learning
+    tasks, ensuring that the image dimensions meet specified requirements or adjusting
+    them when necessary.
 
-    Output images are saved as tiff with naming shame 1_1_1_25. Where
-    number indicate grid position in xyz. Last number indicate stride.
+    :param image:
+        The input image array, which can be 2D or 3D, and include grayscale or RGB
+        channels. The data type and shape may vary depending on the input.
+    :param trim_size_xy:
+        Desired size for trimming in the X and Y dimensions. The input value determines
+        the width and height of each patch. If not provided, default values will be
+        calculated.
+    :param trim_size_z:
+        Desired size for trimming in the Z dimension. The input value determines
+        the depth of each patch in case of 3D data. If not provided, default values
+        will be calculated.
+    :param output:
+        Directory path where the trimmed patches will be saved. Output images and masks
+        are stored in subdirectories.
+    :param image_counter:
+        Counter used for naming the output files. This ensures unique filenames during
+        the trimming process.
+    :param scale:
+        A scaling factor list that adjusts the image size before trimming is performed.
+    :param clean_empty:
+        When set to True, automatic filtering is applied to exclude patches considered
+        empty based on a specific condition.
+    :param keep_if:
+        Minimum threshold for keeping patches. The condition ensures that patches
+        with non-empty values above this percentage are retained.
+    :param stride:
+        The stride size for trimming patches. Stride determines the overlap between
+        adjacent patches when slicing the image.
+    :param mask:
+        Optional mask array corresponding to the input image. Used for segmentation
+        or region-specific analyses. The function scales and trims the mask alongside
+        the image.
+    :param log:
+        Flag to enable or disable logging of the process; logs errors and important
+        actions during execution when set to True.
+    :param pixel_size:
+        Indicates whether the output should be saved in '.mrc' (specific file format)
+        or '.tif' (common image format). Leave None for default behavior.
+    :param device:
+        Specifies the computational device (CPU, GPU, etc.) to be used if scaling
+        operations employ device-specific optimizations.
 
-    Args:
-        image (np.ndarray): Corresponding image for the labels.
-        trim_size_xy (int): Size of trimming in xy dimension.
-        trim_size_z (int): Size of trimming in z dimension.
-        output (str): Name of the output directory for saving.
-        image_counter (int): Number id of image.
-        scale (tuple): Up- DownScale image and mask to the given shape or factor.
-        clean_empty (bool): Remove empty patches.
-        keep_if (float): If float, keep only patches that have mask.
-            Evaluated based on % of pixels with mask
-        stride (int): Trimming step size.
-        mask (np.ndarray, None): Label mask.
-        log (bool): If True, output trimming log information.
-        pixel_size (None, float): If not None, save mask as mrc with pixel size information.
-        device (torch.device): Optional device.
+    :return:
+        Returns None. Side effect: Saves the image patches and corresponding mask
+        patches (when provided) to the specified output directory. Each patch is
+        named according to its positional indices to maintain unique identification.
     """
     img_dtype = np.float32
 
@@ -313,12 +344,18 @@ def trim_label_mask(
     points: np.ndarray, image: np.ndarray, label_mask: np.ndarray
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
-    ! DEPRECIATED ! Module to trim image and mask to boundary box of point cloud.
+    Trim the label mask, image, and adjust the point coordinates based on the minimum and
+    maximum boundaries in the provided points. The function calculates the bounding box
+    using the points array, crops the image and label mask within this bounding box,
+    and shifts the points coordinates accordingly.
 
-    Args:
-        points (np.ndarray): 3D coordinates of pitons.
-        image (np.ndarray): corresponding image for the labels.
-        label_mask (np.ndarray): empty label mask.
+    :param points: A numpy array of shape (N, 3) representing the coordinates of points.
+    :param image: A 3D numpy array representing the volumetric image.
+    :param label_mask: A 3D numpy array representing the volumetric label mask.
+
+    :return: A tuple containing the trimmed image array, the trimmed label_mask array,
+        and the adjusted points array.
+    :rtype: Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]
     """
     max_x, min_x = max(points[:, 0]), min(points[:, 0])
     max_y, min_y = max(points[:, 1]), min(points[:, 1])
