@@ -193,12 +193,7 @@ warnings.simplefilter("ignore", UserWarning)
     help="If True, continue from the last tomogram that was successfully predicted.",
     show_default=True,
 )
-@click.option(
-    "-test_click",
-    "--test_click",
-    default=False,
-    hidden=True
-)
+@click.option("-test_click", "--test_click", default=False, hidden=True)
 @click.version_option(version=version)
 def main(
     path: str,

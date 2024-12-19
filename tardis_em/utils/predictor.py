@@ -944,7 +944,8 @@ class GeneralPredictor:
         # Check if there is anything to predict in the user-indicated folder
         msg = f"Given {self.dir} does not contain any recognizable file!"
         assert_ = len(self.predict_list) == 0
-        if self.tardis_logo:
+
+        if self.tardis_logo and self.tardis_progress is not None:
             if assert_:
                 TardisError(
                     id_="12",

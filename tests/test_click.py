@@ -36,7 +36,7 @@ def test_script_executable(script):
         "Usage" in result.stdout.decode()
     ), f"Script {script} does not provide proper help output."
 
-    if script.startswith(('predict', 'train')):
+    if script.startswith(("predict", "train")):
         result = subprocess.run(
             ["python", script, "--test_click True"],
             stdout=subprocess.PIPE,

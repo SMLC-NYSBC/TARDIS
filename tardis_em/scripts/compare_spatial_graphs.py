@@ -263,7 +263,7 @@ def main(
                 )
 
     if len(amira_files) == 0:
-        amira_files = ['test']
+        amira_files = ["test"]
 
     tardis_progress(
         title=f"Spline matching module {str_debug}",

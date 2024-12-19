@@ -221,12 +221,7 @@ from tardis_em._version import version
     help="If indicated, value of dropout for CNN.",
     show_default=True,
 )
-@click.option(
-    "-test_click",
-    "--test_click",
-    default=False,
-    hidden=True
-)
+@click.option("-test_click", "--test_click", default=False, hidden=True)
 @click.version_option(version=version)
 def main(
     path: str,
