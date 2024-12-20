@@ -1,3 +1,13 @@
+#######################################################################
+#  TARDIS - Transformer And Rapid Dimensionless Instance Segmentation #
+#                                                                     #
+#  New York Structural Biology Center                                 #
+#  Simons Machine Learning Center                                     #
+#                                                                     #
+#  Robert Kiewisz, Tristan Bepler                                     #
+#  MIT License 2021 - 2024                                            #
+#######################################################################
+
 import numpy as np
 from tardis_em.analysis.mt_classification.utils import (
     count_true_groups,

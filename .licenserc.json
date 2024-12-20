@@ -19,6 +19,7 @@
     "tardis_em/dist_pytorch/utils/__init__.py",
     "tardis_em/benchmarks/__init__.py",
     "tardis_em/dist_pytorch/sparse_model/__init__.py",
+    "tardis_em/analysis/mt_classification/__init__.py",
     "docs/",
     "doc/"
   ]
