@@ -186,7 +186,7 @@ warnings.simplefilter("ignore", UserWarning)
 )
 @click.option(
     "-continue",
-    "--continue_",
+    "--continue_b",
     default=False,
     type=bool,
     help="If True, continue from the last tomogram that was successfully predicted.",
@@ -212,7 +212,7 @@ def main(
     connect_cylinder: int,
     device: str,
     debug: bool,
-    continue_: bool,
+    continue_b: bool,
     test_click=False,
 ):
     """
@@ -238,7 +238,7 @@ def main(
 
     predictor = GeneralPredictor(
         predict="Membrane2D",
-        dir_=path,
+        dir_s=path,
         binary_mask=mask,
         correct_px=correct_px,
         normalize_px=normalize_px,
@@ -254,9 +254,9 @@ def main(
         instances=instances,
         connect_splines=connect_membranes,
         connect_cylinder=connect_cylinder,
-        device_=str(device),
+        device_s=str(device),
         debug=debug,
-        continue_=continue_,
+        continue_b=continue_b,
     )
 
     if not test_click:

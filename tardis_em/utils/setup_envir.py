@@ -17,21 +17,21 @@ from typing import Union
 from tardis_em.utils.errors import TardisError
 
 
-def build_new_dir(dir_: str):
+def build_new_dir(dir_s: str):
     """
     Builds a directory for temporary output files and ensures required files
     are present within the specified directory. If the required conditions
     are not met or the output directory already exists, appropriate actions
     are taken.
 
-    :param dir_: Path to the base directory where the temporary directory will
+    :param dir_s: Path to the base directory where the temporary directory will
                  be created.
-    :type dir_: str
+    :type dir_s: str
     :return: None
     """
     """ Build temp files directory """
-    output = join(dir_, "output")
-    image_list = glob.glob(dir_ + "/*.tif")
+    output = join(dir_s, "output")
+    image_list = glob.glob(dir_s + "/*.tif")
     if not len(image_list) > 0:
         TardisError(
             "12",
@@ -49,11 +49,11 @@ def build_new_dir(dir_: str):
             "directory.",
         )
 
-        rename(output, join(dir_, "output_old"))
+        rename(output, join(dir_s, "output_old"))
         mkdir(output)
 
 
-def build_temp_dir(dir_: str):
+def build_temp_dir(dir_s: str):
     """
     Creates necessary directories in the specified base directory to ensure the required
     structure for processing is in place. The function first checks for the existence of
@@ -62,56 +62,56 @@ def build_temp_dir(dir_: str):
     state. If not, proper directories will be created as needed. Additionally, verifies
     and creates a top-level "Predictions" directory if it doesn't exist.
 
-    :param dir_: The base directory where the directories need to be created or reset.
-    :type dir_: str
+    :param dir_s: The base directory where the directories need to be created or reset.
+    :type dir_s: str
     :return: None
     """
-    if isdir(join(dir_, "temp")):
-        if isdir(join(dir_, "temp", "Patches")) or isdir(
-            join(dir_, "temp", "Predictions")
+    if isdir(join(dir_s, "temp")):
+        if isdir(join(dir_s, "temp", "Patches")) or isdir(
+            join(dir_s, "temp", "Predictions")
         ):
-            clean_up(dir_=dir_)
+            clean_up(dir_s=dir_s)
 
-            mkdir(join(dir_, "temp"))
-            mkdir(join(dir_, "temp", "Patches"))
-            mkdir(join(dir_, "temp", "Predictions"))
+            mkdir(join(dir_s, "temp"))
+            mkdir(join(dir_s, "temp", "Patches"))
+            mkdir(join(dir_s, "temp", "Predictions"))
         else:
-            mkdir(join(dir_, "temp", "Patches"))
-            mkdir(join(dir_, "temp", "Predictions"))
+            mkdir(join(dir_s, "temp", "Patches"))
+            mkdir(join(dir_s, "temp", "Predictions"))
     else:
-        mkdir(join(dir_, "temp"))
-        mkdir(join(dir_, "temp", "Patches"))
-        mkdir(join(dir_, "temp", "Predictions"))
+        mkdir(join(dir_s, "temp"))
+        mkdir(join(dir_s, "temp", "Patches"))
+        mkdir(join(dir_s, "temp", "Predictions"))
 
-    if not isdir(join(dir_, "Predictions")):
-        mkdir(join(dir_, "Predictions"))
+    if not isdir(join(dir_s, "Predictions")):
+        mkdir(join(dir_s, "Predictions"))
 
 
-def clean_up(dir_: str):
+def clean_up(dir_s: str):
     """
     Removes a directory named "temp" and its subdirectories, including
     "Patches" and "Predictions", from the specified directory path. Ensures
     recursive deletion of all files and subdirectories inside the "temp"
     directory.
 
-    :param dir_: The path to the parent directory containing the "temp"
+    :param dir_s: The path to the parent directory containing the "temp"
         directory to be cleaned up. The directory path must be provided as a
         string.
     :return: None. The function performs cleanup operations without
         returning a value.
     """
-    if isdir(join(dir_, "temp")):
-        if isdir(join(dir_, "temp", "Patches")):
-            rmtree(join(dir_, "temp", "Patches"))
+    if isdir(join(dir_s, "temp")):
+        if isdir(join(dir_s, "temp", "Patches")):
+            rmtree(join(dir_s, "temp", "Patches"))
 
-        if isdir(join(dir_, "temp", "Predictions")):
-            rmtree(join(dir_, "temp", "Predictions"))
+        if isdir(join(dir_s, "temp", "Predictions")):
+            rmtree(join(dir_s, "temp", "Predictions"))
 
-        rmtree(join(dir_, "temp"))
+        rmtree(join(dir_s, "temp"))
 
 
 def check_dir(
-    dir_: str,
+    dir_s: str,
     train_img: str,
     train_mask: str,
     test_img: str,
@@ -128,8 +128,8 @@ def check_dir(
     It ensures that the number of image files matches the number of mask files,
     and optionally validates file formats.
 
-    :param dir_: Root directory of the dataset to validate.
-    :type dir_: str
+    :param dir_s: Root directory of the dataset to validate.
+    :type dir_s: str
     :param train_img: Path to the subdirectory containing training images.
     :type train_img: str
     :param train_mask: Path to the subdirectory containing training masks.
@@ -156,7 +156,7 @@ def check_dir(
         return True
 
     dataset_test = False
-    if isdir(join(dir_, "train")) and isdir(join(dir_, "test")):
+    if isdir(join(dir_s, "train")) and isdir(join(dir_s, "test")):
         dataset_test = True
 
         if with_img:

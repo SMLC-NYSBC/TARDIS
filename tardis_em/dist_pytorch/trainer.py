@@ -35,23 +35,6 @@ class SparseDistTrainer(BasicTrainer):
     to execute these processes on loaded datasets. The class incorporates
     functions to save metrics, display progress updates, and manage checkpoints
     based on improvements in tracked metrics.
-
-    :ivar node_input: The input nodes extracted from the structure.
-    :type node_input: dict
-    :ivar Graph_gt: Greedy graph cut instance for ground truth with a threshold of 0.5.
-    :type Graph_gt: PropGreedyGraphCut
-    :ivar Graph0_25: Greedy graph cut instance with 0.25 threshold and instance coverage.
-    :type Graph0_25: PropGreedyGraphCut
-    :ivar Graph0_5: Greedy graph cut instance with 0.5 threshold and instance coverage.
-    :type Graph0_5: PropGreedyGraphCut
-    :ivar Graph0_9: Greedy graph cut instance with 0.9 threshold and instance coverage.
-    :type Graph0_9: PropGreedyGraphCut
-    :ivar mCov0_25: List to store evaluation metrics for 0.25 threshold-based mCov.
-    :type mCov0_25: list
-    :ivar mCov0_5: List to store evaluation metrics for 0.5 threshold-based mCov.
-    :type mCov0_5: list
-    :ivar mCov0_9: List to store evaluation metrics for 0.9 threshold-based mCov.
-    :type mCov0_9: list
     """
 
     def __init__(self, **kwargs):
@@ -426,26 +409,6 @@ class DistTrainer(BasicTrainer):
     The class uses various greedy graph cut algorithms with different thresholds
     to generate segmentations. Metrics and model states are saved during training
     to ensure progress tracking and checkpointing for better model reproducibility.
-
-    :ivar node_input: The input node structure used in the graph calculations.
-    :ivar Graph_gt: Greedy graph cut instance with a threshold of 0.5 and a
-        connection limit of 1000.
-    :type Graph_gt: PropGreedyGraphCut
-    :ivar Graph0_25: Greedy graph cut instance with a threshold of 0.25 and a
-        connection limit based on instance coverage.
-    :type Graph0_25: PropGreedyGraphCut
-    :ivar Graph0_5: Greedy graph cut instance with a threshold of 0.5 and a
-        connection limit based on instance coverage.
-    :type Graph0_5: PropGreedyGraphCut
-    :ivar Graph0_9: Greedy graph cut instance with a threshold of 0.9 and a
-        connection limit based on instance coverage.
-    :type Graph0_9: PropGreedyGraphCut
-    :ivar mCov0_25: List of coverage metrics for graphs with a threshold of 0.25.
-    :type mCov0_25: list
-    :ivar mCov0_5: List of coverage metrics for graphs with a threshold of 0.5.
-    :type mCov0_5: list
-    :ivar mCov0_9: List of coverage metrics for graphs with a threshold of 0.9.
-    :type mCov0_9: list
     """
 
     def __init__(self, **kwargs):
@@ -719,31 +682,31 @@ class DistTrainer(BasicTrainer):
         full_list = list(range(len(graph)))
 
         while len(full_list) != 0:
-            id_, old_id = [full_list[0]], [full_list[0]]
-            added = list(node[id_[0]].keys())
-            id_ = id_ + added
+            id_i, old_id = [full_list[0]], [full_list[0]]
+            added = list(node[id_i[0]].keys())
+            id_i = id_i + added
 
-            while len(id_) != len(old_id):
-                old_id = id_
+            while len(id_i) != len(old_id):
+                old_id = id_i
                 added_new = []
                 for key in added:
                     added_new = added_new + list(node[key].keys())
                 added = list(dict.fromkeys(added_new))
 
-                id_ = list(dict.fromkeys(id_ + added))
-            id_ = sorted(id_)
+                id_i = list(dict.fromkeys(id_i + added))
+            id_i = sorted(id_i)
 
-            coord_list[seg_id] = id_
+            coord_list[seg_id] = id_i
             seg_id += 1
 
-            for i in id_:
+            for i in id_i:
                 full_list.remove(i)
 
         list_c = []
         for key in coord_list:
             value = coord[coord_list[key], :]
-            id_ = np.repeat(key, len(value)).reshape(-1, 1)
-            list_c.append(np.hstack((id_, value)))
+            id_i = np.repeat(key, len(value)).reshape(-1, 1)
+            list_c.append(np.hstack((id_i, value)))
         return np.concatenate(list_c)
 
     def _validate(self):
@@ -757,16 +720,6 @@ class DistTrainer(BasicTrainer):
                            or 0.9. This is handled with a fallback value of 0.0.
 
         :param self: The class instance containing the necessary data and attributes for validation.
-
-        :ivar validation_loss: A list to store the average validation loss for each epoch.
-        :ivar accuracy: A list to store the average accuracy values for each epoch.
-        :ivar precision: A list to store the average precision values for each epoch.
-        :ivar recall: A list to store the average recall values for each epoch.
-        :ivar threshold: A list to store the average threshold values for each epoch.
-        :ivar f1: A list to store the average F1 score values for each epoch.
-        :ivar mCov0_25: A list to store mean coverage (mCov) metrics at a threshold of 0.25 for each epoch.
-        :ivar mCov0_5: A list to store mean coverage (mCov) metrics at a threshold of 0.5 for each epoch.
-        :ivar mCov0_9: A list to store mean coverage (mCov) metrics at a threshold of 0.9 for each epoch.
 
         :return: Updates the class instance with the validation metrics calculated for the current epoch.
         """
@@ -900,38 +853,6 @@ class CDistTrainer(BasicTrainer):
     as loss, accuracy, precision, recall, F1 score, and threshold. It supports
     both training and validation phases using DataLoader objects for respective
     datasets.
-
-    :ivar structure: Configuration defining the distance type and other related
-        parameters for the trainer.
-    :type structure: dict
-    :ivar criterion_cls: A classification loss function (e.g., CrossEntropyLoss)
-        used for evaluating the semantic similarities.
-    :type criterion_cls: torch.nn.modules.loss
-    :ivar node_input: Indicates whether node features are utilized as an input to
-        the model.
-    :type node_input: bool
-    :ivar optimizer: Optimizer used for model parameter updates during training.
-    :type optimizer: torch.optim.Optimizer
-    :ivar training_DataLoader: DataLoader object containing the training dataset.
-    :type training_DataLoader: torch.utils.data.DataLoader
-    :ivar validation_DataLoader: DataLoader object containing the validation dataset.
-    :type validation_DataLoader: torch.utils.data.DataLoader
-    :ivar training_loss: List storing training loss for each iteration.
-    :type training_loss: list[float]
-    :ivar validation_loss: List storing validation loss for each iteration.
-    :type validation_loss: list[float]
-    :ivar accuracy: List tracking accuracy scores during validation.
-    :type accuracy: list[float]
-    :ivar precision: List tracking precision scores during validation.
-    :type precision: list[float]
-    :ivar recall: List tracking recall scores during validation.
-    :type recall: list[float]
-    :ivar f1: List tracking F1 scores during validation.
-    :type f1: list[float]
-    :ivar threshold: List tracking threshold values during validation.
-    :type threshold: list[float]
-    :ivar device: Specifies the computational device (CPU/GPU) for processing.
-    :type device: torch.device
     """
 
     def __init__(self, **kwargs):

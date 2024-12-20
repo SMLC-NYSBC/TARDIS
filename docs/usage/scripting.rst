@@ -19,7 +19,7 @@ _______
 
     predictor = GeneralPredictor(
         predict: str,
-        dir_: Union[str, tuple[np.ndarray], np.ndarray],
+        dir_s: Union[str, tuple[np.ndarray], np.ndarray],
         binary_mask: bool,
         output_format: str,
         patch_size: int,
@@ -29,7 +29,7 @@ _______
         points_in_patch: int,
         predict_with_rotation: bool,
         instances: bool,
-        device_: str,
+        device_s: str,
         debug: bool,
         checkpoint: Optional[list] = None,
         correct_px: float = None,
@@ -48,7 +48,7 @@ _______
 :bash:`predict`: File directory to visualize.
     - :guilabel:`Allowed options:` Microtubule, Membrane2D, Membrane
 
-:bash:`-dir_`: Directory to a single file, folder with files or numpy array with tomogram/micrograph.
+:bash:`-dir_s`: Directory to a single file, folder with files or numpy array with tomogram/micrograph.
     - :guilabel:`Allowed options:` str, np.ndarray
 
 :bash:`-binary_mask`: If True, Predictor assume, that input images are binary mask. The semantic segmentation step would be skipped and only instance segmentation results will be produce.
@@ -81,7 +81,7 @@ _______
 :bash:`-instances``: If True, run instance segmentation after semantic.
     - :guilabel:`Allowed options:` bool
 
-:bash:`-device_`: Device on which prediction will take place.
+:bash:`-device_s`: Device on which prediction will take place.
     - :guilabel:`Allowed options:` cpu, gpu or number between 0-9 indicating gpu id
 
 :bash:`-debug`: If True, enable debugging mode which save all intermediate files.

@@ -29,21 +29,6 @@ class ISR_LR:
     functionalities like stepping, zeroing gradients, saving, and loading the optimizer's
     state. The scheduling ensures a dynamic learning rate control to improve model
     training stability and efficiency.
-
-    :ivar _optimizer: The wrapped optimizer instance to apply customized learning rate
-        scheduling to.
-    :type _optimizer: torch.optim.Optimizer
-    :ivar lr_mul: Multiplier applied to the base learning rate computed via schedule.
-    :type lr_mul: float
-    :ivar warmup_steps: Number of warmup steps before the learning rate begins to decrease.
-    :type warmup_steps: int
-    :ivar steps: Current step in the training process.
-    :type steps: int
-    :ivar scale: Scaling factor for the learning rate scheduler.
-    :type scale: int
-    :ivar param_groups: Parameter groups of the inner optimizer, providing details about
-        managed model parameters and their current learning rates.
-    :type param_groups: list
     """
 
     def __init__(
@@ -58,10 +43,10 @@ class ISR_LR:
 
     def load_state_dict(self, checkpoint: dict):
         """
-        Wrapper for loading Optimizer state dictionary
+        Loads the state_dict of the optimizer from a given checkpoint.
 
-        Args:
-            checkpoint (dict): Dictionary with optimizer state.
+        :param checkpoint: A dictionary containing the state_dict of the optimizer.
+        :return: None
         """
         self._optimizer.load_state_dict(checkpoint)
 
@@ -102,64 +87,6 @@ class BasicTrainer:
     and validation data loaders, optional learning rate scheduling, early stopping, and
     metric tracking. It is targeted for both classification and distributed computation
     tasks.
-
-    :ivar model: The neural network model used for training.
-    :type model: torch.nn.Module
-    :ivar structure: Dictionary that specifies the architecture or configuration of
-        the model, such as 'cnn_type' or 'dist_type'.
-    :type structure: dict
-    :ivar device: Torch device object specifying the computational device (cpu or gpu).
-    :type device: torch.device
-    :ivar criterion: Loss function used during training.
-    :type criterion: Any
-    :ivar optimizer: Optimizer for updating model parameters.
-    :type optimizer: Union[ISR_LR, torch.optim.Adam]
-    :ivar lr_scheduler: Boolean to enable or disable learning rate scheduling.
-    :type lr_scheduler: bool
-    :ivar epochs: Integer defining the total number of epochs for training.
-    :type epochs: int
-    :ivar early_stop_rate: Integer that determines the patience for early stopping.
-    :type early_stop_rate: int
-    :ivar checkpoint_name: String specifying the checkpoint file name for model saving.
-    :type checkpoint_name: str
-    :ivar instance_cov: Integer specifying instance coverage rate.
-    :type instance_cov: int
-    :ivar classification: Boolean indicating if the model is for a classification task.
-    :type classification: bool
-    :ivar training_DataLoader: DataLoader for training dataset.
-    :type training_DataLoader: torch.utils.data.DataLoader
-    :ivar validation_DataLoader: DataLoader for validation dataset; optional.
-    :type validation_DataLoader: torch.utils.data.DataLoader or None
-    :ivar training_loss: List to store training loss metrics over epochs.
-    :type training_loss: list
-    :ivar validation_loss: List to store validation loss metrics over epochs.
-    :type validation_loss: list
-    :ivar learning_rate: List to store learning rate values over epochs.
-    :type learning_rate: list
-    :ivar accuracy: List to store accuracy scores during evaluation.
-    :type accuracy: list
-    :ivar precision: List to store precision scores during evaluation.
-    :type precision: list
-    :ivar recall: List to store recall scores during evaluation.
-    :type recall: list
-    :ivar f1: List to store F1 scores during evaluation.
-    :type f1: list
-    :ivar threshold: List to store thresholds used for evaluation.
-    :type threshold: list
-    :ivar print_setting: Tuple containing print configuration for logging.
-    :type print_setting: tuple
-    :ivar progress_epoch: Progress bar for tracking epoch progress.
-    :type progress_epoch: Any
-    :ivar progress_train: Progress bar for tracking training progress within an epoch.
-    :type progress_train: Any
-    :ivar nn_name: String representing the name of the neural network type.
-    :type nn_name: str
-    :ivar node_input: Integer defining node input size; applicable for distributed tasks.
-    :type node_input: int
-    :ivar gpu_info: Placeholder for logging GPU usage information.
-    :type gpu_info: str
-    :ivar epoch_desc: Placeholder string describing epoch information.
-    :type epoch_desc: str
     """
 
     def __init__(
@@ -180,43 +107,31 @@ class BasicTrainer:
         classification=False,
     ):
         """
-        This class initializes a trainer for machine learning models, with the capability
-        to handle various neural network structures and configurations. It includes
-        train and validation data loaders, optional learning rate scheduling,
-        early stopping, and metric tracking. It is targeted for both classification
-        and distributed computation tasks.
+        Initializes the BasicTrainer class with the necessary model, hyperparameters, and
+        dataset information. Prepares the trainer for executing training and validation
+        operations with optional early stopping, learning rate scheduling, and instance
+        coverage settings.
 
-        Attributes:
-        -----------
-        :attr model: The neural network model used for training.
-        :attr structure: Dictionary that specifies the architecture or configuration of
-            the model, such as 'cnn_type' or 'dist_type'.
-        :attr device: Torch device object specifying the computational device (cpu or gpu).
-        :attr criterion: Loss function used during training.
-        :attr optimizer: Optimizer for updating model parameters.
-        :attr lr_scheduler: Boolean to enable or disable learning rate scheduling.
-        :attr epochs: Integer defining the total number of epochs for training.
-        :attr early_stop_rate: Integer that determines the patience for early stopping.
-        :attr checkpoint_name: String specifying the checkpoint file name for model saving.
-        :attr instance_cov: Integer specifying instance coverage rate.
-        :attr classification: Boolean indicating if the model is for a classification task.
-        :attr training_DataLoader: DataLoader for training dataset.
-        :attr validation_DataLoader: DataLoader for validation dataset; optional.
-        :attr training_loss: List to store training loss metrics over epochs.
-        :attr validation_loss: List to store validation loss metrics over epochs.
-        :attr learning_rate: List to store learning rate values over epochs.
-        :attr accuracy: List to store accuracy scores during evaluation.
-        :attr precision: List to store precision scores during evaluation.
-        :attr recall: List to store recall scores during evaluation.
-        :attr f1: List to store F1 scores during evaluation.
-        :attr threshold: List to store thresholds used for evaluation.
-        :attr print_setting: Tuple containing print configuration for logging.
-        :attr progress_epoch: Progress bar for tracking epoch progress.
-        :attr progress_train: Progress bar for tracking training progress within an epoch.
-        :attr nn_name: String representing the name of the neural network type.
-        :attr node_input: Integer defining node input size; applicable for distributed tasks.
-        :attr gpu_info: Placeholder for logging GPU usage information.
-        :attr epoch_desc: Placeholder string describing epoch information.
+        :param model: The deep learning model instance that will be trained.
+        :param structure: Dictionary defining the structure and configuration specifics
+            of the model (e.g., type, node input size if applicable).
+        :param device: The torch.device defining whether to use CPU or GPU for training.
+        :param criterion: The loss function used for optimization.
+        :param optimizer: The optimizer applied during training to update model parameters.
+        :param print_setting: Tuple containing settings to configure print-related
+            details such as progress bars.
+        :param training_DataLoader: Dataloader for the training dataset.
+        :param validation_DataLoader: Optional. Dataloader for the validation dataset. Default is None.
+        :param lr_scheduler: Optional. Indicates whether a learning rate scheduler
+            is used. Default is False.
+        :param epochs: Optional. Number of training epochs. Default is 100.
+        :param early_stop_rate: Optional. Number of consecutive epochs to suffer no improvement
+            in validation loss before early stopping. Default is 10.
+        :param instance_cov: Optional. Setting for instance coverage. Default is 2.
+        :param checkpoint_name: Optional. String defining the checkpoint name for saving
+            intermediate training states. Default is "DIST".
+        :param classification: Optional. Boolean indicating whether a classification
+            task is performed. Default is False.
         """
         super(BasicTrainer, self).__init__()
 
@@ -474,44 +389,13 @@ class BasicTrainer:
 
     def run_trainer(self):
         """
-        Run the training process for a specified number of epochs using a defined
-        model and optionally validate its performance. Handles early stopping,
-        progress tracking, and directory setup for checkpoints.
+        Executes the training process for a machine learning model. This method handles
+        the initialization of necessary components such as progress bars, early stopping,
+        and training directories. It iteratively trains and validates the model over a
+        specified number of epochs, updating progress and metrics. The process supports
+        early stopping to terminate training if a certain condition is met.
 
-        :raises Exception: If there is any issue during training such as file
-            permission errors or model not properly initialized.
-
-        Attributes:
-            checkpoint_name: A string representing the name of the checkpoint.
-            epochs: An integer specifying the number of training epochs.
-            early_stop_rate: An integer that determines the patience for early
-                stopping.
-            early_stopping: An instance of EarlyStopping to monitor the
-                training process.
-            validation_DataLoader: A DataLoader object used for model validation.
-                Defaults to None.
-            id: An integer keeping track of the current epoch number during
-                training.
-            progress_setting: A list defining the settings for progress display.
-            print_setting: A list defining the text to be displayed during each
-                progress update.
-            progress_epoch: A callable for displaying the current progress of
-                training epochs.
-            epoch_desc: A string for the description of the current epoch status.
-            model: An instance of the model being trained. Should be set before
-                calling this method.
-
-        :param checkpoint_name: The name of the checkpoint where training artifacts
-            will be saved.
-        :type checkpoint_name: str
-        :param epochs: Total number of epochs the training process should run.
-        :type epochs: int
-        :param early_stop_rate: The number of epochs to wait for improvement in
-            validation metric before stopping early.
-        :type early_stop_rate: int
-        :param validation_DataLoader: Optional DataLoader used for model validation
-            during training. Defaults to None.
-        :type validation_DataLoader: DataLoader, optional
+        :raises FileExistsError: If errors occur while handling directory setup.
 
         :return: None
         """

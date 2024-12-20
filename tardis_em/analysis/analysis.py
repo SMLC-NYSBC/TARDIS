@@ -210,7 +210,7 @@ def save_analysis(
 
 def analyse_filaments_list(
     data: Union[List, Tuple],
-    names_: Union[List, Tuple],
+    names_l: Union[List, Tuple],
     path: str,
     images: Union[List, Tuple] = None,
     px: Union[List, Tuple] = None,
@@ -225,9 +225,9 @@ def analyse_filaments_list(
     :param data: A collection of data representing filament structures. It must be a list
         or tuple.
     :type data: Union[List, Tuple]
-    :param names_: A collection of filenames or identifiers corresponding to each set of data.
+    :param names_l: A collection of filenames or identifiers corresponding to each set of data.
         It must be a list or tuple.
-    :type names_: Union[List, Tuple]
+    :type names_l: Union[List, Tuple]
     :param path: A string representing the file path where the analysis results will be saved.
     :type path: str
     :param images: Optional collection of images corresponding to the data, where each
@@ -244,23 +244,23 @@ def analyse_filaments_list(
     """
 
     if images is not None:
-        assert_ = len(data) == len(images)
+        assert_i = len(data) == len(images)
     else:
-        assert_ = len(data) > 0
+        assert_i = len(data) > 0
 
-    if not assert_:
+    if not assert_i:
         TardisError(
             id_="117",
             py="analysis.analysis:analise_filaments_list",
             desc="List of analysed files do not match or is 0",
-            warning_=False,
+            warning_b=False,
         )
 
     if images is None:
         images = [None for _ in range(len(data))]
 
     save_analysis(
-        names_, analyse_filaments(data, images, thickness, px=px), px=px, save=path
+        names_l, analyse_filaments(data, images, thickness, px=px), px=px, save=path
     )
 
 

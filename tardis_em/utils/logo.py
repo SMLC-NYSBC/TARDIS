@@ -26,9 +26,6 @@ def print_progress_bar(value: int, max_v: int):
     mode. In non-interactive environments or in case of error, a default width
     is used.
 
-    The progress bar will fill proportionally to the progress made, and shows the
-    textual representation of the current proportion and the total values passed.
-
     :param value: The current progress value. Must be a non-negative integer
                   less than or equal to `max_v`.
     :param max_v: The maximum value for the progress bar, representing 100%
@@ -66,24 +63,6 @@ class TardisLogo:
     """
     Class for managing TARDIS logo display and formatting within a console or
     Jupyter environment.
-
-    The TardisLogo class provides functionality for printing a formatted TARDIS
-    logo in either an interactive or non-interactive terminal environment. It
-    includes methods for clearing the console output, adjusting console width,
-    and formatting text to display within predefined dimensions.
-
-    :ivar title: The title or heading to display with the logo.
-    :type title: str
-    :ivar CLEAR: A platform-specific function to clear the console window.
-    :type CLEAR: callable or None
-    :ivar WIDTH: The width of the console window in characters.
-    :type WIDTH: int or None
-    :ivar FN: General footer text information used in the logo display.
-    :type FN: str
-    :ivar C: Copyright information for the TARDIS project.
-    :type C: str
-    :ivar logo: Boolean to indicate whether the logo is enabled for display.
-    :type logo: bool
     """
 
     def __init__(self, logo=True):
@@ -106,36 +85,33 @@ class TardisLogo:
         self.logo = logo
 
     @staticmethod
-    def _build_text(max_=80, text="", repeat=False) -> str:
+    def _build_text(max_i=80, text="", repeat=False) -> str:
         """
         Constructs a formatted text string based on the maximum length,
-        given text, and repeat flag. The function ensures the constructed
-        string is either truncated or adjusted to match the specified
-        maximum length.
+        given text, and repeat flag.
 
-        :param max_: Maximum length of the resulting string.
-        :type max_: int
+        :param max_i: Maximum length of the resulting string.
+        :type max_i: int
         :param text: Input text to format.
         :type text: str
         :param repeat: Flag indicating whether the input text should
             be repeated to fill the maximum length.
         :type repeat: bool
+
         :return: A formatted text string of exact length `max_`. The
             string is either truncated or padded with spaces as needed.
         :rtype: str
         """
         if repeat:
-            text = text * max_
+            text = text * max_i
 
-        return f'{text[:max_] + " " * (max_ - len(text))}'
+        return f'{text[:max_i] + " " * (max_i - len(text))}'
 
     @staticmethod
     def clear_output(wait=True):
         """
         Clears the current output displayed in the terminal or within an interactive
-        environment. This function determines if an interactive shell environment
-        is initialized and clears the output accordingly. If no interactive shell
-        is found, it manually clears the console output using escape sequences.
+        environment.
 
         :param wait: Determines whether the clearing of the output should wait
             for the display to be updated. The functionality of this parameter
@@ -152,14 +128,7 @@ class TardisLogo:
 
     def cell_width(self):
         """
-        Adjusts the cell width based on the environment and terminal properties. The method dynamically
-        calculates and sets the `WIDTH` attribute to tailor output formatting. If the code is running in
-        an interactive Jupyter environment, a fixed width value is used, otherwise, it attempts to retrieve
-        the terminal width. In case of failure, a default width value is applied.
-
-        :raises OSError: If unable to determine terminal size and no fallback mechanism is defined.
-
-        :return: None
+        Adjusts the cell width based on the environment and terminal properties.
         """
         if is_interactive():  # Jupyter
             self.WIDTH = 90

@@ -32,44 +32,6 @@ class BasicCNN(nn.Module):
     to tailor the neural network model to specific tasks, including image patch processing and segmentation tasks.
     Additionally, it manages activation functions and final layer outputs suitable for either classification or
     prediction purposes.
-
-    :ivar prediction: Indicates whether the model is in prediction mode.
-    :type prediction: bool
-    :ivar model: The type of model to be built, e.g., 'CNN' or 'RCNN'.
-    :type model: str
-    :ivar encoder: The encoder component of the CNN model.
-    :type encoder: Optional[nn.Module]
-    :ivar decoder: The decoder component of the CNN model.
-    :type decoder: Optional[nn.Module]
-    :ivar patch_sizes: The sizes of image patches through the layers of the network.
-    :type patch_sizes: list[int]
-    :ivar in_channels: The number of input channels in the network.
-    :type in_channels: int
-    :ivar out_channels: The number of output channels of the final layer.
-    :type out_channels: int
-    :ivar num_conv_layer: The total number of convolutional layers in the model.
-    :type num_conv_layer: int
-    :ivar conv_layer_scaler: Multiplier to scale the number of output channels in convolutional layers.
-    :type conv_layer_scaler: int
-    :ivar conv_kernel: The size of the kernel for convolution operations.
-    :type conv_kernel: int
-    :ivar padding: The amount of zero-padding around input tensors during convolution.
-    :type padding: int
-    :ivar dropout: Dropout probability for regularizing the network.
-    :type dropout: Optional[float]
-    :ivar num_group: The number of groups for group convolutions in the network.
-    :type num_group: int
-    :ivar layer_components: The composition of layer types, e.g., '3gcl' for 3D group convolutions with concatenation
-                            and linear activations.
-    :type layer_components: str
-    :ivar pool_kernel: The kernel size used for pooling operations.
-    :type pool_kernel: int
-    :ivar final_conv_layer: The final convolutional layer of the network.
-    :type final_conv_layer: Optional[Union[nn.Conv2d, nn.Conv3d]]
-    :ivar sigmoid: Indicates whether the sigmoid activation is used in the final layer.
-    :type sigmoid: bool
-    :ivar activation: The activation function applied to the final layer (e.g., Sigmoid, Softmax).
-    :type activation: Optional[nn.Module]
     """
 
     def __init__(
@@ -89,6 +51,42 @@ class BasicCNN(nn.Module):
         num_group=8,
         prediction=False,
     ):
+        """
+        Initializes an instance of the BasicCNN class used for constructing and managing
+        a Convolutional Neural Network (CNN) with configurable parameters such as the
+        number of layers, kernel size, and pooling operations. This class is highly
+        flexible and allows the user to define architectural details including the
+        overall number of layers, groupings, and activation methods.
+
+        :param model: Specifies the model type, default is "CNN".
+        :type model: str
+        :param in_channels: The number of input channels to the CNN.
+        :type in_channels: int
+        :param out_channels: The number of output channels produced by the CNN.
+        :type out_channels: int
+        :param sigmoid: Determines the use of a sigmoid activation function.
+        :type sigmoid: bool
+        :param num_conv_layer: The total number of convolutional layers in the model.
+        :type num_conv_layer: int
+        :param conv_layer_scaler: Scaling factor for the convolution layers.
+        :type conv_layer_scaler: int
+        :param conv_kernel: Size of the kernel used in the convolutional layers.
+        :type conv_kernel: int
+        :param padding: Padding applied to convolutional operations.
+        :type padding: int
+        :param pool_kernel: Kernel size used for pooling operations.
+        :type pool_kernel: int
+        :param img_patch_size: Size of the image patches processed by the CNN.
+        :type img_patch_size: int
+        :param layer_components: Describes the structure of components for each layer, e.g., "3gcl".
+        :type layer_components: str
+        :param dropout: Probability for dropout regularization if enabled.
+        :type dropout: float or None
+        :param num_group: Number of groups used for grouped convolution operations.
+        :type num_group: int
+        :param prediction: Indicates whether the model is being used for predictions.
+        :type prediction: bool
+        """
         super(BasicCNN, self).__init__()
 
         self.prediction = prediction
@@ -112,6 +110,19 @@ class BasicCNN(nn.Module):
         self.build_cnn_model()
 
     def update_patch_size(self, img_patch_size, sigmoid):
+        """
+        Updates the image patch sizes and rebuilds the model if necessary.
+
+        This function recalculates the patch sizes for an image as it traverses through convolutional layers.
+        It also rebuilds the CNN model if the current model is not of type string, retaining the previous
+        model's state dictionary.
+
+        :param img_patch_size: The initial size of the image patches to be processed.
+        :type img_patch_size: int
+        :param sigmoid: The sigmoid activation function applied to predictions to constrain outputs.
+        :type sigmoid: Callable or function
+        :return: None
+        """
         self.prediction = sigmoid
 
         self.patch_sizes = [img_patch_size]
@@ -128,7 +139,12 @@ class BasicCNN(nn.Module):
             states = None
 
     def build_cnn_model(self):
-        """Encoder"""
+        """
+        Constructs a Convolutional Neural Network (CNN) or Recurrent Convolutional Neural
+        Network (RCNN) model by building encoder, decoder, and a final layer based on the
+        configuration provided. This function handles the creation of the model
+        architecture including layers, activation functions, and other components.
+        """
         if self.model == "CNN":
             self.encoder = build_encoder(
                 in_ch=self.in_channels,
@@ -191,7 +207,12 @@ class BasicCNN(nn.Module):
 
 class UNet(BasicCNN):
     """
-    2D/3D UNET MODEL
+    Implementation of a U-Net model derived from a basic convolutional neural network.
+
+    The U-Net model is widely used in image segmentation tasks. This class is designed to
+    handle encoder-decoder architectures for feature extraction and reconstruction. It applies
+    the U-Net structure with added flexibility for extensions or customizations as needed in
+    specific tasks.
 
     "3D U-Net: Learning Dense Volumetric Segmentation from Sparse Annotation"
     <https://arxiv.org/pdf/1606.06650.pdf>.
@@ -203,13 +224,15 @@ class UNet(BasicCNN):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Forward for an Unet model.
+        Performs the forward pass through the network which includes an encoding stage,
+        decoding stage, and a final prediction step.
 
-            Args:
-                x (torch.Tensor): Input image features.
-
-            Returns:
-                torch.Tensor: Probability mask of predicted image.
+        :param x: Input tensor that will be passed through the encoder, decoder, and
+            prediction stages of the network.
+        :type x: torch.Tensor
+        :return: Output tensor produced after applying the encoder, decoder,
+            and the final activation (if prediction is enabled).
+        :rtype: torch.Tensor
         """
         encoder_features = []
 
@@ -235,7 +258,13 @@ class UNet(BasicCNN):
 
 class ResUNet(BasicCNN):
     """
-    2D/3D RESNET MODEL
+    A residual U-Net (ResUNet) model implementation extending the BasicCNN base class.
+
+    A class structure designed for image segmentation tasks utilizing a Residual U-Net
+    architecture. The network is composed of an encoder and a decoder. The encoder
+    extracts features, and the decoder reconstructs the features into a segmentation
+    mask. It supports flexible customization for model variations through inheritance
+    and additional parameters.
 
     modified of <10.1016/j.isprsjprs.2020.01.013>
     """
@@ -246,13 +275,15 @@ class ResUNet(BasicCNN):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Forward for ResNet model.
+        Performs the forward pass through the network which includes an encoding stage,
+        decoding stage, and a final prediction step.
 
-            Args:
-                x (torch.Tensor): Input image features.
-
-            Returns:
-                torch.Tensor: Probability mask of predicted image.
+        :param x: Input tensor that will be passed through the encoder, decoder, and
+            prediction stages of the network.
+        :type x: torch.Tensor
+        :return: Output tensor produced after applying the encoder, decoder,
+            and the final activation (if prediction is enabled).
+        :rtype: torch.Tensor
         """
         encoder_features = []
 
@@ -278,7 +309,16 @@ class ResUNet(BasicCNN):
 
 class UNet3Plus(nn.Module):
     """
-    3D FULLY CONNECTED UNET
+    UNet3Plus is a neural network model based on the U-Net architecture with enhancements
+    specifically designed for segmentation tasks. It integrates improvements in both encoder
+    and decoder components and optionally provides classification capabilities. This class is
+    highly configurable and supports both 2D and 3D inputs.
+
+    The class consists of an encoder that extracts features from the input, a decoder
+    that reconstructs the segmentation map from these features, optional classification
+    modules, and a final prediction activation layer. Users can configure the number of
+    convolutional layers, kernel sizes, pooling operations, dropout, and other settings
+    to adapt the model to a wide variety of use cases.
 
     modified of <https://arxiv.org/abs/2004.08790>
     """
@@ -301,6 +341,45 @@ class UNet3Plus(nn.Module):
         classifies=False,
         decoder_features=None,
     ):
+        """
+        Represents the 3D U-Net++ (UNet3Plus) architecture for segmentation tasks with options
+        for classification. The class supports configurable numbers of layers, convolution
+        properties, dropout, group normalization, and multiple segmentation and classification
+        settings.
+
+        :param in_channels:
+            Number of input channels for the network.
+        :param out_channels:
+            Number of output channels from the network.
+        :param sigmoid:
+            Whether to use Sigmoid activation for prediction. If False, Softmax activation
+            will be used.
+        :param num_conv_layer:
+            Number of convolutional layers to use.
+        :param conv_layer_scaler:
+            Scaling factor for the number of feature maps in each convolutional layer.
+        :param conv_kernel:
+            Size of the convolutional kernels.
+        :param padding:
+            Amount of padding to apply in convolutional operations.
+        :param pool_kernel:
+            Size of the pooling kernels.
+        :param img_patch_size:
+            Size of the initial image patch.
+        :param layer_components:
+            Indicates the dimensionality (2D or 3D convolution) and whether grouped
+            convolution or residual layers are used. For example, "3gcl".
+        :param dropout:
+            Probability of dropout for the layers. If None, dropout is not applied.
+        :param num_group:
+            Number of groups for group normalization layers.
+        :param prediction:
+            Flag to indicate whether the network produces explicit predictions.
+        :param classifies:
+            Flag to indicate whether the network includes a classification head.
+        :param decoder_features:
+            Optional additional features for the decoder configuration.
+        """
         super(UNet3Plus, self).__init__()
         self.prediction = prediction
         self.decoder_features = decoder_features
@@ -385,14 +464,22 @@ class UNet3Plus(nn.Module):
     @staticmethod
     def dot_product(x: torch.Tensor, x_cls: torch.Tensor) -> torch.Tensor:
         """
-        Dot product for two tensors.
+        Computes the dot product of two tensors `x` and `x_cls` along specific dimensions.
+        The function first reshapes the input tensors to flatten the spatial dimensions
+        (H, W) and depth (D) into a single dimension for efficient computation. Then,
+        it performs an element-wise dot product of the reshaped tensors. The result is
+        reshaped back into the original spatial and depth dimensions of the inputs.
 
-        Args:
-            x (torch.Tensor): Image tensor.
-            x_cls (torch.Tensor): Classified image tensor.
-
-        Returns:
-            torch.Tensor: Dot product of two tensors.
+        :param x:
+            A tensor of shape (B, N, D, H, W), where B represents the batch size,
+            N represents the number of channels or features, D represents the depth,
+            and H, W represent spatial dimensions.
+        :param x_cls:
+            A tensor of shape (B, N, D, H, W), aligned with the same shape as `x`,
+            used for element-wise dot product computation.
+        :return:
+            A tensor of the same shape (B, N, D, H, W) as the input, containing the
+            result of the dot product operation computed along specific dimensions.
         """
         B, N, D, H, W = x.shape
         x = x.view(B, N, D * H * W)
@@ -404,13 +491,15 @@ class UNet3Plus(nn.Module):
 
     def forward(self, x: torch.Tensor):
         """
-        Forward for Unet3Plus model.
+        Performs the forward pass through the network which includes an encoding stage,
+        decoding stage, and a final prediction step.
 
-            Args:
-                x (torch.Tensor): Input image features.
-
-            Returns:
-                torch.Tensor: Probability mask of predicted image.
+        :param x: Input tensor that will be passed through the encoder, decoder, and
+            prediction stages of the network.
+        :type x: torch.Tensor
+        :return: Output tensor produced after applying the encoder, decoder,
+            and the final activation (if prediction is enabled).
+        :rtype: torch.Tensor
         """
         """ Encoder """
         encoder_features = []
@@ -461,26 +550,14 @@ class UNet3Plus(nn.Module):
 
 class FNet(nn.Module):
     """
-    New Unet model combining Unet and Unet3Plus
-    The model shares encoder path which is split for decoding patch Unet and Unet3Plus
-    style. The final layers from each are summed and sigmoid
+    FNet model for image segmentation.
 
-    Args:
-        in_channels: Number of input channels for the first convolution.
-        out_channels: Number of output channels for the last deconvolution.
-        sigmoid: If True, use nn.Sigmoid or nn.Softmax if False. Use True if
-            nn.BCELoss is used as a loss function for (two-class segmentation).
-        num_conv_layer: Number of convolution and deconvolution steps. A number of
-            input channels for convolution is calculated as a linear progression.
-            E.g. [64, 128, 256, 512].
-        conv_layer_scaler: Feature output of the first layer.
-        conv_kernel: Kernel size for the convolution.
-        padding: Padding size for convolution.
-        pool_kernel: kernel size for max_pooling.
-        img_patch_size: Image patch size used for calculation of network structure.
-        layer_components: Convolution module used for building network.
-        num_group: Number of groups for nn.GroupNorm.
-        prediction: If True, prediction mode is on.
+    This class implements the FNet model, designed for feature extraction and image
+    segmentation tasks. It includes an encoder for processing input features, two decoder
+    variants (UNet and UNet3+), and a final output layer for generating a segmentation
+    map. It supports configurable parameters for convolutional layers, kernel size, dropout,
+    padding, pool kernel size, and other hyperparameters. The class can predict either
+    sigmoid- or softmax-activated probability masks for segmentation.
     """
 
     def __init__(
@@ -500,6 +577,38 @@ class FNet(nn.Module):
         attn_features=False,
         prediction=False,
     ):
+        """
+        Initializes the FNet class, which serves as the main implementation
+        for a configurable neural network architecture. This class includes
+        several components such as an encoder, decoders, convolutional layers,
+        and support for attention-based features. The class allows customization
+        of the architecture through input parameters to tailor it for
+        specific tasks.
+
+        :param in_channels: Number of input channels for the network.
+        :param out_channels: Number of output channels generated by the network.
+        :param sigmoid: Determines whether to apply sigmoid activation at
+            the final layer, typically used in binary classification problems.
+        :param num_conv_layer: Controls the number of convolutional layers
+            in the architecture.
+        :param conv_layer_scaler: Factor to multiply the number of
+            convolutional filters at each layer.
+        :param conv_kernel: Kernel size for the convolutional layers.
+        :param padding: Amount of padding for convolutional layers
+            (e.g., same or valid).
+        :param pool_kernel: Kernel size to use for pooling operations.
+        :param dropout: Defines the dropout rate applied to intermediate
+            layers to prevent overfitting. If None, no dropout is applied.
+        :param img_patch_size: Input image patch size used during
+            the network's processing pipeline.
+        :param layer_components: String specifying layer configurations
+            (e.g., "3gcl" could refer to grouped convolutions with attention layers).
+        :param num_group: Defines the number of groups for grouped convolutions.
+        :param attn_features: Boolean determining whether attention-based
+            features are included in the network's architecture.
+        :param prediction: Whether the model is in prediction mode, which
+            influences components such as the patch size and activation layers.
+        """
         super(FNet, self).__init__()
         self.prediction = prediction
         self.encoder, self.decoder_unet, self.decoder_3plus = None, None, None
@@ -530,6 +639,23 @@ class FNet(nn.Module):
         self.build_cnn_model()
 
     def update_patch_size(self, img_patch_size, prediction):
+        """
+        Updates the image patch sizes and rebuilds decoders with the new configuration.
+
+        This method is responsible for updating the internal patch sizes based on the
+        provided `img_patch_size` and constructing new decoders (`decoder_unet` and
+        `decoder_3plus`) using the updated patch sizes. Furthermore, it preserves the
+        state of the existing decoder models and reloads them into the newly built
+        decoders.
+
+        :param img_patch_size: Initial size of the image patch to be used for calculating
+            new patch sizes across layers.
+        :type img_patch_size: int
+        :param prediction: Indicates if the operation is performed during prediction mode.
+        :type prediction: bool
+        :return: This method does not return a value.
+        :rtype: None
+        """
         self.prediction = prediction
 
         self.patch_sizes = [img_patch_size]
@@ -568,7 +694,10 @@ class FNet(nn.Module):
             states = None
 
     def build_cnn_model(self):
-        """Encoder"""
+        """
+        Build the CNN model by constructing encoder, decoder, and final prediction layers.
+        """
+        """ Encoder """
         self.encoder = build_encoder(
             in_ch=self.in_channels,
             conv_layers=self.num_conv_layer,
@@ -649,13 +778,15 @@ class FNet(nn.Module):
 
     def forward(self, x: torch.Tensor):
         """
-        Forward for FNet model.
+        Performs the forward pass through the network which includes an encoding stage,
+        decoding stage, and a final prediction step.
 
-            Args:
-                x (torch.Tensor): Input image features.
-
-            Returns:
-                torch.Tensor: Probability mask of predicted image.
+        :param x: Input tensor that will be passed through the encoder, decoder, and
+            prediction stages of the network.
+        :type x: torch.Tensor
+        :return: Output tensor produced after applying the encoder, decoder,
+            and the final activation (if prediction is enabled).
+        :rtype: torch.Tensor
         """
         encoder_features = []
 

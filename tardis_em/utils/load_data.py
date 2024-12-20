@@ -47,25 +47,6 @@ class ImportDataFromAmira:
     provided, performing validation for Amira-specific file formats. It is designed
     to assist in loading Amira Mesh 3D models and extracting relevant graphical
     and spatial data for further processing.
-
-    :ivar src_img: Path to the source image file.
-    :type src_img: str or None
-    :ivar src_am: Path to the source Amira Mesh file.
-    :type src_am: str
-    :ivar src_surf: Path to the source Amira surface file.
-    :type src_surf: str or None
-    :ivar image: Loaded image data as a multi-dimensional array.
-    :type image: numpy.ndarray or None
-    :ivar pixel_size: Pixel size of the image.
-    :type pixel_size: float or None
-    :ivar physical_size: Physical size of the image in appropriate units.
-    :type physical_size: float or None
-    :ivar transformation: Transformation matrix applied to the image.
-    :type transformation: numpy.ndarray or None
-    :ivar surface: Loaded surface data.
-    :type surface: Any or None
-    :ivar spatial_graph: Spatial graph data extracted from the Amira file.
-    :type spatial_graph: list of str or None
     """
 
     def __init__(
@@ -182,6 +163,7 @@ class ImportDataFromAmira:
 
         :param self: The current instance of the class containing the spatial graph data.
         :type self: object
+
         :return: A NumPy array representing the number of points in each segment, or
             None if no spatial graph is provided.
         :rtype: Union[np.ndarray, None]
@@ -201,7 +183,7 @@ class ImportDataFromAmira:
         segment_start = "".join((ch if ch in "0123456789" else " ") for ch in segments)
         segment_start = [int(i) for i in segment_start.split()]
 
-        # Find in the line directory that starts with @..
+        # Find in the line directory that starts with @...
         try:
             segment_start = (
                 int(self.spatial_graph.index("@" + str(segment_start[0]))) + 1
@@ -221,7 +203,7 @@ class ImportDataFromAmira:
         segment_no = int(segment_finish[0])
         segment_finish = segment_start + int(segment_finish[0])
 
-        # Select all lines between @.. (+1) and number of segments
+        # Select all lines between @... (+1) and number of segments
         segments = self.spatial_graph[segment_start:segment_finish]
         segments = [i.split(" ")[0] for i in segments]
 
@@ -244,6 +226,7 @@ class ImportDataFromAmira:
             (x, y, z) of a point in the spatial graph. If `spatial_graph` is
             not provided or points cannot be found, returns `None`.
         :rtype: Union[np.ndarray, None]
+
         :raises ValueError: When the index for extracting points fails due to
             invalid input format in the `spatial_graph`.
         """
@@ -259,7 +242,7 @@ class ImportDataFromAmira:
             ]
         )
 
-        # Find in the line directory that starts with @..
+        # Find in the line directory that starts with @...
         points_start = "".join((ch if ch in "0123456789" else " ") for ch in points)
         points_start = [int(i) for i in points_start.split()]
         # Find line that start with the directory @... and select last one
@@ -280,7 +263,7 @@ class ImportDataFromAmira:
         points_no = points_finish
         points_finish = points_start + points_finish
 
-        # Select all lines between @.. (-1) and number of points
+        # Select all lines between @... (-1) and number of points
         points = self.spatial_graph[points_start:points_finish]
 
         # return an array of all points coordinates in pixel
@@ -316,7 +299,7 @@ class ImportDataFromAmira:
             ]
         )
 
-        # Find in the line directory that starts with @..
+        # Find in the line directory that starts with @...
         points_start = "".join((ch if ch in "0123456789" else " ") for ch in points)
         points_start = [int(i) for i in points_start.split()]
 
@@ -338,7 +321,7 @@ class ImportDataFromAmira:
         points_no = points_finish
         points_finish = points_start + points_finish
 
-        # Select all lines between @.. (-1) and number of points
+        # Select all lines between @... (-1) and number of points
         points = self.spatial_graph[points_start:points_finish]
 
         # return an array of all points coordinates in pixel
@@ -394,25 +377,17 @@ class ImportDataFromAmira:
 
     def get_vertex(self) -> Union[np.ndarray, None]:
         """
-        Retrieves the adjusted vertex coordinates from the spatial graph considering
-        the transformation and the scale parameter. If the spatial graph or source
-        image data is unavailable, it accounts for these conditions and returns
-        appropriate results.
+        Computes and returns the coordinates of a vertex in the spatial graph with optional
+        coordinate transformations applied. This function handles specific conditions related
+        to the presence of `spatial_graph` and `src_img` attributes and applies transformations and
+        scaling to the identified vertex coordinates.
 
-        :param np.ndarray | None self.spatial_graph: The spatial graph data structure
-            containing coordinate information in string format. If None, the method
-            returns None.
-        :param np.ndarray | None self.src_img: Input source image data. If None, uses
-            zero as transformation values.
-        :param list[float] self.transformation: Transformation offsets for the x, y,
-            and z coordinates, initialized or updated during the computation.
-        :param float self.pixel_size: Pixel size value used for scaling the
-            coordinates.
-        :return: Adjusted vertex coordinates as a NumPy array or None if spatial
-            graph is not available.
-        :rtype: np.ndarray | None
-        :raises IndexError: May be raised if the coordinates information in the
-            spatial graph is not found or formatted unexpectedly.
+        :return:
+            `numpy.ndarray` containing the transformed and scaled vertex coordinates,
+            or `None` in case the `spatial_graph` attribute is None.
+
+            If the coordinate unit retrieved from the spatial graph is 'nm', then the
+            vertex coordinates are scaled differently based on the `pixel_size` value.
         """
         if self.spatial_graph is None:
             return None
@@ -446,12 +421,6 @@ class ImportDataFromAmira:
         Generates segmented points based on the spatial graph and the computed
         segments. The segmentation assigns an index to each point in the graph,
         indicating which segment it belongs to.
-
-        :raises TypeError: Raised if `spatial_graph` is not of the expected
-            type or does not provide the necessary functionality.
-
-        :raises ValueError: Raised if the computed segments or points have
-            inconsistent shapes or invalid values.
 
         :return: A numpy array of shape (N, 4) where each row represents a
             point with its corresponding segment index as the first element.
@@ -515,7 +484,7 @@ class ImportDataFromAmira:
             label_start = "".join((ch if ch in "0123456789" else " ") for ch in i)
             label_start = [int(i) for i in label_start.split()][-1:]
 
-            # Find in the line directory that starts with @..
+            # Find in the line directory that starts with @...
             try:
                 label_start = (
                     int(self.spatial_graph.index("@" + str(label_start[0]))) + 1
@@ -533,7 +502,7 @@ class ImportDataFromAmira:
             label_no = int(label_finish[0])
             label_finish = label_start + int(label_finish[0])
 
-            # Select all lines between @.. (+1) and number of segments
+            # Select all lines between @... (+1) and number of segments
             label = self.spatial_graph[label_start:label_finish]
             label = [i.split(" ")[0] for i in label]
 
@@ -548,9 +517,7 @@ class ImportDataFromAmira:
 
     def get_image(self):
         """
-        Retrieves the image and its corresponding pixel size. The method returns
-        a tuple containing the image and its respective pixel size. This function
-        is utilized to access an image alongside its metadata.
+        Retrieves the image and its corresponding pixel size.
 
         :return: A tuple where the first element is the image and the second
             element is the pixel size.
@@ -561,11 +528,6 @@ class ImportDataFromAmira:
     def get_pixel_size(self) -> float:
         """
         Retrieves the size of a single pixel.
-
-        This method is used to return the size of a pixel in the unit of measurement
-        being used. It is particularly useful in contexts where precise graphical
-        or spatial calculations are required. The pixel size ensures that detailed
-        rendering or object measurements in the relevant domain maintain accuracy.
 
         :return: The size of the pixel.
         :rtype: float
@@ -587,15 +549,13 @@ def load_tiff(tiff: str) -> Tuple[np.ndarray, float]:
     Load a TIFF file and return its data as a NumPy array along with an intensity scale
     factor.
 
-    This function checks if the specified TIFF file exists and reads its contents as a
-    NumPy array. If the file does not exist, it raises a TardisError. The function also
-    returns a fixed intensity scale factor of 1.0 for the loaded TIFF file.
-
     :param tiff: The path to the TIFF file to be loaded.
     :type tiff: str
+
     :return: A tuple containing the NumPy array representation of the TIFF file and a
         float representing the intensity scale factor.
     :rtype: Tuple[np.ndarray, float]
+
     :raises TardisError: If the specified TIFF file does not exist.
     """
     if not isfile(tiff):
@@ -617,6 +577,7 @@ def mrc_read_header(mrc: Union[str, bytes, None] = None):
     header.
 
     :param mrc: The MRC file path as a string, raw header bytes, or None.
+
     :return: Named tuple representing the parsed header of the MRC file.
     """
     if isinstance(mrc, str):
@@ -633,8 +594,8 @@ def mrc_write_header(*args) -> bytes:
     Constructs an MRC file header.
 
     :param args: The arguments required to initialize an `MRCHeader` object.
+
     :return: Packed binary data representing the MRC header.
-    :rtype: bytes
     """
     header = MRCHeader(*args)
     return header_struct.pack(*list(header))
@@ -653,13 +614,14 @@ def mrc_mode(mode: int, amin: int):
     :param amin: Minimum amplitude or intensity value used to refine the data type
         determination for the provided mode. Applicable when the mode is 0.
     :type amin: int
+
     :return: Returns the corresponding data type or mode index based on the
         provided parameters. For integer mode inputs, it will return the dtype
         associated with the mode or an error will be raised for unsupported modes.
         For non-integer type matching, it will return the corresponding mode index.
     :rtype: Union[numpy.dtype, str, int]
     """
-    dtype_ = {
+    dtype_m = {
         0: np.uint8,
         1: np.int16,  # Signed 16-bit integer
         2: np.float32,  # Signed 32-bit real
@@ -685,12 +647,12 @@ def mrc_mode(mode: int, amin: int):
 
     if isinstance(mode, int):
         if mode == 0 and amin >= 0:
-            return dtype_[mode]
+            return dtype_m[mode]
         elif mode == 0 and amin < 0:
             return np.int8
 
-        if mode in dtype_:
-            return dtype_[mode]
+        if mode in dtype_m:
+            return dtype_m[mode]
         else:
             TardisError(
                 "130",
@@ -700,8 +662,8 @@ def mrc_mode(mode: int, amin: int):
     else:
         if mode in [np.int8, np.uint8]:
             return 0
-        for name in dtype_:
-            if mode == dtype_[name]:
+        for name in dtype_m:
+            if mode == dtype_m[name]:
                 return name
 
 
@@ -709,12 +671,6 @@ def load_am(am_file: str):
     """
     Loads data from an AmiraMesh (.am) 3D image file and extracts image,
     pixel size, physical dimensions, and transformation details.
-
-    Loads the content of the `.am` file, determines the data type (ASCII or binary),
-    and parses metadata such as physical size, bounding box, pixel size, and
-    coordinate system. The function processes binary/ASCII data from the file,
-    reshapes it into suitable dimensions, and handles any missing or incomplete data
-    by correcting or filling it as necessitated by the `.am` file format.
 
     :param am_file: File path of the .am file to be loaded.
     :type am_file: str
@@ -724,6 +680,7 @@ def load_am(am_file: str):
         - Physical size of the image.
         - Transformation (offsets) in the bounding box.
     :rtype: tuple[np.ndarray, float, float, np.ndarray]
+
     :raises TardisError: If the file does not exist, is of unsupported format,
         or contains missing or invalid metadata.
     """
@@ -843,7 +800,7 @@ def load_am(am_file: str):
     return img, pixel_size, physical_size, transformation
 
 
-def load_am_surf(surf_file: str, simplify_=None) -> Tuple:
+def load_am_surf(surf_file: str, simplify_f=None) -> Tuple:
     """
     Parses an Amira surface file and extracts material names, grid properties, vertex data,
     and triangle data. It also optionally simplifies the geometry using Open3D.
@@ -856,9 +813,10 @@ def load_am_surf(surf_file: str, simplify_=None) -> Tuple:
 
     :param surf_file: Path to the Amira surface file.
     :type surf_file: str
-    :param simplify_: Level of simplification to apply to the mesh geometry. If None, no
+    :param simplify_f: Level of simplification to apply to the mesh geometry. If None, no
                       simplification is performed.
-    :type simplify_: Optional[int]
+    :type simplify_f: Optional[int]
+
     :return: A 4-tuple containing:
              - A list of material names extracted from the file.
              - A list comprising GridBox and GridSize arrays.
@@ -918,7 +876,7 @@ def load_am_surf(surf_file: str, simplify_=None) -> Tuple:
         _, triangles_list[i] = np.unique(triangles_list[i], return_inverse=True)
         triangles_list[i] = triangles_list[i].reshape(t_shape)
 
-    if simplify_ is not None:
+    if simplify_f is not None:
         try:
             import open3d as o3d
 
@@ -929,7 +887,7 @@ def load_am_surf(surf_file: str, simplify_=None) -> Tuple:
                 mesh.triangles = o3d.utility.Vector3iVector(t)
 
                 voxel_size = (
-                    max(mesh.get_max_bound() - mesh.get_min_bound()) / simplify_
+                    max(mesh.get_max_bound() - mesh.get_min_bound()) / simplify_f
                 )
                 mesh = mesh.simplify_vertex_clustering(
                     voxel_size=voxel_size,
@@ -952,6 +910,7 @@ def load_mrc_file(mrc: str) -> Union[Tuple[np.ndarray, float], Tuple[None, float
 
     :param mrc: The file path to the .mrc file to be loaded.
     :type mrc: str
+
     :return: A tuple containing the loaded image data and the pixel size (in Angstroms).
              If the file is corrupted and no valid image data can be retrieved, returns
              a tuple where the image data is None and pixel size is set to 1.0.
@@ -1042,11 +1001,11 @@ def load_nd2_file(nd2_dir: str) -> Tuple[np.ndarray, float]:
 
     img = nd2.imread(nd2_dir)
     if img.ndim == 5:
-        movie_ = True
+        movie_b = True
     else:
-        movie_ = False
+        movie_b = False
 
-    if movie_:
+    if movie_b:
         img = np.transpose(img, (2, 1, 0, 3, 4))
     else:
         img = np.transpose(img, (1, 0, 2, 3))
@@ -1072,7 +1031,7 @@ def load_ply_scannet(
     :param downscaling: Voxel size for downscaling the point cloud. If set to 0, no
         downscaling is applied.
     :type downscaling: int, optional
-    :param color: Optional path to a secondary .ply file containing RGB features
+    :param color:  path to a secondary .ply file containing RGB features
         for the point cloud.
     :type color: str, optional
     :return: Either a tuple containing the downsampled point cloud coordinates and RGB
@@ -1223,7 +1182,7 @@ def load_txt_s3dis(
 
 
 def load_s3dis_scene(
-    dir_: str, downscaling=0, random_ds=None, rgb=False
+    dir_s: str, downscaling=0, random_ds=None, rgb=False
 ) -> Union[Tuple[np.ndarray, np.ndarray], np.ndarray]:
     """
     Loads and processes a Stanford Large-Scale 3D Indoor Spaces (S3DIS) scene from a specified
@@ -1232,8 +1191,8 @@ def load_s3dis_scene(
     factor or a random downsampling threshold. The output format depends on whether RGB data
     is included and whether any downscaling is applied.
 
-    :param dir_: Directory containing the S3DIS scene files.
-    :type dir_: str
+    :param dir_s: Directory containing the S3DIS scene files.
+    :type dir_s: str
     :param downscaling: Downscaling factor to reduce the scene resolution by voxelizing.
         Default is 0, meaning no downscaling is applied.
     :type downscaling: int, optional
@@ -1249,7 +1208,7 @@ def load_s3dis_scene(
         data is downscaled accordingly.
     :rtype: Union[Tuple[np.ndarray, np.ndarray], np.ndarray]
     """
-    dir_list = [x for x in listdir(dir_) if x not in [".DS_Store", "Icon"]]
+    dir_list = [x for x in listdir(dir_s) if x not in [".DS_Store", "Icon"]]
 
     # Build S3DIS scene with IDs [ID, X, Y, Z] [R, G, B]
     coord_scene = []
@@ -1257,10 +1216,10 @@ def load_s3dis_scene(
     id_ = 0
     for i in dir_list:
         if rgb:
-            coord_inst, rgb_v = load_txt_s3dis(join(dir_, i), rgb=rgb)
+            coord_inst, rgb_v = load_txt_s3dis(join(dir_s, i), rgb=rgb)
             rgb_scene.append(rgb_v)
         else:
-            coord_inst = load_txt_s3dis(join(dir_, i))
+            coord_inst = load_txt_s3dis(join(dir_s, i))
 
         coord_scene.append(
             np.hstack((np.repeat(id_, len(coord_inst)).reshape(-1, 1), coord_inst))

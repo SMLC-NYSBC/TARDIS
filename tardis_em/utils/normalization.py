@@ -19,12 +19,12 @@ def adaptive_threshold(img: np.ndarray):
     Perform adaptive thresholding on an image array using mean and standard deviation.
 
     This function calculates the standard deviation and mean of the input image.
-    If the image is multi-channel (e.g., RGB), it processes each channel independently.
+    If the image is multichannel (e.g., RGB), it processes each channel independently.
     The threshold is determined by dividing the mean by the standard deviation.
     The resulting image is binarized by comparing pixel values to the thresholded
     value.
 
-    :param img: Input image as a NumPy array. For multi-channel images, each channel
+    :param img: Input image as a NumPy array. For multichannel images, each channel
         is processed independently.
     :type img: np.ndarray
     :return: A binarized image as a NumPy array with values set to 1 for pixels
@@ -48,10 +48,6 @@ class SimpleNormalize:
     floating-point representations within the range of 0 to 1. The class aims to handle
     multiple types of integer-based image data, adjusting ranges based on the specific
     data type to ensure proper normalization.
-
-    :ivar scalars: Mapping of data types to their normalization scalar values or
-        specific shifts for signed data types.
-    :type scalars: dict
     """
 
     def __call__(self, x: np.ndarray) -> np.ndarray:
@@ -95,11 +91,6 @@ class MinMaxNormalize:
     the input array. If the maximum value is less than or equal to zero, the
     normalization adjusts the input data before scaling by adding the absolute
     value of the minimum.
-
-    :ivar MIN: Minimum value within the input array after computation.
-    :type MIN: float
-    :ivar MAX: Maximum value within the input array after computation.
-    :type MAX: float
     """
 
     def __call__(self, x: np.ndarray) -> np.ndarray:
@@ -133,11 +124,6 @@ class MeanStdNormalize:
     and scaling it to have a standard deviation of one. It is designed for use
     in preprocessing image data or other numerical datasets to improve
     performance in machine learning models.
-
-    :ivar MEAN: Mean value of the input data used for standardization.
-    :type MEAN: float
-    :ivar STD: Standard deviation of the input data used for standardization.
-    :type STD: float
     """
 
     def __call__(self, x: np.ndarray) -> np.ndarray:
@@ -170,9 +156,6 @@ class RescaleNormalize:
     specified clipping range using a percentile-based approach. It is particularly
     useful for preprocessing image data in various computer vision tasks, ensuring
     that output values fall within a defined intensity range.
-
-    :ivar range: A tuple that specifies the percentile range used for clipping.
-    :type range: tuple[int, int]
     """
 
     def __init__(self, clip_range=(2, 98)):
@@ -206,7 +189,7 @@ class FFTNormalize:
         self,
         method="affine",
         alpha=900,
-        beta_=1,
+        beta_i=1,
         num_iters=100,
         sample=1,
         use_cuda=False,
@@ -222,14 +205,14 @@ class FFTNormalize:
 
         :param method: Transformation method. Default is "affine".
         :param alpha: Weighting factor for transformations.
-        :param beta_: Regularization factor.
+        :param beta_i: Regularization factor.
         :param num_iters: Number of iterations to be performed.
         :param sample: Sampling rate or number of samples.
         :param use_cuda: Indicator to use CUDA (Boolean).
         """
         self.method = method
         self.alpha = alpha
-        self.beta = beta_
+        self.beta = beta_i
         self.num_iters = num_iters
         self.sample = sample
         self.cuda = use_cuda
@@ -242,7 +225,7 @@ class FFTNormalize:
         pi=0.5,
         split=None,
         alpha=0.5,
-        beta_=0.5,
+        beta_f=0.5,
         scale=1.0,
         tol=1e-3,
         num_iters=100,
@@ -265,7 +248,7 @@ class FFTNormalize:
             to a quantile-based value computed from the data.
         :param alpha: Parameter for the Beta distribution prior on the mixing coefficient.
             Defaults to 0.5.
-        :param beta_: Parameter for the Beta distribution prior on the mixing coefficient.
+        :param beta_f: Parameter for the Beta distribution prior on the mixing coefficient.
             Defaults to 0.5.
         :param scale: Scaling factor for the log-likelihood computation. Defaults to 1.0.
         :param tol: Convergence tolerance for the log-likelihood difference between iteration
@@ -332,7 +315,7 @@ class FFTNormalize:
 
         # the probability of the data is
         logp = scale * torch.sum(Z) + scipy.stats.beta.logpdf(
-            pi.cpu().numpy(), alpha, beta_
+            pi.cpu().numpy(), alpha, beta_f
         )
         logp_cur = logp
 
@@ -344,7 +327,7 @@ class FFTNormalize:
             # now, update distribution parameters
             s = torch.sum(p1)
             a = alpha + s
-            b = beta_ + p1.numel() - s
+            b = beta_f + p1.numel() - s
             pi = (a - 1) / (a + b - 2)  # MAP estimate of pi
 
             mu0 = mu
@@ -381,7 +364,7 @@ class FFTNormalize:
             Z = ma + torch.log(torch.exp(log_p0 - ma) + torch.exp(log_p1 - ma))
 
             logp = scale * torch.sum(Z) + scipy.stats.beta.logpdf(
-                pi.cpu().numpy(), alpha, beta_
+                pi.cpu().numpy(), alpha, beta_f
             )
 
             if verbose:
@@ -394,7 +377,9 @@ class FFTNormalize:
 
         return logp, mu0, mu1, var1
 
-    def norm_fit(self, x, alpha=900, beta_=1, scale=1.0, num_iters=100, use_cuda=False):
+    def norm_fit(
+        self, x, alpha=900, beta_i=1, scale=1.0, num_iters=100, use_cuda=False
+    ):
         """
         Fits a normalization model to the input data by iteratively evaluating different
         probability mixtures while maximizing a log-likelihood measure. The function tries
@@ -411,8 +396,8 @@ class FFTNormalize:
         :type x: numpy.ndarray or torch.Tensor
         :param alpha: Shape parameter for the beta prior distribution.
         :type alpha: int
-        :param beta_: Second shape parameter for the beta prior distribution.
-        :type beta_: int
+        :param beta_i: Second shape parameter for the beta prior distribution.
+        :type beta_i: int
         :param scale: Scaling factor for the likelihood computation.
         :type scale: float
         :param num_iters: Number of iterations allowed for the GMM fitting process.
@@ -443,14 +428,14 @@ class FFTNormalize:
                 var = x.var()
                 logp = scale * torch.sum(
                     -((x - mu) ** 2) / 2 / var - 0.5 * torch.log(2 * np.pi * var)
-                ) + scipy.stats.beta.pdf(1, alpha, beta_)
+                ) + scipy.stats.beta.pdf(1, alpha, beta_i)
             else:
                 logp, mu0, mu, var = self.gmm_fit(
                     x,
                     pi=pi,
                     split=split,
                     alpha=alpha,
-                    beta_=beta_,
+                    beta_f=beta_i,
                     scale=scale,
                     num_iters=num_iters,
                 )
@@ -486,7 +471,7 @@ class FFTNormalize:
             mu, std = self.norm_fit(
                 x_sample,
                 alpha=self.alpha,
-                beta_=self.beta,
+                beta_i=self.beta,
                 scale=scale,
                 num_iters=self.num_iters,
                 use_cuda=self.cuda,
@@ -495,7 +480,7 @@ class FFTNormalize:
             mu, std = self.norm_fit(
                 x,
                 alpha=self.alpha,
-                beta_=self.beta,
+                beta_i=self.beta,
                 scale=1,
                 num_iters=self.num_iters,
                 use_cuda=self.cuda,

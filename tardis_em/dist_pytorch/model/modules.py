@@ -26,41 +26,6 @@ class PairBiasSelfAttention(nn.Module):
     The attention mechanism applies normalization and linear projections to
     both node and edge features, calculates attention weights, and uses those
     weights to compute weighted combinations of feature representations.
-
-    :ivar embed_dim: Number of dimensions for node embeddings.
-    :type embed_dim: int
-    :ivar kdim: The same as embed_dim, used for keys.
-    :type kdim: int
-    :ivar vdim: The same as embed_dim, used for values.
-    :type vdim: int
-    :ivar qkv_same_dim: Indicates whether key and value dimensions are
-        the same as the embedding dimensions.
-    :type qkv_same_dim: bool
-    :ivar num_heads: Number of heads used in multi-head attention.
-    :type num_heads: int
-    :ivar head_dim: Dimensional size of each attention head.
-    :type head_dim: int
-    :ivar scaling: Scaling factor applied during attention computation.
-    :type scaling: float
-    :ivar init_scaling: The factor used for initializing weights.
-    :type init_scaling: float
-    :ivar norm_input: Layer normalization module applied to node embeddings.
-    :type norm_input: nn.LayerNorm
-    :ivar q_proj: Linear projection layer for the query input.
-    :type q_proj: nn.Linear
-    :ivar k_proj: Linear projection layer for the key input.
-    :type k_proj: nn.Linear
-    :ivar v_proj: Linear projection layer for the value input.
-    :type v_proj: nn.Linear
-    :ivar out_proj: Linear projection layer for output embeddings.
-    :type out_proj: nn.Linear
-    :ivar pairs_dim: Number of dimensions for pairwise features.
-    :type pairs_dim: int
-    :ivar norm_pairs: Layer normalization module applied to pairwise features.
-    :type norm_pairs: nn.LayerNorm
-    :ivar pairs_proj: Linear projection layer for pairwise features
-        to generate attention biases.
-    :type pairs_proj: nn.Linear
     """
 
     def __init__(
@@ -265,18 +230,6 @@ class ComparisonLayer(nn.Module):
     to generate a tensor that is compatible with specific downstream tasks in deep
     learning models. It leverages PyTorch's `nn.Module` for implementing
     customized neural network layers.
-
-    :ivar norm: LayerNorm for normalizing input features.
-    :type norm: nn.LayerNorm
-    :ivar linear1: Linear transformation for the first input pathway with optional bias.
-    :type linear1: nn.Linear
-    :ivar linear2: Linear transformation for the second input pathway with optional bias.
-    :type linear2: nn.Linear
-    :ivar linear3: Linear transformation for the output pathway with bias initialized to zero.
-    :type linear3: nn.Linear
-    :ivar linear4: Linear transformation for the output pathway without bias and initialized
-        with zeroes.
-    :type linear4: nn.Linear
     """
 
     def __init__(self, input_dim: int, output_dim: int, channel_dim=128):
@@ -342,32 +295,6 @@ class TriangularEdgeUpdate(nn.Module):
     and gating mechanisms. It supports optional masking and performs updates
     based on a defined axis. The resulting features are computed via einsum operations,
     allowing for flexible interaction across specified dimensions.
-
-    :ivar input_dim: Dimension of the input features.
-    :type input_dim: int
-    :ivar channel_dim: Dimension of the intermediate channel, default is 128.
-    :type channel_dim: int
-    :ivar axis: Axis for einsum computation, determines the relationship direction
-                for triangular updates. Defaults to 1.
-    :type axis: int
-    :ivar norm_input: Layer normalization module to normalize the input tensor.
-    :type norm_input: torch.nn.LayerNorm
-    :ivar linear_a: Linear layer for the first set of edge features.
-    :type linear_a: torch.nn.Linear
-    :ivar gate_a: Gating layer for the first set of edge features.
-    :type gate_a: torch.nn.Linear
-    :ivar linear_b: Linear layer for the second set of edge features.
-    :type linear_b: torch.nn.Linear
-    :ivar gate_b: Gating layer for the second set of edge features.
-    :type gate_b: torch.nn.Linear
-    :ivar norm_o: Layer normalization module applied to output tensors.
-    :type norm_o: torch.nn.LayerNorm
-    :ivar gate_o: Gating layer applied to the combined triangular updates.
-    :type gate_o: torch.nn.Linear
-    :ivar linear_o: Linear layer for final edge updates back into the input dimension space.
-    :type linear_o: torch.nn.Linear
-    :ivar init_scaling: Initialization scaling factor for weights.
-    :type init_scaling: float
     """
 
     def __init__(self, input_dim, channel_dim=128, axis=1):
@@ -476,39 +403,6 @@ class QuadraticEdgeUpdate(nn.Module):
     The outputs are combined through einsum-based operations based on the configured axis, enabling
     contextual computations for edge features. The final results are subjected to normalization and
     linear transformations to produce the output tensor.
-
-    :ivar input_dim: Dimensionality of the input tensor to the module.
-    :type input_dim: int
-    :ivar channel_dim: Number of intermediate channels for computations.
-    :type channel_dim: int
-    :ivar axis: Tensor axis for einsum transformations.
-    :type axis: int
-    :ivar init_scaling: Scaling factor for initializing weights.
-    :type init_scaling: float
-    :ivar norm_input: nn.LayerNorm layer for input normalization.
-    :type norm_input: nn.LayerNorm
-    :ivar linear_a: Linear transformation layer for intermediate computations.
-    :type linear_a: nn.Linear
-    :ivar gate_a: Gating mechanism associated with linear_a.
-    :type gate_a: nn.Linear
-    :ivar linear_b: Linear transformation layer for intermediate computations.
-    :type linear_b: nn.Linear
-    :ivar gate_b: Gating mechanism associated with linear_b.
-    :type gate_b: nn.Linear
-    :ivar linear_c: Linear transformation layer for intermediate computations.
-    :type linear_c: nn.Linear
-    :ivar gate_c: Gating mechanism associated with linear_c.
-    :type gate_c: nn.Linear
-    :ivar linear_d: Linear transformation layer for intermediate computations.
-    :type linear_d: nn.Linear
-    :ivar gate_d: Gating mechanism associated with linear_d.
-    :type gate_d: nn.Linear
-    :ivar norm_o: nn.LayerNorm layer for normalizing intermediate outputs.
-    :type norm_o: nn.LayerNorm
-    :ivar gate_o: Gating mechanism for the final output layer.
-    :type gate_o: nn.Linear
-    :ivar linear_o: Linear transformation for producing the final output tensor.
-    :type linear_o: nn.Linear
     """
 
     def __init__(self, input_dim, channel_dim=128, axis=1):
@@ -653,53 +547,6 @@ class MultiHeadAttention(nn.Module):
 
     The module expects inputs in the form of query, key, and value tensors and
     provides attention outputs for further processing in the neural network.
-
-    :ivar embed_dim: Dimensionality of input embedding.
-    :type embed_dim: int
-    :ivar kdim: Dimensionality of key representations. Defaults to embed_dim.
-    :type kdim: Optional[int]
-    :ivar vdim: Dimensionality of value representations. Defaults to embed_dim.
-    :type vdim: Optional[int]
-    :ivar num_heads: The number of independent attention heads.
-    :type num_heads: int
-    :ivar head_dim: Dimensionality per head, derived as embed_dim // num_heads.
-    :type head_dim: int
-    :ivar scaling: Scaling factor for queries to stabilize computations.
-    :type scaling: float
-    :ivar self_attention: Indicates if the module operates as self-attention.
-    :type self_attention: bool
-    :ivar encoder_decoder_attention: Indicates if cross-attention is
-        implemented between encoder and decoder.
-    :type encoder_decoder_attention: bool
-    :ivar add_bias_kv: Adds learnable bias for key and value projections,
-        if True.
-    :type add_bias_kv: bool
-    :ivar add_zero_attn: Enables zero-padding to enforce attention computation
-        at specific positions.
-    :type add_zero_attn: bool
-    :ivar init_scaling: Scaling factor for initialization of projections.
-    :type init_scaling: float
-    :ivar onnx_trace: Used to facilitate conversion of the model to ONNX.
-    :type onnx_trace: bool
-    :ivar tpu: Indicates TPU compatibility for this module.
-    :type tpu: bool
-    :ivar dropout_module: Dropout layer applied to attention weights.
-    :type dropout_module: nn.Dropout
-    :ivar bias_k: Bias tensor for key projections, when add_bias_kv is True.
-    :type bias_k: Optional[nn.Parameter]
-    :ivar bias_v: Bias tensor for value projections, when add_bias_kv is True.
-    :type bias_v: Optional[nn.Parameter]
-    :ivar v_proj: Linear layer for value projections.
-    :type v_proj: nn.Linear
-    :ivar q_proj: Linear layer for query projections.
-    :type q_proj: nn.Linear
-    :ivar k_proj: Linear layer for key projections.
-    :type k_proj: nn.Linear
-    :ivar out_proj: Linear layer for output projections after attention.
-    :type out_proj: nn.Linear
-    :ivar qkv_same_dim: Indicates if query, key, and value dimensions are
-        identical, simplifying projection setup.
-    :type qkv_same_dim: bool
     """
 
     def __init__(
@@ -745,7 +592,7 @@ class MultiHeadAttention(nn.Module):
         :param add_bias_kv: If True, adds learnable bias to keys and values.
         :type add_bias_kv: bool
 
-        :param add_zero_attn: If True, adds an additional all-zero attention frame.
+        :param add_zero_attn: If True, adds an all-zero attention frame.
         :type add_zero_attn: bool
 
         :param self_attention: If True, configures layer for self-attention.
@@ -811,7 +658,7 @@ class MultiHeadAttention(nn.Module):
         constant values.
 
         :raises TypeError: An exception is raised if the model components are not
-                           properly initialized or invalid attribute references occur.
+                           properly initialized or invalid attribute references to occur.
         """
         nn.init.xavier_uniform_(self.k_proj.weight, gain=self.init_scaling)
         nn.init.xavier_uniform_(self.v_proj.weight, gain=self.init_scaling)
@@ -1030,13 +877,6 @@ class SelfAttention2D(MultiHeadAttention):
     the input features depending on the axis mode (rows or columns) and enables
     efficient computation of attention by considering memory constraints via
     batching.
-
-    :ivar axis: Attention axis. If None, computes full N\*M\*N\*M attention; otherwise,
-        computes row-wise or column-wise attention.
-    :type axis: int or None
-    :ivar max_size: Maximum size limit for the attention computation to handle
-        memory constraints effectively.
-    :type max_size: int
     """
 
     def __init__(
@@ -1152,16 +992,6 @@ class GeluFeedForward(nn.Module):
     and applies a two-layer feedforward network with GELU activation. This is
     commonly used in transformer architectures or other deep learning models
     to enhance the representational power of the model.
-
-    :ivar norm: Layer normalization applied to the input tensor.
-    :type norm: nn.LayerNorm
-    :ivar linear1: First linear transformation that projects the tensor to a
-        higher-dimensional space.
-    :type linear1: nn.Linear
-    :ivar linear2: Second linear transformation that projects the tensor back
-        to the original input dimension. The weights and biases of this layer
-        are initialized to zero.
-    :type linear2: nn.Linear
     """
 
     def __init__(self, input_dim: int, ff_dim: int):

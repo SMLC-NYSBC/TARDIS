@@ -29,11 +29,15 @@ def draw_instances(
     """
     Draws labeled or binary masks based on the input coordinates, mask size, and additional parameters.
 
-    This function generates either 2D or 3D masks, depending on the shape of the provided coordinates. If label generation is enabled, unique segment labels are created to distinguish between different segments. Circles centered around specific points are drawn in the masks, with sizes determined by the input circle size and pixel size. Input parameters related to the shape, size, and type of the mask, as well as the labeling behavior, are fully customizable. This function is suitable for constructing semantic or instance masks.
+    This function generates either 2D or 3D masks, depending on the shape of the provided coordinates.
+    If label generation is enabled, unique segment labels are created to distinguish between different segments.
+    Circles centered around specific points are drawn in the masks, with sizes determined by the input circle size
+    and pixel size. Input parameters related to the shape, size, and type of the mask, as well as the labeling behavior,
+    are fully customizable. This function is suitable for constructing semantic or instance masks.
 
     :param mask_size: The dimensions of the mask to be created.
     :type mask_size: list | tuple
-    :param coordinate: An array of coordinates specifying the locations to draw the mask. Coordinates can include optional labels as the first column.
+    :param coordinate: An array of coordinates specifying the locations to draw the mask.
     :type coordinate: np.ndarray
     :param pixel_size: Size of a pixel in the mask, used to scale the mask appropriately.
     :type pixel_size: float
@@ -41,7 +45,7 @@ def draw_instances(
     :type circle_size: int, optional
     :param label: Flag indicating whether a labeled mask or a binary mask should be created. Defaults to True.
     :type label: bool, optional
-    :param dtype: Data type for the output mask. If not provided, defaults to np.uint16 for labeled masks or np.uint8 for binary masks.
+    :param dtype: Data type for the output mask. If not provided, defaults to np.uint16 or np.uint8.
     :type dtype: str | None, optional
 
     :return: A 2D or 3D mask generated based on the input parameters.

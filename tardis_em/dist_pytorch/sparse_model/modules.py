@@ -20,33 +20,6 @@ class SparsTriangularUpdate(nn.Module):
     The module includes normalization layers, linear transformations, and gating mechanisms
     to modulate and compute updates. It supports customizable parameters for dimensions
     and the axis of operations, as well as a k-nearest-neighbor (knn) connectivity.
-
-    :ivar input_dim: Dimensionality of the input data.
-    :type input_dim: int
-    :ivar channel_dim: Number of channels in the transformation output.
-    :type channel_dim: int
-    :ivar axis: The axis along which the triangular update rule is applied.
-    :type axis: int
-    :ivar init_scaling: Scaling factor for parameter initialization.
-    :type init_scaling: float
-    :ivar knn: Number of nearest neighbors for the sparse computations.
-    :type knn: int
-    :ivar norm_input: Layer normalization applied to the input data.
-    :type norm_input: nn.LayerNorm
-    :ivar linear_a: Linear layer for transformation A.
-    :type linear_a: nn.Linear
-    :ivar gate_a: Gating layer for modulating transformation A.
-    :type gate_a: nn.Linear
-    :ivar linear_b: Linear layer for transformation B.
-    :type linear_b: nn.Linear
-    :ivar gate_b: Gating layer for modulating transformation B.
-    :type gate_b: nn.Linear
-    :ivar norm_o: Layer normalization applied to the output data.
-    :type norm_o: nn.LayerNorm
-    :ivar gate_o: Gating layer for modulating the output.
-    :type gate_o: nn.Linear
-    :ivar linear_o: Linear layer to compute the output transformation.
-    :type linear_o: nn.Linear
     """
 
     def __init__(self, input_dim: int, channel_dim=128, axis=1, knn=8):

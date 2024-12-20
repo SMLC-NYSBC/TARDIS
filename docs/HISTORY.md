@@ -291,7 +291,7 @@
       * Change how DIST distance embedding is computed for GT data.
       * Change normalization for point cloud
         - MT normalized by pixel size
-        - All other by open3d downsampling value optional random downsamling
+        - All other by open3d down-sampling value optional random down-sampling
       * F1 eval metric and BCE loss without diagonal axis
     * *New_Feature*:
       * DataLoader for Stanford data
@@ -335,7 +335,7 @@
 * **General changes:**
     * Added support for mrc and csv file outputs
     * Support for Python 3.11 (awaiting pytorch and open3d)
-    * requirements.txt changes and include pytroch with support for different os
+    * requirements.txt changes and include pytorch with support for different os
 
 </details>
 

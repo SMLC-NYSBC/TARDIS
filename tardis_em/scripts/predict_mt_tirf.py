@@ -184,7 +184,7 @@ warnings.simplefilter("ignore", UserWarning)
 )
 @click.option(
     "-continue",
-    "--continue_",
+    "--continue_b",
     default=False,
     type=bool,
     help="If True, continue from the last tomogram that was successfully predicted.",
@@ -214,7 +214,7 @@ def main(
     connect_cylinder: int,
     device: str,
     debug: bool,
-    continue_: bool,
+    continue_b: bool,
     test_click=False,
 ):
     """
@@ -242,7 +242,7 @@ def main(
         import tifffile.tifffile as save_tiff
 
         for i in nd2_files:
-            image, _ = load_nd2_file(join(path, i), channels=True)
+            image, _ = load_nd2_file(join(path, i))
 
             for j in range(image.shape[0]):
                 name_file = join(path, i[:-4]) + f"_{j}.tiff"
@@ -252,7 +252,7 @@ def main(
 
     predictor = GeneralPredictor(
         predict="Microtubule_tirf",
-        dir_=path,
+        dir_s=path,
         binary_mask=mask,
         correct_px=None,
         normalize_px=1.0,
@@ -272,9 +272,9 @@ def main(
         amira_compare_distance=None,
         amira_inter_probability=None,
         instances=instances,
-        device_=str(device),
+        device_s=str(device),
         debug=debug,
-        continue_=continue_,
+        continue_b=continue_b,
     )
 
     if not test_click:
@@ -289,11 +289,11 @@ def main(
             os.rename(i, join(f_name, "Predictions", splitext(basename(i))[0]) + ".tif")
 
         # Analyze length, average intensity along the spline,
-        name_ = find_filtered_files(
+        name_s = find_filtered_files(
             join(dirname(path), "Predictions"), prefix="instances_filter"
         )
         data = []
-        for d in name_:
+        for d in name_s:
             d = np.genfromtxt(d, delimiter=",")
 
             if str(d[0, 0]) == "nan":
@@ -302,7 +302,7 @@ def main(
 
         analyse_filaments_list(
             data=data,
-            names_=name_,
+            names_l=name_s,
             path=join(path, "Predictions"),
             images=images,
             px=None,

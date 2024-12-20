@@ -11,7 +11,6 @@ from collections import defaultdict
 from itertools import combinations
 from typing import List, Optional, Tuple, Union
 
-from rfc3986.abnf_regexp import segments
 from scipy.spatial import KDTree
 
 try:

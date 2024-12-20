@@ -56,11 +56,6 @@ def device_is_str(device: str = "0") -> bool:
     Checks if the provided device identifier string represents a valid integer and determines
     if the input can be interpreted as a valid device representation.
 
-    This function attempts to convert the provided string into an integer. If successful,
-    the function confirms whether the converted value is an integer type and returns the
-    result accordingly. If the string cannot be converted into an integer, it explicitly
-    returns False.
-
     :param device: The device identifier as a string. Defaults to "0".
     :type device: str
 

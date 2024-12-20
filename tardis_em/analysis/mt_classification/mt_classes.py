@@ -35,68 +35,6 @@ class MicrotubuleClassifier:
 
     It initializes with critical parameters, loads and corrects processed data, and
     offers methods to extract relevant structural information from the provided files.
-
-    :ivar triangle: Stores triangle mesh data extracted during vertex processing.
-    :type triangle: any
-    :ivar tardis_logo: Boolean indicating whether the TARDIS logo and progress output
-        is displayed during execution.
-    :type tardis_logo: bool
-    :ivar main_logo: Object used for configuring and controlling the TARDIS logo.
-    :type main_logo: TardisLogo
-    :ivar pixel_size: Represents the scaling factor between raw coordinate systems and
-        real-world measurements.
-    :type pixel_size: float or int
-    :ivar gap_size: The threshold distance used for gaps between objects during spatial
-        computations.
-    :type gap_size: int
-    :ivar kmt_dist_to_surf: The predefined threshold distance from kinetochore MT
-        segments to surfaces.
-    :type kmt_dist_to_surf: int
-    :ivar surfaces: Path to surface data file input by the user.
-    :type surfaces: str
-    :ivar vertices: Contains normalized vertices derived during surface processing.
-    :type vertices: list
-    :ivar filaments: Contains resampled and preprocessed filament information.
-    :type filaments: np.ndarray
-    :ivar filament_pole1: Tracks filament segments associated with the first pole
-        structure.
-    :type filament_pole1: any
-    :ivar filament_pole2: Tracks filament segments assigned to the secondary pole
-        structure.
-    :type filament_pole2: any
-    :ivar poles: Contains spatially corrected pole data.
-    :type poles: np.ndarray
-    :ivar min_coords: Placeholder variable, representing the approximate bounding
-        region minimum coordinates extracted from the dataset.
-    :type min_coords: any
-    :ivar f_1: The count of unique filaments associated with pole 1.
-    :type f_1: int
-    :ivar f_2: The count of unique filaments associated with pole 2.
-    :type f_2: int
-    :ivar plus_end_id: Identifier for the plus-end MT classification group.
-    :type plus_end_id: any
-    :ivar minus_end_id: Identifier for the minus-end MT classification group.
-    :type minus_end_id: any
-    :ivar kmts_id_1: List of kinetochore MTs associated with the first pole region.
-    :type kmts_id_1: any
-    :ivar kmts_id_2: List of kinetochore MTs associated with the second pole region.
-    :type kmts_id_2: any
-    :ivar kmts_inside_id_1: List of kinetochore MTs inside the first pole’s bounds.
-    :type kmts_inside_id_1: any
-    :ivar kmts_outside_id_1: List of kinetochore MTs outside the first pole region.
-    :type kmts_outside_id_1: any
-    :ivar kmts_inside_id_2: List of kinetochore MTs inside the second pole’s bounds.
-    :type kmts_inside_id_2: any
-    :ivar kmts_outside_id_2: List of kinetochore MTs outside the second pole region.
-    :type kmts_outside_id_2: any
-    :ivar mid_mt_ids: List holding mid-region MT identities.
-    :type mid_mt_ids: any
-    :ivar int_mt_ids: List denoting interdigitating MT elements.
-    :type int_mt_ids: any
-    :ivar brg_mt_ids: List denoting bridging MT elements.
-    :type brg_mt_ids: any
-    :ivar smt_ids: Identifiers for single-microtubule classifications.
-    :type smt_ids: any
     """
 
     def __init__(
@@ -195,15 +133,15 @@ class MicrotubuleClassifier:
         self.mid_mt_ids, self.int_mt_ids, self.brg_mt_ids = None, None, None
         self.smt_ids = None
 
-    def get_vertices_file(self, dir_: str, simplify: bool = None) -> list:
+    def get_vertices_file(self, dir_s: str, simplify: bool = None) -> list:
         """
         Extracts and returns the vertices information from a given directory containing
         data for an AM surface file. This method utilizes the `load_am_surf` function
         to process the data in the specified directory. Optionally, the simplification
         param can be used to streamline the vertices extraction process.
 
-        :param dir_: The directory containing the AM surface file.
-        :type dir_: str
+        :param dir_s: The directory containing the AM surface file.
+        :type dir_s: str
         :param simplify: Defines whether simplification is applied during the loading
             process. This parameter is optional.
         :type simplify: bool, optional
@@ -211,27 +149,27 @@ class MicrotubuleClassifier:
         :return: A list of vertices extracted from the surface file.
         :rtype: list
         """
-        _, _, vertices, self.triangles = load_am_surf(dir_, simplify_=simplify)
+        _, _, vertices, self.triangles = load_am_surf(dir_s, simplify_f=simplify)
 
         return vertices
 
     @staticmethod
-    def get_filament_file(dir_) -> np.ndarray:
+    def get_filament_file(dir_s: str) -> np.ndarray:
         """
         Extracts and returns segmented points from the specified directory using the
         ImportDataFromAmira class. This function is a static method and does not rely
         on class instance attributes.
 
-        :param dir_: Directory path to the source AM file
-        :type dir_: str
+        :param dir_s: Directory path to the source AM file
+        :type dir_s: str
 
         :return: Numpy array of segmented points extracted from the specified directory
         :rtype: np.ndarray
         """
-        return ImportDataFromAmira(src_am=dir_).get_segmented_points()
+        return ImportDataFromAmira(src_am=dir_s).get_segmented_points()
 
     @staticmethod
-    def get_poles_file(dir_) -> np.ndarray:
+    def get_poles_file(dir_s: str) -> np.ndarray:
         """
         Retrieve pole positions from a specified directory and returns them as a NumPy array.
 
@@ -242,13 +180,13 @@ class MicrotubuleClassifier:
         The directory passed must contain the required data structure that is compatible with
         `ImportDataFromAmira` functionality. The output is formatted as a NumPy array.
 
-        :param dir_: The file path to the directory containing the Amira data files
-        :type dir_: str
+        :param dir_s: The file path to the directory containing the Amira data files
+        :type dir_s: str
 
         :return: A NumPy array containing the vertex data representing pole positions
         :rtype: np.ndarray
         """
-        return ImportDataFromAmira(src_am=dir_).get_vertex()
+        return ImportDataFromAmira(src_am=dir_s).get_vertex()
 
     def correct_data(self):
         """
@@ -302,7 +240,7 @@ class MicrotubuleClassifier:
 
         return int(index_starts), end_indices
 
-    def assign_to_kmts(self, filaments, id_=0) -> list:
+    def assign_to_kmts(self, filaments, id_i=0) -> list:
         """
         Assigns filaments to kinetochores (KMTs) based on spatial and distance criteria.
 
@@ -313,7 +251,7 @@ class MicrotubuleClassifier:
         of KMT-associated filaments.
 
         :param filaments: A NumPy array representing the set of filaments.
-        :param id_: An integer representing the index of the vertices and poles
+        :param id_i: An integer representing the index of the vertices and poles
             being processed. Defaults to 0.
         :return: A list of unique filament IDs assigned to KMTs.
         """
@@ -321,19 +259,19 @@ class MicrotubuleClassifier:
         plus_end = filaments[unique_indices, :]
 
         # Preselect filaments inside bounding box
-        kmt_ids = select_mt_ids_within_bb(self.vertices[id_], plus_end)
+        kmt_ids = select_mt_ids_within_bb(self.vertices[id_i], plus_end)
         if len(kmt_ids) == 0:
             return []
 
         kmt_fibers = filaments[np.isin(filaments[:, 0], kmt_ids)]
-        kmt_ids = self.assign_mt_with_crossing(kmt_fibers, self.vertices[id_], [1])
+        kmt_ids = self.assign_mt_with_crossing(kmt_fibers, self.vertices[id_i], [1])
 
         if len(kmt_ids) == 0:
             return []
 
         # Calculate distances of MT endpoints to the surface and poles
         d1_, d2_ = distances_of_ends_to_surface(
-            self.vertices[id_], self.poles[id_], plus_end
+            self.vertices[id_i], self.poles[id_i], plus_end
         )
 
         # Select MTs based on distance threshold
@@ -348,7 +286,9 @@ class MicrotubuleClassifier:
         # Combine and return final KMT IDs
         return list(np.unique(np.hstack((kmt_ids, plus_end))))
 
-    def kmts_inside_outside(self, kmt_proposal, id_=0) -> tuple[np.ndarray, np.ndarray]:
+    def kmts_inside_outside(
+        self, kmt_proposal, id_i=0
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         Determines whether the k-MTs (kinetochore MicroTubules) are inside or outside based
         on their distance to the surface. The function computes unique k-MTs and evaluates
@@ -357,7 +297,7 @@ class MicrotubuleClassifier:
 
         :param kmt_proposal: A 2D numpy array where each row corresponds to an association
             of k-MTs, with the first column representing k-MT identifiers.
-        :param id_: An integer representing the identifier of the current vertex and pole
+        :param id_i: An integer representing the identifier of the current vertex and pole
             configuration to be used for computations. Defaults to 0.
         :return: A tuple containing two numpy arrays. The first array contains unique k-MT
             identifiers classified as inside, while the second array contains unique k-MT
@@ -367,7 +307,7 @@ class MicrotubuleClassifier:
         plus_ends = kmt_proposal[unique_indices, :]
 
         d1_, d2_ = distances_of_ends_to_surface(
-            self.vertices[id_], self.poles[id_], plus_ends, True
+            self.vertices[id_i], self.poles[id_i], plus_ends, True
         )
         d1_to_d2 = d2_ > d1_
 
@@ -416,14 +356,14 @@ class MicrotubuleClassifier:
 
         """Select MT with 0 or 1 crossing"""
         mid_mt_ids = select_mt_ids_within_bb(
-            vertices_=np.vstack(self.vertices), mt_ends1=mts_plus, mt_ends2=mts_minus
+            vertices_n=np.vstack(self.vertices), mt_ends1=mts_plus, mt_ends2=mts_minus
         )
         if len(mid_mt_ids) == 0:
             return []
 
         mid_mt_fibers = self.filaments[np.isin(self.filaments[:, 0], mid_mt_ids)]
         mid_mt_ids = self.assign_mt_with_crossing(
-            filaments=mid_mt_fibers, vertices_=np.vstack(self.vertices), class_=[0, 1]
+            filaments=mid_mt_fibers, vertices_l=np.vstack(self.vertices), class_l=[0, 1]
         )
         if len(mid_mt_ids) == 0:
             return []
@@ -474,7 +414,7 @@ class MicrotubuleClassifier:
 
         int_mt_fibers = self.filaments[np.isin(self.filaments[:, 0], int_mt_ids)]
         int_mt_ids = self.assign_mt_with_crossing(
-            filaments=int_mt_fibers, vertices_=np.vstack(self.vertices), class_=[2, 3]
+            filaments=int_mt_fibers, vertices_l=np.vstack(self.vertices), class_l=[2, 3]
         )
 
         return list(int_mt_ids)
@@ -507,12 +447,12 @@ class MicrotubuleClassifier:
 
         bridge_mt_ids = self.assign_mt_with_crossing(
             filaments=brg_mt_fibers,
-            vertices_=np.vstack(self.vertices),
-            class_=[4, 5, 6],
+            vertices_l=np.vstack(self.vertices),
+            class_l=[4, 5, 6],
         )
         return list(bridge_mt_ids)
 
-    def assign_mt_with_crossing(self, filaments, vertices_, class_=[1]) -> np.ndarray:
+    def assign_mt_with_crossing(self, filaments, vertices_l, class_l=[1]) -> np.ndarray:
         """
         Assigns microtubule (MT) IDs based on whether or not they cross a specific surface
         and belong to a specified class of interest.
@@ -526,9 +466,9 @@ class MicrotubuleClassifier:
         :param filaments: A 2D numpy array where each row represents a segment of a
             microtubule. The first column contains microtubule IDs (integers), while
             the subsequent columns correspond to the spatial coordinates (e.g., x, y, z).
-        :param vertices_: A 2D numpy array representing the vertices of the surface for
+        :param vertices_l: A 2D numpy array representing the vertices of the surface for
             comparison, each row specifying a spatial coordinate (e.g., x, y, z).
-        :param class_: A list of integers representing the microtubule classification
+        :param class_l: A list of integers representing the microtubule classification
             criteria. Default is [1], which selects microtubules matching the threshold
             condition.
         :return: A numpy array containing IDs of microtubules that intersect the surface
@@ -537,7 +477,7 @@ class MicrotubuleClassifier:
         all_ids = np.unique(filaments[:, 0])
 
         """Calculate MT crossing the surface"""
-        _, points_on_surface = points_on_mesh_knn(filaments[:, 1:], vertices_)
+        _, points_on_surface = points_on_mesh_knn(filaments[:, 1:], vertices_l)
 
         points_indices = [id_ for id_, i in enumerate(points_on_surface) if i]
         mt_id_crossing = np.unique(filaments[points_indices, 0]).astype(np.int16)
@@ -561,10 +501,10 @@ class MicrotubuleClassifier:
             f = filaments[:, 0] == mt_id
             f = point_sequence[f,]
 
-            if count_true_groups(f) in class_:
+            if count_true_groups(f) in class_l:
                 ids.append(mt_id)
 
-        if 0 in class_:
+        if 0 in class_l:
             for mt_id in all_ids:
                 if mt_id not in mt_id_crossing:
                     ids.append(mt_id)
@@ -590,17 +530,21 @@ class MicrotubuleClassifier:
         self.plus_end_id, self.minus_end_id = self.get_filament_endpoints()
 
         """Get indices for KMTs"""
-        self.kmts_id_1 = list(self.assign_to_kmts(filaments=self.filament_pole1, id_=0))
-        self.kmts_id_2 = list(self.assign_to_kmts(filaments=self.filament_pole2, id_=1))
+        self.kmts_id_1 = list(
+            self.assign_to_kmts(filaments=self.filament_pole1, id_i=0)
+        )
+        self.kmts_id_2 = list(
+            self.assign_to_kmts(filaments=self.filament_pole2, id_i=1)
+        )
 
         self.kmts_inside_id_1, self.kmts_outside_id_1 = self.kmts_inside_outside(
-            self.filaments[np.isin(self.filaments[:, 0], self.kmts_id_1)], id_=0
+            self.filaments[np.isin(self.filaments[:, 0], self.kmts_id_1)], id_i=0
         )
         self.kmts_inside_id_1, self.kmts_outside_id_1 = list(
             self.kmts_inside_id_1
         ), list(self.kmts_outside_id_1)
         self.kmts_outside_id_2, self.kmts_inside_id_2 = self.kmts_inside_outside(
-            self.filaments[np.isin(self.filaments[:, 0], self.kmts_id_2)], id_=1
+            self.filaments[np.isin(self.filaments[:, 0], self.kmts_id_2)], id_i=1
         )
         self.kmts_outside_id_2, self.kmts_inside_id_2 = list(
             self.kmts_outside_id_2

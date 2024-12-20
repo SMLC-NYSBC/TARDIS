@@ -205,7 +205,7 @@ def main(
 
     predictor = GeneralPredictor(
         predict=predict,
-        dir_=path,
+        dir_s=path,
         binary_mask=mask,
         correct_px=correct_px,
         convolution_nn=convolution_nn,
@@ -218,7 +218,7 @@ def main(
         points_in_patch=points_in_patch,
         predict_with_rotation=rotate,
         instances=instances,
-        device_=str(device),
+        device_s=str(device),
         debug=debug,
     )
 

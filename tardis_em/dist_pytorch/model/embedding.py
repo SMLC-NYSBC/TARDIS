@@ -25,22 +25,6 @@ class NodeEmbedding(nn.Module):
     patches) into a desired output dimension. If sigma is 0, a trainable linear
     layer is applied. Otherwise, a fixed random projection is utilized with
     a cosine activation.
-
-    :ivar linear: Trainable linear layer, used when sigma is set to 0.
-                  Defaults to None otherwise.
-    :type linear: Optional[torch.nn.Linear]
-    :ivar n_in: Input dimension of the node features, used when sigma is
-                non-zero.
-    :type n_in: int
-    :ivar sigma: Scale factor for the randomized cosine transformation, used
-                 when sigma is non-zero.
-    :type sigma: torch.Tensor
-    :ivar weight: Weight matrix used in the cosine transformation, initialized
-                  randomly and stored in the module buffer.
-    :type weight: torch.Tensor
-    :ivar bias: Bias term used in the cosine transformation, initialized
-                randomly and stored in the module buffer.
-    :type bias: torch.Tensor
     """
 
     def __init__(self, n_in: int, n_out: int, sigma=1):
@@ -111,13 +95,6 @@ class EdgeEmbedding(nn.Module):
     of a specified dimensionality. It supports both fixed sigma values (as single
     or iterable ranges) and learns to dynamically adjust their dimensions
     via linear layers.
-
-    :ivar n_out: The number of output features produced by the embedding layer.
-    :type n_out: int
-    :ivar sigma: Specifies the Gaussian bandwidth(s) for the embedding. It can
-        either be a fixed value (int or float) or a range (list or tuple)
-        for generating Gaussian RBFs.
-    :type sigma: Union[int, float, list]
     """
 
     def __init__(self, n_out: int, sigma: Union[int, float, list]):

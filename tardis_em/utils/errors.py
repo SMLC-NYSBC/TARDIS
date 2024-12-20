@@ -56,7 +56,7 @@ id_dict = {
 }
 
 
-def standard_error_id(id_: str):
+def standard_error_id(id_s: str):
     """
     Fetches the standard error message corresponding to the provided ID.
 
@@ -64,14 +64,14 @@ def standard_error_id(id_: str):
     and returns the associated error message. If the ID does not exist in the
     dictionary, it falls back to a default string indicating an unknown error.
 
-    :param id_: The identifier string for the error to search in the dictionary.
-    :type id_: str
+    :param id_s: The identifier string for the error to search in the dictionary.
+    :type id_s: str
     :return: Corresponding error message if the ID is found, else "UNKNOWN_ERROR".
     :rtype: str
     """
 
     try:
-        return id_dict[id_]
+        return id_dict[id_s]
     except KeyError:
         return "UNKNOWN_ERROR"
 
@@ -85,15 +85,10 @@ class TardisError(Exception):
     logs error-related information to a file, and supports formatted, error-specific console
     notifications. It also facilitates the truncation of long error descriptions to fit
     within terminal display constraints.
-
-    :ivar WIDTH: The width of the shell/terminal to adjust error message display formatting.
-    :type WIDTH: int or None
-    :ivar tardis_error_rise: Instance of TardisLogo used for rendering error visuals.
-    :type tardis_error_rise: TardisLogo
     """
 
     def __init__(
-        self, id_="0", py="NA", desc="Unknown exertion occurred!", warning_=True
+        self, id_="0", py="NA", desc="Unknown exertion occurred!", warning_b=True
     ):
         super().__init__()
 
@@ -119,7 +114,7 @@ class TardisError(Exception):
         desc_3, desc_4, desc_5, desc_6, desc_7, desc_8, desc_9, desc_10 = self.cut_desc(
             desc
         )
-        code = "ERROR" if not warning_ else "WARNING"
+        code = "ERROR" if not warning_b else "WARNING"
 
         self.tardis_error_rise(
             title=f"TARDIS {code} CODE {id_} {id_desc} \n",
@@ -134,7 +129,7 @@ class TardisError(Exception):
             text_9=desc_9,
             text_10=desc_10,
         )
-        if not warning_:
+        if not warning_b:
             sys.exit()
 
     def cut_desc(self, desc: str) -> Tuple[str, str, str, str, str, str, str, str]:

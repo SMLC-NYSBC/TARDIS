@@ -29,15 +29,6 @@ class SparseEdgeEmbedding(nn.Module):
     The module computes pairwise distances between input points, finds the
     nearest neighbors, and applies Gaussian kernels on the neighbor distances
     to construct sparse adjacency matrices augmented with multiple sigma ranges.
-
-    :ivar k: The number of nearest neighbors considered for each point.
-    :type k: int
-    :ivar _range: A range of sigma values used for Gaussian kernels.
-    :type _range: torch.Tensor
-    :ivar n_out: The number of output channels representing multiple sigma values.
-    :type n_out: int
-    :ivar sigma: The input sigma range as a list containing minimum and maximum values.
-    :type sigma: list
     """
 
     def __init__(self, n_knn: int, n_out: int, sigma: list):
@@ -133,24 +124,6 @@ class SparseEdgeEmbeddingV4(nn.Module):
     functions, and distance matrices for embedding computations. The primary
     purpose of the module is to generate embeddings for input coordinate tensors
     by applying a range of Gaussian filters over computed distances.
-
-    :ivar _range: The range of Gaussian kernel standard deviations,
-        determined by the `sigma` parameter provided during initialization.
-    :type _range: torch.tensor
-    :ivar knn: The number of nearest neighbors to consider for kNN computation.
-    :type knn: int
-    :ivar df_knn: A backup variable to temporarily store the desired kNN value
-        if the dataset contains fewer samples than `knn`.
-    :type df_knn: Optional[int]
-    :ivar n_out: Number of output channels, representing the total number of
-        Gaussian filters applied during embedding computation.
-    :type n_out: int
-    :ivar sigma: List containing the lower and upper bounds for the Gaussian
-        kernel's sigma value.
-    :type sigma: list
-    :ivar _device: Specifies the computation device, either "cpu" or "cuda",
-        used for tensor operations.
-    :type _device: str
     """
 
     def __init__(self, n_out: int, sigma: list, knn: int, _device="cpu"):

@@ -171,7 +171,7 @@ def main(
         predictor_bch = CnnBenchmark(
             model=predictor,
             dataset=data_set,
-            dir_=DIR_EVAL,
+            dir_s=DIR_EVAL,
             threshold=nn_threshold,
             patch_size=patch_size,
         )
@@ -181,7 +181,7 @@ def main(
         predictor_bch = DISTBenchmark(
             model=predictor,
             dataset=data_set,
-            dir_=DIR_EVAL,
+            dir_s=DIR_EVAL,
             threshold=nn_threshold,
             points_in_patch=points_in_patch,
         )

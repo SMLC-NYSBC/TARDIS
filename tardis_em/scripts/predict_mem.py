@@ -159,7 +159,7 @@ warnings.simplefilter("ignore", UserWarning)
 )
 @click.option(
     "-continue",
-    "--continue_",
+    "--continue_b",
     default=False,
     type=bool,
     help="If True, continue from the last tomogram that was successfully predicted.",
@@ -183,7 +183,7 @@ def main(
     points_in_patch: int,
     device: str,
     debug: bool,
-    continue_: bool,
+    continue_b: bool,
     test_click=False,
 ):
     """
@@ -209,7 +209,7 @@ def main(
 
     predictor = GeneralPredictor(
         predict="Membrane",
-        dir_=path,
+        dir_s=path,
         binary_mask=mask,
         correct_px=correct_px,
         normalize_px=normalize_px,
@@ -223,9 +223,9 @@ def main(
         points_in_patch=points_in_patch,
         predict_with_rotation=rotate,
         instances=instances,
-        device_=str(device),
+        device_s=str(device),
         debug=debug,
-        continue_=continue_,
+        continue_b=continue_b,
     )
 
     if not test_click:

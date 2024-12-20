@@ -179,12 +179,6 @@ class BuildGraph:
     constructed either through Nearest Neighbors for mesh-based structures or explicit connections for
     points belonging to the same contour. The graph is represented as a binary matrix, with optional
     handling of self-connections.
-
-    :ivar K: Number of neighbors to consider when constructing a mesh-based graph. Default is 2.
-    :type K: int
-    :ivar mesh: Indicates whether to use a mesh-based structure with K-nearest neighbors or to construct
-        explicit contour connections. Default is False.
-    :type mesh: bool
     """
 
     def __init__(self, K=2, mesh=False):
@@ -269,15 +263,6 @@ class Crop2D3D:
     on the input) by specifying a center position and dimensions for the crop. It
     supports normalization of the cropped section if a normalization function is
     provided.
-
-    :ivar image: Input image to be cropped.
-    :type image: np.ndarray
-    :ivar size: Dimensions of the crop, specified as a tuple. It can contain
-        two or three values depending on whether the cropping is in 2D or 3D.
-    :type size: tuple
-    :ivar normalization: A callable normalization function applied to the cropped
-        image, or None if no normalization is needed.
-    :type normalization: callable or None
     """
 
     def __init__(self, image: np.ndarray, size: tuple, normalization):

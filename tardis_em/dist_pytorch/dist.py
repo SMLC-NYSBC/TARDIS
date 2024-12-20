@@ -28,31 +28,6 @@ class BasicDIST(nn.Module):
     processing graph-like structures with transformer-based operations. It supports
     different configurations including embeddings, number of layers, heads, and the ability
     to predict outputs using a sigmoid activation.
-
-    :ivar n_out: Number of output features per edge.
-    :type n_out: int
-    :ivar node_input: Input dimension of node features (if any).
-    :type node_input: int
-    :ivar node_dim: The embedding size for the nodes.
-    :type node_dim: int or None
-    :ivar edge_dim: The embedding size for the edges.
-    :type edge_dim: int
-    :ivar num_layers: Number of layers in the transformer stack.
-    :type num_layers: int
-    :ivar num_heads: Number of attention heads for the transformer.
-    :type num_heads: int
-    :ivar num_cls: Number of classification outputs, if applicable.
-    :type num_cls: int or None
-    :ivar node_sigma: Standard deviation for the RGB-based node embedding.
-    :type node_sigma: float
-    :ivar edge_sigma: Standard deviation for the coordinate-based edge embedding.
-    :type edge_sigma: float
-    :ivar dropout_rate: Dropout rate used in transformer layers.
-    :type dropout_rate: float
-    :ivar structure: Type of transformer structure configuration (e.g., "full").
-    :type structure: str
-    :ivar predict: Flag to indicate if sigmoid is applied to the output for predictions.
-    :type predict: bool
     """
 
     def __init__(
@@ -244,11 +219,6 @@ class DIST(BasicDIST):
     by its superclass, BasicDIST. The implementation utilizes keyword arguments
     to allow dynamic initialization of class attributes or properties in a
     flexible manner.
-
-    :ivar attribute1: Description of attribute1.
-    :type attribute1: type
-    :ivar attribute2: Description of attribute2.
-    :type attribute2: type
     """
 
     def __init__(self, **kwargs):
@@ -261,17 +231,6 @@ class CDIST(BasicDIST):
     neural network. It dynamically creates layers based on input arguments and handles
     functionalities related to logits and predictions. This class serves as a foundational
     component for classification tasks, ensuring that proper configurations are enforced.
-
-    :ivar decoder_cls: Linear layer that acts as the final classification layer of
-        the network. Maps input features to the number of classes.
-    :type decoder_cls: nn.Linear
-    :ivar logits_sigmoid: Applies a sigmoid activation to logits when predictions
-        are enabled, used for scenarios requiring binary classification outputs.
-    :type logits_sigmoid: nn.Sigmoid
-    :ivar logits_cls_softmax: Applies a softmax activation function to logits along
-        the class dimension, which converts network outputs into probabilities for
-        multi-class classification tasks.
-    :type logits_cls_softmax: nn.Softmax
     """
 
     def __init__(self, **kwargs):

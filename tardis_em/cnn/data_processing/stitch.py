@@ -28,23 +28,6 @@ class StitchImages:
     uses for computation. This functionality is useful in domains such as
     image processing and machine learning, where use of segmented image parts
     during preprocessing and their subsequent recombination is common.
-
-    :ivar idx: Track the number of image groups/files for stitching.
-    :type idx: int
-    :ivar nx: Store the x-dimension size of the image patch.
-    :type nx: int
-    :ivar ny: Store the y-dimension size of the image patch.
-    :type ny: int
-    :ivar nz: Store the z-dimension size of the image patch (if applicable).
-    :type nz: int
-    :ivar x: Store the number of overlapping patches in the x-dimension.
-    :type x: int
-    :ivar y: Store the number of overlapping patches in the y-dimension.
-    :type y: int
-    :ivar z: Store the number of overlapping patches in the z-dimension.
-    :type z: int
-    :ivar stride: Step size (or stride) designated for overlapping patches.
-    :type stride: int
     """
 
     def __init__(self):

@@ -23,25 +23,6 @@ class PatchDataSet:
     functionalities for down-sampling points, defining overlapping feature patches, and specifying
     output formats such as tensor representation or graph structure. It also initializes and manages
     patch size configurations.
-
-    Attributes:
-    ------------
-    :ivar DOWNSAMPLING_TH: Threshold for the maximum number of points for down-sampling.
-    :type DOWNSAMPLING_TH: int
-    :ivar voxel: Placeholder for voxel setting, initially unused (defaults to None).
-    :type voxel: NoneType
-    :ivar drop_rate: Defines the probability of dropping features during patch processing.
-    :type drop_rate: float, optional
-    :ivar TORCH_OUTPUT: Indicates whether tensor-based output functionality is enabled.
-    :type TORCH_OUTPUT: bool
-    :ivar GRAPH_OUTPUT: Indicates whether graph-based output functionality is enabled.
-    :type GRAPH_OUTPUT: bool
-    :ivar EXPAND: Specifies the degree to extend bounding box dimensions during processing.
-    :type EXPAND: float
-    :ivar STRIDE: Overlapping ratio between feature patches.
-    :type STRIDE: float
-    :ivar INIT_PATCH_SIZE: Initializes an array to store patch dimensions defined as a 2x3 matrix.
-    :type INIT_PATCH_SIZE: np.ndarray
     """
 
     def __init__(
@@ -57,18 +38,6 @@ class PatchDataSet:
         parameters for down-sampling the point cloud, configuring the feature patches, and determining output
         formats such as tensor or graph. It also provides initial space for the patch size in the configuration.
 
-        Attributes:
-        ------------
-        :max_number_of_points: The threshold for the maximum number of points allowed for point cloud
-           down-sampling. Points exceeding this limit will be reduced.
-        :overlap: The overlap ratio between patches to specify the stride when creating patches.
-        :drop_rate: Probability of dropping features during processing. Determines the fraction of features
-           to disregard.
-        :graph: Boolean value indicating whether graph-based outputs are enabled or not.
-        :tensor: Boolean value indicating whether tensor-based outputs are enabled or not.
-
-        Parameters:
-        -----------
         :param max_number_of_points: The maximum number of points for point cloud down-sampling.
         :param overlap: A floating-point value specifying the overlap percentage
             for creating patches.
@@ -302,8 +271,8 @@ class PatchDataSet:
                     self.points_in_patch(coord=coord, patch_center=patch_grid[random_])
                 ]
 
-                # Check if picked voxel have more then self.mesh points
-                # and less then downsample threshold
+                # Check if picked voxel have more than self.mesh points
+                # and less than downsample threshold
                 pc_size = np.sum(all_patch[0])
 
                 while (

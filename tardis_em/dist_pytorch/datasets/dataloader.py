@@ -44,39 +44,6 @@ class BasicDataset(Dataset):
     This class is particularly useful for managing coordinate files, setting
     downscaled versions of files, and utility methods for temporary storage of
     preprocessed data.
-
-    :ivar coord_dir: Path to the directory containing coordinate files.
-    :type coord_dir: Optional[str]
-    :ivar coord_format: File format of the coordinate files. Default is `.csv`.
-    :type coord_format: str
-    :ivar patch_if: Maximum number of points allowed in a patch.
-    :type patch_if: int
-    :ivar downscale: Downscale factor applied to the dataset, if any.
-    :type downscale: Optional[Any]
-    :ivar rgb: Boolean flag to indicate whether input data includes RGB values.
-    :type rgb: bool
-    :ivar benchmark: Boolean flag indicating if the dataset is used for evaluation
-        or benchmarking purposes.
-    :type benchmark: bool
-    :ivar train: Boolean flag to specify whether the dataset is used for training.
-    :type train: bool
-    :ivar cwd: The current working directory where the dataset is initialized.
-    :type cwd: str
-    :ivar temp: Name of the temporary directory used for storing processed data.
-    :type temp: str
-    :ivar ids: List of detected coordinate file names matching the defined file
-        format from the `coord_dir`.
-    :type ids: List[str]
-    :ivar patch_size: Predefined patch size values for faster computations. Initialized
-        as zeros, shaped by the number of detected coordinate files.
-    :type patch_size: np.ndarray
-    :ivar VD: Reserved for storing additional dataset-specific values. Currently unused.
-    :type VD: Optional[Any]
-    :ivar max_point_in_patch: The maximum number of datapoints allowed in each patch,
-        used for building patched datasets.
-    :type max_point_in_patch: int
-    :ivar l_: Number of detected files or dataset instances.
-    :type l_: int
     """
 
     def __init__(
@@ -141,11 +108,11 @@ class BasicDataset(Dataset):
         # Patch build setting
         self.max_point_in_patch = patch_if
 
-        self.l_ = len(self.ids)
+        self.length_i = len(self.ids)
 
     def __len__(self):
-        if self.l_ > 0:
-            return self.l_
+        if self.length_i > 0:
+            return self.length_i
         else:
             return 1
 
@@ -229,17 +196,9 @@ class FilamentSimulateDataset(BasicDataset):
     filament simulation types, dataset down-sampling, and patch-based data
     processing. The dataset can be used for training, testing, or validation
     workflows, depending on the configuration.
-
-    :ivar sample_count: Number of samples in the dataset.
-    :type sample_count: int
-    :ivar type: Type of filament simulation, such as 'mix3d' or 'membranes'.
-    :type type: str
-    :ivar VD: An instance of the PatchDataSet class used for patch-based
-              dataset processing.
-    :type VD: PatchDataSet
     """
 
-    def __init__(self, type_: str, sample_count=50, **kwargs):
+    def __init__(self, type_s: str, sample_count=50, **kwargs):
         """
         Initializes the FilamentSimulateDataset instance.
 
@@ -248,7 +207,7 @@ class FilamentSimulateDataset(BasicDataset):
         point, overlap, drop rate, and graph support. The instance represents the
         structure and configuration for filament simulation dataset generation.
 
-        :param type_: Specifies the type of the dataset.
+        :param type_s: Specifies the type of the dataset.
         :param sample_count: The number of samples required in the dataset. Defaults to 50.
         :param kwargs: Additional keyword arguments passed to the parent class's
             initialization method.
@@ -256,7 +215,7 @@ class FilamentSimulateDataset(BasicDataset):
         super(FilamentSimulateDataset, self).__init__(**kwargs)
 
         self.sample_count = sample_count
-        self.type = type_
+        self.type = type_s
 
         self.VD = PatchDataSet(
             max_number_of_points=self.max_point_in_patch,
@@ -369,10 +328,6 @@ class FilamentDataset(BasicDataset):
     coordinate data, image patch creation, and handling normalized data points. It is
     useful for machine learning tasks requiring patched datasets, graph representations,
     and customized preprocessing.
-
-    :ivar VD: Instance of `PatchDataSet`, responsible for managing patched datasets with
-        specified configurations.
-    :type VD: PatchDataSet
     """
 
     def __init__(self, **kwargs):
@@ -477,26 +432,6 @@ class PartnetDataset(BasicDataset):
     The class leverages the PatchDataSet to create patches of data points with specified
     parameters like maximum points, overlap, and drop rate. Additionally, it supports
     temporary storage and loading for optimized access.
-
-    :ivar VD: PatchDataSet instance responsible for processing data into patches,
-        managing downscaling, and converting data into tensors.
-    :type VD: PatchDataSet
-    :ivar train: Boolean indicating whether the dataset is used for training mode.
-    :type train: bool
-    :ivar temp: Temporary directory used to save or load pre-processed data.
-    :type temp: str
-    :ivar max_point_in_patch: Maximum number of points allowed in a patch.
-    :type max_point_in_patch: int
-    :ivar coord_dir: Directory containing coordinate files.
-    :type coord_dir: str
-    :ivar ids: List of identifiers for each dataset entry.
-    :type ids: list
-    :ivar benchmark: Flag indicating if the dataset is running in benchmark mode.
-    :type benchmark: bool
-    :ivar downscale: Factor for downscaling coordinate data.
-    :type downscale: float or None
-    :ivar patch_size: Array to store the initial patch size for each data entry.
-    :type patch_size: numpy.ndarray
     """
 
     def __init__(self, **kwargs):
@@ -587,10 +522,6 @@ class ScannetDataset(BasicDataset):
     and managing batch-level operations for training and testing
     workflows. The class also supports saving and retrieving
     preprocessed temporary data for faster data loading.
-
-    :ivar VD: Instance of PatchDataSet used for splitting the
-              full dataset into smaller structured patches.
-    :type VD: PatchDataSet
     """
 
     def __init__(self, **kwargs):
@@ -686,12 +617,6 @@ class ScannetColorDataset(BasicDataset):
     coordinate scaling, patch-based segmentation, and preprocessed data
     caching for efficient usage. It also incorporates graph-based dataset
     representations.
-
-    :ivar color_dir: Path to the directory containing color data for the dataset.
-    :type color_dir: str
-    :ivar VD: The internal PatchDataSet object used for managing patch-based
-        segmentation and processing within the dataset.
-    :type VD: PatchDataSet
     """
 
     def __init__(self, **kwargs):
@@ -804,15 +729,6 @@ class Stanford3DDataset(BasicDataset):
     and patch data preparation. It is responsible for organizing room data from directories and subdirectories,
     preprocessing 3D point cloud data for machine learning tasks, and optimizing computational resources
     by leveraging patches. The class integrates with the PatchDataSet for patch extraction and manipulation.
-
-    :ivar coord_dir: Directory path containing the coordinate data for the Stanford 3D dataset.
-    :type coord_dir: str
-    :ivar ids: List of paths to specific room folders found within the `coord_dir` structure, excluding hidden files or directories.
-    :type ids: list
-    :ivar patch_size: Numpy array storing sizes for patches associated with each room data, enabling efficient processing.
-    :type patch_size: numpy.ndarray
-    :ivar VD: An instance of the `PatchDataSet` class used for creating and handling point cloud patches with configurations such as maximum points per patch, overlap, and drop rate.
-    :type VD: PatchDataSet
     """
 
     def __init__(self, **kwargs):
@@ -824,17 +740,6 @@ class Stanford3DDataset(BasicDataset):
         to assist in handling patches with defined configurations for future usage.
 
         :param kwargs: Arbitrary keyword arguments passed during initialization.
-
-        :ivar self.ids: List of identifiers representing valid datasets. Each
-            identifier corresponds to a specific room within recognized areas from the
-            dataset directory structure.
-        :ivar self.patch_size: Array of zeros with dimensions matching the number of
-            dataset identifiers. Used to store and manage patch sizes for the
-            respective data to optimize performance.
-        :ivar self.VD: An instance of the `PatchDataSet` class, initialized with
-            predefined arguments to handle point patches, overlap behavior, dropping
-            mechanisms, and specific configurations (e.g., graph-based and tensor-based
-            options).
         """
         super(Stanford3DDataset, self).__init__(**kwargs)
 
@@ -903,29 +808,29 @@ class Stanford3DDataset(BasicDataset):
                     scale = self.downscale.split("_")
                     if scale[0] == "v":
                         coord, rgb_v = load_s3dis_scene(
-                            dir_=coord_file, downscaling=float(scale[1]), rgb=True
+                            dir_s=coord_file, downscaling=float(scale[1]), rgb=True
                         )
                     else:
                         coord, rgb_v = load_s3dis_scene(
-                            dir_=coord_file, random_ds=float(scale[1]), rgb=True
+                            dir_s=coord_file, random_ds=float(scale[1]), rgb=True
                         )
                 else:
                     coord, rgb_v = load_s3dis_scene(
-                        dir_=coord_file, downscaling=0, rgb=True
+                        dir_s=coord_file, downscaling=0, rgb=True
                     )
             else:
                 if self.downscale is not None:
                     scale = self.downscale.split("_")
                     if scale[0] == "v":
                         coord = load_s3dis_scene(
-                            dir_=coord_file, downscaling=float(scale[1])
+                            dir_s=coord_file, downscaling=float(scale[1])
                         )
                     else:
                         coord = load_s3dis_scene(
-                            dir_=coord_file, random_ds=float(scale[1])
+                            dir_s=coord_file, random_ds=float(scale[1])
                         )
                 else:
-                    coord = load_s3dis_scene(dir_=coord_file, downscaling=0)
+                    coord = load_s3dis_scene(dir_s=coord_file, downscaling=0)
 
             if self.downscale is not None:
                 if scale[0] == "v":
@@ -1041,14 +946,14 @@ def build_dataset(
         if dataset_type[0] == "simulate":
             if not benchmark:
                 dl_train = FilamentSimulateDataset(
-                    type_=dataset_type[1],
+                    type_s=dataset_type[1],
                     sample_count=int(dataset_type[2]),
                     patch_if=max_points_per_patch,
                     train=True,
                     downscale=downscale,
                 )
             dl_test = FilamentSimulateDataset(
-                type_=dataset_type[1],
+                type_s=dataset_type[1],
                 sample_count=int(dataset_type[3]),
                 patch_if=max_points_per_patch,
                 train=False,

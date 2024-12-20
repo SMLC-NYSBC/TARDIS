@@ -8,7 +8,7 @@
 #  MIT License 2021 - 2024                                            #
 #######################################################################
 
-from typing import Optional, Union
+from typing import Union
 
 import numpy as np
 import torch
@@ -263,7 +263,7 @@ def AP(logits: np.ndarray, targets: np.ndarray) -> float:
     return average_precision_score(targets, logits)
 
 
-def AP_instance(input_: np.ndarray, targets: np.ndarray) -> float:
+def AP_instance(input_n: np.ndarray, targets: np.ndarray) -> float:
     """
     Compute the average precision (AP) for the given input and target instances. The function
     compares the input predictions with ground truth instances and calculates precision values
@@ -271,7 +271,7 @@ def AP_instance(input_: np.ndarray, targets: np.ndarray) -> float:
     number of positive detections. The final AP is normalized by the total number of unique target
     instances.
 
-    :param input_: A 2D numpy array representing predicted instances, where the first column
+    :param input_n: A 2D numpy array representing predicted instances, where the first column
         corresponds to instance labels and the remaining columns represent associated features.
     :param targets: A 2D numpy array representing ground truth (GT) instances, where the first
         column corresponds to instance labels and the remaining columns represent associated features.
@@ -286,8 +286,8 @@ def AP_instance(input_: np.ndarray, targets: np.ndarray) -> float:
         prec_df = []
 
         # Select max Prec (best mach)
-        for i in np.unique(input_[:, 0]):
-            pred = input_[np.where(input_[:, 0] == i)[0]]  # Pick input instance
+        for i in np.unique(input_n[:, 0]):
+            pred = input_n[np.where(input_n[:, 0] == i)[0]]  # Pick input instance
 
             # Prec is ratio of true positives to the total number of positive detections
             prec_df.append(
@@ -336,7 +336,7 @@ def AUC(logits: np.ndarray, targets: np.ndarray, diagonal=False) -> float:
     return auc(fpr, tpr)
 
 
-def IoU(input_: np.ndarray, targets: np.ndarray, diagonal=False):
+def IoU(input_n: np.ndarray, targets: np.ndarray, diagonal=False):
     """
     Compute the Intersection Over Union (IoU) metric for given input and targets.
 
@@ -346,7 +346,7 @@ def IoU(input_: np.ndarray, targets: np.ndarray, diagonal=False):
     by excluding diagonal elements in the computation, particularly useful in
     multi-class datasets.
 
-    :param input_: Input numpy array, typically model predictions. Can be a 2D or 3D array.
+    :param input_n: Input numpy array, typically model predictions. Can be a 2D or 3D array.
     :param targets: Target numpy array, representing the ground-truth labels. Must match
         the shape of the input.
     :param diagonal: Flag to enforce diagonal elements to be 1. If True, modifies the
@@ -354,26 +354,26 @@ def IoU(input_: np.ndarray, targets: np.ndarray, diagonal=False):
     :return: Computed IoU value as a floating-point number.
     """
     if diagonal:
-        g_len = input_.shape[1]
+        g_len = input_n.shape[1]
         g_range = range(g_len)
 
-        if input_.ndim == 3:
-            input_[:, g_range, g_range] = 1.0
+        if input_n.ndim == 3:
+            input_n[:, g_range, g_range] = 1.0
             targets[:, g_range, g_range] = 1.0
         else:
-            input_[g_range, g_range] = 1.0
+            input_n[g_range, g_range] = 1.0
             targets[g_range, g_range] = 1.0
 
-    input_ = input_.flatten()
+    input_n = input_n.flatten()
     targets = targets.flatten()
 
-    tp, fp, tn, fn = confusion_matrix(input_, targets)
+    tp, fp, tn, fn = confusion_matrix(input_n, targets)
 
     return tp / (tp + fp + fn + 1e-16)
 
 
 def mcov(
-    input_,
+    input_n,
     targets,
 ):
     """
@@ -383,9 +383,10 @@ def mcov(
     ground truth (GT) instances based on Intersection over Union (IoU). It considers both the ratio of
     the instance size (w_g) relative to the total size and overall mean matching.
 
-    :param input_: Input point cloud data where the first column identifies instance labels and the remaining
+
+    :param input_n: Input point cloud data where the first column identifies instance labels and the remaining
         columns represent corresponding coordinates or features.
-    :type input_: numpy.ndarray
+    :type input_n: numpy.ndarray
     :param targets: Ground truth (GT) point cloud data with the first column identifying instance labels
         and the remaining columns representing corresponding coordinates or features.
     :type targets: numpy.ndarray
@@ -399,7 +400,7 @@ def mcov(
 
     unique_target = np.unique(targets[:, 0])
     G = len(unique_target)
-    unique_input = np.unique(input_[:, 0])
+    unique_input = np.unique(input_n[:, 0])
 
     # Get GT instances, compute IoU for best mach between GT and input
     for j in unique_target:
@@ -409,7 +410,7 @@ def mcov(
 
         # Select max IoU (the best mach)
         for i in unique_input:
-            p = input_[input_[:, 0] == i, 1:]  # Pick input instance
+            p = input_n[input_n[:, 0] == i, 1:]  # Pick input instance
 
             # Intersection of coordinates between GT and input instances
             # Union of coordinates between GT and input instances
@@ -440,9 +441,9 @@ def confusion_matrix(
     True Negatives (TN), and False Negatives (FN). This function handles both
     PyTorch tensors and NumPy arrays as input for logits and targets.
 
-    :num-param logits: The predicted values, supporting either PyTorch tensors or
+    :param logits: The predicted values, supporting either PyTorch tensors or
         NumPy arrays.
-    :num-param targets: The ground-truth values, supporting either PyTorch tensors
+    :param targets: The ground-truth values, supporting either PyTorch tensors
         or NumPy arrays.
     :return: A tuple containing four integer values representing True Positives
         (TP), False Positives (FP), True Negatives (TN), and False Negatives (FN),

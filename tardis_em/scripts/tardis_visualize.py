@@ -34,7 +34,7 @@ from tardis_em._version import version
 )
 @click.option(
     "-t",
-    "--type_",
+    "--type_s",
     type=click.Choice(["f", "p"]),
     default="p",
     help="Visualize filaments or points",
@@ -68,7 +68,7 @@ from tardis_em._version import version
 def main(
     path: str,
     _2d: bool,
-    type_: str,
+    type_s: str,
     animate: bool,
     with_node: bool,
     color: tuple,
@@ -98,7 +98,7 @@ def main(
         pc = build_pc_from_img(pc)
 
     if pc is not None:
-        if type_ == "p":
+        if type_s == "p":
             if pc.shape[1] == 4 or pc.shape[1] == 3 and _2d:
                 VisualizePointCloud(pc, segmented=True, animate=animate)
             elif pc.shape[1] > 4:
@@ -124,10 +124,10 @@ def build_pc_from_img(img: np.ndarray):
     if img.min() == 0 and img.max() == 1:
         pc = np.array(np.where(img > 0)).T
     else:
-        idx_ = np.unique(img)
+        idx_n = np.unique(img)
 
         px_df = []
-        for i in idx_:
+        for i in idx_n:
             if i == 0:
                 continue
 

@@ -19,9 +19,9 @@ class GeneralLoss:
     General class for testing loss functions
     """
 
-    def __init__(self, logits_: torch.Tensor, targets_: torch.Tensor, criterion):
-        self.logits = logits_
-        self.targets = targets_
+    def __init__(self, logits_t: torch.Tensor, targets_t: torch.Tensor, criterion):
+        self.logits = logits_t
+        self.targets = targets_t
         self.criterion = criterion
 
     def test_loss(self) -> torch.Tensor:

@@ -16,7 +16,6 @@ import os
 from tardis_em.analysis.mt_classification.mt_classes import MicrotubuleClassifier
 from tardis_em.utils.export_data import NumpyToAmira
 from tardis_em._version import version
-from tardis_em.utils.logo import TardisLogo
 
 
 @click.command()
@@ -155,21 +154,21 @@ def main(
                 np.vstack((np.vstack(classes[0]), np.vstack(classes[1]))),
                 False,
                 filament_color="red",
-                return_=True,
+                return_b=True,
             )
             vis_mid_mt = VisualizeFilaments(
-                classes[2], False, filament_color="magenta", return_=True
+                classes[2], False, filament_color="magenta", return_b=True
             )
             vis_brg_mt = VisualizeFilaments(
-                classes[3], False, filament_color="white", return_=True
+                classes[3], False, filament_color="white", return_b=True
             )
             vis_int_mt = VisualizeFilaments(
-                classes[4], False, filament_color="orange", return_=True
+                classes[4], False, filament_color="orange", return_b=True
             )
             vis_smt = VisualizeFilaments(
-                classes[5], False, filament_color="yellow", return_=True
+                classes[5], False, filament_color="yellow", return_b=True
             )
-            surf = VisualizeSurface(vertices, triangles, False, return_=True)
+            surf = VisualizeSurface(vertices, triangles, False, return_b=True)
 
             VisualizeCompose(
                 False,

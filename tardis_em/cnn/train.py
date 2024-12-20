@@ -12,7 +12,6 @@ import sys
 from os import getcwd
 from typing import Optional
 
-import torch
 from torch import optim
 
 from tardis_em.cnn.cnn import build_cnn_network

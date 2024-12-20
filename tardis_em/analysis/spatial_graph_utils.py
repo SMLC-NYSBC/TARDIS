@@ -27,11 +27,6 @@ class FilterConnectedNearSegments:
     connecting nearby segments based on specific cylindrical geometry
     criteria. It handles operations such as determining cylindrical overlap,
     removing duplicates, and merging splines.
-
-    :ivar distance_th: Maximum allowable distance threshold for operations.
-    :type distance_th: float
-    :ivar cylinder_radius: Radius of the cylinder used in calculations.
-    :type cylinder_radius: float
     """
 
     def __init__(self, distance_th=1000, cylinder_radius=150):
@@ -227,33 +222,33 @@ class FilterConnectedNearSegments:
                 np.sum((np.asarray(end01_list) - np.asarray(end01)) ** 2, axis=1)
             )
             end01_list01 = [
-                {id_: dist}
-                for id_, dist in zip(list(splines_list.keys()), end01_list01)
-                if dist <= 1000 and id_ != key
+                {id_i: dist}
+                for id_i, dist in zip(list(splines_list.keys()), end01_list01)
+                if dist <= 1000 and id_i != key
             ]
             end01_list10 = np.sqrt(
                 np.sum((np.asarray(end10_list) - np.asarray(end01)) ** 2, axis=1)
             )
             end01_list10 = [
-                {id_: dist}
-                for id_, dist in zip(list(splines_list.keys()), end01_list10)
-                if dist <= self.distance_th and id_ != key
+                {id_i: dist}
+                for id_i, dist in zip(list(splines_list.keys()), end01_list10)
+                if dist <= self.distance_th and id_i != key
             ]
             end10_list01 = np.sqrt(
                 np.sum((np.asarray(end01_list) - np.asarray(end10)) ** 2, axis=1)
             )
             end10_list01 = [
-                {id_: dist}
-                for id_, dist in zip(list(splines_list.keys()), end10_list01)
-                if dist <= self.distance_th and id_ != key
+                {id_i: dist}
+                for id_i, dist in zip(list(splines_list.keys()), end10_list01)
+                if dist <= self.distance_th and id_i != key
             ]
             end10_list10 = np.sqrt(
                 np.sum((np.asarray(end10_list) - np.asarray(end10)) ** 2, axis=1)
             )
             end10_list10 = [
-                {id_: dist}
-                for id_, dist in zip(list(splines_list.keys()), end10_list10)
-                if dist <= self.distance_th and id_ != key
+                {id_i: dist}
+                for id_i, dist in zip(list(splines_list.keys()), end10_list10)
+                if dist <= self.distance_th and id_i != key
             ]
 
             # Check if any of the point is within the cylinder and get the closest one
@@ -444,13 +439,6 @@ class FilterSpatialGraph:
     endpoints within a specified distance and removing splines that are below
     a defined length threshold. Additionally, iterative optimization is
     performed to split connections at sharp angles.
-
-    :ivar connect_seg_if_closer_then: Maximum distance threshold for connecting
-        segment endpoints. Segments closer than this threshold will be merged.
-    :type connect_seg_if_closer_then: int
-    :ivar filter_short_segments: Minimum length threshold below which segments
-        will be removed.
-    :type filter_short_segments: int
     """
 
     def __init__(
@@ -495,9 +483,9 @@ class FilterSpatialGraph:
         """
         """Do iterative optimization split 150 degree connection / marge"""
         # Split 150 degree connections
-        loop_ = True
-        while loop_:
-            loop_, segments = cut_150_degree(segments)
+        loop_b = True
+        while loop_b:
+            loop_b, segments = cut_150_degree(segments)
 
         # Connect segments with ends close to each other
         border = [np.min(segments[:, 3]), np.max(segments[:, 3])]
@@ -528,9 +516,9 @@ class FilterSpatialGraph:
                 segments = reorder_segments_id(segments)
 
         # Split 150 degree connections
-        loop_ = True
-        while loop_:
-            loop_, segments = cut_150_degree(segments)
+        loop_b = True
+        while loop_b:
+            loop_b, segments = cut_150_degree(segments)
 
         return reorder_segments_id(segments)
 
@@ -545,13 +533,6 @@ class SpatialGraphCompare:
     microtubules between two spatial graphs by calculating probabilities of alignment.
     The class is used for both comparing spatial structures and filtering instances
     based on pre-defined distance and interaction thresholds.
-
-    :ivar dist_th: Minimum distance threshold used for comparing splines from two
-        spatial graphs.
-    :type dist_th: int
-    :ivar inter_th: Interaction probability threshold to determine matches between
-        splines of the graphs.
-    :type inter_th: float
     """
 
     def __init__(self, distance_threshold: int, interaction_threshold: float):

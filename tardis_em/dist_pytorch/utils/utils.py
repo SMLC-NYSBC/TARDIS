@@ -155,16 +155,6 @@ class DownSampling:
     primary methods of operation: processing the entire point cloud at once or downsampling each index
     when the input is a list. Additional features include support for sampling point clouds with or
     without assigned class IDs (labels) and optional K-Nearest Neighbors (KNN) consideration.
-
-    :ivar sample: Defines the sampling strategy, either based on voxel size or threshold.
-    :type sample: int
-    :ivar labels: If true, data is assumed to include class IDs and expects coordinate arrays of shape
-        [[N, 3] or [N, 4]] (ID followed by coordinates). If false, coordinate arrays are expected in
-        shape [[N, 2] or [N, 3]] (coordinates only).
-    :type labels: bool
-    :ivar KNN: Defines whether K-Nearest Neighbors (KNN) consideration should be applied during
-        downsampling.
-    :type KNN: bool
     """
 
     def __init__(self, voxel=None, threshold=None, labels=True, KNN=False):
@@ -311,11 +301,6 @@ class VoxelDownSampling(DownSampling):
 
     Useful for reducing the size of large point clouds for computational efficiency while
     preserving their spatial structure.
-
-    :ivar labels: Indicates whether labels are provided for the points in the point cloud.
-    :type labels: bool
-    :ivar KNN: Indicates whether nearest neighbor search is applied in the down-sampling process.
-    :type KNN: bool
     """
 
     def __init__(self, **kwargs):
@@ -410,9 +395,6 @@ class RandomDownSampling(DownSampling):
     This class leverages random selection to down-sample point cloud data. It is suitable for
     reducing the size of datasets while maintaining a random subset of points. The class retains
     compatibility with additional node features such as RGB values during the down-sampling process.
-
-    :ivar sampling_rate: Description of the attribute related to sampling rate or method.
-    :type sampling_rate: Function or float
     """
 
     def __init__(self, **kwargs):

@@ -82,117 +82,12 @@ class GeneralPredictor:
     apply various normalization techniques, and output results in specified formats.
     The class is modular enough to work with instances, semantic predictions, and
     custom settings based on the input parameters and configurations.
-
-    :ivar continue_: Specifies whether to continue from a previous state.
-    :type continue_: bool
-    :ivar transformation: Stores transformation parameters for the image data.
-    :type transformation: list | None
-    :ivar px: The pixel resolution of the image data.
-    :type px: float | None
-    :ivar image: The image data to be processed.
-    :type image: ndarray | None
-    :ivar tardis_logo: Determines whether to include the TARDIS logo in outputs.
-    :type tardis_logo: bool
-    :ivar tardis_progress: Tracks the progress of TARDIS processing.
-    :type tardis_progress: Any | None
-    :ivar title: Stores any title or label associated with the process.
-    :type title: str | None
-    :ivar dir: Input directory or data to be processed.
-    :type dir: str | tuple | np.ndarray
-    :ivar output_format: Specifies the desired output format for predictions.
-    :type output_format: str
-    :ivar predict: Indicates the type of prediction to perform.
-    :type predict: str
-    :ivar expect_2d: Indicates whether the expected input data is 2D.
-    :type expect_2d: bool
-    :ivar amira_prefix: Prefix for Amira file outputs.
-    :type amira_prefix: str | None
-    :ivar checkpoint: Stores model checkpoint information.
-    :type checkpoint: list | None
-    :ivar model_version: Version of the model to use for predictions.
-    :type model_version: int | None
-    :ivar correct_px: Pixel value correction factor.
-    :type correct_px: float | None
-    :ivar normalize_px: Pixel value normalization factor.
-    :type normalize_px: float | None
-    :ivar cnn: The convolutional neural network to be used.
-    :type cnn: Any | None
-    :ivar dist: The distance threshold settings.
-    :type dist: Any | None
-    :ivar patch_size: Size of the image patches for CNN.
-    :type patch_size: int
-    :ivar points_in_patch: Maximum number of points in a patch for DIST processing.
-    :type points_in_patch: int
-    :ivar pc_hd: Points cloud in high-definition format.
-    :type pc_hd: numpy.ndarray
-    :ivar pc_ld: Points cloud in low-definition format.
-    :type pc_ld: numpy.ndarray
-    :ivar coords_df: Coordinates dataframe for additional computations.
-    :type coords_df: numpy.ndarray
-    :ivar segments: Stores segmented data.
-    :type segments: Any | None
-    :ivar segments_filter: Filtered segments for post-processing.
-    :type segments_filter: Any | None
-    :ivar convolution_nn: Type of convolutional neural network to use.
-    :type convolution_nn: str
-    :ivar cnn_threshold: Threshold value for CNN predictions.
-    :type cnn_threshold: str
-    :ivar dist_threshold: Threshold value for DIST predictions.
-    :type dist_threshold: float
-    :ivar rotate: Specifies prediction with rotation.
-    :type rotate: bool
-    :ivar binary_mask: Indicates whether to use binary masks in processing.
-    :type binary_mask: bool
-    :ivar predict_instance: Indicates whether to predict individual instances.
-    :type predict_instance: bool
-    :ivar device: Hardware device to use for predictions.
-    :type device: str
-    :ivar debug: Indicates if debugging mode is enabled.
-    :type debug: bool
-    :ivar semantic_header: Stores metadata for semantic predictions.
-    :type semantic_header: list
-    :ivar instance_header: Stores metadata for instance predictions.
-    :type instance_header: list
-    :ivar log_prediction: Tracks logs of predictions.
-    :type log_prediction: list
-    :ivar str_debug: String flag to append debug information in logs.
-    :type str_debug: str
-    :ivar amira_check: Checks if the input folder contains Amira-compatible files.
-    :type amira_check: bool
-    :ivar dir_amira: Stores Amira file directory if available.
-    :type dir_amira: str
-    :ivar available_format: File formats available for prediction.
-    :type available_format: tuple
-    :ivar omit_format: File formats to omit during predictions.
-    :type omit_format: tuple
-    :ivar normalize: Instance for normalizing input data.
-    :type normalize: RescaleNormalize
-    :ivar mean_std: Instance for standardizing data using mean and standard deviation.
-    :type mean_std: MeanStdNormalize
-    :ivar sigmoid: Sigmoid activation for predicted images.
-    :type sigmoid: torch.nn.Sigmoid
-    :ivar image_stitcher: Instance to handle image stitching.
-    :type image_stitcher: StitchImages
-    :ivar post_processes: Instance responsible for post-processing point clouds.
-    :type post_processes: BuildPointCloud
-    :ivar patch_pc: Instance to manage PATCH data for DIST processing.
-    :type patch_pc: PatchDataSet | None
-    :ivar GraphToSegment: Instance to process graph based on input models.
-    :type GraphToSegment: PropGreedyGraphCut | None
-    :ivar filter_splines: Instance to handle spline filtering.
-    :type filter_splines: FilterConnectedNearSegments | FilterSpatialGraph | None
-    :ivar compare_spline: Instance to compare spatial graphs.
-    :type compare_spline: SpatialGraphCompare | None
-    :ivar score_splines: Instance to compute confidence scores for splines.
-    :type score_splines: ComputeConfidenceScore | None
-    :ivar amira_file: Instance to handle Amira file output.
-    :type amira_file: NumpyToAmira
     """
 
     def __init__(
         self,
         predict: str,
-        dir_: Union[str, tuple[np.ndarray], np.ndarray],
+        dir_s: Union[str, tuple[np.ndarray], np.ndarray],
         binary_mask: bool,
         output_format: str,
         patch_size: int,
@@ -202,7 +97,7 @@ class GeneralPredictor:
         points_in_patch: int,
         predict_with_rotation: bool,
         instances: bool,
-        device_: str,
+        device_s: str,
         debug: bool,
         checkpoint: Optional[list] = None,
         model_version: Optional[int] = None,
@@ -215,7 +110,7 @@ class GeneralPredictor:
         amira_compare_distance: int = None,
         amira_inter_probability: float = None,
         tardis_logo: bool = True,
-        continue_: bool = False,
+        continue_b: bool = False,
     ):
         """
         This class initializes the configuration and parameters required for predictive models
@@ -225,7 +120,7 @@ class GeneralPredictor:
         comparison, and various filters.
 
         :param predict: The predictive model type to be used.
-        :param dir_: The directory path or dataset array for input data processing.
+        :param dir_s: The directory path or dataset array for input data processing.
         :param binary_mask: Flag indicating if a binary mask will be used.
         :param output_format: Specifies the output format for results.
         :param patch_size: Size of the patches in the image dataset.
@@ -235,7 +130,7 @@ class GeneralPredictor:
         :param points_in_patch: Maximum number of points to include in a patch.
         :param predict_with_rotation: Flag to determine if prediction should consider rotations.
         :param instances: Flag to enable instance-based predictions.
-        :param device_: The computation device (CPU/GPU) to be used.
+        :param device_s: The computation device (CPU/GPU) to be used.
         :param debug: Flag to enable debugging mode.
         :param checkpoint: Optional, list of checkpoints for loading model weights.
         :param model_version: Optional, model version identifier.
@@ -248,18 +143,18 @@ class GeneralPredictor:
         :param amira_compare_distance: Optional, distance threshold for spatial graph comparison.
         :param amira_inter_probability: Optional, interaction threshold for Amira spatial graph probabilities.
         :param tardis_logo: Flag to handle tardis logo processing.
-        :param continue_: Flag to indicate if processing should resume from previous state.
+        :param continue_b: Flag to indicate if processing should resume from previous state.
 
         :raises: Raises errors for various invalid configurations or unsupported operation parameters.
         """
-        self.continue_ = continue_
+        self.continue_b = continue_b
         self.transformation, self.px, self.image = None, None, None
         self.tardis_logo = tardis_logo
         self.tardis_progress = None
         self.title = None
 
         # Directories and dataset info
-        self.dir = dir_
+        self.dir = dir_s
         self.output_format = output_format
         self.predict = predict
         if self.predict in ["Membrane2D", "Microtubule_tirf"]:
@@ -290,7 +185,7 @@ class GeneralPredictor:
         # Global flags
         self.binary_mask = binary_mask
         self.predict_instance = instances
-        self.device = get_device(device_)
+        self.device = get_device(device_s)
         self.debug = debug
         self.semantic_header, self.instance_header, self.log_prediction = [], [], []
 
@@ -305,7 +200,7 @@ class GeneralPredictor:
         if isinstance(self.dir, str):
             if isdir(join(self.dir, "amira")):
                 self.amira_check = True
-                self.dir_amira = join(dir_, "amira")
+                self.dir_amira = join(dir_s, "amira")
 
         # Searching for available images for prediction
         self.available_format = (
@@ -404,7 +299,7 @@ class GeneralPredictor:
         :parameter self.dir: Directory path for file output or processing.
             Default is retrieved current working directory if unset.
         :parameter self.output_format: Format of the output data produced during
-           prediction, e.g as,send LabelSetsivet nn
+           prediction, e.g. as,send LabelSetsivet nn
         """
         dir_ = self.dir if isinstance(self.dir, str) else "np.ndarray"
         if dir_ == ".":
@@ -489,7 +384,7 @@ class GeneralPredictor:
             + [""]
         )
 
-        if self.continue_ and isfile(
+        if self.continue_b and isfile(
             join(self.dir, "Predictions", "prediction_log.txt")
         ):
             self.log_prediction = np.genfromtxt(
@@ -506,29 +401,28 @@ class GeneralPredictor:
 
     def init_check(self):
         """
-        Initializes and validates the TARDIS segmentation configuration for the specified
-        prediction type and output format, ensuring compatibility and correctness per
-        system constraints. If any error occurs, handles it with error description and
-        validation termination.
+        Perform initialization and validation checks for a segmentation prediction task.
 
-        :raises AssertionError: Raised when the prediction structure type or output
-                                 format is invalid.
-        :raises SystemExit: Raised when encountering critical errors requiring process
-                            termination.
+        This method performs several checks and initializations before executing a segmentation
+        task. It first validates whether the requested prediction type is supported. If support is
+        enabled for a TARDIS logo, additional checks are performed for user configurations, and error
+        messages are displayed if any invalid settings are detected. Subsequently, the log output
+        initialization begins with a defined title according to the segmentation type and configuration.
 
-        :attributes tardis_logo: Boolean flag to indicate whether TARDIS visualization
-                                 or logo activity is enabled.
-        :attributes tardis_progress: Initialized with TardisLogo instance to handle
-                                     TARDIS-related progress output or title.
-        :attributes title: Formatted segmentation configuration title based on input
-                           prediction types, output, and debug mode.
-        :attributes output_format: Output configuration for segmentation, must not
-                                   violate format constraints.
-        :attributes device: Computation device in use, displayed in progress text of
-                            TARDIS logo.
+        This function also validates the chosen output format to ensure its compatibility with the
+        system (e.g., checking for unsupported machine types like ARM64 or ensuring that at least one
+        valid output format is selected). Invalid configurations or unsupported settings result in
+        terminating the execution with proper error messaging.
+
+        :param self: Instance of the class to which the initialization belongs.
+
+        :raises AssertionError: If the requested segmentation type is unsupported.
+        :raises TardisError: If any invalid configuration is detected based on
+                              TARDIS-specific rules (e.g., invalid output format, machine-type
+                              dependencies).
         """
         msg = f"TARDIS v.{version} supports only MT and Mem segmentation!"
-        assert_ = self.predict in [
+        assert_b = self.predict in [
             "Actin",
             "Membrane2D",
             "Membrane",
@@ -539,7 +433,7 @@ class GeneralPredictor:
         ]
         if self.tardis_logo:
             # Check if users ask to predict the correct structure
-            if not assert_:
+            if not assert_b:
                 TardisError(
                     id_="01",
                     py="tardis_em/utils/predictor.py",
@@ -547,7 +441,7 @@ class GeneralPredictor:
                 )
                 sys.exit()
         else:
-            assert assert_, msg
+            assert assert_b, msg
 
         # Initiate log output
         if self.tardis_logo:
@@ -580,8 +474,8 @@ class GeneralPredictor:
         # Check for any other errors
         # Early stop if not semantic of instance was specified
         msg = f"Require that at lest one output format is not None but {self.output_format} was given!"
-        assert_ = self.output_format == "None_None"
-        if assert_:
+        assert_b = self.output_format == "None_None"
+        if assert_b:
             if self.tardis_logo:
                 TardisError(
                     id_="151",
@@ -590,11 +484,11 @@ class GeneralPredictor:
                 )
                 sys.exit()
             else:
-                assert assert_, msg
+                assert assert_b, msg
 
         # Check for know error if using ARM64 machine
         msg = f"STL output is not allowed on {platform.machine()} machine type!"
-        assert_ = platform.machine() == "aarch64"
+        assert_b = platform.machine() == "aarch64"
         if self.output_format.endswith("stl"):
             if self.tardis_logo:
                 TardisError(
@@ -604,7 +498,7 @@ class GeneralPredictor:
                 )
                 sys.exit()
             else:
-                assert not assert_, msg
+                assert not assert_b, msg
 
     def build_NN(self, NN: str):
         """
@@ -744,7 +638,7 @@ class GeneralPredictor:
         """
         Loads and processes image data or point cloud data from a specified file or array. Depending on the
         input type, the function determines if the data is an AmiraMesh 3D ASCII file, a general image file,
-        or a pre-loaded array. It performs normalization, sanity checks, and prepares the data for further
+        or a preloaded array. It performs normalization, sanity checks, and prepares the data for further
         processing.
 
         :param id_name:
@@ -765,7 +659,7 @@ class GeneralPredictor:
         :return: None
         """
         # Build temp dir
-        build_temp_dir(dir_=self.dir)
+        build_temp_dir(dir_s=self.dir)
 
         if isinstance(id_name, str):
             # Load image file
@@ -782,10 +676,10 @@ class GeneralPredictor:
                     self.px = self.correct_px
                     self.transformation = [0, 0, 0]
 
-                    assert_ = self.pc_hd.shape[1] == 4
+                    assert_b = self.pc_hd.shape[1] == 4
                     msg = f"Amira Spatial Graph has wrong dimension. Given {self.pc_hd.shape[1]}, but expected 4."
                     if self.tardis_logo:
-                        if not assert_:
+                        if not assert_b:
                             TardisError(
                                 id_="11",
                                 py="tardis_em/utils/predictor.py",
@@ -793,7 +687,7 @@ class GeneralPredictor:
                             )
                             sys.exit()
                     else:
-                        assert assert_, msg
+                        assert assert_b, msg
                 else:
                     self.amira_image = True
                     self.image, self.px, _, self.transformation = load_am(
@@ -823,9 +717,9 @@ class GeneralPredictor:
                     self.image = self.image / 255  # move to 0 - 1
                     self.image = (self.image - 0.5) * 2  # shift to -1 - 1
 
-            assert_ = self.image.dtype == np.float32
+            assert_b = self.image.dtype == np.float32
             if self.tardis_logo:
-                if not assert_:
+                if not assert_b:
                     TardisError(
                         id_="11",
                         py="tardis_em/utils/predictor.py",
@@ -833,7 +727,7 @@ class GeneralPredictor:
                     )
                     sys.exit()
             else:
-                assert assert_, msg
+                assert assert_b, msg
 
             # Calculate parameters for image pixel size with optional scaling
             if self.correct_px is not None:
@@ -853,9 +747,9 @@ class GeneralPredictor:
             # Check image structure
             self.image = np.where(self.image > 0, 1, 0).astype(np.int8)
 
-            assert_ = self.image.dtype == np.int8 or self.image.dtype == np.uint8
+            assert_b = self.image.dtype == np.int8 or self.image.dtype == np.uint8
             if self.tardis_logo:
-                if not assert_:
+                if not assert_b:
                     TardisError(
                         id_="11",
                         py="tardis_em/utils/predictor.py",
@@ -863,14 +757,14 @@ class GeneralPredictor:
                     )
                     sys.exit()
             else:
-                assert assert_, msg
+                assert assert_b, msg
 
         if self.image.ndim == 2 or self.predict == "Microtubule_tirf":
             self.expect_2d = True
         else:
             self.expect_2d = False
 
-    def predict_cnn(self, id_: int, id_name: str, dataloader):
+    def predict_cnn(self, id_i: int, id_name: str, dataloader):
         """
         Predict images using a Convolutional Neural Network (CNN) with options for image rotation
         and progress tracking integrated with the Tardis progress bar interface.
@@ -880,8 +774,8 @@ class GeneralPredictor:
         The method supports progress tracking with Tardis interface updates
         and dynamically optimizes the progress bar refresh rate based on initial iteration timing.
 
-        :param id_: Integer representing the ID of the image being processed.
-        :type id_: int
+        :param id_i: Integer representing the ID of the image being processed.
+        :type id_i: int
         :param id_name: The name of the image being processed.
         :type id_name: str
         :param dataloader: An iterable object that provides access to image data and corresponding names.
@@ -900,7 +794,7 @@ class GeneralPredictor:
                     title=self.title,
                     text_1=f"Found {len(self.predict_list)} images to predict!",
                     text_2=f"Device: {self.device}",
-                    text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {id_name}",
+                    text_3=f"Image {id_i + 1}/{len(self.predict_list)}: {id_name}",
                     text_4=f"Org. Pixel size: {self.px} A | Norm. Pixel size: {self.normalize_px}",
                     text_5=pred_title,
                     text_7="Current Task: CNN prediction...",
@@ -927,7 +821,7 @@ class GeneralPredictor:
 
             tif.imwrite(join(self.output, f"{name}.tif"), input_)
 
-    def predict_cnn_napari(self, input_: torch.Tensor, name: str):
+    def predict_cnn_napari(self, input_t: torch.Tensor, name: str):
         """
         Predicts an output using the CNN model on the provided input tensor, saves the
         result in TIFF format, and returns the output tensor.
@@ -936,7 +830,7 @@ class GeneralPredictor:
         (CNN) model on the given input tensor. The result is saved as a TIFF file
         using the provided file name in the specified output directory.
 
-        :param input_:
+        :param input_t:
             Input tensor on which prediction needs to be performed, should follow
             the required input format for the CNN model.
         :param name:
@@ -946,10 +840,10 @@ class GeneralPredictor:
             The output tensor resulting from the CNN prediction, after processing
             with the input tensor.
         """
-        input_ = self.cnn.predict(input_[None, :], rotate=self.rotate)
-        tif.imwrite(join(self.output, f"{name}.tif"), input_)
+        input_t = self.cnn.predict(input_t[None, :], rotate=self.rotate)
+        tif.imwrite(join(self.output, f"{name}.tif"), input_t)
 
-        return input_
+        return input_t
 
     def postprocess_CNN(self, id_name: str):
         """
@@ -1007,7 +901,7 @@ class GeneralPredictor:
                     self.image = None
 
         """Clean-up temp dir"""
-        clean_up(dir_=self.dir)
+        clean_up(dir_s=self.dir)
 
     def preprocess_DIST(self, id_name: str):
         """
@@ -1045,7 +939,7 @@ class GeneralPredictor:
             down_sample = VoxelDownSampling(voxel=5, labels=False, KNN=True)
             self.pc_ld = down_sample(coord=self.pc_hd[:, 1:])
 
-    def predict_DIST(self, id_: int, id_name: str):
+    def predict_DIST(self, id_i: int, id_name: str):
         """
         Predicts DIST graphs for the given coordinates using the provided DIST prediction
         model. The method processes coordinate data in chunks and updates the progress bar
@@ -1054,7 +948,7 @@ class GeneralPredictor:
         The function ensures predictive modeling for the total images with a
         controlled iteration mechanism.
 
-        :param id_: An integer representing the identifier of the image to be processed.
+        :param id_i: An integer representing the identifier of the image to be processed.
         :param id_name: A string denoting the name of the image corresponding to the ID.
         :return: A list of predicted graph representations for each coordinate dataset.
         """
@@ -1073,7 +967,7 @@ class GeneralPredictor:
                     title=self.title,
                     text_1=f"Found {len(self.predict_list)} images to predict!",
                     text_2=f"Device: {self.device}",
-                    text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {id_name}",
+                    text_3=f"Image {id_i + 1}/{len(self.predict_list)}: {id_name}",
                     text_4=f"Org. Pixel size: {self.px} A | Norm. Pixel size: {self.normalize_px}",
                     text_5=f"Point Cloud: {pc[0]} Nodes; NaN Segments",
                     text_7="Current Task: DIST prediction...",
@@ -1089,7 +983,7 @@ class GeneralPredictor:
                 title=self.title,
                 text_1=f"Found {len(self.predict_list)} images to predict!",
                 text_2=f"Device: {self.device}",
-                text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {id_name}",
+                text_3=f"Image {id_i + 1}/{len(self.predict_list)}: {id_name}",
                 text_4=f"Org. Pixel size: {self.px} A | Norm. Pixel size: {self.normalize_px}",
                 text_5=f"Point Cloud: {self.pc_ld.shape[0]}; NaN Segments",
                 text_7=f"Current Task: {self.predict} segmentation...",
@@ -1097,7 +991,7 @@ class GeneralPredictor:
 
         return graphs
 
-    def postprocess_DIST(self, id_, i):
+    def postprocess_DIST(self, id_i, i):
         """
         Processes and postprocesses data based on given inputs.
 
@@ -1106,9 +1000,9 @@ class GeneralPredictor:
         of graphs to segments. Additionally, updates the Tardis
         progress bar to provide task-specific updates.
 
-        :param id_: Identification number for the current image
+        :param id_i: Identification number for the current image
             being processed.
-        :type id_: int
+        :type id_i: int
 
         :param i: Index of the current image.
         :type i: int
@@ -1130,9 +1024,9 @@ class GeneralPredictor:
             "General_filament",
             "Microtubule_tirf",
         ]:
-            self.log_tardis(id_, i, log_id=6.1)
+            self.log_tardis(id_i, i, log_id=6.1)
         else:
-            self.log_tardis(id_, i, log_id=6.2)
+            self.log_tardis(id_i, i, log_id=6.2)
 
         if self.predict in [
             "Actin",
@@ -1172,7 +1066,7 @@ class GeneralPredictor:
                 title=self.title,
                 text_1=f"Found {len(self.predict_list)} images to predict!",
                 text_2=f"Device: {self.device}",
-                text_3=f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
+                text_3=f"Image {id_i + 1}/{len(self.predict_list)}: {i}",
                 text_4=f"Org. Pixel size: {self.px} A | Norm. Pixel size: {self.normalize_px}",
                 text_5=no_segments,
                 text_7=f"Current Task: {self.predict} segmented...",
@@ -1232,7 +1126,7 @@ class GeneralPredictor:
         self.output = join(self.dir, "temp", "Predictions")
         self.am_output = join(self.dir, "Predictions")
 
-        if self.continue_:
+        if self.continue_b:
             if isfile(join(self.am_output, "prediction_log.txt")):
                 logs = np.genfromtxt(
                     join(self.am_output, "prediction_log.txt"), delimiter=",", dtype=str
@@ -1248,10 +1142,10 @@ class GeneralPredictor:
 
         # Check if there is anything to predict in the user-indicated folder
         msg = f"Given {self.dir} does not contain any recognizable file!"
-        assert_ = len(self.predict_list) == 0
+        assert_b = len(self.predict_list) == 0
 
         if self.tardis_logo and self.tardis_progress is not None:
-            if assert_:
+            if assert_b:
                 TardisError(
                     id_="12",
                     py="tardis_em/utils/predictor.py",
@@ -1266,18 +1160,18 @@ class GeneralPredictor:
                     text_7="Current Task: Setting-up environment...",
                 )
         else:
-            assert not assert_, msg
+            assert not assert_b, msg
 
-    def log_tardis(self, id_: int, i: Union[str, np.ndarray], log_id: float):
+    def log_tardis(self, id_i: int, i: Union[str, np.ndarray], log_id: float):
         """
         Logs various states and processing stages of the TARDIS application based on the
         provided `log_id` and input data. Depending on the log ID and input type, it generates
         log messages showcasing the progress of various computational tasks and updates a
         progress bar accordingly.
 
-        :param id_: Identifier for the current image being processed in the list
+        :param id_i: Identifier for the current image being processed in the list
             of input images.
-        :type id_: int
+        :type id_i: int
         :param i: Input data for logging, representing either a string description
             or a numpy array. If a numpy array is passed, it is converted into a
             string representation.
@@ -1298,7 +1192,7 @@ class GeneralPredictor:
         common_text = {
             "text_1": f"Found {len(self.predict_list)} images to predict!",
             "text_2": f"Device: {self.device}",
-            "text_3": f"Image {id_ + 1}/{len(self.predict_list)}: {i}",
+            "text_3": f"Image {id_i + 1}/{len(self.predict_list)}: {i}",
         }
 
         if log_id == 7:
@@ -1772,13 +1666,13 @@ class GeneralPredictor:
                 f"Predicted file {id_} is numpy array without pixel size metadate {self.px}."
                 "Please pass correct_px argument as a correct pixel size value."
             )
-            assert_ = self.px is None and not isinstance(i, str)
-            if assert_:
+            assert_b = self.px is None and not isinstance(i, str)
+            if assert_b:
                 if self.tardis_logo:
                     TardisError(id_="161", py="tardis_em.utils.predictor.py", desc=msg)
                     sys.exit()
                 else:
-                    assert not assert_, msg
+                    assert not assert_b, msg
 
             # Tardis progress bar update
             self.log_tardis(id_, i, log_id=1)
@@ -1800,7 +1694,7 @@ class GeneralPredictor:
 
                 """CNN prediction"""
                 self.predict_cnn(
-                    id_=id_,
+                    id_i=id_,
                     id_name=i,
                     dataloader=PredictionDataset(
                         join(self.dir, "temp", "Patches", "imgs")
@@ -1832,8 +1726,8 @@ class GeneralPredictor:
                 self._debug(id_name=i, debug_id="cnn")
 
                 # Check if predicted image
-                assert_ = self.image.shape == self.org_shape
-                if not assert_:
+                assert_b = self.image.shape == self.org_shape
+                if not assert_b:
                     msg = (
                         "Last Task: Stitching/Scaling/Make correction..."
                         f"Tardis Error: Error while converting to {self.px} A "
@@ -1847,7 +1741,7 @@ class GeneralPredictor:
                             desc=msg,
                         )
                     else:
-                        assert assert_, msg
+                        assert assert_b, msg
                     sys.exit()
 
                 # Save predicted mask as file
@@ -1891,7 +1785,7 @@ class GeneralPredictor:
             self.log_tardis(id_, i, log_id=5)
 
             # DIST prediction
-            self.graphs = self.predict_DIST(id_=id_, id_name=i)
+            self.graphs = self.predict_DIST(id_i=id_, id_name=i)
             self._debug(id_name=i, debug_id="graph")
             # Save debugging check point
             self._debug(id_name=i, debug_id="segment")
@@ -1922,7 +1816,7 @@ class GeneralPredictor:
                     instance_filter_output.append(self.segments_filter)
 
             """Clean-up temp dir"""
-            clean_up(dir_=self.dir)
+            clean_up(dir_s=self.dir)
 
         """Optional return"""
         if self.output_format.startswith("return"):
@@ -1936,36 +1830,11 @@ class Predictor:
     Handles model prediction workflows for neural networks, including loading pretrained
     weights, configuring model architectures dynamically, and predicting data. The
     purpose of this class is to abstract away the complexities of network setup and
-    enhance user focus on utilizing pre-trained networks, streamlining predictions.
+    enhance user focus on utilizing pretrained networks, streamlining predictions.
 
     The class ensures compatibility with various deep learning frameworks, supports
     CNNs and distance-based networks dynamically, and provides inference-time adjustments like
     rotations for robustness.
-
-    :ivar logo: Flag indicating whether to display logo or not.
-    :type logo: bool
-    :ivar device: The computational device to run the network (e.g., CUDA or CPU).
-    :type device: torch.device
-    :ivar img_size: The image size expected by the input model.
-    :type img_size: int, optional
-    :ivar network: Name of the network architecture.
-    :type network: str, None for autodetection
-    :ivar checkpoint: Path or dict containing network checkpoint for loading pre-trained weights.
-    :type checkpoint: str, dict, None
-    :ivar subtype: Sub-type of the network, if needed for weight fetching.
-    :type subtype: str, None
-    :ivar model_version: Version of the model to load.
-    :type model_version: int, None
-    :ivar model_type: Type of the model to determine specific configurations.
-    :type model_type: str, None
-    :ivar sigma: Sigma value for adjusting model configuration (if applicable).
-    :type sigma: float, None
-    :ivar sigmoid: Flag to enable sigmoid prediction output.
-    :type sigmoid: bool
-    :ivar _2d: Indicates if the model operates in 2D or 3D space.
-    :type _2d: bool
-    :ivar model: The loaded PyTorch model for inference.
-    :type model: PyTorch model object
     """
 
     def __init__(

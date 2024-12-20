@@ -25,9 +25,6 @@ class GeLU(nn.Module):
     This implementation provides an optional `tanh` parameter that can be used to scale the
     input argument to the standard mathematical error function (erf). It is primarily used
     in neural networks to introduce non-linearity.
-
-    :ivar tanh: A scaling factor applied to the input tensor during the forward pass.
-    :type tanh: float
     """
 
     def __init__(self, tanh: Optional[float] = None):
@@ -35,10 +32,6 @@ class GeLU(nn.Module):
         Represents the Gaussian Error Linear Unit (GeLU) function used as an activation function
         in machine learning models. This implementation contains an optional tangent hyperbolic
         approximation factor that alters the behavior of the GeLU computation.
-
-        :ivar tanh: The precomputed value of the square root of the given tangent hyperbolic
-            approximation factor. If not provided during initialization, defaults to the
-            square root of 2.
 
         :param tanh: Optional tangent hyperbolic approximation factor. If provided, its square
             root is calculated and stored as an attribute.
@@ -229,11 +222,6 @@ class SingleConvolution(nn.Sequential):
     `nn.Sequential` to combine multiple convolutional modules into a sequence
     based on the specified dimensionality of the operation. It dynamically
     constructs convolutional layers considering the input parameters.
-
-    :ivar _modules: Contains ordered child modules of the sequential
-                    structure, populated with the convolutional layers
-                    defined during initialization.
-    :type _modules: collections.OrderedDict
     """
 
     def __init__(
@@ -316,18 +304,6 @@ class DoubleConvolution(nn.Sequential):
     flexibility of defining kernel size, padding, and customizable components.
     The concept of group convolutions is enabled for enhanced modularity via
     `num_group`.
-
-    :ivar block_type: The type of the block, either "encoder" or "decoder".
-    :type block_type: str
-    :ivar kernel: The size of the filter kernels used for convolutions.
-    :type kernel: int or tuple
-    :ivar padding: The padding applied to maintain desired convolution dimensions.
-    :type padding: int or tuple
-    :ivar components: The configuration of convolutional layers, activation
-                      functions, and normalization defined as string characters.
-    :type components: str
-    :ivar num_group: The number of groups for group convolutions. Defaults to None.
-    :type num_group: int or None
     """
 
     def __init__(
@@ -409,15 +385,6 @@ class RecurrentDoubleConvolution(nn.Module):
     It incorporates residual connections and supports various non-linearity
     components such as LeakyReLU, ReLU, and PReLU, making it suitable for
     flexible deep learning architectures.
-
-    :ivar conv1: First single convolution layer with specific in/out channels.
-    :type conv1: SingleConvolution
-    :ivar conv2: Second single convolution layer with specific in/out channels.
-    :type conv2: SingleConvolution
-    :ivar conv3: Third single convolution layer designed with identity mapping.
-    :type conv3: SingleConvolution
-    :ivar non_linearity: Non-linear activation function applied after convolutions.
-    :type non_linearity: torch.nn.Module
     """
 
     def __init__(

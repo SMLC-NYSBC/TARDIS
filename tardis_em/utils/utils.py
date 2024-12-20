@@ -48,17 +48,6 @@ class EarlyStopping:
     prevent overfitting or unnecessary computation. Early stopping halts
     the training if the monitored metric stops improving according to
     specified patience and threshold (min_delta) values.
-
-    :ivar patience: Number of epochs to wait for an improvement before stopping.
-    :type patience: int
-    :ivar min_delta: Minimum change in the monitored metric to qualify as an improvement.
-    :type min_delta: float
-    :ivar counter: Tracks epochs without improvement to determine if patience has elapsed.
-    :type counter: int
-    :ivar best_loss: Stores the best metric value achieved so far during training.
-    :type best_loss: Union[float, None]
-    :ivar early_stop: Indicates whether training should be halted.
-    :type early_stop: bool
     """
 
     def __init__(self, patience=10, min_delta=0):

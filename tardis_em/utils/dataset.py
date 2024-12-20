@@ -19,7 +19,7 @@ from typing import Optional
 from tardis_em.utils.errors import TardisError
 
 
-def find_filtered_files(directory, prefix="instances_filter", format_="csv"):
+def find_filtered_files(directory, prefix="instances_filter", format_b="csv"):
     """
     Finds and retrieves a list of files in the specified directory based on a given
     prefix and format(s). This function can search for files matching the prefix
@@ -31,9 +31,10 @@ def find_filtered_files(directory, prefix="instances_filter", format_="csv"):
     :param prefix: The prefix that filtered files should match.
         Defaults to 'instances_filter'.
     :type prefix: str, optional
-    :param format_: The format or formats (as string or a list/tuple of strings)
+    :param format_b: The format or formats (as string or a list/tuple of strings)
         to search for matching files. Defaults to 'csv'.
-    :type format_: str or list or tuple, optional
+    :type format_b: str or list or tuple, optional
+
     :return: A list of file paths that match the specified prefix and format(s) in
         the directory.
     :rtype: list
@@ -43,14 +44,14 @@ def find_filtered_files(directory, prefix="instances_filter", format_="csv"):
     else:
         extension = "*_"
 
-    if not isinstance(format_, list) or not isinstance(format_, tuple):
-        search_pattern = join(directory, f"{extension}{prefix}.{format_}")
+    if not isinstance(format_b, list) or not isinstance(format_b, tuple):
+        search_pattern = join(directory, f"{extension}{prefix}.{format_b}")
 
         filtered_files = glob(search_pattern)
     else:
         filtered_files = []
-        for i in format_:
-            search_pattern = join(directory, f"{extension}{prefix}.{format_}")
+        for i in format_b:
+            search_pattern = join(directory, f"{extension}{prefix}.{format_b}")
 
             filtered_files += glob(search_pattern)
 
@@ -58,14 +59,14 @@ def find_filtered_files(directory, prefix="instances_filter", format_="csv"):
 
 
 def move_train_dataset(
-    dir_: str, coord_format: tuple, with_img: bool, img_format: Optional[tuple] = None
+    dir_s: str, coord_format: tuple, with_img: bool, img_format: Optional[tuple] = None
 ):
     """
     Moves and organizes a training dataset by placing coordinate files and optionally
     image files into appropriate subdirectories.
 
-    :param dir_: The directory containing dataset files to be moved.
-    :type dir_: str
+    :param dir_s: The directory containing dataset files to be moved.
+    :type dir_s: str
     :param coord_format: The file extension or format of coordinate files to be processed.
     :type coord_format: tuple
     :param with_img: A flag indicating whether to include associated image files during
@@ -83,37 +84,37 @@ def move_train_dataset(
         are found in the given directory.
     """
     if coord_format == ".txt":
-        area_list = [d for d in listdir(dir_) if isdir(join(dir_, d))]
+        area_list = [d for d in listdir(dir_s) if isdir(join(dir_s, d))]
         area_list = [f for f in area_list if not f.startswith((".", "train", "test"))]
 
         for i in area_list:
-            copytree(join(dir_, i), join(dir_, "train", "masks", i))
+            copytree(join(dir_s, i), join(dir_s, "train", "masks", i))
 
-    if not len([f for f in listdir(dir_) if f.endswith(coord_format)]) > 0:
+    if not len([f for f in listdir(dir_s) if f.endswith(coord_format)]) > 0:
         TardisError(
             "121",
             "tardis_em/utils/dataset.py",
-            f"No coordinate file found in given dir {dir_}",
+            f"No coordinate file found in given dir {dir_s}",
         )
 
-    idx_coord = [f for f in listdir(dir_) if f.endswith(coord_format)]
+    idx_coord = [f for f in listdir(dir_s) if f.endswith(coord_format)]
 
     for i in idx_coord:
-        copyfile(src=join(dir_, i), dst=join(dir_, "train", "masks", i))
+        copyfile(src=join(dir_s, i), dst=join(dir_s, "train", "masks", i))
 
     """Sort coord with images if included"""
     if with_img:
-        if not len([f for f in listdir(dir_) if f.endswith(img_format)]) > 0:
+        if not len([f for f in listdir(dir_s) if f.endswith(img_format)]) > 0:
             TardisError(
                 "121",
                 "tardis_em/utils/dataset.py",
-                f"No image file found in given dir {dir_}",
+                f"No image file found in given dir {dir_s}",
             )
 
-        idx_coord = [f for f in listdir(dir_) if f.endswith(img_format)]
+        idx_coord = [f for f in listdir(dir_s) if f.endswith(img_format)]
 
         for i in idx_coord:
-            copyfile(src=join(dir_, i), dst=join(dir_, "train", "imgs", i))
+            copyfile(src=join(dir_s, i), dst=join(dir_s, "train", "imgs", i))
 
 
 def build_test_dataset(dataset_dir: str, dataset_no: int, stanford=False):
@@ -131,6 +132,7 @@ def build_test_dataset(dataset_dir: str, dataset_no: int, stanford=False):
     :param stanford: If True, applies specific folder organization and file movement logic
                      for Stanford datasets. Defaults to False.
     :type stanford: bool
+
     :return: None
     """
     if "test" not in listdir(dataset_dir) and "train" not in listdir(dataset_dir):

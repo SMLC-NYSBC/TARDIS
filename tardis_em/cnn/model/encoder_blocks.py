@@ -26,20 +26,6 @@ class EncoderBlock(nn.Module):
     layers, dropout layers, attention features, and employs convolutional modules with specific
     kernel sizes and padding. The components used in the block can be customized through
     component identifiers.
-
-    :ivar attn_features: Indicates if attention features are enabled for this block.
-    :type attn_features: bool
-    :ivar dropout: Dropout rate used in the block. If None, dropout is not applied.
-    :type dropout: float or None
-    :ivar maxpool: Max pooling layer. If max pooling is disabled, this is set to None.
-    :type maxpool: torch.nn.Module or None
-    :ivar dropout_layer: Dropout layer used in the block. Initialized if dropout is provided.
-    :type dropout_layer: torch.nn.Module or None
-    :ivar conv_module: Convolutional module used as the core of the encoder block.
-    :type conv_module: torch.nn.Module
-    :ivar attn_conv: Attention-based convolutional module. Initialized if attention features
-        are enabled.
-    :type attn_conv: torch.nn.Module or None
     """
 
     def __init__(

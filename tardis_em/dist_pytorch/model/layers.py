@@ -33,10 +33,6 @@ class DistStack(nn.Module):
     provides an easy way to apply the stack sequentially on graph-related data,
     with the ability to handle optional node features and customizable edge
     masks for input feature attention.
-
-    :ivar layers: A list containing individual layers (DistLayer) that make
-        up the DistStack.
-    :type layers: torch.nn.ModuleList
     """
 
     def __init__(
@@ -129,16 +125,6 @@ class DistLayer(nn.Module):
 
     DistLayer allows for versatile interaction between node and pair features
     through specific update routines that depend on the chosen structure.
-
-    :ivar pairs_dim: Dimensionality of the pair features input.
-    :type pairs_dim: int
-    :ivar channel_dim: Internal dimensionality for the interaction channels computed as a fraction of pairs_dim.
-    :type channel_dim: int
-    :ivar node_dim: Optional dimensionality for the node features input.
-    :type node_dim: Optional[int]
-    :ivar structure: Specification of the structural interaction type. Options include
-        "full", "full_af", "self_attn", "triang", "quad", and "dualtriang".
-    :type structure: str
     """
 
     def __init__(

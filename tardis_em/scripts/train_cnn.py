@@ -265,7 +265,7 @@ def main(
 
     """Check if dir has train/test folder and if folder have compatible data"""
     DATASET_TEST = check_dir(
-        dir_=path,
+        dir_s=path,
         with_img=True,
         train_img=TRAIN_IMAGE_DIR,
         train_mask=TRAIN_MASK_DIR,

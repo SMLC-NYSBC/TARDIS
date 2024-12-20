@@ -2,7 +2,6 @@ import numpy as np
 from tardis_em.analysis.filament_utils import (
     resample_filament,
     sort_segments,
-    sort_segment,
     reorder_segments_id,
     smooth_spline,
     sort_by_length,
@@ -16,8 +15,6 @@ from tardis_em.analysis.geometry_metrics import (
     total_length,
     length_list,
     angle_between_vectors,
-    intensity,
-    pixel_intensity,
 )
 
 

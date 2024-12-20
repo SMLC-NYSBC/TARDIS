@@ -22,25 +22,6 @@ class SparseDIST(nn.Module):
     tasks. SparseDIST is highly optimized for operations on sparse tensors,
     making it suitable for large-scale data processing tasks requiring a sparse
     data representation.
-
-    :ivar n_out: The number of output features.
-    :type n_out: int
-    :ivar edge_dim: The dimensionality of the edge features.
-    :type edge_dim: int
-    :ivar num_layers: The number of transformer layers in the model.
-    :type num_layers: int
-    :ivar knn: The number of nearest neighbors considered for edge embedding.
-    :type knn: int
-    :ivar edge_sigma: The standard deviation parameter for the edge embedding layer.
-    :type edge_sigma: int
-    :ivar predict: Determines whether a sigmoid activation should be applied to the final output.
-    :type predict: bool
-    :ivar coord_embed: A layer for embedding sparse coordinate data using edges.
-    :type coord_embed: SparseEdgeEmbeddingV4
-    :ivar layers: A stack of transformer-based layers to process edge features.
-    :type layers: SparseDistStack
-    :ivar decoder: A linear layer for decoding the processed features into output features.
-    :type decoder: nn.Linear
     """
 
     def __init__(

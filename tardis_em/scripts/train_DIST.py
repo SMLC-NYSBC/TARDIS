@@ -262,7 +262,7 @@ def main(
 
     """Check if dir has train/test folder and if f  older have compatible data"""
     DATASET_TEST = check_dir(
-        dir_=path,
+        dir_s=path,
         train_img=TRAIN_IMAGE_DIR,
         train_mask=TRAIN_COORD_DIR,
         img_format=(),
@@ -299,7 +299,7 @@ def main(
             mkdir(TEST_COORD_DIR)
 
             # Build train and test dataset
-            move_train_dataset(dir_=path, coord_format=COORD_FORMAT, with_img=False)
+            move_train_dataset(dir_s=path, coord_format=COORD_FORMAT, with_img=False)
 
             no_dataset = int(
                 len([f for f in listdir(path) if f.endswith(COORD_FORMAT)]) / 2

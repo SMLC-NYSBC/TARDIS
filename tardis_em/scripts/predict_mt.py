@@ -219,7 +219,7 @@ warnings.simplefilter("ignore", UserWarning)
 )
 @click.option(
     "-continue",
-    "--continue_",
+    "--continue_b",
     default=False,
     type=bool,
     help="If True, continue from the last tomogram that was successfully predicted.",
@@ -248,7 +248,7 @@ def main(
     amira_inter_probability: float,
     device: str,
     debug: bool,
-    continue_: bool,
+    continue_b: bool,
     test_click=False,
 ):
     """
@@ -274,7 +274,7 @@ def main(
 
     predictor = GeneralPredictor(
         predict="Microtubule",
-        dir_=path,
+        dir_s=path,
         binary_mask=mask,
         correct_px=correct_px,
         convolution_nn=convolution_nn,
@@ -293,9 +293,9 @@ def main(
         amira_compare_distance=amira_compare_distance,
         amira_inter_probability=amira_inter_probability,
         instances=instances,
-        device_=str(device),
+        device_s=str(device),
         debug=debug,
-        continue_=continue_,
+        continue_b=continue_b,
     )
 
     if not test_click:

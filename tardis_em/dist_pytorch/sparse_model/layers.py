@@ -27,9 +27,6 @@ class SparseDistStack(nn.Module):
     This class is designed for processing pairwise relationships with sparse data structures,
     particularly in machine learning frameworks where modular and scalable architecture is needed.
     It allows easy modification of the number of layers and their properties.
-
-    :ivar layers: A list of SparseDistLayer modules forming the stack.
-    :type layers: nn.ModuleList
     """
 
     def __init__(self, pairs_dim: int, num_layers=1, ff_factor=4, knn=8):
@@ -107,24 +104,6 @@ class SparseDistLayer(nn.Module):
     This class serves as an essential component in advanced neural network
     architectures and is particularly tailored for sparse data processing,
     supporting updates for both edges and potentially nodes in future iterations.
-
-    :ivar pairs_dim: Dimensionality of the edge pair features used as an input
-        for the model.
-    :type pairs_dim: int
-    :ivar channel_dim: Channel dimensionality, derived as a quarter of the
-        ``pairs_dim`` or set to 1 if the value is non-positive.
-    :type channel_dim: int
-    :ivar row_update: Instance of ``SparsTriangularUpdate`` for applying triangular
-        updates along rows, specifically constructed with the input dimensionality,
-        channel dimensionality, axis, and number of nearest neighbors.
-    :type row_update: SparsTriangularUpdate
-    :ivar col_update: Instance of ``SparsTriangularUpdate`` for applying triangular
-        updates along columns, inheriting the same initialization parameters as
-        ``row_update`` with a different axis specification.
-    :type col_update: SparsTriangularUpdate
-    :ivar pair_ffn: Instance of ``GeluFeedForward`` representing the feed-forward
-        network for processing edge feature representations after updates.
-    :type pair_ffn: GeluFeedForward
     """
 
     def __init__(self, pairs_dim: int, ff_factor=4, knn=8):

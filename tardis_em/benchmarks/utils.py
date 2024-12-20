@@ -13,7 +13,7 @@ from sklearn.metrics import f1_score, precision_score, recall_score
 from tqdm.contrib import tzip
 
 
-def benchmark_cnn(logits: list, targets: list, reduce="mean", tqdm_=True):
+def benchmark_cnn(logits: list, targets: list, reduce="mean", tqdm_pb=True):
     all_precisions = []
     all_recall = []
     all_f1 = []
@@ -22,13 +22,13 @@ def benchmark_cnn(logits: list, targets: list, reduce="mean", tqdm_=True):
     all_AP90 = []
 
     # Validation scores
-    if tqdm_:
-        zip_ = tzip(logits, targets)
+    if tqdm_pb:
+        zip_l = tzip(logits, targets)
     else:
-        zip_ = zip(logits, targets)
+        zip_l = zip(logits, targets)
 
     id_ = 0
-    for logit, target in zip_:
+    for logit, target in zip_l:
         print(id_)
         logit = logit.flatten()
         logit_th = np.where(logit > 0.5, 1, 0).astype(np.uint8).flatten()

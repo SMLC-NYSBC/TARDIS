@@ -1,4 +1,3 @@
-import pytest
 import numpy as np
 from tardis_em.analysis.mt_classification.utils import (
     count_true_groups,

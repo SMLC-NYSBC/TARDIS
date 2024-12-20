@@ -31,16 +31,6 @@ class DecoderBlockCNN(nn.Module):
     either bilinear or trilinear interpolation), a double convolution module
     configured for decoding tasks, and optional dropout. The class also
     permits initialization of the weights for its layers.
-
-    :ivar upscale: Upsampling module implementing either bilinear or
-        trilinear interpolation.
-    :type upscale: nn.Module
-    :ivar deconv_module: Double convolution module specifically configured
-        for decoding tasks.
-    :type deconv_module: DoubleConvolution
-    :ivar dropout_layer: Optional dropout layer for regularization. Initializes
-        only if the dropout parameter is specified.
-    :type dropout_layer: nn.Dropout
     """
 
     def __init__(
@@ -147,17 +137,6 @@ class DecoderBlockRCNN(nn.Module):
     dropout regularization. It is designed for flexible integration into various neural
     network architectures, particularly those requiring upscaling and deep feature
     convolutions.
-
-    :ivar upscale: Upsampling layer using specified mode ("trilinear" or "bilinear").
-    :type upscale: torch.nn.Upsample
-    :ivar deconv_module: DoubleConvolution module for processing input features.
-    :type deconv_module: DoubleConvolution
-    :ivar deconv_res_module: RecurrentDoubleConvolution module for residual connections.
-    :type deconv_res_module: RecurrentDoubleConvolution
-    :ivar dropout_layer: Dropout regularization layer (optional).
-    :type dropout_layer: torch.nn.Dropout
-    :ivar dropout: Dropout probability (optional). When provided, enables dropout layer.
-    :type dropout: Optional[float]
     """
 
     def __init__(
@@ -277,23 +256,6 @@ class DecoderBlockUnet3Plus(nn.Module):
     designed for multi-scale feature fusion with optional attention mechanism, skip
     connections, and dropout capabilities. This block helps upscale encoded spatial
     representations and recombine them with corresponding encoder features.
-
-    :ivar attn_features: Indicates whether the attention mechanism is enabled or disabled.
-    :type attn_features: bool
-    :ivar dropout: The dropout probability value, or None if dropout is disabled.
-    :type dropout: Optional[float]
-    :ivar upscale: Module for upscaling the spatial dimensions of input features.
-    :type upscale: nn.Module
-    :ivar deconv: DoubleConvolution module for feature decoding.
-    :type deconv: DoubleConvolution
-    :ivar encoder_max_pool: List of optional max-pooling layers for encoder features.
-    :type encoder_max_pool: nn.ModuleList
-    :ivar encoder_feature_conv: List of DoubleConvolution modules for encoder features.
-    :type encoder_feature_conv: nn.ModuleList
-    :ivar attn_conv: Optional DoubleConvolution module for attention-based feature fusion.
-    :type attn_conv: DoubleConvolution
-    :ivar dropout_layer: nn.Dropout layer applied if dropout is enabled.
-    :type dropout_layer: nn.Module
     """
 
     def __init__(

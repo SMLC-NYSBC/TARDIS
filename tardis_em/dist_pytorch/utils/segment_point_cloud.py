@@ -30,16 +30,6 @@ class PropGreedyGraphCut:
     and need to be combined into a unified representation. The provided methods allow
     for detailed control over graph stitching, class and coordinate merging, adjacency
     list construction, and preconditioning of connection data.
-
-    :ivar threshold: Threshold value for limiting connections in constructed adjacency
-                     matrices and ensuring relevant associations.
-    :type threshold: float
-    :ivar connection: Maximum number of connections per node. Defaults to a very high
-                      number if not specified or improperly defined.
-    :type connection: int
-    :ivar smooth: Boolean flag indicating if smoothing functionality should be applied
-                  during processing.
-    :type smooth: bool
     """
 
     def __init__(self, threshold=0.5, connection=2, smooth=False):

@@ -25,11 +25,6 @@ class CenterCrop:
     both 2D and 3D image formats. The usage involves initializing the crop size
     and then calling the instance with the input image array and an optional mask
     array.
-
-    :ivar size: Specifies the crop size. A tuple (depth, height, width) for 3D or
-        (height, width) for 2D. If initialized with 2D tuple, it is transformed
-        internally to 3D with depth = 0.
-    :type size: tuple
     """
 
     def __init__(self, size: tuple):
@@ -124,10 +119,6 @@ class RandomFlip:
     RandomFlip class for flipping 2D or 3D images and their corresponding label masks
     along a random axis. This class is commonly used in data augmentation for machine
     learning models, particularly in image processing tasks.
-
-    :ivar random_state: Integer representing the axis along which the image and label
-        mask will be flipped.
-    :type random_state: int
     """
 
     def __call__(self, x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -173,13 +164,6 @@ class RandomRotation:
     corresponding label mask arrays. It can determine the rotation angle and direction randomly,
     then apply the transformation to the input data. The main purpose is to augment the data
     by introducing random rotations.
-
-    :ivar random_rotation: Randomly selected rotation degree represented in terms of 90-degree
-        increments (0, 90, 180, 270).
-    :type random_rotation: int
-    :ivar random_direction: Randomly selected direction (0 for clockwise,
-        1 for counterclockwise).
-    :type random_direction: int
     """
 
     def __init__(self):
@@ -236,12 +220,6 @@ class ComposeRandomTransformation:
     in a sequence is determined randomly between 1 and 3. This class is designed
     to augment data by applying non-deterministic transformations to images and
     their corresponding label masks during preprocessing.
-
-    :ivar transforms: List of transformations to choose from.
-    :type transforms: list
-    :ivar random_repetition: Randomly determined number of sequential transformations
-        to apply (between 1 and 3).
-    :type random_repetition: int
     """
 
     def __init__(self, transformations: list):
@@ -253,11 +231,6 @@ class ComposeRandomTransformation:
         chosen randomly between 1 and 3.
 
         :param transformations: The collection of transformations to apply.
-
-        :ivar transforms: Stores the provided transformations to be used during the
-            transformation process.
-        :ivar random_repetition: Represents the number of times transformations will be
-            randomly repeated, determined as a random integer value between 1 and 3.
         """
         self.transforms = transformations
         self.random_repetition = np.random.randint(1, 4)

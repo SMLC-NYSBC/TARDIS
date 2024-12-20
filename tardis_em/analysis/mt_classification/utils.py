@@ -37,7 +37,7 @@ def count_true_groups(bool_list) -> int:
 
 
 def distances_of_ends_to_surface(
-    vertices_: np.ndarray, pole_: np.ndarray, ends: np.ndarray, d1_to_surf=False
+    vertices_n: np.ndarray, pole_n: np.ndarray, ends: np.ndarray, d1_to_surf=False
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Compute the distances from specified end points to a surface and optionally
@@ -50,8 +50,8 @@ def distances_of_ends_to_surface(
     the calculated distances include intermediate computations involving the
     nearest neighbors of end points on the surface.
 
-    :param vertices_: Array of coordinates of the vertices defining the surface.
-    :param pole_: Array of coordinates representing the reference pole position.
+    :param vertices_n: Array of coordinates of the vertices defining the surface.
+    :param pole_n: Array of coordinates representing the reference pole position.
     :param ends: Array of coordinates of the end points for which distances are to
         be calculated.
     :param d1_to_surf: Boolean flag. If True, distances from the end points to the
@@ -63,12 +63,12 @@ def distances_of_ends_to_surface(
         the nearest vertices. The second array contains distances from end points
         to the reference pole.
     """
-    knn_v = NearestNeighbors(n_neighbors=1, algorithm="auto").fit(vertices_)
-    knn_e = NearestNeighbors(n_neighbors=1, algorithm="auto").fit(pole_.reshape(1, -1))
+    knn_v = NearestNeighbors(n_neighbors=1, algorithm="auto").fit(vertices_n)
+    knn_e = NearestNeighbors(n_neighbors=1, algorithm="auto").fit(pole_n.reshape(1, -1))
 
     if d1_to_surf:
         _, i1 = knn_v.kneighbors(ends[:, 1:])
-        d1, _ = knn_e.kneighbors(vertices_[i1.flatten(), :])
+        d1, _ = knn_e.kneighbors(vertices_n[i1.flatten(), :])
     else:
         d1, _ = knn_v.kneighbors(ends[:, 1:])
     d2, _ = knn_e.kneighbors(ends[:, 1:])
@@ -227,13 +227,13 @@ def points_on_mesh_knn(
 
 
 def select_mt_ids_within_bb(
-    vertices_: np.ndarray, mt_ends1: np.ndarray, mt_ends2=None
+    vertices_n: np.ndarray, mt_ends1: np.ndarray, mt_ends2=None
 ) -> np.ndarray:
     """
     Finds microtubule (MT) IDs whose end-points lie within a 3D bounding box defined by the vertices.
     If `mt_ends2` is provided, it performs the filtering on this additional set of MT end-points as well.
 
-    :param vertices_: A 2D numpy array of shape (n, 3) representing the vertices of a 3D bounding box. Each vertex is
+    :param vertices_n: A 2D numpy array of shape (n, 3) representing the vertices of a 3D bounding box. Each vertex is
         expected to have x, y, and z coordinates.
     :param mt_ends1: A 2D numpy array where each row represents an MT end-point. Column 0 should contain MT IDs, and
         columns 1, 2, and 3 should correspond to x, y, and z coordinates of the end-points, respectively.
@@ -245,9 +245,9 @@ def select_mt_ids_within_bb(
         `mt_ends2` as well.
     """
     # Vertices 3D bounding box
-    min_x, max_x = np.min(vertices_[:, 0]), np.max(vertices_[:, 0])
-    min_y, max_y = np.min(vertices_[:, 1]), np.max(vertices_[:, 1])
-    min_z, max_z = np.min(vertices_[:, 2]), np.max(vertices_[:, 2])
+    min_x, max_x = np.min(vertices_n[:, 0]), np.max(vertices_n[:, 0])
+    min_y, max_y = np.min(vertices_n[:, 1]), np.max(vertices_n[:, 1])
+    min_z, max_z = np.min(vertices_n[:, 2]), np.max(vertices_n[:, 2])
 
     def filter_mts(mt_ends, min_, max_, axis):
         mask = (mt_ends[:, axis] >= min_) & (mt_ends[:, axis] <= max_)

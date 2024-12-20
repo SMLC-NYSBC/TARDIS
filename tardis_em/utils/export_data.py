@@ -31,15 +31,6 @@ class NumpyToAmira:
     data, point clouds, or spatial graphs. It also provides utilities to validate
     and format data for Amira. The header and data formats are customizable
     via options or additional input parameters.
-
-    Detailed description of the class, its purpose, and usage.
-
-    :ivar as_point_cloud: Whether to treat the data as a point cloud instead of
-                          other possible structures.
-    :type as_point_cloud: bool
-    :ivar tardis_header: Header information for the Amira file, including metadata
-                         relevant to TARDIS usage and customization.
-    :type tardis_header: list
     """
 
     def __init__(self, as_point_cloud=False, header: list = None):
@@ -76,6 +67,7 @@ class NumpyToAmira:
             or an iterable (list or tuple) containing numpy arrays. It must have
             specific dimensional properties depending on the processing logic.
         :type coord: Optional[np.ndarray], optional List
+
         :return: Processed coordinate data. The output type depends on the
             `as_point_cloud` attribute. It returns a numpy array if the input
             is a numpy array and `as_point_cloud` is enabled. Otherwise, it
@@ -145,6 +137,7 @@ class NumpyToAmira:
         :param labels: Optional; A tuple that can contain either numpy arrays
             or strings, influencing the generated labels.
         :type labels: Optional[tuple]
+
         :return: A list of labels generated based on the provided input.
         :rtype: list
         """
@@ -171,11 +164,6 @@ class NumpyToAmira:
         Constructs and writes the header section of a Tardis file based on provided
         graph structure data, such as vertex, edges, and point attributes.
 
-        The method computes basic graph statistics like the number of vertices, edges,
-        and points depending on the structure of the coordinate array and whether the
-        graph is a point cloud or not. It writes these statistics and other specified
-        attributes into the file header formatted according to the Tardis specification.
-
         :param coord: Coordinate array defining the spatial structure of graph or point
             cloud data. It is a NumPy array, where its shape[0] represents either the
             number of points or other meaningful data describing the graph structure.
@@ -191,6 +179,7 @@ class NumpyToAmira:
             additional attributes of the structure. It can be a list with an integer
             and additional nested list corresponding to the score types or categories.
         :type score: Optional[list[int, list]]
+
         :return: The function does not return anything as its purpose is to handle
             file operations and save the header data directly to the specified file.
         :rtype: None
@@ -286,6 +275,7 @@ class NumpyToAmira:
         :type data: list
         :param file_dir: Path to the file where the data will be written.
         :type file_dir: str
+
         :return: None
         :rtype: None
         """
@@ -308,7 +298,6 @@ class NumpyToAmira:
         coords: Union[tuple, list, np.ndarray] = np.ndarray,
         labels: Union[tuple, list, None] = None,
         scores: Optional[list] = None,
-        header: list = None,
     ):
         """
         Exports 3D coordinates data into a format compatible with Amira visualization software. This
@@ -328,9 +317,7 @@ class NumpyToAmira:
         :param scores: Optional score information for the edges. Can include a list where the second element
             contains scores for corresponding edges.
         :type scores: Optional[list]
-        :param header: Optional header information for the Amira file format. It can hold a list of custom
-            definitions as per the Amira requirements.
-        :type header: list
+
         :return: Returns None. The output is written to the file at the specified `file_dir`.
         :rtype: None
         """
@@ -497,6 +484,7 @@ def to_mrc(
     :type org_header: MRCHeader, optional
     :param label: Optional list of labels or metadata to be included in the MRC file.
     :type label: List, optional
+
     :return: None
     """
     mode = mrc_mode(mode=data.dtype, amin=data.min())
@@ -616,8 +604,8 @@ def to_am(data: np.ndarray, pixel_size: float, file_dir: str, header: list = Non
         AmiraMesh file. Items not starting with "#" will be prefixed with "#".
         Defaults to None.
     :type header: list or None
+
     :return: None
-    :rtype: NoneType
     """
     nz, ny, nx = data.shape
     xLen, yLen, zLen = nx * pixel_size, ny * pixel_size, nz * pixel_size
@@ -677,6 +665,7 @@ def to_stl(data: np.ndarray, file_dir: str):
     :param file_dir: The path to the directory where the combined STL file will
         be saved.
     :type file_dir: str
+
     :return: None
     """
     # STL save exception for Arm64 machines

@@ -17,7 +17,7 @@ def weights_init_kaiming(m):
     """
     Initializes the weights of layers in a neural network module using the Kaiming
     initialization technique. This function checks the type of layer contained in
-    the passed module and applies different initialization strategies depending on
+    the past module and applies different initialization strategies depending on
     the layer type. Specifically, it adjusts the weights and biases for convolutional
     layers, batch normalization layers, and group normalization layers. This function
     is commonly used for improving the convergence of deep learning models with

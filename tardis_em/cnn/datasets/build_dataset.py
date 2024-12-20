@@ -13,7 +13,6 @@ from typing import Tuple, Union
 
 import numpy as np
 
-from tardis_em.dist_pytorch.utils.build_point_cloud import BuildPointCloud
 from tardis_em.cnn.data_processing.draw_mask import draw_instances
 from tardis_em.cnn.data_processing.trim import trim_with_stride
 from tardis_em.utils.errors import TardisError
@@ -126,7 +125,7 @@ def build_train_dataset(
         if not isfile(img_dir):
             # Store fail in the log file
             log_file = error_log_build_data(
-                dir_=join(dataset_dir, "log.csv"), log_file=log_file, id_=id_, i=i
+                dir_name=join(dataset_dir, "log.csv"), log_file=log_file, id_i=id_, i=i
             )
             continue
 
@@ -150,9 +149,9 @@ def build_train_dataset(
         if not isfile(mask_dir):
             # Store fail in the log file
             log_file = error_log_build_data(
-                dir_=join(dataset_dir, "log.csv"),
+                dir_name=join(dataset_dir, "log.csv"),
                 log_file=log_file,
-                id_=id_,
+                id_i=id_,
                 i=i + "|" + mask_dir,
             )
             continue
@@ -173,9 +172,9 @@ def build_train_dataset(
 
         if pixel_size is None:
             log_file = error_log_build_data(
-                dir_=join(dataset_dir, "log.csv"),
+                dir_name=join(dataset_dir, "log.csv"),
                 log_file=log_file,
-                id_=id_,
+                id_i=id_,
                 i=i + "||" + mask_dir,
             )
 
@@ -428,7 +427,7 @@ def load_img_mask_data(
 
 
 def error_log_build_data(
-    dir_: str, log_file: np.ndarray, id_: int, i: str
+    dir_name: str, log_file: np.ndarray, id_i: int, i: str
 ) -> np.ndarray:
     """
     Stores error data into a log file and saves the updated log file.
@@ -437,15 +436,15 @@ def error_log_build_data(
     to a given ID and an identifier string. After updating the log file, it
     saves the file in the specified directory.
 
-    :param dir_: The directory location where the updated log file should be
+    :param dir_name: The directory location where the updated log file should be
         saved.
-    :type dir_: str
+    :type dir_name: str
     :param log_file: A two-dimensional NumPy array representing the log file
         where error information will be stored.
     :type log_file: np.ndarray
-    :param id_: The integer identifier used to locate and store error data
+    :param id_i: The integer identifier used to locate and store error data
         within the log file.
-    :type id_: int
+    :type id_i: int
     :param i: The identifier string associated with the specific error or
         data entry being logged.
     :type i: str
@@ -455,10 +454,10 @@ def error_log_build_data(
     """
 
     # Store fail in the log file
-    log_file[id_ + 1, 0] = str(id)
-    log_file[id_ + 1, 1] = str(i)
-    log_file[id_ + 1, 2] = "NA"
-    log_file[id_ + 1, 3] = "NA"
-    np.savetxt(dir_, log_file, fmt="%s", delimiter=",")
+    log_file[id_i + 1, 0] = str(id)
+    log_file[id_i + 1, 1] = str(i)
+    log_file[id_i + 1, 2] = "NA"
+    log_file[id_i + 1, 3] = "NA"
+    np.savetxt(dir_name, log_file, fmt="%s", delimiter=",")
 
     return log_file

@@ -36,7 +36,7 @@ class CnnBenchmark:
     Args:
         model (Predictor): Predictor class with evaluated model.
         dataset (str): Dataset name to evaluate model on.
-        dir_ (str): Dataset directory.
+        dir_s (str): Dataset directory.
         patch_size (int): Image patch size for CNN model.
         threshold (float): Threshold value used for prediction..
     """
@@ -45,7 +45,7 @@ class CnnBenchmark:
         self,
         model: Predictor,
         dataset: str,
-        dir_: str,
+        dir_s: str,
         patch_size: int,
         threshold: float,
     ):
@@ -66,12 +66,12 @@ class CnnBenchmark:
         }
 
         self.data_set = dataset
-        self.dir = dir_
-        if isdir(join(dir_, "train")):
-            rmtree(join(dir_, "train"))
+        self.dir = dir_s
+        if isdir(join(dir_s, "train")):
+            rmtree(join(dir_s, "train"))
 
-        makedirs(join(dir_, "train", "imgs"))
-        makedirs(join(dir_, "train", "masks"))
+        makedirs(join(dir_s, "train", "imgs"))
+        makedirs(join(dir_s, "train", "masks"))
 
         if self.data_set in ["MT", "Mem"]:
             build_train_dataset(
@@ -193,7 +193,7 @@ class DISTBenchmark:
     Args:
         model (Predictor): Predictor class with evaluated model.
         dataset (str): Dataset name to evaluate model on.
-        dir_ (str): Dataset directory.
+        dir_s (str): Dataset directory.
         points_in_patch (int): Max. number of points in sub-graphs.
         threshold (float): Threshold value used for prediction..
     """
@@ -202,7 +202,7 @@ class DISTBenchmark:
         self,
         model: Predictor,
         dataset: str,
-        dir_: str,
+        dir_s: str,
         points_in_patch: int,
         threshold: float,
     ):
@@ -211,7 +211,7 @@ class DISTBenchmark:
         self.tardis_progress(title=self.title)
 
         self.model = model
-        self.dir = dir_
+        self.dir = dir_s
         self.data_set = dataset
         if self.data_set in ["MT", "Mem"]:
             self.sort = True

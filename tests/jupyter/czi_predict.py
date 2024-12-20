@@ -54,7 +54,7 @@ async def get_from_aws(url):
 
 
 async def upload_to_aws(
-    aws_key, aws_secret, bucket, id_, data_name, file_name, remove_=True
+    aws_key, aws_secret, bucket, id_, data_name, file_name, remove_b=True
 ):
     def upload_file():
         if data_name is None:
@@ -77,7 +77,7 @@ async def upload_to_aws(
                 bucket,
                 join("robert_kiewisz_tardis_01_2024", id_, data_name, file_name),
             )
-            if remove_:
+            if remove_b:
                 remove(file_name)
             else:
                 move(file_name, join("TARDIS", file_name))
@@ -158,8 +158,6 @@ class ProcessTardisForCZI:
         """
         Standard set-up for creating new temp dir for cnn prediction.
 
-        Args:
-            dir_ (str): Directory where the folder will be built.
         """
         if not isdir(self.results):
             mkdir(self.results)
@@ -384,7 +382,7 @@ class ProcessTardisForCZI:
                     folder_name,
                     name,
                     name + "_instance.csv",
-                    remove_=False,
+                    remove_b=False,
                 )
             ),
             upload_to_aws(
@@ -394,7 +392,7 @@ class ProcessTardisForCZI:
                 "TARDIS_Prediction_Stats",
                 None,
                 "stat.json",
-                remove_=False,
+                remove_b=False,
             ),
         ]
 
