@@ -52,6 +52,10 @@ Features
 Citation
 ========
 
+`DOI [BioRxiv] <http://doi.org/10.1101/2024.12.19.629196>`__
+
+Kiewisz R. et.al. 2024. Accurate and fast segmentation of filaments and membranes in micrographs and tomograms with TARDIS.
+
 `DOI [Microscopy and Microanalysis] <http://dx.doi.org/10.1093/micmic/ozad067.485>`__
 
 Kiewisz R., Fabig G., Müller-Reichert T. Bepler T. 2023. Automated Segmentation of 3D Cytoskeletal Filaments from Electron Micrographs with TARDIS. Microscopy and Microanalysis 29(Supplement_1):970-972.
