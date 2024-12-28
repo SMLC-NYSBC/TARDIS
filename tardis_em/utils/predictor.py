@@ -11,7 +11,7 @@ import sys
 import time
 from datetime import datetime
 from os import listdir, getcwd
-from os.path import isdir, isfile, join, dirname
+from os.path import isdir, isfile, join
 from typing import Optional, Union
 import platform
 
@@ -1140,10 +1140,7 @@ class GeneralPredictor:
         # Check if there is anything to predict in the user-indicated folder
         msg = f"Given {self.dir} does not contain any recognizable file!"
         assert_b = len(self.predict_list) == 0
-        print(self.predict_list)
-        print(len(self.predict_list))
-        sys.exit()
-        
+
         if self.tardis_logo and self.tardis_progress is not None:
             if assert_b:
                 TardisError(
