@@ -1115,6 +1115,8 @@ class GeneralPredictor:
                     if f.endswith(self.available_format)
                     and not f.endswith(self.omit_format)
                 ]
+                print(self.dir)
+                print(self.predict_list)
 
         if self.dir.endswith((".mrc", ".rec", ".map", ".tif", ".tiff", ".am")):
             self.dir = dirname(self.dir)
