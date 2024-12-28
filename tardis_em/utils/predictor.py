@@ -1116,10 +1116,8 @@ class GeneralPredictor:
                     and not f.endswith(self.omit_format)
                 ]
 
-        print(self.predict_list)
         if self.dir.endswith((".mrc", ".rec", ".map", ".tif", ".tiff", ".am")):
             self.dir = getcwd()
-        sys.exit()
 
         # Update Dir paths
         self.output = join(self.dir, "temp", "Predictions")
@@ -1641,7 +1639,9 @@ class GeneralPredictor:
         :rtype: tuple or list
         """
         self.get_file_list()
-
+        print(self.predict_list)
+        sys.exit()
+        
         semantic_output, instance_output, instance_filter_output = [], [], []
         for id_, i in enumerate(self.predict_list):
             """CNN Pre-Processing"""
