@@ -1116,8 +1116,10 @@ class GeneralPredictor:
                     and not f.endswith(self.omit_format)
                 ]
 
+        print(self.predict_list)
         if self.dir.endswith((".mrc", ".rec", ".map", ".tif", ".tiff", ".am")):
             self.dir = getcwd()
+        sys.exit()
 
         # Update Dir paths
         self.output = join(self.dir, "temp", "Predictions")
