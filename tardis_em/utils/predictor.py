@@ -787,13 +787,13 @@ class GeneralPredictor:
             pred_title = f"CNN prediction with four 90 degree rotations with {self.convolution_nn}"
         else:
             pred_title = f"CNN prediction with {self.convolution_nn}"
-        eta_time = "NA"
         start, end = 0, 0
 
         for j in range(len(dataloader)):
             if j % iter_time == 0 and self.tardis_logo:
                 eta_time = (
-                        str(round(((end - start) * (len(dataloader) - j - 1)) / 60, 1)) + "min"
+                    str(round(((end - start) * (len(dataloader) - j - 1)) / 60, 1))
+                    + "min"
                 )
 
                 # Tardis progress bar update
@@ -1831,7 +1831,10 @@ class GeneralPredictor:
             self.eta_predict = (
                 str(
                     round(
-                        ((end_predict - start_predict) * (len(self.predict_list) - id_ - 1))
+                        (
+                            (end_predict - start_predict)
+                            * (len(self.predict_list) - id_ - 1)
+                        )
                         / 60,
                         1,
                     )
