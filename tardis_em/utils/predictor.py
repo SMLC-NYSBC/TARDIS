@@ -1117,6 +1117,7 @@ class GeneralPredictor:
                 ]
                 print(self.dir)
                 print(self.predict_list)
+                sys.exit()
 
         if self.dir.endswith((".mrc", ".rec", ".map", ".tif", ".tiff", ".am")):
             self.dir = dirname(self.dir)
