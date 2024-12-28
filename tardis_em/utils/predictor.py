@@ -805,6 +805,7 @@ class GeneralPredictor:
 
             # Pick image['s]
             input_, name = dataloader.__getitem__(j)
+            start, end = 0, 0
 
             if j == 0:
                 start = time.time()
@@ -814,7 +815,6 @@ class GeneralPredictor:
 
                 # Scale progress bar refresh to 10s
                 end = time.time()
-                eta_time = str(round(((end - start) * (len(dataloader) - j)) / 60, 1)) + "min"
 
                 iter_time = 10 // (end - start)
                 if iter_time <= 1:
@@ -823,6 +823,7 @@ class GeneralPredictor:
                 # Predict
                 input_ = self.cnn.predict(input_[None, :], rotate=self.rotate)
 
+            eta_time = str(round(((end - start) * (len(dataloader) - j)) / 60, 1)) + "min"
             tif.imwrite(join(self.output, f"{name}.tif"), input_)
 
     def predict_cnn_napari(self, input_t: torch.Tensor, name: str):
