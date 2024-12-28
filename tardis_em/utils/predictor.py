@@ -1115,12 +1115,9 @@ class GeneralPredictor:
                     if f.endswith(self.available_format)
                     and not f.endswith(self.omit_format)
                 ]
-                print(self.dir)
-                print(self.predict_list)
-                sys.exit()
 
         if self.dir.endswith((".mrc", ".rec", ".map", ".tif", ".tiff", ".am")):
-            self.dir = dirname(self.dir)
+            self.dir = getcwd()
 
         # Update Dir paths
         self.output = join(self.dir, "temp", "Predictions")
@@ -1143,7 +1140,10 @@ class GeneralPredictor:
         # Check if there is anything to predict in the user-indicated folder
         msg = f"Given {self.dir} does not contain any recognizable file!"
         assert_b = len(self.predict_list) == 0
-
+        print(self.predict_list)
+        print(len(self.predict_list))
+        sys.exit()
+        
         if self.tardis_logo and self.tardis_progress is not None:
             if assert_b:
                 TardisError(
