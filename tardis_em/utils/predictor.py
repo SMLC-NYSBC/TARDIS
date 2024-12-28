@@ -1832,7 +1832,7 @@ class GeneralPredictor:
                     round(
                         ((end_predict - start_predict) * (len(self.predict_list) - id_))
                         / 60,
-                        2,
+                        1,
                     )
                 )
                 + " min"
