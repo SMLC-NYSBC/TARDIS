@@ -234,7 +234,7 @@ class GeneralPredictor:
         self.image_stitcher = StitchImages()
         self.post_processes = BuildPointCloud()
 
-        self.get_file_list()
+        # self.get_file_list()
 
         # Build handler for DIST input and output
         if self.predict_instance:
