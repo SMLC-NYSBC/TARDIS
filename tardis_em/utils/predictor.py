@@ -823,7 +823,9 @@ class GeneralPredictor:
                 # Predict
                 input_ = self.cnn.predict(input_[None, :], rotate=self.rotate)
 
-            eta_time = str(round(((end - start) * (len(dataloader) - j)) / 60, 1)) + "min"
+            eta_time = (
+                str(round(((end - start) * (len(dataloader) - j)) / 60, 1)) + "min"
+            )
             tif.imwrite(join(self.output, f"{name}.tif"), input_)
 
     def predict_cnn_napari(self, input_t: torch.Tensor, name: str):
@@ -1825,7 +1827,16 @@ class GeneralPredictor:
             """Clean-up temp dir"""
             clean_up(dir_s=self.dir)
             end_predict = time.time()
-            self.eta_predict = str(round((end_predict - start_predict) / 60, 2)) + " min"
+            self.eta_predict = (
+                str(
+                    round(
+                        ((end_predict - start_predict) * (len(self.predict_list) - id_))
+                        / 60,
+                        2,
+                    )
+                )
+                + " min"
+            )
 
         """Optional return"""
         if self.output_format.startswith("return"):
