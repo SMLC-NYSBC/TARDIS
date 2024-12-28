@@ -792,6 +792,10 @@ class GeneralPredictor:
 
         for j in range(len(dataloader)):
             if j % iter_time == 0 and self.tardis_logo:
+                eta_time = (
+                        str(round(((end - start) * (len(dataloader) - j - 1)) / 60, 1)) + "min"
+                )
+
                 # Tardis progress bar update
                 self.tardis_progress(
                     title=self.title,
@@ -822,10 +826,6 @@ class GeneralPredictor:
             else:
                 # Predict
                 input_ = self.cnn.predict(input_[None, :], rotate=self.rotate)
-
-            eta_time = (
-                str(round(((end - start) * (len(dataloader) - j)) / 60, 1)) + "min"
-            )
             tif.imwrite(join(self.output, f"{name}.tif"), input_)
 
     def predict_cnn_napari(self, input_t: torch.Tensor, name: str):
@@ -1831,7 +1831,7 @@ class GeneralPredictor:
             self.eta_predict = (
                 str(
                     round(
-                        ((end_predict - start_predict) * (len(self.predict_list) - id_))
+                        ((end_predict - start_predict) * (len(self.predict_list) - id_ - 1))
                         / 60,
                         1,
                     )
