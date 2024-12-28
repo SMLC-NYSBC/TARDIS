@@ -11,7 +11,7 @@ import sys
 import time
 from datetime import datetime
 from os import listdir, getcwd
-from os.path import isdir, isfile, join
+from os.path import isdir, isfile, join, dirname
 from typing import Optional, Union
 import platform
 
@@ -1115,12 +1115,9 @@ class GeneralPredictor:
                     if f.endswith(self.available_format)
                     and not f.endswith(self.omit_format)
                 ]
-        out_ = [
-            i
-            for i in self.dir.split("/")
-            if not i.endswith((".mrc", ".rec", ".map", ".tif", ".tiff", ".am"))
-        ]
-        self.dir = join("/".join(out_))
+
+        if self.dir.endswith((".mrc", ".rec", ".map", ".tif", ".tiff", ".am")):
+            self.dir = dirname(self.dir)
 
         # Update Dir paths
         self.output = join(self.dir, "temp", "Predictions")
