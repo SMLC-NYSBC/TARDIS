@@ -200,7 +200,7 @@ class GeneralPredictor:
         if isinstance(self.dir, str):
             if isdir(join(self.dir, "amira")):
                 self.amira_check = True
-                self.dir_amira = join(dir_s, "amira")
+                self.dir_amira = join(self.dir, "amira")
 
         # Searching for available images for prediction
         self.available_format = (
@@ -1115,9 +1115,12 @@ class GeneralPredictor:
                     if f.endswith(self.available_format)
                     and not f.endswith(self.omit_format)
                 ]
-
-        if self.dir.endswith((".mrc", ".rec", ".map", ".tif", ".tiff", ".am")):
-            self.dir = getcwd()
+        out_ = [
+            i
+            for i in self.dir.split("/")
+            if not i.endswith((".mrc", ".rec", ".map", ".tif", ".tiff", ".am"))
+        ]
+        self.dir = join("/".join(out_))
 
         # Update Dir paths
         self.output = join(self.dir, "temp", "Predictions")
@@ -1639,9 +1642,7 @@ class GeneralPredictor:
         :rtype: tuple or list
         """
         self.get_file_list()
-        print(self.predict_list)
-        sys.exit()
-        
+
         semantic_output, instance_output, instance_filter_output = [], [], []
         for id_, i in enumerate(self.predict_list):
             """CNN Pre-Processing"""
