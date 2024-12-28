@@ -788,6 +788,7 @@ class GeneralPredictor:
         else:
             pred_title = f"CNN prediction with {self.convolution_nn}"
         eta_time = "NA"
+        start, end = 0, 0
 
         for j in range(len(dataloader)):
             if j % iter_time == 0 and self.tardis_logo:
@@ -805,7 +806,6 @@ class GeneralPredictor:
 
             # Pick image['s]
             input_, name = dataloader.__getitem__(j)
-            start, end = 0, 0
 
             if j == 0:
                 start = time.time()
@@ -1827,6 +1827,7 @@ class GeneralPredictor:
             """Clean-up temp dir"""
             clean_up(dir_s=self.dir)
             end_predict = time.time()
+
             self.eta_predict = (
                 str(
                     round(
