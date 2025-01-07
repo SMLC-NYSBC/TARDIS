@@ -1,0 +1,852 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Global -&gt; Trainer Handlers &mdash; TARDIS-em 0.3.10 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=9f76a604"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="../_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Global -&gt; Predictor Handlers" href="predictor.html" />
+    <link rel="prev" title="Global -&gt; Data Handlers" href="import_data.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TARDIS-em
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../HISTORY.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../instructions.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_actin.html">-  3D Actin Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/tirf_mt.html">-  TIRF Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_membrane.html">-  3D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/scripting.html">-  Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/fine_tune_model.html">Fine-Tune TARDIS models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/helper.html">TARDIS helper-functions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html">CNN Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#dist-module">DIST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#analysis-module">Analysis Module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../code_doc.html#global-functions">Global Functions</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="aws.html">AWS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="import_data.html">Data Handlers</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Trainer</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.utils.trainer">General NN trainer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.trainer.ISR_LR"><code class="docutils literal notranslate"><span class="pre">ISR_LR</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.trainer.BasicTrainer"><code class="docutils literal notranslate"><span class="pre">BasicTrainer</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.utils.losses">Loss functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.losses.AbstractLoss"><code class="docutils literal notranslate"><span class="pre">AbstractLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.losses.AdaptiveDiceLoss"><code class="docutils literal notranslate"><span class="pre">AdaptiveDiceLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.losses.BCELoss"><code class="docutils literal notranslate"><span class="pre">BCELoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.losses.BCEGraphWiseLoss"><code class="docutils literal notranslate"><span class="pre">BCEGraphWiseLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.losses.BCEDiceLoss"><code class="docutils literal notranslate"><span class="pre">BCEDiceLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.losses.CELoss"><code class="docutils literal notranslate"><span class="pre">CELoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.losses.DiceLoss"><code class="docutils literal notranslate"><span class="pre">DiceLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.losses.LaplacianEigenmapsLoss"><code class="docutils literal notranslate"><span class="pre">LaplacianEigenmapsLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.losses.SoftSkeletonization"><code class="docutils literal notranslate"><span class="pre">SoftSkeletonization</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.losses.ClBCELoss"><code class="docutils literal notranslate"><span class="pre">ClBCELoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.losses.ClDiceLoss"><code class="docutils literal notranslate"><span class="pre">ClDiceLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.losses.SigmoidFocalLoss"><code class="docutils literal notranslate"><span class="pre">SigmoidFocalLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.losses.WBCELoss"><code class="docutils literal notranslate"><span class="pre">WBCELoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.losses.BCEMSELoss"><code class="docutils literal notranslate"><span class="pre">BCEMSELoss</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.utils.metrics">Training metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.metrics.compare_dict_metrics"><code class="docutils literal notranslate"><span class="pre">compare_dict_metrics()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.metrics.eval_graph_f1"><code class="docutils literal notranslate"><span class="pre">eval_graph_f1()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.metrics.calculate_f1"><code class="docutils literal notranslate"><span class="pre">calculate_f1()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.metrics.AP"><code class="docutils literal notranslate"><span class="pre">AP()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.metrics.AP_instance"><code class="docutils literal notranslate"><span class="pre">AP_instance()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.metrics.AUC"><code class="docutils literal notranslate"><span class="pre">AUC()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.metrics.IoU"><code class="docutils literal notranslate"><span class="pre">IoU()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.metrics.mcov"><code class="docutils literal notranslate"><span class="pre">mcov()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.metrics.confusion_matrix"><code class="docutils literal notranslate"><span class="pre">confusion_matrix()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.metrics.normalize_image"><code class="docutils literal notranslate"><span class="pre">normalize_image()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="predictor.html">Predictor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="helper.html">Helper Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logger.html">Logger</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utils Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html">SetUp Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize.html">Visualizer</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../code_doc.html">CNN Module</a></li>
+      <li class="breadcrumb-item active">Global -&gt; Trainer Handlers</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/utils/trainer.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="global-trainer-handlers">
+<h1>Global -&gt; Trainer Handlers<a class="headerlink" href="#global-trainer-handlers" title="Link to this heading"></a></h1>
+<section id="module-tardis_em.utils.trainer">
+<span id="general-nn-trainer"></span><h2>General NN trainer<a class="headerlink" href="#module-tardis_em.utils.trainer" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.trainer.ISR_LR">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.trainer.</span></span><span class="sig-name descname"><span class="pre">ISR_LR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimizer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Adam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_mul</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.trainer.ISR_LR" title="Link to this definition"></a></dt>
+<dd><p>Handles learning rate scheduling with warmup and scaling for an inner optimizer.</p>
+<p>This class provides a custom learning rate scheduling strategy, blending a warmup
+period followed by scaled, decreasing learning rates. It also wraps core optimizer
+functionalities like stepping, zeroing gradients, saving, and loading the optimizer’s
+state. The scheduling ensures a dynamic learning rate control to improve model
+training stability and efficiency.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.trainer.ISR_LR.load_state_dict">
+<span class="sig-name descname"><span class="pre">load_state_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">checkpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.trainer.ISR_LR.load_state_dict" title="Link to this definition"></a></dt>
+<dd><p>Loads the state_dict of the optimizer from a given checkpoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>checkpoint</strong> – A dictionary containing the state_dict of the optimizer.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.trainer.ISR_LR.state_dict">
+<span class="sig-name descname"><span class="pre">state_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.trainer.ISR_LR.state_dict" title="Link to this definition"></a></dt>
+<dd><p>Wrapper for retrieving Optimizer state dictionary</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.trainer.ISR_LR.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.trainer.ISR_LR.step" title="Link to this definition"></a></dt>
+<dd><p>Step with the inner optimize</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.trainer.ISR_LR.zero_grad">
+<span class="sig-name descname"><span class="pre">zero_grad</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.trainer.ISR_LR.zero_grad" title="Link to this definition"></a></dt>
+<dd><p>Zero out the gradients with the inner optimizer</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.trainer.ISR_LR.get_lr_scale">
+<span class="sig-name descname"><span class="pre">get_lr_scale</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.trainer.ISR_LR.get_lr_scale" title="Link to this definition"></a></dt>
+<dd><p>Compute scaler for LR</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.trainer.BasicTrainer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.trainer.</span></span><span class="sig-name descname"><span class="pre">BasicTrainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">structure</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">criterion</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#tardis_em.utils.trainer.ISR_LR" title="tardis_em.utils.trainer.ISR_LR"><span class="pre">ISR_LR</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Adam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_setting</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_DataLoader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_DataLoader</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_scheduler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">early_stop_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance_cov</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'DIST'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classification</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.trainer.BasicTrainer" title="Link to this definition"></a></dt>
+<dd><p>This class initializes a trainer for machine learning models, with the capability
+to handle various neural network structures and configurations. It includes train
+and validation data loaders, optional learning rate scheduling, early stopping, and
+metric tracking. It is targeted for both classification and distributed computation
+tasks.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.trainer.BasicTrainer.run_trainer">
+<span class="sig-name descname"><span class="pre">run_trainer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.trainer.BasicTrainer.run_trainer" title="Link to this definition"></a></dt>
+<dd><p>Executes the training process for a machine learning model. This method handles
+the initialization of necessary components such as progress bars, early stopping,
+and training directories. It iteratively trains and validates the model over a
+specified number of epochs, updating progress and metrics. The process supports
+early stopping to terminate training if a certain condition is met.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>FileExistsError</strong> – If errors occur while handling directory setup.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-tardis_em.utils.losses">
+<span id="loss-functions"></span><h2>Loss functions<a class="headerlink" href="#module-tardis_em.utils.losses" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.AbstractLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.losses.</span></span><span class="sig-name descname"><span class="pre">AbstractLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">smooth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diagonal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmoid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.losses.AbstractLoss" title="Link to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.AbstractLoss.activate">
+<span class="sig-name descname"><span class="pre">activate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.losses.AbstractLoss.activate" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.AbstractLoss.ignor_diagonal">
+<span class="sig-name descname"><span class="pre">ignor_diagonal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.losses.AbstractLoss.ignor_diagonal" title="Link to this definition"></a></dt>
+<dd><p>Applies processing to logits and targets to ignore the diagonal entries when
+the <code class="docutils literal notranslate"><span class="pre">diagonal</span></code> condition is set. The behavior changes based on the value
+of the <code class="docutils literal notranslate"><span class="pre">mask</span></code> parameter. If masking is enabled, the diagonal entries of
+logits and targets are nullified. Without masking, the diagonal entries of
+logits and targets are set to 1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>logits</strong> – A tensor representing unnormalized log probabilities of
+predicted classes.</p></li>
+<li><p><strong>targets</strong> – A tensor representing the actual target classes.</p></li>
+<li><p><strong>mask</strong> – A boolean indicating whether to apply zero masking
+on the diagonal elements of <cite>logits</cite> and <cite>targets</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing the processed logits and targets tensors, with
+the diagonal entries adjusted based on the <cite>mask</cite> parameter.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.AbstractLoss.initialize_tensors">
+<span class="sig-name descname"><span class="pre">initialize_tensors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.losses.AbstractLoss.initialize_tensors" title="Link to this definition"></a></dt>
+<dd><p>Initializes tensors by applying activation to the logits and optionally ignoring
+diagonal in graph structures.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>logits</strong> (<em>Tensor</em>) – The input tensor representing logits which undergo activation.</p></li>
+<li><p><strong>targets</strong> (<em>Tensor</em>) – A tensor representing target values.</p></li>
+<li><p><strong>mask</strong> (<em>Tensor</em>) – A boolean tensor to apply masking for ignoring specific elements,
+such as diagonal values in graphs.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Activated logits tensor with potential diagonal values ignored based
+on the provided mask.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.AbstractLoss.forward">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.losses.AbstractLoss.forward" title="Link to this definition"></a></dt>
+<dd><p>Computes the forward pass of the layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>logits</strong> – The predicted logits represented as a PyTorch Tensor.</p></li>
+<li><p><strong>targets</strong> – The ground-truth values represented as a PyTorch Tensor.</p></li>
+<li><p><strong>mask</strong> – A boolean flag. If set to True, a mask will be applied during
+computation. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The computed result as a PyTorch Tensor.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.AdaptiveDiceLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.losses.</span></span><span class="sig-name descname"><span class="pre">AdaptiveDiceLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.losses.AdaptiveDiceLoss" title="Link to this definition"></a></dt>
+<dd><p>Computes the Adaptive Dice Loss, a metric commonly used in image segmentation that combines the concept of Dice
+loss with an adaptive exponent to control the weight given to false negatives. The method calculates the similarity
+between predicted outputs (logits) and target values while considering class imbalance.</p>
+<p>This loss function is particularly useful in medical image analysis or other scenarios where the regions of interest
+can be very small compared to the overall image size, making it difficult for traditional loss functions to perform well.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.AdaptiveDiceLoss.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.utils.losses.AdaptiveDiceLoss.forward" title="Link to this definition"></a></dt>
+<dd><p>Computes the Soft Weighted Dice Loss between a predicted tensor (logits) and a target
+tensor.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.BCELoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.losses.</span></span><span class="sig-name descname"><span class="pre">BCELoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.losses.BCELoss" title="Link to this definition"></a></dt>
+<dd><p>Binary Cross-Entropy Loss (BCELoss) class.</p>
+<p>This class is responsible for computing the binary cross-entropy loss
+between predicted logits and target values. It inherits from the
+AbstractLoss class and uses PyTorch’s nn.BCELoss.</p>
+<p>The purpose of this class is to provide a specialized loss computation
+for binary classification tasks or similar problems where binary
+labels are involved. It supports masking functionality to handle
+specific use cases where part of the data needs to be ignored during
+loss calculation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.BCELoss.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.utils.losses.BCELoss.forward" title="Link to this definition"></a></dt>
+<dd><p>Computes the BCE loss between the logits and targets.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.BCEGraphWiseLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.losses.</span></span><span class="sig-name descname"><span class="pre">BCEGraphWiseLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.losses.BCEGraphWiseLoss" title="Link to this definition"></a></dt>
+<dd><p>Handles binary cross-entropy loss computation on a graph-wise level.</p>
+<p>This class extends AbstractLoss and is designed to compute binary cross-entropy
+(BCE) loss with specific functionality for handling graph-based input and output.
+It applies BCE loss separately to positive and negative targets, allowing for
+different treatment of these cases. The loss is calculated using a mask to focus
+only on specific parts of the logits and targets.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.BCEGraphWiseLoss.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.utils.losses.BCEGraphWiseLoss.forward" title="Link to this definition"></a></dt>
+<dd><p>Computes and returns the combined loss for positive and negative examples.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.BCEDiceLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.losses.</span></span><span class="sig-name descname"><span class="pre">BCEDiceLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.losses.BCEDiceLoss" title="Link to this definition"></a></dt>
+<dd><p>The BCEDiceLoss class combines Binary Cross-Entropy (BCE) loss and Dice loss
+to support both pixel-wise classification and segmentation tasks. It is designed
+to accommodate weighted or masked losses and is particularly useful in applications
+such as medical image segmentation where overlapping metric-based losses are
+advantageous.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.BCEDiceLoss.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.utils.losses.BCEDiceLoss.forward" title="Link to this definition"></a></dt>
+<dd><p>Computes the combined loss by summing Binary Cross-Entropy (BCE) loss and Dice loss.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.CELoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.losses.</span></span><span class="sig-name descname"><span class="pre">CELoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.losses.CELoss" title="Link to this definition"></a></dt>
+<dd><p>Implements a Cross-Entropy Loss (CELoss) for neural networks.</p>
+<p>Cross-Entropy loss is commonly used in classification problems as a
+measure of how well the predicted probability distribution aligns with the
+actual distribution. This implementation supports optional masking for
+specific elements during the computation of the loss.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.CELoss.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.utils.losses.CELoss.forward" title="Link to this definition"></a></dt>
+<dd><p>Forward loos function</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.DiceLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.losses.</span></span><span class="sig-name descname"><span class="pre">DiceLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.losses.DiceLoss" title="Link to this definition"></a></dt>
+<dd><p>Computes the Dice Loss, primarily used for image segmentation tasks.</p>
+<p>This loss function is frequently used to evaluate the overlap between
+predicted segmentations and ground truth segmentations. It is designed
+to penalize predictions that deviate from the ground truth, especially
+in situations where the classes are imbalanced. Dice Loss is defined
+as 1 - Dice Coefficient and is differentiable, making it useful for
+optimization in deep learning models.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.DiceLoss.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.utils.losses.DiceLoss.forward" title="Link to this definition"></a></dt>
+<dd><p>Forward loos function</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.LaplacianEigenmapsLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.losses.</span></span><span class="sig-name descname"><span class="pre">LaplacianEigenmapsLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.losses.LaplacianEigenmapsLoss" title="Link to this definition"></a></dt>
+<dd><p>Implements a loss function based on Laplacian Eigenmaps. This loss function compares
+the smallest non-zero eigenvectors of Laplacian matrices derived from true and
+predicted adjacency matrices. It uses mean squared error to quantify the discrepancy.</p>
+<p>This class leverages <cite>nn.MSELoss</cite> internally to compute the error between eigenvectors.
+The Laplacian matrix is computed as the degree matrix minus the adjacency matrix.
+The loss is primarily designed for graph-structured data.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.LaplacianEigenmapsLoss.compute_laplacian">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_laplacian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.utils.losses.LaplacianEigenmapsLoss.compute_laplacian" title="Link to this definition"></a></dt>
+<dd><p>Computes the Laplacian matrix of a given adjacency matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>A</strong> (<em>torch.Tensor</em>) – The adjacency matrix represented as a tensor.
+Each element in the matrix defines the connection
+weights between nodes in a graph.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The Laplacian matrix computed from the given adjacency
+matrix.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.LaplacianEigenmapsLoss.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.utils.losses.LaplacianEigenmapsLoss.forward" title="Link to this definition"></a></dt>
+<dd><p>Computes the Laplacian-Eigenmaps loss between the true and predicted adjacency matrices.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.SoftSkeletonization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.losses.</span></span><span class="sig-name descname"><span class="pre">SoftSkeletonization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.losses.SoftSkeletonization" title="Link to this definition"></a></dt>
+<dd><p>Implements a loss function based on soft skeletonization.</p>
+<p>This class provides a mechanism to compute a specific type of loss by applying
+soft morphological operations (erosion, dilation, opening) iteratively to extract
+soft skeletal representations of binary target masks. Primarily used for tasks
+requiring representation of skeletonized structures in binary masks.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.SoftSkeletonization.soft_skel">
+<span class="sig-name descname"><span class="pre">soft_skel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">binary_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.utils.losses.SoftSkeletonization.soft_skel" title="Link to this definition"></a></dt>
+<dd><p>Extracts a soft skeleton from a binary mask using iterative erosion and morphological
+opening techniques. The algorithm starts by computing a partial skeleton and refines
+it iteratively over a user-defined number of iterations. This operation is used in
+image processing tasks to extract a skeletonized representation of binary masks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>binary_mask</strong> – Input binary mask as a tensor on which the soft skeleton
+operation will be performed.</p></li>
+<li><p><strong>iter_i</strong> – Number of iterations for which the skeletonization process will be
+performed. This controls the refinement of the resulting skeleton.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The resulting soft skeleton as a tensor after processing the input
+binary mask and applying iterative operations.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.SoftSkeletonization.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.utils.losses.SoftSkeletonization.forward" title="Link to this definition"></a></dt>
+<dd><p>Forward loos function</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.ClBCELoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.losses.</span></span><span class="sig-name descname"><span class="pre">ClBCELoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.losses.ClBCELoss" title="Link to this definition"></a></dt>
+<dd><p>Computes a combined Binary Cross-Entropy (BCE) loss and soft skeletonization-
+based class-sensitive loss. This class extends SoftSkeletonization and aims
+to address challenges in pixel-based confidence predictions for segmentation tasks.</p>
+<p>The main purpose of this loss function is to enhance performance by integrating
+standard BCE loss with a sensitivity and precision balance derived from skeletonized
+inputs. It calculates a harmonized ClBCE loss by prioritizing critical regions of the
+predictions while maintaining global and structural integrity.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.ClBCELoss.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.utils.losses.ClBCELoss.forward" title="Link to this definition"></a></dt>
+<dd><p>Forward loss function</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.ClDiceLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.losses.</span></span><span class="sig-name descname"><span class="pre">ClDiceLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.losses.ClDiceLoss" title="Link to this definition"></a></dt>
+<dd><p>The ClDiceLoss class combines Soft Dice Loss with a topology-preserving loss based
+on soft skeletonization, referred to as clDice loss.</p>
+<p>This class is designed to compute the clDice loss, which aligns with the Dice Loss
+for pixel-wise accuracy while incorporating additional terms to preserve the topology
+of structures in binary segmentation tasks. The clDice loss employs soft skeletonization
+techniques to evaluate the similarity between skeletonized predictions and ground truth.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.ClDiceLoss.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.utils.losses.ClDiceLoss.forward" title="Link to this definition"></a></dt>
+<dd><p>Forward loss function</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.SigmoidFocalLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.losses.</span></span><span class="sig-name descname"><span class="pre">SigmoidFocalLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.losses.SigmoidFocalLoss" title="Link to this definition"></a></dt>
+<dd><p>Implements the Sigmoid Focal Loss function, a type of loss function often
+used for addressing class imbalance problems in classification tasks.</p>
+<p>The function applies a modulating factor to the standard cross-entropy
+criterion to focus learning more on hard-to-classify examples. It includes
+parameters like <cite>gamma</cite> for focusing and an optional <cite>alpha</cite> for
+handling class imbalance.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.SigmoidFocalLoss.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.utils.losses.SigmoidFocalLoss.forward" title="Link to this definition"></a></dt>
+<dd><p>Computes the sigmoid focal loss between the logits and targets.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.WBCELoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.losses.</span></span><span class="sig-name descname"><span class="pre">WBCELoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.losses.WBCELoss" title="Link to this definition"></a></dt>
+<dd><p>Defines the WBCELoss class which calculates a Weighted Binary Cross-Entropy (BCE)
+loss. This loss function is useful in scenarios where there is a significant class
+imbalance, as it allows for custom weighting of positive and negative classes. The
+loss calculation takes into account the logits (predicted probabilities), the target
+values, and optional parameters for masking and adjusting class weights.</p>
+<p>Its primary purpose is to compute a more flexible BCE loss that accommodates
+customizable weight scaling for positive and negative classes, especially in datasets
+with imbalanced distributions.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.WBCELoss.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.utils.losses.WBCELoss.forward" title="Link to this definition"></a></dt>
+<dd><p>Computes the weighted BCE loss between the logits and targets.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.BCEMSELoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.losses.</span></span><span class="sig-name descname"><span class="pre">BCEMSELoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mse_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.losses.BCEMSELoss" title="Link to this definition"></a></dt>
+<dd><p>Combines Binary Cross Entropy (BCE) loss and Mean Squared Error (MSE) loss
+for enhanced predictive modeling.</p>
+<p>This class is designed to compute a loss function that combines BCE
+for binary classification tasks and MSE for additional temporal consistency
+by penalizing differences between adjacent frames. The <cite>mse_weight</cite> parameter
+controls the relative contribution of the MSE to the final loss value.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.losses.BCEMSELoss.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.utils.losses.BCEMSELoss.forward" title="Link to this definition"></a></dt>
+<dd><p>Computes the BCE loss between the logits and targets.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-tardis_em.utils.metrics">
+<span id="training-metrics"></span><h2>Training metrics<a class="headerlink" href="#module-tardis_em.utils.metrics" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.metrics.compare_dict_metrics">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.metrics.</span></span><span class="sig-name descname"><span class="pre">compare_dict_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">last_best_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#tardis_em.utils.metrics.compare_dict_metrics" title="Link to this definition"></a></dt>
+<dd><p>Compare the average metric values of two dictionaries and return whether the new
+dictionary has a higher average than the last best dictionary. The metric
+comparison is performed by calculating the average of the dictionary values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>last_best_dict</strong> – A dictionary representing the last best metrics. Values must
+be numeric and will be used to compute their average.</p></li>
+<li><p><strong>new_dict</strong> – A dictionary representing the new metrics. Values must be numeric
+and will be used to compute their average.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A boolean indicating whether the average value of metrics in the new
+dictionary is greater than the average value of the last best
+dictionary.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.metrics.eval_graph_f1">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.metrics.</span></span><span class="sig-name descname"><span class="pre">eval_graph_f1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soft</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.metrics.eval_graph_f1" title="Link to this definition"></a></dt>
+<dd><p>Evaluates the Graph-F1 metric for given logits and targets using a threshold-based
+approach with an option to calculate the soft variant.</p>
+<p>The function supports both soft approximation and threshold-based calculation
+to determine precision, recall, accuracy, and F1-score of predictions. It uses
+specific configurations for masking the diagonal elements and applies varied
+thresholds to optimize performance metrics. This is particularly useful in
+evaluating graph-based predictions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>logits</strong> – Prediction scores or probabilities from the model (e.g., output of a neural network).</p></li>
+<li><p><strong>targets</strong> – True binary labels corresponding to the predictions.</p></li>
+<li><p><strong>threshold</strong> – A threshold value for converting logits into binary predictions. Determines decision boundaries.</p></li>
+<li><p><strong>soft</strong> – If True, computes a soft approximation of metrics; otherwise, uses threshold-based evaluation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>If <cite>soft</cite> is True, returns precision cost, recall cost, and F1 cost as tensors.
+Otherwise, returns averaged accuracy score, precision score, recall score, F1 score, and selected threshold.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.metrics.calculate_f1">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.metrics.</span></span><span class="sig-name descname"><span class="pre">calculate_f1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_f1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.metrics.calculate_f1" title="Link to this definition"></a></dt>
+<dd><p>Calculates evaluation metrics for binary classification tasks, such as F1 score,
+precision, recall, and accuracy. Depending on the <cite>best_f1</cite> flag, the function
+either computes metrics for a specific threshold or iteratively finds the
+threshold yielding the best F1 score.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>logits</strong> (<em>Union</em><em>[</em><em>numpy.ndarray</em><em>, </em><em>torch.Tensor</em><em>]</em>) – Predictions or model outputs, either as probabilities or logits.</p></li>
+<li><p><strong>targets</strong> (<em>Union</em><em>[</em><em>numpy.ndarray</em><em>, </em><em>torch.Tensor</em><em>]</em>) – Ground-truth binary targets for the classification task.</p></li>
+<li><p><strong>best_f1</strong> (<em>bool</em>) – Flag to enable iterative calculation to find the threshold
+for the highest F1 score. If False, metrics are calculated directly.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing metrics - accuracy, precision, recall, F1 score,
+and (if applicable) the best threshold.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[float, float, float, float, Optional[float]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.metrics.AP">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.metrics.</span></span><span class="sig-name descname"><span class="pre">AP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#tardis_em.utils.metrics.AP" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.metrics.AP_instance">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.metrics.</span></span><span class="sig-name descname"><span class="pre">AP_instance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#tardis_em.utils.metrics.AP_instance" title="Link to this definition"></a></dt>
+<dd><p>Compute the average precision (AP) for the given input and target instances. The function
+compares the input predictions with ground truth instances and calculates precision values
+based on the best matches. Precision is evaluated as the ratio of true positives to the total
+number of positive detections. The final AP is normalized by the total number of unique target
+instances.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_n</strong> – A 2D numpy array representing predicted instances, where the first column
+corresponds to instance labels and the remaining columns represent associated features.</p></li>
+<li><p><strong>targets</strong> – A 2D numpy array representing ground truth (GT) instances, where the first
+column corresponds to instance labels and the remaining columns represent associated features.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The computed average precision (AP) as a float, normalized across all unique GT
+instances in the targets dataset.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.metrics.AUC">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.metrics.</span></span><span class="sig-name descname"><span class="pre">AUC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diagonal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#tardis_em.utils.metrics.AUC" title="Link to this definition"></a></dt>
+<dd><p>Computes the Area Under the Curve (AUC) for given logits and targets.</p>
+<p>This function calculates the AUC score, which is a measure of the performance
+of a classification model. It uses logits and targets as input and computes
+the Receiver Operating Characteristic (ROC) curve for evaluation. If the
+<cite>diagonal</cite> parameter is set to True, it modifies the diagonal of the input
+logits and targets matrices to ensure specific conditions before calculating
+the AUC.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>logits</strong> – The predicted scores or probabilities as a numpy
+array. Can be 2D or 3D.</p></li>
+<li><p><strong>targets</strong> – Ground truth binary labels as a numpy array. Must
+match the shape of <cite>logits</cite>.</p></li>
+<li><p><strong>diagonal</strong> – A boolean indicating if the diagonal elements of
+logits/targets matrices should be altered before computation.
+Default is <cite>False</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The computed AUC metric as a float.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.metrics.IoU">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.metrics.</span></span><span class="sig-name descname"><span class="pre">IoU</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diagonal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.metrics.IoU" title="Link to this definition"></a></dt>
+<dd><p>Compute the Intersection Over Union (IoU) metric for given input and targets.</p>
+<p>The IoU is a performance metric commonly used for evaluating segmentation models
+in computer vision. It measures the overlap between the ground-truth target
+and predicted values. The optional ‘diagonal’ parameter allows modifications
+by excluding diagonal elements in the computation, particularly useful in
+multi-class datasets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_n</strong> – Input numpy array, typically model predictions. Can be a 2D or 3D array.</p></li>
+<li><p><strong>targets</strong> – Target numpy array, representing the ground-truth labels. Must match
+the shape of the input.</p></li>
+<li><p><strong>diagonal</strong> – Flag to enforce diagonal elements to be 1. If True, modifies the
+diagonal elements in the input and targets arrays.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Computed IoU value as a floating-point number.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.metrics.mcov">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.metrics.</span></span><span class="sig-name descname"><span class="pre">mcov</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.metrics.mcov" title="Link to this definition"></a></dt>
+<dd><p>Calculate the mean Coverage (mCov) and weighted mean Coverage (mwCov) for given input and target data.</p>
+<p>This function computes the coverage metrics evaluating how well given input instances match with
+ground truth (GT) instances based on Intersection over Union (IoU). It considers both the ratio of
+the instance size (w_g) relative to the total size and overall mean matching.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_n</strong> (<em>numpy.ndarray</em>) – Input point cloud data where the first column identifies instance labels and the remaining
+columns represent corresponding coordinates or features.</p></li>
+<li><p><strong>targets</strong> (<em>numpy.ndarray</em>) – Ground truth (GT) point cloud data with the first column identifying instance labels
+and the remaining columns representing corresponding coordinates or features.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing:
+- mCov (float): Mean Coverage across all GT instances.
+- mwCov (float): Weighted Mean Coverage based on instance ratio.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[float, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.metrics.confusion_matrix">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.metrics.</span></span><span class="sig-name descname"><span class="pre">confusion_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.metrics.confusion_matrix" title="Link to this definition"></a></dt>
+<dd><p>Calculates the confusion matrix components for the provided logits and targets.
+The confusion matrix consists of True Positives (TP), False Positives (FP),
+True Negatives (TN), and False Negatives (FN). This function handles both
+PyTorch tensors and NumPy arrays as input for logits and targets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>logits</strong> – The predicted values, supporting either PyTorch tensors or
+NumPy arrays.</p></li>
+<li><p><strong>targets</strong> – The ground-truth values, supporting either PyTorch tensors
+or NumPy arrays.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing four integer values representing True Positives
+(TP), False Positives (FP), True Negatives (TN), and False Negatives (FN),
+computed based on the provided logits and targets.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[int, int, int, int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.metrics.normalize_image">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.metrics.</span></span><span class="sig-name descname"><span class="pre">normalize_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.metrics.normalize_image" title="Link to this definition"></a></dt>
+<dd><p>Normalizes a given image represented as a NumPy array.</p>
+<p>This function ensures that the input image array falls within the defined
+binary normalization context. If the image has minimum and maximum values
+already set to 0 and 1, respectively, it is returned unchanged. Otherwise,
+based on the minimum and maximum values, the image is normalized to binary
+values (0 or 1).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>image</strong> – The input image to be normalized, represented as a NumPy array.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The normalized image array with binary values, where pixel values are
+either 0 or 1.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="import_data.html" class="btn btn-neutral float-left" title="Global -&gt; Data Handlers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="predictor.html" class="btn btn-neutral float-right" title="Global -&gt; Predictor Handlers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2024, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

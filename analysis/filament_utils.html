@@ -1,0 +1,505 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analysis -&gt; Filament Utils &mdash; TARDIS-em 0.3.10 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=9f76a604"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="../_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Global -&gt; AWS Handlers" href="../utils/aws.html" />
+    <link rel="prev" title="Analysis -&gt; MT Classification" href="mt_classification.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TARDIS-em
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../HISTORY.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../instructions.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_actin.html">-  3D Actin Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/tirf_mt.html">-  TIRF Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_membrane.html">-  3D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/scripting.html">-  Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/fine_tune_model.html">Fine-Tune TARDIS models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/helper.html">TARDIS helper-functions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html">CNN Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#dist-module">DIST Module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../code_doc.html#analysis-module">Analysis Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="analysis.html">Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mt_classification.html">MT classification</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Filament Utils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#tardis_em.analysis.filament_utils.resample_filament"><code class="docutils literal notranslate"><span class="pre">resample_filament()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tardis_em.analysis.filament_utils.sort_segments"><code class="docutils literal notranslate"><span class="pre">sort_segments()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tardis_em.analysis.filament_utils.sort_segment"><code class="docutils literal notranslate"><span class="pre">sort_segment()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tardis_em.analysis.filament_utils.reorder_segments_id"><code class="docutils literal notranslate"><span class="pre">reorder_segments_id()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tardis_em.analysis.filament_utils.smooth_spline"><code class="docutils literal notranslate"><span class="pre">smooth_spline()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tardis_em.analysis.filament_utils.sort_by_length"><code class="docutils literal notranslate"><span class="pre">sort_by_length()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tardis_em.analysis.filament_utils.cut_150_degree"><code class="docutils literal notranslate"><span class="pre">cut_150_degree()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.analysis.spatial_graph_utils">Analysis -&gt; Spatial Graph Utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.spatial_graph_utils.FilterConnectedNearSegments"><code class="docutils literal notranslate"><span class="pre">FilterConnectedNearSegments</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.spatial_graph_utils.FilterSpatialGraph"><code class="docutils literal notranslate"><span class="pre">FilterSpatialGraph</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.spatial_graph_utils.SpatialGraphCompare"><code class="docutils literal notranslate"><span class="pre">SpatialGraphCompare</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.spatial_graph_utils.ComputeConfidenceScore"><code class="docutils literal notranslate"><span class="pre">ComputeConfidenceScore</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.spatial_graph_utils.compare_splines_probability"><code class="docutils literal notranslate"><span class="pre">compare_splines_probability()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#global-functions">Global Functions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../code_doc.html">CNN Module</a></li>
+      <li class="breadcrumb-item active">Analysis -&gt; Filament Utils</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/analysis/filament_utils.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-tardis_em.analysis.filament_utils">
+<span id="analysis-filament-utils"></span><h1>Analysis -&gt; Filament Utils<a class="headerlink" href="#module-tardis_em.analysis.filament_utils" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.filament_utils.resample_filament">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.filament_utils.</span></span><span class="sig-name descname"><span class="pre">resample_filament</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing_size</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.analysis.filament_utils.resample_filament" title="Link to this definition"></a></dt>
+<dd><p>Resample a collection of 3D coordinates (X, Y, Z) associated with unique IDs to
+uniform spacing along their paths. The input points are grouped by their IDs, and
+each group is interpolated based on the specified spacing size.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> – A numpy array of shape [N, 4], where each row contains [ID, X, Y, Z].
+The ‘ID’ column is used to differentiate between different groups of
+points, while the remaining columns represent the 3D coordinates.</p></li>
+<li><p><strong>spacing_size</strong> – A float specifying the uniform spacing distance to be applied
+when resampling the 3D points within each group.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A numpy array of resampled points with shape [M, 4], where each row contains
+[ID, X, Y, Z]. The output maintains the ID for each group, along with its
+uniformly-spaced coordinates.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.filament_utils.sort_segments">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.filament_utils.</span></span><span class="sig-name descname"><span class="pre">sort_segments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.analysis.filament_utils.sort_segments" title="Link to this definition"></a></dt>
+<dd><p>Sorts 3D segments by their coordinates. The function first identifies unique
+segment identifiers in the first column of the array. It then collects and
+sorts the associated segments for each unique identifier, constructing a
+final 2D array combining the sorted results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>coord</strong> – Input 2D array where each row represents a 3D segment. The first
+column contains unique segment identifiers, and the remaining columns
+contain the segment coordinates.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A sorted 2D array of the same shape as the input, where the rows
+are sorted segment-wise based on their coordinates.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.filament_utils.sort_segment">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.filament_utils.</span></span><span class="sig-name descname"><span class="pre">sort_segment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.analysis.filament_utils.sort_segment" title="Link to this definition"></a></dt>
+<dd><p>Sorts a set of coordinates in a specific sequence by iteratively selecting the farthest point
+and proceeding to find the nearest neighbors in subsequent steps.</p>
+<p>This function is designed to work with a two-dimensional array of coordinates. It uses a
+combination of distance calculations (using <cite>cdist</cite>) and nearest-neighbor search (using
+<cite>scipy.spatial.KDTree</cite>) to determine the order in which coordinates are rearranged. The
+process starts by identifying the farthest pair of points in the set and continues from
+the first point in the sequence, progressively adding the nearest neighbor to the sequence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>coord</strong> – A numpy array of two-dimensional coordinates. Shape is expected as
+(n, 2), where n is the number of coordinates provided.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A numpy array of sorted coordinates in the order as per the described procedure.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.filament_utils.reorder_segments_id">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.filament_utils.</span></span><span class="sig-name descname"><span class="pre">reorder_segments_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.analysis.filament_utils.reorder_segments_id" title="Link to this definition"></a></dt>
+<dd><p>Reorders segment IDs within the provided coordinate array based on the given
+range or a specific order list. This function modifies the segment IDs in the
+coordinate data to either follow a sequence defined by a range or an explicitly
+provided order. If no range or list is provided, default ordering is applied
+based on the unique segment IDs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coord</strong> (<em>np.ndarray</em>) – A 2D numpy array where the first column contains the segment IDs
+to be reordered.</p></li>
+<li><p><strong>order_range</strong> (<em>Optional</em><em>[</em><em>list</em><em>]</em>) – An optional list defining the range of values to be used
+when reordering segment IDs. If None, the IDs are reordered into a default
+range sequence.</p></li>
+<li><p><strong>order_list</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>list</em><em>, </em><em>np.ndarray</em><em>]</em><em>]</em>) – An optional list or numpy array defining the specific new
+order of segment IDs. If None, the IDs are reordered using a default range
+sequence.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A numpy array with updated segment IDs, reflecting the reordering as
+per the provided range or specific order list.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.filament_utils.smooth_spline">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.filament_utils.</span></span><span class="sig-name descname"><span class="pre">smooth_spline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.analysis.filament_utils.smooth_spline" title="Link to this definition"></a></dt>
+<dd><p>Smoothens a given set of 3D points using spline interpolation to reduce variations and noise while
+maintaining the overall shape of the point cloud.</p>
+<p>If the points array includes an identifier column (ID), the function normalizes the coordinates,
+computes the pre- and post-smoothing tortuosity of the points, and ensures that the smoothed spline
+does not increase tortuosity excessively, serving as a failure check for the smoothing process.</p>
+<p>If the points array contains only the 3D coordinates ([X, Y, Z]), it directly computes the spline
+without any tortuosity checks or normalization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> – The array of input 3D points to be smoothened. The input array should have a shape of either
+(N, 3) for 3D points without identifiers, or (N, 4) for 3D points prefixed with an identifier column.</p></li>
+<li><p><strong>s</strong> – The smoothness factor for spline interpolation. A smaller value ensures the spline closely conforms
+to the input points, while a larger value produces a smoother spline. Default is 0.5.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An array of smoothened 3D point coordinates. If an identifier column is present, it is preserved
+in the returned result. The output shape is consistent with the input, either (N, 4) for points
+with identifiers or (N, 3) for points without identifiers.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.filament_utils.sort_by_length">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.filament_utils.</span></span><span class="sig-name descname"><span class="pre">sort_by_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.analysis.filament_utils.sort_by_length" title="Link to this definition"></a></dt>
+<dd><p>Sorts and reorders segments in the coordinate array by their total length in ascending order.</p>
+<p>This function takes an input array of coordinates, identifies unique segment IDs,
+calculates the total length of each segment, and then sorts the segments by length.
+The output is the reordered array with updated segment IDs, maintaining their relative
+order after sorting.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>coord</strong> (<em>numpy.ndarray</em>) – A numpy array where the first column represents segment IDs and the
+subsequent columns represent coordinates.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A numpy array with segments reordered by their total length, where segment IDs
+are updated and assigned sequentially in the sorted order.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.filament_utils.cut_150_degree">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.filament_utils.</span></span><span class="sig-name descname"><span class="pre">cut_150_degree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">segments_array</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.analysis.filament_utils.cut_150_degree" title="Link to this definition"></a></dt>
+<dd><p>Cuts segments based on angles between consecutive line segments and reassigns IDs
+to the newly split segments. The function calculates angles between vectors
+within provided segments, and if any angle is less than or equal to 150 degrees,
+the segment is split at the point with the smallest angle. Single-point segments
+are excluded from the output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>segments_array</strong> (<em>numpy.ndarray</em>) – A numpy ndarray where each row represents a segment point.
+The first column contains segment IDs, and the remaining columns contain
+point coordinates.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing a boolean indicating whether any segments were split,
+and a numpy array of the updated segments with reassigned segment IDs.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<section id="module-tardis_em.analysis.spatial_graph_utils">
+<span id="analysis-spatial-graph-utils"></span><h2>Analysis -&gt; Spatial Graph Utils<a class="headerlink" href="#module-tardis_em.analysis.spatial_graph_utils" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.analysis.spatial_graph_utils.FilterConnectedNearSegments">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.spatial_graph_utils.</span></span><span class="sig-name descname"><span class="pre">FilterConnectedNearSegments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distance_th</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cylinder_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">150</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.analysis.spatial_graph_utils.FilterConnectedNearSegments" title="Link to this definition"></a></dt>
+<dd><p>This class is used to manage and process splines in a point cloud by
+connecting nearby segments based on specific cylindrical geometry
+criteria. It handles operations such as determining cylindrical overlap,
+removing duplicates, and merging splines.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.analysis.spatial_graph_utils.FilterConnectedNearSegments.splines_direction">
+<span class="sig-name descname"><span class="pre">splines_direction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spline1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spline2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#tardis_em.analysis.spatial_graph_utils.FilterConnectedNearSegments.splines_direction" title="Link to this definition"></a></dt>
+<dd><p>Determines whether two splines are facing the same direction within specific spatial
+constraints. This function evaluates the positional relationships of two splines based
+on predefined conditions involving distance and orientation in a cylindrical coordinate
+system.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>spline1</strong> – The first spline represented as a list of points, where each point is a
+coordinate in 2D or 3D space.</p></li>
+<li><p><strong>spline2</strong> – The second spline represented as a list of points, where each point is
+a coordinate in 2D or 3D space.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A boolean value indicating whether the two splines face in the same direction
+based on the specified criteria.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.analysis.spatial_graph_utils.FilterConnectedNearSegments.marge_splines">
+<span class="sig-name descname"><span class="pre">marge_splines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point_cloud</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omit_border</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.analysis.spatial_graph_utils.FilterConnectedNearSegments.marge_splines" title="Link to this definition"></a></dt>
+<dd><p>Merge splines from a given point cloud dataset based on certain distance and
+alignment criteria. Each spline in the point cloud is analyzed and combined
+with other splines if they satisfy conditions such as proximity, alignment,
+and not being within a border exclusion zone. The function returns the
+merged splines as a numpy array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>point_cloud</strong> (<em>numpy.ndarray</em>) – A numpy array representing the point cloud data, where
+each row corresponds to a point with information such as spline ID,
+x-coordinate, y-coordinate, and z-coordinate.</p></li>
+<li><p><strong>omit_border</strong> (<em>int</em>) – An integer value specifying the range from the minimum
+and maximum along the z-axis for excluding points at borders, used to
+eliminate spurious connections near boundaries.</p></li>
+<li><p><strong>initial</strong> (<em>bool</em>) – A boolean indicating whether to process and create an
+initial dictionary of splines based on unique spline IDs. Controls the
+creation and initialization of spline data structures.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A numpy array representing the merged splines, where each row
+corresponds to a point with updated spline IDs, x-coordinate,
+y-coordinate, and z-coordinate. The merged splines preserve the
+consistency of segment continuity and alignment.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.analysis.spatial_graph_utils.FilterSpatialGraph">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.spatial_graph_utils.</span></span><span class="sig-name descname"><span class="pre">FilterSpatialGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">connect_seg_if_closer_then</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cylinder_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_short_segments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.analysis.spatial_graph_utils.FilterSpatialGraph" title="Link to this definition"></a></dt>
+<dd><p>A class for filtering and refining spatial graphs by connecting nearby
+segments and removing short segments.</p>
+<p>This class is designed to process a given array of segments representing
+spatial structures, such as microtubules or similar graph-based
+representations. The primary tasks include connecting splines with
+endpoints within a specified distance and removing splines that are below
+a defined length threshold. Additionally, iterative optimization is
+performed to split connections at sharp angles.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.analysis.spatial_graph_utils.SpatialGraphCompare">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.spatial_graph_utils.</span></span><span class="sig-name descname"><span class="pre">SpatialGraphCompare</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distance_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interaction_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.analysis.spatial_graph_utils.SpatialGraphCompare" title="Link to this definition"></a></dt>
+<dd><p>Compares spatial graphs to identify matching microtubules (MTs) and classify
+them based on specific criteria.</p>
+<p>This class is designed to analyze and compare spatial graphs, which represent
+microtubule structures, based on user-defined thresholds. It identifies matching
+microtubules between two spatial graphs by calculating probabilities of alignment.
+The class is used for both comparing spatial structures and filtering instances
+based on pre-defined distance and interaction thresholds.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.analysis.spatial_graph_utils.ComputeConfidenceScore">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.spatial_graph_utils.</span></span><span class="sig-name descname"><span class="pre">ComputeConfidenceScore</span></span><a class="headerlink" href="#tardis_em.analysis.spatial_graph_utils.ComputeConfidenceScore" title="Link to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.analysis.spatial_graph_utils.ComputeConfidenceScore.normalized_length">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">normalized_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_l</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_l</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.analysis.spatial_graph_utils.ComputeConfidenceScore.normalized_length" title="Link to this definition"></a></dt>
+<dd><p>Calculates the normalized length of a path defined by a sequence of points. The normalization
+is based on the minimum and maximum lengths provided. It utilizes the total_length function
+to compute the original length of the path. The returned normalized value lies between 0 and 1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> – A numpy array representing the sequence of points
+that defines the path.</p></li>
+<li><p><strong>min_l</strong> – The minimum length to be used for normalization.</p></li>
+<li><p><strong>max_l</strong> – The maximum length to be used for normalization.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Normalized length of the path as a float value.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.analysis.spatial_graph_utils.ComputeConfidenceScore.combined_smoothness">
+<span class="sig-name descname"><span class="pre">combined_smoothness</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_l</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_l</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.analysis.spatial_graph_utils.ComputeConfidenceScore.combined_smoothness" title="Link to this definition"></a></dt>
+<dd><p>Computes the combined smoothness score for a series of points based on both
+angle-based smoothness and normalized length. The method integrates these
+two metrics into a single smoothness score by averaging their values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> – The array of points representing a series of coordinates.
+It should have shape (n, m) where n is the number of points
+and m is the dimensionality of each point.</p></li>
+<li><p><strong>min_l</strong> – The minimum length used for normalization.</p></li>
+<li><p><strong>max_l</strong> – The maximum length used for normalization.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The combined smoothness score as a float value.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.spatial_graph_utils.compare_splines_probability">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.spatial_graph_utils.</span></span><span class="sig-name descname"><span class="pre">compare_splines_probability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spline_1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spline_2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.analysis.spatial_graph_utils.compare_splines_probability" title="Link to this definition"></a></dt>
+<dd><p>Compares the similarity of two splines based on a distance threshold and returns a
+probability measure of their intersection. The comparison is performed by calculating
+the distances between points on the splines and determining the proportion of
+points on the first spline that match the second spline, within the specified threshold.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>spline_1</strong> – A numpy array representing the first spline.</p></li>
+<li><p><strong>spline_2</strong> – A numpy array representing the second spline.</p></li>
+<li><p><strong>threshold</strong> – A numeric value representing the distance threshold below which points on
+the splines are considered matching. Default is 100.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A floating-point value representing the probability of intersection, i.e., the
+proportion of points on the first spline that match the second spline within
+the specified threshold.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mt_classification.html" class="btn btn-neutral float-left" title="Analysis -&gt; MT Classification" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../utils/aws.html" class="btn btn-neutral float-right" title="Global -&gt; AWS Handlers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2024, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

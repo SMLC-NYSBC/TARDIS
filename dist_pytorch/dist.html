@@ -1,0 +1,369 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DIST &mdash; TARDIS-em 0.3.10 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=9f76a604"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="../_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="DIST -&gt; Model" href="modules.html" />
+    <link rel="prev" title="CNN -&gt; Utils" href="../cnn/utils.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TARDIS-em
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../HISTORY.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../instructions.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_actin.html">-  3D Actin Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/tirf_mt.html">-  TIRF Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_membrane.html">-  3D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/scripting.html">-  Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/fine_tune_model.html">Fine-Tune TARDIS models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/helper.html">TARDIS helper-functions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html">CNN Module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../code_doc.html#dist-module">DIST Module</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">DIST</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.dist_pytorch.dist">DIST Model Class</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.dist.BasicDIST"><code class="docutils literal notranslate"><span class="pre">BasicDIST</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.dist.DIST"><code class="docutils literal notranslate"><span class="pre">DIST</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.dist.CDIST"><code class="docutils literal notranslate"><span class="pre">CDIST</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.dist.build_dist_network"><code class="docutils literal notranslate"><span class="pre">build_dist_network()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.dist_pytorch.train">DIST Train Module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.train.train_dist"><code class="docutils literal notranslate"><span class="pre">train_dist()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.dist_pytorch.trainer">DIST Trainer Wrapper</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.trainer.SparseDistTrainer"><code class="docutils literal notranslate"><span class="pre">SparseDistTrainer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.trainer.DistTrainer"><code class="docutils literal notranslate"><span class="pre">DistTrainer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.trainer.CDistTrainer"><code class="docutils literal notranslate"><span class="pre">CDistTrainer</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html">DIST Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_loader.html">DataLoader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#analysis-module">Analysis Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#global-functions">Global Functions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../code_doc.html">CNN Module</a></li>
+      <li class="breadcrumb-item active">DIST</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/dist_pytorch/dist.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="dist">
+<h1>DIST<a class="headerlink" href="#dist" title="Link to this heading"></a></h1>
+<section id="module-tardis_em.dist_pytorch.dist">
+<span id="dist-model-class"></span><h2>DIST Model Class<a class="headerlink" href="#module-tardis_em.dist_pytorch.dist" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.dist.BasicDIST">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.dist.</span></span><span class="sig-name descname"><span class="pre">BasicDIST</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_heads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_cls</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rgb_embed_sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coord_embed_sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">structure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'full'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_angles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.dist.BasicDIST" title="Link to this definition"></a></dt>
+<dd><p>This class implements the BasicDIST model, a graph-based transformer designed for the
+prediction of graph edges from input node and edge features. The model can handle node
+and edge embedding, layer stacking, and decoding mechanisms to provide predictions.</p>
+<p>The main purpose of this class is to act as a flexible and modular framework for
+processing graph-like structures with transformer-based operations. It supports
+different configurations including embeddings, number of layers, heads, and the ability
+to predict outputs using a sigmoid activation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.dist.BasicDIST.embed_input">
+<span class="sig-name descname"><span class="pre">embed_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coords</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.dist.BasicDIST.embed_input" title="Link to this definition"></a></dt>
+<dd><p>Embeds input coordinates and optional node features using separate embedding mechanisms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coords</strong> – A tensor representing the input coordinates of shape
+[Batch x Length x Coordinate_Dim].</p></li>
+<li><p><strong>node_features</strong> – An optional tensor representing the input node features
+of shape [Batch x Length x Feature_Dim]. If None, no node features are
+used in embedding.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing the embedded node features and the embedded
+coordinates. The first element represents the embedded node features
+of shape [Batch x Length x Embedded_Dim], or None if <cite>node_features</cite>
+is not provided. The second element represents the embedded coordinates
+of shape [Batch x Length x Length x Channels].</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.dist.BasicDIST.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coords</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.dist.BasicDIST.forward" title="Link to this definition"></a></dt>
+<dd><p>Processes input node and edge features through a transformer-based architecture
+to predict the graph edges.</p>
+<p>The method takes as input the coordinates and optional node features of a graph
+and embeds them. It applies transformer layers for encoding, followed by decoding
+to predict the graph edges. The predictions are based on the transformed edge
+features, optionally applying a sigmoid function for binary prediction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coords</strong> – Coordinates of the nodes in the graph.</p></li>
+<li><p><strong>node_features</strong> (<em>torch.Tensor</em><em> or </em><em>None</em>) – Optional features of the nodes in the graph.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Predicted logits for the graph edges. If <cite>predict</cite> is True, returns
+logits processed through a sigmoid function for binary prediction.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Union[Tuple[torch.Tensor, torch.Tensor], torch.Tensor]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.dist.DIST">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.dist.</span></span><span class="sig-name descname"><span class="pre">DIST</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.dist.DIST" title="Link to this definition"></a></dt>
+<dd><p>DIST class, a specialized subclass of BasicDIST.</p>
+<p>The DIST class inherits from the BasicDIST class and provides additional
+functionality or modifications as per its design. It is a flexible
+implementation that accepts various keyword arguments during instantiation
+to customize its behavior or configuration. This class is intended as part
+of a larger system and builds upon the foundational functionality provided
+by its superclass, BasicDIST. The implementation utilizes keyword arguments
+to allow dynamic initialization of class attributes or properties in a
+flexible manner.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.dist.CDIST">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.dist.</span></span><span class="sig-name descname"><span class="pre">CDIST</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.dist.CDIST" title="Link to this definition"></a></dt>
+<dd><p>CDIST class inherits from BasicDIST and is used for constructing a classification
+neural network. It dynamically creates layers based on input arguments and handles
+functionalities related to logits and predictions. This class serves as a foundational
+component for classification tasks, ensuring that proper configurations are enforced.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.dist.build_dist_network">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.dist.</span></span><span class="sig-name descname"><span class="pre">build_dist_network</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">network_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">structure</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prediction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.dist.build_dist_network" title="Link to this definition"></a></dt>
+<dd><p>Builds a DISTRIBUTED instance or semantic neural network based on the
+specified network type, structure parameters, and prediction mode.</p>
+<p>This function creates a network object, either <cite>DIST</cite> for instance
+segmentation tasks or <cite>CDIST</cite> for semantic segmentation tasks, depending
+on the provided <cite>network_type</cite>. The network is configured dynamically
+using the provided <cite>structure</cite> dictionary and the <cite>prediction</cite> flag,
+which determines whether the network will operate in prediction mode
+or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>network_type</strong> (<em>str</em>) – Specifies the type of the network to be built. Accepted
+values are “instance” or “semantic”. An error is raised if an unsupported
+value is provided.</p></li>
+<li><p><strong>structure</strong> (<em>dict</em>) – Dictionary containing all the configuration parameters
+required for creating the network. These parameters are passed as
+arguments when instantiating the <cite>DIST</cite> or <cite>CDIST</cite> objects.</p></li>
+<li><p><strong>prediction</strong> (<em>bool</em>) – Boolean flag indicating whether the network should be set up
+in prediction mode.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An instantiated network object of type <cite>DIST</cite> or <cite>CDIST</cite>. If an invalid
+<cite>network_type</cite> is provided, <cite>None</cite> is returned.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#tardis_em.dist_pytorch.dist.DIST" title="tardis_em.dist_pytorch.dist.DIST">DIST</a> or <a class="reference internal" href="#tardis_em.dist_pytorch.dist.CDIST" title="tardis_em.dist_pytorch.dist.CDIST">CDIST</a> or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-tardis_em.dist_pytorch.train">
+<span id="dist-train-module"></span><h2>DIST Train Module<a class="headerlink" href="#module-tardis_em.dist_pytorch.train" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.train.train_dist">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.train.</span></span><span class="sig-name descname"><span class="pre">train_dist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_angles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_dataloader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_dataloader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_structure</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bce'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_scheduler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">early_stop_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gpu'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.train.train_dist" title="Link to this definition"></a></dt>
+<dd><p>Train a DIST (Dimensionless Instance Segmentation via Transformers) model using the provided configurations
+and hyperparameters. This function supports multiple types of DIST models, including instance,
+instance-sparse, and semantic segmentation. The training process involves setting up the model,
+optimizer, loss function, and optionally loading checkpoints before initiating the trainer for
+the specified number of epochs. The function allows for flexibility in dataset types, device selection,
+learning rate schedulers, and custom loss functions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset_type</strong> – The type of dataset to be trained on; determines coverage calculation strategy</p></li>
+<li><p><strong>edge_angles</strong> – A boolean indicating whether edge angles are considered in the model</p></li>
+<li><p><strong>train_dataloader</strong> – DataLoader object for the training dataset</p></li>
+<li><p><strong>test_dataloader</strong> – DataLoader object for the testing/validation dataset</p></li>
+<li><p><strong>model_structure</strong> – Dictionary containing the structural specifications for the DIST model</p></li>
+<li><p><strong>checkpoint</strong> – Optional string specifying the path to a checkpoint file for resuming training</p></li>
+<li><p><strong>loss_function</strong> – String specifying the name of the loss function to be used, defaults to “bce”</p></li>
+<li><p><strong>learning_rate</strong> – Float value for the learning rate of the model optimizer, default is 0.001</p></li>
+<li><p><strong>lr_scheduler</strong> – Boolean indicating whether to use a learning rate scheduler, defaults to False</p></li>
+<li><p><strong>early_stop_rate</strong> – Integer value for the patience of early stopping mechanism, defaults to 10</p></li>
+<li><p><strong>device</strong> – String or torch.device indicating which device (e.g., “gpu” or “cpu”) to use for training</p></li>
+<li><p><strong>epochs</strong> – Integer specifying the number of epochs to train the model, default is 1000</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-tardis_em.dist_pytorch.trainer">
+<span id="dist-trainer-wrapper"></span><h2>DIST Trainer Wrapper<a class="headerlink" href="#module-tardis_em.dist_pytorch.trainer" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.trainer.SparseDistTrainer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.trainer.</span></span><span class="sig-name descname"><span class="pre">SparseDistTrainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.trainer.SparseDistTrainer" title="Link to this definition"></a></dt>
+<dd><p>SparseDistTrainer Class</p>
+<p>The SparseDistTrainer class is designed for training models with a focus on
+graph-based data structures and various optimization pipelines. It extends
+the BasicTrainer class and introduces specific functionalities, such as
+graph-based thresholding and metrics tracking. The class includes utilities
+to save metrics, train the model, and validate its performance. It is
+tailored for models requiring graph propagation and metric-driven checkpoints.</p>
+<p>Initialization involves setting up key components and thresholds for
+various graph configurations. Training and validation methods are provided
+to execute these processes on loaded datasets. The class incorporates
+functions to save metrics, display progress updates, and manage checkpoints
+based on improvements in tracked metrics.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.trainer.DistTrainer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.trainer.</span></span><span class="sig-name descname"><span class="pre">DistTrainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.trainer.DistTrainer" title="Link to this definition"></a></dt>
+<dd><p>Handles the training process for a distributed graph-based model leveraging
+different segmentation thresholds. This class is designed to optimize the
+training and checkpointing process for models that utilize graph-based
+representations.</p>
+<p>The class uses various greedy graph cut algorithms with different thresholds
+to generate segmentations. Metrics and model states are saved during training
+to ensure progress tracking and checkpointing for better model reproducibility.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.trainer.CDistTrainer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.trainer.</span></span><span class="sig-name descname"><span class="pre">CDistTrainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.trainer.CDistTrainer" title="Link to this definition"></a></dt>
+<dd><p>Trainer class for implementing a custom distance-based training strategy.</p>
+<p>The CDistTrainer class extends the BasicTrainer and provides
+functionality for training and validating a model with a specific
+distance-based loss criterion and evaluation metrics. This trainer is
+designed for node and edge-based input, handling mid-training evaluations,
+early stopping based on F1-score, and updating performance metrics such
+as loss, accuracy, precision, recall, F1 score, and threshold. It supports
+both training and validation phases using DataLoader objects for respective
+datasets.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../cnn/utils.html" class="btn btn-neutral float-left" title="CNN -&gt; Utils" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="modules.html" class="btn btn-neutral float-right" title="DIST -&gt; Model" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2024, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

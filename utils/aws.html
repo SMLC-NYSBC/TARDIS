@@ -1,0 +1,363 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Global -&gt; AWS Handlers &mdash; TARDIS-em 0.3.10 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=9f76a604"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="../_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Global -&gt; Data Handlers" href="import_data.html" />
+    <link rel="prev" title="Analysis -&gt; Filament Utils" href="../analysis/filament_utils.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TARDIS-em
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../HISTORY.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../instructions.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_actin.html">-  3D Actin Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/tirf_mt.html">-  TIRF Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_membrane.html">-  3D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/scripting.html">-  Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/fine_tune_model.html">Fine-Tune TARDIS models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/helper.html">TARDIS helper-functions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html">CNN Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#dist-module">DIST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#analysis-module">Analysis Module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../code_doc.html#global-functions">Global Functions</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">AWS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.utils.aws">AWS API</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.aws.get_benchmark_aws"><code class="docutils literal notranslate"><span class="pre">get_benchmark_aws()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.aws.put_benchmark_aws"><code class="docutils literal notranslate"><span class="pre">put_benchmark_aws()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.aws.get_all_version_aws"><code class="docutils literal notranslate"><span class="pre">get_all_version_aws()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.aws.get_model_aws"><code class="docutils literal notranslate"><span class="pre">get_model_aws()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.aws.get_weights_aws"><code class="docutils literal notranslate"><span class="pre">get_weights_aws()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.aws.aws_check_with_temp"><code class="docutils literal notranslate"><span class="pre">aws_check_with_temp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.aws.aws_check_pkg_with_temp"><code class="docutils literal notranslate"><span class="pre">aws_check_pkg_with_temp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.utils.ota_update">Over-the-Air Update API</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.ota_update.ota_update"><code class="docutils literal notranslate"><span class="pre">ota_update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.ota_update.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="import_data.html">Data Handlers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trainer.html">Trainer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="predictor.html">Predictor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="helper.html">Helper Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logger.html">Logger</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utils Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html">SetUp Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize.html">Visualizer</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../code_doc.html">CNN Module</a></li>
+      <li class="breadcrumb-item active">Global -&gt; AWS Handlers</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/utils/aws.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="global-aws-handlers">
+<h1>Global -&gt; AWS Handlers<a class="headerlink" href="#global-aws-handlers" title="Link to this heading"></a></h1>
+<section id="module-tardis_em.utils.aws">
+<span id="aws-api"></span><h2>AWS API<a class="headerlink" href="#module-tardis_em.utils.aws" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.aws.get_benchmark_aws">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.aws.</span></span><span class="sig-name descname"><span class="pre">get_benchmark_aws</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#tardis_em.utils.aws.get_benchmark_aws" title="Link to this definition"></a></dt>
+<dd><p>Fetch benchmark data from a specified AWS endpoint.</p>
+<p>This function sends a GET request to the specified AWS S3 URL to fetch the latest network
+benchmark data. If the request is successful (HTTP status code 200), it decodes the
+JSON content from the response and returns it as a Python dictionary. The function
+handles the request with a specific timeout configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A dictionary containing the benchmark data fetched from the AWS endpoint if
+the request is successful and content is valid JSON.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.aws.put_benchmark_aws">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.aws.</span></span><span class="sig-name descname"><span class="pre">put_benchmark_aws</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#tardis_em.utils.aws.put_benchmark_aws" title="Link to this definition"></a></dt>
+<dd><p>Sends benchmark data and optional model weights to an AWS S3 bucket.</p>
+<p>This function uploads provided benchmark data as a JSON file to a predefined
+location in an AWS S3 bucket. Optionally, if a model file is provided, it
+uploads the model weights to a corresponding directory in the bucket based on
+the network name. The function ensures appropriate HTTP status codes are checked
+to confirm successful uploads.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – The benchmark data to upload. It should be a dictionary containing
+the relevant information.</p></li>
+<li><p><strong>network</strong> – The name of the network associated with the uploaded model. This
+serves as part of the model file name. Defaults to an empty string if not
+provided.</p></li>
+<li><p><strong>model</strong> – The path to the model’s file to upload. If provided, the function
+will attempt to upload the model to the AWS S3 bucket.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A boolean value indicating whether the data upload (and optionally,
+the model upload) was successful.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.aws.get_all_version_aws">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.aws.</span></span><span class="sig-name descname"><span class="pre">get_all_version_aws</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">network</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.aws.get_all_version_aws" title="Link to this definition"></a></dt>
+<dd><p>Fetches all available version strings of a specific model from the AWS Tardis weights bucket.</p>
+<p>This function communicates with an AWS S3 bucket to retrieve version information
+for specified network, subtype, and model. It parses the response to extract
+all relevant versions that match the expected format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>network</strong> (<em>str</em>) – The name of the network being queried.</p></li>
+<li><p><strong>subtype</strong> (<em>str</em>) – The specific subtype of the network.</p></li>
+<li><p><strong>model</strong> (<em>str</em>) – The model identifier within the specified network and subtype.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of version strings that match the query parameters, starting with “V”.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.aws.get_model_aws">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.aws.</span></span><span class="sig-name descname"><span class="pre">get_model_aws</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">https</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.aws.get_model_aws" title="Link to this definition"></a></dt>
+<dd><p>Fetches a model from AWS by sending a GET request to the provided URL.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>https</strong> (<em>str</em>) – The HTTPS URL string to fetch the model from.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The response object from the GET request.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>requests.Response</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.aws.get_weights_aws">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.aws.</span></span><span class="sig-name descname"><span class="pre">get_weights_aws</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">network</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.aws.get_weights_aws" title="Link to this definition"></a></dt>
+<dd><p>Retrieve the weights of a specified deep learning model architecture and subtype,
+optionally specifying the model and version, from AWS or locally cached storage if
+available. The function handles directory setup, input validation, and either fetching
+or downloading the required weights.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>network</strong> (<em>str</em>) – Name of the neural network model to retrieve. Must be one of the
+predefined valid model types from ‘ALL_MODELS’.</p></li>
+<li><p><strong>subtype</strong> (<em>str</em>) – Specific subtype or configuration of the network. Must be one of
+the predefined valid subtype values from ‘ALL_SUBTYPE’.</p></li>
+<li><p><strong>model</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Dataset or model specification for the given network and subtype. Defaults
+to None. Relevant only for certain network types.</p></li>
+<li><p><strong>version</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Version of the model to retrieve. Defaults to None, which automatically
+selects the latest version available for the given network, subtype, and model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Path to the weights file if available locally or a file-like buffer containing
+the downloaded weights if fetched from AWS.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.aws.aws_check_with_temp">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.aws.</span></span><span class="sig-name descname"><span class="pre">aws_check_with_temp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#tardis_em.utils.aws.aws_check_with_temp" title="Link to this definition"></a></dt>
+<dd><p>Check the availability and validity of local model weights and headers compared
+to the version stored on AWS.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model_name</strong> – A list containing identifiers for the model. It is expected
+to contain at least four elements where each corresponds to specific attributes
+or subdirectories of the model.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A boolean value indicating whether the locally stored model weights
+are up-to-date (True) or require a download/update (False).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.aws.aws_check_pkg_with_temp">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.aws.</span></span><span class="sig-name descname"><span class="pre">aws_check_pkg_with_temp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#tardis_em.utils.aws.aws_check_pkg_with_temp" title="Link to this definition"></a></dt>
+<dd><p>Checks the existence and validity of a local Tardis package and compares it with
+the latest version available on AWS.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A boolean indicating whether the local package exists and is up-to-date.
+If False is returned, the caller is expected to download the package from AWS.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-tardis_em.utils.ota_update">
+<span id="over-the-air-update-api"></span><h2>Over-the-Air Update API<a class="headerlink" href="#module-tardis_em.utils.ota_update" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.ota_update.ota_update">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.ota_update.</span></span><span class="sig-name descname"><span class="pre">ota_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.ota_update.ota_update" title="Link to this definition"></a></dt>
+<dd><p>Check for Over-The-Air (OTA) updates and handle notifications for available updates.</p>
+<p>This function performs a check to determine whether a new version of the application
+is available. The function periodically checks for updates based on a saved timestamp.
+If an update check has not occurred in the last 24 hours, it consults AWS for new updates.
+Based on the <cite>status</cite> parameter, it either returns a simple message or displays a
+detailed notification about the availability of a new version.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>status</strong> (<em>bool</em>) – A boolean indicating the type of response. If True, returns a simple
+notification message. If False, displays a graphical notification about
+the update.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>If <cite>status</cite> is True and a new version is available, returns a string indicating
+that a new version is available. Otherwise, returns an empty string.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.ota_update.main">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.ota_update.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.ota_update.main" title="Link to this definition"></a></dt>
+<dd><p>The <cite>main</cite> function performs an Over-The-Air (OTA) update for the Tardis-EM package.
+It checks or creates a directory for the update, retrieves the new package, saves
+the package locally, uninstalls previous versions of the package, installs the
+new one, and provides update-related instructions to the user via a visual display.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../analysis/filament_utils.html" class="btn btn-neutral float-left" title="Analysis -&gt; Filament Utils" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="import_data.html" class="btn btn-neutral float-right" title="Global -&gt; Data Handlers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2024, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

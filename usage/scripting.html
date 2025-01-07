@@ -1,0 +1,280 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scripting in Python &mdash; TARDIS-em 0.3.10 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=9f76a604"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="../_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Visualization" href="visualization.html" />
+    <link rel="prev" title="Prediction of 2D Membrane semantics/instances" href="2d_membrane.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TARDIS-em
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../HISTORY.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../instructions.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="3d_actin.html">-  3D Actin Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tirf_mt.html">-  TIRF Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="3d_membrane.html">-  3D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">-  Scripting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fine_tune_model.html">Fine-Tune TARDIS models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="helper.html">TARDIS helper-functions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html">CNN Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#dist-module">DIST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#analysis-module">Analysis Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#global-functions">Global Functions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Scripting in Python</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/usage/scripting.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="scripting-in-python">
+<h1>Scripting in Python<a class="headerlink" href="#scripting-in-python" title="Link to this heading"></a></h1>
+<p>TARDIS-em library can be use to simply and fast script your own workflows.</p>
+<p>More examples can be find in: tardis_em/examples/TARDIS_em_Script.ipynb</p>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Link to this heading"></a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tardis_em.utils.predictor</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeneralPredictor</span>
+
+<span class="n">predictor</span> <span class="o">=</span> <span class="n">GeneralPredictor</span><span class="p">(</span>
+    <span class="n">predict</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">dir_s</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+    <span class="n">binary_mask</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">output_format</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">patch_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">convolution_nn</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">cnn_threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">dist_threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">points_in_patch</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">predict_with_rotation</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">instances</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">device_s</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">checkpoint</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">correct_px</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">amira_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">filter_by_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">connect_splines</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">connect_cylinder</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">amira_compare_distance</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">amira_inter_probability</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">tardis_logo</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">semantic</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">instance_filter</span> <span class="o">=</span> <span class="n">predictor</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt><code class="code highlight bash docutils literal highlight-bash">predict</code>: File directory to visualize.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Allowed options:</span> Microtubule, Membrane2D, Membrane</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-dir_s</code>: Directory to a single file, folder with files or numpy array with tomogram/micrograph.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Allowed options:</span> str, np.ndarray</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-binary_mask</code>: If True, Predictor assume, that input images are binary mask. The semantic segmentation step would be skipped and only instance segmentation results will be produce.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Allowed options:</span> bool</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-output_format</code>: Two output format for semantic and instance prediction.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Tips:</span> Define as <cite>semantic_instance</cite> format. For example to output semantic segmentation mask as .mrc file format, and instance segmentation as .csv file. Type <cite>mrc_csv</cite></p></li>
+<li><p><span class="guilabel">Allowed options Semantics:</span> None, am, mrc, tif, npy</p></li>
+<li><p><span class="guilabel">Allowed options Instances:</span> None, am, mrc, tif, npy, amSG, csv, stl</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-patch_size</code>: Image crop size used during semantic segmentation.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Allowed options:</span> int</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-convolution_nn</code>: Type of pre-train CNN model.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Allowed options:</span> unet, fnet_attn</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-cnn_threshold</code>: Threshold for CNN model. Used during semantic segmentation.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Allowed options:</span> float</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-dist_threshold</code>: Threshold for DIST model. Used during instance segmentation.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Allowed options:</span> float</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-points_in_patch</code>: Maximum number of points per patched point cloud.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Tip</span>: About 1000 points require ~ 12Gb of GPU or RAM (if device == ‘cpu’)</p></li>
+<li><p><span class="guilabel">Allowed options:</span> int</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-predict_with_rotation</code>: If True, CNN predict with 4 90* rotations.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Allowed options:</span> bool</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-instances<span class="sb">`</span></code>: If True, run instance segmentation after semantic.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Allowed options:</span> bool</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-device_s</code>: Device on which prediction will take place.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Allowed options:</span> cpu, gpu or number between 0-9 indicating gpu id</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-debug</code>: If True, enable debugging mode which save all intermediate files.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Allowed options:</span> bool</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-checkpoint</code>: List of model checkpoints for semantic and instance segmentation. If its None, TARDIS retrieves weights from AWS.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Default:</span> None</p></li>
+<li><p><span class="guilabel">Allowed options:</span> list[str], list[dict]</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-correct_px</code>: Indicate correct pixel size for image data. If its None, TARDIS retrieves pixels size from the file header.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Default:</span> None</p></li>
+<li><p><span class="guilabel">Allowed options:</span> float, None</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-amira_prefix<span class="sb">`</span></code>: Optional, Amira file prefix name used for spatial graph comparison.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Default:</span> None</p></li>
+<li><p><span class="guilabel">Allowed options:</span> str, None</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-filter_by_length</code>: Optional, filter setting for filtering short splines. Value given in Angstrom.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Default:</span> None</p></li>
+<li><p><span class="guilabel">Allowed options:</span> int, None</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-connect_splines</code>: Optional, filter setting for connecting near splines. Value given in Angstrom.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Default:</span> None</p></li>
+<li><p><span class="guilabel">Allowed options:</span> int, None</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-connect_cylinder</code>: Optional, filter setting for connecting splines withing cylinder radius. Value given in Angstrom.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Default:</span> None</p></li>
+<li><p><span class="guilabel">Allowed options:</span> int, None</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-amira_compare_distance</code>: Optional, compare setting, max distance between two splines to consider them as the same. Value given in Angstrom.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Default:</span> None</p></li>
+<li><p><span class="guilabel">Allowed options:</span> int, None</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-amira_inter_probability</code>: Optional, compare setting, portability threshold to define comparison class. Value given between 0-1 as a probability.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Default:</span> None</p></li>
+<li><p><span class="guilabel">Allowed options:</span> float, None</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-tardis_logo</code>: If True, GeneralPredictor will display terminal or command-line logs.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Default:</span> True</p></li>
+<li><p><span class="guilabel">Allowed options:</span> bool</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="2d_membrane.html" class="btn btn-neutral float-left" title="Prediction of 2D Membrane semantics/instances" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="visualization.html" class="btn btn-neutral float-right" title="Visualization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2024, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

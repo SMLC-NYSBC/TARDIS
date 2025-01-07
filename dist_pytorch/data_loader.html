@@ -1,0 +1,688 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DIST -&gt; DataLoader &mdash; TARDIS-em 0.3.10 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=9f76a604"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="../_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="DIST -&gt; Utils" href="utils.html" />
+    <link rel="prev" title="DIST -&gt; Model" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TARDIS-em
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../HISTORY.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../instructions.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_actin.html">-  3D Actin Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/tirf_mt.html">-  TIRF Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_membrane.html">-  3D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/scripting.html">-  Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/fine_tune_model.html">Fine-Tune TARDIS models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/helper.html">TARDIS helper-functions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html">CNN Module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../code_doc.html#dist-module">DIST Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dist.html">DIST</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html">DIST Model</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">DataLoader</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#general-dataloader">General DataLoader</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.datasets.dataloader.BasicDataset"><code class="docutils literal notranslate"><span class="pre">BasicDataset</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#specialized-dataloader-s">Specialized DataLoader’s</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#filament-structure-dataset">Filament structure DataSet</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#scannet-v2-synthetic-dataset">ScanNet V2 synthetic DataSet</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#scannet-v2-with-rgb-values-synthetic-dataset">ScanNet V2 with RGB values synthetic DataSet</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#stanford-s3dis-dataset">Stanford S3DIS DataSet</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#helper-functions">Helper Functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#build-dataloader">Build dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-tardis_em.dist_pytorch.datasets.augmentation">Point Cloud Augmentation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-tardis_em.dist_pytorch.datasets.patches">Patch dataset</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#analysis-module">Analysis Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#global-functions">Global Functions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../code_doc.html">CNN Module</a></li>
+      <li class="breadcrumb-item active">DIST -&gt; DataLoader</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/dist_pytorch/data_loader.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="dist-dataloader">
+<h1>DIST -&gt; DataLoader<a class="headerlink" href="#dist-dataloader" title="Link to this heading"></a></h1>
+<section id="general-dataloader">
+<h2>General DataLoader<a class="headerlink" href="#general-dataloader" title="Link to this heading"></a></h2>
+<p>General class for creating Datasets. It works by detecting all specified
+file formats in the given directory and return the index list.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.datasets.dataloader.BasicDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.datasets.dataloader.</span></span><span class="sig-name descname"><span class="pre">BasicDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coord_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.csv'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patch_if</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downscale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rgb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">benchmark</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.datasets.dataloader.BasicDataset" title="Link to this definition"></a></dt>
+<dd><p>BasicDataset is a dataset handling class, mainly designed to manage and preprocess
+coordinate data for tasks requiring large-scale numerical data handling. This
+class initializes the dataset environment, processes input data, and provides
+several utility functions to save, load, and transform data efficiently.</p>
+<p>This class is particularly useful for managing coordinate files, setting
+downscaled versions of files, and utility methods for temporary storage of
+preprocessed data.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.datasets.dataloader.BasicDataset.save_temp">
+<span class="sig-name descname"><span class="pre">save_temp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.datasets.dataloader.BasicDataset.save_temp" title="Link to this definition"></a></dt>
+<dd><p>Saves temporary data to numpy files.</p>
+<p>This method takes an integer identifier <cite>i</cite> and saves temporary data
+provided in <cite>kwargs</cite> to <cite>.npy</cite> files within a specified directory. Files
+are named using the format <cite>&lt;key&gt;_&lt;i&gt;.npy</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>i</strong> – An integer used in naming the saved files.</p></li>
+<li><p><strong>kwargs</strong> – Keyword arguments where keys represent file name prefixes,
+and values are the data to be saved in the numpy files. Each value
+is converted to a numpy array with <cite>object</cite> dtype before saving.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.datasets.dataloader.BasicDataset.load_temp">
+<span class="sig-name descname"><span class="pre">load_temp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.datasets.dataloader.BasicDataset.load_temp" title="Link to this definition"></a></dt>
+<dd><p>Loads temporary numpy array files from the disk. The function can load a single file
+or multiple files depending on the provided keyword arguments. If one keyword
+argument is given, it will load the corresponding file directly. Otherwise, it will
+load all files corresponding to the provided keyword arguments in a list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>i</strong> (<em>int</em>) – Index used to identify the file(s) to be loaded.</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em>) – A set of keyword arguments where the keys represent the prefix of the
+filename(s) to be loaded. Each key corresponds to a possible file.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of numpy ndarray objects if multiple keyword arguments are provided,
+or a single numpy ndarray object if only one keyword argument is given.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[np.ndarray]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.datasets.dataloader.BasicDataset.list_to_tensor">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">list_to_tensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.datasets.dataloader.BasicDataset.list_to_tensor" title="Link to this definition"></a></dt>
+<dd><p>Converts a list of numerical dataframes into a list of PyTorch tensors. This method
+takes variable keyword arguments, where each value is expected to be a list of
+dataframes. It processes each dataframe in these lists to convert them into
+PyTorch tensors with a float32 data type, preserving the structure of the input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kwargs</strong> – Variable keyword arguments where each key corresponds to a list of
+pandas DataFrames. Each dataframe is processed and converted to a PyTorch
+tensor with dtype set to <cite>float32</cite>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of lists containing the converted PyTorch tensors. The structure
+of the returned list parallels the structure of the input keyword arguments.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="specialized-dataloader-s">
+<h2>Specialized DataLoader’s<a class="headerlink" href="#specialized-dataloader-s" title="Link to this heading"></a></h2>
+<section id="filament-structure-dataset">
+<h3>Filament structure DataSet<a class="headerlink" href="#filament-structure-dataset" title="Link to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.datasets.dataloader.FilamentDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.datasets.dataloader.</span></span><span class="sig-name descname"><span class="pre">FilamentDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.datasets.dataloader.FilamentDataset" title="Link to this definition"></a></dt>
+<dd><p>FilamentDataset class for handling filament data processing.</p>
+<p>This class is designed to process filament datasets, including pre-processing of
+coordinate data, image patch creation, and handling normalized data points. It is
+useful for machine learning tasks requiring patched datasets, graph representations,
+and customized preprocessing.</p>
+</dd></dl>
+
+<p>PartNet synthetic DataSet</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.datasets.dataloader.PartnetDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.datasets.dataloader.</span></span><span class="sig-name descname"><span class="pre">PartnetDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.datasets.dataloader.PartnetDataset" title="Link to this definition"></a></dt>
+<dd><p>PartnetDataset is a specialized dataset class designed to work with 3D point clouds
+and graph representations. It integrates functionalities to preprocess, manage, and
+retrieve data efficiently. This includes handling downscaling, patch generation, and
+dynamic data loading for both training and testing.</p>
+<p>The class leverages the PatchDataSet to create patches of data points with specified
+parameters like maximum points, overlap, and drop rate. Additionally, it supports
+temporary storage and loading for optimized access.</p>
+</dd></dl>
+
+</section>
+<section id="scannet-v2-synthetic-dataset">
+<h3>ScanNet V2 synthetic DataSet<a class="headerlink" href="#scannet-v2-synthetic-dataset" title="Link to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.datasets.dataloader.ScannetDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.datasets.dataloader.</span></span><span class="sig-name descname"><span class="pre">ScannetDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.datasets.dataloader.ScannetDataset" title="Link to this definition"></a></dt>
+<dd><p>ScannetDataset handles loading and processing of 3D scan data,
+specifically for tasks involving graph and patch-based methods
+in the context of 3D scene understanding.</p>
+<p>This class is a specialized dataset loader that extends the
+BasicDataset. It can handle a range of tasks including
+preprocessing of scan data, handling coordinate formats,
+and managing batch-level operations for training and testing
+workflows. The class also supports saving and retrieving
+preprocessed temporary data for faster data loading.</p>
+</dd></dl>
+
+</section>
+<section id="scannet-v2-with-rgb-values-synthetic-dataset">
+<h3>ScanNet V2 with RGB values synthetic DataSet<a class="headerlink" href="#scannet-v2-with-rgb-values-synthetic-dataset" title="Link to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.datasets.dataloader.ScannetColorDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.datasets.dataloader.</span></span><span class="sig-name descname"><span class="pre">ScannetColorDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.datasets.dataloader.ScannetColorDataset" title="Link to this definition"></a></dt>
+<dd><p>Represents a dataset for Scannet, inheriting functionalities from the
+BasicDataset. It supports handling of color information, coordination
+files, and patch-based data processing.</p>
+<p>This dataset class processes 3D point cloud data and corresponding color
+information from Scannet using various custom functionalities, including
+coordinate scaling, patch-based segmentation, and preprocessed data
+caching for efficient usage. It also incorporates graph-based dataset
+representations.</p>
+</dd></dl>
+
+</section>
+<section id="stanford-s3dis-dataset">
+<h3>Stanford S3DIS DataSet<a class="headerlink" href="#stanford-s3dis-dataset" title="Link to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.datasets.dataloader.Stanford3DDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.datasets.dataloader.</span></span><span class="sig-name descname"><span class="pre">Stanford3DDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.datasets.dataloader.Stanford3DDataset" title="Link to this definition"></a></dt>
+<dd><p>This class represents the Stanford 3D dataset, which handles dataset processing, room identification,
+and patch data preparation. It is responsible for organizing room data from directories and subdirectories,
+preprocessing 3D point cloud data for machine learning tasks, and optimizing computational resources
+by leveraging patches. The class integrates with the PatchDataSet for patch extraction and manipulation.</p>
+</dd></dl>
+
+</section>
+</section>
+<section id="helper-functions">
+<h2>Helper Functions<a class="headerlink" href="#helper-functions" title="Link to this heading"></a></h2>
+<section id="build-dataloader">
+<h3>Build dataloader<a class="headerlink" href="#build-dataloader" title="Link to this heading"></a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.datasets.dataloader.build_dataset">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.datasets.dataloader.</span></span><span class="sig-name descname"><span class="pre">build_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_points_per_patch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downscale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">benchmark</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.datasets.dataloader.build_dataset" title="Link to this definition"></a></dt>
+<dd><p>Build dataset objects and corresponding data loaders based on the specified dataset
+type and configurations. Supports various dataset types for training and testing such
+as simulated datasets, Filament datasets, PartNet, ScanNet, Stanford datasets, and more.
+The function also handles benchmark mode for testing datasets only. Depending on the
+<cite>dataset_type</cite>, appropriate dataset classes are instantiated, configured with training
+and testing attributes, and wrapped in data loaders for model consumption.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset_type</strong> – Specifies the type of dataset to load. Can be either a string or
+a list. If it is a list, it must define simulation-related metadata. For strings,
+supported values include “filament”, “MT”, “Mem”, “partnet”, “scannet”,
+“stanford”, and their variations (e.g., “scannet_rgb”, “stanford_rgb”).</p></li>
+<li><p><strong>dirs</strong> – A list containing directory paths to load training and testing dataset
+files from. The directories depend on the specific type of dataset being used.</p></li>
+<li><p><strong>max_points_per_patch</strong> – The maximum number of points that a single patch within
+the dataset can contain. This value is used to configure dataset-specific patch
+loading and processing.</p></li>
+<li><p><strong>downscale</strong> – Defines optional downscaling operations to be applied during
+dataset loading to alter point cloud resolution. If not provided, defaults are
+used based on the dataset type.</p></li>
+<li><p><strong>benchmark</strong> – If set to True, indicates benchmark testing mode. In this mode,
+only the test dataset loader is returned, and the training loader setup is bypassed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>For non-benchmark mode, returns a tuple where the first element is the
+training dataset loader instance and the second element is the testing dataset
+loader instance. For benchmark mode, only the testing dataset loader is returned.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-tardis_em.dist_pytorch.datasets.augmentation">
+<span id="point-cloud-augmentation"></span><h3>Point Cloud Augmentation<a class="headerlink" href="#module-tardis_em.dist_pytorch.datasets.augmentation" title="Link to this heading"></a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.datasets.augmentation.preprocess_data">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.datasets.augmentation.</span></span><span class="sig-name descname"><span class="pre">preprocess_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'simple'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.datasets.augmentation.preprocess_data" title="Link to this definition"></a></dt>
+<dd><p>Preprocesses coordinate and image data for further analysis.</p>
+<p>This function reads and processes geometric coordinate data and associated image data,
+applying normalization and cropping based on specified parameters. It supports various
+file formats for input coordinates (.csv, .npy, .am) and optionally uses the image data
+aligned with these coordinates. The processed output can include labels, graphs, or
+specific image subsets, depending on the provided parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coord</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>np.ndarray</em><em>]</em>) – Required input coordinates in either raw array format or file paths
+(strings) pointing to supported formats like .csv, .npy, or .am files. Depending
+on the format, data is loaded and processed for subsequent use.</p></li>
+<li><p><strong>image</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Optional input image path corresponding to the given coordinates. If
+provided, image patches are extracted and normalized around coordinate positions.
+It can also be a .am file for specific processing.</p></li>
+<li><p><strong>size</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Optional size of image patches to be cropped. If not provided, a
+default size of 1 is used. Determines whether the cropping is applied in 2D
+or 3D, based on the dimensions of the provided coordinates.</p></li>
+<li><p><strong>include_label</strong> (<em>bool</em>) – Indicates whether to return labels along with coordinates
+and image patches. If False, an additional graph is created from coordinates.</p></li>
+<li><p><strong>normalization</strong> (<em>str</em>) – Specifies the normalization method for image data. Accepts
+“simple” or “minmax” as methods or None for no normalization. Default is “simple”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Returns a tuple that may consist of coordinates with labels, images, or
+a graph depending on the value of <cite>include_label</cite>. If <cite>include_label</cite> is True,
+a tuple of coordinates, labels, and images is returned. Otherwise, a graph of
+coordinates and images is included in the returned tuple.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Union[Tuple[np.ndarray, np.ndarray],
+Tuple[np.ndarray, np.ndarray, np.ndarray]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.datasets.augmentation.BuildGraph">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.datasets.augmentation.</span></span><span class="sig-name descname"><span class="pre">BuildGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">K</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.datasets.augmentation.BuildGraph" title="Link to this definition"></a></dt>
+<dd><p>Creates a representation of points as a graph where each edge represents the connectivity between
+points based on their proximity or contour sequence. Depending on the configuration, the graph is
+constructed either through Nearest Neighbors for mesh-based structures or explicit connections for
+points belonging to the same contour. The graph is represented as a binary matrix, with optional
+handling of self-connections.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.datasets.augmentation.Crop2D3D">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.datasets.augmentation.</span></span><span class="sig-name descname"><span class="pre">Crop2D3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalization</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.datasets.augmentation.Crop2D3D" title="Link to this definition"></a></dt>
+<dd><p>Class for 2D or 3D image cropping based on a center position and size.</p>
+<p>This class facilitates cropping sections of an image (both 2D and 3D depending
+on the input) by specifying a center position and dimensions for the crop. It
+supports normalization of the cropped section if a normalization function is
+provided.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.datasets.augmentation.Crop2D3D.get_xyz_position">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_xyz_position</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">center_point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.datasets.augmentation.Crop2D3D.get_xyz_position" title="Link to this definition"></a></dt>
+<dd><p>Calculate the adjusted x-coordinate positions for a frame, ensuring that the
+frame fits within the bounds of a specified maximum size.</p>
+<p>This method adjusts the lower and upper bounds of the frame’s position based
+on its size, ensuring it remains within the allowed range (<cite>max_size</cite>). If the
+computed position exceeds boundaries, it shifts the frame appropriately.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>center_point</strong> – The center point of the frame, around which the lower
+and upper x-coordinate positions are calculated.</p></li>
+<li><p><strong>size</strong> – The size of the frame on the x-axis, which will be distributed
+evenly around the center point.</p></li>
+<li><p><strong>max_size</strong> – The maximum allowable boundary in the x-axis that the frame
+must stay within.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing the adjusted lower and upper x-coordinate
+positions, ensuring the frame lies within the bounds.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[int, int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.datasets.augmentation.upsample_pc">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.datasets.augmentation.</span></span><span class="sig-name descname"><span class="pre">upsample_pc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">org_coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampled_coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.datasets.augmentation.upsample_pc" title="Link to this definition"></a></dt>
+<dd><p>Upsample the point cloud by associating each original coordinate (org_coord) with its
+nearest neighbor in the sampled coordinate set (sampled_coord). The function finds the
+nearest neighbor using a KDTree for efficient spatial querying and computes the
+new coordinates based on these associations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>org_coord</strong> – A numpy array of shape (n, m), where n is the number of points
+and m represents the dimensionality of the space.
+The first column represents unique identifiers,
+and the remaining columns represent the coordinates of the points.</p></li>
+<li><p><strong>sampled_coord</strong> – A numpy array of shape (k, m), where k is the number of sampled points
+and m represents the dimensionality of the space.
+The first column represents unique identifiers,
+and the remaining columns represent the coordinates of the points.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A numpy array of shape (n, m-1) representing the upsampled point cloud.
+The first column contains the identifiers of the nearest neighbors from the
+sampled_coord array, and the remaining columns replicate the coordinate
+dimensions of the input org_coord.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-tardis_em.dist_pytorch.datasets.patches">
+<span id="patch-dataset"></span><h3>Patch dataset<a class="headerlink" href="#module-tardis_em.dist_pytorch.datasets.patches" title="Link to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.datasets.patches.PatchDataSet">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.datasets.patches.</span></span><span class="sig-name descname"><span class="pre">PatchDataSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_number_of_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">graph</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.datasets.patches.PatchDataSet" title="Link to this definition"></a></dt>
+<dd><p>Represents a class designed for configuring and processing point cloud data. This includes
+functionalities for down-sampling points, defining overlapping feature patches, and specifying
+output formats such as tensor representation or graph structure. It also initializes and manages
+patch size configurations.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.datasets.patches.PatchDataSet.boundary_box">
+<span class="sig-name descname"><span class="pre">boundary_box</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.datasets.patches.PatchDataSet.boundary_box" title="Link to this definition"></a></dt>
+<dd><p>Calculate the boundary box for the given coordinates, optionally applying an
+offset. The function computes the minimum and maximum dimensions along each
+axis (x, y, z if applicable). If the offset is provided, the boundary box is
+expanded proportionally around the center. The result is a NumPy array
+representing the boundary box with two points: the lower and upper bounds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coord</strong> (<em>np.ndarray</em>) – The input array of coordinates where rows represent points, and
+columns represent dimensional axes (x, y, and optionally z).</p></li>
+<li><p><strong>offset</strong> (<em>float</em><em>, </em><em>optional</em>) – An optional expansion multiplier for the bounding box dimensions.
+If provided, it scales the boundary box’s size relative to its
+center.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A NumPy array representing the boundary box with two rows: the minimum
+(x, y, z) coordinates and the maximum (x, y, z) coordinates.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.datasets.patches.PatchDataSet.center_patch">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">center_patch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bbox</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voxel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.datasets.patches.PatchDataSet.center_patch" title="Link to this definition"></a></dt>
+<dd><p>Calculates the coordinates for the centers of voxels within a given bounding box.
+The bounding box is divided into a three-dimensional grid using the specified voxel size.
+The method ensures a minimum of 2 voxels along each axis to avoid degenerate cases.
+The voxel centers are returned as a NumPy array containing their coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bbox</strong> (<em>np.ndarray</em>) – The bounding box defined as a 2x3 NumPy array where the first row contains
+the minimum x, y, z coordinates and the second row contains the maximum x, y, z
+coordinates.</p></li>
+<li><p><strong>voxel_size</strong> (<em>float</em>) – The size of each voxel along all dimensions. Defaults to 1.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A NumPy array with the coordinates of all voxel centers as rows.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.datasets.patches.PatchDataSet.points_in_patch">
+<span class="sig-name descname"><span class="pre">points_in_patch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patch_center</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.datasets.patches.PatchDataSet.points_in_patch" title="Link to this definition"></a></dt>
+<dd><p>Determines if specific points represented by their coordinates are located within a
+defined patch based on the patch’s center and pre-defined size. The patch is modeled
+as a cuboid, and each coordinate is verified to be within the patch bounds along
+all axes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coord</strong> – A numpy array of shape (N, 3), where N is the number of points,
+and each row represents the x, y, z coordinates of a point.</p></li>
+<li><p><strong>patch_center</strong> – A numpy array of shape (3,), representing the x, y, z
+coordinates of the patch center.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A boolean array of shape (N,), where each element signifies whether
+the corresponding point in <cite>coord</cite> is located within the defined patch limits.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.datasets.patches.PatchDataSet.optimal_patches">
+<span class="sig-name descname"><span class="pre">optimal_patches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.datasets.patches.PatchDataSet.optimal_patches" title="Link to this definition"></a></dt>
+<dd><p>The <cite>optimal_patches</cite> function calculates and returns a list of boolean
+values representing whether specific patches within a given coordinate
+space contain points that meet certain criteria. It operates in two
+modes: random patch selection or systematic grid-based patch calculation.</p>
+<p>This function first calculates a bounding box for the input coordinates.
+It determines voxel sizes dynamically based on the bounding box dimensions,
+applies strategies for patch creation, and evaluates patches for spatial
+distribution of points. The two modes allow either randomly selected patches
+or systematic patches using voxel downscaling until a threshold is satisfied.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coord</strong> (<em>np.ndarray</em>) – The spatial coordinate input as a numpy array.</p></li>
+<li><p><strong>random</strong> (<em>bool</em><em>, </em><em>optional</em>) – Determines if the patch selection should follow
+a random process or systematic method. Default is False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of boolean values indicating which patches meet
+the specific criteria.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[bool]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.datasets.patches.PatchDataSet.normalize_idx">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">normalize_idx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord_with_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.datasets.patches.PatchDataSet.normalize_idx" title="Link to this definition"></a></dt>
+<dd><p>Normalizes the index values of coordinates in the given array. The method updates the array
+such that indices in the first column are replaced with normalized indices, starting from zero.
+The normalization process maps unique indices to a consecutive range of indices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>coord_with_idx</strong> (<em>np.ndarray</em>) – A numpy array where the first column contains coordinate indices to be
+normalized.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The input array with normalized indices in its first column.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.datasets.patches.PatchDataSet.output_format">
+<span class="sig-name descname"><span class="pre">output_format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.datasets.patches.PatchDataSet.output_format" title="Link to this definition"></a></dt>
+<dd><p>Converts the given data into the desired output format. If the <cite>TORCH_OUTPUT</cite>
+flag is set, the input NumPy array is converted to a PyTorch tensor of type
+<cite>torch.float32</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>np.ndarray</em>) – Input data as a NumPy array.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The input data converted to the desired format. Returns a PyTorch
+tensor if <cite>TORCH_OUTPUT</cite> is enabled, otherwise returns the original
+NumPy array.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Union[np.ndarray, torch.Tensor]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.datasets.patches.PatchDataSet.patched_dataset">
+<span class="sig-name descname"><span class="pre">patched_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_cls</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rgb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voxel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.datasets.patches.PatchDataSet.patched_dataset" title="Link to this definition"></a></dt>
+<dd><p>Generates patches of spatial data and optional associated properties (class labels,
+graph structures, and RGB values) for deep learning tasks. This function processes
+input spatial coordinates to divide them into smaller, manageable patches, and
+conditionally builds graph structures or assigns additional information like class
+labels and RGB values for each patch. This method supports either a 2D-to-3D
+transformation or segmented and raw data processing, depending on the provided input
+configurations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coord</strong> – An array of spatial coordinates, potentially in 2D, 3D, or segmented
+4D form.</p></li>
+<li><p><strong>label_cls</strong> – Optional array of class labels for spatial coordinates.</p></li>
+<li><p><strong>rgb</strong> – Optional array of RGB values for spatial coordinates.</p></li>
+<li><p><strong>mesh</strong> – An integer indicating the scale or structure of graph connectivity
+(e.g., K in a K-Nearest Neighbors graph).</p></li>
+<li><p><strong>random</strong> – Boolean indicating whether to randomly segment patches or determine
+them based on an optimization algorithm.</p></li>
+<li><p><strong>voxel_size</strong> – Optional numeric value specifying the desired voxel size
+for downsampling spatial data.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple of lists with various outputs segmented into patches:
+- Point cloud patches for input coordinates.
+- RGB data patches if available.
+- Graph patches if graph output is configured.
+- Indices of original data points corresponding to each patch.
+- Optional class label patches if <cite>label_cls</cite> is provided.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modules.html" class="btn btn-neutral float-left" title="DIST -&gt; Model" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="utils.html" class="btn btn-neutral float-right" title="DIST -&gt; Utils" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2024, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

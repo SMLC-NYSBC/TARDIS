@@ -1,0 +1,610 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analysis &mdash; TARDIS-em 0.3.10 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=9f76a604"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="../_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Analysis -&gt; MT Classification" href="mt_classification.html" />
+    <link rel="prev" title="DIST -&gt; Utils" href="../dist_pytorch/utils.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TARDIS-em
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../HISTORY.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../instructions.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_actin.html">-  3D Actin Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/tirf_mt.html">-  TIRF Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_membrane.html">-  3D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/scripting.html">-  Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/fine_tune_model.html">Fine-Tune TARDIS models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/helper.html">TARDIS helper-functions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html">CNN Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#dist-module">DIST Module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../code_doc.html#analysis-module">Analysis Module</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.analysis.analysis">Analysis -&gt; Analysis wrappers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.analysis.analyse_filaments"><code class="docutils literal notranslate"><span class="pre">analyse_filaments()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.analysis.save_analysis"><code class="docutils literal notranslate"><span class="pre">save_analysis()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.analysis.analyse_filaments_list"><code class="docutils literal notranslate"><span class="pre">analyse_filaments_list()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.analysis.analyse_mt_classes"><code class="docutils literal notranslate"><span class="pre">analyse_mt_classes()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.analysis.filament_structure">Analysis -&gt; Filament Structure</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.filament_structure.assign_filaments_to_poles"><code class="docutils literal notranslate"><span class="pre">assign_filaments_to_poles()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.analysis.geometry_metrics">Analysis -&gt; Geometry metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.geometry_metrics.curvature"><code class="docutils literal notranslate"><span class="pre">curvature()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.geometry_metrics.curvature_list"><code class="docutils literal notranslate"><span class="pre">curvature_list()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.geometry_metrics.tortuosity"><code class="docutils literal notranslate"><span class="pre">tortuosity()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.geometry_metrics.tortuosity_list"><code class="docutils literal notranslate"><span class="pre">tortuosity_list()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.geometry_metrics.total_length"><code class="docutils literal notranslate"><span class="pre">total_length()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.geometry_metrics.length_list"><code class="docutils literal notranslate"><span class="pre">length_list()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.geometry_metrics.angle_between_vectors"><code class="docutils literal notranslate"><span class="pre">angle_between_vectors()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.geometry_metrics.intensity"><code class="docutils literal notranslate"><span class="pre">intensity()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.geometry_metrics.pixel_intensity"><code class="docutils literal notranslate"><span class="pre">pixel_intensity()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.geometry_metrics.thicken_line_coordinates"><code class="docutils literal notranslate"><span class="pre">thicken_line_coordinates()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.geometry_metrics.intensity_list"><code class="docutils literal notranslate"><span class="pre">intensity_list()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mt_classification.html">MT classification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="filament_utils.html">Filament Utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#global-functions">Global Functions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../code_doc.html">CNN Module</a></li>
+      <li class="breadcrumb-item active">Analysis</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/analysis/analysis.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="analysis">
+<h1>Analysis<a class="headerlink" href="#analysis" title="Link to this heading"></a></h1>
+<section id="module-tardis_em.analysis.analysis">
+<span id="analysis-analysis-wrappers"></span><h2>Analysis -&gt; Analysis wrappers<a class="headerlink" href="#module-tardis_em.analysis.analysis" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.analysis.analyse_filaments">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.analysis.</span></span><span class="sig-name descname"><span class="pre">analyse_filaments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thickness</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">px</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#tardis_em.analysis.analysis.analyse_filaments" title="Link to this definition"></a></dt>
+<dd><p>Analyzes filament data to compute various attributes including length, curvature,
+tortuosity, and intensity-related metrics. If image data is provided, intensity
+metrics such as average intensity, average length intensity, total intensity,
+and total length intensity are computed. Lengths can be scaled based on pixel size
+(px) if specified.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>Union</em><em>[</em><em>np.ndarray</em><em>, </em><em>List</em><em>, </em><em>Tuple</em><em>]</em>) – Filament data used for analysis. Can be a numpy array or a sequence
+containing numpy arrays.</p></li>
+<li><p><strong>image</strong> (<em>Union</em><em>[</em><em>np.ndarray</em><em>, </em><em>List</em><em>, </em><em>Tuple</em><em>]</em><em>, </em><em>optional</em>) – Optional image data corresponding to the filaments. Used for
+computing intensity metrics. Can be a numpy array or a sequence containing
+numpy arrays.</p></li>
+<li><p><strong>thickness</strong> (<em>int</em><em>, </em><em>optional</em>) – Thickness of filaments used for intensity calculation.
+Defaults to 1.</p></li>
+<li><p><strong>px</strong> (<em>Sequence</em><em>, </em><em>optional</em>) – Scaling factors for pixel size to convert lengths into physical
+units. If None, lengths are computed directly without scaling. Defaults to
+None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>A tuple containing:</p>
+<ul class="simple">
+<li><p>length (list): Computed lengths of the filaments.</p></li>
+<li><p>curvature (list): Computed mean curvatures of the filaments.</p></li>
+<li><p>tortuosity (list): Computed mean tortuosity of the filaments.</p></li>
+<li><p>avg_intensity (list): Computed average intensity per filament, or None
+if no image data is provided.</p></li>
+<li><p>avg_length_intensity (list): Computed average filament intensity
+normalized by filament length, or None if no image data is provided.</p></li>
+<li><p>sum_intensity (list): Computed total intensity per filament, or None
+if no image data is provided.</p></li>
+<li><p>sum_length_intensity (list): Computed total filament intensity normalized
+by filament length, or None if no image data is provided.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.analysis.save_analysis">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.analysis.</span></span><span class="sig-name descname"><span class="pre">save_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">px</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.analysis.analysis.save_analysis" title="Link to this definition"></a></dt>
+<dd><p>Saves or generates a detailed analysis file from the given <cite>analysis</cite> data. The function
+is capable of saving the processed analysis to a CSV file if a save path is provided
+or alternatively returns the processed analysis as a NumPy array. The analysis includes
+details such as filament lengths, curvatures, tortuosities, and intensity-related data. It
+is designed to handle multiple files and their corresponding filament data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>names</strong> – List or tuple containing the names of the files being analyzed.</p></li>
+<li><p><strong>analysis</strong> – Tuple or list containing multiple analysis metrics such as
+length, curvature, tortuosity, intensity, and their derivatives. Each metric
+corresponds to a specific aspect of the filament data.</p></li>
+<li><p><strong>px</strong> – Optional parameter containing pixel size for each file, which is used
+to calculate some metrics. If not specified, a default value is assumed.</p></li>
+<li><p><strong>save</strong> – Optional parameter specifying the path where the CSV file will be
+saved. If not provided, the function will not save the file and returns the
+analysis as a NumPy array.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Returns a NumPy array containing the processed analysis, or None if the
+analysis is saved to a CSV file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.analysis.analyse_filaments_list">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.analysis.</span></span><span class="sig-name descname"><span class="pre">analyse_filaments_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names_l</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">images</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">px</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thickness</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.analysis.analysis.analyse_filaments_list" title="Link to this definition"></a></dt>
+<dd><p>Analyzes and processes a list of filament data along with optional corresponding images.
+The function validates the input to ensure consistency between the length of the data
+and images before analyzing the filaments. The processed analysis is then saved to the
+specified path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>Union</em><em>[</em><em>List</em><em>, </em><em>Tuple</em><em>]</em>) – A collection of data representing filament structures. It must be a list
+or tuple.</p></li>
+<li><p><strong>names_l</strong> (<em>Union</em><em>[</em><em>List</em><em>, </em><em>Tuple</em><em>]</em>) – A collection of filenames or identifiers corresponding to each set of data.
+It must be a list or tuple.</p></li>
+<li><p><strong>path</strong> (<em>str</em>) – A string representing the file path where the analysis results will be saved.</p></li>
+<li><p><strong>images</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>List</em><em>, </em><em>Tuple</em><em>]</em><em>]</em>) – Optional collection of images corresponding to the data, where each
+image represents the visual context of the filament. Default is None.</p></li>
+<li><p><strong>px</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>List</em><em>, </em><em>Tuple</em><em>]</em><em>]</em>) – Optional collection indicating pixel calibration or scaling of the images,
+if provided. Default is None.</p></li>
+<li><p><strong>thickness</strong> (<em>int</em>) – An integer specifying the thickness parameter used during filament
+analysis. Default is 1.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.analysis.analyse_mt_classes">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.analysis.</span></span><span class="sig-name descname"><span class="pre">analyse_mt_classes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filaments</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">poles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#tardis_em.analysis.analysis.analyse_mt_classes" title="Link to this definition"></a></dt>
+<dd><p>Analyzes microtubule (MT) classes by assigning filaments to poles, then categorizing
+their ends as plus or minus ends. The process involves sorting poles relative to
+defined vertices, assigning filaments to corresponding poles, and subsequently
+determining the extremities of the filaments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filaments</strong> – A NumPy array of filaments where each filament is defined as a
+collection of points.</p></li>
+<li><p><strong>poles</strong> – A NumPy array containing pole positions.</p></li>
+<li><p><strong>vertices</strong> – A list of vertex points used to determine pole-to-surface assignments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple where the first element contains the mapping of filaments to poles
+and the second element is a tuple with two lists: one for the plus ends and
+another for the minus ends of the filaments.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-tardis_em.analysis.filament_structure">
+<span id="analysis-filament-structure"></span><h2>Analysis -&gt; Filament Structure<a class="headerlink" href="#module-tardis_em.analysis.filament_structure" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.filament_structure.assign_filaments_to_poles">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.filament_structure.</span></span><span class="sig-name descname"><span class="pre">assign_filaments_to_poles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filaments</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">poles</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.analysis.filament_structure.assign_filaments_to_poles" title="Link to this definition"></a></dt>
+<dd><p>Assigns filaments to the closest poles and potentially flips their orientation to maintain consistency
+based on proximity to the assigned pole.</p>
+<p>The function processes a set of filaments, identified by unique IDs, and calculates their start and end points.
+Distances from these points to given poles are computed, and each filament is assigned to the nearest pole.
+If needed, the points of a filament are reordered to ensure that their orientation starts closer to their assigned pole.
+Filaments are then grouped according to their assigned pole.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filaments</strong> – A 2D NumPy array where each row contains information about an individual
+point of a filament. The first column represents the filament ID, and the
+remaining columns represent the position coordinates of the point.</p></li>
+<li><p><strong>poles</strong> – A 2D NumPy array where each row contains the coordinates of a pole.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing two arrays. The first array represents the filaments assigned
+to the first pole, while the second array represents the filaments assigned to the
+second pole. Each filament is listed with its points in correct order to maintain
+proximity to the assigned pole.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[np.ndarray, np.ndarray]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-tardis_em.analysis.geometry_metrics">
+<span id="analysis-geometry-metrics"></span><h2>Analysis -&gt; Geometry metrics<a class="headerlink" href="#module-tardis_em.analysis.geometry_metrics" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.geometry_metrics.curvature">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.geometry_metrics.</span></span><span class="sig-name descname"><span class="pre">curvature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tortuosity_b</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span></span></span><a class="headerlink" href="#tardis_em.analysis.geometry_metrics.curvature" title="Link to this definition"></a></dt>
+<dd><p>Computes the curvature of a curve specified by input coordinates. Optionally, it can also compute
+the tortuosity of the curve if the <cite>tortuosity_</cite> parameter is set to True. The curvature is calculated
+as the norm of the cross product of the first and second derivatives divided by the norm of the first
+derivative raised to the power of three. Tortuosity is defined as the ratio of the curve’s arc length
+to the straight-line distance between its endpoints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coord</strong> – A NumPy array representing the coordinates of the curve where curvature calculations
+are performed.</p></li>
+<li><p><strong>tortuosity_b</strong> – A boolean flag indicating whether to calculate the tortuosity value in addition
+to the curvature. If True, tortuosity is calculated as the ratio of the curve length to the
+straight-line distance between the endpoints.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>If <cite>tortuosity_b</cite> is False, a single float is returned representing the average curvature;
+if <cite>tortuosity_b</cite> is True, a tuple is returned containing the average curvature as the first
+element and the tortuosity value as the second element.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.geometry_metrics.curvature_list">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.geometry_metrics.</span></span><span class="sig-name descname"><span class="pre">curvature_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tortuosity_b</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean_b</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span></span></span><a class="headerlink" href="#tardis_em.analysis.geometry_metrics.curvature_list" title="Link to this definition"></a></dt>
+<dd><p>Computes curvature and optionally tortuosity of splines corresponding to unique
+coordinate groups in a given array. The input consists of a 2D array where the
+first column represents group identifiers and the subsequent columns represent
+the coordinates of points in each group. Curvature computation is based on groups
+with at least six points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coord</strong> – A 2D numpy array where the first column indicates grouping identifiers
+and the remaining columns represent coordinates of points.</p></li>
+<li><p><strong>tortuosity_b</strong> – A boolean indicating whether to compute and return the tortuosity
+for each group. Default is False.</p></li>
+<li><p><strong>mean_b</strong> – A boolean flag. When set to True, the mean curvature value for each
+group is computed instead of returning individual curvatures. Default is False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>If tortuosity_b is False, returns a list of curvatures for each unique group.
+If tortuosity_b is True, returns a tuple containing two elements: a list of curvatures
+and a list of tortuosity values (as floats) for each group.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.geometry_metrics.tortuosity">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.geometry_metrics.</span></span><span class="sig-name descname"><span class="pre">tortuosity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#tardis_em.analysis.geometry_metrics.tortuosity" title="Link to this definition"></a></dt>
+<dd><p>Calculates the tortuosity of a curve.</p>
+<p>This function computes the ratio of the total length of a curve defined by a
+series of coordinates to the straight-line distance between the first and
+last points of the curve. If there is only one coordinate or none, it
+returns a default value of 1.0 as the tortuosity cannot be defined.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>coord</strong> – A numpy array containing the coordinates of the curve, where
+each coordinate is a point in n-dimensional space.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A float representing the tortuosity, which is computed as the ratio
+of the total length of the curve to the straight-line distance
+between the start and end points.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.geometry_metrics.tortuosity_list">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.geometry_metrics.</span></span><span class="sig-name descname"><span class="pre">tortuosity_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#tardis_em.analysis.geometry_metrics.tortuosity_list" title="Link to this definition"></a></dt>
+<dd><p>Calculates the tortuosity for each unique coordinate id in the provided array.
+The function groups the input coordinates by their unique first column values,
+computes the tortuosity for each group, and returns the results as a list of
+floats.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>coord</strong> (<em>numpy.ndarray</em>) – A 2-dimensional numpy array where the first column represents
+unique ids and the subsequent columns represent coordinates.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of tortuosity values as floats, each corresponding to a
+unique id from the first column of input.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.geometry_metrics.total_length">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.geometry_metrics.</span></span><span class="sig-name descname"><span class="pre">total_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#tardis_em.analysis.geometry_metrics.total_length" title="Link to this definition"></a></dt>
+<dd><p>Computes the total length of a path defined by a sequence of coordinates.</p>
+<p>This function calculates the total distance between consecutive points
+in a path represented by an array of coordinates. The distance is computed
+using the Euclidean norm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>coord</strong> – A numpy array where each row represents a point’s coordinates
+in the path.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Sum of the Euclidean distances between consecutive points
+in the path.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.geometry_metrics.length_list">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.geometry_metrics.</span></span><span class="sig-name descname"><span class="pre">length_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#tardis_em.analysis.geometry_metrics.length_list" title="Link to this definition"></a></dt>
+<dd><p>Calculate the total lengths of grouped coordinates and return them as a list.</p>
+<p>This function processes a numpy array of coordinates, groups them based on the
+unique values in the first column, calculates the lengths of each group of coordinates
+using an external <cite>total_length</cite> function, and returns the lengths of these
+groups as a list of floats.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>coord</strong> – A numpy array of shape (N, M) where the first column describes a
+grouping attribute, and the remaining columns define the coordinates for
+which the lengths are calculated.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of float values representing the calculated lengths for each
+group of coordinates based on the unique grouping from the first column
+of the input array.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.geometry_metrics.angle_between_vectors">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.geometry_metrics.</span></span><span class="sig-name descname"><span class="pre">angle_between_vectors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#tardis_em.analysis.geometry_metrics.angle_between_vectors" title="Link to this definition"></a></dt>
+<dd><p>Calculates the angle between two vectors in degrees. This function computes the
+angle based on the dot product and magnitudes of the input vectors. The arc cosine
+of the cosine similarity is calculated to derive the angle between the vectors.
+A small value is added to the magnitudes to prevent division by zero.</p>
+<p>cos(theta) = (A . B) / (||A|| ||B||)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>v1</strong> (<em>np.ndarray</em>) – The first vector represented as a numpy array.</p></li>
+<li><p><strong>v2</strong> (<em>np.ndarray</em>) – The second vector represented as a numpy array.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The angle between <cite>v1</cite> and <cite>v2</cite> in degrees.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.geometry_metrics.intensity">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.geometry_metrics.</span></span><span class="sig-name descname"><span class="pre">intensity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thickness</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.analysis.geometry_metrics.intensity" title="Link to this definition"></a></dt>
+<dd><p>Computes the intensity values along a parametric spline through a given dataset and subtracts
+the background intensity estimated from parallel shifted spline paths. This function is designed
+specifically for tasks involving intensity extraction in image processing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>np.ndarray</em>) – 2D array containing the coordinates corresponding to the data points the spline
+is fitted to.</p></li>
+<li><p><strong>image</strong> (<em>np.ndarray</em>) – 2D image array from which pixel intensity values will be extracted.</p></li>
+<li><p><strong>thickness</strong> (<em>int</em><em>, </em><em>optional</em>) – Integer denoting the thickness of the line for which pixel intensities will
+be aggregated. Default value is 1.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>1D array containing the adjusted intensity values along the spline after background
+subtraction.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.geometry_metrics.pixel_intensity">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.geometry_metrics.</span></span><span class="sig-name descname"><span class="pre">pixel_intensity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#tardis_em.analysis.geometry_metrics.pixel_intensity" title="Link to this definition"></a></dt>
+<dd><p>Extracts pixel intensities from an image at specified coordinates. The function
+supports both 2D and 3D images and handles out-of-bound coordinates with <cite>None</cite>.
+If any extracted pixel value is <cite>None</cite>, it replaces them with the minimum valid
+pixel value present in the list. If no valid pixel values are found, it returns
+<cite>None</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coord</strong> – A numpy array of shape (N, 3) for 3D or (N, 2) for 2D, containing
+the coordinates where pixel intensities are to be extracted.</p></li>
+<li><p><strong>image</strong> – A numpy array representing the image from which pixel intensities
+are to be extracted. Can be either 2D or 3D.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of extracted pixel intensities. If any coordinate is invalid,
+its corresponding intensity is initially <cite>None</cite> but replaced with the
+minimum valid pixel value in the list. Returns <cite>None</cite> if no valid pixel
+values exist.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.geometry_metrics.thicken_line_coordinates">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.geometry_metrics.</span></span><span class="sig-name descname"><span class="pre">thicken_line_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coords</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thickness</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.analysis.geometry_metrics.thicken_line_coordinates" title="Link to this definition"></a></dt>
+<dd><p>Expands the thickness of a set of 3D coordinates to represent a line or shape with a specified
+thickness. This is achieved by creating a grid of points around each coordinate based on the
+specified thickness.</p>
+<p>This function is useful for visualizing or processing lines/shapes in three-dimensional space
+with a specific thickness, often needed in environments like 3D geometry processing or
+voxel-based computations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coords</strong> – A NumPy array containing 3D coordinates to be thickened. Each coordinate is
+represented as a tuple (x, y, z).</p></li>
+<li><p><strong>thickness</strong> – An integer that defines the extent of expansion around the input coordinates.
+The thickness is centered on each coordinate, producing a local grid.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A NumPy array containing the updated set of 3D coordinates, including all points
+within the specified thickness range.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.geometry_metrics.intensity_list">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.geometry_metrics.</span></span><span class="sig-name descname"><span class="pre">intensity_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thickness</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.analysis.geometry_metrics.intensity_list" title="Link to this definition"></a></dt>
+<dd><p>Extracts intensity values along spline coordinates from the given image.</p>
+<p>This function computes the intensity values along a set of spline coordinates
+within a given image, using the specified thickness for sampling. It iterates
+through unique spline identifiers in the coordinate array, processes points
+associated with each identifier, and computes the intensity or returns a zero
+value if there are insufficient points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coord</strong> – A 2D array containing the spline coordinates. The first column
+represents unique identifiers for each spline, and the remaining columns
+represent the spatial coordinates of each point.</p></li>
+<li><p><strong>image</strong> – A 2D numpy array representing the image from which intensity
+values are to be extracted.</p></li>
+<li><p><strong>thickness</strong> – An optional parameter specifying the thickness used for
+sampling intensity values. Defaults to 1.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of intensity values computed for each unique spline identifier.
+The list contains a computed intensity value for identifiers with sufficient
+points and 0.0 for those with insufficient points.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../dist_pytorch/utils.html" class="btn btn-neutral float-left" title="DIST -&gt; Utils" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mt_classification.html" class="btn btn-neutral float-right" title="Analysis -&gt; MT Classification" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2024, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

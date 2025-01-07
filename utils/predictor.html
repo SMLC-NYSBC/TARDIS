@@ -1,0 +1,585 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Global -&gt; Predictor Handlers &mdash; TARDIS-em 0.3.10 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=9f76a604"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="../_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Global -&gt; Helper Handlers" href="helper.html" />
+    <link rel="prev" title="Global -&gt; Trainer Handlers" href="trainer.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TARDIS-em
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../HISTORY.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../instructions.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_actin.html">-  3D Actin Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/tirf_mt.html">-  TIRF Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_membrane.html">-  3D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/scripting.html">-  Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/fine_tune_model.html">Fine-Tune TARDIS models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/helper.html">TARDIS helper-functions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html">CNN Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#dist-module">DIST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#analysis-module">Analysis Module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../code_doc.html#global-functions">Global Functions</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="aws.html">AWS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="import_data.html">Data Handlers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trainer.html">Trainer</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Predictor</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#tardis_em.utils.predictor.GeneralPredictor"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.predictor.GeneralPredictor.eta_predict"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.eta_predict</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.predictor.GeneralPredictor.omit_format"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.omit_format</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.predictor.GeneralPredictor.create_headers"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.create_headers()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.predictor.GeneralPredictor.init_check"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.init_check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.predictor.GeneralPredictor.build_NN"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.build_NN()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.predictor.GeneralPredictor.load_data"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.load_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.predictor.GeneralPredictor.predict_cnn"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.predict_cnn()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.predictor.GeneralPredictor.predict_cnn_napari"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.predict_cnn_napari()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.predictor.GeneralPredictor.postprocess_CNN"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.postprocess_CNN()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.predictor.GeneralPredictor.preprocess_DIST"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.preprocess_DIST()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.predictor.GeneralPredictor.predict_DIST"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.predict_DIST()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.predictor.GeneralPredictor.postprocess_DIST"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.postprocess_DIST()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.predictor.GeneralPredictor.get_file_list"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.get_file_list()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.predictor.GeneralPredictor.log_tardis"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.log_tardis()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.predictor.GeneralPredictor.save_semantic_mask"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.save_semantic_mask()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.predictor.GeneralPredictor.save_instance_PC"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.save_instance_PC()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#tardis_em.utils.predictor.Predictor"><code class="docutils literal notranslate"><span class="pre">Predictor</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.predictor.Predictor.predict"><code class="docutils literal notranslate"><span class="pre">Predictor.predict()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="helper.html">Helper Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logger.html">Logger</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utils Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html">SetUp Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize.html">Visualizer</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../code_doc.html">CNN Module</a></li>
+      <li class="breadcrumb-item active">Global -&gt; Predictor Handlers</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/utils/predictor.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-tardis_em.utils.predictor">
+<span id="global-predictor-handlers"></span><h1>Global -&gt; Predictor Handlers<a class="headerlink" href="#module-tardis_em.utils.predictor" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.predictor.GeneralPredictor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.predictor.</span></span><span class="sig-name descname"><span class="pre">GeneralPredictor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binary_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convolution_nn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cnn_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dist_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points_in_patch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predict_with_rotation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instances</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correct_px</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_px</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amira_prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_by_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connect_splines</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connect_cylinder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amira_compare_distance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amira_inter_probability</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tardis_logo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">continue_b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.predictor.GeneralPredictor" title="Link to this definition"></a></dt>
+<dd><p>Summary of what the class does.</p>
+<p>The GeneralPredictor class is designed for handling image-based predictions
+using various neural network architectures. It provides functionalities
+to set up the environment, preprocess data, run predictions with or
+without rotation, and post-process the results for further usage or
+analysis. This class also includes methods to handle different file formats,
+apply various normalization techniques, and output results in specified formats.
+The class is modular enough to work with instances, semantic predictions, and
+custom settings based on the input parameters and configurations.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.predictor.GeneralPredictor.eta_predict">
+<span class="sig-name descname"><span class="pre">eta_predict</span></span><a class="headerlink" href="#tardis_em.utils.predictor.GeneralPredictor.eta_predict" title="Link to this definition"></a></dt>
+<dd><p>Initial Setup</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tardis_em.utils.predictor.GeneralPredictor.omit_format">
+<span class="sig-name descname"><span class="pre">omit_format</span></span><a class="headerlink" href="#tardis_em.utils.predictor.GeneralPredictor.omit_format" title="Link to this definition"></a></dt>
+<dd><p>Build handler’s</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.predictor.GeneralPredictor.create_headers">
+<span class="sig-name descname"><span class="pre">create_headers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.predictor.GeneralPredictor.create_headers" title="Link to this definition"></a></dt>
+<dd><p>Creates ASCII headers and initializes logging information for a spatial graph
+prediction process. The headers include project details, directory setup,
+neural network configurations for semantic and instance segmentation, and
+other metadata. It verifies paths, logs prediction states appropriately,
+and dynamically determines the model version depending on the predictive
+needs and available checkpoints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>self.dir</strong> – Directory path for file output or processing.
+Default is retrieved current working directory if unset.</p></li>
+<li><p><strong>self.output_format</strong> – Format of the output data produced during
+prediction, e.g. as,send LabelSetsivet nn</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.predictor.GeneralPredictor.init_check">
+<span class="sig-name descname"><span class="pre">init_check</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.predictor.GeneralPredictor.init_check" title="Link to this definition"></a></dt>
+<dd><p>Perform initialization and validation checks for a segmentation prediction task.</p>
+<p>This method performs several checks and initializations before executing a segmentation
+task. It first validates whether the requested prediction type is supported. If support is
+enabled for a TARDIS logo, additional checks are performed for user configurations, and error
+messages are displayed if any invalid settings are detected. Subsequently, the log output
+initialization begins with a defined title according to the segmentation type and configuration.</p>
+<p>This function also validates the chosen output format to ensure its compatibility with the
+system (e.g., checking for unsupported machine types like ARM64 or ensuring that at least one
+valid output format is selected). Invalid configurations or unsupported settings result in
+terminating the execution with proper error messaging.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>self</strong> – Instance of the class to which the initialization belongs.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>AssertionError</strong> – If the requested segmentation type is unsupported.</p></li>
+<li><p><a class="reference internal" href="logger.html#tardis_em.utils.errors.TardisError" title="tardis_em.utils.errors.TardisError"><strong>TardisError</strong></a> – If any invalid configuration is detected based on
+TARDIS-specific rules (e.g., invalid output format, machine-type
+dependencies).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.predictor.GeneralPredictor.build_NN">
+<span class="sig-name descname"><span class="pre">build_NN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">NN</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.predictor.GeneralPredictor.build_NN" title="Link to this definition"></a></dt>
+<dd><p>Builds the neural network and distance prediction modules based on the specified
+neural network (NN) type. Depending on the NN type, the appropriate configurations
+and pre-trained weights are loaded for CNN and DIST networks. This method supports
+multiple NN types, including Actin, Microtubule, Membrane, and General models.
+Additionally, configurations for 2D, 3D, and other specialized models are supported.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>NN</strong> (<em>str</em>) – A string denoting the neural network type. Supported types include
+“Actin”, “Microtubule”, “Microtubule_tirf”, “Membrane2D”, “Membrane”,
+or any type starting with “General”.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.predictor.GeneralPredictor.load_data">
+<span class="sig-name descname"><span class="pre">load_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.predictor.GeneralPredictor.load_data" title="Link to this definition"></a></dt>
+<dd><p>Loads and processes image data or point cloud data from a specified file or array. Depending on the
+input type, the function determines if the data is an AmiraMesh 3D ASCII file, a general image file,
+or a preloaded array. It performs normalization, sanity checks, and prepares the data for further
+processing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>id_name</strong> – Specifies either the path to the file to be loaded or an already loaded numpy array.
+Can be a string filename or a numpy array.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>AssertionError</strong> – <ul>
+<li><p>If the Amira Spatial Graph has dimensions other than 4.</p></li>
+<li><p>If the loaded image’s dtype is not <cite>float32</cite> after normalization.</p></li>
+<li><p>If the processed binary mask dtype is not <cite>int8</cite> or <cite>uint8</cite>.</p></li>
+</ul>
+</p></li>
+<li><p><a class="reference internal" href="logger.html#tardis_em.utils.errors.TardisError" title="tardis_em.utils.errors.TardisError"><strong>TardisError</strong></a> – <ul>
+<li><p>If <cite>tardis_logo</cite> is True and any of the aforementioned conditions fail.</p></li>
+</ul>
+</p></li>
+<li><p><strong>SystemExit</strong> – <ul>
+<li><p>If certain errors occur during processing and <cite>tardis_logo</cite> is True.</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.predictor.GeneralPredictor.predict_cnn">
+<span class="sig-name descname"><span class="pre">predict_cnn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataloader</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.predictor.GeneralPredictor.predict_cnn" title="Link to this definition"></a></dt>
+<dd><p>Predict images using a Convolutional Neural Network (CNN) with options for image rotation
+and progress tracking integrated with the Tardis progress bar interface.</p>
+<p>This method iterates over a dataloader to retrieve images, predicts their output using
+a CNN model (optionally with four 90° rotations), and writes the output to <cite>.tif</cite> files.
+The method supports progress tracking with Tardis interface updates
+and dynamically optimizes the progress bar refresh rate based on initial iteration timing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id_i</strong> (<em>int</em>) – Integer representing the ID of the image being processed.</p></li>
+<li><p><strong>id_name</strong> (<em>str</em>) – The name of the image being processed.</p></li>
+<li><p><strong>dataloader</strong> – An iterable object that provides access to image data and corresponding names.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.predictor.GeneralPredictor.predict_cnn_napari">
+<span class="sig-name descname"><span class="pre">predict_cnn_napari</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.predictor.GeneralPredictor.predict_cnn_napari" title="Link to this definition"></a></dt>
+<dd><p>Predicts an output using the CNN model on the provided input tensor, saves the
+result in TIFF format, and returns the output tensor.</p>
+<p>This function performs a prediction using the Convolutional Neural Network
+(CNN) model on the given input tensor. The result is saved as a TIFF file
+using the provided file name in the specified output directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_t</strong> – Input tensor on which prediction needs to be performed, should follow
+the required input format for the CNN model.</p></li>
+<li><p><strong>name</strong> – Name of the output file to save the predicted result.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The output tensor resulting from the CNN prediction, after processing
+with the input tensor.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.predictor.GeneralPredictor.postprocess_CNN">
+<span class="sig-name descname"><span class="pre">postprocess_CNN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.predictor.GeneralPredictor.postprocess_CNN" title="Link to this definition"></a></dt>
+<dd><p>Post-processes the CNN prediction by stitching predicted image patches,
+restoring the original pixel size, applying a threshold, and optionally
+saving the results in the specified format. This function also performs
+clean-up of temporary directories after processing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>id_name</strong> (<em>str</em>) – Identifier of the input data used to track and log the
+processed output.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.predictor.GeneralPredictor.preprocess_DIST">
+<span class="sig-name descname"><span class="pre">preprocess_DIST</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.predictor.GeneralPredictor.preprocess_DIST" title="Link to this definition"></a></dt>
+<dd><p>Preprocesses a given dataset identifier (id_name) to produce and manipulate
+high-density and low-density point clouds, typically used for structural or
+image data analysis. Depending on the prediction type and the presence of
+an Amira image, this function either post-processes predicted image patches
+to construct point clouds using provided processing utilities or applies
+optimization methods like voxel down-sampling for refining existing point
+clouds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>id_name</strong> (<em>str</em>) – The unique dataset identifier used in debugging and processing.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.predictor.GeneralPredictor.predict_DIST">
+<span class="sig-name descname"><span class="pre">predict_DIST</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.predictor.GeneralPredictor.predict_DIST" title="Link to this definition"></a></dt>
+<dd><p>Predicts DIST graphs for the given coordinates using the provided DIST prediction
+model. The method processes coordinate data in chunks and updates the progress bar
+if visual feedback is enabled. The progress bar reflects the current task,
+the percentage of completion, and relevant details of the segmentation process.
+The function ensures predictive modeling for the total images with a
+controlled iteration mechanism.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id_i</strong> – An integer representing the identifier of the image to be processed.</p></li>
+<li><p><strong>id_name</strong> – A string denoting the name of the image corresponding to the ID.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of predicted graph representations for each coordinate dataset.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.predictor.GeneralPredictor.postprocess_DIST">
+<span class="sig-name descname"><span class="pre">postprocess_DIST</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id_i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.predictor.GeneralPredictor.postprocess_DIST" title="Link to this definition"></a></dt>
+<dd><p>Processes and postprocesses data based on given inputs.</p>
+<p>This function adjusts the pixel data, logs information based
+on specific prediction types, and handles the transformation
+of graphs to segments. Additionally, updates the Tardis
+progress bar to provide task-specific updates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id_i</strong> (<em>int</em>) – Identification number for the current image
+being processed.</p></li>
+<li><p><strong>i</strong> (<em>int</em>) – Index of the current image.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None, modifies instance attributes based
+on the processing steps.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.predictor.GeneralPredictor.get_file_list">
+<span class="sig-name descname"><span class="pre">get_file_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.predictor.GeneralPredictor.get_file_list" title="Link to this definition"></a></dt>
+<dd><p>Retrieves and processes a list of files to be used for prediction based on the directory
+or input provided. Filters files according to specified formats, handles input as either
+single directories or lists/tuples, and logs the processed files. Additionally, performs
+setup tasks for the prediction workflow, including generating paths for output directories
+and checking prediction readiness.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>self</strong> (Object containing attributes: <cite>dir</cite>, <cite>available_format</cite>, <cite>omit_format</cite>,
+<cite>continue_</cite>, <cite>tardis_logo</cite>, <cite>tardis_progress</cite>, <cite>output</cite>, <cite>am_output</cite>,
+<cite>predict_list</cite>, <cite>device</cite>, <cite>title</cite>.) – The instance of the object that contains attributes such as directory paths,
+filtering formats, continuation settings, and progress handlers for processing.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>AssertionError</strong> – Raised when no recognizable files exist in the provided directory
+structure, based on specified formats, and appropriate progress
+handling or error logging is not enabled.</p></li>
+<li><p><strong>Exception</strong> – Additional exceptions may occur if environmental setup or file reading
+operations fail, depending on external utilities used and provided paths.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.predictor.GeneralPredictor.log_tardis">
+<span class="sig-name descname"><span class="pre">log_tardis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.predictor.GeneralPredictor.log_tardis" title="Link to this definition"></a></dt>
+<dd><p>Logs various states and processing stages of the TARDIS application based on the
+provided <cite>log_id</cite> and input data. Depending on the log ID and input type, it generates
+log messages showcasing the progress of various computational tasks and updates a
+progress bar accordingly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id_i</strong> (<em>int</em>) – Identifier for the current image being processed in the list
+of input images.</p></li>
+<li><p><strong>i</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>numpy.ndarray</em><em>]</em>) – Input data for logging, representing either a string description
+or a numpy array. If a numpy array is passed, it is converted into a
+string representation.</p></li>
+<li><p><strong>log_id</strong> (<em>float</em>) – Numeric identifier specifying the current task or processing
+stage. Determines the type of logging information generated, and can
+optionally include different subtasks.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.predictor.GeneralPredictor.save_semantic_mask">
+<span class="sig-name descname"><span class="pre">save_semantic_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.predictor.GeneralPredictor.save_semantic_mask" title="Link to this definition"></a></dt>
+<dd><p>Saves a semantic mask prediction in a specified format and logs the prediction
+details. Supported formats include MRC, TIF, AM, and NPY. The function also
+updates a log file with prediction details and writes the semantic mask output
+to the appropriate directory in the chosen format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>i</strong> (<em>str</em>) – The input file name used to derive the output file name.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>IOError</strong> – If there are issues writing the output files or logs.</p></li>
+<li><p><strong>ValueError</strong> – If the specified output format is unsupported.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.predictor.GeneralPredictor.save_instance_PC">
+<span class="sig-name descname"><span class="pre">save_instance_PC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite_save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.predictor.GeneralPredictor.save_instance_PC" title="Link to this definition"></a></dt>
+<dd><p>Save processed prediction instance data to disk in various formats. This method handles
+logging, filtering, and outputting of prediction data based on the specified output format
+or other input parameters. It supports multiple output types like CSV, MRC, TIF, AM, STL,
+and NPY for different prediction types such as “Actin”, “Microtubule”, “Membrane”,
+and general filaments or objects. Depending on the output format, it can further refine
+data through filtering, save semantic masks, or interface with Amira for spatial graph
+comparison and exportation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>i</strong> (<em>str</em>) – The identifier for the instance being saved.</p></li>
+<li><p><strong>overwrite_save</strong> (<em>bool</em>) – A flag to denote whether an existing file should be overwritten.
+Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.predictor.Predictor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.predictor.</span></span><span class="sig-name descname"><span class="pre">Predictor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigmoid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_2d</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.predictor.Predictor" title="Link to this definition"></a></dt>
+<dd><p>Handles model prediction workflows for neural networks, including loading pretrained
+weights, configuring model architectures dynamically, and predicting data. The
+purpose of this class is to abstract away the complexities of network setup and
+enhance user focus on utilizing pretrained networks, streamlining predictions.</p>
+<p>The class ensures compatibility with various deep learning frameworks, supports
+CNNs and distance-based networks dynamically, and provides inference-time adjustments like
+rotations for robustness.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.predictor.Predictor.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.utils.predictor.Predictor.predict" title="Link to this definition"></a></dt>
+<dd><p>Predicts an output based on given input data using a trained model. The method supports
+various modes of operation, including computing outputs for specific network types or
+applying rotations to the input for models with two-dimensional or three-dimensional
+spatial components. This function can handle data provided as PyTorch tensors or convert
+NumPy arrays into tensors internally. Outputs are generated either in a transformed or
+direct form according to the network type and additional parameters provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>torch.Tensor</em>) – Input tensor containing the primary data for prediction. Expected to have
+shapes conforming to the model’s requirements.</p></li>
+<li><p><strong>y</strong> (<em>Optional</em><em>[</em><em>torch.Tensor</em><em>]</em>) – Optional secondary input tensor containing additional data or node features.
+Defaults to None. Expected to match the compatible input feature dimensions
+of the model if provided.</p></li>
+<li><p><strong>rotate</strong> (<em>bool</em>) – Boolean flag indicating whether rotations should be applied to the input
+tensor to generate averaged transformed outputs. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The processed output from the model, structured as a NumPy array. Its dimensions
+and content correspond to the defined task of the provided trained model. Output
+is adjusted according to whether rotations were applied or if specific
+computations are required by the network type.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="trainer.html" class="btn btn-neutral float-left" title="Global -&gt; Trainer Handlers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="helper.html" class="btn btn-neutral float-right" title="Global -&gt; Helper Handlers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2024, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

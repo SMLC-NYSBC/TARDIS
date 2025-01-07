@@ -1,0 +1,349 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Global -&gt; SetUp Handlers &mdash; TARDIS-em 0.3.10 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=9f76a604"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="../_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="DIST -&gt; Visualize Point Clouds Handles" href="visualize.html" />
+    <link rel="prev" title="Global - &gt; Utils Functions" href="utils.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TARDIS-em
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../HISTORY.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../instructions.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_actin.html">-  3D Actin Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/tirf_mt.html">-  TIRF Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_membrane.html">-  3D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/scripting.html">-  Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/fine_tune_model.html">Fine-Tune TARDIS models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/helper.html">TARDIS helper-functions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html">CNN Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#dist-module">DIST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#analysis-module">Analysis Module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../code_doc.html#global-functions">Global Functions</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="aws.html">AWS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="import_data.html">Data Handlers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trainer.html">Trainer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="predictor.html">Predictor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="helper.html">Helper Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logger.html">Logger</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utils Functions</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">SetUp Environment</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.utils.dataset">Dataset organizers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.dataset.find_filtered_files"><code class="docutils literal notranslate"><span class="pre">find_filtered_files()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.dataset.move_train_dataset"><code class="docutils literal notranslate"><span class="pre">move_train_dataset()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.dataset.build_test_dataset"><code class="docutils literal notranslate"><span class="pre">build_test_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.utils.setup_envir">Environment setup</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.setup_envir.build_new_dir"><code class="docutils literal notranslate"><span class="pre">build_new_dir()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.setup_envir.build_temp_dir"><code class="docutils literal notranslate"><span class="pre">build_temp_dir()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.setup_envir.clean_up"><code class="docutils literal notranslate"><span class="pre">clean_up()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.setup_envir.check_dir"><code class="docutils literal notranslate"><span class="pre">check_dir()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="visualize.html">Visualizer</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../code_doc.html">CNN Module</a></li>
+      <li class="breadcrumb-item active">Global -&gt; SetUp Handlers</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/utils/setup.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="global-setup-handlers">
+<h1>Global -&gt; SetUp Handlers<a class="headerlink" href="#global-setup-handlers" title="Link to this heading"></a></h1>
+<section id="module-tardis_em.utils.dataset">
+<span id="dataset-organizers"></span><h2>Dataset organizers<a class="headerlink" href="#module-tardis_em.utils.dataset" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.dataset.find_filtered_files">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.dataset.</span></span><span class="sig-name descname"><span class="pre">find_filtered_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'instances_filter'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format_b</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'csv'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.dataset.find_filtered_files" title="Link to this definition"></a></dt>
+<dd><p>Finds and retrieves a list of files in the specified directory based on a given
+prefix and format(s). This function can search for files matching the prefix
+along with a single format or multiple formats, returning a list of filtered
+file paths.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>directory</strong> (<em>str</em>) – The directory path in which the search will be performed.</p></li>
+<li><p><strong>prefix</strong> (<em>str</em><em>, </em><em>optional</em>) – The prefix that filtered files should match.
+Defaults to ‘instances_filter’.</p></li>
+<li><p><strong>format_b</strong> (<em>str</em><em> or </em><em>list</em><em> or </em><em>tuple</em><em>, </em><em>optional</em>) – The format or formats (as string or a list/tuple of strings)
+to search for matching files. Defaults to ‘csv’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of file paths that match the specified prefix and format(s) in
+the directory.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.dataset.move_train_dataset">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.dataset.</span></span><span class="sig-name descname"><span class="pre">move_train_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dir_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coord_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_img</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.dataset.move_train_dataset" title="Link to this definition"></a></dt>
+<dd><p>Moves and organizes a training dataset by placing coordinate files and optionally
+image files into appropriate subdirectories.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dir_s</strong> (<em>str</em>) – The directory containing dataset files to be moved.</p></li>
+<li><p><strong>coord_format</strong> (<em>tuple</em>) – The file extension or format of coordinate files to be processed.</p></li>
+<li><p><strong>with_img</strong> (<em>bool</em>) – A flag indicating whether to include associated image files during
+dataset organization.</p></li>
+<li><p><strong>img_format</strong> (<em>tuple</em><em>, </em><em>optional</em>) – The file extension or format of image files to be processed if
+<cite>with_img</cite> is True. Optional.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="logger.html#tardis_em.utils.errors.TardisError" title="tardis_em.utils.errors.TardisError"><strong>TardisError</strong></a> – If no coordinate files matching <cite>coord_format</cite> are found in the
+given directory.</p></li>
+<li><p><a class="reference internal" href="logger.html#tardis_em.utils.errors.TardisError" title="tardis_em.utils.errors.TardisError"><strong>TardisError</strong></a> – If <cite>with_img</cite> is True but no image files matching <cite>img_format</cite>
+are found in the given directory.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.dataset.build_test_dataset">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.dataset.</span></span><span class="sig-name descname"><span class="pre">build_test_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_no</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stanford</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.dataset.build_test_dataset" title="Link to this definition"></a></dt>
+<dd><p>Builds a test dataset by reorganizing and moving files from the train dataset directory
+to a test dataset directory based on specific selection logic. This function handles
+dataset creation for both the general case and a special case for Stanford datasets.
+Images and corresponding masks are moved into a new test directory, ensuring the train
+directory is properly split into train and test datasets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset_dir</strong> (<em>str</em>) – Path to the directory containing the dataset.</p></li>
+<li><p><strong>dataset_no</strong> (<em>int</em>) – Number of datasets or partitions to consider when splitting for test data.</p></li>
+<li><p><strong>stanford</strong> (<em>bool</em>) – If True, applies specific folder organization and file movement logic
+for Stanford datasets. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-tardis_em.utils.setup_envir">
+<span id="environment-setup"></span><h2>Environment setup<a class="headerlink" href="#module-tardis_em.utils.setup_envir" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.setup_envir.build_new_dir">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.setup_envir.</span></span><span class="sig-name descname"><span class="pre">build_new_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dir_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.setup_envir.build_new_dir" title="Link to this definition"></a></dt>
+<dd><p>Builds a directory for temporary output files and ensures required files
+are present within the specified directory. If the required conditions
+are not met or the output directory already exists, appropriate actions
+are taken.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dir_s</strong> (<em>str</em>) – Path to the base directory where the temporary directory will
+be created.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.setup_envir.build_temp_dir">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.setup_envir.</span></span><span class="sig-name descname"><span class="pre">build_temp_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dir_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.setup_envir.build_temp_dir" title="Link to this definition"></a></dt>
+<dd><p>Creates necessary directories in the specified base directory to ensure the required
+structure for processing is in place. The function first checks for the existence of
+a “temp” subdirectory and its nested structure within the provided <cite>dir_</cite>. If the
+“temp” and respective subdirectories already exist, they will be reset to a clean
+state. If not, proper directories will be created as needed. Additionally, verifies
+and creates a top-level “Predictions” directory if it doesn’t exist.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dir_s</strong> (<em>str</em>) – The base directory where the directories need to be created or reset.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.setup_envir.clean_up">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.setup_envir.</span></span><span class="sig-name descname"><span class="pre">clean_up</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dir_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.setup_envir.clean_up" title="Link to this definition"></a></dt>
+<dd><p>Removes a directory named “temp” and its subdirectories, including
+“Patches” and “Predictions”, from the specified directory path. Ensures
+recursive deletion of all files and subdirectories inside the “temp”
+directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dir_s</strong> – The path to the parent directory containing the “temp”
+directory to be cleaned up. The directory path must be provided as a
+string.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None. The function performs cleanup operations without
+returning a value.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.setup_envir.check_dir">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.setup_envir.</span></span><span class="sig-name descname"><span class="pre">check_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dir_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_img</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_img</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_img</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#tardis_em.utils.setup_envir.check_dir" title="Link to this definition"></a></dt>
+<dd><p>Validates the structure and contents of a dataset directory to ensure proper
+organization for training and testing processes. This function checks for
+the existence of specific subdirectories (<cite>train</cite> and <cite>test</cite>), as well as for
+the presence and consistency of files (both images and masks) in the dataset.
+It ensures that the number of image files matches the number of mask files,
+and optionally validates file formats.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dir_s</strong> (<em>str</em>) – Root directory of the dataset to validate.</p></li>
+<li><p><strong>train_img</strong> (<em>str</em>) – Path to the subdirectory containing training images.</p></li>
+<li><p><strong>train_mask</strong> (<em>str</em>) – Path to the subdirectory containing training masks.</p></li>
+<li><p><strong>test_img</strong> (<em>str</em>) – Path to the subdirectory containing test images.</p></li>
+<li><p><strong>test_mask</strong> (<em>str</em>) – Path to the subdirectory containing test masks.</p></li>
+<li><p><strong>with_img</strong> (<em>bool</em>) – Indicates whether the validation should check for the
+presence of both images and masks, or just masks alone.</p></li>
+<li><p><strong>img_format</strong> (<em>Union</em><em>[</em><em>tuple</em><em>, </em><em>str</em><em>]</em>) – File extension(s) for image files. It can be either
+a tuple of extensions or a single extension as a string.</p></li>
+<li><p><strong>mask_format</strong> (<em>Union</em><em>[</em><em>tuple</em><em>, </em><em>str</em><em>, </em><em>None</em><em>]</em>) – File extension(s) for mask files. It can be a tuple
+of extensions, a single extension as a string, or None to disable
+mask format validation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A boolean indicating whether the directory structure and
+contents meet the validation criteria.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="utils.html" class="btn btn-neutral float-left" title="Global - &gt; Utils Functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="visualize.html" class="btn btn-neutral float-right" title="DIST -&gt; Visualize Point Clouds Handles" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2024, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

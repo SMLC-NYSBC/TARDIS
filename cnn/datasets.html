@@ -1,0 +1,355 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CNN -&gt; Datasets &mdash; TARDIS-em 0.3.10 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=9f76a604"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="../_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="CNN -&gt; Data processing" href="data_processing.html" />
+    <link rel="prev" title="CNN -&gt; Model" href="model.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TARDIS-em
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../HISTORY.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../instructions.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_actin.html">-  3D Actin Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/tirf_mt.html">-  TIRF Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_membrane.html">-  3D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/scripting.html">-  Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/fine_tune_model.html">Fine-Tune TARDIS models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/helper.html">TARDIS helper-functions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../code_doc.html">CNN Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cnn.html">CNN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model.html">CNN Model</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">DataLoader</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.cnn.datasets.augmentation">Image Augmentation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.datasets.augmentation.CenterCrop"><code class="docutils literal notranslate"><span class="pre">CenterCrop</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.datasets.augmentation.RandomFlip"><code class="docutils literal notranslate"><span class="pre">RandomFlip</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.datasets.augmentation.RandomRotation"><code class="docutils literal notranslate"><span class="pre">RandomRotation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.datasets.augmentation.ComposeRandomTransformation"><code class="docutils literal notranslate"><span class="pre">ComposeRandomTransformation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.datasets.augmentation.preprocess"><code class="docutils literal notranslate"><span class="pre">preprocess()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.cnn.datasets.dataloader">DataLoader</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.datasets.dataloader.CNNDataset"><code class="docutils literal notranslate"><span class="pre">CNNDataset</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.datasets.dataloader.PredictionDataset"><code class="docutils literal notranslate"><span class="pre">PredictionDataset</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.cnn.datasets.build_dataset">Dataset Builder</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.datasets.build_dataset.build_train_dataset"><code class="docutils literal notranslate"><span class="pre">build_train_dataset()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.datasets.build_dataset.load_img_mask_data"><code class="docutils literal notranslate"><span class="pre">load_img_mask_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.datasets.build_dataset.error_log_build_data"><code class="docutils literal notranslate"><span class="pre">error_log_build_data()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="data_processing.html">Data processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#dist-module">DIST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#analysis-module">Analysis Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#global-functions">Global Functions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../code_doc.html">CNN Module</a></li>
+      <li class="breadcrumb-item active">CNN -&gt; Datasets</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/cnn/datasets.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cnn-datasets">
+<h1>CNN -&gt; Datasets<a class="headerlink" href="#cnn-datasets" title="Link to this heading"></a></h1>
+<section id="module-tardis_em.cnn.datasets.augmentation">
+<span id="image-augmentation"></span><h2>Image Augmentation<a class="headerlink" href="#module-tardis_em.cnn.datasets.augmentation" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.cnn.datasets.augmentation.CenterCrop">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.datasets.augmentation.</span></span><span class="sig-name descname"><span class="pre">CenterCrop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.datasets.augmentation.CenterCrop" title="Link to this definition"></a></dt>
+<dd><p>CenterCrop is used to crop the center region of 2D or 3D image arrays.</p>
+<p>The purpose of this class is to allow cropping of image arrays to a predefined
+central size for further processing, training, or analysis. The class supports
+both 2D and 3D image formats. The usage involves initializing the crop size
+and then calling the instance with the input image array and an optional mask
+array.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.cnn.datasets.augmentation.RandomFlip">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.datasets.augmentation.</span></span><span class="sig-name descname"><span class="pre">RandomFlip</span></span><a class="headerlink" href="#tardis_em.cnn.datasets.augmentation.RandomFlip" title="Link to this definition"></a></dt>
+<dd><p>RandomFlip class for flipping 2D or 3D images and their corresponding label masks
+along a random axis. This class is commonly used in data augmentation for machine
+learning models, particularly in image processing tasks.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.cnn.datasets.augmentation.RandomRotation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.datasets.augmentation.</span></span><span class="sig-name descname"><span class="pre">RandomRotation</span></span><a class="headerlink" href="#tardis_em.cnn.datasets.augmentation.RandomRotation" title="Link to this definition"></a></dt>
+<dd><p>Randomize rotation.</p>
+<p>This class provides a mechanism to apply random rotations to 2D/3D image arrays and their
+corresponding label mask arrays. It can determine the rotation angle and direction randomly,
+then apply the transformation to the input data. The main purpose is to augment the data
+by introducing random rotations.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.cnn.datasets.augmentation.ComposeRandomTransformation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.datasets.augmentation.</span></span><span class="sig-name descname"><span class="pre">ComposeRandomTransformation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transformations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.datasets.augmentation.ComposeRandomTransformation" title="Link to this definition"></a></dt>
+<dd><p>ComposeRandomTransformation applies a random sequence of transformations
+from a given list to the input data. The number of transformations applied
+in a sequence is determined randomly between 1 and 3. This class is designed
+to augment data by applying non-deterministic transformations to images and
+their corresponding label masks during preprocessing.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.datasets.augmentation.preprocess">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.datasets.augmentation.</span></span><span class="sig-name descname"><span class="pre">preprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image:</span> <span class="pre">~numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transformation:</span> <span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size:</span> <span class="pre">tuple</span> <span class="pre">|</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'int'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask:</span> <span class="pre">~numpy.ndarray</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dim_mask=1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.cnn.datasets.augmentation.preprocess" title="Link to this definition"></a></dt>
+<dd><p>Preprocesses an image with optional transformations, resizing, and mask handling. The function
+supports both 2D and 3D images. It resizes the image and optionally a mask to the desired size,
+applies random transformations, and prepares the data for model input by expanding its
+dimensions as needed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> – The input image to preprocess. Must be a NumPy array of 2 or 3 dimensions.</p></li>
+<li><p><strong>transformation</strong> – A boolean flag to determine whether random transformations such as
+flipping and rotation should be applied to the image.</p></li>
+<li><p><strong>size</strong> – The target size for resizing the image. Can be an integer for uniform scaling
+or a tuple for specific dimensions.</p></li>
+<li><p><strong>mask</strong> – Optional. A mask corresponding to the input image. Must match the dimensions
+of the image.</p></li>
+<li><p><strong>output_dim_mask</strong> – Optional. The number of desired output dimensions for the mask. Default
+is 1.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>If a mask is provided, returns a tuple containing the preprocessed image and mask.
+If no mask is provided, returns only the preprocessed image.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>Exception</strong> – Raised when a tuple size for resizing does not represent uniform scaling
+(e.g., dimensions that are non-uniform or inconsistent).</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-tardis_em.cnn.datasets.dataloader">
+<span id="dataloader"></span><h2>DataLoader<a class="headerlink" href="#module-tardis_em.cnn.datasets.dataloader" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.cnn.datasets.dataloader.CNNDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.datasets.dataloader.</span></span><span class="sig-name descname"><span class="pre">CNNDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_mask'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.datasets.dataloader.CNNDataset" title="Link to this definition"></a></dt>
+<dd><p>Handles dataset creation and processing for Convolutional Neural Network (CNN) training and inference.</p>
+<p>This class manages the loading, processing, and formatting of image and mask data
+needed for training CNN models. It includes normalization, size adjustments,
+and optional transformations to prepare data for further model usage.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.cnn.datasets.dataloader.PredictionDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.datasets.dataloader.</span></span><span class="sig-name descname"><span class="pre">PredictionDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.datasets.dataloader.PredictionDataset" title="Link to this definition"></a></dt>
+<dd><p>Manages loading, processing, and serving of datasets for image prediction tasks.</p>
+<p>This class provides methods to load images from a specified directory, preprocess
+and format them into tensors compatible with convolutional neural networks. It also
+facilitates retrieval by a specific index. Used for predictive model input preparation.</p>
+</dd></dl>
+
+</section>
+<section id="module-tardis_em.cnn.datasets.build_dataset">
+<span id="dataset-builder"></span><h2>Dataset Builder<a class="headerlink" href="#module-tardis_em.cnn.datasets.build_dataset" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.datasets.build_dataset.build_train_dataset">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.datasets.build_dataset.</span></span><span class="sig-name descname"><span class="pre">build_train_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">circle_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resize_pixel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trim_xy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trim_z</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">benchmark</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correct_pixel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.datasets.build_dataset.build_train_dataset" title="Link to this definition"></a></dt>
+<dd><p>Build a training dataset by processing image files and their corresponding masks.</p>
+<p>This function performs a series of data pre-processing steps, including file validation,
+loading images and masks, calculating scaling factors based on pixel size, handling different
+mask formats, and generating the required training dataset with any necessary transformations.
+Logs the progress and any encountered errors into a log file during processing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset_dir</strong> (<em>str</em>) – Directory path containing the dataset files</p></li>
+<li><p><strong>circle_size</strong> (<em>int</em>) – Size of the circle used for mask drawing</p></li>
+<li><p><strong>resize_pixel_size</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>NoneType</em><em>]</em>) – Target pixel size for resizing the images, if specified</p></li>
+<li><p><strong>trim_xy</strong> (<em>int</em>) – Number of pixels to trim from the x and y dimensions during processing</p></li>
+<li><p><strong>trim_z</strong> (<em>int</em>) – Number of pixels to trim from the z dimension during processing</p></li>
+<li><p><strong>benchmark</strong> (<em>bool</em>) – Flag indicating whether to keep certain processing details for benchmark datasets</p></li>
+<li><p><strong>correct_pixel_size</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>NoneType</em><em>]</em>) – Optional, explicitly specifies the correct pixel size to be used</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>NoneType</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.datasets.build_dataset.load_img_mask_data">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.datasets.build_dataset.</span></span><span class="sig-name descname"><span class="pre">load_img_mask_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.cnn.datasets.build_dataset.load_img_mask_data" title="Link to this definition"></a></dt>
+<dd><p>Load image and mask data from various supported file formats (e.g., MRC, REC, Amira, TIFF, CSV).
+The function also processes correlated data from mask coordinate files where necessary.
+It supports Amira, TIFF, and MRC/REC file formats for flexibility in scientific imaging workflows.
+Normalization and scaling are optionally applied to the image as part of the loading process.
+The function returns the processed image, mask or coordinate data, and pixel size information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<em>str</em>) – Path to the image file. Supported formats are <cite>.mrc</cite>, <cite>.rec</cite>,
+<cite>.map</cite>, <cite>.am</cite>, <cite>.tif</cite>, and <cite>.tiff</cite>.</p></li>
+<li><p><strong>mask</strong> (<em>str</em>) – Path to the mask file. Supported formats are <cite>_mask.mrc</cite>,
+<cite>_mask.rec</cite>, <cite>_mask.am</cite>, <cite>_mask.csv</cite>, <cite>.CorrelationLines.am</cite>,
+and <cite>_mask.tif</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing the normalized image, loaded mask or coordinate
+data (if applicable), and the pixel size as either a float (for pixel
+size) or None.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[numpy.ndarray, numpy.ndarray or numpy.ndarray, float or None]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.datasets.build_dataset.error_log_build_data">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.datasets.build_dataset.</span></span><span class="sig-name descname"><span class="pre">error_log_build_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dir_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.cnn.datasets.build_dataset.error_log_build_data" title="Link to this definition"></a></dt>
+<dd><p>Stores error data into a log file and saves the updated log file.</p>
+<p>This function updates the specified log file with error data corresponding
+to a given ID and an identifier string. After updating the log file, it
+saves the file in the specified directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dir_name</strong> (<em>str</em>) – The directory location where the updated log file should be
+saved.</p></li>
+<li><p><strong>log_file</strong> (<em>np.ndarray</em>) – A two-dimensional NumPy array representing the log file
+where error information will be stored.</p></li>
+<li><p><strong>id_i</strong> (<em>int</em>) – The integer identifier used to locate and store error data
+within the log file.</p></li>
+<li><p><strong>i</strong> (<em>str</em>) – The identifier string associated with the specific error or
+data entry being logged.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The updated log file as a two-dimensional NumPy array after
+storing the new data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="model.html" class="btn btn-neutral float-left" title="CNN -&gt; Model" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="data_processing.html" class="btn btn-neutral float-right" title="CNN -&gt; Data processing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2024, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

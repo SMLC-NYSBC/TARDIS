@@ -1,0 +1,640 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CNN -&gt; Data processing &mdash; TARDIS-em 0.3.10 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=9f76a604"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="../_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="CNN -&gt; Utils" href="utils.html" />
+    <link rel="prev" title="CNN -&gt; Datasets" href="datasets.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TARDIS-em
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../HISTORY.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../instructions.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_actin.html">-  3D Actin Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/tirf_mt.html">-  TIRF Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_membrane.html">-  3D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/scripting.html">-  Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/fine_tune_model.html">Fine-Tune TARDIS models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/helper.html">TARDIS helper-functions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../code_doc.html">CNN Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cnn.html">CNN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model.html">CNN Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets.html">DataLoader</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Data processing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.cnn.data_processing.trim">Image patching - Image trimming</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.trim.trim_with_stride"><code class="docutils literal notranslate"><span class="pre">trim_with_stride()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.trim.trim_label_mask"><code class="docutils literal notranslate"><span class="pre">trim_label_mask()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.cnn.data_processing.stitch">Image patching - Image stitching</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.stitch.StitchImages"><code class="docutils literal notranslate"><span class="pre">StitchImages</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.stitch.generate_grid"><code class="docutils literal notranslate"><span class="pre">generate_grid()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.cnn.data_processing.interpolation">Utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.interpolation.interpolate_generator"><code class="docutils literal notranslate"><span class="pre">interpolate_generator()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.interpolation.interpolation"><code class="docutils literal notranslate"><span class="pre">interpolation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.draw_mask.draw_instances"><code class="docutils literal notranslate"><span class="pre">draw_instances()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.draw_mask.draw_semantic_membrane"><code class="docutils literal notranslate"><span class="pre">draw_semantic_membrane()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.draw_mask.draw_instances_membrane"><code class="docutils literal notranslate"><span class="pre">draw_instances_membrane()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.draw_mask.draw_mask"><code class="docutils literal notranslate"><span class="pre">draw_mask()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.draw_mask.draw_circle"><code class="docutils literal notranslate"><span class="pre">draw_circle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.draw_mask.draw_sphere"><code class="docutils literal notranslate"><span class="pre">draw_sphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.scaling.scale_image"><code class="docutils literal notranslate"><span class="pre">scale_image()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.scaling.nn_scaling"><code class="docutils literal notranslate"><span class="pre">nn_scaling()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.scaling.linear_scaling"><code class="docutils literal notranslate"><span class="pre">linear_scaling()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.scaling.area_scaling"><code class="docutils literal notranslate"><span class="pre">area_scaling()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.cnn.data_processing.scaling.fourier_scaling"><code class="docutils literal notranslate"><span class="pre">fourier_scaling()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#dist-module">DIST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#analysis-module">Analysis Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#global-functions">Global Functions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../code_doc.html">CNN Module</a></li>
+      <li class="breadcrumb-item active">CNN -&gt; Data processing</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/cnn/data_processing.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cnn-data-processing">
+<h1>CNN -&gt; Data processing<a class="headerlink" href="#cnn-data-processing" title="Link to this heading"></a></h1>
+<section id="module-tardis_em.cnn.data_processing.trim">
+<span id="image-patching-image-trimming"></span><h2>Image patching - Image trimming<a class="headerlink" href="#module-tardis_em.cnn.data_processing.trim" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.trim.trim_with_stride">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.trim.</span></span><span class="sig-name descname"><span class="pre">trim_with_stride</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trim_size_xy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trim_size_z</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_counter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clean_empty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_if</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">device(type='cpu')</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.data_processing.trim.trim_with_stride" title="Link to this definition"></a></dt>
+<dd><p>Trim a 2D/3D image with optional masking into smaller patches with a specific stride
+and size. This function is designed for preprocessing image data for machine learning
+tasks, ensuring that the image dimensions meet specified requirements or adjusting
+them when necessary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> – The input image array, which can be 2D or 3D, and include grayscale or RGB
+channels. The data type and shape may vary depending on the input.</p></li>
+<li><p><strong>trim_size_xy</strong> – Desired size for trimming in the X and Y dimensions. The input value determines
+the width and height of each patch. If not provided, default values will be
+calculated.</p></li>
+<li><p><strong>trim_size_z</strong> – Desired size for trimming in the Z dimension. The input value determines
+the depth of each patch in case of 3D data. If not provided, default values
+will be calculated.</p></li>
+<li><p><strong>output</strong> – Directory path where the trimmed patches will be saved. Output images and masks
+are stored in subdirectories.</p></li>
+<li><p><strong>image_counter</strong> – Counter used for naming the output files. This ensures unique filenames during
+the trimming process.</p></li>
+<li><p><strong>scale</strong> – A scaling factor list that adjusts the image size before trimming is performed.</p></li>
+<li><p><strong>clean_empty</strong> – When set to True, automatic filtering is applied to exclude patches considered
+empty based on a specific condition.</p></li>
+<li><p><strong>keep_if</strong> – Minimum threshold for keeping patches. The condition ensures that patches
+with non-empty values above this percentage are retained.</p></li>
+<li><p><strong>stride</strong> – The stride size for trimming patches. Stride determines the overlap between
+adjacent patches when slicing the image.</p></li>
+<li><p><strong>mask</strong> – Optional mask array corresponding to the input image. Used for segmentation
+or region-specific analyses. The function scales and trims the mask alongside
+the image.</p></li>
+<li><p><strong>log</strong> – Flag to enable or disable logging of the process; logs errors and important
+actions during execution when set to True.</p></li>
+<li><p><strong>pixel_size</strong> – Indicates whether the output should be saved in ‘.mrc’ (specific file format)
+or ‘.tif’ (common image format). Leave None for default behavior.</p></li>
+<li><p><strong>device</strong> – Specifies the computational device (CPU, GPU, etc.) to be used if scaling
+operations employ device-specific optimizations.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Returns None. Side effect: Saves the image patches and corresponding mask
+patches (when provided) to the specified output directory. Each patch is
+named according to its positional indices to maintain unique identification.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.trim.trim_label_mask">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.trim.</span></span><span class="sig-name descname"><span class="pre">trim_label_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.cnn.data_processing.trim.trim_label_mask" title="Link to this definition"></a></dt>
+<dd><p>Trim the label mask, image, and adjust the point coordinates based on the minimum and
+maximum boundaries in the provided points. The function calculates the bounding box
+using the points array, crops the image and label mask within this bounding box,
+and shifts the points coordinates accordingly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> – A numpy array of shape (N, 3) representing the coordinates of points.</p></li>
+<li><p><strong>image</strong> – A 3D numpy array representing the volumetric image.</p></li>
+<li><p><strong>label_mask</strong> – A 3D numpy array representing the volumetric label mask.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing the trimmed image array, the trimmed label_mask array,
+and the adjusted points array.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-tardis_em.cnn.data_processing.stitch">
+<span id="image-patching-image-stitching"></span><h2>Image patching - Image stitching<a class="headerlink" href="#module-tardis_em.cnn.data_processing.stitch" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.stitch.StitchImages">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.stitch.</span></span><span class="sig-name descname"><span class="pre">StitchImages</span></span><a class="headerlink" href="#tardis_em.cnn.data_processing.stitch.StitchImages" title="Link to this definition"></a></dt>
+<dd><p>A class for stitching multiple image patches into a single image.</p>
+<p>This class is utilized to process and combine multiple small image patches
+into a large cohesive image. The images are expected to follow a specific
+naming convention that includes indices and dimensions, which the class
+uses for computation. This functionality is useful in domains such as
+image processing and machine learning, where use of segmented image parts
+during preprocessing and their subsequent recombination is common.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.stitch.generate_grid">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.stitch.</span></span><span class="sig-name descname"><span class="pre">generate_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.cnn.data_processing.stitch.generate_grid" title="Link to this definition"></a></dt>
+<dd><p>Generates grid coordinates for a given image, with support for both 2D and 3D images. The
+method computes overlapping patch regions for an image based on the specified patch size, grid
+size, and stride. For 2D images, the function generates grid points for rows and columns,
+and for 3D images, it extends the functionality by incorporating depth information. Output
+grid coordinates serve as indexing patterns for segmenting images into smaller patches or
+for analyzing specific grid areas.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image_size</strong> – Tuple representing dimensions of the image. For a 2D image,
+it takes the form (height, width). For a 3D image, it takes the form
+(depth, height, width).</p></li>
+<li><p><strong>patch_size</strong> – List representing the size of the patches for either a 2D or 3D image.
+For a 2D image, it should be [patch_height, patch_width]. For a 3D image,
+[patch_depth, patch_height, patch_width].</p></li>
+<li><p><strong>grid_size</strong> – List defining the number of grid steps along each dimension.
+For a 2D image, it is [grid_rows, grid_columns]. For a 3D image, it is
+[grid_depth, grid_rows, grid_columns].</p></li>
+<li><p><strong>stride</strong> – Integer specifying the step size or overlap between the patch regions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>If the input image is 2D, returns two arrays containing the y-coordinates
+and x-coordinates of the grid. If the input image is 3D, returns three arrays:
+(1) a 2D array of coordinates for depth and rows, (2) a 2D array of coordinates
+for depth and columns, and (3) a 1D array of z-coordinates grid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-tardis_em.cnn.data_processing.interpolation">
+<span id="utils"></span><h2>Utils<a class="headerlink" href="#module-tardis_em.cnn.data_processing.interpolation" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.interpolation.interpolate_generator">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.interpolation.</span></span><span class="sig-name descname"><span class="pre">interpolate_generator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterable</span></span></span><a class="headerlink" href="#tardis_em.cnn.data_processing.interpolation.interpolate_generator" title="Link to this definition"></a></dt>
+<dd><p>Generates interpolated points between two given 2D or 3D points. The function
+determines the interpolation path in a pixel-grid-like manner between the start
+and end points, based on Bresenham-like algorithms. Interpolation supports
+only 2D and 3D coordinate systems, and exactly two points must be provided for
+interpolation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>points</strong> – An array of shape (2, 2) for 2D points or (2, 3) for 3D points.
+Defines the two points between which interpolation is performed.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An iterable generator that yields tuples representing (x, y) in 2D
+space and (x, y, z) in 3D space.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.interpolation.interpolation">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.interpolation.</span></span><span class="sig-name descname"><span class="pre">interpolation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.cnn.data_processing.interpolation.interpolation" title="Link to this definition"></a></dt>
+<dd><p>Performs 3D interpolation for XYZ coordinates using a given interpolation
+generator over sequential point pairs, and appends the last point to the
+output in integer format. The function creates a continuous series of
+interpolated points connecting all input coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>points</strong> – An array of shape (N, 3) representing a sequence of 3D points.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An array of shape (M, 3) containing the interpolated 3D coordinates,
+where M &gt;= N due to newly generated intermediate points.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function" id="module-tardis_em.cnn.data_processing.draw_mask">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.draw_mask.draw_instances">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.draw_mask.</span></span><span class="sig-name descname"><span class="pre">draw_instances</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mask_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">circle_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">250</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.cnn.data_processing.draw_mask.draw_instances" title="Link to this definition"></a></dt>
+<dd><p>Draws labeled or binary masks based on the input coordinates, mask size, and additional parameters.</p>
+<p>This function generates either 2D or 3D masks, depending on the shape of the provided coordinates.
+If label generation is enabled, unique segment labels are created to distinguish between different segments.
+Circles centered around specific points are drawn in the masks, with sizes determined by the input circle size
+and pixel size. Input parameters related to the shape, size, and type of the mask, as well as the labeling behavior,
+are fully customizable. This function is suitable for constructing semantic or instance masks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mask_size</strong> (<em>list</em><em> | </em><em>tuple</em>) – The dimensions of the mask to be created.</p></li>
+<li><p><strong>coordinate</strong> (<em>np.ndarray</em>) – An array of coordinates specifying the locations to draw the mask.</p></li>
+<li><p><strong>pixel_size</strong> (<em>float</em>) – Size of a pixel in the mask, used to scale the mask appropriately.</p></li>
+<li><p><strong>circle_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Diameter of the circle to be drawn at each coordinate point. Defaults to 250.</p></li>
+<li><p><strong>label</strong> (<em>bool</em><em>, </em><em>optional</em>) – Flag indicating whether a labeled mask or a binary mask should be created. Defaults to True.</p></li>
+<li><p><strong>dtype</strong> (<em>str</em><em> | </em><em>None</em><em>, </em><em>optional</em>) – Data type for the output mask. If not provided, defaults to np.uint16 or np.uint8.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A 2D or 3D mask generated based on the input parameters.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.draw_mask.draw_semantic_membrane">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.draw_mask.</span></span><span class="sig-name descname"><span class="pre">draw_semantic_membrane</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mask_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spline_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">70</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.cnn.data_processing.draw_mask.draw_semantic_membrane" title="Link to this definition"></a></dt>
+<dd><p>Draws a semantic membrane mask based on given coordinates, pixel size, and spline size.
+The function generates a mask of the specified size and marks regions centered
+around the provided coordinates. The region size is determined by the given spline size,
+adjusted by the pixel size.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mask_size</strong> (<em>tuple</em>) – The dimensions of the output mask, specified as a tuple of integers (z, y, x).</p></li>
+<li><p><strong>coordinate</strong> (<em>np.ndarray</em>) – A numpy array of coordinates specifying the center points of each region to be drawn in the mask.</p></li>
+<li><p><strong>pixel_size</strong> (<em>float</em>) – Resolution of the mask, defining the relationship between spline size and the mask grid.</p></li>
+<li><p><strong>spline_size</strong> (<em>int</em><em>, </em><em>optional</em>) – The diameter of the spline in real-world size, measured in the same unit as pixel_size. Default is 70.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A numpy ndarray representing the mask, where regions centered at the provided coordinates are filled.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.draw_mask.draw_instances_membrane">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.draw_mask.</span></span><span class="sig-name descname"><span class="pre">draw_instances_membrane</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mask_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spline_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">70</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.cnn.data_processing.draw_mask.draw_instances_membrane" title="Link to this definition"></a></dt>
+<dd><p>Draws the instances of membranes on a specified mask by iterating through given
+coordinates, creating circular “stamp”-like regions based on the spline size and
+pixel size, and assigning unique identifiers to each region in the mask.</p>
+<p>The mask is a 3D array where each element corresponds to a region assigned to a
+specific identifier. The process converts coordinates to integers, calculates a
+radius from the given spline and pixel sizes, and applies the circular regions
+to the mask for each set of input coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mask_size</strong> – A tuple representing the size of the mask, typically in 3D, that
+specifies its spatial dimensions.</p></li>
+<li><p><strong>coordinate</strong> – A 2D numpy array where each row corresponds to an instance,
+containing the identifier in the first column and the coordinates in the remaining
+columns.</p></li>
+<li><p><strong>pixel_size</strong> – A float representing the physical distance represented by
+a single pixel in the spatial dimensions of the mask.</p></li>
+<li><p><strong>spline_size</strong> – An integer specifying the base size of the “stamped” mask
+regions. Optional, default value is 70.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A 3D numpy array with the same dimensions as the input mask, containing
+unique identifiers based on the given coordinate for each “stamped” membrane region.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.draw_mask.draw_mask">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.draw_mask.</span></span><span class="sig-name descname"><span class="pre">draw_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.cnn.data_processing.draw_mask.draw_mask" title="Link to this definition"></a></dt>
+<dd><p>Draws a mask on the given label array by creating a circle or sphere depending
+on the specified shape. The method can handle both 2D and 3D label masks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>r</strong> – The radius of the circle (2D) or sphere (3D) to be drawn.</p></li>
+<li><p><strong>c</strong> – A numpy array containing the center coordinates of the shape,
+where the length of the input determines if it is 2D or 3D.</p></li>
+<li><p><strong>label_mask</strong> – A numpy array representing the label mask where
+the circle or sphere will be drawn. Must have 2 or 3 dimensions.</p></li>
+<li><p><strong>segment_shape</strong> – A string specifying the shape to draw; <cite>“c”</cite> for
+circle (default) or <cite>“s”</cite> for sphere.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple of numpy arrays representing the coordinates of the
+drawn mask shape. For 3D shapes, the tuple will include <cite>z</cite>, <cite>y</cite>,
+and <cite>x</cite> arrays. For 2D shapes, the tuple will include <cite>y</cite> and <cite>x</cite>
+arrays, omitting the <cite>z</cite> array.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.draw_mask.draw_circle">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.draw_mask.</span></span><span class="sig-name descname"><span class="pre">draw_circle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.cnn.data_processing.draw_mask.draw_circle" title="Link to this definition"></a></dt>
+<dd><p>Generates the coordinates of pixels to draw a filled circle in a given array shape.
+Depending on the input <cite>c</cite> (2D or 3D), it generates either 2D (y, x) or 3D (z, y, x)
+coordinates restricted within the specified shape.</p>
+<p>The method uses the <cite>skimage.draw.disk</cite> function to calculate the circular region
+and adjusts for its position in the provided coordinate frame <cite>c</cite>. It ensures
+that all pixels remain within the bounds of the array defined by <cite>shape</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>r</strong> – Radius of the circle to be drawn.</p></li>
+<li><p><strong>c</strong> – Tuple representing the center coordinates of the circle. In 2D, it requires (y, x),
+and for 3D, it requires (z, y, x).</p></li>
+<li><p><strong>shape</strong> – Tuple representing the shape of the frame or array where the circle needs to be
+drawn. For 2D: (rows, columns). For 3D: (depth, rows, columns).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Coordinates of pixels forming the circle. A tuple of arrays (y, x) for 2D or
+(z, y, x) for 3D representing the indices of the circle’s pixels.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.draw_mask.draw_sphere">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.draw_mask.</span></span><span class="sig-name descname"><span class="pre">draw_sphere</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.cnn.data_processing.draw_mask.draw_sphere" title="Link to this definition"></a></dt>
+<dd><p>Generates the coordinates of a 3D spherical structure within a volume of specified shape.
+This function simulates a sphere using a 3D binary array, applies trimming to the sphere,
+and shifts its position within a given coordinate frame. The output consists of the
+adjusted coordinates of the sphere within the specified 3D volume.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>r</strong> (<em>int</em>) – Radius of the sphere</p></li>
+<li><p><strong>c</strong> (<em>tuple</em>) – Center coordinates of the sphere in the 3D volume</p></li>
+<li><p><strong>shape</strong> (<em>tuple</em>) – Shape of the 3D volume to contain the sphere</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Coordinates of the sphere within the 3D volume along z, y, and x axes</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple of numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function" id="module-tardis_em.cnn.data_processing.scaling">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.scaling.scale_image">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.scaling.</span></span><span class="sig-name descname"><span class="pre">scale_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">device(type='cpu')</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.cnn.data_processing.scaling.scale_image" title="Link to this definition"></a></dt>
+<dd><p>Scales the input image and/or mask to the specified dimensions. Depending on the sizes
+given in <cite>scale</cite> compared to the original dimensions of the image or mask, down-sampling
+or up-sampling is applied. When both image and mask are provided, both are processed
+and returned along with the dimensional value. If only one of them (image or mask) is
+provided, it is scaled and returned with the dimensional value. If neither is provided,
+a <cite>None</cite> result is returned with the dimensional value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scale</strong> – A tuple of integers specifying the desired dimensions for scaling. Can
+be of length 2 (height and width) or 3 (height, width, and depth).</p></li>
+<li><p><strong>image</strong> – Optional. A NumPy array representing the image to be scaled. If
+provided, it is processed and scaled according to the provided <cite>scale</cite>.</p></li>
+<li><p><strong>mask</strong> – Optional. A NumPy array representing the mask to be scaled. If
+provided, it is processed and scaled according to the provided <cite>scale</cite>.</p></li>
+<li><p><strong>device</strong> – An optional argument specifying the device to perform scaling
+operations (e.g., <cite>torch.device(‘cpu’)</cite> or <cite>torch.device(‘cuda’)</cite>).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing either:
+- <cite>(image, mask, dim)</cite> if both <cite>image</cite> and <cite>mask</cite> are provided and processed.
+- <cite>(image, dim)</cite> if only <cite>image</cite> is provided and processed.
+- <cite>(mask, dim)</cite> if only <cite>mask</cite> is provided and processed.
+- <cite>(None, dim)</cite> if neither <cite>image</cite> nor <cite>mask</cite> are provided.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.scaling.nn_scaling">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.scaling.</span></span><span class="sig-name descname"><span class="pre">nn_scaling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">device(type='cpu')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gauss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.cnn.data_processing.scaling.nn_scaling" title="Link to this definition"></a></dt>
+<dd><p>Scale an image using nearest-neighbor interpolation, with an optional Gaussian
+filter applied before scaling.</p>
+<p>This function performs image resizing using PyTorch’s interpolation method
+with mode set to “nearest”. If the <cite>gauss</cite> parameter is set to True, a Gaussian
+filter is applied before resizing to smoothen the image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> – Input image as a NumPy array.</p></li>
+<li><p><strong>scale</strong> – New dimensions for the image as a tuple (height, width).</p></li>
+<li><p><strong>device</strong> – PyTorch device to perform operations on. Defaults to “cpu”.</p></li>
+<li><p><strong>gauss</strong> – Optional boolean flag to apply Gaussian filtering before scaling.
+Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Rescaled image as a NumPy array.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.scaling.linear_scaling">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.scaling.</span></span><span class="sig-name descname"><span class="pre">linear_scaling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">device(type='cpu')</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.cnn.data_processing.scaling.linear_scaling" title="Link to this definition"></a></dt>
+<dd><p>Scales a 2D or 3D image to a desired resolution using trilinear or bilinear
+interpolation. The function performs the scaling in multiple steps, doubling or
+halving dimensions at each step, until the desired resolution is achieved or
+exceeded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> – Input image to be scaled. Can be 2D or 3D. Should be provided as
+a NumPy array.</p></li>
+<li><p><strong>scale</strong> – Target resolution as a tuple of integers representing the
+desired dimensions. Must correspond to either (depth, height, width) for 3D
+images or (height, width) for 2D images.</p></li>
+<li><p><strong>device</strong> – Device to use for the tensor operations (default is
+<cite>torch.device(“cpu”)</cite>). It accepts GPU devices (e.g., <cite>torch.device(“cuda”)</cite>).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A NumPy array representing the resized image, scaled to the target
+resolution.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.scaling.area_scaling">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.scaling.</span></span><span class="sig-name descname"><span class="pre">area_scaling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">device(type='cpu')</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.cnn.data_processing.scaling.area_scaling" title="Link to this definition"></a></dt>
+<dd><p>Scales a 3D image array to a specified size along all axes using area-based
+interpolation. The function uses PyTorch’s interpolation functionality to
+rescale the image accurately. This process first adjusts the Z-axis size,
+then scales along the XY plane to match the target scale. The function assumes
+input and output images to be 3D arrays. It takes a device parameter that
+leverages GPU acceleration if specified.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> (<em>np.ndarray</em>) – Input 3D numpy array representing the image data to be scaled.</p></li>
+<li><p><strong>scale</strong> (<em>tuple</em>) – A tuple specifying the desired size of the scaled image
+(depth, height, width).</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em>) – The computation device to perform scaling. Defaults to CPU.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A scaled 3D numpy array.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.cnn.data_processing.scaling.fourier_scaling">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.cnn.data_processing.scaling.</span></span><span class="sig-name descname"><span class="pre">fourier_scaling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">device(type='cpu')</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.cnn.data_processing.scaling.fourier_scaling" title="Link to this definition"></a></dt>
+<dd><p>Rescales the given image in the frequency domain to the specified spatial dimensions
+using Fourier Transform. The function accepts an image as a NumPy array, performs
+Fourier Transform, adjusts the frequency components to fit the target scale, and
+reconstructs the resized image via inverse Fourier Transform. The scaling is performed
+directly in the frequency domain, which helps preserve spatial details in the resized
+image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img</strong> (<em>np.ndarray</em>) – 2D or 3D image array to be processed.</p></li>
+<li><p><strong>scale</strong> (<em>tuple</em>) – Target dimensions for scaling the image. Must be a tuple.</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em>) – Computing device to perform the Fourier Transform operations.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Resized image array with dimensions matching the specified scale.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="datasets.html" class="btn btn-neutral float-left" title="CNN -&gt; Datasets" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="utils.html" class="btn btn-neutral float-right" title="CNN -&gt; Utils" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2024, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,710 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DIST -&gt; Model &mdash; TARDIS-em 0.3.10 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=9f76a604"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="../_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="DIST -&gt; DataLoader" href="data_loader.html" />
+    <link rel="prev" title="DIST" href="dist.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TARDIS-em
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../HISTORY.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../instructions.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_actin.html">-  3D Actin Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/tirf_mt.html">-  TIRF Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_membrane.html">-  3D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/scripting.html">-  Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/fine_tune_model.html">Fine-Tune TARDIS models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/helper.html">TARDIS helper-functions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html">CNN Module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../code_doc.html#dist-module">DIST Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dist.html">DIST</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">DIST Model</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.dist_pytorch.model.layers">DIST layer wrapper</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.model.layers.DistStack"><code class="docutils literal notranslate"><span class="pre">DistStack</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.model.layers.DistLayer"><code class="docutils literal notranslate"><span class="pre">DistLayer</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#dist-graph-update-modules">DIST graph update-modules</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.model.modules.PairBiasSelfAttention"><code class="docutils literal notranslate"><span class="pre">PairBiasSelfAttention</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.model.modules.ComparisonLayer"><code class="docutils literal notranslate"><span class="pre">ComparisonLayer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.model.modules.TriangularEdgeUpdate"><code class="docutils literal notranslate"><span class="pre">TriangularEdgeUpdate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.model.modules.QuadraticEdgeUpdate"><code class="docutils literal notranslate"><span class="pre">QuadraticEdgeUpdate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.model.modules.MultiHeadAttention"><code class="docutils literal notranslate"><span class="pre">MultiHeadAttention</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.model.modules.SelfAttention2D"><code class="docutils literal notranslate"><span class="pre">SelfAttention2D</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.model.modules.GeluFeedForward"><code class="docutils literal notranslate"><span class="pre">GeluFeedForward</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#feature-embedding">Feature embedding</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.model.embedding.NodeEmbedding"><code class="docutils literal notranslate"><span class="pre">NodeEmbedding</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.dist_pytorch.model.embedding.EdgeEmbedding"><code class="docutils literal notranslate"><span class="pre">EdgeEmbedding</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="data_loader.html">DataLoader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#analysis-module">Analysis Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#global-functions">Global Functions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../code_doc.html">CNN Module</a></li>
+      <li class="breadcrumb-item active">DIST -&gt; Model</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/dist_pytorch/modules.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="dist-model">
+<h1>DIST -&gt; Model<a class="headerlink" href="#dist-model" title="Link to this heading"></a></h1>
+<section id="module-tardis_em.dist_pytorch.model.layers">
+<span id="dist-layer-wrapper"></span><h2>DIST layer wrapper<a class="headerlink" href="#module-tardis_em.dist_pytorch.model.layers" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.model.layers.DistStack">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.model.layers.</span></span><span class="sig-name descname"><span class="pre">DistStack</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pairs_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ff_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_heads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">structure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'full'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.model.layers.DistStack" title="Link to this definition"></a></dt>
+<dd><p>A neural network module for applying a stack of DistLayer layers to process
+edge and optional node features, typically for graph-based tasks.</p>
+<p>The DistStack class is a part of a Transformer-like architecture designed
+for graphs, where the stack is composed of multiple DistLayer layers. It
+provides an easy way to apply the stack sequentially on graph-related data,
+with the ability to handle optional node features and customizable edge
+masks for input feature attention.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.model.layers.DistStack.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_key_padding_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.model.layers.DistStack.forward" title="Link to this definition"></a></dt>
+<dd><p>Processes input edge features and optionally node features through multiple layers, applying
+transformations to generate updated tensors for nodes and edges.</p>
+<p>The forward method iterates through all available layers, transforming the input features.
+Each layer processes the given feature sets (nodes and edges), along with optional masks
+(src_mask and src_key_padding_mask) as part of the computation. The output is updated node
+features and edge features after the transformations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>edge_features</strong> – Input edge features as a tensor.</p></li>
+<li><p><strong>node_features</strong> – Optional input node features, provided as a tensor.
+Defaults to None.</p></li>
+<li><p><strong>src_mask</strong> – Optional source mask for attention-based computations.</p></li>
+<li><p><strong>src_key_padding_mask</strong> – Optional key padding mask for attention-based computations.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple consisting of two tensors:
+- Updated node features
+- Updated edge features</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.model.layers.DistLayer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.model.layers.</span></span><span class="sig-name descname"><span class="pre">DistLayer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pairs_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ff_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_heads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">structure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'full'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.model.layers.DistLayer" title="Link to this definition"></a></dt>
+<dd><p>DistLayer class is designed for hierarchical processing of node and pair
+representations using multi-head attention and feed-forward mechanisms.
+The class supports various structures for interaction layers such as
+triangular, quadratic, dual triangular updates, or full attention-based
+architectures. It extends PyTorch’s nn.Module and incorporates mechanisms
+to handle input features, as well as dropout for regularization.</p>
+<p>DistLayer allows for versatile interaction between node and pair features
+through specific update routines that depend on the chosen structure.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.model.layers.DistLayer.update_nodes">
+<span class="sig-name descname"><span class="pre">update_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h_pairs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_nodes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_key_padding_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.model.layers.DistLayer.update_nodes" title="Link to this definition"></a></dt>
+<dd><p>Updates the node representations based on pair embeddings and self-attention
+mechanism. This function combines the provided node embeddings and pair
+embeddings through an attention mechanism and applies a feed-forward network
+for further transformation. The updated node representation is returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h_pairs</strong> – Pairwise embeddings. A tensor that provides information about
+pair dependencies between nodes.</p></li>
+<li><p><strong>h_nodes</strong> – Optional initial node embeddings. If provided, these will be
+updated using the attention mechanism and feed-forward network.</p></li>
+<li><p><strong>src_mask</strong> – Attention mask used during the attention computation to
+indicate valid positions. This allows selective attention and prevents
+unwanted information flow.</p></li>
+<li><p><strong>src_key_padding_mask</strong> – Key padding mask used to indicate valid and
+invalid tokens or nodes for each sample in a batch. Useful during
+variable-length sequence handling.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Updated node representations after attention computation and
+feed-forward network application.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.model.layers.DistLayer.update_edges">
+<span class="sig-name descname"><span class="pre">update_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h_pairs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_nodes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_key_padding_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.model.layers.DistLayer.update_edges" title="Link to this definition"></a></dt>
+<dd><p>Updates the edge features in a graph based on the chosen structural configuration
+and optionally includes node features or masking conditions. The method modifies
+the input edge features by applying a variety of attentions, feature updates,
+and feedforward transformations, depending on the structure type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h_pairs</strong> – Tensor containing initial edge features, of shape
+<cite>(batch_size, num_nodes, num_nodes, feature_dim)</cite>.</p></li>
+<li><p><strong>h_nodes</strong> – Optional tensor containing node features, of shape
+<cite>(batch_size, num_nodes, feature_dim)</cite>. If provided, the function incorporates
+these features into the edge features during the update process.</p></li>
+<li><p><strong>mask</strong> – Optional tensor of shape <cite>(batch_size, num_nodes, num_nodes)</cite>. Acts
+as an attention mask or structural constraint for the feature update process.</p></li>
+<li><p><strong>src_key_padding_mask</strong> – Optional tensor of shape <cite>(batch_size, num_nodes)</cite>. If
+provided, it is used to generate a mask to ignore certain nodes by expanding it
+along the necessary dimensions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tensor of the same shape as <cite>h_pairs</cite>, representing the updated edge
+features after applying the selected transformations.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.model.layers.DistLayer.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h_pairs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_nodes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_key_padding_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.model.layers.DistLayer.forward" title="Link to this definition"></a></dt>
+<dd><p>Processes and updates node and edge features using provided input tensors.
+The function advances the transformation of node and edge features by applying
+update operations on input tensors, including optional masking of source inputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h_pairs</strong> – Tensor representing the edge features in the graph.</p></li>
+<li><p><strong>h_nodes</strong> – Tensor representing the node features in the graph. It can
+be optionally None, in which case no node updates will be performed.</p></li>
+<li><p><strong>src_mask</strong> – Optional mask applied at the source level during node update.</p></li>
+<li><p><strong>src_key_padding_mask</strong> – Optional mask to specify which elements should be
+ignored in the computation, typically used for padded sequences.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple of two tensors, the updated node features and the updated edge
+features in the graph.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="dist-graph-update-modules">
+<h2>DIST graph update-modules<a class="headerlink" href="#dist-graph-update-modules" title="Link to this heading"></a></h2>
+<p>Collection of all modules wrapped around ‘torch.nn.Module’ used in the DIST model.</p>
+<dl class="py class" id="module-tardis_em.dist_pytorch.model.modules">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.model.modules.PairBiasSelfAttention">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.model.modules.</span></span><span class="sig-name descname"><span class="pre">PairBiasSelfAttention</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embed_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pairs_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_heads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_scaling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.7071067811865475</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.model.modules.PairBiasSelfAttention" title="Link to this definition"></a></dt>
+<dd><p>Implements self-attention mechanism that incorporates pairwise features
+for multi-head attention. This class is designed for scenarios where
+attention bias is calculated based on edge features alongside the node
+embeddings. The module allows adjustable parameters including the number
+of heads, embedding dimensions, and initial scaling factors.</p>
+<p>The attention mechanism applies normalization and linear projections to
+both node and edge features, calculates attention weights, and uses those
+weights to compute weighted combinations of feature representations.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.model.modules.PairBiasSelfAttention.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pairs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attn_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key_padding_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">need_weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">need_head_weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.model.modules.PairBiasSelfAttention.forward" title="Link to this definition"></a></dt>
+<dd><p>Computes the forward pass of a multi-head attention module with additional pairwise
+positional weighting. This function first processes the query tensor through normalization
+and projection, prepares the attention weights using pair and masked components, applies
+the attention and then combines attended outputs with pairwise positional contributions.
+It optionally provides attention weights for inference or analysis.</p>
+<p>This method supports key padding masks for excluding irrelevant tokens from attention calculations,
+as well as optional attention masks for customizing attention strength in multi-head
+contexts. The function includes the necessary transformations to prepare query,
+key, and value tensors for batched multi-head operations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>query</strong> – The input tensor of shape (target length, batch size, embedding dimension).</p></li>
+<li><p><strong>pairs</strong> – Pairwise positional tensor of shape (batch size, sequence length,
+sequence length, number of heads).</p></li>
+<li><p><strong>attn_mask</strong> – Optional mask tensor of shape (target length, source length) to
+apply additional additive masking to the attention weights.</p></li>
+<li><p><strong>key_padding_mask</strong> – Optional binary tensor of shape (batch size, source length)
+indicating padded positions.</p></li>
+<li><p><strong>need_weights</strong> – Boolean flag to indicate whether to return the attention weights
+alongside the output tensor.</p></li>
+<li><p><strong>need_head_weights</strong> – Boolean flag to indicate whether individual head weights
+should be returned. Overrides <cite>need_weights</cite> when True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The output tensor of shape (target length, batch size, embedding dimension).
+If <cite>need_weights</cite> is True, also returns attention weights; the shape of weights
+depends on the <cite>need_head_weights</cite> parameter.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.model.modules.ComparisonLayer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.model.modules.</span></span><span class="sig-name descname"><span class="pre">ComparisonLayer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.model.modules.ComparisonLayer" title="Link to this definition"></a></dt>
+<dd><p>Defines the ComparisonLayer class, which is used to process and transform node
+features into a specific tensor shape. The class includes normalization and
+linear transformations for enhanced data manipulation.</p>
+<p>This layer takes as input node features and performs a series of transformations
+to generate a tensor that is compatible with specific downstream tasks in deep
+learning models. It leverages PyTorch’s <cite>nn.Module</cite> for implementing
+customized neural network layers.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.model.modules.ComparisonLayer.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.model.modules.ComparisonLayer.forward" title="Link to this definition"></a></dt>
+<dd><p>Performs a forward pass through the computational graph built for the operation.
+The method applies specific transformations on the input tensor such as transposition,
+normalization, and linear transformations to generate the final output. The computation
+includes element-wise multiplication and subtraction of transformed tensors, followed
+by additional linear transformations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>torch.Tensor</em>) – Input tensor with shape (Batch, Length, Feature_Dimensions)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Transformed tensor with shape (Batch, Length, Length, Out_Channels)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.model.modules.TriangularEdgeUpdate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.model.modules.</span></span><span class="sig-name descname"><span class="pre">TriangularEdgeUpdate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.model.modules.TriangularEdgeUpdate" title="Link to this definition"></a></dt>
+<dd><p>The TriangularEdgeUpdate class implements a neural network module that performs
+triangular edge updates for edge feature tensors. This is primarily designed for
+processing relational or structural data, where edge updates between nodes in a
+triangular relationship must be computed.</p>
+<p>The class takes input and processes it using linear layers, layer normalization,
+and gating mechanisms. It supports optional masking and performs updates
+based on a defined axis. The resulting features are computed via einsum operations,
+allowing for flexible interaction across specified dimensions.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.model.modules.TriangularEdgeUpdate.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.model.modules.TriangularEdgeUpdate.forward" title="Link to this definition"></a></dt>
+<dd><p>Processes the input tensor <cite>z</cite> using gated mechanisms and performs tensor operations to produce the output.
+It applies normalization, gating, and optionally masks certain elements based on the provided mask tensor.
+The computation involves einsum operations and a final gating mechanism for the output tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>z</strong> – Input tensor with dimensions suitable for processing by the forward method.</p></li>
+<li><p><strong>mask</strong> – Optional tensor used to mask specific elements of the input tensor during processing.
+If provided, elements are masked where the mask tensor indicates.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Processed tensor after applying the normalization, gating, masking (if applicable),
+and tensor manipulation operations.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.model.modules.QuadraticEdgeUpdate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.model.modules.</span></span><span class="sig-name descname"><span class="pre">QuadraticEdgeUpdate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.model.modules.QuadraticEdgeUpdate" title="Link to this definition"></a></dt>
+<dd><p>A neural network module for quadratic edge updates with gated linear units and layer normalization.</p>
+<p>This module processes edge features through a series of transformations, including gated linear
+layer calculations, layer normalization, and tensor manipulation using the einsum operation. It
+supports masking for optional selective computation over input tensors and provides flexible
+dimensional configurations.</p>
+<p>The input is normalized first and then transformed via multiple linear and gating operations.
+The outputs are combined through einsum-based operations based on the configured axis, enabling
+contextual computations for edge features. The final results are subjected to normalization and
+linear transformations to produce the output tensor.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.model.modules.QuadraticEdgeUpdate.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.model.modules.QuadraticEdgeUpdate.forward" title="Link to this definition"></a></dt>
+<dd><p>Computes the forward pass of the layer by applying gated transformations to the input tensor,
+optionally considering an input mask. It applies a series of linear transformations and
+element-wise sigmoid activations to generate intermediate tensors, followed by a tensor contraction
+using Einstein summation notation for specific axes. The output is further transformed by gating
+and normalization operations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>z</strong> – The input tensor with shape (B x L x D) where B is the batch size, L is the sequence length,
+and D is the input dimension.</p></li>
+<li><p><strong>mask</strong> – An optional binary mask tensor with shape (B x L x L) where masked positions are indicated
+with <cite>1</cite> and unmasked positions with <cite>0</cite>. If provided, it will nullify specific computations in the output.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tensor with shape (B x L x L x O), representing the transformed outputs after gating,
+linear transformation, normalization, and contraction operations.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.model.modules.MultiHeadAttention">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.model.modules.</span></span><span class="sig-name descname"><span class="pre">MultiHeadAttention</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embed_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_heads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kdim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vdim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_bias_kv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_zero_attn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">self_attention</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoder_decoder_attention</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_scaling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.7071067811865475</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.model.modules.MultiHeadAttention" title="Link to this definition"></a></dt>
+<dd><p>Represents a Multi-Head Attention (MHA) mechanism that enables self-attention
+or cross-attention in neural networks, primarily used in transformers.
+MHA facilitates attention over multiple heads, allowing the model to focus
+on different parts of the sequence simultaneously. This module supports
+various options such as encoder-decoder attention, dropout, bias customization,
+and scaling initialization.</p>
+<p>Multi-Head Attention is a key building block for many Natural Language
+Processing (NLP) and computer vision tasks, enabling the model to capture
+contextual dependencies efficiently.</p>
+<p>The module expects inputs in the form of query, key, and value tensors and
+provides attention outputs for further processing in the neural network.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.model.modules.MultiHeadAttention.reset_parameters">
+<span class="sig-name descname"><span class="pre">reset_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.model.modules.MultiHeadAttention.reset_parameters" title="Link to this definition"></a></dt>
+<dd><p>Initializes model parameters with specific initialization methods.</p>
+<p>This method resets the weights and biases of the key, value, query, and output
+projection layers in the neural network to ensure consistent training results
+and proper initialization of the model. It uses Xavier uniform initialization
+for the weights and constant initialization for specific components such as
+biases. If optional biases <cite>bias_k</cite> or <cite>bias_v</cite> exist, they are also reset to
+constant values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>TypeError</strong> – An exception is raised if the model components are not
+properly initialized or invalid attribute references to occur.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.model.modules.MultiHeadAttention.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key_padding_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">need_weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attn_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">before_softmax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">need_head_weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.model.modules.MultiHeadAttention.forward" title="Link to this definition"></a></dt>
+<dd><p>Computes the forward pass through a multi-head attention mechanism with
+support for self-attention, encoder-decoder attention, and custom input
+masks. The function supports options to include or exclude weights,
+apply dropout, and handle special cases such as biases and padding.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>query</strong> – Tensor representing the input sequence to compute attention for,
+with dimensions (target length, batch size, embedding dimension).</p></li>
+<li><p><strong>key</strong> – Optional tensor representing the key in the attention mechanism,
+with dimensions (source length, batch size, embedding dimension). If None,
+it assumes self-attention or other specialized attention types.</p></li>
+<li><p><strong>value</strong> – Optional tensor representing the value in the attention mechanism,
+with dimensions (source length, batch size, embedding dimension). If None,
+it assumes self-attention or other specialized attention types.</p></li>
+<li><p><strong>key_padding_mask</strong> – Optional boolean tensor used to specify padding on
+certain input positions, with dimensions (batch size, source length). Non-zero
+values denote positions to be masked.</p></li>
+<li><p><strong>need_weights</strong> – Boolean flag indicating whether the function should return
+attention weights along with the computed output.</p></li>
+<li><p><strong>attn_mask</strong> – Optional tensor representing a mask to restrict attention to
+specific positions, with dimensions (target length, source length). Typical
+for causal masking in transformer models.</p></li>
+<li><p><strong>before_softmax</strong> – Boolean flag to determine if attention weights are returned
+before or after the softmax operation is applied.</p></li>
+<li><p><strong>need_head_weights</strong> – Boolean flag indicating whether attention weights per
+head are needed (as opposed to aggregated weights across heads).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple consisting of the attention output (tensor with dimensions
+(target length, batch size, embedding dimension)) and, if requested, the
+attention weights (as a tensor with details depending on the head weights
+selection). If weights are not requested, only the attention output is returned.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.model.modules.SelfAttention2D">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.model.modules.</span></span><span class="sig-name descname"><span class="pre">SelfAttention2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embed_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_heads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4194304</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.model.modules.SelfAttention2D" title="Link to this definition"></a></dt>
+<dd><p>Implements 2D self-attention mechanism.</p>
+<p>This class extends the MultiHeadAttention module to perform self-attention
+specifically over 2D edge features. It provides functionality to reshape
+the input features depending on the axis mode (rows or columns) and enables
+efficient computation of attention by considering memory constraints via
+batching.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.model.modules.SelfAttention2D.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.model.modules.SelfAttention2D.forward" title="Link to this definition"></a></dt>
+<dd><p>Processes input tensor through a 2D self-attention mechanism and adjusts its shape
+based on the specified axis. Handles padding masks if provided, allowing optional
+batching for memory-efficient computation when the attention matrix size exceeds
+a specified maximum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>torch.Tensor</em>) – Input tensor containing the features to be processed using 2D self-attention.</p></li>
+<li><p><strong>padding_mask</strong> (<em>torch.Tensor</em><em> or </em><em>None</em>) – Optional mask used to ignore certain positions during the
+attention computation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Transformed tensor with the same spatial dimensions as the input but
+adjusted for the attention weights applied.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.model.modules.GeluFeedForward">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.model.modules.</span></span><span class="sig-name descname"><span class="pre">GeluFeedForward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ff_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.model.modules.GeluFeedForward" title="Link to this definition"></a></dt>
+<dd><p>Applies a GELU-based feedforward transformation to the input tensor.</p>
+<p>GeluFeedForward is a neural network module that normalizes the input tensor
+and applies a two-layer feedforward network with GELU activation. This is
+commonly used in transformer architectures or other deep learning models
+to enhance the representational power of the model.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.model.modules.GeluFeedForward.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.model.modules.GeluFeedForward.forward" title="Link to this definition"></a></dt>
+<dd><p>Applies a forward pass through the sequence of operations which includes
+normalization, two linear transformations, and the application of GELU
+activation function.</p>
+<p>This method processes the input tensor by first normalizing it using the
+<cite>self.norm</cite> function. It then applies the first linear transformation
+(<cite>self.linear1</cite>), followed by the GELU activation, and finally the
+second linear transformation (<cite>self.linear2</cite>). The output is returned
+as a transformed tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>torch.Tensor</em>) – Input tensor to the forward pass.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Transformed tensor after normalization, linear transformations,
+and activation function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="feature-embedding">
+<h2>Feature embedding<a class="headerlink" href="#feature-embedding" title="Link to this heading"></a></h2>
+<p>Collection of classes used for Node and Edge embedding.</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><strong>Node embedding</strong> is composed of RGB value or optionally flattened image patches.</dt><dd><p>The node embedding use only ‘nn.Linear’ to embedding (n) dimensional feature object.
+And output [Batch x Feature Length x Channels]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>Edge embedding</strong> is composed directly from the (n)D coordinate values, where n</dt><dd><p>is av dimension.
+The edge embedding computes ‘cdist’ operation on coordinate features and produces
+a distance matrix for all points in the given patch. The distance matrix is then
+normalized with an exponential function optimized with the sigma parameter. This
+exponential function normalize distance matrix by putting higher weight on
+the lower distance value (threshold with sigma). This allows the network to
+embed distance preserving SO(n) invariance for translation and rotation.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="py class" id="module-tardis_em.dist_pytorch.model.embedding">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.model.embedding.NodeEmbedding">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.model.embedding.</span></span><span class="sig-name descname"><span class="pre">NodeEmbedding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.model.embedding.NodeEmbedding" title="Link to this definition"></a></dt>
+<dd><p>NodeEmbedding class for transforming node features using either a learned
+linear mapping or a randomized cosine transformation, depending on the
+value of sigma.</p>
+<p>This class is used to embed input node features (e.g., RGB values or image
+patches) into a desired output dimension. If sigma is 0, a trainable linear
+layer is applied. Otherwise, a fixed random projection is utilized with
+a cosine activation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.model.embedding.NodeEmbedding.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.model.embedding.NodeEmbedding.forward" title="Link to this definition"></a></dt>
+<dd><p>Performs the forward pass of the module. If an input tensor is provided, it processes
+it through the defined <cite>linear</cite> layer if available, otherwise applies a specific
+transformation involving the cosine function and linear operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>input_node</strong> (<em>Optional</em><em>[</em><em>torch.Tensor</em><em>]</em>) – Input tensor to process. If None, returns None.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tensor where the processed input is transformed and scaled into the
+range [0, 1], or None if no input was provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[torch.Tensor]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.model.embedding.EdgeEmbedding">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.dist_pytorch.model.embedding.</span></span><span class="sig-name descname"><span class="pre">EdgeEmbedding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.dist_pytorch.model.embedding.EdgeEmbedding" title="Link to this definition"></a></dt>
+<dd><p>EdgeEmbedding layer encapsulates the functionality of computing edge-based
+representations within a graph, leveraging Gaussian radial basis functions (RBF)
+as embedding mechanisms. This module enables the transformation of edge distances
+into either fixed-dimensional encodings or dynamically adjustable encodings
+based on input configurations.</p>
+<p>EdgeEmbedding computes Gaussian kernel representations of edge distances
+and optionally applies a linear transformation to produce embeddings
+of a specified dimensionality. It supports both fixed sigma values (as single
+or iterable ranges) and learns to dynamically adjust their dimensions
+via linear layers.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.dist_pytorch.model.embedding.EdgeEmbedding.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="headerlink" href="#tardis_em.dist_pytorch.model.embedding.EdgeEmbedding.forward" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Computes a transformation of pairwise distances between input coordinates</dt><dd><p>and applies an optional linear transformation. The specific transformation
+depends on the configuration, such as whether a fixed <cite>sigma</cite> value or
+varying <cite>_range</cite> values are provided. Handles missing values robustly by
+replacing NaN distance values with zeros.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>input_coord</strong> (<em>torch.Tensor</em>) – Tensor of shape (…, L, D) where L is the number of
+coordinate points and D is the dimensionality of each point. It represents
+the input feature coordinates for which pairwise distances will be computed.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tensor of shape (…, L, L, K) where K is either 1 or the length of the <cite>_range</cite> attribute.
+Represents the transformed pairwise distances. If <cite>self.linear</cite> is provided, the returned tensor
+is further transformed using the linear layer.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="dist.html" class="btn btn-neutral float-left" title="DIST" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="data_loader.html" class="btn btn-neutral float-right" title="DIST -&gt; DataLoader" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2024, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

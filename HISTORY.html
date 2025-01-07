@@ -1,0 +1,942 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>History &mdash; TARDIS-em 0.3.10 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=9f76a604"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="instructions.html" />
+    <link rel="prev" title="Features" href="README.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            TARDIS-em
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/3d_actin.html">-  3D Actin Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/tirf_mt.html">-  TIRF Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/3d_membrane.html">-  3D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/scripting.html">-  Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/fine_tune_model.html">Fine-Tune TARDIS models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/helper.html">TARDIS helper-functions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="code_doc.html">CNN Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code_doc.html#dist-module">DIST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code_doc.html#analysis-module">Analysis Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code_doc.html#global-functions">Global Functions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">History</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/HISTORY.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="history">
+<h1>History<a class="headerlink" href="#history" title="Link to this heading"></a></h1>
+<details open>
+    <summary><b>0.3.10 (2025-01-07)</b></summary>
+<ul class="simple">
+<li><p><strong>General changes:</strong></p>
+<ul>
+<li><p><em>General</em>:</p>
+<ul>
+<li><p>Update and bugfixes for napari plugin</p></li>
+<li><p>Added filament editor in Napari</p></li>
+<li><p>Bugfix in model versioning</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>CNN module changes:</strong></p>
+<ul>
+<li><p><em>General</em>:</p>
+<ul>
+<li><p>Updated all models</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>Napari plugin:</strong></p>
+<ul>
+<li><p><em>General</em>:</p>
+<ul>
+<li><p>Build instance label editor</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</details>
+<details>
+    <summary><b>0.2.8 (2024-07-21)</b></summary>
+<ul class="simple">
+<li><p><strong>General changes:</strong></p>
+<ul>
+<li><p><em>General</em>:</p>
+<ul>
+<li><p>Update and bugfixes for napari plugin</p></li>
+<li><p>Fixed numpy v2.0.0 support</p></li>
+<li><p>Added general predictor for filament and object type structures</p></li>
+</ul>
+</li>
+<li><p><em>New_Feature</em>:</p>
+<ul>
+<li><p>Added support for model versioning</p>
+<ul>
+<li><p>Users are now allowed to use starting from v0.2.8 new and old model version</p></li>
+</ul>
+</li>
+<li><p>Added prediction metadata to all save files, including prediction log file</p></li>
+<li><p>Added docker builder</p></li>
+</ul>
+</li>
+<li><p><em>Bugfixes</em>:</p>
+<ul>
+<li><p>Fixes from v0.2.6 version</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>CNN module changes:</strong></p>
+<ul>
+<li><p><em>General</em>:</p>
+<ul>
+<li><p>Change scaling types for up- and down- scaling of images before/after predictions</p></li>
+</ul>
+</li>
+<li><p><em>New_Feature</em>:</p>
+<ul>
+<li><p>Added adaptive threshold as an optional cnn threshold</p></li>
+<li><p>Added model for actin</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>Napari plugin:</strong></p>
+<ul>
+<li><p><em>General</em>:</p>
+<ul>
+<li><p>Build in training workflow within napari plugin</p></li>
+<li><p>Build general predictor for trained CNN models including filament and object instance segmentation</p></li>
+<li><p>Build in prediction workflow for all supported structures within tardis-em v0.2.8</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</details>
+<details>
+    <summary><b>0.2.7 (2024-05-28)</b></summary>
+<ul class="simple">
+<li><p><strong>General changes:</strong></p>
+<ul>
+<li><p><em>General</em>:</p>
+<ul>
+<li><p>Bugfix when multiple files are predicted in batch</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</details>
+<details>
+    <summary><b>0.2.6 (2024-05-22)</b></summary>
+<ul class="simple">
+<li><p><strong>General changes:</strong></p>
+<ul>
+<li><p><em>General</em>:</p>
+<ul>
+<li><p>Bugfix when multiple files are predicted in batch</p></li>
+<li><p>Added support for predicting Actin</p></li>
+<li><p>Predicting point clouds directly from cli</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</details>
+<details>
+    <summary><b>0.2.4 (2024-05-10)</b></summary>
+<p><em>This intends to be a release submitted with Nature Method 2024</em></p>
+<ul class="simple">
+<li><p><strong>General changes:</strong></p>
+<ul>
+<li><p><em>General</em>:</p>
+<ul>
+<li><p>Few fixes from v0.2.2</p></li>
+<li><p>Added visualization for semantic masks</p></li>
+<li><p>Documentation</p></li>
+<li><p>Fix conda upload</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</details>
+<details>
+    <summary><b>0.2.1 (2024-05-09)</b></summary>
+<p><em>This intends to be a release submitted with Nature Method 2024</em></p>
+<ul class="simple">
+<li><p><strong>General changes:</strong></p>
+<ul>
+<li><p><em>General</em>:</p>
+<ul>
+<li><p>Improve prediction for microtubules and membranes (reduce false positive)</p></li>
+<li><p>Update Membrane and Microtubule modules predictions</p></li>
+<li><p>Update usage tutorials</p></li>
+<li><p>Added pypi and conda installations</p></li>
+<li><p>Enabled scripting with tardis-em</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>SpindleTorch module changes:</strong></p>
+<ul>
+<li><p><em>General</em>:</p>
+<ul>
+<li><p>Update Fnet_attn model</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>DIST module changes:</strong></p>
+<ul>
+<li><p><em>Optimize</em>:</p>
+<ul>
+<li><p>Re-trained DIST model using simulated datasets</p></li>
+<li><p>Build 2 model for:</p>
+<ul>
+<li><p>filaments and general 2D structures</p></li>
+<li><p>3D objects like membranes mitochondria LiDAR data etc.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</details>
+<details>
+    <summary><b>0.1.5 (2023-12-NA)</b></summary>
+<ul class="simple">
+<li><p><strong>General changes:</strong></p>
+<ul>
+<li><p><em>General</em>:</p>
+<ul>
+<li><p>Improve prediction handling</p></li>
+<li><p>Update Membrane and Microtubule modules predictions</p></li>
+<li><p>Include usage tutorials</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>SpindleTorch module changes:</strong></p>
+<ul>
+<li><p><em>General</em>:</p>
+<ul>
+<li><p>New BCE_MSE loss function to improve false-positive prediction and
+smooth out labels.</p></li>
+<li><p>Improved model generalizability and removed scaling optimization to ensure
+stable prediction regardless the pixel size</p></li>
+</ul>
+</li>
+<li><p><em>Optimize</em>:</p>
+<ul>
+<li><p>New CNN module structure</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</details>
+<details>
+    <summary><b>0.1.2 (2023-08-10)</b></summary>
+<ul class="simple">
+<li><p><strong>General changes:</strong></p>
+<ul>
+<li><p><em>General</em>:</p>
+<ul>
+<li><p>Fix installation for ARM64/aarch64 machine</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</details>
+<details>
+    <summary><b>0.1.1 (2023-08-10)</b></summary>
+<ul class="simple">
+<li><p><strong>General changes:</strong></p>
+<ul>
+<li><p><em>General</em>:</p>
+<ul>
+<li><p>Documentation update</p></li>
+<li><p>General bugfixes</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</details>
+<details>
+    <summary><b>0.1.0 (2023-08-10)</b></summary>
+<ul class="simple">
+<li><p><strong>General changes:</strong></p>
+<ul>
+<li><p><em>General</em>:</p>
+<ul>
+<li><p>Documentation update</p></li>
+<li><p>Added full support for OTA updates of the entire package</p></li>
+<li><p>Fixed AWS access denied error on some networks</p></li>
+<li><p>A few bug fixes</p></li>
+<li><p>Fixed Bugs in final filament filtering algorithms</p></li>
+<li><p>Added filament filtering for removing false-positive rapid 150-degree connections</p></li>
+<li><p>Microtubule output is now sorted by the length</p></li>
+<li><p>Each instance receives a segmentation confidence score by which the user can filter out predictions</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>SpindleTorch module changes:</strong></p>
+<ul>
+<li><p><em>General</em>:</p>
+<ul>
+<li><p>Update for FNet CNN model for membrane 3D</p></li>
+</ul>
+</li>
+<li><p><em>Optimize</em>:</p>
+<ul>
+<li><p>Improved handling of the pixel size, prompts, and normalization</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>DIST module changes:</strong></p>
+<ul>
+<li><p><em>Optimize</em>:</p>
+<ul>
+<li><p>Update DIST model for 2D and 3D membrane</p></li>
+<li><p>Improved filtering for filament</p></li>
+<li><p>Added confidence value for each filament instance based on filament length and shape</p></li>
+</ul>
+</li>
+<li><p><em>BugFix</em>:</p>
+<ul>
+<li><p>Fixed a few issues in the membrane segmentation pipeline</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</details>
+<details>
+    <summary><b>0.1.0-RC3 (2023-08-25)</b></summary>
+<ul class="simple">
+<li><p><strong>General changes:</strong></p>
+<ul>
+<li><p><em>General</em>:</p>
+<ul>
+<li><p>Full support for 2D data</p></li>
+<li><p>Black</p></li>
+<li><p>Introduced the TARDIS Logo and rebranding to Tardis-PyTorch</p></li>
+<li><p>Remove Open3D library (conflict in CentOS7)</p></li>
+<li><p>Fixed MRC read-out during training that forcibly rotated .mrc files</p></li>
+</ul>
+</li>
+<li><p><em>New_Feature</em>:</p>
+<ul>
+<li><p>Added new output format .ply</p></li>
+<li><p>New general tardis call</p></li>
+<li><p>Added helper functions csv_am and am_csv</p></li>
+<li><p>Added instance prediction from semantic binary masks</p></li>
+</ul>
+</li>
+<li><p><em>Optimize</em>:</p>
+<ul>
+<li><p>Added an optional checkpoint to all Tardis calls</p></li>
+<li><p>Improvements in training for CNN and DIST by users</p></li>
+<li><p>Amira possible output as a raw point cloud</p></li>
+</ul>
+</li>
+<li><p><em>BugFix</em>:</p>
+<ul>
+<li><p>Fixed save for .mrc files</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>SpindleTorch module changes:</strong></p>
+<ul>
+<li><p><em>General</em>:</p>
+<ul>
+<li><p>Retrained FNet_32 model for membrane and microtubules</p></li>
+<li><p>Train FNet_32 for 2D membrane segmentation</p></li>
+</ul>
+</li>
+<li><p><em>Optimize</em>:</p>
+<ul>
+<li><p>2D CNN network set-up</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>DIST module changes:</strong></p>
+<ul>
+<li><p><em>General</em>:</p>
+<ul>
+<li><p>Added simulated data for training on filament-like structures</p></li>
+<li><p>Re-train model no simulated + real data</p></li>
+<li><p>Fine-tuned setting for predictions and post-processing</p></li>
+</ul>
+</li>
+<li><p><em>New_Feature</em>:</p>
+<ul>
+<li><p>Experimental SparseDist model to offer more memory-efficient performance,<br />
+for instance segmentation</p></li>
+</ul>
+</li>
+<li><p><em>Optimize</em>:</p>
+<ul>
+<li><p>Improved visualization outputs</p></li>
+<li><p>Mcov metric optimization</p></li>
+<li><p>Rebuild Graph prediction function to be more robust</p></li>
+<li><p>Reverse-engineered Open3D voxel downsampling and added random downsampling</p></li>
+<li><p>Added distance embedding with a range value</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</details>
+<details>
+    <summary><b>0.1.0-RC2-HotFix2 (2023-03-28)</b></summary>
+<ul class="simple">
+<li><p><strong>General changes:</strong></p>
+<ul>
+<li><p>Fixed saving int8 semantic output as mrc</p></li>
+<li><p>Added rotation for CNN prediction</p></li>
+</ul>
+</li>
+</ul>
+</details>
+<details>
+    <summary><b>0.1.0-RC2-HotFix1 (2023-03-23)</b></summary>
+<ul class="simple">
+<li><p><strong>General changes:</strong></p>
+<ul>
+<li><p>Fixed loading for corrupted mrc files</p></li>
+<li><p>Fixed for loading and saving mrc/rec files (fix for reading headers size)</p></li>
+<li><p>Fix for loading new Amira SG with coordinates in ‘nm’ not ‘Angstrom’</p></li>
+<li><p>Small fixed in general prediction loops</p></li>
+<li><p>Fixed missing membrane instance prediction output</p></li>
+</ul>
+</li>
+</ul>
+</details>
+<details>
+    <summary><b>0.1.0-RC2 (2023-03-22)</b></summary>
+<ul class="simple">
+<li><p><strong>General changes:</strong></p>
+<ul>
+<li><p><em>General</em>:</p>
+<ul>
+<li><p>Normalized all documentation to *.md</p></li>
+</ul>
+</li>
+<li><p><em>New_Feature</em>:</p>
+<ul>
+<li><p>Ensure support for PyTorch 2.0</p></li>
+<li><p>Added benchmark entry</p></li>
+<li><p>Added ClBCE and ClDice loss functions</p></li>
+<li><p>Added binary Amira image file export</p></li>
+<li><p>Full membrane support (training and prediction of cryo-mem)</p></li>
+<li><p>Added costume LR schedular (ISR - invert square root)</p></li>
+</ul>
+</li>
+<li><p><em>Optimize</em>:</p>
+<ul>
+<li><p>Loss functions pytest and general cleanup</p></li>
+<li><p>Formatting and missing TardisErrors</p></li>
+<li><p>20x Speed up for Tardis logo for Linux/OS X</p></li>
+</ul>
+</li>
+<li><p><em>BugFix</em>:</p>
+<ul>
+<li><p>Fixed small bugs in metrics calculation</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>SpindleTorch module changes:</strong></p>
+<ul>
+<li><p><em>New_Feature</em></p>
+<ul>
+<li><p>Added and tested clDice and clBCE loss function</p></li>
+</ul>
+</li>
+<li><p><em>Optimize</em></p>
+<ul>
+<li><p>Support for the membrane training dataset</p></li>
+</ul>
+</li>
+<li><p><em>General</em></p>
+<ul>
+<li><p>Globally change normalization (0-1) to image standardization (-1-1)
+with mean and standard deviation</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>DIST module changes:</strong></p>
+<ul>
+<li><p><em>New_Feature</em>
+* Node embedding with furrier random
+* Added calculation of mcov metric during training and saved checkpoint based on it</p></li>
+<li><p><em>Optimize</em></p>
+<ul>
+<li><p>Point cloud visualization can be now with or without animation</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</details>
+<details>
+    <summary><b>0.1.0-RC1 (2023-02-08)</b></summary>
+<ul class="simple">
+<li><p><strong>Code restructure:</strong></p>
+<ul>
+<li><p><em>Optimize</em>:</p>
+<ul>
+<li><p>Autonomization of tests for all Python version</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>*<em>SpindleTorch module changesimize</em>:
+* Rebuild interpolation for images and mask
+* Simplified building training/testing of datasets
+* Redo mask building from coordinates
+* Build_Point_Cloud
+* New model train with optimize image normalization</p>
+<ul>
+<li><p><em>BugFix</em>:</p>
+<ul>
+<li><p>image normalization for a few very specific cases</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>DIST module changes:</strong></p>
+<ul>
+<li><p><em>Optimize</em>:</p>
+<ul>
+<li><p>Change how DIST distance embedding is computed for GT data.</p></li>
+<li><p>Change normalization for point cloud</p>
+<ul>
+<li><p>MT normalized by pixel size</p></li>
+<li><p>All other by open3d down-sampling value optional random down-sampling</p></li>
+</ul>
+</li>
+<li><p>F1 eval metric and BCE loss without diagonal axis</p></li>
+</ul>
+</li>
+<li><p><em>New_Feature</em>:</p>
+<ul>
+<li><p>DataLoader for Stanford data</p></li>
+<li><p>spline filtering includes geometric filtering and margin of spline</p></li>
+</ul>
+</li>
+<li><p><em>BugFix</em>:</p>
+<ul>
+<li><p>in a point cloud segmenter when feed with coord idx as float not int</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>General changes:</strong></p>
+<ul>
+<li><p><em>General</em>:</p>
+<ul>
+<li><p>Added data competition with Amira mesh output</p></li>
+<li><p>Added license footnote</p></li>
+</ul>
+</li>
+<li><p><em>General</em> code <em>Optimize</em> for speed</p></li>
+<li><p><em>BugFix</em> and <em>Optimize</em> for post-processing of spatial-graphs</p></li>
+<li><p><em>BugFix</em> and <em>New_Feature</em> for Amira export format (now build multi-label)</p></li>
+<li><p><em>BugFix</em>:</p>
+<ul>
+<li><p>AWS weight import when AWS doesn’t allow read access</p></li>
+</ul>
+</li>
+<li><p><em>New_Feature</em>:</p>
+<ul>
+<li><p>TardisError for all error handling</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</details>
+<details>
+    <summary><b>0.1.0-beta2 (2022-09-14)</b></summary>
+<ul class="simple">
+<li><p><strong>Code restructure:</strong></p>
+<ul>
+<li><p>Finished documentation with Sphinx</p></li>
+<li><p>Build tests for the whole tardis-EM</p></li>
+<li><p>Push to RC branch</p></li>
+</ul>
+</li>
+<li><p><strong>SpindleTorch module changes:</strong></p>
+<ul>
+<li><p>Cryo-membrane model support</p></li>
+<li><p>Build prediction module for Cryo-membrane</p></li>
+<li><p>Removed scaling module (after extensive tests it shows no benefits)</p></li>
+<li><p>Fixes in building train data set and small restructure (more in documentation)</p></li>
+<li><p>Added more support for 2D images while building test/train dataset</p></li>
+<li><p>Added support for pure probability prediction output in float32</p></li>
+</ul>
+</li>
+<li><p><strong>DIST module changes:</strong></p>
+<ul>
+<li><p>Last clean-up and prepare for release with ICLR2023</p></li>
+</ul>
+</li>
+<li><p><strong>General changes:</strong></p>
+<ul>
+<li><p>Added support for mrc and csv file outputs</p></li>
+<li><p>Support for Python 3.11 (awaiting pytorch and open3d)</p></li>
+<li><p>requirements.txt changes and include pytorch with support for different os</p></li>
+</ul>
+</li>
+</ul>
+</details>
+<details>
+    <summary><b>0.1.0-pre_beta2 (2022-09-14)</b></summary>
+<ul class="simple">
+<li><p><strong>Code restructure:</strong></p>
+<ul>
+<li><p>Clean-up</p></li>
+<li><p>Restructure code organization</p></li>
+<li><p>Removed slcpy and unified it with spindletorch and dist</p></li>
+<li><p>Rebuild main classes and make them more general</p></li>
+<li><p>Simplified overall structure</p></li>
+<li><p>Full documentation with Sphinx</p></li>
+<li><p>Separate dev. requirements</p></li>
+<li><p>Cleaned S3 AWS loading and removed old models from the S3 bucket</p></li>
+</ul>
+</li>
+<li><p><strong>SLCPY module changes:</strong></p>
+<ul>
+<li><p>Removed and managed with SpindleTorch and DIST</p></li>
+</ul>
+</li>
+<li><p><strong>SpindleTorch module changes:</strong></p>
+<ul>
+<li><p>Retrained FNet_16, FNet_32 and UNet_16, UNet_32</p></li>
+</ul>
+</li>
+<li><p><strong>DIST module changes:</strong></p>
+<ul>
+<li><p>Introduced DIST for semantic segmentation</p></li>
+<li><p>Retrained model on ScanNet v2 datasets</p></li>
+<li><p>Added node feature embedding with images or RGB values</p></li>
+<li><p>Retrained DIST model on ScanNet v2 + RGB</p></li>
+</ul>
+</li>
+<li><p><strong>General changes:</strong></p>
+<ul>
+<li><p>Load image data, marge and fixed for int8 and uint8</p></li>
+<li><p>Amira binary import fixes. Amira defined import type. Previously assumption was
+that Amira load all binary as uint8. Amira loads files as uint8 or int8 and
+have different structures when loading mask data which can be binary or ascii.</p></li>
+<li><p>Overall stability improvements</p></li>
+<li><p>Tardis logo was integrated with all TARDIS modules</p></li>
+<li><p>Build tests for the whole tardis-EM</p></li>
+<li><p>Introduced tardis_dev and divided stable and developmental branches</p></li>
+<li><p>Fixed image normalization and ensure correct normalized output for training
+and prediction</p></li>
+<li><p>Added MRC export</p></li>
+<li><p>Minor bugfixes from prebeta2 and new additions to beta2</p></li>
+</ul>
+</li>
+</ul>
+</details>
+<details>
+    <summary><b>0.1.0-beta1 (2022-09-14)</b></summary>
+<ul class="simple">
+<li><p><strong>DIST module changes:</strong></p>
+<ul>
+<li><p>Added new classification model based on DIST</p></li>
+<li><p>Simplified logic for patching big point cloud + reduction of number of patches</p></li>
+<li><p>Model structure now embedded in the model weight file</p></li>
+<li><p>Spline smoothing added to graph prediction</p></li>
+<li><p>Small bugfixes:</p>
+<ul>
+<li><p>Fixe initial_scale in model nn.Modules</p></li>
+<li><p>Fixed graph builder for ScanNet and PartNet</p></li>
+</ul>
+</li>
+<li><p>Speed improved data loader during training</p></li>
+<li><p>Added support for .ply file format and meshes</p></li>
+<li><p>Re-train model on different DIST structures for the paper and searching
+of the best approach</p></li>
+<li><p>Bugfixes for segmentation of point cloud from graph probabilities</p>
+<ul>
+<li><p>Speed-up boost by simplifying the building and reading adjacency matrix</p></li>
+<li><p>Fix in masking adjacency matrix for points already connected</p></li>
+<li><p>Moved from greedy segmentation to 1-step-back segmentation</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>SpindleTorch changes:</strong></p>
+<ul>
+<li><p>Quick retrained model on a hand-curated dataset</p></li>
+<li><p>Added and trained new FNet</p></li>
+<li><p>Standardized pixel size input. Now all data are reshaping pixel size of 2.32</p></li>
+<li><p>Change up-sampling from align_corners=True to align_corners=False</p></li>
+<li><p>Added new data for training from &#64;Stefanie_Redemann and &#64;Gunar</p></li>
+<li><p>Ground-up rebuild spindletorch model</p>
+<ul>
+<li><p>New Big UNet model combining both UNet and UNet3Plus</p></li>
+<li><p>Unet/Unet3Plus re-trained &lt;- rejected big_unet is better</p></li>
+<li><p>Train Big UNet</p></li>
+</ul>
+</li>
+<li><p>Speed-up prediction with the new Big UNet model</p></li>
+</ul>
+</li>
+<li><p><strong>SLCPY module changes:</strong></p>
+<ul>
+<li><p>Fix interpolation handling for up-sampled datasets</p></li>
+<li><p>Post-processing improvements and speeds-up</p></li>
+<li><p>MRC2014 file format expands readable formats</p></li>
+<li><p>Processing image data with a standardized pixel size of 25 A</p></li>
+<li><p>Bugfixes for floating point precision in Amira output</p>
+<ul>
+<li><p>Change floating point from 3 to 15</p></li>
+</ul>
+</li>
+<li><p>Improvements from importing data from binary Amira file format</p>
+<ul>
+<li><p>Change how pixel size is calculated. Amira has weird behavior whenever ET
+is trimmed. Include this in the pixel size calculation</p></li>
+</ul>
+</li>
+<li><p>Improvements in .rec, .mrc file loader</p>
+<ul>
+<li><p>.rec and .mrc files are format with uint8 (value from -128 to 128) or
+int8 (value from 0 to 255). Fix the reading of these files</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>TARDIS</strong></p>
+<ul>
+<li><p>Cleaned log output for easier reading</p></li>
+<li><p>New beautiful log progress window</p></li>
+<li><p>Moved loss fun. to common directory</p></li>
+<li><p>Clean-up</p></li>
+<li><p>Flake8 and pyteset fixes</p></li>
+<li><p>Global tunning for segmentation quality</p></li>
+</ul>
+</li>
+</ul>
+</details>
+<details>
+    <summary><b>0.1.0-alpha6 (2022-07-12)</b></summary>
+<ul class="simple">
+<li><p>Check pipeline for image embedding (normalization to enhance features)</p>
+<ul>
+<li><p>Introduce new normalization ResaleNormalize that spread histogram from
+2-98 projectile of the intensity distribution</p></li>
+</ul>
+</li>
+<li><p>Model retraining for MTs and membranes (generalization)</p></li>
+<li><p>Redone PC normalization</p></li>
+<li><p>Additional work on speeding up training by optimizing DataLoader</p></li>
+<li><p>TODO: Model retraining for MTs with real image data</p></li>
+<li><p>Closed #7 and #9 issue</p></li>
+<li><p>Added removal of dist_embedding as an input</p></li>
+<li><p>SpindleTorch rebuild to work on 2D and 3D datasets</p></li>
+<li><p>DIST training progress bar update (simplified output and removed prints)</p></li>
+<li><p>Add Visualizer module for point clouds</p></li>
+<li><p>Added hotfix for output of coordinates to fit Amira coordinates transformation</p></li>
+<li><p>Spellings and documentation fixes</p></li>
+<li><p>Bumped version for DIST and slcpy</p></li>
+<li><p>Cleaned code and documentation</p></li>
+</ul>
+</details>
+<details>
+    <summary><b>0.1.0-alpha5 (2022-04-25)</b></summary>
+<ul class="simple">
+<li><p>Rename GraphFormer to DIST (Dimensionless instance Segmentation Transformer)</p></li>
+<li><p>Updates for DIST</p>
+<ul>
+<li><p>Setup metric evaluation</p></li>
+<li><p>Changes in handling point cloud</p>
+<ul>
+<li><p>Normalization based on K-NN distance</p></li>
+</ul>
+</li>
+<li><p>Setup for easy dissection of the model</p></li>
+<li><p>Dist version to 0.1.5</p></li>
+<li><p>Added evaluation pipeline</p></li>
+</ul>
+</li>
+</ul>
+</details>
+<details>
+    <summary><b>0.1.0a2-alpha4 (2022-04-25)</b></summary>
+<ul class="simple">
+<li><p>Fix for better handling graph prediction</p></li>
+<li><p>Fix for #4-#6 issues</p></li>
+<li><p>Small bugfixes for GraphFormer while training</p></li>
+<li><p>Add point cloud normalization before training/prediction</p></li>
+</ul>
+</details>
+<details>
+    <summary><b>0.1.0-alpha1 (2022-04-13)</b></summary>
+<ul class="simple">
+<li><p>Rename tardis to tardis-EM</p></li>
+<li><p>Build tests for all modules</p></li>
+<li><p>Integrated slcpy, spindletorch and graph former</p></li>
+<li><p>Added general workflow for MT prediction</p>
+<ul>
+<li><p>SLCPY:</p>
+<ul>
+<li><p>Loading of data types: .tif, .am, .mrc, .rec for 2D and 3D</p></li>
+<li><p>Included all slcpy modules</p></li>
+<li><p>Move Amira file output of point cloud from graphformer</p></li>
+<li><p>SetUp workflows for data pre- and post-processing</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>SPINDLETORCH</p>
+<ul>
+<li><p>Included all spindletorch modules</p></li>
+<li><p>Build standard workflows for training and prediction of 2D and 3D images</p></li>
+</ul>
+</li>
+<li><p>GRAPHFORMER</p>
+<ul>
+<li><p>Included all graphformer modules</p></li>
+</ul>
+</li>
+</ul>
+</details>
+<details>
+    <summary><b>0.0.1 (2022-03-24)</b></summary>
+<ul class="simple">
+<li><p>Initial commit</p></li>
+</ul>
+</details>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="README.html" class="btn btn-neutral float-left" title="Features" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="instructions.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2024, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

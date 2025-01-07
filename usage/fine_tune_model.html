@@ -1,0 +1,343 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tuning new CNN module for specific dataset &mdash; TARDIS-em 0.3.10 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=9f76a604"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="../_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Troubleshooting" href="troubleshooting.html" />
+    <link rel="prev" title="Visualization" href="visualization.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TARDIS-em
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../HISTORY.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../instructions.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="3d_actin.html">-  3D Actin Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tirf_mt.html">-  TIRF Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="3d_membrane.html">-  3D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripting.html">-  Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Fine-Tune TARDIS models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#training-tardis-cnn-models">Training TARDIS CNN models</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#data-preparation">1. Data preparation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#training">2. Training</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#basic-usage">Basic usage:</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#advance-usage">Advance usage:</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pre-train-model-from-scratch">3.1 Pre-train model from scratch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fine-tune-existing-models">3.2 Fine-tune existing models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#predict-with-train-model">4. Predict with train model</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="helper.html">TARDIS helper-functions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html">CNN Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#dist-module">DIST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#analysis-module">Analysis Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#global-functions">Global Functions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Tuning new CNN module for specific dataset</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/usage/fine_tune_model.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="tuning-new-cnn-module-for-specific-dataset">
+<h1>Tuning new CNN module for specific dataset<a class="headerlink" href="#tuning-new-cnn-module-for-specific-dataset" title="Link to this heading"></a></h1>
+<p>TARDIS has general training and prediction model build in. With TARDIS you can
+train your UNet, ResNet, UNet3Plus and our custom build FNet CNN model.</p>
+<section id="training-tardis-cnn-models">
+<h2>Training TARDIS CNN models<a class="headerlink" href="#training-tardis-cnn-models" title="Link to this heading"></a></h2>
+<section id="data-preparation">
+<h3>1. Data preparation<a class="headerlink" href="#data-preparation" title="Link to this heading"></a></h3>
+<p>TARDIS requires a folder containing training datasets as input. The dataset should include images
+in formats such as .tif, .mrc, .rec, or .am, and corresponding binary masks/labels in .tif, .mrc, .rec, .am, or .csv formats.
+The images and mask files must share the same names, with mask files having an additional _mask prefix.</p>
+<p>E.g. For example image.mrc and image_mask.mrc or image_mask.csv</p>
+<dl class="simple">
+<dt>Tips:</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>For .mrc files:</dt><dd><p>Ensure your data is not flipped. You can verify this by loading your file in Fiji and checking if the image and mask file overlap.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Normalization:</dt><dd><p>No normalization is required. It is best to use raw image files, as TARDIS will handle all necessary normalizations.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="training">
+<h3>2. Training<a class="headerlink" href="#training" title="Link to this heading"></a></h3>
+<p>To train a CNN model with TARDIS, use the following command to get detailed information:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tardis_cnn_train</span> <span class="o">--</span><span class="n">help</span>
+</pre></div>
+</div>
+<section id="basic-usage">
+<h4>Basic usage:<a class="headerlink" href="#basic-usage" title="Link to this heading"></a></h4>
+<p>To run training. To start training, use the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tardis_cnn_train</span> <span class="o">-</span><span class="nb">dir</span> <span class="o">&lt;</span><span class="n">path</span><span class="o">-</span><span class="n">to</span><span class="o">-</span><span class="n">your</span><span class="o">-</span><span class="n">dataset</span><span class="p">;</span> <span class="nb">str</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">ps</span> <span class="o">&lt;</span><span class="n">patch_size</span><span class="p">;</span> <span class="nb">int</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">cnn</span> <span class="o">&lt;</span><span class="n">cnn_type</span><span class="p">;</span> <span class="nb">str</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">b</span> <span class="o">&lt;</span><span class="n">batch_size</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">cs</span> <span class="mi">3</span><span class="n">gcl</span> <span class="o">&lt;</span><span class="ow">or</span> <span class="mi">2</span><span class="n">gcl</span> <span class="k">for</span> <span class="mi">2</span><span class="n">D</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>TARDIS will create a folder named cnn_model_checkpoint, containing files named <cite>*_checkpoint.pth</cite> and <cite>model_weights.pth</cite>.</p>
+<ul class="simple">
+<li><p>For re-training the model, use the <cite>*_checkpoint.pth</cite> file.</p></li>
+<li><p>For predictions with TARDIS-em, use the <cite>model_weights.pth</cite> file.</p></li>
+</ul>
+</section>
+<section id="advance-usage">
+<h4>Advance usage:<a class="headerlink" href="#advance-usage" title="Link to this heading"></a></h4>
+<p>Below you can find all available arguments you can use with <code class="code highlight bash docutils literal highlight-bash">tardis_mt</code>,
+with the explanation for their functionality:</p>
+<dl class="simple">
+<dt><code class="code highlight bash docutils literal highlight-bash">-dir</code> or <code class="code highlight bash docutils literal highlight-bash">--path</code>: Directory path with all dataset and labels.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">default:</span> Current command line directory.</p></li>
+<li><p><span class="guilabel">type:</span> str</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-ps</code> or <code class="code highlight bash docutils literal highlight-bash">--patch_size</code>: Image size used for prediction.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">default:</span> 64</p></li>
+<li><p><span class="guilabel">type:</span> int</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-ms</code> or <code class="code highlight bash docutils literal highlight-bash">--mask_size</code>: Size of drawn mask in A. If you are using .csv files as labels.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">default:</span> 150</p></li>
+<li><p><span class="guilabel">type:</span> int</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-cnn</code> or <code class="code highlight bash docutils literal highlight-bash">--cnn_type</code>: Type of NN used for training.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">default:</span> fnet_attn</p></li>
+<li><p><span class="guilabel">type:</span> str</p></li>
+<li><p><span class="guilabel">options:</span> unet, resunet, unet3plus, big_unet, fnet, fnet_attn</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-co</code> or <code class="code highlight bash docutils literal highlight-bash">--cnn_out_channel</code>: Number of output channels for the NN.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">default:</span> 1</p></li>
+<li><p><span class="guilabel">type:</span> int</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-b</code> or <code class="code highlight bash docutils literal highlight-bash">--training_batch_size</code>: Batch size.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">default:</span> 25</p></li>
+<li><p><span class="guilabel">type:</span> int</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-cl</code> or <code class="code highlight bash docutils literal highlight-bash">--cnn_layers</code>: Number of convolution layer for NN.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">default:</span> 5</p></li>
+<li><p><span class="guilabel">type:</span> int</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-cm</code> or <code class="code highlight bash docutils literal highlight-bash">--cnn_scaler</code>: Convolution multiplayer for CNN layers.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">default:</span> 32</p></li>
+<li><p><span class="guilabel">type:</span> int</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-cs</code> or <code class="code highlight bash docutils literal highlight-bash">--cnn_structure</code>: Define structure of the convolution layer.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">default:</span> 3gcl</p></li>
+<li><p><span class="guilabel">type:</span> str</p></li>
+<li><p><span class="guilabel">options:</span> 2 or 3 - dimension in 2D or 3D;  c - convolution;    g - group normalization;    b - batch normalization;    r - ReLU;   l - LeakyReLU;  e - GeLu;   p - PReLu</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-ck</code> or <code class="code highlight bash docutils literal highlight-bash">--conv_kernel</code>: Kernel size for 2D or 3D convolution.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">default:</span> 3</p></li>
+<li><p><span class="guilabel">type:</span> int</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-cp</code> or <code class="code highlight bash docutils literal highlight-bash">--conv_padding</code>: Padding size for convolution.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">default:</span> 1</p></li>
+<li><p><span class="guilabel">type:</span> int</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-cmpk</code> or <code class="code highlight bash docutils literal highlight-bash">--pool_kernel</code>: Max_pooling kernel.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">default:</span> 2</p></li>
+<li><p><span class="guilabel">type:</span> int</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-l</code> or <code class="code highlight bash docutils literal highlight-bash">--cnn_loss</code>: Loss function use for training.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">default:</span> BCELoss</p></li>
+<li><p><span class="guilabel">type:</span> str</p></li>
+<li><p><span class="guilabel">options:</span> AdaptiveDiceLoss, BCELoss, WBCELoss, BCEDiceLoss, CELoss, DiceLoss, ClDiceLoss, ClBCELoss, SigmoidFocalLoss, LaplacianEigenmapsLoss, BCEMSELoss</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-lr</code> or <code class="code highlight bash docutils literal highlight-bash">--loss_lr_rate</code>: Learning rate for NN.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">default:</span> 0.0005</p></li>
+<li><p><span class="guilabel">type:</span> float</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-lrs</code> or <code class="code highlight bash docutils literal highlight-bash">--lr_rate_schedule</code>: If True learning rate scheduler is used.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">default:</span> False</p></li>
+<li><p><span class="guilabel">type:</span> bool</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-dv</code> or <code class="code highlight bash docutils literal highlight-bash">--device</code>: Define which device use for training:</dt><dd><ul class="simple">
+<li><p><span class="guilabel">default:</span> 0</p></li>
+<li><p><span class="guilabel">type:</span> str</p></li>
+<li><p><span class="guilabel">options:</span> gpu - Use ID 0 gpus;  cpu - Usa CPU; mps - Apple silicon; 0-9 - specified gpu device id to use</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-w</code> or <code class="code highlight bash docutils literal highlight-bash">--warmup</code>: Number of warmup steps.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">default:</span> 100</p></li>
+<li><p><span class="guilabel">type:</span> int</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-e</code> or <code class="code highlight bash docutils literal highlight-bash">--epochs</code>: Number of epoches.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">default:</span> 10000</p></li>
+<li><p><span class="guilabel">type:</span> int</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-es</code> or <code class="code highlight bash docutils literal highlight-bash">--early_stop</code>: Number of epoches without improvement after which early stop is initiated. Default should is 10% of the total number of epochs.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">default:</span> 1000</p></li>
+<li><p><span class="guilabel">type:</span> int</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-cch</code> or <code class="code highlight bash docutils literal highlight-bash">--cnn_checkpoint</code>: If indicated, dir to training checkpoint to reinitialized training.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">default:</span> None</p></li>
+<li><p><span class="guilabel">type:</span> str</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-dp</code> or <code class="code highlight bash docutils literal highlight-bash">--dropout_rate</code>: If indicated, value of dropout for CNN.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">default:</span> 0.5</p></li>
+<li><p><span class="guilabel">type:</span> float</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+</section>
+<section id="pre-train-model-from-scratch">
+<h3>3.1 Pre-train model from scratch<a class="headerlink" href="#pre-train-model-from-scratch" title="Link to this heading"></a></h3>
+<p>To run re-training:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tardis_cnn_train</span> <span class="o">-</span><span class="nb">dir</span> <span class="o">&lt;</span><span class="n">path</span><span class="o">-</span><span class="n">to</span><span class="o">-</span><span class="n">your</span><span class="o">-</span><span class="n">dataset</span><span class="p">;</span> <span class="nb">str</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">ps</span> <span class="o">&lt;</span><span class="n">patch_size</span><span class="p">;</span> <span class="nb">int</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">cnn</span> <span class="o">&lt;</span><span class="n">cnn_type</span><span class="p">;</span> <span class="nb">str</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">b</span> <span class="o">&lt;</span><span class="n">batch_size</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">cch</span> <span class="o">&lt;</span><span class="n">checkpoint</span><span class="o">.</span><span class="n">pth_file_dir</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="fine-tune-existing-models">
+<h3>3.2 Fine-tune existing models<a class="headerlink" href="#fine-tune-existing-models" title="Link to this heading"></a></h3>
+<p>All TARDIS models are stored locally in ~/tardis_em/</p>
+<p>For example a default model for membrane segmentation can be found in</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">./</span><span class="n">tardis_em</span><span class="o">/</span><span class="n">fnet_attn_32</span><span class="o">/</span><span class="n">membrane_3d</span><span class="o">/</span><span class="n">model_weights</span><span class="o">.</span><span class="n">pth</span>
+</pre></div>
+</div>
+<p>In order to fine-tune it on your existing data:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tardis_cnn_train</span> <span class="o">...</span> <span class="o">-</span><span class="n">cch</span> <span class="o">./</span><span class="n">tardis_em</span><span class="o">/</span><span class="n">fnet_attn_32</span><span class="o">/</span><span class="n">membrane_3d</span><span class="o">/</span><span class="n">model_weights</span><span class="o">.</span><span class="n">pth</span>
+</pre></div>
+</div>
+</section>
+<section id="predict-with-train-model">
+<h3>4. Predict with train model<a class="headerlink" href="#predict-with-train-model" title="Link to this heading"></a></h3>
+<p>To predict images with your newly train model, you can use the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tardis_predict</span> <span class="o">--</span><span class="n">help</span>
+<span class="n">tardis_predict</span> <span class="o">-</span><span class="nb">dir</span> <span class="o">&lt;</span><span class="nb">dir</span> <span class="n">to</span> <span class="n">folder</span> <span class="n">of</span> <span class="n">file</span> <span class="n">to</span> <span class="n">predict</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">ch</span> <span class="o">&lt;</span><span class="n">model_weight</span><span class="o">.</span><span class="n">pth_directory</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">ps</span> <span class="o">&lt;</span><span class="n">patch_size</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">out</span> <span class="o">&lt;</span><span class="n">output_format</span><span class="o">&gt;</span> <span class="n">mrc</span><span class="o">|</span><span class="n">tif</span><span class="o">|</span><span class="n">rec</span><span class="o">|</span><span class="n">am</span> <span class="o">-</span><span class="n">rt</span> <span class="kc">True</span> <span class="o">-</span><span class="n">ct</span> <span class="o">&lt;</span><span class="n">CNN_threshold</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">dv</span> <span class="mi">0</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="visualization.html" class="btn btn-neutral float-left" title="Visualization" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="troubleshooting.html" class="btn btn-neutral float-right" title="Troubleshooting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2024, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

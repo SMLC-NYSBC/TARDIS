@@ -1,0 +1,753 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analysis -&gt; MT Classification &mdash; TARDIS-em 0.3.10 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=9f76a604"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="../_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Analysis -&gt; Filament Utils" href="filament_utils.html" />
+    <link rel="prev" title="Analysis" href="analysis.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TARDIS-em
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../HISTORY.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../instructions.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_actin.html">-  3D Actin Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/tirf_mt.html">-  TIRF Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_membrane.html">-  3D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/scripting.html">-  Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/fine_tune_model.html">Fine-Tune TARDIS models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/helper.html">TARDIS helper-functions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html">CNN Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#dist-module">DIST Module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../code_doc.html#analysis-module">Analysis Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="analysis.html">Analysis</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">MT classification</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.analysis.mt_classification.mt_classes">MT Classification - Main</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier"><code class="docutils literal notranslate"><span class="pre">MicrotubuleClassifier</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.analysis.mt_classification.utils">MT Classification - Utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.mt_classification.utils.count_true_groups"><code class="docutils literal notranslate"><span class="pre">count_true_groups()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.mt_classification.utils.distances_of_ends_to_surface"><code class="docutils literal notranslate"><span class="pre">distances_of_ends_to_surface()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.mt_classification.utils.distance_to_the_pole"><code class="docutils literal notranslate"><span class="pre">distance_to_the_pole()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.mt_classification.utils.divide_into_sequences"><code class="docutils literal notranslate"><span class="pre">divide_into_sequences()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.mt_classification.utils.fill_gaps"><code class="docutils literal notranslate"><span class="pre">fill_gaps()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.mt_classification.utils.pick_pole_to_surfaces"><code class="docutils literal notranslate"><span class="pre">pick_pole_to_surfaces()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.mt_classification.utils.points_on_mesh_knn"><code class="docutils literal notranslate"><span class="pre">points_on_mesh_knn()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.mt_classification.utils.select_mt_ids_within_bb"><code class="docutils literal notranslate"><span class="pre">select_mt_ids_within_bb()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.analysis.mt_classification.utils.assign_filaments_to_poles"><code class="docutils literal notranslate"><span class="pre">assign_filaments_to_poles()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="filament_utils.html">Filament Utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#global-functions">Global Functions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../code_doc.html">CNN Module</a></li>
+      <li class="breadcrumb-item active">Analysis -&gt; MT Classification</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/analysis/mt_classification.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="analysis-mt-classification">
+<h1>Analysis -&gt; MT Classification<a class="headerlink" href="#analysis-mt-classification" title="Link to this heading"></a></h1>
+<section id="module-tardis_em.analysis.mt_classification.mt_classes">
+<span id="mt-classification-main"></span><h2>MT Classification - Main<a class="headerlink" href="#module-tardis_em.analysis.mt_classification.mt_classes" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.mt_classification.mt_classes.</span></span><span class="sig-name descname"><span class="pre">MicrotubuleClassifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">surfaces</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filaments</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">poles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gaps_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kmt_dist_to_surf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tardis_logo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier" title="Link to this definition"></a></dt>
+<dd><p>Manages the classification and preprocessing of data related to Microtubule (MT)
+analysis, including processing of surfaces, filaments, and poles. This class aims
+to facilitate segmentation and feature extraction for MT datasets, enabling further
+analysis tasks such as classification and structural evaluations.</p>
+<p>It initializes with critical parameters, loads and corrects processed data, and
+offers methods to extract relevant structural information from the provided files.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_vertices_file">
+<span class="sig-name descname"><span class="pre">get_vertices_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dir_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simplify</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_vertices_file" title="Link to this definition"></a></dt>
+<dd><p>Extracts and returns the vertices information from a given directory containing
+data for an AM surface file. This method utilizes the <cite>load_am_surf</cite> function
+to process the data in the specified directory. Optionally, the simplification
+param can be used to streamline the vertices extraction process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dir_s</strong> (<em>str</em>) – The directory containing the AM surface file.</p></li>
+<li><p><strong>simplify</strong> (<em>bool</em><em>, </em><em>optional</em>) – Defines whether simplification is applied during the loading
+process. This parameter is optional.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of vertices extracted from the surface file.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_filament_file">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_filament_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dir_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_filament_file" title="Link to this definition"></a></dt>
+<dd><p>Extracts and returns segmented points from the specified directory using the
+ImportDataFromAmira class. This function is a static method and does not rely
+on class instance attributes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dir_s</strong> (<em>str</em>) – Directory path to the source AM file</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Numpy array of segmented points extracted from the specified directory</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_poles_file">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_poles_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dir_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_poles_file" title="Link to this definition"></a></dt>
+<dd><p>Retrieve pole positions from a specified directory and returns them as a NumPy array.</p>
+<p>This method uses the <cite>ImportDataFromAmira</cite> class to access data associated with vertex
+positions in the specified directory. It processes the data to extract pole positions and
+return them in a structured format suitable for further computations or analysis.</p>
+<p>The directory passed must contain the required data structure that is compatible with
+<cite>ImportDataFromAmira</cite> functionality. The output is formatted as a NumPy array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dir_s</strong> (<em>str</em>) – The file path to the directory containing the Amira data files</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A NumPy array containing the vertex data representing pole positions</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.correct_data">
+<span class="sig-name descname"><span class="pre">correct_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.correct_data" title="Link to this definition"></a></dt>
+<dd><p>Normalizes and processes filament data based on pixel size and assigned poles.</p>
+<p>This method performs several operations including:
+- Normalization of filament coordinates using the pixel size.
+- Resampling of the filament data.
+- Normalization of vertex and pole coordinates.
+- Assignment of filaments to poles and subsequent reordering.
+- Stacking of corrected filaments into a unified structure.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_filament_endpoints">
+<span class="sig-name descname"><span class="pre">get_filament_endpoints</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_filament_endpoints" title="Link to this definition"></a></dt>
+<dd><p>Computes and returns the start and end indices of the unique filament IDs
+in the dataset. This function identifies unique filament IDs and uses them
+to derive the corresponding starting and ending positional indices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A tuple containing two integers:
+- The starting index of the first unique filament ID.
+- The ending index of the last unique filament ID.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[int, int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.assign_to_kmts">
+<span class="sig-name descname"><span class="pre">assign_to_kmts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filaments</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_i</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.assign_to_kmts" title="Link to this definition"></a></dt>
+<dd><p>Assigns filaments to kinetochores (KMTs) based on spatial and distance criteria.</p>
+<p>The function performs several steps to identify filaments, represented by their
+unique IDs, that meet specific conditions relative to bounding boxes, surfaces,
+and distance thresholds. It uses unique identification, filtering within bounding
+boxes, various distance measurements, and thresholds to determine the final set
+of KMT-associated filaments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filaments</strong> – A NumPy array representing the set of filaments.</p></li>
+<li><p><strong>id_i</strong> – An integer representing the index of the vertices and poles
+being processed. Defaults to 0.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of unique filament IDs assigned to KMTs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.kmts_inside_outside">
+<span class="sig-name descname"><span class="pre">kmts_inside_outside</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kmt_proposal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_i</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.kmts_inside_outside" title="Link to this definition"></a></dt>
+<dd><p>Determines whether the k-MTs (kinetochore MicroTubules) are inside or outside based
+on their distance to the surface. The function computes unique k-MTs and evaluates
+the proximity of their plus ends in comparison to a given pole surface. The result
+is segregated into k-MTs considered inside and outside.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kmt_proposal</strong> – A 2D numpy array where each row corresponds to an association
+of k-MTs, with the first column representing k-MT identifiers.</p></li>
+<li><p><strong>id_i</strong> – An integer representing the identifier of the current vertex and pole
+configuration to be used for computations. Defaults to 0.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing two numpy arrays. The first array contains unique k-MT
+identifiers classified as inside, while the second array contains unique k-MT
+identifiers classified as outside.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.assign_to_mid_mt">
+<span class="sig-name descname"><span class="pre">assign_to_mid_mt</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.assign_to_mid_mt" title="Link to this definition"></a></dt>
+<dd><p>Assigns microtubules (MTs) to a middle set based on specific conditions and filters.</p>
+<p>The function identifies MTs which are not part of specific pre-defined ID sets and
+selects candidate MTs with no more than one crossing. It further filters these selected
+MTs based on their distance to a defined set of vertices in comparison to poles. The
+final IDs of the specific MTs that meet all conditions are returned as a list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of MT IDs that belong to the middle set. These are filtered based on
+their geometric properties and crossing conditions.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.assign_to_int_mt">
+<span class="sig-name descname"><span class="pre">assign_to_int_mt</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.assign_to_int_mt" title="Link to this definition"></a></dt>
+<dd><p>Assigns intermediate microtubule IDs based on specific criteria.</p>
+<p>This function identifies intermediate microtubules (MTs) from given input data,
+excluding specific MT IDs and using bounding boxes to further select relevant
+MTs. It then reassigns the identified MTs based on crossing criteria and returns
+their IDs as a list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the provided data structures have inconsistent shapes or types.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of assigned intermediate microtubule IDs. If no IDs are found or
+assigned, an empty list is returned.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.assign_to_bridge_mt">
+<span class="sig-name descname"><span class="pre">assign_to_bridge_mt</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.assign_to_bridge_mt" title="Link to this definition"></a></dt>
+<dd><p>Assigns microtubules to the bridge class based on their ID exclusions and their spatial
+crossings with assigned vertices. It first filters out specific filament IDs that belong
+to other microtubule classes and then assigns remaining filaments to the bridge if they
+meet crossing conditions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of microtubule IDs assigned to the bridge class.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.assign_mt_with_crossing">
+<span class="sig-name descname"><span class="pre">assign_mt_with_crossing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filaments</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertices_l</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_l</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1]</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.assign_mt_with_crossing" title="Link to this definition"></a></dt>
+<dd><p>Assigns microtubule (MT) IDs based on whether or not they cross a specific surface
+and belong to a specified class of interest.</p>
+<p>The function evaluates a set of segmented microtubules (filaments) and determines
+to which class each should belong. This classification is based on their crossing
+behavior with a given surface defined by vertices, as well as a specified class
+parameter. It ensures that MTs crossing specific surfaces or having other
+characteristics are correctly classified.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filaments</strong> – A 2D numpy array where each row represents a segment of a
+microtubule. The first column contains microtubule IDs (integers), while
+the subsequent columns correspond to the spatial coordinates (e.g., x, y, z).</p></li>
+<li><p><strong>vertices_l</strong> – A 2D numpy array representing the vertices of the surface for
+comparison, each row specifying a spatial coordinate (e.g., x, y, z).</p></li>
+<li><p><strong>class_l</strong> – A list of integers representing the microtubule classification
+criteria. Default is [1], which selects microtubules matching the threshold
+condition.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A numpy array containing IDs of microtubules that intersect the surface
+and fit the classification criteria specified by the <cite>class_</cite> parameter.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.classified_MTs">
+<span class="sig-name descname"><span class="pre">classified_MTs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.classified_MTs" title="Link to this definition"></a></dt>
+<dd><p>Classifies microtubules (MTs) into different categories based on spatial properties, assignments to poles,
+and other criteria. The classification includes Kinetochore Microtubules (KMTs), Mid-MTs, Interdigitating-MTs,
+Bridging-MTs, and Standard Microtubules (SMTs). Coordinates are corrected to the original scale after assignments.
+Contains options for a logo display summarizing the classification process. This function integrates multiple
+steps such as endpoint determination, pole classifications, and other custom classifications.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>self</strong> – The object instance invoking the method.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – If any invalid indices are encountered during processing.</p></li>
+<li><p><strong>TypeError</strong> – If inputs to certain classification methods have mismatched types.</p></li>
+<li><p><strong>AttributeError</strong> – If required attributes are missing from the self instance.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_classified_indices">
+<span class="sig-name descname"><span class="pre">get_classified_indices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_classified_indices" title="Link to this definition"></a></dt>
+<dd><p>Returns a list of classified indices, grouped into specific categories
+representing various groups of IDs. These categories include inside and
+outside IDs, mid-point IDs, intermediate IDs, bridge IDs, and SMT IDs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List containing groups of classified indices.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_classified_fibers">
+<span class="sig-name descname"><span class="pre">get_classified_fibers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_classified_fibers" title="Link to this definition"></a></dt>
+<dd><p>Classifies and retrieves fibers based on their categories and identifiers. This method
+divides the fibers into multiple subcategories including kinetochore microtubules
+(kMT) for two different states (inside and outside), midplane microtubules
+(mid_MT), interpolar microtubules (int_MT), bridging microtubules (brg_MT),
+and other spindle microtubules (smt_MT). The classification is performed
+by checking the fiber identifiers against predefined ID collections.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A nested list where each element represents a specific category or subcategory
+of classified fibers. It includes a list of kMT fibers for each state
+(inside, outside), and other categorized fibers (mid_MT, int_MT, brg_MT, smt_MT).</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_filaments">
+<span class="sig-name descname"><span class="pre">get_filaments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_filaments" title="Link to this definition"></a></dt>
+<dd><p>Returns the filaments stored in the object.</p>
+<p>The function provides direct access to the filaments as a
+numpy array. It is useful for retrieving the stored filaments
+data for further processing or analysis purposes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A numpy array containing filaments data.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_vertices">
+<span class="sig-name descname"><span class="pre">get_vertices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simplify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_vertices" title="Link to this definition"></a></dt>
+<dd><p>Retrieve the vertices and triangles of the object, with optional simplification.</p>
+<p>The method allows fetching the vertices and triangles that represent the geometry
+of the object. By default, an optional simplification value can be provided to
+reduce the complexity of the vertices. If the <cite>simplify</cite> parameter is <cite>None</cite>,
+an alternative retrieval process is utilized.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>simplify</strong> (<em>int</em><em> or </em><em>None</em>) – Specifies the simplification factor for reducing vertex complexity.
+If <cite>None</cite>, returns the detailed geometry without simplification.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing a list of vertices and a list of triangles.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[list, list]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_poles">
+<span class="sig-name descname"><span class="pre">get_poles</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_poles" title="Link to this definition"></a></dt>
+<dd><p>Retrieves the poles data of a given instance and returns it as a NumPy array.
+Poles typically represent key computation parameters or specific physical
+characteristics depending on the context of implementation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>An array containing the poles of the current instance.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-tardis_em.analysis.mt_classification.utils">
+<span id="mt-classification-utils"></span><h2>MT Classification - Utils<a class="headerlink" href="#module-tardis_em.analysis.mt_classification.utils" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.utils.count_true_groups">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.mt_classification.utils.</span></span><span class="sig-name descname"><span class="pre">count_true_groups</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bool_list</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#tardis_em.analysis.mt_classification.utils.count_true_groups" title="Link to this definition"></a></dt>
+<dd><p>Counts the number of ‘True’ groups in a list of booleans. A ‘True’ group is defined
+as a contiguous sequence of ‘True’ values, separated by at least one ‘False’ value
+or the start/end of the list non-‘True’ regions. This function iterates through the
+given list and counts distinct ‘True’ groups.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>bool_list</strong> (<em>list</em><em>[</em><em>bool</em><em>]</em>) – A list of boolean values.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The number of ‘True’ groups identified in the boolean list.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.utils.distances_of_ends_to_surface">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.mt_classification.utils.</span></span><span class="sig-name descname"><span class="pre">distances_of_ends_to_surface</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertices_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pole_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ends</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d1_to_surf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.analysis.mt_classification.utils.distances_of_ends_to_surface" title="Link to this definition"></a></dt>
+<dd><p>Compute the distances from specified end points to a surface and optionally
+to a reference pole.</p>
+<p>This function determines the distances of provided end points to the nearest
+vertex on a specified surface and optionally the further distance to a
+prespecified pole. The function makes use of the Nearest Neighbors algorithm
+for distance computation. If the additional parameter <cite>d1_to_surf</cite> is set,
+the calculated distances include intermediate computations involving the
+nearest neighbors of end points on the surface.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vertices_n</strong> – Array of coordinates of the vertices defining the surface.</p></li>
+<li><p><strong>pole_n</strong> – Array of coordinates representing the reference pole position.</p></li>
+<li><p><strong>ends</strong> – Array of coordinates of the end points for which distances are to
+be calculated.</p></li>
+<li><p><strong>d1_to_surf</strong> – Boolean flag. If True, distances from the end points to the
+surface include intermediate computations involving the nearest neighbors
+of specified vertices on the surface. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple of two distance arrays. The first array represents distances
+computed involving <cite>d1_to_surf</cite> logic if True, otherwise from ends to
+the nearest vertices. The second array contains distances from end points
+to the reference pole.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.utils.distance_to_the_pole">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.mt_classification.utils.</span></span><span class="sig-name descname"><span class="pre">distance_to_the_pole</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance_to</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.analysis.mt_classification.utils.distance_to_the_pole" title="Link to this definition"></a></dt>
+<dd><p>Compute the Euclidean distances between each point and a reference point.</p>
+<p>This function calculates the Euclidean distance from a given set of points
+to a specific reference point. The points and the reference point must be
+provided as numpy arrays. The expected shapes of the input arrays ensure
+that each row in the <cite>points</cite> array represents a single point in the same
+dimensional space as the <cite>distance_to</cite> point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> – A numpy array of shape (n, m) where <cite>n</cite> is the number of
+points and <cite>m</cite> is the dimensionality of the points.</p></li>
+<li><p><strong>distance_to</strong> – A numpy array of shape (m,) that specifies the
+reference point in the m-dimensional space.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A numpy array of shape (n,) representing the computed distances
+for each point to the given reference point.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.utils.divide_into_sequences">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.mt_classification.utils.</span></span><span class="sig-name descname"><span class="pre">divide_into_sequences</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.analysis.mt_classification.utils.divide_into_sequences" title="Link to this definition"></a></dt>
+<dd><p>Divides a list of integers into contiguous subsequences, where each subsequence
+contains consecutive numbers. The method processes the input list and groups
+elements into separate lists based on consecutive relationships.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>arr</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – A list of integers to be divided into sequences. Must be non-empty.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of lists, where each internal list represents a contiguous
+subsequence of consecutive integers from the input list.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[list[int]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.utils.fill_gaps">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.mt_classification.utils.</span></span><span class="sig-name descname"><span class="pre">fill_gaps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">float_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.analysis.mt_classification.utils.fill_gaps" title="Link to this definition"></a></dt>
+<dd><p>Fill gaps between consecutive elements in a list with evenly spaced values.</p>
+<p>This function takes a list of floats and a threshold value, <cite>n</cite>, to determine
+the gap size between consecutive elements. If the gap between two consecutive
+elements is smaller than or equal to <cite>n</cite>, it fills the gap with evenly spaced
+values. The resulting list is then returned as a sorted NumPy array with unique
+values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>float_list</strong> (<em>list</em>) – A list of float numbers to process.</p></li>
+<li><p><strong>n</strong> (<em>float</em>) – A float threshold value for determining the maximum gap size.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A NumPy array with gaps filled by evenly spaced unique values.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.utils.pick_pole_to_surfaces">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.mt_classification.utils.</span></span><span class="sig-name descname"><span class="pre">pick_pole_to_surfaces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">poles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertices</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.analysis.mt_classification.utils.pick_pole_to_surfaces" title="Link to this definition"></a></dt>
+<dd><p>Determine the order of poles based on their distance to the centroid of provided vertices.</p>
+<p>This function calculates the centroid of the given vertices, computes the Euclidean distance
+of the two poles from the centroid, and orders the poles based on which is closer to the centroid.
+If the second pole is closer to the centroid than the first pole, their positions are swapped
+in the returned array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>poles</strong> – A 2D NumPy array with shape (2, N), where each row represents a pole’s coordinates.</p></li>
+<li><p><strong>vertices</strong> – A NumPy array with shape (1, M, N), where M represents the number of vertices
+and N represents the dimensions (e.g., 2D, 3D) of each vertex’s coordinates.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A NumPy array containing the reordered poles based on their distance to the centroid
+of the vertices.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.utils.points_on_mesh_knn">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.mt_classification.utils.</span></span><span class="sig-name descname"><span class="pre">points_on_mesh_knn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.analysis.mt_classification.utils.points_on_mesh_knn" title="Link to this definition"></a></dt>
+<dd><p>Computes the distances of points to a mesh and identifies if the distances are within a
+threshold.</p>
+<p>The function calculates the nearest distances from given points to the provided mesh vertices
+using k-nearest neighbors. It also determines whether the points lie within a computed distance
+based on the mean edge length of the mesh (mean distance between vertices multiplied by 2). The
+output includes the actual distances and a boolean array indicating if the threshold was met.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> – Coordinates of the points that need to be tested against the mesh vertices.
+Expected to be a 2D NumPy array with each row representing a point in space.</p></li>
+<li><p><strong>vertices</strong> – Coordinates of the mesh vertices. Expected to be a 2D NumPy array with each
+row representing a vertex in space.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing two elements:
+- A NumPy array of distances from each point to the nearest mesh vertex.
+- A NumPy boolean array indicating whether each distance falls within the computed threshold.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.utils.select_mt_ids_within_bb">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.mt_classification.utils.</span></span><span class="sig-name descname"><span class="pre">select_mt_ids_within_bb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertices_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mt_ends1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mt_ends2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.analysis.mt_classification.utils.select_mt_ids_within_bb" title="Link to this definition"></a></dt>
+<dd><p>Finds microtubule (MT) IDs whose end-points lie within a 3D bounding box defined by the vertices.
+If <cite>mt_ends2</cite> is provided, it performs the filtering on this additional set of MT end-points as well.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vertices_n</strong> – A 2D numpy array of shape (n, 3) representing the vertices of a 3D bounding box. Each vertex is
+expected to have x, y, and z coordinates.</p></li>
+<li><p><strong>mt_ends1</strong> – A 2D numpy array where each row represents an MT end-point. Column 0 should contain MT IDs, and
+columns 1, 2, and 3 should correspond to x, y, and z coordinates of the end-points, respectively.</p></li>
+<li><p><strong>mt_ends2</strong> – Optional. A 2D numpy array structured similarly to <cite>mt_ends1</cite>. Each row represents an additional
+set of MT end-points. Default is None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A 1D numpy array containing unique MT IDs whose end-points lie within the 3D bounding box defined by
+<cite>vertices_</cite>. If <cite>mt_ends2</cite> is provided, the function updates its result set to include filtered IDs from
+<cite>mt_ends2</cite> as well.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.analysis.mt_classification.utils.assign_filaments_to_poles">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.analysis.mt_classification.utils.</span></span><span class="sig-name descname"><span class="pre">assign_filaments_to_poles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filaments</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">poles</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.analysis.mt_classification.utils.assign_filaments_to_poles" title="Link to this definition"></a></dt>
+<dd><p>Assigns filaments to the closest of two poles based on their minimal distance and
+reverses filament orientation if necessary to ensure the correct assignment.</p>
+<p>The function calculates the minimal distance between each filament endpoint and
+two given poles, and assigns filaments to the pole they are closest to. If the
+start point of a filament is farther from the assigned pole than the endpoint,
+the function flips the filament orientation. The result is a tuple of two arrays,
+where each array contains the filaments assigned to a particular pole.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filaments</strong> – A 2D numpy array of filaments where each row represents a
+point in a filament. The first column contains filament IDs, and the
+remaining columns represent the coordinates of the points.</p></li>
+<li><p><strong>poles</strong> – A 2D numpy array of two poles, where each row corresponds to a
+pole, and the columns represent the coordinates of the pole.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple of two numpy arrays. The first element contains all filaments
+assigned to pole 1, and the second element contains all filaments assigned
+to pole 2. Each array has rows corresponding to filament points, with the
+first column representing the filament ID and the remaining columns
+representing the coordinates of the filament point.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="analysis.html" class="btn btn-neutral float-left" title="Analysis" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="filament_utils.html" class="btn btn-neutral float-right" title="Analysis -&gt; Filament Utils" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2024, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

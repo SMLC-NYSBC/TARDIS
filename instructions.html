@@ -1,0 +1,260 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Installation &mdash; TARDIS-em 0.3.10 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=9f76a604"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tutorials" href="tutorials.html" />
+    <link rel="prev" title="History" href="HISTORY.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            TARDIS-em
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="HISTORY.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#option-1">Option 1:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#option-2">Option 2:</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#step-1-clone-repository">Step 1: Clone repository</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-2-create-a-conda-environment">Step 2: Create a conda environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-3-install-tardis">Step 3: Install TARDIS</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#validate-installation">Validate installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#optional-installation-of-napari-plugin">[Optional] installation of Napari plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#run-automatic-segmentation">Run automatic segmentation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/3d_actin.html">-  3D Actin Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/tirf_mt.html">-  TIRF Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/3d_membrane.html">-  3D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/scripting.html">-  Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/fine_tune_model.html">Fine-Tune TARDIS models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/helper.html">TARDIS helper-functions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="code_doc.html">CNN Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code_doc.html#dist-module">DIST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code_doc.html#analysis-module">Analysis Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code_doc.html#global-functions">Global Functions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Installation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/instructions.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
+<p>This is a preliminary installation instruction. This may not work on all systems.
+If any problems come up, do not hesitate to contact us <a class="reference external" href="mailto:rkiewisz&#37;&#52;&#48;nysbc&#46;org">rkiewisz<span>&#64;</span>nysbc<span>&#46;</span>org</a>,
+or contact us on our <a class="reference external" href="https://tardis-em.slack.com">Slack Channel</a>.</p>
+<p>We are working on a more intuitive installation of our software. In the meantime please use the following options.</p>
+<section id="option-1">
+<h2>Option 1:<a class="headerlink" href="#option-1" title="Link to this heading"></a></h2>
+<p>Install TARDIS using the newest released package from <a class="reference external" href="https://github.com/SMLC-NYSBC/TARDIS/releases">Github</a></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>package_name-py3-none-any.whl
+</pre></div>
+</div>
+<p>or</p>
+<ul class="simple">
+<li><p>Install pytorch with GPU support as per Pytorch official website: <a class="reference external" href="https://pytorch.org/get-started/locally/">https://pytorch.org/get-started/locally/</a></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>tardis-em
+</pre></div>
+</div>
+<p>And jump to <a class="reference internal" href="#validate">Validate</a>.</p>
+</section>
+<section id="option-2">
+<h2>Option 2:<a class="headerlink" href="#option-2" title="Link to this heading"></a></h2>
+<p>Build a package from the source</p>
+<section id="step-1-clone-repository">
+<h3>Step 1: Clone repository<a class="headerlink" href="#step-1-clone-repository" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/SMLC-NYSBC/TARDIS.git
+</pre></div>
+</div>
+</section>
+<section id="step-2-create-a-conda-environment">
+<h3>Step 2: Create a conda environment<a class="headerlink" href="#step-2-create-a-conda-environment" title="Link to this heading"></a></h3>
+<p>Before starting, it is beneficial to create a virtual Python environment.
+In these cases, we use Miniconda.</p>
+<p>If you don’t know if you have installed Miniconda on your machine, please run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>-h
+</pre></div>
+</div>
+<p>If you don’t have Miniconda, you could install it following <a class="reference external" href="https://docs.conda.io/projects/miniconda/en/latest">official instruction</a>.</p>
+<p>Now you can create a new conda environment:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>&lt;env_name&gt;<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.11
+</pre></div>
+</div>
+<p>And to use it, you need to active it:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>&lt;env_name&gt;
+</pre></div>
+</div>
+</section>
+<section id="step-3-install-tardis">
+<h3>Step 3: Install TARDIS<a class="headerlink" href="#step-3-install-tardis" title="Link to this heading"></a></h3>
+<p>The following command will install TARDIS and all its dependencies</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>tardis-em
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span>tardis-em
+</pre></div>
+</div>
+<p>(Optional) Install from GitHub master branch:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>TARDIS
+pip<span class="w"> </span>install<span class="w"> </span>.
+</pre></div>
+</div>
+</section>
+</section>
+<section id="validate-installation">
+<span id="validate"></span><h2>Validate installation<a class="headerlink" href="#validate-installation" title="Link to this heading"></a></h2>
+<p>To check if the installation was successful and check for any new OTA updates, you can run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tardis
+</pre></div>
+</div>
+<p>This should display the TARDIS home screen, similar to the screenshot below:</p>
+<blockquote>
+<div><a class="reference internal image-reference" href="_images/main_tardis.jpg"><img alt="_images/main_tardis.jpg" src="_images/main_tardis.jpg" style="width: 512px;" />
+</a>
+</div></blockquote>
+</section>
+<section id="optional-installation-of-napari-plugin">
+<h2>[Optional] installation of Napari plugin<a class="headerlink" href="#optional-installation-of-napari-plugin" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>napari-tardis-em
+</pre></div>
+</div>
+</section>
+<section id="run-automatic-segmentation">
+<h2>Run automatic segmentation<a class="headerlink" href="#run-automatic-segmentation" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Advance Tutorial - Predict Microtubules in 3D [<a class="reference external" href="usage/3d_mt.html">Tutorial</a>].</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tardis_mt<span class="w"> </span>-dir<span class="w"> </span>path/to/folder/with/your/tomograms
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Advance Tutorial - Predict Microtubules in 2D [Coming soon] [<a class="reference external" href="usage/2d_mt.html">Tutorial</a>]</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>TBD
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Advance Tutorial - Predict Membrane in 3D [<a class="reference external" href="usage/3d_membrane.html">Tutorial</a>]</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tardis_mem<span class="w"> </span>-dir<span class="w"> </span>path/to/folder/with/your/tomograms
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Advance Tutorial - Predict Membrane in 2D [<a class="reference external" href="usage/2d_membrane.html">Tutorial</a>]</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tardis_mem2d<span class="w"> </span>-dir<span class="w"> </span>path/to/folder/with/your/tomograms
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="HISTORY.html" class="btn btn-neutral float-left" title="History" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tutorials.html" class="btn btn-neutral float-right" title="Tutorials" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2024, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

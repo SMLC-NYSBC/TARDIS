@@ -1,0 +1,316 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prediction of 3D Membrane semantics/instances &mdash; TARDIS-em 0.3.10 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=9f76a604"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="../_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Prediction of 2D Membrane semantics/instances" href="2d_membrane.html" />
+    <link rel="prev" title="Prediction of TIRF MT semantics/instances" href="tirf_mt.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TARDIS-em
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../HISTORY.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../instructions.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="3d_actin.html">-  3D Actin Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tirf_mt.html">-  TIRF Microtubules Prediction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">-  3D Membrane Prediction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#tardis-workflow">TARDIS Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#preparation">Preparation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#prediction">Prediction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#semantic-instance-segmentation">Semantic/Instance segmentation:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#advance-usage">Advance usage:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripting.html">-  Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fine_tune_model.html">Fine-Tune TARDIS models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="helper.html">TARDIS helper-functions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html">CNN Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#dist-module">DIST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#analysis-module">Analysis Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#global-functions">Global Functions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Prediction of 3D Membrane semantics/instances</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/usage/3d_membrane.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="prediction-of-3d-membrane-semantics-instances">
+<h1>Prediction of 3D Membrane semantics/instances<a class="headerlink" href="#prediction-of-3d-membrane-semantics-instances" title="Link to this heading"></a></h1>
+<p>This guide provides detailed instructions to perform fully automatic membrane
+segmentation on all of your tomograms using our most up-to-date model.</p>
+<p>TARDIS can predict fully automatic membranes as semantic labels,
+or instances [track, labels, point cloud].</p>
+<img alt="../_images/3d_mem.jpg" src="../_images/3d_mem.jpg" />
+<p>Data source: EMPIRE-10236, DOI: 10.1038/s41586-019-1089-3</p>
+<p>Example of segmented tomograms with indicated predicted semantic binary
+segmentation and individual instances represented as tracks of different colors.</p>
+<section id="tardis-workflow">
+<h2>TARDIS Workflow<a class="headerlink" href="#tardis-workflow" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Prepare a folder with data</p></li>
+<li><p>Predict membrane segmentation</p></li>
+<li><p>(Optional) Advance prediction setting</p></li>
+</ol>
+</section>
+<section id="preparation">
+<h2>Preparation<a class="headerlink" href="#preparation" title="Link to this heading"></a></h2>
+<p>Simply store all your tomograms in one folder. TARDIS will recognize all
+image file with the extension [.tif, .tiff, .rec, .map, .mrc, .am, .npy].</p>
+<p><cite>Tip:</cite> In the case of REC/MAP/MRC files try to make sure that files have embedded
+in the header pixel size information.</p>
+</section>
+<section id="prediction">
+<h2>Prediction<a class="headerlink" href="#prediction" title="Link to this heading"></a></h2>
+<p>(Optional) Type the following to check if TARDIS is working properly.</p>
+<p><cite>Tips:</cite> If any error occurs, try using our <a class="reference external" href="troubleshooting.html">troubleshooting chapter</a>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tardis</span>
+</pre></div>
+</div>
+<p>This will display the TARDIS interface and show available options.</p>
+<a class="reference internal image-reference" href="../_images/main_tardis.jpg"><img alt="../_images/main_tardis.jpg" src="../_images/main_tardis.jpg" style="width: 512px;" />
+</a>
+<section id="semantic-instance-segmentation">
+<h3>Semantic/Instance segmentation:<a class="headerlink" href="#semantic-instance-segmentation" title="Link to this heading"></a></h3>
+<p>For the semantic prediction, you only need to type:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tardis_mem</span> <span class="o">-</span><span class="nb">dir</span> <span class="o">&lt;</span><span class="n">path</span><span class="o">-</span><span class="n">to</span><span class="o">-</span><span class="n">your</span><span class="o">-</span><span class="n">tomograms</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">out</span> <span class="o">&lt;</span><span class="n">output_type</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>TARDIS will save predictions in the default folder <code class="code highlight bash docutils literal highlight-bash">Prediction</code> located in
+the folder with your data.</p>
+<p>Running this will segment all tomograms in the indicated path. Predicted output
+will be store in file format indicated in <code class="code highlight bash docutils literal highlight-bash">-out<span class="w"> </span>&lt;output_type&gt;</code> [<a class="reference internal" href="#out"><span class="std std-ref">see all -out options</span></a>].</p>
+<p>You can also segment individual file by replacing <code class="code highlight bash docutils literal highlight-bash">-dir</code> with file not a folder location.</p>
+<p>For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tardis_mem</span> <span class="o">-</span><span class="nb">dir</span> <span class="o">&lt;</span><span class="n">path</span><span class="o">-</span><span class="n">to</span><span class="o">-</span><span class="n">your</span><span class="o">-</span><span class="n">tomograms</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">out</span> <span class="n">mrc_None</span>
+</pre></div>
+</div>
+<p>Will perform only semantic segmentation and save the output file as a .mrc file.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tardis_mem</span> <span class="o">-</span><span class="nb">dir</span> <span class="o">&lt;</span><span class="n">path</span><span class="o">-</span><span class="n">to</span><span class="o">-</span><span class="n">your</span><span class="o">-</span><span class="n">tomograms</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">out</span> <span class="n">None_csv</span>
+</pre></div>
+</div>
+<p>Will perform only instance segmentation and save the output file as a .csv file with data
+structure as [Membrane ID x X x Y x Z]</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tardis_mem</span> <span class="o">-</span><span class="nb">dir</span> <span class="o">&lt;</span><span class="n">path</span><span class="o">-</span><span class="n">to</span><span class="o">-</span><span class="n">your</span><span class="o">-</span><span class="n">tomograms</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">out</span> <span class="n">mrc_csv</span>
+</pre></div>
+</div>
+<p>Will perform semantic and instance segmentation and save the output file as a .mrc and a .csv files.</p>
+</section>
+<section id="advance-usage">
+<h3>Advance usage:<a class="headerlink" href="#advance-usage" title="Link to this heading"></a></h3>
+<p>Below you can find all available arguments you can use with <code class="code highlight bash docutils literal highlight-bash">tardis_mem</code>,
+with the explanation for their functionality:</p>
+<dl class="simple">
+<dt><code class="code highlight bash docutils literal highlight-bash">-dir</code> or <code class="code highlight bash docutils literal highlight-bash">--path</code>: Directory path with all tomograms for TARDIS prediction.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">default:</span> Current command line directory.</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-ms</code> or <code class="code highlight bash docutils literal highlight-bash">--mask</code>: Define if your input is a binary mask with a pre-segmented membrane.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Example:</span> You can set this argument to <code class="code highlight bash docutils literal highlight-bash">-ms<span class="w"> </span>True</code> if you have already segmented membrane
+and you only want to segment instances.</p></li>
+<li><p><span class="guilabel">default:</span> False</p></li>
+<li><p><span class="guilabel">Allowed options:</span> True, False</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-px</code> or <code class="code highlight bash docutils literal highlight-bash">--correct_px</code>: Overwrite pixel value.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Example:</span> You can set this argument to <code class="code highlight bash docutils literal highlight-bash">-px<span class="w"> </span>True</code> if you want to overwrite
+the pixel size value that is being recognized by TARDIS.</p></li>
+<li><p><span class="guilabel">default:</span> False</p></li>
+<li><p><span class="guilabel">Allowed options:</span> True, False</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-ch</code> or <code class="code highlight bash docutils literal highlight-bash">--checkpoint</code>: Directories to pre-train models.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Example:</span> If you fine-tuned TARDIS on your data you can indicate here
+file directories for semantic and instance model. To do this type your directory
+as follow: <code class="code highlight bash docutils literal highlight-bash">-ch<span class="w"> </span>&lt;semantic-model-directory&gt;<span class="p">|</span>&lt;instance-model-directory&gt;</code>. For example,
+if you want to pass only semantic model type: <code class="code highlight bash docutils literal highlight-bash">-ch<span class="w"> </span>&lt;semantic-model-directory&gt;<span class="p">|</span>None</code>.</p></li>
+<li><p><span class="guilabel">default:</span> None|None</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple" id="out">
+<dt><code class="code highlight bash docutils literal highlight-bash">-out</code> or <code class="code highlight bash docutils literal highlight-bash">--output_format</code>: Type of output files.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Example:</span> Output format argument is compose of two elements <code class="code highlight bash docutils literal highlight-bash">-out<span class="w"> </span>&lt;format&gt;_&lt;format&gt;</code>.
+The first output format is the semantic mask, which can be of type: None [no output], am [Amira], mrc, or tif.
+The second output is predicted instances of detected objects, which can be of type:
+output as amSG [Amira spatial graph], mrc [mrc instance mask], tif [tif instance mask],
+csv coordinate file [ID, X, Y, Z], stl [mesh grid], or None [no instance prediction].</p></li>
+<li><p><span class="guilabel">default:</span> mrc_csv</p></li>
+<li><p><span class="guilabel">Allowed options:</span> am_None, mrc_None, tif_None, npy_None, None_am, am_am, mrc_am, tif_am, npy_am,
+None_amSG, am_amSG, mrc_amSG, tif_amSG, npy_amSG, None_mrc, am_mrc, mrc_mrc, tif_mrc, npy_csv,
+None_tif, am_tif, mrc_tif, tif_tif, npy_tif, None_csv, am_csv, mrc_csv, tif_csv, npy_csv,
+None_stl, am_stl, mrc_stl, tif_stl, npy_stl, None_npy, am_npy, mrc_npy, tif_npy, npy_npy</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-ps</code> or <code class="code highlight bash docutils literal highlight-bash">--patch_size</code>: Window size used for prediction.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Example:</span> This will break tomograms into smaller patches with 25% overlap.
+Smaller values than 128 consume less GPU, but also may lead to worse segmentation results!</p></li>
+<li><p><span class="guilabel">default:</span> 128</p></li>
+<li><p><span class="guilabel">Allowed options:</span> 32, 64, 96, 128, 256, 512</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-rt</code> or <code class="code highlight bash docutils literal highlight-bash">--rotate</code>: Predict the image 4 times rotating it each time by 90 degrees.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Example:</span> If <code class="code highlight bash docutils literal highlight-bash">-rt<span class="w"> </span>True</code>, during semantic prediction tomograms is rotate 4x by 90 degrees.
+This will increase prediction time 4 times. However, it usually will result in cleaner output.</p></li>
+<li><p><span class="guilabel">default:</span> True</p></li>
+<li><p><span class="guilabel">Allowed options:</span> True, False</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-ct</code> or <code class="code highlight bash docutils literal highlight-bash">--cnn_threshold</code>: Threshold used for semantic prediction.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Example:</span> Higher value then <code class="code highlight bash docutils literal highlight-bash">-ct<span class="w"> </span><span class="m">0</span>.5</code> will lead to a reduction in noise
+and membrane prediction recall. A lower value will increase membrane prediction
+recall but may lead to increased noise.</p></li>
+<li><p><span class="guilabel">default:</span> 0.5</p></li>
+<li><p><span class="guilabel">Allowed options:</span> Float value between 0.0 and 1.0</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-dt</code> or <code class="code highlight bash docutils literal highlight-bash">--dist_threshold</code>: Threshold used for instance prediction.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Example:</span> Higher value then <code class="code highlight bash docutils literal highlight-bash">-dt<span class="w"> </span><span class="m">0</span>.9</code> will lower number of the
+predicted instances, a lower value will increase the number of predicted instances.</p></li>
+<li><p><span class="guilabel">default:</span> 0.9</p></li>
+<li><p><span class="guilabel">Allowed options:</span> Float value between 0.0 and 1.0</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-pv</code> or <code class="code highlight bash docutils literal highlight-bash">--points_in_patch</code>: Window size used for instance prediction.</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt><span class="guilabel">Example:</span> This value indicates the maximum number of points that could be</dt><dd><p>found in each point cloud cropped view. Essentially, this will lead to dividing
+a point cloud into smaller overlapping areas that would be segmented individually and
+then stitched and predicted together. <cite>Tips</cite>: 1000 points per crop requires
+~12 GB of GPU memory. For GPUs with smaller amounts of GPU memory, you can use
+lower numbers 500 or 800. A higher number will always lead to faster inference,
+and may slightly improve segmentation.</p>
+</dd>
+</dl>
+</li>
+<li><p><span class="guilabel">default:</span> 1000</p></li>
+<li><p><span class="guilabel">Allowed options:</span> Int value between 250 and 5000.</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-dv</code> or <code class="code highlight bash docutils literal highlight-bash">--device</code>: Define which device to use for inference.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Example:</span> You can use <code class="code highlight bash docutils literal highlight-bash">-dv<span class="w"> </span>gpu</code> to use the first available gpu on your system.
+You can also specify the exact GPU device with the number  <code class="code highlight bash docutils literal highlight-bash">-dv<span class="w"> </span><span class="m">0</span></code>, <code class="code highlight bash docutils literal highlight-bash">-dv<span class="w"> </span><span class="m">1</span></code>, etc. where 0 is always the default GPU.
+You can also use <code class="code highlight bash docutils literal highlight-bash">-dv<span class="w"> </span>cpu</code> to perform inference only on the CPU.</p></li>
+<li><p><span class="guilabel">default:</span> 0</p></li>
+<li><p><span class="guilabel">Allowed options:</span> cpu, gpu, 0, 1, 2, 3, etc.</p></li>
+</ul>
+</dd>
+<dt><code class="code highlight bash docutils literal highlight-bash">-db</code> or <code class="code highlight bash docutils literal highlight-bash">--debug</code>: Enable debugging mode.</dt><dd><ul class="simple">
+<li><p><span class="guilabel">Example:</span> Debugging mode saves all intermediate files allowing for
+debugging any errors. Use only as a developer or if specifically asked for by the developer.</p></li>
+<li><p><span class="guilabel">default:</span> False</p></li>
+<li><p><span class="guilabel">Allowed options:</span> True, False</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tirf_mt.html" class="btn btn-neutral float-left" title="Prediction of TIRF MT semantics/instances" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="2d_membrane.html" class="btn btn-neutral float-right" title="Prediction of 2D Membrane semantics/instances" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2024, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

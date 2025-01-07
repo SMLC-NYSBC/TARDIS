@@ -1,0 +1,1183 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Features &mdash; TARDIS-em 0.3.10 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=9f76a604"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Features" href="README.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            TARDIS-em
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="HISTORY.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/3d_actin.html">-  3D Actin Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/tirf_mt.html">-  TIRF Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/3d_membrane.html">-  3D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/scripting.html">-  Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/fine_tune_model.html">Fine-Tune TARDIS models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/helper.html">TARDIS helper-functions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="code_doc.html">CNN Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code_doc.html#dist-module">DIST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code_doc.html#analysis-module">Analysis Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code_doc.html#global-functions">Global Functions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Features</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <a class="reference external image-reference" href="https://smlc-nysbc.github.io/TARDIS/"><img alt="_images/Tardis_logo_2.png" class="align-center" src="_images/Tardis_logo_2.png" style="width: 512px;" />
+</a>
+<hr class="docutils" />
+<a class="reference external image-reference" href="https://img.shields.io/github/v/release/smlc-nysbc/tardis"><img alt="https://img.shields.io/github/v/release/smlc-nysbc/tardis" src="https://img.shields.io/github/v/release/smlc-nysbc/tardis" />
+</a>
+<a class="reference external image-reference" href="https://join.slack.com/t/tardis-em/shared_invite/zt-27jznfn9j-OplbV70KdKjkHsz5FcQQGg"><img alt="https://img.shields.io/badge/Join%20Our%20Community-Slack-blue" src="https://img.shields.io/badge/Join%20Our%20Community-Slack-blue" />
+</a>
+<a class="reference external image-reference" href="https://img.shields.io/github/downloads/smlc-nysbc/tardis/total"><img alt="https://img.shields.io/github/downloads/smlc-nysbc/tardis/total" src="https://img.shields.io/github/downloads/smlc-nysbc/tardis/total" />
+</a>
+<img alt="Static Badge" src="https://img.shields.io/badge/https%3A%2F%2Fgithub.com%2FSMLC-NYSBC%2Fnapari-tardis_em?style=plastic&amp;label=Napari&amp;link=https%3A%2F%2Fgithub.com%2FSMLC-NYSBC%2Fnapari-tardis_em" />
+<a class="reference external image-reference" href="https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_pytest.yml"><img alt="https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_pytest.yml/badge.svg" src="https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/python_pytest.yml/badge.svg" />
+</a>
+<a class="reference external image-reference" href="https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/sphinx_documentation.yml"><img alt="https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/sphinx_documentation.yml/badge.svg" src="https://github.com/SMLC-NYSBC/TARDIS/actions/workflows/sphinx_documentation.yml/badge.svg" />
+</a>
+<p>Python-based software for generalized object instance segmentation from (cryo-)electron microscopy
+micrographs/tomograms. The software package is built on a general workflow where predicted semantic segmentation
+is used for instance segmentation of 2D/3D images.</p>
+<img alt="_images/workflow.png" src="_images/workflow.png" />
+<section id="features">
+<h1>Features<a class="headerlink" href="#features" title="Link to this heading"></a></h1>
+<ul class="simple">
+<li><dl class="simple">
+<dt>Robust and high-throughput semantic/instance segmentation of all microtubules:</dt><dd><ul>
+<li><p>Supported file formats: [.tif, .mrc, .rec, .am]</p></li>
+<li><p>Supported modality: [ET, Cryo-ET]</p></li>
+<li><p>Supported Å resolution: [any best results in 1-40 Å range]</p></li>
+<li><p>2D micrograph modality microtubule segmentation will come soon!</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Robust and high-throughput semantic/instance segmentation of membranes:</dt><dd><ul>
+<li><p>Supported file formats: [.tif, .mrc, .rec, .am]</p></li>
+<li><p>Supported modality: [EM, ET, Cryo-EM, Cryo-ET]</p></li>
+<li><p>Supported Å resolution: [all]</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>High-throughput semantic/instance segmentation of actin [Beta]</p></li>
+<li><p>Fully automatic segmentation solution!</p></li>
+<li><p><a class="reference external" href="https://github.com/SMLC-NYSBC/napari-tardis_em/">Napari plugin</a></p></li>
+<li><p>Cloud computing [Coming soon]</p></li>
+</ul>
+</section>
+<section id="citation">
+<h1>Citation<a class="headerlink" href="#citation" title="Link to this heading"></a></h1>
+<p><a class="reference external" href="http://doi.org/10.1101/2024.12.19.629196">DOI [BioRxiv]</a></p>
+<p>Kiewisz R. et.al. 2024. Accurate and fast segmentation of filaments and membranes in micrographs and tomograms with TARDIS.</p>
+<p><a class="reference external" href="http://dx.doi.org/10.1093/micmic/ozad067.485">DOI [Microscopy and Microanalysis]</a></p>
+<p>Kiewisz R., Fabig G., Müller-Reichert T. Bepler T. 2023. Automated Segmentation of 3D Cytoskeletal Filaments from Electron Micrographs with TARDIS. Microscopy and Microanalysis 29(Supplement_1):970-972.</p>
+<p><a class="reference external" href="https://www.mlsb.io/papers_2022/Membrane_and_microtubule_rapid_instance_segmentation_with_dimensionless_instance_segmentation_by_learning_graph_representations_of_point_clouds.pdf">Link: NeurIPS 2022 MLSB Workshop</a></p>
+<p>Kiewisz R., Bepler T. 2022. Membrane and microtubule rapid instance segmentation with dimensionless instance segmentation by learning graph representations of point clouds. Neurips 2022 - Machine Learning for Structural Biology Workshop.</p>
+</section>
+<section id="what-s-new">
+<h1>What’s new?<a class="headerlink" href="#what-s-new" title="Link to this heading"></a></h1>
+<p><a class="reference external" href="https://smlc-nysbc.github.io/TARDIS/HISTORY.html">Full History</a></p>
+<dl class="simple">
+<dt>TARDIS-em v0.3.10 (2025-01-07):</dt><dd><ul class="simple">
+<li><p>Models update</p></li>
+<li><p>Progress with estimated ETA time</p></li>
+<li><p>Small bugfixes</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="quick-start">
+<h1>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading"></a></h1>
+<p>For more examples and advanced usage please find more details in our <a class="reference external" href="https://smlc-nysbc.github.io/TARDIS/">Documentation</a></p>
+<ol class="arabic simple">
+<li><p>Install TARDIS-em:</p></li>
+</ol>
+<blockquote>
+<div><p>Install pytorch with GPU support as per Pytorch official website: <a class="reference external" href="https://pytorch.org/get-started/locally/">https://pytorch.org/get-started/locally/</a></p>
+</div></blockquote>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>tardis-em
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Verifies installation:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tardis
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>Optional Napari plugin installation</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>napari-tardis-em
+</pre></div>
+</div>
+<section id="filaments-prediction">
+<h2>Filaments Prediction<a class="headerlink" href="#filaments-prediction" title="Link to this heading"></a></h2>
+<section id="d-actin-prediction">
+<h3>3D Actin prediction<a class="headerlink" href="#d-actin-prediction" title="Link to this heading"></a></h3>
+<p>Full tutorial: <a class="reference external" href="https://smlc-nysbc.github.io/TARDIS/usage/3d_actin.html">3D Actin Prediction</a></p>
+<section id="usage">
+<h4>Usage:<a class="headerlink" href="#usage" title="Link to this heading"></a></h4>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>recommended<span class="w"> </span>usage:<span class="w"> </span>tardis_actin<span class="w"> </span><span class="o">[</span>-dir<span class="w"> </span>path/to/folder/with/input/tomogram<span class="o">]</span>
+advance<span class="w"> </span>usage:<span class="w"> </span>tardis_actin<span class="w"> </span><span class="o">[</span>-dir<span class="w"> </span>str<span class="o">]</span><span class="w"> </span><span class="o">[</span>-out<span class="w"> </span>str<span class="o">]</span><span class="w"> </span><span class="o">[</span>-ps<span class="w"> </span>int<span class="o">]</span><span class="w"> </span><span class="o">[</span>-ct<span class="w"> </span>float<span class="o">]</span><span class="w"> </span><span class="o">[</span>-dt<span class="w"> </span>float<span class="o">]</span>
+<span class="w">                         </span><span class="o">[</span>-pv<span class="w"> </span>int<span class="o">]</span><span class="w"> </span><span class="o">[</span>-px<span class="w"> </span>float<span class="o">]</span><span class="w"> </span>...
+</pre></div>
+</div>
+</section>
+</section>
+<section id="d-microtubule-prediction">
+<h3>2D Microtubule prediction<a class="headerlink" href="#d-microtubule-prediction" title="Link to this heading"></a></h3>
+<p>TBD</p>
+</section>
+<section id="id1">
+<h3>3D Microtubule prediction<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<p>Full tutorial: <a class="reference external" href="https://smlc-nysbc.github.io/TARDIS/usage/3d_mt.html">3D Microtubules Prediction</a></p>
+<section id="example">
+<h4>Example:<a class="headerlink" href="#example" title="Link to this heading"></a></h4>
+<img alt="_images/3d_mt.jpg" src="_images/3d_mt.jpg" />
+<p>Data source: Dr. Gunar Fabig and Prof. Dr. Thomas Müller-Reichert, TU Dresden</p>
+</section>
+<section id="id2">
+<h4>Usage:<a class="headerlink" href="#id2" title="Link to this heading"></a></h4>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>recommended<span class="w"> </span>usage:<span class="w"> </span>tardis_mt<span class="w"> </span><span class="o">[</span>-dir<span class="w"> </span>path/to/folder/with/input/tomogram<span class="o">]</span>
+advance<span class="w"> </span>usage:<span class="w"> </span>tardis_mt<span class="w"> </span><span class="o">[</span>-dir<span class="w"> </span>str<span class="o">]</span><span class="w"> </span><span class="o">[</span>-out<span class="w"> </span>str<span class="o">]</span><span class="w"> </span><span class="o">[</span>-ps<span class="w"> </span>int<span class="o">]</span><span class="w"> </span><span class="o">[</span>-ct<span class="w"> </span>float<span class="o">]</span><span class="w"> </span><span class="o">[</span>-dt<span class="w"> </span>float<span class="o">]</span>
+<span class="w">                         </span><span class="o">[</span>-pv<span class="w"> </span>int<span class="o">]</span><span class="w"> </span><span class="o">[</span>-px<span class="w"> </span>float<span class="o">]</span><span class="w"> </span>...
+</pre></div>
+</div>
+</section>
+</section>
+<section id="tirf-microtubule-prediction">
+<h3>TIRF Microtubule prediction<a class="headerlink" href="#tirf-microtubule-prediction" title="Link to this heading"></a></h3>
+<p>Full tutorial: <a class="reference external" href="https://smlc-nysbc.github.io/TARDIS/usage/tirf_mt.html">TIRF Microtubules Prediction</a></p>
+<section id="id3">
+<h4>Example:<a class="headerlink" href="#id3" title="Link to this heading"></a></h4>
+<img alt="_images/tirf_mt.png" src="_images/tirf_mt.png" />
+<p>Data source: RNDr. Cyril Bařinka, Ph.D, Biocev</p>
+</section>
+<section id="id4">
+<h4>Usage:<a class="headerlink" href="#id4" title="Link to this heading"></a></h4>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>recommended<span class="w"> </span>usage:<span class="w"> </span>tardis_mt_tirf<span class="w"> </span><span class="o">[</span>-dir<span class="w"> </span>path/to/folder/with/input/data<span class="o">]</span>
+advance<span class="w"> </span>usage:<span class="w"> </span>tardis_mt<span class="w"> </span><span class="o">[</span>-dir<span class="w"> </span>str<span class="o">]</span><span class="w"> </span><span class="o">[</span>-out<span class="w"> </span>str<span class="o">]</span><span class="w"> </span><span class="o">[</span>-ps<span class="w"> </span>int<span class="o">]</span><span class="w"> </span><span class="o">[</span>-ct<span class="w"> </span>float<span class="o">]</span><span class="w"> </span><span class="o">[</span>-dt<span class="w"> </span>float<span class="o">]</span>
+<span class="w">                         </span><span class="o">[</span>-pv<span class="w"> </span>int<span class="o">]</span><span class="w"> </span>...
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="membrane-prediction">
+<h2>Membrane Prediction<a class="headerlink" href="#membrane-prediction" title="Link to this heading"></a></h2>
+<section id="d-prediction">
+<h3>2D prediction<a class="headerlink" href="#d-prediction" title="Link to this heading"></a></h3>
+<p>Full tutorial: <a class="reference external" href="https://smlc-nysbc.github.io/TARDIS/usage/2d_membrane.html">2D Membrane Prediction</a></p>
+<section id="id5">
+<h4>Example:<a class="headerlink" href="#id5" title="Link to this heading"></a></h4>
+<img alt="_images/2d_mem.jpg" src="_images/2d_mem.jpg" />
+<p>Data source: Dr. Victor Kostyuchenko and Prof. Dr. Shee-Mei Lok, DUKE-NUS Medical School Singapore</p>
+</section>
+<section id="id6">
+<h4>Usage:<a class="headerlink" href="#id6" title="Link to this heading"></a></h4>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>recommended<span class="w"> </span>usage:<span class="w"> </span>tardis_mem2d<span class="w"> </span><span class="o">[</span>-dir<span class="w"> </span>path/to/folder/with/input/tomogram<span class="o">]</span><span class="w"> </span>-out<span class="w"> </span>mrc_csv
+advance<span class="w"> </span>usage:<span class="w"> </span>tardis_mem<span class="w"> </span><span class="o">[</span>-dir<span class="w"> </span>str<span class="o">]</span><span class="w"> </span><span class="o">[</span>-out<span class="w"> </span>str<span class="o">]</span><span class="w"> </span><span class="o">[</span>-ps<span class="w"> </span>int<span class="o">]</span><span class="w"> </span>...
+</pre></div>
+</div>
+</section>
+</section>
+<section id="id7">
+<h3>3D prediction<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<p>Full tutorial: <a class="reference external" href="https://smlc-nysbc.github.io/TARDIS/usage/3d_membrane.html">3D Membrane Prediction</a></p>
+<section id="id8">
+<h4>Example:<a class="headerlink" href="#id8" title="Link to this heading"></a></h4>
+<img alt="_images/3d_mem.jpg" src="_images/3d_mem.jpg" />
+<p>Data source: EMPIRE-10236, DOI: 10.1038/s41586-019-1089-3</p>
+</section>
+<section id="id9">
+<h4>Usage:<a class="headerlink" href="#id9" title="Link to this heading"></a></h4>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>recommended<span class="w"> </span>usage:<span class="w"> </span>tardis_mem<span class="w"> </span><span class="o">[</span>-dir<span class="w"> </span>path/to/folder/with/input/tomogram<span class="o">]</span><span class="w"> </span>-out<span class="w"> </span>mrc_csv
+advance<span class="w"> </span>usage:<span class="w"> </span>tardis_mem<span class="w"> </span><span class="o">[</span>-dir<span class="w"> </span>str<span class="o">]</span><span class="w"> </span><span class="o">[</span>-out<span class="w"> </span>str<span class="o">]</span><span class="w"> </span><span class="o">[</span>-ps<span class="w"> </span>int<span class="o">]</span><span class="w"> </span>...
+</pre></div>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html#quick-start">Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="README.html#filaments-prediction">Filaments Prediction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="README.html#d-actin-prediction">3D Actin prediction</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="README.html#usage">Usage:</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="README.html#d-microtubule-prediction">2D Microtubule prediction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="README.html#id1">3D Microtubule prediction</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="README.html#example">Example:</a></li>
+<li class="toctree-l4"><a class="reference internal" href="README.html#id2">Usage:</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="README.html#tirf-microtubule-prediction">TIRF Microtubule prediction</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="README.html#id3">Example:</a></li>
+<li class="toctree-l4"><a class="reference internal" href="README.html#id4">Usage:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="README.html#membrane-prediction">Membrane Prediction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="README.html#d-prediction">2D prediction</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="README.html#id5">Example:</a></li>
+<li class="toctree-l4"><a class="reference internal" href="README.html#id6">Usage:</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="README.html#id7">3D prediction</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="README.html#id8">Example:</a></li>
+<li class="toctree-l4"><a class="reference internal" href="README.html#id9">Usage:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="HISTORY.html">History</a></li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="instructions.html#option-1">Option 1:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="instructions.html#option-2">Option 2:</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="instructions.html#step-1-clone-repository">Step 1: Clone repository</a></li>
+<li class="toctree-l3"><a class="reference internal" href="instructions.html#step-2-create-a-conda-environment">Step 2: Create a conda environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="instructions.html#step-3-install-tardis">Step 3: Install TARDIS</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="instructions.html#validate-installation">Validate installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="instructions.html#optional-installation-of-napari-plugin">[Optional] installation of Napari plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="instructions.html#run-automatic-segmentation">Run automatic segmentation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials.html#d-microtubule-prediction">1. 3D Microtubule Prediction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials.html#id1">2. 2D Microtubule Prediction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials.html#d-membrane-prediction">3. 3D Membrane Prediction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials.html#id2">4. 2D Membrane Prediction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials.html#scripting-in-python">6. Scripting in python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials.html#visualize-instance-segmentation-results">6. Visualize Instance segmentation results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials.html#helper-functions">7. Helper functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage/3d_actin.html">-  3D Actin Prediction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage/3d_actin.html#tardis-workflow">TARDIS Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage/3d_actin.html#preparation">Preparation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage/3d_actin.html#prediction">Prediction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage/3d_actin.html#semantic-instance-segmentation">Semantic/Instance segmentation:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/3d_actin.html#advance-usage">Advance usage:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage/3d_mt.html">-  3D Microtubules Prediction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage/3d_mt.html#tardis-workflow">TARDIS Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage/3d_mt.html#preparation">Preparation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage/3d_mt.html#optional-amira-comparison">(Optional) Amira Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage/3d_mt.html#prediction">Prediction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage/3d_mt.html#semantic-instance-segmentation">Semantic/Instance segmentation:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/3d_mt.html#advance-usage">Advance usage:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage/2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/tirf_mt.html">-  TIRF Microtubules Prediction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage/tirf_mt.html#tardis-workflow">TARDIS Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage/tirf_mt.html#preparation">Preparation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage/tirf_mt.html#prediction">Prediction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage/tirf_mt.html#semantic-instance-segmentation">Semantic/Instance segmentation:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/tirf_mt.html#advance-usage">Advance usage:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage/3d_membrane.html">-  3D Membrane Prediction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage/3d_membrane.html#tardis-workflow">TARDIS Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage/3d_membrane.html#preparation">Preparation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage/3d_membrane.html#prediction">Prediction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage/3d_membrane.html#semantic-instance-segmentation">Semantic/Instance segmentation:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/3d_membrane.html#advance-usage">Advance usage:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage/2d_membrane.html">-  2D Membrane Prediction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage/2d_membrane.html#tardis-workflow">TARDIS Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage/2d_membrane.html#preparation">Preparation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage/2d_membrane.html#prediction">Prediction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage/2d_membrane.html#semantic-instance-segmentation">Semantic/Instance segmentation:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/2d_membrane.html#advance-usage">Advance usage:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage/scripting.html">-  Scripting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage/scripting.html#example">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage/visualization.html">Visualization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage/visualization.html#simple-usage">Simple Usage:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage/visualization.html#advance-usage">Advance usage:</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage/fine_tune_model.html">Fine-Tune TARDIS models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage/fine_tune_model.html#training-tardis-cnn-models">Training TARDIS CNN models</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage/fine_tune_model.html#data-preparation">1. Data preparation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/fine_tune_model.html#training">2. Training</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="usage/fine_tune_model.html#basic-usage">Basic usage:</a></li>
+<li class="toctree-l4"><a class="reference internal" href="usage/fine_tune_model.html#advance-usage">Advance usage:</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="usage/fine_tune_model.html#pre-train-model-from-scratch">3.1 Pre-train model from scratch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/fine_tune_model.html#fine-tune-existing-models">3.2 Fine-tune existing models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage/fine_tune_model.html#predict-with-train-model">4. Predict with train model</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage/troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage/troubleshooting.html#pytorch-not-compiled-with-cuda">Pytorch not compiled with CUDA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage/troubleshooting.html#tardis-produce-no-output-and-no-error-message">TARDIS produce no output and no error message</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage/helper.html">TARDIS helper-functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage/helper.html#conversion">Conversion</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage/helper.html#convert-between-csv-and-amira-am-format">Convert between csv and Amira .am format</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="code_doc.html">CNN Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cnn/cnn.html">CNN</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cnn/cnn.html#module-tardis_em.cnn.cnn">CNN Model Class</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cnn/cnn.html#tardis_em.cnn.cnn.build_cnn_network"><code class="docutils literal notranslate"><span class="pre">build_cnn_network()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cnn/cnn.html#module-tardis_em.cnn.train">CNN Train Module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cnn/cnn.html#tardis_em.cnn.train.train_cnn"><code class="docutils literal notranslate"><span class="pre">train_cnn()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cnn/cnn.html#module-tardis_em.cnn.trainer">CNN Trainer Wrapper</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cnn/cnn.html#tardis_em.cnn.trainer.CNNTrainer"><code class="docutils literal notranslate"><span class="pre">CNNTrainer</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cnn/model.html">CNN Model</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cnn/model.html#module-tardis_em.cnn.model.convolution">Convolutions Modules</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cnn/model.html#tardis_em.cnn.model.convolution.GeLU"><code class="docutils literal notranslate"><span class="pre">GeLU</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="cnn/model.html#tardis_em.cnn.model.convolution.GeLU.forward"><code class="docutils literal notranslate"><span class="pre">GeLU.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/model.html#tardis_em.cnn.model.convolution.convolution"><code class="docutils literal notranslate"><span class="pre">convolution()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/model.html#tardis_em.cnn.model.convolution.SingleConvolution"><code class="docutils literal notranslate"><span class="pre">SingleConvolution</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/model.html#tardis_em.cnn.model.convolution.DoubleConvolution"><code class="docutils literal notranslate"><span class="pre">DoubleConvolution</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/model.html#tardis_em.cnn.model.convolution.RecurrentDoubleConvolution"><code class="docutils literal notranslate"><span class="pre">RecurrentDoubleConvolution</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="cnn/model.html#tardis_em.cnn.model.convolution.RecurrentDoubleConvolution.forward"><code class="docutils literal notranslate"><span class="pre">RecurrentDoubleConvolution.forward()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cnn/model.html#module-tardis_em.cnn.model.encoder_blocks">Generalize Encoder Module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cnn/model.html#tardis_em.cnn.model.encoder_blocks.EncoderBlock"><code class="docutils literal notranslate"><span class="pre">EncoderBlock</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="cnn/model.html#tardis_em.cnn.model.encoder_blocks.EncoderBlock.dropout"><code class="docutils literal notranslate"><span class="pre">EncoderBlock.dropout</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="cnn/model.html#tardis_em.cnn.model.encoder_blocks.EncoderBlock.forward"><code class="docutils literal notranslate"><span class="pre">EncoderBlock.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/model.html#tardis_em.cnn.model.encoder_blocks.build_encoder"><code class="docutils literal notranslate"><span class="pre">build_encoder()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cnn/model.html#module-tardis_em.cnn.model.decoder_blocks">Generalize Decoder Module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cnn/model.html#tardis_em.cnn.model.decoder_blocks.DecoderBlockCNN"><code class="docutils literal notranslate"><span class="pre">DecoderBlockCNN</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="cnn/model.html#tardis_em.cnn.model.decoder_blocks.DecoderBlockCNN.dropout"><code class="docutils literal notranslate"><span class="pre">DecoderBlockCNN.dropout</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="cnn/model.html#tardis_em.cnn.model.decoder_blocks.DecoderBlockCNN.deconv_module"><code class="docutils literal notranslate"><span class="pre">DecoderBlockCNN.deconv_module</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="cnn/model.html#tardis_em.cnn.model.decoder_blocks.DecoderBlockCNN.forward"><code class="docutils literal notranslate"><span class="pre">DecoderBlockCNN.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/model.html#tardis_em.cnn.model.decoder_blocks.DecoderBlockRCNN"><code class="docutils literal notranslate"><span class="pre">DecoderBlockRCNN</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="cnn/model.html#tardis_em.cnn.model.decoder_blocks.DecoderBlockRCNN.dropout"><code class="docutils literal notranslate"><span class="pre">DecoderBlockRCNN.dropout</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="cnn/model.html#tardis_em.cnn.model.decoder_blocks.DecoderBlockRCNN.deconv_res_module"><code class="docutils literal notranslate"><span class="pre">DecoderBlockRCNN.deconv_res_module</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="cnn/model.html#tardis_em.cnn.model.decoder_blocks.DecoderBlockRCNN.forward"><code class="docutils literal notranslate"><span class="pre">DecoderBlockRCNN.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/model.html#tardis_em.cnn.model.decoder_blocks.DecoderBlockUnet3Plus"><code class="docutils literal notranslate"><span class="pre">DecoderBlockUnet3Plus</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="cnn/model.html#tardis_em.cnn.model.decoder_blocks.DecoderBlockUnet3Plus.dropout"><code class="docutils literal notranslate"><span class="pre">DecoderBlockUnet3Plus.dropout</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="cnn/model.html#tardis_em.cnn.model.decoder_blocks.DecoderBlockUnet3Plus.deconv"><code class="docutils literal notranslate"><span class="pre">DecoderBlockUnet3Plus.deconv</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="cnn/model.html#tardis_em.cnn.model.decoder_blocks.DecoderBlockUnet3Plus.forward"><code class="docutils literal notranslate"><span class="pre">DecoderBlockUnet3Plus.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/model.html#tardis_em.cnn.model.decoder_blocks.build_decoder"><code class="docutils literal notranslate"><span class="pre">build_decoder()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cnn/model.html#module-tardis_em.cnn.model.init_weights">Weight Initialization</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cnn/model.html#tardis_em.cnn.model.init_weights.weights_init_kaiming"><code class="docutils literal notranslate"><span class="pre">weights_init_kaiming()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/model.html#tardis_em.cnn.model.init_weights.init_weights"><code class="docutils literal notranslate"><span class="pre">init_weights()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cnn/datasets.html">DataLoader</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cnn/datasets.html#module-tardis_em.cnn.datasets.augmentation">Image Augmentation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cnn/datasets.html#tardis_em.cnn.datasets.augmentation.CenterCrop"><code class="docutils literal notranslate"><span class="pre">CenterCrop</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/datasets.html#tardis_em.cnn.datasets.augmentation.RandomFlip"><code class="docutils literal notranslate"><span class="pre">RandomFlip</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/datasets.html#tardis_em.cnn.datasets.augmentation.RandomRotation"><code class="docutils literal notranslate"><span class="pre">RandomRotation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/datasets.html#tardis_em.cnn.datasets.augmentation.ComposeRandomTransformation"><code class="docutils literal notranslate"><span class="pre">ComposeRandomTransformation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/datasets.html#tardis_em.cnn.datasets.augmentation.preprocess"><code class="docutils literal notranslate"><span class="pre">preprocess()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cnn/datasets.html#module-tardis_em.cnn.datasets.dataloader">DataLoader</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cnn/datasets.html#tardis_em.cnn.datasets.dataloader.CNNDataset"><code class="docutils literal notranslate"><span class="pre">CNNDataset</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/datasets.html#tardis_em.cnn.datasets.dataloader.PredictionDataset"><code class="docutils literal notranslate"><span class="pre">PredictionDataset</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cnn/datasets.html#module-tardis_em.cnn.datasets.build_dataset">Dataset Builder</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cnn/datasets.html#tardis_em.cnn.datasets.build_dataset.build_train_dataset"><code class="docutils literal notranslate"><span class="pre">build_train_dataset()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/datasets.html#tardis_em.cnn.datasets.build_dataset.load_img_mask_data"><code class="docutils literal notranslate"><span class="pre">load_img_mask_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/datasets.html#tardis_em.cnn.datasets.build_dataset.error_log_build_data"><code class="docutils literal notranslate"><span class="pre">error_log_build_data()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cnn/data_processing.html">Data processing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cnn/data_processing.html#module-tardis_em.cnn.data_processing.trim">Image patching - Image trimming</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cnn/data_processing.html#tardis_em.cnn.data_processing.trim.trim_with_stride"><code class="docutils literal notranslate"><span class="pre">trim_with_stride()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/data_processing.html#tardis_em.cnn.data_processing.trim.trim_label_mask"><code class="docutils literal notranslate"><span class="pre">trim_label_mask()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cnn/data_processing.html#module-tardis_em.cnn.data_processing.stitch">Image patching - Image stitching</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cnn/data_processing.html#tardis_em.cnn.data_processing.stitch.StitchImages"><code class="docutils literal notranslate"><span class="pre">StitchImages</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/data_processing.html#tardis_em.cnn.data_processing.stitch.generate_grid"><code class="docutils literal notranslate"><span class="pre">generate_grid()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cnn/data_processing.html#module-tardis_em.cnn.data_processing.interpolation">Utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cnn/data_processing.html#tardis_em.cnn.data_processing.interpolation.interpolate_generator"><code class="docutils literal notranslate"><span class="pre">interpolate_generator()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/data_processing.html#tardis_em.cnn.data_processing.interpolation.interpolation"><code class="docutils literal notranslate"><span class="pre">interpolation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/data_processing.html#tardis_em.cnn.data_processing.draw_mask.draw_instances"><code class="docutils literal notranslate"><span class="pre">draw_instances()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/data_processing.html#tardis_em.cnn.data_processing.draw_mask.draw_semantic_membrane"><code class="docutils literal notranslate"><span class="pre">draw_semantic_membrane()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/data_processing.html#tardis_em.cnn.data_processing.draw_mask.draw_instances_membrane"><code class="docutils literal notranslate"><span class="pre">draw_instances_membrane()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/data_processing.html#tardis_em.cnn.data_processing.draw_mask.draw_mask"><code class="docutils literal notranslate"><span class="pre">draw_mask()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/data_processing.html#tardis_em.cnn.data_processing.draw_mask.draw_circle"><code class="docutils literal notranslate"><span class="pre">draw_circle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/data_processing.html#tardis_em.cnn.data_processing.draw_mask.draw_sphere"><code class="docutils literal notranslate"><span class="pre">draw_sphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/data_processing.html#tardis_em.cnn.data_processing.scaling.scale_image"><code class="docutils literal notranslate"><span class="pre">scale_image()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/data_processing.html#tardis_em.cnn.data_processing.scaling.nn_scaling"><code class="docutils literal notranslate"><span class="pre">nn_scaling()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/data_processing.html#tardis_em.cnn.data_processing.scaling.linear_scaling"><code class="docutils literal notranslate"><span class="pre">linear_scaling()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/data_processing.html#tardis_em.cnn.data_processing.scaling.area_scaling"><code class="docutils literal notranslate"><span class="pre">area_scaling()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/data_processing.html#tardis_em.cnn.data_processing.scaling.fourier_scaling"><code class="docutils literal notranslate"><span class="pre">fourier_scaling()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cnn/utils.html">Utils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cnn/utils.html#module-tardis_em.cnn.utils.build_cnn">CNN Builder</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cnn/utils.html#tardis_em.cnn.utils.build_cnn.BasicCNN"><code class="docutils literal notranslate"><span class="pre">BasicCNN</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="cnn/utils.html#tardis_em.cnn.utils.build_cnn.BasicCNN.update_patch_size"><code class="docutils literal notranslate"><span class="pre">BasicCNN.update_patch_size()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="cnn/utils.html#tardis_em.cnn.utils.build_cnn.BasicCNN.build_cnn_model"><code class="docutils literal notranslate"><span class="pre">BasicCNN.build_cnn_model()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/utils.html#tardis_em.cnn.utils.build_cnn.UNet"><code class="docutils literal notranslate"><span class="pre">UNet</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="cnn/utils.html#tardis_em.cnn.utils.build_cnn.UNet.forward"><code class="docutils literal notranslate"><span class="pre">UNet.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/utils.html#tardis_em.cnn.utils.build_cnn.ResUNet"><code class="docutils literal notranslate"><span class="pre">ResUNet</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="cnn/utils.html#tardis_em.cnn.utils.build_cnn.ResUNet.forward"><code class="docutils literal notranslate"><span class="pre">ResUNet.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/utils.html#tardis_em.cnn.utils.build_cnn.UNet3Plus"><code class="docutils literal notranslate"><span class="pre">UNet3Plus</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="cnn/utils.html#tardis_em.cnn.utils.build_cnn.UNet3Plus.encoder"><code class="docutils literal notranslate"><span class="pre">UNet3Plus.encoder</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="cnn/utils.html#tardis_em.cnn.utils.build_cnn.UNet3Plus.decoder"><code class="docutils literal notranslate"><span class="pre">UNet3Plus.decoder</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="cnn/utils.html#tardis_em.cnn.utils.build_cnn.UNet3Plus.dot_product"><code class="docutils literal notranslate"><span class="pre">UNet3Plus.dot_product()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="cnn/utils.html#tardis_em.cnn.utils.build_cnn.UNet3Plus.forward"><code class="docutils literal notranslate"><span class="pre">UNet3Plus.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/utils.html#tardis_em.cnn.utils.build_cnn.FNet"><code class="docutils literal notranslate"><span class="pre">FNet</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="cnn/utils.html#tardis_em.cnn.utils.build_cnn.FNet.update_patch_size"><code class="docutils literal notranslate"><span class="pre">FNet.update_patch_size()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="cnn/utils.html#tardis_em.cnn.utils.build_cnn.FNet.build_cnn_model"><code class="docutils literal notranslate"><span class="pre">FNet.build_cnn_model()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="cnn/utils.html#tardis_em.cnn.utils.build_cnn.FNet.forward"><code class="docutils literal notranslate"><span class="pre">FNet.forward()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cnn/utils.html#module-tardis_em.cnn.utils.utils">CNN Utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cnn/utils.html#tardis_em.cnn.utils.utils.number_of_features_per_level"><code class="docutils literal notranslate"><span class="pre">number_of_features_per_level()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/utils.html#tardis_em.cnn.utils.utils.max_number_of_conv_layer"><code class="docutils literal notranslate"><span class="pre">max_number_of_conv_layer()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/utils.html#tardis_em.cnn.utils.utils.normalize_image"><code class="docutils literal notranslate"><span class="pre">normalize_image()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cnn/utils.html#tardis_em.cnn.utils.utils.check_model_dict"><code class="docutils literal notranslate"><span class="pre">check_model_dict()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="code_doc.html#dist-module">DIST Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dist_pytorch/dist.html">DIST</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="dist_pytorch/dist.html#module-tardis_em.dist_pytorch.dist">DIST Model Class</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/dist.html#tardis_em.dist_pytorch.dist.BasicDIST"><code class="docutils literal notranslate"><span class="pre">BasicDIST</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/dist.html#tardis_em.dist_pytorch.dist.BasicDIST.embed_input"><code class="docutils literal notranslate"><span class="pre">BasicDIST.embed_input()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/dist.html#tardis_em.dist_pytorch.dist.BasicDIST.forward"><code class="docutils literal notranslate"><span class="pre">BasicDIST.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/dist.html#tardis_em.dist_pytorch.dist.DIST"><code class="docutils literal notranslate"><span class="pre">DIST</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/dist.html#tardis_em.dist_pytorch.dist.CDIST"><code class="docutils literal notranslate"><span class="pre">CDIST</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/dist.html#tardis_em.dist_pytorch.dist.build_dist_network"><code class="docutils literal notranslate"><span class="pre">build_dist_network()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="dist_pytorch/dist.html#module-tardis_em.dist_pytorch.train">DIST Train Module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/dist.html#tardis_em.dist_pytorch.train.train_dist"><code class="docutils literal notranslate"><span class="pre">train_dist()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="dist_pytorch/dist.html#module-tardis_em.dist_pytorch.trainer">DIST Trainer Wrapper</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/dist.html#tardis_em.dist_pytorch.trainer.SparseDistTrainer"><code class="docutils literal notranslate"><span class="pre">SparseDistTrainer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/dist.html#tardis_em.dist_pytorch.trainer.DistTrainer"><code class="docutils literal notranslate"><span class="pre">DistTrainer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/dist.html#tardis_em.dist_pytorch.trainer.CDistTrainer"><code class="docutils literal notranslate"><span class="pre">CDistTrainer</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="dist_pytorch/modules.html">DIST Model</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="dist_pytorch/modules.html#module-tardis_em.dist_pytorch.model.layers">DIST layer wrapper</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/modules.html#tardis_em.dist_pytorch.model.layers.DistStack"><code class="docutils literal notranslate"><span class="pre">DistStack</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/modules.html#tardis_em.dist_pytorch.model.layers.DistStack.forward"><code class="docutils literal notranslate"><span class="pre">DistStack.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/modules.html#tardis_em.dist_pytorch.model.layers.DistLayer"><code class="docutils literal notranslate"><span class="pre">DistLayer</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/modules.html#tardis_em.dist_pytorch.model.layers.DistLayer.update_nodes"><code class="docutils literal notranslate"><span class="pre">DistLayer.update_nodes()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/modules.html#tardis_em.dist_pytorch.model.layers.DistLayer.update_edges"><code class="docutils literal notranslate"><span class="pre">DistLayer.update_edges()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/modules.html#tardis_em.dist_pytorch.model.layers.DistLayer.forward"><code class="docutils literal notranslate"><span class="pre">DistLayer.forward()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="dist_pytorch/modules.html#dist-graph-update-modules">DIST graph update-modules</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/modules.html#tardis_em.dist_pytorch.model.modules.PairBiasSelfAttention"><code class="docutils literal notranslate"><span class="pre">PairBiasSelfAttention</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/modules.html#tardis_em.dist_pytorch.model.modules.PairBiasSelfAttention.forward"><code class="docutils literal notranslate"><span class="pre">PairBiasSelfAttention.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/modules.html#tardis_em.dist_pytorch.model.modules.ComparisonLayer"><code class="docutils literal notranslate"><span class="pre">ComparisonLayer</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/modules.html#tardis_em.dist_pytorch.model.modules.ComparisonLayer.forward"><code class="docutils literal notranslate"><span class="pre">ComparisonLayer.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/modules.html#tardis_em.dist_pytorch.model.modules.TriangularEdgeUpdate"><code class="docutils literal notranslate"><span class="pre">TriangularEdgeUpdate</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/modules.html#tardis_em.dist_pytorch.model.modules.TriangularEdgeUpdate.forward"><code class="docutils literal notranslate"><span class="pre">TriangularEdgeUpdate.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/modules.html#tardis_em.dist_pytorch.model.modules.QuadraticEdgeUpdate"><code class="docutils literal notranslate"><span class="pre">QuadraticEdgeUpdate</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/modules.html#tardis_em.dist_pytorch.model.modules.QuadraticEdgeUpdate.forward"><code class="docutils literal notranslate"><span class="pre">QuadraticEdgeUpdate.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/modules.html#tardis_em.dist_pytorch.model.modules.MultiHeadAttention"><code class="docutils literal notranslate"><span class="pre">MultiHeadAttention</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/modules.html#tardis_em.dist_pytorch.model.modules.MultiHeadAttention.reset_parameters"><code class="docutils literal notranslate"><span class="pre">MultiHeadAttention.reset_parameters()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/modules.html#tardis_em.dist_pytorch.model.modules.MultiHeadAttention.forward"><code class="docutils literal notranslate"><span class="pre">MultiHeadAttention.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/modules.html#tardis_em.dist_pytorch.model.modules.SelfAttention2D"><code class="docutils literal notranslate"><span class="pre">SelfAttention2D</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/modules.html#tardis_em.dist_pytorch.model.modules.SelfAttention2D.forward"><code class="docutils literal notranslate"><span class="pre">SelfAttention2D.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/modules.html#tardis_em.dist_pytorch.model.modules.GeluFeedForward"><code class="docutils literal notranslate"><span class="pre">GeluFeedForward</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/modules.html#tardis_em.dist_pytorch.model.modules.GeluFeedForward.forward"><code class="docutils literal notranslate"><span class="pre">GeluFeedForward.forward()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="dist_pytorch/modules.html#feature-embedding">Feature embedding</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/modules.html#tardis_em.dist_pytorch.model.embedding.NodeEmbedding"><code class="docutils literal notranslate"><span class="pre">NodeEmbedding</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/modules.html#tardis_em.dist_pytorch.model.embedding.NodeEmbedding.forward"><code class="docutils literal notranslate"><span class="pre">NodeEmbedding.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/modules.html#tardis_em.dist_pytorch.model.embedding.EdgeEmbedding"><code class="docutils literal notranslate"><span class="pre">EdgeEmbedding</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/modules.html#tardis_em.dist_pytorch.model.embedding.EdgeEmbedding.forward"><code class="docutils literal notranslate"><span class="pre">EdgeEmbedding.forward()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="dist_pytorch/data_loader.html">DataLoader</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="dist_pytorch/data_loader.html#general-dataloader">General DataLoader</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/data_loader.html#tardis_em.dist_pytorch.datasets.dataloader.BasicDataset"><code class="docutils literal notranslate"><span class="pre">BasicDataset</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/data_loader.html#tardis_em.dist_pytorch.datasets.dataloader.BasicDataset.save_temp"><code class="docutils literal notranslate"><span class="pre">BasicDataset.save_temp()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/data_loader.html#tardis_em.dist_pytorch.datasets.dataloader.BasicDataset.load_temp"><code class="docutils literal notranslate"><span class="pre">BasicDataset.load_temp()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/data_loader.html#tardis_em.dist_pytorch.datasets.dataloader.BasicDataset.list_to_tensor"><code class="docutils literal notranslate"><span class="pre">BasicDataset.list_to_tensor()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="dist_pytorch/data_loader.html#specialized-dataloader-s">Specialized DataLoader’s</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/data_loader.html#filament-structure-dataset">Filament structure DataSet</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/data_loader.html#tardis_em.dist_pytorch.datasets.dataloader.FilamentDataset"><code class="docutils literal notranslate"><span class="pre">FilamentDataset</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/data_loader.html#tardis_em.dist_pytorch.datasets.dataloader.PartnetDataset"><code class="docutils literal notranslate"><span class="pre">PartnetDataset</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/data_loader.html#scannet-v2-synthetic-dataset">ScanNet V2 synthetic DataSet</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/data_loader.html#tardis_em.dist_pytorch.datasets.dataloader.ScannetDataset"><code class="docutils literal notranslate"><span class="pre">ScannetDataset</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/data_loader.html#scannet-v2-with-rgb-values-synthetic-dataset">ScanNet V2 with RGB values synthetic DataSet</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/data_loader.html#tardis_em.dist_pytorch.datasets.dataloader.ScannetColorDataset"><code class="docutils literal notranslate"><span class="pre">ScannetColorDataset</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/data_loader.html#stanford-s3dis-dataset">Stanford S3DIS DataSet</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/data_loader.html#tardis_em.dist_pytorch.datasets.dataloader.Stanford3DDataset"><code class="docutils literal notranslate"><span class="pre">Stanford3DDataset</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="dist_pytorch/data_loader.html#helper-functions">Helper Functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/data_loader.html#build-dataloader">Build dataloader</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/data_loader.html#tardis_em.dist_pytorch.datasets.dataloader.build_dataset"><code class="docutils literal notranslate"><span class="pre">build_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/data_loader.html#module-tardis_em.dist_pytorch.datasets.augmentation">Point Cloud Augmentation</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/data_loader.html#tardis_em.dist_pytorch.datasets.augmentation.preprocess_data"><code class="docutils literal notranslate"><span class="pre">preprocess_data()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/data_loader.html#tardis_em.dist_pytorch.datasets.augmentation.BuildGraph"><code class="docutils literal notranslate"><span class="pre">BuildGraph</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/data_loader.html#tardis_em.dist_pytorch.datasets.augmentation.Crop2D3D"><code class="docutils literal notranslate"><span class="pre">Crop2D3D</span></code></a><ul>
+<li class="toctree-l6"><a class="reference internal" href="dist_pytorch/data_loader.html#tardis_em.dist_pytorch.datasets.augmentation.Crop2D3D.get_xyz_position"><code class="docutils literal notranslate"><span class="pre">Crop2D3D.get_xyz_position()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/data_loader.html#tardis_em.dist_pytorch.datasets.augmentation.upsample_pc"><code class="docutils literal notranslate"><span class="pre">upsample_pc()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/data_loader.html#module-tardis_em.dist_pytorch.datasets.patches">Patch dataset</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/data_loader.html#tardis_em.dist_pytorch.datasets.patches.PatchDataSet"><code class="docutils literal notranslate"><span class="pre">PatchDataSet</span></code></a><ul>
+<li class="toctree-l6"><a class="reference internal" href="dist_pytorch/data_loader.html#tardis_em.dist_pytorch.datasets.patches.PatchDataSet.boundary_box"><code class="docutils literal notranslate"><span class="pre">PatchDataSet.boundary_box()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="dist_pytorch/data_loader.html#tardis_em.dist_pytorch.datasets.patches.PatchDataSet.center_patch"><code class="docutils literal notranslate"><span class="pre">PatchDataSet.center_patch()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="dist_pytorch/data_loader.html#tardis_em.dist_pytorch.datasets.patches.PatchDataSet.points_in_patch"><code class="docutils literal notranslate"><span class="pre">PatchDataSet.points_in_patch()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="dist_pytorch/data_loader.html#tardis_em.dist_pytorch.datasets.patches.PatchDataSet.optimal_patches"><code class="docutils literal notranslate"><span class="pre">PatchDataSet.optimal_patches()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="dist_pytorch/data_loader.html#tardis_em.dist_pytorch.datasets.patches.PatchDataSet.normalize_idx"><code class="docutils literal notranslate"><span class="pre">PatchDataSet.normalize_idx()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="dist_pytorch/data_loader.html#tardis_em.dist_pytorch.datasets.patches.PatchDataSet.output_format"><code class="docutils literal notranslate"><span class="pre">PatchDataSet.output_format()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="dist_pytorch/data_loader.html#tardis_em.dist_pytorch.datasets.patches.PatchDataSet.patched_dataset"><code class="docutils literal notranslate"><span class="pre">PatchDataSet.patched_dataset()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="dist_pytorch/utils.html">Utils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="dist_pytorch/utils.html#module-tardis_em.dist_pytorch.utils.build_point_cloud">Build point cloud from image</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/utils.html#tardis_em.dist_pytorch.utils.build_point_cloud.BuildPointCloud"><code class="docutils literal notranslate"><span class="pre">BuildPointCloud</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/utils.html#tardis_em.dist_pytorch.utils.build_point_cloud.BuildPointCloud.check_data"><code class="docutils literal notranslate"><span class="pre">BuildPointCloud.check_data()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/utils.html#tardis_em.dist_pytorch.utils.build_point_cloud.BuildPointCloud.build_point_cloud"><code class="docutils literal notranslate"><span class="pre">BuildPointCloud.build_point_cloud()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/utils.html#tardis_em.dist_pytorch.utils.build_point_cloud.draw_line"><code class="docutils literal notranslate"><span class="pre">draw_line()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/utils.html#tardis_em.dist_pytorch.utils.build_point_cloud.quadratic_bezier"><code class="docutils literal notranslate"><span class="pre">quadratic_bezier()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/utils.html#tardis_em.dist_pytorch.utils.build_point_cloud.draw_curved_line"><code class="docutils literal notranslate"><span class="pre">draw_curved_line()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/utils.html#tardis_em.dist_pytorch.utils.build_point_cloud.draw_circle"><code class="docutils literal notranslate"><span class="pre">draw_circle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/utils.html#tardis_em.dist_pytorch.utils.build_point_cloud.draw_sphere"><code class="docutils literal notranslate"><span class="pre">draw_sphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/utils.html#tardis_em.dist_pytorch.utils.build_point_cloud.draw_sheet"><code class="docutils literal notranslate"><span class="pre">draw_sheet()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/utils.html#tardis_em.dist_pytorch.utils.build_point_cloud.create_simulated_dataset"><code class="docutils literal notranslate"><span class="pre">create_simulated_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="dist_pytorch/utils.html#module-tardis_em.dist_pytorch.utils.segment_point_cloud">Segment point cloud from graph</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/utils.html#tardis_em.dist_pytorch.utils.segment_point_cloud.PropGreedyGraphCut"><code class="docutils literal notranslate"><span class="pre">PropGreedyGraphCut</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/utils.html#tardis_em.dist_pytorch.utils.segment_point_cloud.PropGreedyGraphCut.preprocess_connections"><code class="docutils literal notranslate"><span class="pre">PropGreedyGraphCut.preprocess_connections()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/utils.html#tardis_em.dist_pytorch.utils.segment_point_cloud.PropGreedyGraphCut.patch_to_segment"><code class="docutils literal notranslate"><span class="pre">PropGreedyGraphCut.patch_to_segment()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="dist_pytorch/utils.html#module-tardis_em.dist_pytorch.utils.utils">General Utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/utils.html#tardis_em.dist_pytorch.utils.utils.pc_median_dist"><code class="docutils literal notranslate"><span class="pre">pc_median_dist()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/utils.html#tardis_em.dist_pytorch.utils.utils.point_in_bb"><code class="docutils literal notranslate"><span class="pre">point_in_bb()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/utils.html#tardis_em.dist_pytorch.utils.utils.DownSampling"><code class="docutils literal notranslate"><span class="pre">DownSampling</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/utils.html#tardis_em.dist_pytorch.utils.utils.DownSampling.pc_down_sample"><code class="docutils literal notranslate"><span class="pre">DownSampling.pc_down_sample()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/utils.html#tardis_em.dist_pytorch.utils.utils.VoxelDownSampling"><code class="docutils literal notranslate"><span class="pre">VoxelDownSampling</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/utils.html#tardis_em.dist_pytorch.utils.utils.VoxelDownSampling.pc_down_sample"><code class="docutils literal notranslate"><span class="pre">VoxelDownSampling.pc_down_sample()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/utils.html#tardis_em.dist_pytorch.utils.utils.RandomDownSampling"><code class="docutils literal notranslate"><span class="pre">RandomDownSampling</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="dist_pytorch/utils.html#tardis_em.dist_pytorch.utils.utils.RandomDownSampling.pc_down_sample"><code class="docutils literal notranslate"><span class="pre">RandomDownSampling.pc_down_sample()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="dist_pytorch/utils.html#tardis_em.dist_pytorch.utils.utils.check_model_dict"><code class="docutils literal notranslate"><span class="pre">check_model_dict()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="code_doc.html#analysis-module">Analysis Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="analysis/analysis.html">Analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="analysis/analysis.html#module-tardis_em.analysis.analysis">Analysis -&gt; Analysis wrappers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="analysis/analysis.html#tardis_em.analysis.analysis.analyse_filaments"><code class="docutils literal notranslate"><span class="pre">analyse_filaments()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/analysis.html#tardis_em.analysis.analysis.save_analysis"><code class="docutils literal notranslate"><span class="pre">save_analysis()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/analysis.html#tardis_em.analysis.analysis.analyse_filaments_list"><code class="docutils literal notranslate"><span class="pre">analyse_filaments_list()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/analysis.html#tardis_em.analysis.analysis.analyse_mt_classes"><code class="docutils literal notranslate"><span class="pre">analyse_mt_classes()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="analysis/analysis.html#module-tardis_em.analysis.filament_structure">Analysis -&gt; Filament Structure</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="analysis/analysis.html#tardis_em.analysis.filament_structure.assign_filaments_to_poles"><code class="docutils literal notranslate"><span class="pre">assign_filaments_to_poles()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="analysis/analysis.html#module-tardis_em.analysis.geometry_metrics">Analysis -&gt; Geometry metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="analysis/analysis.html#tardis_em.analysis.geometry_metrics.curvature"><code class="docutils literal notranslate"><span class="pre">curvature()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/analysis.html#tardis_em.analysis.geometry_metrics.curvature_list"><code class="docutils literal notranslate"><span class="pre">curvature_list()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/analysis.html#tardis_em.analysis.geometry_metrics.tortuosity"><code class="docutils literal notranslate"><span class="pre">tortuosity()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/analysis.html#tardis_em.analysis.geometry_metrics.tortuosity_list"><code class="docutils literal notranslate"><span class="pre">tortuosity_list()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/analysis.html#tardis_em.analysis.geometry_metrics.total_length"><code class="docutils literal notranslate"><span class="pre">total_length()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/analysis.html#tardis_em.analysis.geometry_metrics.length_list"><code class="docutils literal notranslate"><span class="pre">length_list()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/analysis.html#tardis_em.analysis.geometry_metrics.angle_between_vectors"><code class="docutils literal notranslate"><span class="pre">angle_between_vectors()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/analysis.html#tardis_em.analysis.geometry_metrics.intensity"><code class="docutils literal notranslate"><span class="pre">intensity()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/analysis.html#tardis_em.analysis.geometry_metrics.pixel_intensity"><code class="docutils literal notranslate"><span class="pre">pixel_intensity()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/analysis.html#tardis_em.analysis.geometry_metrics.thicken_line_coordinates"><code class="docutils literal notranslate"><span class="pre">thicken_line_coordinates()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/analysis.html#tardis_em.analysis.geometry_metrics.intensity_list"><code class="docutils literal notranslate"><span class="pre">intensity_list()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="analysis/mt_classification.html">MT classification</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="analysis/mt_classification.html#module-tardis_em.analysis.mt_classification.mt_classes">MT Classification - Main</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier"><code class="docutils literal notranslate"><span class="pre">MicrotubuleClassifier</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_vertices_file"><code class="docutils literal notranslate"><span class="pre">MicrotubuleClassifier.get_vertices_file()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_filament_file"><code class="docutils literal notranslate"><span class="pre">MicrotubuleClassifier.get_filament_file()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_poles_file"><code class="docutils literal notranslate"><span class="pre">MicrotubuleClassifier.get_poles_file()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.correct_data"><code class="docutils literal notranslate"><span class="pre">MicrotubuleClassifier.correct_data()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_filament_endpoints"><code class="docutils literal notranslate"><span class="pre">MicrotubuleClassifier.get_filament_endpoints()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.assign_to_kmts"><code class="docutils literal notranslate"><span class="pre">MicrotubuleClassifier.assign_to_kmts()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.kmts_inside_outside"><code class="docutils literal notranslate"><span class="pre">MicrotubuleClassifier.kmts_inside_outside()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.assign_to_mid_mt"><code class="docutils literal notranslate"><span class="pre">MicrotubuleClassifier.assign_to_mid_mt()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.assign_to_int_mt"><code class="docutils literal notranslate"><span class="pre">MicrotubuleClassifier.assign_to_int_mt()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.assign_to_bridge_mt"><code class="docutils literal notranslate"><span class="pre">MicrotubuleClassifier.assign_to_bridge_mt()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.assign_mt_with_crossing"><code class="docutils literal notranslate"><span class="pre">MicrotubuleClassifier.assign_mt_with_crossing()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.classified_MTs"><code class="docutils literal notranslate"><span class="pre">MicrotubuleClassifier.classified_MTs()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_classified_indices"><code class="docutils literal notranslate"><span class="pre">MicrotubuleClassifier.get_classified_indices()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_classified_fibers"><code class="docutils literal notranslate"><span class="pre">MicrotubuleClassifier.get_classified_fibers()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_filaments"><code class="docutils literal notranslate"><span class="pre">MicrotubuleClassifier.get_filaments()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_vertices"><code class="docutils literal notranslate"><span class="pre">MicrotubuleClassifier.get_vertices()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.mt_classes.MicrotubuleClassifier.get_poles"><code class="docutils literal notranslate"><span class="pre">MicrotubuleClassifier.get_poles()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="analysis/mt_classification.html#module-tardis_em.analysis.mt_classification.utils">MT Classification - Utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.utils.count_true_groups"><code class="docutils literal notranslate"><span class="pre">count_true_groups()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.utils.distances_of_ends_to_surface"><code class="docutils literal notranslate"><span class="pre">distances_of_ends_to_surface()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.utils.distance_to_the_pole"><code class="docutils literal notranslate"><span class="pre">distance_to_the_pole()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.utils.divide_into_sequences"><code class="docutils literal notranslate"><span class="pre">divide_into_sequences()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.utils.fill_gaps"><code class="docutils literal notranslate"><span class="pre">fill_gaps()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.utils.pick_pole_to_surfaces"><code class="docutils literal notranslate"><span class="pre">pick_pole_to_surfaces()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.utils.points_on_mesh_knn"><code class="docutils literal notranslate"><span class="pre">points_on_mesh_knn()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.utils.select_mt_ids_within_bb"><code class="docutils literal notranslate"><span class="pre">select_mt_ids_within_bb()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/mt_classification.html#tardis_em.analysis.mt_classification.utils.assign_filaments_to_poles"><code class="docutils literal notranslate"><span class="pre">assign_filaments_to_poles()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="analysis/filament_utils.html">Filament Utils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="analysis/filament_utils.html#tardis_em.analysis.filament_utils.resample_filament"><code class="docutils literal notranslate"><span class="pre">resample_filament()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis/filament_utils.html#tardis_em.analysis.filament_utils.sort_segments"><code class="docutils literal notranslate"><span class="pre">sort_segments()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis/filament_utils.html#tardis_em.analysis.filament_utils.sort_segment"><code class="docutils literal notranslate"><span class="pre">sort_segment()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis/filament_utils.html#tardis_em.analysis.filament_utils.reorder_segments_id"><code class="docutils literal notranslate"><span class="pre">reorder_segments_id()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis/filament_utils.html#tardis_em.analysis.filament_utils.smooth_spline"><code class="docutils literal notranslate"><span class="pre">smooth_spline()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis/filament_utils.html#tardis_em.analysis.filament_utils.sort_by_length"><code class="docutils literal notranslate"><span class="pre">sort_by_length()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis/filament_utils.html#tardis_em.analysis.filament_utils.cut_150_degree"><code class="docutils literal notranslate"><span class="pre">cut_150_degree()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="analysis/filament_utils.html#module-tardis_em.analysis.spatial_graph_utils">Analysis -&gt; Spatial Graph Utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="analysis/filament_utils.html#tardis_em.analysis.spatial_graph_utils.FilterConnectedNearSegments"><code class="docutils literal notranslate"><span class="pre">FilterConnectedNearSegments</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="analysis/filament_utils.html#tardis_em.analysis.spatial_graph_utils.FilterConnectedNearSegments.splines_direction"><code class="docutils literal notranslate"><span class="pre">FilterConnectedNearSegments.splines_direction()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="analysis/filament_utils.html#tardis_em.analysis.spatial_graph_utils.FilterConnectedNearSegments.marge_splines"><code class="docutils literal notranslate"><span class="pre">FilterConnectedNearSegments.marge_splines()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/filament_utils.html#tardis_em.analysis.spatial_graph_utils.FilterSpatialGraph"><code class="docutils literal notranslate"><span class="pre">FilterSpatialGraph</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/filament_utils.html#tardis_em.analysis.spatial_graph_utils.SpatialGraphCompare"><code class="docutils literal notranslate"><span class="pre">SpatialGraphCompare</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/filament_utils.html#tardis_em.analysis.spatial_graph_utils.ComputeConfidenceScore"><code class="docutils literal notranslate"><span class="pre">ComputeConfidenceScore</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="analysis/filament_utils.html#tardis_em.analysis.spatial_graph_utils.ComputeConfidenceScore.normalized_length"><code class="docutils literal notranslate"><span class="pre">ComputeConfidenceScore.normalized_length()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="analysis/filament_utils.html#tardis_em.analysis.spatial_graph_utils.ComputeConfidenceScore.combined_smoothness"><code class="docutils literal notranslate"><span class="pre">ComputeConfidenceScore.combined_smoothness()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="analysis/filament_utils.html#tardis_em.analysis.spatial_graph_utils.compare_splines_probability"><code class="docutils literal notranslate"><span class="pre">compare_splines_probability()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="code_doc.html#global-functions">Global Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="utils/aws.html">AWS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="utils/aws.html#module-tardis_em.utils.aws">AWS API</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="utils/aws.html#tardis_em.utils.aws.get_benchmark_aws"><code class="docutils literal notranslate"><span class="pre">get_benchmark_aws()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/aws.html#tardis_em.utils.aws.put_benchmark_aws"><code class="docutils literal notranslate"><span class="pre">put_benchmark_aws()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/aws.html#tardis_em.utils.aws.get_all_version_aws"><code class="docutils literal notranslate"><span class="pre">get_all_version_aws()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/aws.html#tardis_em.utils.aws.get_model_aws"><code class="docutils literal notranslate"><span class="pre">get_model_aws()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/aws.html#tardis_em.utils.aws.get_weights_aws"><code class="docutils literal notranslate"><span class="pre">get_weights_aws()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/aws.html#tardis_em.utils.aws.aws_check_with_temp"><code class="docutils literal notranslate"><span class="pre">aws_check_with_temp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/aws.html#tardis_em.utils.aws.aws_check_pkg_with_temp"><code class="docutils literal notranslate"><span class="pre">aws_check_pkg_with_temp()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="utils/aws.html#module-tardis_em.utils.ota_update">Over-the-Air Update API</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="utils/aws.html#tardis_em.utils.ota_update.ota_update"><code class="docutils literal notranslate"><span class="pre">ota_update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/aws.html#tardis_em.utils.ota_update.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="utils/import_data.html">Data Handlers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="utils/import_data.html#module-tardis_em.utils.load_data">Import data formats</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.load_data.ImportDataFromAmira"><code class="docutils literal notranslate"><span class="pre">ImportDataFromAmira</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.load_data.ImportDataFromAmira.get_points"><code class="docutils literal notranslate"><span class="pre">ImportDataFromAmira.get_points()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.load_data.ImportDataFromAmira.get_vertex"><code class="docutils literal notranslate"><span class="pre">ImportDataFromAmira.get_vertex()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.load_data.ImportDataFromAmira.get_segmented_points"><code class="docutils literal notranslate"><span class="pre">ImportDataFromAmira.get_segmented_points()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.load_data.ImportDataFromAmira.get_labels"><code class="docutils literal notranslate"><span class="pre">ImportDataFromAmira.get_labels()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.load_data.ImportDataFromAmira.get_image"><code class="docutils literal notranslate"><span class="pre">ImportDataFromAmira.get_image()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.load_data.ImportDataFromAmira.get_pixel_size"><code class="docutils literal notranslate"><span class="pre">ImportDataFromAmira.get_pixel_size()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.load_data.ImportDataFromAmira.get_surface"><code class="docutils literal notranslate"><span class="pre">ImportDataFromAmira.get_surface()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.load_data.load_tiff"><code class="docutils literal notranslate"><span class="pre">load_tiff()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.load_data.mrc_read_header"><code class="docutils literal notranslate"><span class="pre">mrc_read_header()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.load_data.mrc_write_header"><code class="docutils literal notranslate"><span class="pre">mrc_write_header()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.load_data.mrc_mode"><code class="docutils literal notranslate"><span class="pre">mrc_mode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.load_data.load_am"><code class="docutils literal notranslate"><span class="pre">load_am()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.load_data.load_am_surf"><code class="docutils literal notranslate"><span class="pre">load_am_surf()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.load_data.load_mrc_file"><code class="docutils literal notranslate"><span class="pre">load_mrc_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.load_data.load_nd2_file"><code class="docutils literal notranslate"><span class="pre">load_nd2_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.load_data.load_ply_scannet"><code class="docutils literal notranslate"><span class="pre">load_ply_scannet()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.load_data.load_ply_partnet"><code class="docutils literal notranslate"><span class="pre">load_ply_partnet()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.load_data.load_txt_s3dis"><code class="docutils literal notranslate"><span class="pre">load_txt_s3dis()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.load_data.load_s3dis_scene"><code class="docutils literal notranslate"><span class="pre">load_s3dis_scene()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.load_data.load_image"><code class="docutils literal notranslate"><span class="pre">load_image()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="utils/import_data.html#module-tardis_em.utils.export_data">Export data formats</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.export_data.NumpyToAmira"><code class="docutils literal notranslate"><span class="pre">NumpyToAmira</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.export_data.NumpyToAmira.check_3d"><code class="docutils literal notranslate"><span class="pre">NumpyToAmira.check_3d()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.export_data.NumpyToAmira.export_amira"><code class="docutils literal notranslate"><span class="pre">NumpyToAmira.export_amira()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.export_data.to_mrc"><code class="docutils literal notranslate"><span class="pre">to_mrc()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.export_data.to_am"><code class="docutils literal notranslate"><span class="pre">to_am()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.export_data.to_stl"><code class="docutils literal notranslate"><span class="pre">to_stl()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="utils/import_data.html#module-tardis_em.utils.normalization">Image normalization</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.normalization.adaptive_threshold"><code class="docutils literal notranslate"><span class="pre">adaptive_threshold()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.normalization.SimpleNormalize"><code class="docutils literal notranslate"><span class="pre">SimpleNormalize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.normalization.MinMaxNormalize"><code class="docutils literal notranslate"><span class="pre">MinMaxNormalize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.normalization.MeanStdNormalize"><code class="docutils literal notranslate"><span class="pre">MeanStdNormalize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.normalization.RescaleNormalize"><code class="docutils literal notranslate"><span class="pre">RescaleNormalize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.normalization.FFTNormalize"><code class="docutils literal notranslate"><span class="pre">FFTNormalize</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.normalization.FFTNormalize.gmm_fit"><code class="docutils literal notranslate"><span class="pre">FFTNormalize.gmm_fit()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="utils/import_data.html#tardis_em.utils.normalization.FFTNormalize.norm_fit"><code class="docutils literal notranslate"><span class="pre">FFTNormalize.norm_fit()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="utils/trainer.html">Trainer</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="utils/trainer.html#module-tardis_em.utils.trainer">General NN trainer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.trainer.ISR_LR"><code class="docutils literal notranslate"><span class="pre">ISR_LR</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.trainer.ISR_LR.load_state_dict"><code class="docutils literal notranslate"><span class="pre">ISR_LR.load_state_dict()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.trainer.ISR_LR.state_dict"><code class="docutils literal notranslate"><span class="pre">ISR_LR.state_dict()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.trainer.ISR_LR.step"><code class="docutils literal notranslate"><span class="pre">ISR_LR.step()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.trainer.ISR_LR.zero_grad"><code class="docutils literal notranslate"><span class="pre">ISR_LR.zero_grad()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.trainer.ISR_LR.get_lr_scale"><code class="docutils literal notranslate"><span class="pre">ISR_LR.get_lr_scale()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.trainer.BasicTrainer"><code class="docutils literal notranslate"><span class="pre">BasicTrainer</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.trainer.BasicTrainer.run_trainer"><code class="docutils literal notranslate"><span class="pre">BasicTrainer.run_trainer()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="utils/trainer.html#module-tardis_em.utils.losses">Loss functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.AbstractLoss"><code class="docutils literal notranslate"><span class="pre">AbstractLoss</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.AbstractLoss.activate"><code class="docutils literal notranslate"><span class="pre">AbstractLoss.activate()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.AbstractLoss.ignor_diagonal"><code class="docutils literal notranslate"><span class="pre">AbstractLoss.ignor_diagonal()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.AbstractLoss.initialize_tensors"><code class="docutils literal notranslate"><span class="pre">AbstractLoss.initialize_tensors()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.AbstractLoss.forward"><code class="docutils literal notranslate"><span class="pre">AbstractLoss.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.AdaptiveDiceLoss"><code class="docutils literal notranslate"><span class="pre">AdaptiveDiceLoss</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.AdaptiveDiceLoss.forward"><code class="docutils literal notranslate"><span class="pre">AdaptiveDiceLoss.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.BCELoss"><code class="docutils literal notranslate"><span class="pre">BCELoss</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.BCELoss.forward"><code class="docutils literal notranslate"><span class="pre">BCELoss.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.BCEGraphWiseLoss"><code class="docutils literal notranslate"><span class="pre">BCEGraphWiseLoss</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.BCEGraphWiseLoss.forward"><code class="docutils literal notranslate"><span class="pre">BCEGraphWiseLoss.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.BCEDiceLoss"><code class="docutils literal notranslate"><span class="pre">BCEDiceLoss</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.BCEDiceLoss.forward"><code class="docutils literal notranslate"><span class="pre">BCEDiceLoss.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.CELoss"><code class="docutils literal notranslate"><span class="pre">CELoss</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.CELoss.forward"><code class="docutils literal notranslate"><span class="pre">CELoss.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.DiceLoss"><code class="docutils literal notranslate"><span class="pre">DiceLoss</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.DiceLoss.forward"><code class="docutils literal notranslate"><span class="pre">DiceLoss.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.LaplacianEigenmapsLoss"><code class="docutils literal notranslate"><span class="pre">LaplacianEigenmapsLoss</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.LaplacianEigenmapsLoss.compute_laplacian"><code class="docutils literal notranslate"><span class="pre">LaplacianEigenmapsLoss.compute_laplacian()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.LaplacianEigenmapsLoss.forward"><code class="docutils literal notranslate"><span class="pre">LaplacianEigenmapsLoss.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.SoftSkeletonization"><code class="docutils literal notranslate"><span class="pre">SoftSkeletonization</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.SoftSkeletonization.soft_skel"><code class="docutils literal notranslate"><span class="pre">SoftSkeletonization.soft_skel()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.SoftSkeletonization.forward"><code class="docutils literal notranslate"><span class="pre">SoftSkeletonization.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.ClBCELoss"><code class="docutils literal notranslate"><span class="pre">ClBCELoss</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.ClBCELoss.forward"><code class="docutils literal notranslate"><span class="pre">ClBCELoss.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.ClDiceLoss"><code class="docutils literal notranslate"><span class="pre">ClDiceLoss</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.ClDiceLoss.forward"><code class="docutils literal notranslate"><span class="pre">ClDiceLoss.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.SigmoidFocalLoss"><code class="docutils literal notranslate"><span class="pre">SigmoidFocalLoss</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.SigmoidFocalLoss.forward"><code class="docutils literal notranslate"><span class="pre">SigmoidFocalLoss.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.WBCELoss"><code class="docutils literal notranslate"><span class="pre">WBCELoss</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.WBCELoss.forward"><code class="docutils literal notranslate"><span class="pre">WBCELoss.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.BCEMSELoss"><code class="docutils literal notranslate"><span class="pre">BCEMSELoss</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.losses.BCEMSELoss.forward"><code class="docutils literal notranslate"><span class="pre">BCEMSELoss.forward()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="utils/trainer.html#module-tardis_em.utils.metrics">Training metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.metrics.compare_dict_metrics"><code class="docutils literal notranslate"><span class="pre">compare_dict_metrics()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.metrics.eval_graph_f1"><code class="docutils literal notranslate"><span class="pre">eval_graph_f1()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.metrics.calculate_f1"><code class="docutils literal notranslate"><span class="pre">calculate_f1()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.metrics.AP"><code class="docutils literal notranslate"><span class="pre">AP()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.metrics.AP_instance"><code class="docutils literal notranslate"><span class="pre">AP_instance()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.metrics.AUC"><code class="docutils literal notranslate"><span class="pre">AUC()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.metrics.IoU"><code class="docutils literal notranslate"><span class="pre">IoU()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.metrics.mcov"><code class="docutils literal notranslate"><span class="pre">mcov()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.metrics.confusion_matrix"><code class="docutils literal notranslate"><span class="pre">confusion_matrix()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/trainer.html#tardis_em.utils.metrics.normalize_image"><code class="docutils literal notranslate"><span class="pre">normalize_image()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="utils/predictor.html">Predictor</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="utils/predictor.html#tardis_em.utils.predictor.GeneralPredictor"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="utils/predictor.html#tardis_em.utils.predictor.GeneralPredictor.eta_predict"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.eta_predict</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/predictor.html#tardis_em.utils.predictor.GeneralPredictor.omit_format"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.omit_format</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/predictor.html#tardis_em.utils.predictor.GeneralPredictor.create_headers"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.create_headers()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/predictor.html#tardis_em.utils.predictor.GeneralPredictor.init_check"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.init_check()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/predictor.html#tardis_em.utils.predictor.GeneralPredictor.build_NN"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.build_NN()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/predictor.html#tardis_em.utils.predictor.GeneralPredictor.load_data"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.load_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/predictor.html#tardis_em.utils.predictor.GeneralPredictor.predict_cnn"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.predict_cnn()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/predictor.html#tardis_em.utils.predictor.GeneralPredictor.predict_cnn_napari"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.predict_cnn_napari()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/predictor.html#tardis_em.utils.predictor.GeneralPredictor.postprocess_CNN"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.postprocess_CNN()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/predictor.html#tardis_em.utils.predictor.GeneralPredictor.preprocess_DIST"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.preprocess_DIST()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/predictor.html#tardis_em.utils.predictor.GeneralPredictor.predict_DIST"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.predict_DIST()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/predictor.html#tardis_em.utils.predictor.GeneralPredictor.postprocess_DIST"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.postprocess_DIST()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/predictor.html#tardis_em.utils.predictor.GeneralPredictor.get_file_list"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.get_file_list()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/predictor.html#tardis_em.utils.predictor.GeneralPredictor.log_tardis"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.log_tardis()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/predictor.html#tardis_em.utils.predictor.GeneralPredictor.save_semantic_mask"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.save_semantic_mask()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/predictor.html#tardis_em.utils.predictor.GeneralPredictor.save_instance_PC"><code class="docutils literal notranslate"><span class="pre">GeneralPredictor.save_instance_PC()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="utils/predictor.html#tardis_em.utils.predictor.Predictor"><code class="docutils literal notranslate"><span class="pre">Predictor</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="utils/predictor.html#tardis_em.utils.predictor.Predictor.predict"><code class="docutils literal notranslate"><span class="pre">Predictor.predict()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="utils/helper.html">Helper Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="utils/helper.html#tardis_em.tardis_helper.helper_func.tardis_helper"><code class="docutils literal notranslate"><span class="pre">tardis_helper()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="utils/logger.html">Logger</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="utils/logger.html#module-tardis_em.utils.logo">TARDIS log</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="utils/logger.html#tardis_em.utils.logo.print_progress_bar"><code class="docutils literal notranslate"><span class="pre">print_progress_bar()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/logger.html#tardis_em.utils.logo.is_interactive"><code class="docutils literal notranslate"><span class="pre">is_interactive()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/logger.html#tardis_em.utils.logo.TardisLogo"><code class="docutils literal notranslate"><span class="pre">TardisLogo</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="utils/logger.html#tardis_em.utils.logo.TardisLogo.clear_output"><code class="docutils literal notranslate"><span class="pre">TardisLogo.clear_output()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="utils/logger.html#tardis_em.utils.logo.TardisLogo.cell_width"><code class="docutils literal notranslate"><span class="pre">TardisLogo.cell_width()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="utils/logger.html#tardis_em.utils.logo.ContextFilter"><code class="docutils literal notranslate"><span class="pre">ContextFilter</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="utils/logger.html#tardis_em.utils.logo.ContextFilter.hostname"><code class="docutils literal notranslate"><span class="pre">ContextFilter.hostname</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="utils/logger.html#tardis_em.utils.logo.ContextFilter.filter"><code class="docutils literal notranslate"><span class="pre">ContextFilter.filter()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="utils/logger.html#module-tardis_em.utils.errors">TARDIS errors</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="utils/logger.html#tardis_em.utils.errors.standard_error_id"><code class="docutils literal notranslate"><span class="pre">standard_error_id()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/logger.html#tardis_em.utils.errors.TardisError"><code class="docutils literal notranslate"><span class="pre">TardisError</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="utils/logger.html#tardis_em.utils.errors.TardisError.cut_desc"><code class="docutils literal notranslate"><span class="pre">TardisError.cut_desc()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="utils/utils.html">Utils Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="utils/utils.html#module-tardis_em.utils.device">Device</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="utils/utils.html#tardis_em.utils.device.get_device"><code class="docutils literal notranslate"><span class="pre">get_device()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/utils.html#tardis_em.utils.device.device_is_str"><code class="docutils literal notranslate"><span class="pre">device_is_str()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="utils/utils.html#module-tardis_em.utils.utils">Global Utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="utils/utils.html#tardis_em.utils.utils.get_n_params"><code class="docutils literal notranslate"><span class="pre">get_n_params()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/utils.html#tardis_em.utils.utils.EarlyStopping"><code class="docutils literal notranslate"><span class="pre">EarlyStopping</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/utils.html#tardis_em.utils.utils.check_uint8"><code class="docutils literal notranslate"><span class="pre">check_uint8()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="utils/setup.html">SetUp Environment</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="utils/setup.html#module-tardis_em.utils.dataset">Dataset organizers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="utils/setup.html#tardis_em.utils.dataset.find_filtered_files"><code class="docutils literal notranslate"><span class="pre">find_filtered_files()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/setup.html#tardis_em.utils.dataset.move_train_dataset"><code class="docutils literal notranslate"><span class="pre">move_train_dataset()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/setup.html#tardis_em.utils.dataset.build_test_dataset"><code class="docutils literal notranslate"><span class="pre">build_test_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="utils/setup.html#module-tardis_em.utils.setup_envir">Environment setup</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="utils/setup.html#tardis_em.utils.setup_envir.build_new_dir"><code class="docutils literal notranslate"><span class="pre">build_new_dir()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/setup.html#tardis_em.utils.setup_envir.build_temp_dir"><code class="docutils literal notranslate"><span class="pre">build_temp_dir()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/setup.html#tardis_em.utils.setup_envir.clean_up"><code class="docutils literal notranslate"><span class="pre">clean_up()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="utils/setup.html#tardis_em.utils.setup_envir.check_dir"><code class="docutils literal notranslate"><span class="pre">check_dir()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="utils/visualize.html">Visualizer</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="README.html" class="btn btn-neutral float-right" title="Features" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2024, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

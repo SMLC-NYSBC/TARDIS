@@ -1,0 +1,944 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Global -&gt; Data Handlers &mdash; TARDIS-em 0.3.10 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=9f76a604"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="../_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Global -&gt; Trainer Handlers" href="trainer.html" />
+    <link rel="prev" title="Global -&gt; AWS Handlers" href="aws.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TARDIS-em
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../HISTORY.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../instructions.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_actin.html">-  3D Actin Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/tirf_mt.html">-  TIRF Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/3d_membrane.html">-  3D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/scripting.html">-  Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/fine_tune_model.html">Fine-Tune TARDIS models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/helper.html">TARDIS helper-functions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html">CNN Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#dist-module">DIST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#analysis-module">Analysis Module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../code_doc.html#global-functions">Global Functions</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="aws.html">AWS</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Data Handlers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.utils.load_data">Import data formats</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.ImportDataFromAmira"><code class="docutils literal notranslate"><span class="pre">ImportDataFromAmira</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.load_tiff"><code class="docutils literal notranslate"><span class="pre">load_tiff()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.mrc_read_header"><code class="docutils literal notranslate"><span class="pre">mrc_read_header()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.mrc_write_header"><code class="docutils literal notranslate"><span class="pre">mrc_write_header()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.mrc_mode"><code class="docutils literal notranslate"><span class="pre">mrc_mode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.load_am"><code class="docutils literal notranslate"><span class="pre">load_am()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.load_am_surf"><code class="docutils literal notranslate"><span class="pre">load_am_surf()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.load_mrc_file"><code class="docutils literal notranslate"><span class="pre">load_mrc_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.load_nd2_file"><code class="docutils literal notranslate"><span class="pre">load_nd2_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.load_ply_scannet"><code class="docutils literal notranslate"><span class="pre">load_ply_scannet()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.load_ply_partnet"><code class="docutils literal notranslate"><span class="pre">load_ply_partnet()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.load_txt_s3dis"><code class="docutils literal notranslate"><span class="pre">load_txt_s3dis()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.load_s3dis_scene"><code class="docutils literal notranslate"><span class="pre">load_s3dis_scene()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.load_data.load_image"><code class="docutils literal notranslate"><span class="pre">load_image()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.utils.export_data">Export data formats</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.export_data.NumpyToAmira"><code class="docutils literal notranslate"><span class="pre">NumpyToAmira</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.export_data.to_mrc"><code class="docutils literal notranslate"><span class="pre">to_mrc()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.export_data.to_am"><code class="docutils literal notranslate"><span class="pre">to_am()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.export_data.to_stl"><code class="docutils literal notranslate"><span class="pre">to_stl()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-tardis_em.utils.normalization">Image normalization</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.normalization.adaptive_threshold"><code class="docutils literal notranslate"><span class="pre">adaptive_threshold()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.normalization.SimpleNormalize"><code class="docutils literal notranslate"><span class="pre">SimpleNormalize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.normalization.MinMaxNormalize"><code class="docutils literal notranslate"><span class="pre">MinMaxNormalize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.normalization.MeanStdNormalize"><code class="docutils literal notranslate"><span class="pre">MeanStdNormalize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.normalization.RescaleNormalize"><code class="docutils literal notranslate"><span class="pre">RescaleNormalize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tardis_em.utils.normalization.FFTNormalize"><code class="docutils literal notranslate"><span class="pre">FFTNormalize</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="trainer.html">Trainer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="predictor.html">Predictor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="helper.html">Helper Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logger.html">Logger</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utils Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html">SetUp Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize.html">Visualizer</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../code_doc.html">CNN Module</a></li>
+      <li class="breadcrumb-item active">Global -&gt; Data Handlers</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/utils/import_data.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="global-data-handlers">
+<h1>Global -&gt; Data Handlers<a class="headerlink" href="#global-data-handlers" title="Link to this heading"></a></h1>
+<section id="module-tardis_em.utils.load_data">
+<span id="import-data-formats"></span><h2>Import data formats<a class="headerlink" href="#module-tardis_em.utils.load_data" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.ImportDataFromAmira">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">ImportDataFromAmira</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_am</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_img</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_surf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.load_data.ImportDataFromAmira" title="Link to this definition"></a></dt>
+<dd><p>Class for importing and handling data from Amira files.</p>
+<p>Provides functionality to extract spatial graphs, segment data, points, and
+vertices from Amira files. This class also handles image and surface data if
+provided, performing validation for Amira-specific file formats. It is designed
+to assist in loading Amira Mesh 3D models and extracting relevant graphical
+and spatial data for further processing.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.ImportDataFromAmira.get_points">
+<span class="sig-name descname"><span class="pre">get_points</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.ImportDataFromAmira.get_points" title="Link to this definition"></a></dt>
+<dd><p>Computes and returns the transformed points’ coordinates based on the
+spatial graph and image properties.</p>
+<p>If the <cite>spatial_graph</cite> is None, it returns None. The method calculates
+the transformed coordinates of points, adjusting for spatial shifts and
+applying scaling based on the pixel size or other specified factors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>IndexError</strong> – Raised if the extraction of ‘Coordinate’ information
+from the <cite>spatial_graph</cite> fails due to lack of expected content or
+format.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Union[numpy.ndarray, None]</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A numpy array of transformed point coordinates or None if the
+<cite>spatial_graph</cite> attribute is unset.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.ImportDataFromAmira.get_vertex">
+<span class="sig-name descname"><span class="pre">get_vertex</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.ImportDataFromAmira.get_vertex" title="Link to this definition"></a></dt>
+<dd><p>Computes and returns the coordinates of a vertex in the spatial graph with optional
+coordinate transformations applied. This function handles specific conditions related
+to the presence of <cite>spatial_graph</cite> and <cite>src_img</cite> attributes and applies transformations and
+scaling to the identified vertex coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><p><cite>numpy.ndarray</cite> containing the transformed and scaled vertex coordinates,
+or <cite>None</cite> in case the <cite>spatial_graph</cite> attribute is None.</p>
+<p>If the coordinate unit retrieved from the spatial graph is ‘nm’, then the
+vertex coordinates are scaled differently based on the <cite>pixel_size</cite> value.</p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.ImportDataFromAmira.get_segmented_points">
+<span class="sig-name descname"><span class="pre">get_segmented_points</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.ImportDataFromAmira.get_segmented_points" title="Link to this definition"></a></dt>
+<dd><p>Generates segmented points based on the spatial graph and the computed
+segments. The segmentation assigns an index to each point in the graph,
+indicating which segment it belongs to.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A numpy array of shape (N, 4) where each row represents a
+point with its corresponding segment index as the first element.
+The columns correspond to:
+[segment_index, x_coordinate, y_coordinate, z_coordinate].
+Returns None if the spatial_graph is None.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Union[numpy.ndarray, None]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.ImportDataFromAmira.get_labels">
+<span class="sig-name descname"><span class="pre">get_labels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.ImportDataFromAmira.get_labels" title="Link to this definition"></a></dt>
+<dd><p>Determines and returns a dictionary representing labels and their corresponding
+segment points from the spatial graph, if available. The method first identifies
+label lines and segment definitions within the <cite>spatial_graph</cite>. It calculates
+ranges for each label and extracts associated data points. If no <cite>spatial_graph</cite>
+exists, it will return None.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If a label identifier is not found in the <cite>spatial_graph</cite>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary mapping label names to points belonging to each segment
+or None if <cite>spatial_graph</cite> is not defined.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.ImportDataFromAmira.get_image">
+<span class="sig-name descname"><span class="pre">get_image</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.load_data.ImportDataFromAmira.get_image" title="Link to this definition"></a></dt>
+<dd><p>Retrieves the image and its corresponding pixel size.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A tuple where the first element is the image and the second
+element is the pixel size.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.ImportDataFromAmira.get_pixel_size">
+<span class="sig-name descname"><span class="pre">get_pixel_size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.ImportDataFromAmira.get_pixel_size" title="Link to this definition"></a></dt>
+<dd><p>Retrieves the size of a single pixel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The size of the pixel.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.ImportDataFromAmira.get_surface">
+<span class="sig-name descname"><span class="pre">get_surface</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.ImportDataFromAmira.get_surface" title="Link to this definition"></a></dt>
+<dd><p>Provides functionality to return the surface attribute of an object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Either the surface object or None if unavailable</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Union[Tuple, None]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.load_tiff">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">load_tiff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tiff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.load_tiff" title="Link to this definition"></a></dt>
+<dd><p>Load a TIFF file and return its data as a NumPy array along with an intensity scale
+factor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tiff</strong> (<em>str</em>) – The path to the TIFF file to be loaded.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing the NumPy array representation of the TIFF file and a
+float representing the intensity scale factor.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[np.ndarray, float]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="logger.html#tardis_em.utils.errors.TardisError" title="tardis_em.utils.errors.TardisError"><strong>TardisError</strong></a> – If the specified TIFF file does not exist.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.mrc_read_header">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">mrc_read_header</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mrc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.load_data.mrc_read_header" title="Link to this definition"></a></dt>
+<dd><p>Reads the header of an MRC file and returns it as a named tuple. This function
+supports input as a file path or raw bytes. If a string is provided, the
+function will open the file in binary mode and read the first 1024 bytes as
+the header. If raw bytes are passed directly, it processes them as the
+header.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>mrc</strong> – The MRC file path as a string, raw header bytes, or None.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Named tuple representing the parsed header of the MRC file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.mrc_write_header">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">mrc_write_header</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.mrc_write_header" title="Link to this definition"></a></dt>
+<dd><p>Constructs an MRC file header.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>args</strong> – The arguments required to initialize an <cite>MRCHeader</cite> object.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Packed binary data representing the MRC header.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.mrc_mode">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">mrc_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.load_data.mrc_mode" title="Link to this definition"></a></dt>
+<dd><p>Determines and returns the appropriate data type or mode based on the
+provided mode and amin values. The function maps image modes to their respective
+data types, handling specific cases for input mode and amin values and also validates
+if the mode corresponds to known types.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mode</strong> (<em>int</em>) – The mode to evaluate. It can be either an integer or a specific
+type matching one of the predefined dtype values.</p></li>
+<li><p><strong>amin</strong> (<em>int</em>) – Minimum amplitude or intensity value used to refine the data type
+determination for the provided mode. Applicable when the mode is 0.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Returns the corresponding data type or mode index based on the
+provided parameters. For integer mode inputs, it will return the dtype
+associated with the mode or an error will be raised for unsupported modes.
+For non-integer type matching, it will return the corresponding mode index.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Union[numpy.dtype, str, int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.load_am">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">load_am</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">am_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.load_data.load_am" title="Link to this definition"></a></dt>
+<dd><p>Loads data from an AmiraMesh (.am) 3D image file and extracts image,
+pixel size, physical dimensions, and transformation details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>am_file</strong> (<em>str</em>) – File path of the .am file to be loaded.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing:
+- Numpy array of the image.
+- Pixel size in angstrom units.
+- Physical size of the image.
+- Transformation (offsets) in the bounding box.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[np.ndarray, float, float, np.ndarray]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="logger.html#tardis_em.utils.errors.TardisError" title="tardis_em.utils.errors.TardisError"><strong>TardisError</strong></a> – If the file does not exist, is of unsupported format,
+or contains missing or invalid metadata.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.load_am_surf">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">load_am_surf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">surf_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simplify_f</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.load_am_surf" title="Link to this definition"></a></dt>
+<dd><p>Parses an Amira surface file and extracts material names, grid properties, vertex data,
+and triangle data. It also optionally simplifies the geometry using Open3D.</p>
+<p>This function reads the content of an Amira surface file, retrieves Material names,
+GridBox, GridSize, Vertices, and Triangle data. It organizes these data into structured
+formats and optionally simplifies vertex and triangle meshes if the <cite>simplify_</cite> argument
+is supplied. It is designed to assist in reading and processing surface geometry data
+from Amira format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>surf_file</strong> (<em>str</em>) – Path to the Amira surface file.</p></li>
+<li><p><strong>simplify_f</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Level of simplification to apply to the mesh geometry. If None, no
+simplification is performed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A 4-tuple containing:
+- A list of material names extracted from the file.
+- A list comprising GridBox and GridSize arrays.
+- A list of vertex arrays for each material’s geometry.
+- A list of triangle arrays for each material’s geometry.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[List[str], List[np.ndarray], List[np.ndarray], List[np.ndarray]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.load_mrc_file">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">load_mrc_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mrc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.load_mrc_file" title="Link to this definition"></a></dt>
+<dd><p>Loads and processes an .mrc file to extract image data and pixel size. The function checks for
+the existence of the .mrc file, reads its header, and computes the appropriate pixel size based
+on dimensions in the header. It attempts to load the image data, ensures file integrity by
+mitigating corrupted file instances, and performs dimensional reshaping where necessary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>mrc</strong> (<em>str</em>) – The file path to the .mrc file to be loaded.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing the loaded image data and the pixel size (in Angstroms).
+If the file is corrupted and no valid image data can be retrieved, returns
+a tuple where the image data is None and pixel size is set to 1.0.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[np.ndarray | None, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.load_nd2_file">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">load_nd2_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nd2_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.load_nd2_file" title="Link to this definition"></a></dt>
+<dd><p>Loads an ND2 file and processes the image into a specific format. This function
+is designed to read images from ND2 files, which may include movies or still
+images. It checks the dimensionality of the image and applies transformations
+to standardize the format before calculating certain statistical criteria to
+sort them. The result is the sorted image array and a scaling factor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>nd2_dir</strong> (<em>str</em>) – Path to the ND2 file to load.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple consisting of the processed image data as a numpy array and
+the scaling factor (float).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[np.ndarray, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.load_ply_scannet">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">load_ply_scannet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ply</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downscaling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.load_ply_scannet" title="Link to this definition"></a></dt>
+<dd><p>Load and process a .ply file of the ScanNet dataset. This function reads the input
+.ply file, extracts point cloud data, and optionally loads RGB features or applies
+downscaling. It also maps ScanNet v2 labels to corresponding classes, if applicable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ply</strong> (<em>str</em>) – Path to the .ply file containing point cloud data.</p></li>
+<li><p><strong>downscaling</strong> (<em>int</em><em>, </em><em>optional</em>) – Voxel size for downscaling the point cloud. If set to 0, no
+downscaling is applied.</p></li>
+<li><p><strong>color</strong> (<em>str</em><em>, </em><em>optional</em>) – path to a secondary .ply file containing RGB features
+for the point cloud.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Either a tuple containing the downsampled point cloud coordinates and RGB
+features, or the downsampled point cloud coordinates only, depending on whether
+a color file was provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Union[Tuple[ndarray, ndarray], ndarray]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.load_ply_partnet">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">load_ply_partnet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ply</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downscaling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.load_ply_partnet" title="Link to this definition"></a></dt>
+<dd><p>Loads a .ply file in the PartNet format and processes its point cloud by extracting coordinates and color information.
+Optionally performs downscaling of the point cloud and assigns unique labels to points based on their colors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ply</strong> (<em>str</em><em> or </em><em>file-like</em>) – The path or file-like object referring to the .ply file to be loaded.</p></li>
+<li><p><strong>downscaling</strong> (<em>int</em>) – The voxel size used for downscaling the point cloud. If 0, no downscaling is applied.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A NumPy array containing the processed point cloud. The array consists of assigned label IDs and the
+downscaled or original coordinates.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.load_txt_s3dis">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">load_txt_s3dis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">txt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rgb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downscaling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.load_txt_s3dis" title="Link to this definition"></a></dt>
+<dd><p>Loads a point cloud dataset in <cite>.txt</cite> format and optionally applies
+downscaling and extracts RGB color information if present.</p>
+<p>The function interprets the <cite>.txt</cite> file specified by the <code class="docutils literal notranslate"><span class="pre">txt</span></code> parameter
+as a space-separated file containing point cloud data. The first three
+columns are assumed to be the X, Y, and Z coordinates. Any additional
+columns are interpreted as RGB values. Users can optionally apply voxel-based
+downscaling to reduce the resolution of the point cloud.</p>
+<p>The function returns either the coordinates of the point cloud or a tuple
+containing the coordinates and their corresponding RGB values, depending on
+the value of the <code class="docutils literal notranslate"><span class="pre">rgb</span></code> argument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>txt</strong> (<em>str</em>) – Path to the <cite>.txt</cite> file containing the point cloud data.</p></li>
+<li><p><strong>rgb</strong> (<em>bool</em>) – A flag indicating whether the RGB values should be extracted.
+If set to True, the RGB values, if available, are returned along
+with the coordinates. Defaults to False.</p></li>
+<li><p><strong>downscaling</strong> (<em>int</em>) – Voxel size for downscaling the point cloud. If set to a
+value greater than 0, the point cloud will be downsampled
+to reduce resolution using a voxel-based approach.
+Defaults to 0 (no downscaling).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>If <code class="docutils literal notranslate"><span class="pre">rgb</span></code> is True, returns a tuple of two numpy arrays:
+the first array containing the downscaled coordinates and the
+second array containing RGB values. If <code class="docutils literal notranslate"><span class="pre">rgb</span></code> is False, returns
+a single numpy array containing only the downscaled coordinates.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Union[Tuple[np.ndarray, np.ndarray], np.ndarray]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.load_s3dis_scene">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">load_s3dis_scene</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dir_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downscaling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_ds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rgb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.load_s3dis_scene" title="Link to this definition"></a></dt>
+<dd><p>Loads and processes a Stanford Large-Scale 3D Indoor Spaces (S3DIS) scene from a specified
+directory. This function creates a scene containing 3D spatial coordinates and optionally
+RGB color data. It also allows for downscaling of the scene, either with a fixed downscaling
+factor or a random downsampling threshold. The output format depends on whether RGB data
+is included and whether any downscaling is applied.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dir_s</strong> (<em>str</em>) – Directory containing the S3DIS scene files.</p></li>
+<li><p><strong>downscaling</strong> (<em>int</em><em>, </em><em>optional</em>) – Downscaling factor to reduce the scene resolution by voxelizing.
+Default is 0, meaning no downscaling is applied.</p></li>
+<li><p><strong>random_ds</strong> (<em>float</em><em>, </em><em>optional</em>) – Random downsampling threshold. Overrides <code class="docutils literal notranslate"><span class="pre">downscaling</span></code> if provided.
+Default is None, meaning no random downsampling is applied.</p></li>
+<li><p><strong>rgb</strong> (<em>bool</em><em>, </em><em>optional</em>) – Boolean indicating whether to include RGB color data in the output.
+If True, extracts [R, G, B] values along with spatial coordinates. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>If <code class="docutils literal notranslate"><span class="pre">rgb</span></code> is True, returns a tuple containing the processed coordinate array
+and normalized RGB data as numpy arrays. If <code class="docutils literal notranslate"><span class="pre">rgb</span></code> is False, returns only the
+processed coordinate array. If downscaling or random downsampling is applied, the
+data is downscaled accordingly.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Union[Tuple[np.ndarray, np.ndarray], np.ndarray]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.load_data.load_image">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.load_data.</span></span><span class="sig-name descname"><span class="pre">load_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">px</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tardis_em.utils.load_data.load_image" title="Link to this definition"></a></dt>
+<dd><p>Loads an image file and processes it based on its type. The function supports
+several image formats including TIFF, MRC, AM, and ND2. Depending on the file
+type, the image is loaded using the respective file-loader function, and
+optional normalization can be applied. Pixel size information may be returned
+for some file types.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> (<em>str</em>) – Path to the image file to be loaded.</p></li>
+<li><p><strong>normalize</strong> (<em>bool</em>) – Flag indicating whether to apply normalization to the
+loaded image. Defaults to False.</p></li>
+<li><p><strong>px</strong> (<em>bool</em>) – Flag indicating whether to return pixel size information
+along with the image. Defaults to True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The loaded image and optionally the pixel size information as a
+float if <cite>px</cite> is True. If <cite>px</cite> is False, only the image is returned.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Union[np.ndarray, Tuple[np.ndarray, float]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-tardis_em.utils.export_data">
+<span id="export-data-formats"></span><h2>Export data formats<a class="headerlink" href="#module-tardis_em.utils.export_data" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.export_data.NumpyToAmira">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.export_data.</span></span><span class="sig-name descname"><span class="pre">NumpyToAmira</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">as_point_cloud</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.export_data.NumpyToAmira" title="Link to this definition"></a></dt>
+<dd><p>Handles the conversion of numpy arrays into Amira-compatible format for analysis
+or visualization. This class supports functionalities for exporting 3D spline
+data, point clouds, or spatial graphs. It also provides utilities to validate
+and format data for Amira. The header and data formats are customizable
+via options or additional input parameters.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.export_data.NumpyToAmira.check_3d">
+<span class="sig-name descname"><span class="pre">check_3d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">typing.List</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></span><a class="headerlink" href="#tardis_em.utils.export_data.NumpyToAmira.check_3d" title="Link to this definition"></a></dt>
+<dd><p>Check and process the given 3D coordinate data ensuring it adheres to specific
+requirements. Depending on the input type and its shape, transformations are applied
+to make data compatible with the expected format. The method supports numpy arrays
+and iterables like lists or tuples containing numpy arrays. It adjusts or validates
+dimensions where necessary and applies an optional reordering operation for segment
+identifiers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>coord</strong> (<em>Optional</em><em>[</em><em>np.ndarray</em><em>]</em><em>, </em><em>optional List</em>) – The input coordinate data array, which can be a numpy array
+or an iterable (list or tuple) containing numpy arrays. It must have
+specific dimensional properties depending on the processing logic.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Processed coordinate data. The output type depends on the
+<cite>as_point_cloud</cite> attribute. It returns a numpy array if the input
+is a numpy array and <cite>as_point_cloud</cite> is enabled. Otherwise, it
+returns a list of numpy arrays where reordering based on segment
+identifiers has been applied.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Union[List[np.ndarray], np.ndarray]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.export_data.NumpyToAmira.export_amira">
+<span class="sig-name descname"><span class="pre">export_amira</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_dir:</span> <span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords:</span> <span class="pre">tuple</span> <span class="pre">|</span> <span class="pre">list</span> <span class="pre">|</span> <span class="pre">~numpy.ndarray</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'numpy.ndarray'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels:</span> <span class="pre">tuple</span> <span class="pre">|</span> <span class="pre">list</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores:</span> <span class="pre">list</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.export_data.NumpyToAmira.export_amira" title="Link to this definition"></a></dt>
+<dd><p>Exports 3D coordinates data into a format compatible with Amira visualization software. This
+function supports exporting point clouds or data with edge and vertex relationships, optionally
+including labels and scores for additional metadata. If exporting as a point cloud, only the coordinates
+are processed and written into the file. In the case of segments, vertices and edges, along with their
+related attributes, are written into structured sections of the Amira file format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_dir</strong> (<em>str</em>) – Path to the output file where the data will be written.</p></li>
+<li><p><strong>coords</strong> (<em>Union</em><em>[</em><em>tuple</em><em>, </em><em>list</em><em>, </em><em>np.ndarray</em><em>]</em>) – Coordinates of 3D points as a tuple, list, or numpy array. When exporting as segments,
+each segment is identified by its index.</p></li>
+<li><p><strong>labels</strong> (<em>Union</em><em>[</em><em>tuple</em><em>, </em><em>list</em><em>, </em><em>None</em><em>]</em>) – Optional labels for the coordinates. Labels should align with the number of arrays
+in <cite>coords</cite>. Strings or a list of strings can be provided.</p></li>
+<li><p><strong>scores</strong> (<em>Optional</em><em>[</em><em>list</em><em>]</em>) – Optional score information for the edges. Can include a list where the second element
+contains scores for corresponding edges.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Returns None. The output is written to the file at the specified <cite>file_dir</cite>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.export_data.to_mrc">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.export_data.</span></span><span class="sig-name descname"><span class="pre">to_mrc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">org_header</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">MRCHeader</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.export_data.to_mrc" title="Link to this definition"></a></dt>
+<dd><p>Converts numerical array data into an MRC file format and writes it to the specified
+directory. Allows optional parameters for setting the pixel size, header, and label
+information. Handles both 2D and 3D array data for creating appropriate headers
+and labels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>np.ndarray</em>) – The numerical array data to be saved in MRC format.</p></li>
+<li><p><strong>pixel_size</strong> (<em>float</em>) – Size of the pixel in the data.</p></li>
+<li><p><strong>file_dir</strong> (<em>str</em>) – Directory or file path where the MRC file will be saved.</p></li>
+<li><p><strong>org_header</strong> (<em>MRCHeader</em><em>, </em><em>optional</em>) – Optional MRC header to use as a reference when creating the new file.</p></li>
+<li><p><strong>label</strong> (<em>List</em><em>, </em><em>optional</em>) – Optional list of labels or metadata to be included in the MRC file.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.export_data.to_am">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.export_data.</span></span><span class="sig-name descname"><span class="pre">to_am</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.export_data.to_am" title="Link to this definition"></a></dt>
+<dd><p>Converts a 3D NumPy array into AmiraMesh format and writes it to a specified file.
+The function generates a header describing the dataset and its attributes,
+alongside the binary data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>np.ndarray</em>) – A 3-dimensional NumPy array representing the lattice data.</p></li>
+<li><p><strong>pixel_size</strong> (<em>float</em>) – Size of the pixel in the dataset. Used to calculate
+bounding box dimensions.</p></li>
+<li><p><strong>file_dir</strong> (<em>str</em>) – Path to save the AmiraMesh file.</p></li>
+<li><p><strong>header</strong> (<em>list</em><em> or </em><em>None</em>) – Optional. A list of additional headers to include in the
+AmiraMesh file. Items not starting with “#” will be prefixed with “#”.
+Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.export_data.to_stl">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.export_data.</span></span><span class="sig-name descname"><span class="pre">to_stl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.export_data.to_stl" title="Link to this definition"></a></dt>
+<dd><p>Converts a given numpy.ndarray data to an STL file and saves it to the specified
+directory. The function processes a MultiBlock dataset, creates separate .stl
+files for each data part, merges them all, and outputs it as a single STL file.
+Helper functions are used to save individual STL files and process the first
+line to include solid names.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>numpy.ndarray</em>) – The point cloud data as a numpy.ndarray. Each unique value in
+the first column is treated as a separate entity to convert into 3D geometry.</p></li>
+<li><p><strong>file_dir</strong> (<em>str</em>) – The path to the directory where the combined STL file will
+be saved.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-tardis_em.utils.normalization">
+<span id="image-normalization"></span><h2>Image normalization<a class="headerlink" href="#module-tardis_em.utils.normalization" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="tardis_em.utils.normalization.adaptive_threshold">
+<span class="sig-prename descclassname"><span class="pre">tardis_em.utils.normalization.</span></span><span class="sig-name descname"><span class="pre">adaptive_threshold</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.normalization.adaptive_threshold" title="Link to this definition"></a></dt>
+<dd><p>Perform adaptive thresholding on an image array using mean and standard deviation.</p>
+<p>This function calculates the standard deviation and mean of the input image.
+If the image is multichannel (e.g., RGB), it processes each channel independently.
+The threshold is determined by dividing the mean by the standard deviation.
+The resulting image is binarized by comparing pixel values to the thresholded
+value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>img</strong> (<em>np.ndarray</em>) – Input image as a NumPy array. For multichannel images, each channel
+is processed independently.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A binarized image as a NumPy array with values set to 1 for pixels
+meeting the threshold criteria and 0 otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.normalization.SimpleNormalize">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.normalization.</span></span><span class="sig-name descname"><span class="pre">SimpleNormalize</span></span><a class="headerlink" href="#tardis_em.utils.normalization.SimpleNormalize" title="Link to this definition"></a></dt>
+<dd><p>SimpleNormalize class provides functionality for normalizing image data arrays to
+floating-point representations within the range of 0 to 1. The class aims to handle
+multiple types of integer-based image data, adjusting ranges based on the specific
+data type to ensure proper normalization.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.normalization.MinMaxNormalize">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.normalization.</span></span><span class="sig-name descname"><span class="pre">MinMaxNormalize</span></span><a class="headerlink" href="#tardis_em.utils.normalization.MinMaxNormalize" title="Link to this definition"></a></dt>
+<dd><p>Performs Min-Max normalization on input data.</p>
+<p>This class normalizes input data to the range [0, 1] by scaling the values
+proportionally within this range using the minimum and maximum values of
+the input array. If the maximum value is less than or equal to zero, the
+normalization adjusts the input data before scaling by adding the absolute
+value of the minimum.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.normalization.MeanStdNormalize">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.normalization.</span></span><span class="sig-name descname"><span class="pre">MeanStdNormalize</span></span><a class="headerlink" href="#tardis_em.utils.normalization.MeanStdNormalize" title="Link to this definition"></a></dt>
+<dd><p>A class for normalizing input data using mean and standard deviation.</p>
+<p>This class standardizes input data by centering it to have a mean of zero
+and scaling it to have a standard deviation of one. It is designed for use
+in preprocessing image data or other numerical datasets to improve
+performance in machine learning models.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.normalization.RescaleNormalize">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.normalization.</span></span><span class="sig-name descname"><span class="pre">RescaleNormalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clip_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2,</span> <span class="pre">98)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.normalization.RescaleNormalize" title="Link to this definition"></a></dt>
+<dd><p>Performs rescale normalization on a given array.</p>
+<p>This class is designed to normalize image or label mask input based on the
+specified clipping range using a percentile-based approach. It is particularly
+useful for preprocessing image data in various computer vision tasks, ensuring
+that output values fall within a defined intensity range.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardis_em.utils.normalization.FFTNormalize">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardis_em.utils.normalization.</span></span><span class="sig-name descname"><span class="pre">FFTNormalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'affine'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">900</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta_i</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_iters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_cuda</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.normalization.FFTNormalize" title="Link to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.normalization.FFTNormalize.gmm_fit">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gmm_fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta_f</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_iters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">share_var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.normalization.FFTNormalize.gmm_fit" title="Link to this definition"></a></dt>
+<dd><p>Performs Expectation-Maximization (EM) fitting of a two-component Gaussian Mixture
+Model (GMM) with a Beta distribution prior on the mixing coefficient. This function
+estimates the parameters of the GMM (means, variances, and mixing coefficients) and
+returns the log-likelihood and other model parameters.</p>
+<p>The method begins with an initial parameter assignment based on a threshold or
+quantile cut-off and iteratively optimizes the model parameters using EM until the
+log-likelihood converges or the maximum number of iterations is reached.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – Input tensor for the data to be modeled.</p></li>
+<li><p><strong>pi</strong> – Initial mixing coefficient for the Gaussian components. Defaults to 0.5.</p></li>
+<li><p><strong>split</strong> – Threshold value for initializing component assignments. If None, defaults
+to a quantile-based value computed from the data.</p></li>
+<li><p><strong>alpha</strong> – Parameter for the Beta distribution prior on the mixing coefficient.
+Defaults to 0.5.</p></li>
+<li><p><strong>beta_f</strong> – Parameter for the Beta distribution prior on the mixing coefficient.
+Defaults to 0.5.</p></li>
+<li><p><strong>scale</strong> – Scaling factor for the log-likelihood computation. Defaults to 1.0.</p></li>
+<li><p><strong>tol</strong> – Convergence tolerance for the log-likelihood difference between iteration
+steps. Defaults to 1e-3.</p></li>
+<li><p><strong>num_iters</strong> – Maximum number of iterations for the EM algorithm. Defaults to 100.</p></li>
+<li><p><strong>share_var</strong> – Boolean indicating whether the Gaussian components share a single
+variance value. Defaults to True.</p></li>
+<li><p><strong>verbose</strong> – Boolean to enable printing of the log-likelihood at each iteration.
+Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing:
+1. Final log-likelihood of the fitted model.
+2. Estimated mean of the first Gaussian component.
+3. Estimated mean of the second Gaussian component.
+4. Estimated variance of the second Gaussian component.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardis_em.utils.normalization.FFTNormalize.norm_fit">
+<span class="sig-name descname"><span class="pre">norm_fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">900</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta_i</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_iters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_cuda</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tardis_em.utils.normalization.FFTNormalize.norm_fit" title="Link to this definition"></a></dt>
+<dd><p>Fits a normalization model to the input data by iteratively evaluating different
+probability mixtures while maximizing a log-likelihood measure. The function tries
+multiple initializations of probabilities for Gaussian Mixture Models (GMM) and
+evaluates their effectiveness using a combination of beta-prior distribution and
+the data’s log-likelihood. Optimization terminates when the initialization with the
+maximum likelihood is found.</p>
+<p>The function allows either single-component fitting (pi=1) or GMM-based multip-component
+fitting (pi&lt;1). It incorporates optional GPU acceleration for computations and utilizes
+a blend of Torch and Scipy statistical tools.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>numpy.ndarray</em><em> or </em><em>torch.Tensor</em>) – Input data as a 1-dimensional array or tensor.</p></li>
+<li><p><strong>alpha</strong> (<em>int</em>) – Shape parameter for the beta prior distribution.</p></li>
+<li><p><strong>beta_i</strong> (<em>int</em>) – Second shape parameter for the beta prior distribution.</p></li>
+<li><p><strong>scale</strong> (<em>float</em>) – Scaling factor for the likelihood computation.</p></li>
+<li><p><strong>num_iters</strong> (<em>int</em>) – Number of iterations allowed for the GMM fitting process.</p></li>
+<li><p><strong>use_cuda</strong> (<em>bool</em>) – Boolean flag to determine if computations should run on GPU.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple containing the mean (mu) and standard deviation (std) of the best-fit
+normalization parameters optimized for maximum log-likelihood (-logp).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[float, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="aws.html" class="btn btn-neutral float-left" title="Global -&gt; AWS Handlers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="trainer.html" class="btn btn-neutral float-right" title="Global -&gt; Trainer Handlers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2024, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
