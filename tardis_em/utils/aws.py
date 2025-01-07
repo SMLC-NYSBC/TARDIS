@@ -225,7 +225,7 @@ def get_weights_aws(
                     "19", "tardis_em/utils/aws.py", f"{model} of V{version} not found"
                 )
             else:
-                version = f"V_{version_assert[0]}"
+                version = f"{version_assert[0]}"
         else:
             version = f"V_{max([int(v.split('_')[1]) for v in all_version])}"
 
