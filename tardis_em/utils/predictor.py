@@ -551,7 +551,7 @@ class GeneralPredictor:
                     network="dist",
                     subtype="triang",
                     model_type="2d",
-                    model_version=self.model_version,
+                    model_version=None,
                     device=self.device,
                 )
         elif NN in ["Membrane2D", "Membrane"]:
@@ -579,7 +579,7 @@ class GeneralPredictor:
                         network="dist",
                         subtype="triang",
                         model_type="2d",
-                        model_version=self.model_version,
+                        model_version=None,
                         device=self.device,
                     )
             else:
@@ -602,7 +602,7 @@ class GeneralPredictor:
                         network="dist",
                         subtype="triang",
                         model_type="3d",
-                        model_version=self.model_version,
+                        model_version=None,
                         device=self.device,
                     )
         elif NN.startswith("General"):
@@ -622,7 +622,7 @@ class GeneralPredictor:
                         network="dist",
                         subtype="triang",
                         model_type="2d",
-                        model_version=self.model_version,
+                        model_version=None,
                         device=self.device,
                     )
                 else:
@@ -631,7 +631,7 @@ class GeneralPredictor:
                         network="dist",
                         subtype="triang",
                         model_type="3d",
-                        model_version=self.model_version,
+                        model_version=None,
                         device=self.device,
                     )
 

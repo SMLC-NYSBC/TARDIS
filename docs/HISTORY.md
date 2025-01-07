@@ -15,7 +15,7 @@
 * **Napari plugin:**
   * *General*:
     * Build instance label editor
-
+p
 </details>
 
 <details>
