@@ -69,9 +69,10 @@ What's new?
 
 `Full History <https://smlc-nysbc.github.io/TARDIS/HISTORY.html>`__
 
-TARDIS-em v0.3.0 (2024-09-11):
-    * Added general predictor for microtubule filaments from fluorescent microscopes [TIRF]
-    * Added Napari plugin support for training, predictions and corrections of filaments instances
+TARDIS-em v0.3.10 (2025-01-07):
+    * Models update
+    * Progress with estimated ETA time
+    * Small bugfixes
 
 Quick Start
 ===========

@@ -1,5 +1,24 @@
 # History
 <details open>
+    <summary><b>0.3.10 (2025-01-07)</b></summary>
+
+* **General changes:**
+    * *General*:
+        * Update and bugfixes for napari plugin
+        * Added filament editor in Napari
+        * Bugfix in model versioning
+
+* **CNN module changes:**
+  * *General*:
+    * Updated all models
+
+* **Napari plugin:**
+  * *General*:
+    * Build instance label editor
+
+</details>
+
+<details>
     <summary><b>0.2.8 (2024-07-21)</b></summary>
 
 * **General changes:**
