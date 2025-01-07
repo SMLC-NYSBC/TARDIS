@@ -54,7 +54,8 @@ def get_device(device: Union[str, list, tuple] = "0") -> torch.device:
         if torch.cuda.is_available():
             device_ = []
             for i in device:
-                device_.append(torch.device(f"cuda:{int(i)}"))
+                if device_is_str(i):
+                    device_.append(int(i))
     elif device == "mps":  # Load Apple silicon
         if torch.backends.mps.is_available():
             device_ = torch.device("mps")
