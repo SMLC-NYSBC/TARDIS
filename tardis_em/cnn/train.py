@@ -113,7 +113,7 @@ def train_cnn(
 
     """Check input variable"""
     if checkpoint is not None:
-        save_train = torch.load(checkpoint, map_location=device)
+        save_train = torch.load(checkpoint, map_location=device, weights_only=False)
         if "model_struct_dict" in save_train.keys():
             model_structure = save_train["model_struct_dict"]
 
