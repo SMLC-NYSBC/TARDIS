@@ -516,6 +516,8 @@ class GeneralPredictor:
         """
         if NN in ["Actin", "Microtubule", "Microtubule_tirf"]:
             self.normalize_px = 25 if self.normalize_px is None else self.normalize_px
+            if NN == "Actin":
+                self.normalize_px = 15
 
             # Build CNN network with loaded pre-trained weights
             if not self.binary_mask:
