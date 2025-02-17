@@ -661,6 +661,8 @@ class GeneralPredictor:
 
         :return: None
         """
+        self.log_prediction.append(f"Loaded image: {id_name}")
+
         # Build temp dir
         build_temp_dir(dir_s=self.dir)
 
@@ -705,6 +707,9 @@ class GeneralPredictor:
             self.px = self.correct_px
             self.transformation = [0, 0, 0]
 
+        self.log_prediction.append(
+            f"Image pixel size: {self.px}A",
+        )
         # Normalize image histogram
         msg = f"Error while loading image {id_name}. Image loaded correctly, but output format "
         if self.amira_image and not self.binary_mask:
@@ -766,6 +771,10 @@ class GeneralPredictor:
             self.expect_2d = True
         else:
             self.expect_2d = False
+
+        self.log_prediction.append(
+            f"Image scaled to: {self.normalize_px}A and shape {self.scale_shape}",
+        )
 
     def predict_cnn(self, id_i: int, id_name: str, dataloader):
         """
@@ -881,8 +890,8 @@ class GeneralPredictor:
             )[: self.scale_shape[0], : self.scale_shape[1], : self.scale_shape[2]]
 
         # Restored original image pixel size
-        self.image, _ = scale_image(image=self.image, scale=self.org_shape)
         self.image = torch.sigmoid(torch.from_numpy(self.image)).cpu().detach().numpy()
+        self.image, _ = scale_image(image=self.image, scale=self.org_shape)
 
         # Threshold CNN prediction
         if self.cnn_threshold == "auto":
@@ -1690,7 +1699,6 @@ class GeneralPredictor:
 
             """Semantic Segmentation"""
             if not self.binary_mask:
-                # Cut image for fix patch size and normalizing image pixel size
                 trim_with_stride(
                     image=self.image,
                     scale=self.scale_shape,
@@ -1729,6 +1737,11 @@ class GeneralPredictor:
                 ):
                     if len(pd.unique(self.image.flatten())) == 1:
                         self.image = None
+                        self.log_prediction.append(
+                            f"Semantic prediction: No semantic detected."
+                        )
+                        with open(join(self.am_output, "prediction_log.txt"), "w") as f:
+                            f.write(" \n".join(self.log_prediction))
 
                 if self.image is None:
                     continue
@@ -1776,6 +1789,12 @@ class GeneralPredictor:
 
             # Break iter loop for instances if no point cloud is found
             if len(self.pc_ld) == 0:
+                self.log_prediction.append(
+                    f"Instance prediction: Not enough point from semantic mask were generated."
+                )
+                with open(join(self.am_output, "prediction_log.txt"), "w") as f:
+                    f.write(" \n".join(self.log_prediction))
+
                 if self.output_format.endswith("return"):
                     instance_output.append(np.zeros((0, 4)))
                     instance_filter_output.append(np.zeros((0, 4)))
@@ -1805,6 +1824,12 @@ class GeneralPredictor:
             self.postprocess_DIST(id_, i)
 
             if self.segments is None:
+                self.log_prediction.append(
+                    f"Instance prediction: Not segments could be predicted with point cloud generated from Semantic mask."
+                )
+                with open(join(self.am_output, "prediction_log.txt"), "w") as f:
+                    f.write(" \n".join(self.log_prediction))
+
                 continue
 
             self.log_tardis(id_, i, log_id=7)

@@ -128,7 +128,9 @@ def main(
         DIR_ = local_directory
 
     """Get model for benchmark"""
-    model = torch.load(model_checkpoint, map_location=get_device(device), weights_only=False)
+    model = torch.load(
+        model_checkpoint, map_location=get_device(device), weights_only=False
+    )
 
     """Best model list from S3"""
     rgb = False

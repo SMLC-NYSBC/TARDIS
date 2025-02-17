@@ -369,7 +369,9 @@ def main(
     """Optionally: pre-load model structure from checkpoint"""
     model_dict = {}
     if checkpoint is not None:
-        save_train = torch.load(join(checkpoint), map_location=device , weights_only=False)
+        save_train = torch.load(
+            join(checkpoint), map_location=device, weights_only=False
+        )
 
         if "model_struct_dict" in save_train.keys():
             model_dict = save_train["model_struct_dict"]
