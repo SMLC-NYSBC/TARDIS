@@ -708,7 +708,7 @@ class GeneralPredictor:
             self.transformation = [0, 0, 0]
 
         self.log_prediction.append(
-            f"Image pixel size: {self.px}A",
+            f"Image pixel size: {self.px}A" if self.correct_px is None else f"Image pixel size: {self.correct_px}A"
         )
         # Normalize image histogram
         msg = f"Error while loading image {id_name}. Image loaded correctly, but output format "
