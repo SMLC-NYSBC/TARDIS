@@ -137,28 +137,12 @@ def trim_with_stride(
         nc = None  # 2D
         nz = 0  # Gray
 
-    if trim_size_xy is not None or trim_size_z is not None:
-        if not nx >= trim_size_xy:
-            TardisError(
-                "112",
-                "tardis_em/cnn/data_processing.md",
-                "trim_size_xy should be equal or greater then X dimension!",
-            )
-        if not ny >= trim_size_xy:
-            TardisError(
-                "112",
-                "tardis_em/cnn/data_processing.md",
-                "trim_size_xy should be equal or greater then Y dimension!",
-            )
-    else:
-        if stride is None:
-            TardisError(
-                "112",
-                "tardis_em/cnn/data_processing.md",
-                "Trim sizes or stride has to be indicated!",
-            )
-        trim_size_xy = 64
-        trim_size_z = 64
+    if stride is None:
+        TardisError(
+            "112",
+            "tardis_em/cnn/data_processing.md",
+            "Trim sizes or stride has to be indicated!",
+        )
 
     """Calculate number of patches and stride for xyz"""
     x, y, z = ceil(nx / trim_size_xy), ceil(ny / trim_size_xy), ceil(nz / trim_size_z)
