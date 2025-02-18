@@ -912,6 +912,7 @@ class GeneralPredictor:
                     with open(join(self.am_output, "prediction_log.txt"), "w") as f:
                         f.write(" \n".join(self.log_prediction))
 
+                    # ToDo output format specified by user aka MRC/REC/AM/TIFF
                     tif.imwrite(
                         join(self.am_output, f"{id_name[:-self.in_format]}_CNN.tif"),
                         self.image,
@@ -1320,7 +1321,7 @@ class GeneralPredictor:
             tif.imwrite(
                 join(self.am_output, f"{i[:-self.in_format]}_semantic.tif"),
                 (
-                    np.flip(self.image, 1)
+                    self.image
                     if i.endswith((".mrc", ".rec"))
                     else self.image
                 ),
