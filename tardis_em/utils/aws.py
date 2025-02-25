@@ -171,7 +171,7 @@ def get_weights_aws(
     ]
     DIST_DATASET = ["microtubules", "s3dis", "membrane_2d", "2d", "3d"]
 
-    """Chech dir"""
+    """Check dir"""
     if not isdir(join(expanduser("~"), ".tardis_em")):
         mkdir(join(expanduser("~"), ".tardis_em"))
     if not isdir(join(expanduser("~"), ".tardis_em", f"{network}_{subtype}")):

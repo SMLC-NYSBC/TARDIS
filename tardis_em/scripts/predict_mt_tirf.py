@@ -43,11 +43,19 @@ warnings.simplefilter("ignore", UserWarning)
     show_default=True,
 )
 @click.option(
-    "-ch",
-    "--checkpoint",
-    default="None|None",
+    "-cch",
+    "--cnn_checkpoint",
+    default=None,
     type=str,
-    help="Optional list of pre-trained weights",
+    help="Optional list of pre-trained CNN weights",
+    show_default=True,
+)
+@click.option(
+    "-dch",
+    "--dist_checkpoint",
+    default=None,
+    type=str,
+    help="Optional list of pre-trained DIST weights",
     show_default=True,
 )
 @click.option(
@@ -200,7 +208,8 @@ warnings.simplefilter("ignore", UserWarning)
 def main(
     path: str,
     mask: bool,
-    checkpoint: str,
+    cnn_checkpoint: str,
+    dist_checkpoint: str,
     model_version: int,
     output_format: str,
     patch_size: int,
@@ -227,14 +236,7 @@ def main(
     else:
         instances = True
 
-    checkpoint = checkpoint.split("|")
-    if len(checkpoint) != 2:
-        checkpoint.append(None)
-    elif len(checkpoint) == 2:
-        if checkpoint[0] == "None":
-            checkpoint[0] = None
-        if checkpoint[1] == "None":
-            checkpoint[1] = None
+    checkpoint = [cnn_checkpoint, dist_checkpoint]
 
     nd2_files = [i for i in listdir(path) if i.endswith(".nd2")]
     if len(nd2_files) > 0:
