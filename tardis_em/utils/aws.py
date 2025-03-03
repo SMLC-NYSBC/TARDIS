@@ -259,6 +259,10 @@ def get_weights_aws(
         with open(join(dir_, "model_header.json"), "w") as f:
             json.dump(dict(weight.headers), f)
 
+        # Save version
+        with open(join(dir_, "model_version.json"), "w") as f:
+            json.dump({'version': version}, f)
+
         """Save temp weights"""
         if not isdir(join(expanduser("~"), ".tardis_em")):
             mkdir(join(expanduser("~"), ".tardis_em"))

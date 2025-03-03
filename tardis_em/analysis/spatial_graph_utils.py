@@ -13,9 +13,10 @@ import numpy as np
 from scipy.spatial.distance import cdist
 
 from tardis_em.analysis.filament_utils import (
-    cut_150_degree,
+    cut_at_degree,
     reorder_segments_id,
     sort_segment,
+    resample_filament
 )
 from tardis_em.analysis.geometry_metrics import total_length
 from tardis_em.utils.errors import TardisError
@@ -180,7 +181,7 @@ class FilterConnectedNearSegments:
         :rtype: numpy.ndarray
         """
         # Find Z bordered to filter out MT connection at the borders
-        MIN_Z, MAX_Z = np.min(point_cloud[:, 3]), np.max(point_cloud[:, 3])
+        MIN_Z, MAX_Z = np.min(point_cloud[:, -1]), np.max(point_cloud[:, -1])
 
         # Create a dictionary to store spline information
         # Iterate through the point cloud and add points to their respective splines
@@ -224,7 +225,7 @@ class FilterConnectedNearSegments:
             end01_list01 = [
                 {id_i: dist}
                 for id_i, dist in zip(list(splines_list.keys()), end01_list01)
-                if dist <= 1000 and id_i != key
+                if dist <= self.distance_th and id_i != key
             ]
             end01_list10 = np.sqrt(
                 np.sum((np.asarray(end10_list) - np.asarray(end01)) ** 2, axis=1)
@@ -257,35 +258,15 @@ class FilterConnectedNearSegments:
 
             for end_list in end_lists:
                 for i in end_list:
-                    m_id = list(i.keys())[
-                        -1 if end_list in [end10_list01, end10_list10] else 0
-                    ]
+                    end_bool = end_list in [end10_list01, end10_list10]
+                    m_id = list(i.keys())[-1 if end_bool else 0]
                     m_end = list(splines_list[m_id])
 
+                    border_ends = [m_end[0][2], m_end[-1][2]]
                     not_at_the_border = np.all(
                         [
-                            (
-                                m_end[
-                                    (
-                                        -1
-                                        if end_list in [end10_list01, end10_list10]
-                                        else 0
-                                    )
-                                ][2]
-                                - MIN_Z
-                            )
-                            >= omit_border,
-                            (
-                                MAX_Z
-                                - m_end[
-                                    (
-                                        -1
-                                        if end_list in [end10_list01, end10_list10]
-                                        else 0
-                                    )
-                                ][2]
-                            )
-                            >= omit_border,
+                            np.abs(np.min(border_ends) - MIN_Z) >= omit_border,
+                            np.abs(np.max(border_ends) - MAX_Z) >= omit_border,
                         ]
                     )
 
@@ -313,7 +294,6 @@ class FilterConnectedNearSegments:
                                 ]
                             ),
                         )
-
                         in_cylinder = self._in_cylinder(
                             point=points,
                             axis=axis,
@@ -415,16 +395,10 @@ class FilterConnectedNearSegments:
         """
         past_l = 0
         while len(np.unique(point_cloud[:, 0])) != past_l:
-            if past_l == 0:
-                past_l = len(np.unique(point_cloud[:, 0]))
-                point_cloud = self.marge_splines(
-                    point_cloud=point_cloud, omit_border=omit_border, initial=True
-                )
-            else:
-                past_l = len(np.unique(point_cloud[:, 0]))
-                point_cloud = self.marge_splines(
-                    point_cloud=point_cloud, omit_border=omit_border, initial=False
-                )
+            past_l = len(np.unique(point_cloud[:, 0]))
+            point_cloud = self.marge_splines(
+                point_cloud=point_cloud, omit_border=omit_border, initial=True
+            )
         return point_cloud
 
 
@@ -468,7 +442,7 @@ class FilterSpatialGraph:
             distance_th=connect_seg_if_closer_then, cylinder_radius=cylinder_radius
         )
 
-    def __call__(self, segments: np.ndarray) -> np.ndarray:
+    def __call__(self, segments: np.ndarray, px) -> np.ndarray:
         """
         Performs iterative optimization to modify input segments by applying a series of transformations,
         such as cutting connections at specific angles, merging close segment ends, and filtering short
@@ -483,17 +457,27 @@ class FilterSpatialGraph:
         """
         """Do iterative optimization split 150 degree connection / marge"""
         # Split 150 degree connections
+        segments = resample_filament(segments, 2500 / (px / 2))
         loop_b = True
         while loop_b:
-            loop_b, segments = cut_150_degree(segments)
+            loop_b, segments = cut_at_degree(segments, 150)
 
         # Connect segments with ends close to each other
-        border = [np.min(segments[:, 3]), np.max(segments[:, 3])]
-        border = (border[1] - border[0]) / 50
+        border = [np.min(segments[:, -1]), np.max(segments[:, -1])]
+        border = np.abs(border[0] - border[1]) * 0.015
 
         if self.connect_seg_if_closer_then > 0:
-            segments = self.marge_splines(point_cloud=segments, omit_border=border)
-            segments = reorder_segments_id(segments)
+            past_l = 0
+            while len(np.unique(segments[:, 0])) != past_l:
+                past_l = len(np.unique(segments[:, 0]))
+                segments = self.marge_splines(point_cloud=segments, omit_border=border)
+                segments = reorder_segments_id(segments)
+
+                loop_b = True
+                while loop_b:
+                    loop_b, segments = cut_at_degree(segments, 150)
+
+            segments = resample_filament(segments, 2500 / px)
 
         """Remove too short splines"""
         if self.filter_short_segments > 0:
@@ -514,11 +498,6 @@ class FilterSpatialGraph:
             if len(new_seg) > 0:
                 segments = np.hstack(new_seg)[0, :]
                 segments = reorder_segments_id(segments)
-
-        # Split 150 degree connections
-        loop_b = True
-        while loop_b:
-            loop_b, segments = cut_150_degree(segments)
 
         return reorder_segments_id(segments)
 

@@ -73,11 +73,11 @@ warnings.simplefilter("ignore", UserWarning)
 )
 @click.version_option(version=version)
 def main(
-        save_dir: str,
-        model_cnn: str,
-        cnn_version: str,
-        model_dist: str,
-        dist_version: str,
+    save_dir: str,
+    model_cnn: str,
+    cnn_version: str,
+    model_dist: str,
+    dist_version: str,
 ):
     """
     MAIN MODULE FOR FETCHING WEIGHTS FILES
@@ -92,10 +92,15 @@ def main(
     if model_cnn is not None:
         if not isdir(save_dir):
             mkdir(save_dir)
-        if not isdir(join(save_dir, "fnet_attn_32",)):
+        if not isdir(
+            join(
+                save_dir,
+                "fnet_attn_32",
+            )
+        ):
             mkdir(join(save_dir, "fnet_attn_32"))
         if not isdir(join(save_dir, "fnet_attn_32", model_cnn)):
-            mkdir(join(save_dir, "fnet_attn_32",  model_cnn))
+            mkdir(join(save_dir, "fnet_attn_32", model_cnn))
 
     """Save CNN Weights in selected directory"""
     if model_cnn is not None:
@@ -122,13 +127,21 @@ def main(
             f"{model_cnn}/{cnn_version}//model_weights.pth"
         )
 
-        open(join(save_dir, "fnet_attn_32", model_cnn, cnn_version, "model_weights.pth"), "wb").write(weight_cnn.content)
+        open(
+            join(save_dir, "fnet_attn_32", model_cnn, cnn_version, "model_weights.pth"),
+            "wb",
+        ).write(weight_cnn.content)
 
     """Save DIST Weights in selected directory"""
     if model_dist is not None:
         if not isdir(save_dir):
             mkdir(save_dir)
-        if not isdir(join(save_dir, "dist_triang",)):
+        if not isdir(
+            join(
+                save_dir,
+                "dist_triang",
+            )
+        ):
             mkdir(join(save_dir, "dist_triang"))
         if not isdir(join(save_dir, "dist_triang", model_dist)):
             mkdir(join(save_dir, "dist_triang", model_dist))
@@ -154,7 +167,12 @@ def main(
             "dist_triang/"
             f"{model_dist}/{dist_version}/model_weights.pth"
         )
-        open(join(save_dir, "dist_triang", model_dist, dist_version, "model_weights.pth"), "wb").write(weight_dist.content)
+        open(
+            join(
+                save_dir, "dist_triang", model_dist, dist_version, "model_weights.pth"
+            ),
+            "wb",
+        ).write(weight_dist.content)
 
 
 if __name__ == "__main__":

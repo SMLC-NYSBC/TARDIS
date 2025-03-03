@@ -7,11 +7,12 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2024                                            #
 #######################################################################
+import json
 import sys
 import time
 from datetime import datetime
 from os import listdir, getcwd
-from os.path import isdir, isfile, join
+from os.path import isdir, isfile, join, expanduser
 from typing import Optional, Union
 import platform
 
@@ -280,6 +281,7 @@ class GeneralPredictor:
         # Build handler to output amira file
         self.create_headers()
         self.amira_file = NumpyToAmira()
+        self.amira_file_points = NumpyToAmira(as_point_cloud=True)
 
         # Sanity error checks
         self.init_check()
@@ -339,10 +341,19 @@ class GeneralPredictor:
 
             if model != "None":
                 if self.model_version is None:
-                    model_version = get_all_version_aws(
-                        self.convolution_nn, "32", model
-                    )
-                    model_version = model_version[-1]
+                    try:
+                        model_version = get_all_version_aws(
+                            self.convolution_nn, "32", model
+                        )
+                        model_version = model_version[-1]
+                    except:
+                        if isfile(join(expanduser("~"), ".tardis_em", "fnet_attn_32", model, "model_version.json")):
+                            model_version = json.load(open(
+                                join(expanduser("~"), ".tardis_em", "fnet_attn_32", model, "model_version.json")
+                            ))
+                            model_version = model_version["version"]
+                        else:
+                            model_version = "Local"
                 else:
                     model_version = self.model_version
             else:
@@ -708,7 +719,9 @@ class GeneralPredictor:
             self.transformation = [0, 0, 0]
 
         self.log_prediction.append(
-            f"Image pixel size: {self.px}A" if self.correct_px is None else f"Image pixel size: {self.correct_px}A"
+            f"Image pixel size: {self.px}A"
+            if self.correct_px is None
+            else f"Image pixel size: {self.correct_px}A"
         )
         # Normalize image histogram
         msg = f"Error while loading image {id_name}. Image loaded correctly, but output format "
@@ -1320,11 +1333,7 @@ class GeneralPredictor:
         elif self.output_format.startswith("tif"):
             tif.imwrite(
                 join(self.am_output, f"{i[:-self.in_format]}_semantic.tif"),
-                (
-                    self.image
-                    if i.endswith((".mrc", ".rec"))
-                    else self.image
-                ),
+                (self.image if i.endswith((".mrc", ".rec")) else self.image),
             )
         elif self.output_format.startswith("am"):
             to_am(
@@ -1379,72 +1388,92 @@ class GeneralPredictor:
         with open(join(self.am_output, "prediction_log.txt"), "w") as f:
             f.write(" \n".join(self.log_prediction))
 
-        if self.output_format.endswith("amSG") and self.predict in [
-            "Actin",
-            "Microtubule",
-            "General_filament",
-            "Microtubule_tirf",
-        ]:
-            self.amira_file.export_amira(
-                coords=self.segments,
-                file_dir=join(self.am_output, f"{i[:-self.in_format]}_SpatialGraph.am"),
-                labels=["TardisPrediction"],
-                scores=[
-                    ["EdgeLength", "EdgeConfidenceScore"],
-                    [
-                        length_list(self.segments),
-                        self.score_splines(self.segments),
-                    ],
-                ],
-            )
-
-            if self.segments_filter is not None:
+        if self.output_format.endswith("amSG"):
+            if self.predict in [
+                "Actin",
+                "Microtubule",
+                "General_filament",
+                "Microtubule_tirf",
+            ]:
                 self.amira_file.export_amira(
-                    coords=self.segments_filter,
+                    coords=self.segments,
                     file_dir=join(
-                        self.am_output,
-                        f"{i[:-self.in_format]}_SpatialGraph_filter.am",
+                        self.am_output, f"{i[:-self.in_format]}_SpatialGraph.am"
                     ),
                     labels=["TardisPrediction"],
                     scores=[
                         ["EdgeLength", "EdgeConfidenceScore"],
                         [
-                            length_list(self.segments_filter),
-                            self.score_splines(self.segments_filter),
+                            length_list(self.segments),
+                            self.score_splines(self.segments),
                         ],
                     ],
                 )
 
-            if self.amira_check and self.predict == "Microtubule":
-                dir_amira_file = join(
-                    self.dir_amira,
-                    i[: -self.in_format] + self.amira_prefix + ".am",
+                if self.segments_filter is not None:
+                    self.amira_file.export_amira(
+                        coords=self.segments_filter,
+                        file_dir=join(
+                            self.am_output,
+                            f"{i[:-self.in_format]}_SpatialGraph_filter.am",
+                        ),
+                        labels=["TardisPrediction"],
+                        scores=[
+                            ["EdgeLength", "EdgeConfidenceScore"],
+                            [
+                                length_list(self.segments_filter),
+                                self.score_splines(self.segments_filter),
+                            ],
+                        ],
+                    )
+
+                if self.amira_check and self.predict == "Microtubule":
+                    dir_amira_file = join(
+                        self.dir_amira,
+                        i[: -self.in_format] + self.amira_prefix + ".am",
+                    )
+
+                    if isfile(dir_amira_file):
+                        amira_sg = ImportDataFromAmira(src_am=dir_amira_file)
+                        amira_sg = amira_sg.get_segmented_points()
+
+                        if amira_sg is not None:
+                            if self.segments_filter is not None:
+                                compare_sg, label_sg = self.compare_spline(
+                                    amira_sg=amira_sg, tardis_sg=self.segments_filter
+                                )
+                            else:
+                                compare_sg, label_sg = self.compare_spline(
+                                    amira_sg=amira_sg, tardis_sg=self.segments
+                                )
+
+                            if self.output_format.endswith("amSG"):
+                                self.amira_file.export_amira(
+                                    file_dir=join(
+                                        self.am_output,
+                                        f"{i[:-self.in_format]}_AmiraCompare.am",
+                                    ),
+                                    coords=compare_sg,
+                                    labels=label_sg,
+                                    scores=None,
+                                )
+            else:
+                self.amira_file_points.export_amira(
+                    coords=self.segments,
+                    file_dir=join(
+                        self.am_output, f"{i[:-self.in_format]}_SpatialGraph.am"
+                    ),
+                    labels=["TardisPrediction"],
                 )
-
-                if isfile(dir_amira_file):
-                    amira_sg = ImportDataFromAmira(src_am=dir_amira_file)
-                    amira_sg = amira_sg.get_segmented_points()
-
-                    if amira_sg is not None:
-                        if self.segments_filter is not None:
-                            compare_sg, label_sg = self.compare_spline(
-                                amira_sg=amira_sg, tardis_sg=self.segments_filter
-                            )
-                        else:
-                            compare_sg, label_sg = self.compare_spline(
-                                amira_sg=amira_sg, tardis_sg=self.segments
-                            )
-
-                        if self.output_format.endswith("amSG"):
-                            self.amira_file.export_amira(
-                                file_dir=join(
-                                    self.am_output,
-                                    f"{i[:-self.in_format]}_AmiraCompare.am",
-                                ),
-                                coords=compare_sg,
-                                labels=label_sg,
-                                scores=None,
-                            )
+                if self.segments_filter is not None:
+                    self.amira_file_points.export_amira(
+                        coords=self.segments_filter,
+                        file_dir=join(
+                            self.am_output,
+                            f"{i[:-self.in_format]}_SpatialGraph_filter.am",
+                        ),
+                        labels=["TardisPrediction"],
+                    )
         elif self.output_format.endswith("csv") or overwrite_save:
             segments = pd.DataFrame(self.segments)
             segments.to_csv(
@@ -1465,7 +1494,7 @@ class GeneralPredictor:
                 if len(self.segments_filter) > 0:
                     self.segments_filter.to_csv(
                         join(
-                                self.am_output,
+                            self.am_output,
                             f"{i[:-self.in_format]}_instances_filter.csv",
                         ),
                         header=["IDs", "X [A]", "Y [A]", "Z [A]"],

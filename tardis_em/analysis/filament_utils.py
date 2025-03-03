@@ -295,7 +295,7 @@ def sort_by_length(coord):
     return np.concatenate(sorted_list)
 
 
-def cut_150_degree(segments_array: np.ndarray):
+def cut_at_degree(segments_array: np.ndarray, cut_at=150):
     """
     Cuts segments based on angles between consecutive line segments and reassigns IDs
     to the newly split segments. The function calculates angles between vectors
@@ -332,8 +332,8 @@ def cut_150_degree(segments_array: np.ndarray):
             )
         angles_.append(180)
 
-        # Check if any angle is less than or equal to 150 degrees
-        if len([id_ for id_, k in enumerate(angles_) if k <= 150]) > 0:
+        # Check if any angle is less than or equal to cut_at degrees
+        if len([id_ for id_, k in enumerate(angles_) if k <= cut_at]) > 0:
             loop_ = True
 
             # Find the minimum angle and cut the segment
