@@ -1497,18 +1497,19 @@ class GeneralPredictor:
                 "Membrane2D",
                 "General_filament",
             ]:
-                if len(self.segments_filter) > 0:
-                    self.segments_filter = pd.DataFrame(self.segments_filter)
-                    self.segments_filter.to_csv(
-                        join(
-                            self.am_output,
-                            f"{i[:-self.in_format]}_instances_filter.csv",
-                        ),
-                        header=["IDs", "X [A]", "Y [A]", "Z [A]"],
-                        index=False,
-                        sep=",",
-                    )
-                    self.segments_filter = self.segments_filter.to_numpy()
+                if self.segments_filter is not None:
+                    if len(self.segments_filter) > 0:
+                        self.segments_filter = pd.DataFrame(self.segments_filter)
+                        self.segments_filter.to_csv(
+                            join(
+                                self.am_output,
+                                f"{i[:-self.in_format]}_instances_filter.csv",
+                            ),
+                            header=["IDs", "X [A]", "Y [A]", "Z [A]"],
+                            index=False,
+                            sep=",",
+                        )
+                        self.segments_filter = self.segments_filter.to_numpy()
         elif self.output_format.endswith(("mrc", "tif", "am")):
             if self.predict in [
                 "Membrane",
