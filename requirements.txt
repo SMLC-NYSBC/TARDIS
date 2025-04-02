@@ -1,7 +1,9 @@
 # ML library
+--extra-index-url https://download.pytorch.org/whl/cu126
+
 torch>2.0.0
-numpy
-pandas
+numpy>=2.0.0
+pandas>=2.2.0
 
 # Image loading/export library
 tifffile

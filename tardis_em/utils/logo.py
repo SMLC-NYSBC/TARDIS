@@ -204,7 +204,7 @@ class TardisLogo:
                 + f' | {self._build_text(self.WIDTH, "New York Structural Biology Center")}|\n'
                 + f' | {self._build_text(self.WIDTH - 13, "Simons Machine Learning Center")} ___         |\n'
                 + f' | {self._build_text(self.WIDTH - 21, " ", True)} _______(_@_)_______ |\n'
-                + f" | {self._build_text(self.WIDTH - 21, text_0)} |  TARDIS-pytorch | |\n"
+                + f" | {self._build_text(self.WIDTH - 21, text_0)} |     TARDIS-em   | |\n"
                 + f" | {self._build_text(self.WIDTH - 21, text_1)} |_________________| |\n"
                 + f" | {self._build_text(self.WIDTH - 21, text_2)}  | _____ | _____ |  |\n"
                 + f" | {self._build_text(self.WIDTH - 21, text_3)}  | |###| | |###| |  |\n"

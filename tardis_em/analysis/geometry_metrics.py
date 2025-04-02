@@ -239,7 +239,7 @@ def angle_between_vectors(v1: np.ndarray, v2: np.ndarray) -> float:
     return np.degrees(angle)
 
 
-def intensity(data: np.ndarray, image: np.ndarray, thickness=1) -> np.ndarray:
+def intensity(data: np.ndarray, image: np.ndarray, thickness=1) -> tuple:
     """
     Computes the intensity values along a parametric spline through a given dataset and subtracts
     the background intensity estimated from parallel shifted spline paths. This function is designed
@@ -265,18 +265,24 @@ def intensity(data: np.ndarray, image: np.ndarray, thickness=1) -> np.ndarray:
 
     pixel_coords = np.rint(data_fine).astype(int)
     pixel_coords = np.unique(pixel_coords, axis=0)
-    if thickness > 1:
-        pixel_coords = thicken_line_coordinates(pixel_coords, thickness)
+
+    if thickness[1] > 1:
+        pixel_coords_bg = thicken_line_coordinates(pixel_coords, thickness[1])
+    else:
+        pixel_coords_bg = np.copy(pixel_coords)
+
+    if thickness[0] > 1:
+        pixel_coords = thicken_line_coordinates(pixel_coords, thickness[0])
 
     # Extract the pixel values along the spline
     spline_intensity = pixel_intensity(pixel_coords, image)
 
     # Determined avg. background level
-    spline_up = np.copy(pixel_coords)
-    spline_up[:, 1] = spline_up[:, 1] + 10
+    spline_up = np.copy(pixel_coords_bg)
+    spline_up[:, 1] = spline_up[:, 1] + thickness[1]
 
-    spline_down = np.copy(pixel_coords)
-    spline_down[:, 1] = spline_down[:, 1] - 10
+    spline_down = np.copy(pixel_coords_bg)
+    spline_down[:, 1] = spline_down[:, 1] - thickness[1]
 
     # Extract the pixel values along the spline
     intensity_up = pixel_intensity(spline_up, image)
@@ -292,8 +298,11 @@ def intensity(data: np.ndarray, image: np.ndarray, thickness=1) -> np.ndarray:
         else:
             spline_background = intensity_up
     else:
-        return np.zeros_like(spline_intensity)
-    return np.array(spline_intensity) - np.array(spline_background)
+        return 0.0, 0.0
+
+    m = np.mean(np.array(spline_intensity)) - np.mean(np.array(spline_background))
+    s = np.sum(np.array(spline_intensity)) - np.sum(np.array(spline_background))
+    return m, s
 
 
 def pixel_intensity(coord: np.ndarray, image: np.ndarray) -> Union[list, None]:
@@ -399,13 +408,16 @@ def intensity_list(coord: np.ndarray, image: np.ndarray, thickness=1):
         The list contains a computed intensity value for identifiers with sufficient
         points and 0.0 for those with insufficient points.
     """
-    spline_intensity_list = []
+    spline_intensity_list_m, spline_intensity_list_s = [], []
 
     for i in np.unique(coord[:, 0]):
         points = coord[np.where(coord[:, 0] == i)[0], 1:]
         if len(points) > 5:
-            spline_intensity_list.append(intensity(points, image, thickness))
+            m, s = intensity(points, image, thickness)
+            spline_intensity_list_m.append(m)
+            spline_intensity_list_s.append(s)
         else:
-            spline_intensity_list.append(0.0)
+            spline_intensity_list_m.append(0.0)
+            spline_intensity_list_s.append(0.0)
 
-    return spline_intensity_list
+    return spline_intensity_list_m, spline_intensity_list_s

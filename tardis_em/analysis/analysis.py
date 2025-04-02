@@ -32,9 +32,10 @@ from tardis_em._version import version
 def analyse_filaments(
     data: Union[np.ndarray, List, Tuple],
     image: Union[np.ndarray, List, Tuple] = None,
-    thickness=1,
+    thickness=[1, 1],
+    anal_list=None,
     px=None,
-) -> tuple:
+) -> list:
     """
     Analyzes filament data to compute various attributes including length, curvature,
     tortuosity, and intensity-related metrics. If image data is provided, intensity
@@ -70,7 +71,7 @@ def analyse_filaments(
           if no image data is provided.
         - sum_length_intensity (list): Computed total filament intensity normalized
           by filament length, or None if no image data is provided.
-    :rtype: tuple
+    :rtype: list
     """
     if isinstance(data, np.ndarray):
         data = [data]
@@ -93,34 +94,40 @@ def analyse_filaments(
         tortuosity.append(tortuosity_)
 
         if image is not None:
-            intensity = intensity_list(d_, image[id_], thickness)
+            intensity_mean, intensity_sum = intensity_list(d_, image[id_], thickness)
 
-            avg_intensity_ = [np.mean(i).item(0) for i in intensity]
-            avg_intensity.append(avg_intensity_)
+            # avg_intensity_ = [np.mean(i).item(0) for i in intensity]
+            avg_intensity.append(intensity_mean)
 
-            avg_length_intensity_ = [i / l for l, i in zip(length[id_], avg_intensity_)]
+            avg_length_intensity_ = [i / l for l, i in zip(length[id_], intensity_mean)]
             avg_length_intensity.append(avg_length_intensity_)
 
-            sum_intensity_ = [np.sum(i).item(0) for i in intensity]
-            sum_intensity.append(sum_intensity_)
+            sum_intensity.append(intensity_sum)
 
             sum_length_intensity_ = [
-                i / len_ for len_, i in zip(length[id_], sum_intensity_)
+                i / len_ for len_, i in zip(length[id_], intensity_sum)
             ]
             sum_length_intensity.append(sum_length_intensity_)
 
-    if image is not None:
-        return (
-            length,
-            curvature,
-            tortuosity,
-            avg_intensity,
-            avg_length_intensity,
-            sum_intensity,
-            sum_length_intensity,
-        )
-    else:
-        return length, curvature, tortuosity, None, None, None, None
+    analysis = []
+    for i, j in zip((
+            "length",
+            "curvature",
+            "tortuosity",
+            "avg_intensity",
+            "avg_length_intensity",
+            "sum_intensity",
+            "sum_length_intensity",
+        ),
+            (
+                    length, curvature, tortuosity, avg_intensity, avg_length_intensity, sum_intensity, sum_length_intensity,
+            )):
+        if i is not None:
+            analysis.append(j)
+        elif i in anal_list:
+            analysis.append(j)
+
+    return analysis
 
 
 def save_analysis(
@@ -214,7 +221,8 @@ def analyse_filaments_list(
     path: str,
     images: Union[List, Tuple] = None,
     px: Union[List, Tuple] = None,
-    thickness=1,
+    anal_list=None,
+    thicknesses=[1, 1],
 ):
     """
     Analyzes and processes a list of filament data along with optional corresponding images.
@@ -236,9 +244,11 @@ def analyse_filaments_list(
     :param px: Optional collection indicating pixel calibration or scaling of the images,
         if provided. Default is None.
     :type px: Optional[Union[List, Tuple]]
-    :param thickness: An integer specifying the thickness parameter used during filament
+    :param anal_list: List of analysis to perform, if None that all.
+    :type anal_list: None or List[str]
+    :param thicknesses: An integer specifying the thickness parameter used during filament
         analysis. Default is 1.
-    :type thickness: int
+    :type thicknesses: List[int]
 
     :return: None
     """
@@ -260,7 +270,7 @@ def analyse_filaments_list(
         images = [None for _ in range(len(data))]
 
     save_analysis(
-        names_l, analyse_filaments(data, images, thickness, px=px), px=px, save=path
+        names_l, analyse_filaments(data, images, thicknesses, px=px, anal_list=anal_list), px=px, save=path
     )
 
 

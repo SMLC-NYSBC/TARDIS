@@ -442,7 +442,7 @@ class FilterSpatialGraph:
             distance_th=connect_seg_if_closer_then, cylinder_radius=cylinder_radius
         )
 
-    def __call__(self, segments: np.ndarray, px) -> np.ndarray:
+    def __call__(self, segments: np.ndarray, px=None) -> np.ndarray:
         """
         Performs iterative optimization to modify input segments by applying a series of transformations,
         such as cutting connections at specific angles, merging close segment ends, and filtering short
@@ -457,7 +457,14 @@ class FilterSpatialGraph:
         """
         """Do iterative optimization split 150 degree connection / marge"""
         # Split 150 degree connections
-        segments = resample_filament(segments, 2500 / (px / 2))
+        if px is None:
+            spacing = 5
+            spacing_rev = 5
+        else:
+            spacing = 2500 / (px / 2)
+            spacing_rev = 2500 / px
+        segments = resample_filament(segments, spacing)
+
         loop_b = True
         while loop_b:
             loop_b, segments = cut_at_degree(segments, 150)
@@ -477,7 +484,7 @@ class FilterSpatialGraph:
                 while loop_b:
                     loop_b, segments = cut_at_degree(segments, 150)
 
-            segments = resample_filament(segments, 2500 / px)
+            segments = resample_filament(segments, spacing_rev)
 
         """Remove too short splines"""
         if self.filter_short_segments > 0:

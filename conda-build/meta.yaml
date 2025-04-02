@@ -1,6 +1,6 @@
 package:
     name: "tardis-em"
-    version: "0.3.3"
+    version: "0.3.11"
 
 source:
     path: ../
@@ -22,18 +22,18 @@ requirements:
     run:
         - python>=3.10, <3.12
         - pytorch>=2.0.0
-        - numpy
-        - pandas
+        - numpy>=2.0.0
+        - pandas>=2.2.0
         - tifffile
         - imagecodecs
         - scikit-learn>1.0.1
         - scikit-image>0.19.2
-        - scipy>=1.8.1
+        - scipy>=1.10.0
         - requests>2.28.0
         - ipython>8.0.0
         - click>8.0.4
-        - plyfile
     optional:
+        - plyfile
         - pyvista
         - open3d
         - nd2

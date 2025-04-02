@@ -215,6 +215,7 @@ class GeneralPredictor:
             ".npy",
         )
         self.omit_format = (
+            ".nd2",
             "mask.tif",
             "mask.tiff",
             "mask.mrc",
@@ -527,7 +528,8 @@ class GeneralPredictor:
         """
         if NN in ["Actin", "Microtubule", "Microtubule_tirf"]:
             self.normalize_px = 25 if self.normalize_px is None else self.normalize_px
-            if NN == "Actin":
+
+            if NN == "Actin" and self.normalize_px is not None:
                 self.normalize_px = 15
 
             # Build CNN network with loaded pre-trained weights
@@ -672,6 +674,7 @@ class GeneralPredictor:
 
         :return: None
         """
+        self.log_prediction.append("\n")
         self.log_prediction.append(f"Loaded image: {id_name}")
 
         # Build temp dir
@@ -1194,7 +1197,7 @@ class GeneralPredictor:
         else:
             assert not assert_b, msg
 
-    def log_tardis(self, id_i: int, i: Union[str, np.ndarray], log_id: float):
+    def log_tardis(self, id_i: int, i: Union[str, int, np.ndarray], log_id: float):
         """
         Logs various states and processing stages of the TARDIS application based on the
         provided `log_id` and input data. Depending on the log ID and input type, it generates
@@ -1214,6 +1217,9 @@ class GeneralPredictor:
         :type log_id: float
         :return: None
         """
+        with open(join(self.am_output, "prediction_log.txt"), "w") as f:
+            f.write(" \n".join(self.log_prediction))
+
         if isinstance(i, np.ndarray):
             i = "Numpy array"
 
@@ -1375,7 +1381,8 @@ class GeneralPredictor:
             "Microtubule_tirf",
         ]:
             try:
-                self.segments_filter = self.filter_splines(segments=self.segments)
+                self.segments_filter = self.filter_splines(segments=self.segments,
+                                                           px=None if self.predict == "Microtubule_tirf" else self.px)
                 self.segments_filter = sort_by_length(self.segments_filter)
 
                 self.log_prediction.append(
@@ -1490,8 +1497,8 @@ class GeneralPredictor:
                 "Membrane2D",
                 "General_filament",
             ]:
-                self.segments_filter = pd.DataFrame(self.segments_filter)
                 if len(self.segments_filter) > 0:
+                    self.segments_filter = pd.DataFrame(self.segments_filter)
                     self.segments_filter.to_csv(
                         join(
                             self.am_output,
