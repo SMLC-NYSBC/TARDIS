@@ -17,7 +17,7 @@ import pandas as pd
 from tardis_em.analysis.geometry_metrics import (
     length_list,
     curvature_list,
-    intensity_list,
+    intensity_list, calculate_spline_correlations,
 )
 
 from tardis_em.analysis.mt_classification.mt_classes import (
@@ -109,29 +109,13 @@ def analyse_filaments(
             ]
             sum_length_intensity.append(sum_length_intensity_)
 
-    analysis = []
-    for i, j in zip((
-            "length",
-            "curvature",
-            "tortuosity",
-            "avg_intensity",
-            "avg_length_intensity",
-            "sum_intensity",
-            "sum_length_intensity",
-        ),
-            (
-                    length, curvature, tortuosity, avg_intensity, avg_length_intensity, sum_intensity, sum_length_intensity,
-            )):
-        if i is not None:
-            analysis.append(j)
-        elif i in anal_list:
-            analysis.append(j)
+    analysis = [length, curvature, tortuosity, avg_intensity, avg_length_intensity, sum_intensity, sum_length_intensity]
 
     return analysis
 
 
 def save_analysis(
-    names: Union[List, Tuple], analysis: Union[List, Tuple], px=None, save: str = None
+    names: Union[List, Tuple], analysis: Union[List, Tuple], anal_list: list, px=None, save: str = None,
 ) -> Union[None, np.ndarray]:
     """
     Saves or generates a detailed analysis file from the given `analysis` data. The function
@@ -157,45 +141,40 @@ def save_analysis(
     length, curvature, tortuosity = analysis[0], analysis[1], analysis[2]
     avg_intensity, avg_length_intensity = analysis[3], analysis[4]
     sum_intensity, sum_length_intensity = analysis[5], analysis[6]
+    correlation = analysis[7]
 
+    correlation_len = len(correlation[0][0])
     rows = np.sum([len(i) for i in length]).item(0)
-    analysis_file = np.zeros((rows, 10), dtype=object)
+
+    analysis_file = np.zeros((rows, 10+correlation_len), dtype=object)
 
     iter_ = 0
     for i in range(len(length)):  # Iterate throw every file
         for j in range(len(length[i])):
-            analysis_file[iter_, :] = [
-                names[i],
-                str(j),
-                str(1.0) if px is None else px[i],
-                str(length[i][j]),
-                str(curvature[i][j]),
-                str(tortuosity[i][j]),
-                "" if avg_intensity[i] is None else str(avg_intensity[i][j]),
-                (
-                    ""
-                    if avg_length_intensity[i] is None
-                    else str(avg_length_intensity[i][j])
-                ),
-                "" if sum_intensity[i] is None else str(sum_intensity[i][j]),
-                (
-                    ""
-                    if sum_length_intensity[i] is None
-                    else str(sum_length_intensity[i][j])
-                ),
+            analysis_file[iter_, :10] = [
+                names[i],  # 0
+                str(j),  # 1
+                str(1.0) if px is None else px[i],  # 2
+                str(length[i][j]),  # 3
+                str(curvature[i][j]),  # 4
+                str(tortuosity[i][j]),  # 5
+                str(avg_intensity[i][j]),  # 6
+                str(avg_length_intensity[i][j]),  # 7
+                str(sum_intensity[i][j]),  # 8
+                str(sum_length_intensity[i][j]),  # 9
             ]
+
+            for k in range(correlation_len):
+                analysis_file[iter_, 10 + k] = str(correlation[i][j][k])
+
             iter_ += 1
 
     if save is not None:
         date = datetime.now()
         tardis_version = version
 
-        file_name = f"TARDIS_V{tardis_version}_{date.day}_{date.month}_{date.year}-{date.hour}_{date.minute}.csv"
-
-        segments = pd.DataFrame(analysis_file)
-        segments.to_csv(
-            join(save, file_name),
-            header=[
+        file_name = f"TARDIS_V{tardis_version}_analysis_{date.day}_{date.month}_{date.year}-{date.hour}_{date.minute}.csv"
+        header = [
                 "File_Name",
                 "No. of Filament",
                 "Pixel_Size [nm]",
@@ -206,7 +185,38 @@ def save_analysis(
                 "Avg. Intensity / Length [U/nm]",
                 "Sum. Intensity [U]",
                 "Sum. Intensity / Length [U/nm]",
-            ],
+            ]
+        header = header + [f"Correlation [Pearson] CH_{i}" for i in range(correlation_len)]
+
+        if anal_list != []:
+            df = {
+                "length": 3,
+                "curvature": 4,
+                "tortuosity": 5,
+                "avg_intensity": 6,
+                "avg_length_intensity": 7,
+                "sum_intensity": 8,
+                "sum_length_intensity": 9
+            }
+
+            keep_ = [0, 1, 2] + [df[i] for i in anal_list if i in df]
+            if "correlation" in anal_list:
+                keep_ = keep_ + [10]
+
+            remove_ = [item for item in list(range(analysis_file.shape[1])) if item not in keep_]
+
+            if 10 in keep_:
+                keep = keep_.extend([i for i in remove_ if i > 10])
+                remove_ = [i for i in remove_ if i < 10]
+            analysis_file = np.delete(analysis_file, remove_, axis=1)
+
+            header = header + [f"Correlation [Pearson] CH_{i}" for i in range(2)]
+            header = [h for id, h in enumerate(header) if id in keep_]
+
+        segments = pd.DataFrame(analysis_file)
+        segments.to_csv(
+            join(save, file_name),
+            header=header,
             index=False,
             sep=",",
         )
@@ -223,6 +233,8 @@ def analyse_filaments_list(
     px: Union[List, Tuple] = None,
     anal_list=None,
     thicknesses=[1, 1],
+    image_corr=None,
+    frame_id=None,
 ):
     """
     Analyzes and processes a list of filament data along with optional corresponding images.
@@ -269,8 +281,41 @@ def analyse_filaments_list(
     if images is None:
         images = [None for _ in range(len(data))]
 
+    analysis = analyse_filaments(data, images, thicknesses, px=px, anal_list=anal_list)
+    correlations, correlations_px = calculate_spline_correlations(image_corr, data[0], frame_id=frame_id,
+                                                                  thickness=[1, 1])
+    analysis.append([correlations])
+    if "correlation" in anal_list or anal_list == []:
+        # Prepare a dictionary to store our columns
+        csv_data = {}
+
+        # Iterate through the main dictionary
+        for main_key in correlations_px:
+            # Add reference column
+            csv_data[f"{main_key}_reference"] = correlations_px[main_key]["reference"]
+
+            # Add MT columns
+            for mt_key in correlations_px[main_key]["MT"]:
+                csv_data[f"{main_key}_MT_{mt_key}"] = correlations_px[main_key]["MT"][mt_key]
+
+        # Find the maximum length of all lists to ensure proper DataFrame creation
+        max_length = max(len(lst) for col in csv_data.values() for lst in [col])
+
+        # Pad shorter lists with None to make them equal length
+        for col in csv_data:
+            current_length = len(csv_data[col])
+            if current_length < max_length:
+                csv_data[col].extend([None] * (max_length - current_length))
+
+        # Create DataFrame and save to CSV
+        df = pd.DataFrame(csv_data)
+        date = datetime.now()
+        tardis_version = version
+        file_name = f"TARDIS_V{tardis_version}_correlation_{date.day}_{date.month}_{date.year}-{date.hour}_{date.minute}.csv"
+        df.to_csv(join(path, file_name), index=False)
+
     save_analysis(
-        names_l, analyse_filaments(data, images, thicknesses, px=px, anal_list=anal_list), px=px, save=path
+        names_l, analysis, px=px, save=path, anal_list=anal_list
     )
 
 

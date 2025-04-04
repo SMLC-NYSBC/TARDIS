@@ -11,6 +11,7 @@ from typing import Union
 
 import numpy as np
 from scipy.interpolate import splev, splprep
+from tardis_em.utils.normalization import MinMaxNormalize
 
 
 def curvature(coord: np.ndarray, tortuosity_b=False) -> Union[float, tuple]:
@@ -294,14 +295,15 @@ def intensity(data: np.ndarray, image: np.ndarray, thickness=1) -> tuple:
         spline_background = intensity_up
     elif intensity_up is not None and intensity_down is not None:
         if np.mean(intensity_up) > np.mean(intensity_down):
-            spline_background = intensity_down
+            spline_background = np.mean(intensity_down)
         else:
-            spline_background = intensity_up
+            spline_background = np.mean(intensity_up)
     else:
         return 0.0, 0.0
 
-    m = np.mean(np.array(spline_intensity)) - np.mean(np.array(spline_background))
-    s = np.sum(np.array(spline_intensity)) - np.sum(np.array(spline_background))
+    m = np.mean(np.array(spline_intensity) - spline_background)
+    s = np.sum(np.array(spline_intensity) - spline_background)
+
     return m, s
 
 
@@ -408,7 +410,9 @@ def intensity_list(coord: np.ndarray, image: np.ndarray, thickness=1):
         The list contains a computed intensity value for identifiers with sufficient
         points and 0.0 for those with insufficient points.
     """
+    norm = MinMaxNormalize()
     spline_intensity_list_m, spline_intensity_list_s = [], []
+    image = norm(image)
 
     for i in np.unique(coord[:, 0]):
         points = coord[np.where(coord[:, 0] == i)[0], 1:]
@@ -421,3 +425,72 @@ def intensity_list(coord: np.ndarray, image: np.ndarray, thickness=1):
             spline_intensity_list_s.append(0.0)
 
     return spline_intensity_list_m, spline_intensity_list_s
+
+
+def calculate_spline_correlations(image_stack, spline_coords, frame_id, thickness=[1, 1]):
+    norm = MinMaxNormalize()
+    frame_ref = norm(image_stack[frame_id])
+
+    N, Y, X = image_stack.shape
+    num_splines = np.unique(spline_coords[:, 0])
+
+    correlations = np.zeros((len(num_splines), N))
+    correlations_px = {}
+    for spline_id in num_splines:
+        points = spline_coords[np.where(spline_coords[:, 0] == spline_id)[0], 1:]
+        tck, u = splprep(points.T, s=0)
+
+        data_fine = np.linspace(0, 1, 2 * int(total_length(points)))
+        data_fine = np.array(splev(data_fine, tck)).T
+
+        pixel_coords = np.rint(data_fine).astype(int)
+        pixel_coords = np.unique(pixel_coords, axis=0)
+
+        if thickness[1] > 1:
+            pixel_coords_bg = thicken_line_coordinates(pixel_coords, thickness[1])
+        else:
+            pixel_coords_bg = np.copy(pixel_coords)
+
+        if thickness[0] > 1:
+            pixel_coords = thicken_line_coordinates(pixel_coords, thickness[0])
+
+        # Determined avg. background level
+        spline_up = np.copy(pixel_coords_bg)
+        spline_up[:, 1] = spline_up[:, 1] + thickness[1]
+
+        spline_down = np.copy(pixel_coords_bg)
+        spline_down[:, 1] = spline_down[:, 1] - thickness[1]
+
+        # Extract the pixel values along the spline
+        intensity_up = pixel_intensity(spline_up, frame_ref)
+        intensity_down = pixel_intensity(spline_down, frame_ref)
+
+        if intensity_up is None and intensity_down is not None:
+            spline_background = intensity_down
+        elif intensity_down is None and intensity_up is not None:
+            spline_background = intensity_up
+        elif intensity_up is not None and intensity_down is not None:
+            if np.mean(intensity_up) > np.mean(intensity_down):
+                spline_background = np.mean(intensity_down)
+            else:
+                spline_background = np.mean(intensity_up)
+        else:
+            spline_background = 0.0
+
+        # Get reference sequence at frame_id
+        ref_intensity = pixel_intensity(pixel_coords, frame_ref) - spline_background
+
+        correlations_px[int(spline_id)] = {}
+        correlations_px[int(spline_id)]["reference"] = [float(f) for f in ref_intensity]
+        correlations_px[int(spline_id)]["MT"] = {}
+        for i in range(N):
+            spline_intensity = pixel_intensity(pixel_coords, norm(image_stack[i])) - spline_background
+
+            if i == frame_id:
+                correlations_px[int(spline_id)]["MT"][i] = [0.0 for f in spline_intensity]
+                correlations[int(spline_id), i] = 0.0
+            else:
+                correlations[int(spline_id), i] = np.corrcoef(ref_intensity, spline_intensity)[0, 1]
+                correlations_px[int(spline_id)]["MT"][i] = [float(f) for f in spline_intensity]
+
+    return correlations, correlations_px
