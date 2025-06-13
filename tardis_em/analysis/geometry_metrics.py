@@ -32,8 +32,8 @@ def curvature(coord: np.ndarray, tortuosity_b=False) -> Union[float, tuple]:
         if `tortuosity_b` is True, a tuple is returned containing the average curvature as the first
         element and the tortuosity value as the second element.
     """
-
-    tck, u = splprep(coord.T, s=0)
+    # try:
+    tck, u = splprep(coord.T, s=1)
 
     # Calculate the first, second, and third derivatives
     der1 = splev(u, tck, der=1)  # First derivative (velocity)
@@ -47,6 +47,8 @@ def curvature(coord: np.ndarray, tortuosity_b=False) -> Union[float, tuple]:
     curvature_value = (
         np.linalg.norm(np.cross(r1, r2), axis=1) / np.linalg.norm(r1, axis=1) ** 3
     )
+    # except:
+    #     curvature_value = [0.0]
 
     if tortuosity_b:
         # Calculate the curve length (arc length) using the fine points
@@ -86,12 +88,21 @@ def curvature_list(
         and a list of tortuosity values (as floats) for each group.
     """
 
+    def mean_without_outliers_iqr(data):
+        q1 = np.percentile(data, 5)
+        q3 = np.percentile(data, 95)
+        iqr = q3 - q1
+        lower_bound = q1 - 1.5 * iqr
+        upper_bound = q3 + 1.5 * iqr
+        filtered = data[(data >= lower_bound) & (data <= upper_bound)]
+        return np.mean(filtered)
+
     spline_curvature_list, spline_tortuosity_list = [], []
 
     for i in np.unique(coord[:, 0]):
         points = coord[np.where(coord[:, 0] == i)[0], 1:]
 
-        if len(points) > 5:
+        if len(points) > 4:
             if tortuosity_b:
                 c, t = curvature(points, tortuosity_b=True)
 
@@ -100,7 +111,13 @@ def curvature_list(
                 spline_curvature_list.append(c)
                 spline_tortuosity_list.append(t)
             else:
-                spline_curvature_list.append(curvature(points))
+                c = curvature(points)
+                if mean_b:
+                    spline_curvature_list.append(mean_without_outliers_iqr(c).item(0))
+                else:
+                    if c == [0]:
+                        c = np.repeat(0.0, len(points))
+                    spline_curvature_list.append(c)
         else:
             spline_curvature_list.append(0.0)
             spline_tortuosity_list.append(1.0)

@@ -14,6 +14,7 @@ from scipy.interpolate import splev, splprep
 from scipy.spatial.distance import cdist
 from sklearn.neighbors import KDTree
 
+from tardis_em.analysis.geometry_metrics import length_list
 from tardis_em.analysis.geometry_metrics import (
     angle_between_vectors,
     total_length,
@@ -31,7 +32,7 @@ def resample_filament(points, spacing_size) -> np.ndarray:
     :param points: A numpy array of shape [N, 4], where each row contains [ID, X, Y, Z].
                    The 'ID' column is used to differentiate between different groups of
                    points, while the remaining columns represent the 3D coordinates.
-    :param spacing_size: A float specifying the uniform spacing distance to be applied
+    :param spacing_size: A float sfpecifying the uniform spacing distance to be applied
                          when resampling the 3D points within each group.
 
     :return: A numpy array of resampled points with shape [M, 4], where each row contains
@@ -51,6 +52,13 @@ def resample_filament(points, spacing_size) -> np.ndarray:
     # Get unique IDs
     unique_ids = np.unique(points[:, 0])
 
+    if spacing_size == 'auto':
+        length_max = np.max(length_list(points))
+        spacing_size_ = max(int(0.01 * length_max), 5)
+        print(length_max, spacing_size_)
+    else:
+        spacing_size_ = spacing_size
+
     # Loop over each unique ID
     for unique_id in unique_ids:
         # Extract points for the current ID
@@ -64,7 +72,7 @@ def resample_filament(points, spacing_size) -> np.ndarray:
 
         # Create a new range of distances for interpolation
         new_distances = np.arange(
-            0, cumulative_distances[-1] + spacing_size, spacing_size
+            0, cumulative_distances[-1] + spacing_size_, spacing_size_
         )
 
         # Interpolate X, Y, Z coordinates along the new distance range
