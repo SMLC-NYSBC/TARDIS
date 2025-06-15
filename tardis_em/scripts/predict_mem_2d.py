@@ -47,11 +47,11 @@ warnings.simplefilter("ignore", UserWarning)
     show_default=True,
 )
 @click.option(
-    "-npx",
+    "-norm_px",
     "--normalize_px",
     default=None,
     type=float,
-    help="Normalize pixel size values.",
+    help="Normalize pixel size values do given resolution .",
     show_default=True,
 )
 @click.option(

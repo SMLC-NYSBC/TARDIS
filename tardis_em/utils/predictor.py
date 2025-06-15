@@ -527,10 +527,19 @@ class GeneralPredictor:
         :type NN: str
         """
         if NN in ["Actin", "Microtubule", "Microtubule_tirf"]:
-            self.normalize_px = 25 if self.normalize_px is None else self.normalize_px
+            # None - default value
+            # 0.0 - Do not normalize
+            # > 0 - normalzie to specific A resolution
+            if self.normalize_px is None:
+                self.normalize_px = 25
+            elif self.normalize_px == 0.0:
+                self.normalize_px = None
 
             if NN == "Actin" and self.normalize_px is not None:
-                self.normalize_px = 15
+                if self.normalize_px == 0.0:
+                    self.normalize_px = None
+                else:
+                    self.normalize_px = 15
 
             # Build CNN network with loaded pre-trained weights
             if not self.binary_mask:
@@ -570,7 +579,13 @@ class GeneralPredictor:
                     device=self.device,
                 )
         elif NN in ["Membrane2D", "Membrane"]:
-            self.normalize_px = 15 if self.normalize_px is None else self.normalize_px
+            # None - default value
+            # 0.0 - Do not normalize
+            # > 0 - normalzie to specific A resolution
+            if self.normalize_px is None:
+                self.normalize_px = 15
+            elif self.normalize_px == 0.0:
+                self.normalize_px = None
 
             # Build CNN network with loaded pre-trained weights
             if NN == "Membrane2D":

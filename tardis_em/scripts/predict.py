@@ -46,6 +46,14 @@ warnings.simplefilter("ignore", UserWarning)
     show_default=True,
 )
 @click.option(
+    "-norm_px",
+    "--normalize_px",
+    default=None,
+    type=float,
+    help="Normalize pixel size values do given resolution .",
+    show_default=True,
+)
+@click.option(
     "-fi",
     "--filament",
     default=False,
@@ -178,6 +186,7 @@ def main(
     patch_size: int,
     rotate: bool,
     correct_px: float,
+    normalize_px: float,
     convolution_nn: str,
     cnn_threshold: str,
     dist_threshold: float,
@@ -206,6 +215,7 @@ def main(
         dir_s=path,
         binary_mask=mask,
         correct_px=correct_px,
+        normalize_px=normalize_px,
         convolution_nn=convolution_nn,
         checkpoint=checkpoint,
         model_version=None,
