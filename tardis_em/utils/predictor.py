@@ -1797,8 +1797,15 @@ class GeneralPredictor:
                         self.log_prediction.append(
                             f"Semantic prediction: No semantic detected."
                         )
-                        with open(join(self.am_output, "prediction_log.txt"), "w") as f:
-                            f.write(" \n".join(self.log_prediction))
+                    else:
+                        end_predict = time.time()
+                        half_time = round(((end_predict - start_predict) * (len(self.predict_list) - id_ - 1)) / 60, 1)
+                        self.log_prediction.append(
+                            f"Semantic Prediction Finished in: {half_time} min"
+                        )
+
+                    with open(join(self.am_output, "prediction_log.txt"), "w") as f:
+                        f.write(" \n".join(self.log_prediction))
 
                 if self.image is None:
                     continue
@@ -1849,13 +1856,18 @@ class GeneralPredictor:
                 self.log_prediction.append(
                     f"Instance prediction: Not enough point from semantic mask were generated."
                 )
-                with open(join(self.am_output, "prediction_log.txt"), "w") as f:
-                    f.write(" \n".join(self.log_prediction))
 
                 if self.output_format.endswith("return"):
                     instance_output.append(np.zeros((0, 4)))
                     instance_filter_output.append(np.zeros((0, 4)))
                 continue
+            else:
+                half_time = round(((time.time() - end_predict) * (len(self.predict_list) - id_ - 1)) / 60, 1)
+                self.log_prediction.append(
+                    f"Instance Prediction Finished in: {half_time} min"
+                )
+            with open(join(self.am_output, "prediction_log.txt"), "w") as f:
+                f.write(" \n".join(self.log_prediction))
 
             # Tardis progress bar update
             self.log_tardis(id_, i, log_id=4)
