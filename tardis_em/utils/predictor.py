@@ -11,7 +11,7 @@ import json
 import sys
 import time
 from datetime import datetime
-from os import listdir, getcwd
+from os import listdir, getcwd, mkdir
 from os.path import isdir, isfile, join, expanduser
 from typing import Optional, Union
 import platform
@@ -1232,6 +1232,9 @@ class GeneralPredictor:
         :type log_id: float
         :return: None
         """
+        if not isdir(self.am_output):
+            mkdir(self.am_output)
+
         with open(join(self.am_output, "prediction_log.txt"), "w") as f:
             f.write(" \n".join(self.log_prediction))
 
