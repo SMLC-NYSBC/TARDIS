@@ -1799,7 +1799,7 @@ class GeneralPredictor:
                         )
                     else:
                         end_predict = time.time()
-                        half_time = round(((end_predict - start_predict) * (len(self.predict_list) - id_ - 1)) / 60, 1)
+                        half_time = round((end_predict - start_predict) / 60, 1)
                         self.log_prediction.append(
                             f"Semantic Prediction Finished in: {half_time} min"
                         )
@@ -1862,7 +1862,7 @@ class GeneralPredictor:
                     instance_filter_output.append(np.zeros((0, 4)))
                 continue
             else:
-                half_time = round(((time.time() - end_predict) * (len(self.predict_list) - id_ - 1)) / 60, 1)
+                half_time = round((time.time() - end_predict) / 60, 1)
                 self.log_prediction.append(
                     f"Instance Prediction Finished in: {half_time} min"
                 )
