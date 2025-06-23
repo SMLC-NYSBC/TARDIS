@@ -206,6 +206,7 @@ class NumpyToAmira:
             )
             f.write("\n")
             f.write("Parameters { \n")
+            f.write("    Units { \n" '        Coordinates "Å" \n' "    } \n")
             if not self.as_point_cloud:
                 f.write("    SpatialGraphUnitsVertex { \n")
                 for i in label:
@@ -226,8 +227,11 @@ class NumpyToAmira:
                     )
                 f.write("    } \n")
                 f.write("    SpatialGraphUnitsPoint { \n")
+                f.write("        thickness { \n")
+                f.write("            Unit -1, \n")
+                f.write("            Dimension -1 \n")
+                f.write("        } \n")
                 f.write("    } \n")
-                f.write("    Units { \n" '        Coordinates "Å" \n' "    } \n")
                 for id_, i in enumerate(label):
                     f.write(
                         f"    {i}" + " { \n"
@@ -291,6 +295,124 @@ class NumpyToAmira:
 
             for i in data:
                 f.write(f"{i} \n")
+
+    def export_amiraV2(self,
+                       file_dir: str,
+                       coords=np.ndarray,
+                       labels: Union[tuple, list, None] = None,
+                       scores: Optional[list] = None,
+                       ):
+        coord_list = self.check_3d(coord=coords)
+
+        if not self.as_point_cloud:
+            coords = np.concatenate(coord_list)
+
+        if labels is not None:
+            assert len(labels[0]) == len(labels[1])
+            labels[0] = [s.rstrip() + ' ' for s in labels[0]]
+
+        # Build Amira header
+        if scores is not None:
+            score = len(scores[0])
+            self._build_header(
+                coord=coords,
+                file_dir=file_dir,
+                label=labels[0] if labels is not None else None,
+                score=[score, scores[0]],
+            )
+        else:
+            score = False
+            self._build_header(
+                coord=coords,
+                file_dir=file_dir,
+                label=labels[0] if labels is not None else None,
+                score=None,
+            )
+
+        # Save only as a point cloud
+        if self.as_point_cloud:
+            vertex_coord = ["@1"]
+            for c in coords[:, 1:]:
+                vertex_coord.append(f"{c[0]:.15e} " f"{c[1]:.15e} " f"{c[2]:.15e}")
+            self._write_to_amira(data=vertex_coord, file_dir=file_dir)
+        else:
+            segments_idx = len(np.unique(coords[:, 0]))
+            vertex_id_1 = -2
+            vertex_id_2 = -1
+
+            vertex_coord = ["@1"]
+            vertex_id = ["@2"]
+            point_no = ["@3"]
+            point_coord = ["@4"]
+            for i in range(segments_idx):
+                # Collect segment coord and idx
+                segment = coords[np.where(coords[:, 0] == i)[0]][:, 1:]
+
+                # Get Coord for vertex #1 and vertex #2
+                vertex = np.array((segment[0], segment[-1:][0]), dtype=object)
+
+                # Append vertex #1 (aka Node #1)
+                vertex_coord.append(
+                    f"{vertex[0][0]:.15e} "
+                    f"{vertex[0][1]:.15e} "
+                    f"{vertex[0][2]:.15e}"
+                )
+                # Append vertex #2 (aka Node #2)
+                vertex_coord.append(
+                    f"{vertex[1][0]:.15e} "
+                    f"{vertex[1][1]:.15e} "
+                    f"{vertex[1][2]:.15e}"
+                )
+
+                # Get Update id number of vertex #1 and #2
+                vertex_id_1 += 2
+                vertex_id_2 += 2
+                vertex_id.append(f"{vertex_id_1} {vertex_id_2}")
+
+                # Get no. of point in edge
+                point_no.append(f"{len(segment)}")
+
+                # Get coord of points in edge
+                for j in segment:
+                    # Append 3D XYZ coord for point
+                    point_coord.append(f"{j[0]:.15e} {j[1]:.15e} {j[2]:.15e}")
+
+            self._write_to_amira(data=vertex_coord, file_dir=file_dir)
+            self._write_to_amira(data=vertex_id, file_dir=file_dir)
+            self._write_to_amira(data=point_no, file_dir=file_dir)
+            self._write_to_amira(data=point_coord, file_dir=file_dir)
+
+            # Write down all labels
+            label_id = 5
+            total_vertex = len(np.unique(coords[:, 0])) * 2
+            total_edge = len(np.unique(coords[:, 0]))
+
+            for i in labels[1]:
+                vertex_label = [f"@{label_id}"]
+                edge_label = [f"@{label_id + 1}"]
+
+                lable_edge = np.repeat(0, total_edge)
+                lable_edge[i] = 1
+                edge_label.extend(lable_edge)
+
+                lable_vertex = np.repeat(0, total_vertex)
+                lable_vertex[(i*2).astype(int)] = 1
+                lable_vertex[(i + i + 1).astype(int)] = 1
+                vertex_label.extend(lable_vertex)
+                label_id += 2
+
+                self._write_to_amira(data=vertex_label, file_dir=file_dir)
+                self._write_to_amira(data=edge_label, file_dir=file_dir)
+
+            if isinstance(score, int) and score:
+                for i, s in enumerate(scores[1]):
+                    label_id = label_id + i
+                    edge_score = [f"@{label_id}"]
+
+                    for j in range(segments_idx):
+                        edge_score.append(f"{s[j]:.15e}")
+
+                    self._write_to_amira(data=edge_score, file_dir=file_dir)
 
     def export_amira(
         self,
@@ -417,6 +539,7 @@ class NumpyToAmira:
             start = 0
             total_vertex = len(np.unique(coords[:, 0])) * 2
             total_edge = len(np.unique(coords[:, 0]))
+
             for i in coord_list:
                 vertex_label = [f"@{label_id}"]
                 edge_label = [f"@{label_id + 1}"]

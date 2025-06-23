@@ -11,6 +11,9 @@ from typing import Union
 
 import numpy as np
 from scipy.interpolate import splev, splprep
+from scipy.spatial.distance import pdist
+from sklearn.cluster import DBSCAN
+
 from tardis_em.utils.normalization import MinMaxNormalize
 
 
@@ -511,3 +514,35 @@ def calculate_spline_correlations(image_stack, spline_coords, frame_id, thicknes
                 correlations_px[int(spline_id)]["MT"][i] = [float(f) for f in spline_intensity]
 
     return correlations, correlations_px
+
+
+def group_points_by_distance(points: np.ndarray, eps: float = 'auto', min_samples: int = 1) -> list[list[int]]:
+    """
+    Groups 3D points based on spatial proximity using DBSCAN.
+
+    :param points: np.ndarray of shape (n, 4) where the first column is ID and the rest are XYZ.
+    :param eps: Maximum distance between two samples for them to be considered in the same neighborhood.
+    :param min_samples: Minimum number of samples to form a dense region.
+    :return: List of lists of point IDs grouped by spatial proximity.
+    """
+    ids = points[:, 0].astype(int)
+    coords = points[:, 1:]  # 3D coordinates
+
+    # Auto-threshold calculation
+    if eps == 'auto':
+        pairwise_distances = pdist(coords)
+        median_distance = np.median(pairwise_distances)
+        eps = median_distance / 2
+
+    # DBSCAN clustering
+    clustering = DBSCAN(eps=eps, min_samples=min_samples).fit(coords)
+    labels = clustering.labels_
+
+    unique_labels = np.unique(labels)  # remove noise if any
+    groups = []
+
+    for label in unique_labels:
+        group_ids = ids[labels == label].tolist()
+        groups.append(group_ids)
+
+    return groups

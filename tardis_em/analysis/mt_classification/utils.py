@@ -354,3 +354,66 @@ def assign_filaments_to_poles(filaments, poles) -> tuple[np.ndarray, np.ndarray]
     )
 
     return filament_pole1, filament_pole2
+
+
+def assign_filaments_to_n_poles(filaments, poles):
+    """
+    Assigns filaments to the closest of any number of poles based on the minimal distance from any of their points
+    and reverses filament orientation if the first point is farther from the assigned pole than the last point.
+
+    The function calculates the minimal distance between any point of each filament and each pole,
+    assigns filaments to the closest pole, and flips the filament orientation if necessary.
+    The result is a list of arrays, one per pole, containing the assigned filaments.
+
+    :param filaments: A 2D numpy array of shape [m, 4] where each row is [ID, x, y, z] for a point in a filament.
+                      Multiple points may share the same ID, representing a filament with variable points.
+    :param poles: A 2D numpy array of shape [p, 3], where each row contains the [x, y, z] coordinates of a pole.
+    :return: A list of p numpy arrays, where the i-th array contains all filaments assigned to pole i.
+             Each array has shape [k, 4] with [ID, x, y, z] rows. Empty arrays have shape [0, 4].
+    """
+    # Extract filament IDs and coordinates
+    ids = filaments[:, 0]
+    unique_ids, index_starts, counts = np.unique(
+        ids, return_index=True, return_counts=True
+    )
+
+    # Compute end indices for each filament
+    end_indices = index_starts + counts - 1
+
+    # Initialize lists to store filaments for each pole
+    filament_pole_lists = [[] for _ in range(poles.shape[0])]
+
+    # Process each filament
+    for idx, (start_idx, end_idx, filament_id) in enumerate(zip(index_starts, end_indices, unique_ids)):
+        # Extract all points for the current filament
+        filament_points = filaments[start_idx:end_idx + 1]
+        filament_coords = filament_points[:, 1:4]
+
+        # Calculate distances from all points to all poles
+        differences = filament_coords[:, np.newaxis, :] - poles[np.newaxis, :, :]
+        distances = np.linalg.norm(differences, axis=-1)  # Shape: [num_points, num_poles]
+
+        # Find minimal distance to each pole
+        min_distances = np.min(distances, axis=0)  # Shape: [num_poles]
+
+        # Assign filament to the pole with the smallest minimal distance
+        assigned_pole_index = np.argmin(min_distances)
+
+        # Check distances of first and last points to the assigned pole
+        dist_first = distances[0, assigned_pole_index]
+        dist_last = distances[-1, assigned_pole_index]
+
+        # Flip filament if the first point is farther than the last point
+        if dist_first > dist_last:
+            filament_points = filament_points[::-1]
+
+        # Append to the appropriate pole's list
+        filament_pole_lists[assigned_pole_index].append(filament_points)
+
+    # Combine lists into arrays, handling empty cases
+    filament_pole_arrays = [
+        np.vstack(filament_list) if filament_list else np.empty((0, 4))
+        for filament_list in filament_pole_lists
+    ]
+
+    return filament_pole_arrays
