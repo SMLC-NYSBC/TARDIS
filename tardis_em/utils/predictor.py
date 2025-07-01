@@ -1896,8 +1896,9 @@ class GeneralPredictor:
                 self.log_prediction.append(
                     f"Instance prediction: Not segments could be predicted with point cloud generated from Semantic mask."
                 )
-                with open(join(self.am_output, "prediction_log.txt"), "w") as f:
-                    f.write(" \n".join(self.log_prediction))
+            self.log_prediction.append('\n')
+            with open(join(self.am_output, "prediction_log.txt"), "w") as f:
+                f.write(" \n".join(self.log_prediction))
 
                 continue
 

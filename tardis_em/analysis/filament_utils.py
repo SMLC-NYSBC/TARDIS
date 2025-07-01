@@ -54,8 +54,7 @@ def resample_filament(points, spacing_size) -> np.ndarray:
 
     if spacing_size == 'auto':
         length_max = np.max(length_list(points))
-        spacing_size_ = max(int(0.01 * length_max), 5)
-        print(length_max, spacing_size_)
+        spacing_size_ = int(0.01 * length_max)
     else:
         spacing_size_ = spacing_size
 
