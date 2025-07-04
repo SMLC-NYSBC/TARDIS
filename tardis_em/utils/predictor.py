@@ -1252,7 +1252,10 @@ class GeneralPredictor:
         }
 
         if log_id == 7:
-            no_segments = np.max(self.segments[:, 0]) if len(self.segments) > 0 else 0
+            if self.segments is not None:
+                no_segments = np.max(self.segments[:, 0]) if len(self.segments) > 0 else 0
+            else:
+                no_segments = "None"
         else:
             no_segments = "None"
 

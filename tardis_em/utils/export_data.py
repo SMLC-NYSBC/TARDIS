@@ -268,6 +268,137 @@ class NumpyToAmira:
             f.write("\n")
             f.write("# Data section follows")
 
+    def _build_header_V2(
+        self,
+        coord: np.ndarray,
+        file_dir: str,
+        history: list = None,
+        labels_segment: list = None,
+        scores_segment: list = None,
+        scores_points: list = None,
+    ):
+        """
+        Constructs and writes the header section of a Tardis file based on provided
+        graph structure data, such as vertex, edges, and point attributes.
+
+        :param coord: Coordinate array defining the spatial structure of graph or point
+            cloud data. It is a NumPy array, where its shape[0] represents either the
+            number of points or other meaningful data describing the graph structure.
+        :type coord: numpy.ndarray
+        :param file_dir: File path where the header with graph data will be saved.
+            This should be a valid path in the form of a string.
+        :type file_dir: str
+        :param labels_segment: Optional list of labels used to classify or annotate vertices
+            and/or edges in the graph. Each label can represent a unique attribute or
+            property of the entities within the graph.
+        :type labels_segment: list
+        :param scores_segment: Optional score or metric-related data, potentially describing
+            additional attributes of the structure. It can be a list with an integer
+            and additional nested list corresponding to the score types or categories.
+        :type scores_segment: list
+        :param scores_points: Optional score or metric-related data, potentially describing
+            additional attributes of the structure. It can be a list with an integer
+            and additional nested list corresponding to the score types or categories.
+        :type scores_points: list
+
+        :return: The function does not return anything as its purpose is to handle
+            file operations and save the header data directly to the specified file.
+        :rtype: None
+        """
+        # Store common data for the header
+        if self.as_point_cloud:
+            vertex = int(coord.shape[0])
+            edge = 0
+            point = 0
+        else:
+            vertex = int(np.max(coord[:, 0]) + 1) * 2  # Number of spline ends
+            edge = int(vertex / 2)  # Number of splines
+            point = int(coord.shape[0])  # Total number of points
+
+        # Save header
+        with codecs.open(file_dir, mode="w", encoding="utf-8") as f:
+            for i in self.tardis_header:
+                f.write(i)
+            if history is not None:
+                f.write("\n")
+                f.write("# TARDIS-em history: \n")
+                for h in history:
+                    f.write('# ' + h + '\n')
+            f.write("\n")
+            f.write(
+                f"define VERTEX {vertex} \n"
+                f"define EDGE {edge} \n"
+                f"define POINT {point} \n"
+            )
+            f.write("\n")
+            f.write("Parameters { \n")
+            f.write("    Units { \n" '        Coordinates "Å" \n' "    } \n")
+            if not self.as_point_cloud:
+                f.write("    SpatialGraphUnitsVertex { \n")
+                for i in labels_segment:
+                    f.write(
+                        f"        {i}" + " { \n"
+                        "            Unit -1, \n"
+                        "            Dimension -1 \n"
+                        "        } \n"
+                    )
+                f.write("    } \n")
+                f.write("    SpatialGraphUnitsEdge { \n")
+                for i in labels_segment:
+                    f.write(
+                        f"        {i}" + " { \n"
+                        "            Unit -1, \n"
+                        "            Dimension -1 \n"
+                        "        } \n"
+                    )
+                f.write("    } \n")
+                f.write("    SpatialGraphUnitsPoint { \n")
+                f.write("        thickness { \n")
+                f.write("            Unit -1, \n")
+                f.write("            Dimension -1 \n")
+                f.write("        } \n")
+                f.write("    } \n")
+                for id_, i in enumerate(labels_segment):
+                    f.write(
+                        f"    {i}" + " { \n"
+                        "		Label0" + " { \n"
+                        "			Color 1 0.5 0.5, \n"
+                        f"          Id {id_ + 1} \n"
+                        "     } \n"
+                        "        Id 0, \n"
+                        "        Color 1 0 0 \n"
+                        "    } \n"
+                    )
+            f.write('	ContentType "HxSpatialGraph" \n' "} \n")
+            f.write("\n")
+            f.write(
+                "VERTEX { float[3] VertexCoordinates } @1 \n"
+                "EDGE { int[2] EdgeConnectivity } @2 \n"
+                "EDGE { int NumEdgePoints } @3 \n"
+                "POINT { float[3] EdgePointCoordinates } @4 \n"
+            )
+
+            label_id = 5
+            if not self.as_point_cloud:
+                for i in labels_segment:
+                    f.write("VERTEX { int " + f"{i}" + "} " + f"@{label_id} \n")
+                    f.write("EDGE { int " + f"{i}" + "} " + f"@{label_id + 1} \n")
+                    label_id += 2
+
+            if scores_segment is not None:
+                for i in range(scores_segment[0]):
+                    name_ = scores_segment[1][i]
+                    f.write("EDGE { float " + f"{name_}" + " } " + f"@{label_id} \n")
+                    label_id = label_id + 1
+            if scores_points is not None:
+                for i in range(scores_points[0]):
+                    name_ = scores_points[1][i]
+                    f.write("POINT { float " + f"{name_}" + " } " + f"@{label_id} \n")
+                    label_id = label_id + 1
+
+            f.write("\n")
+            f.write("# Data section follows")
+
     @staticmethod
     def _write_to_amira(data: list, file_dir: str):
         """
@@ -299,35 +430,46 @@ class NumpyToAmira:
     def export_amiraV2(self,
                        file_dir: str,
                        coords=np.ndarray,
-                       labels: Union[tuple, list, None] = None,
-                       scores: Optional[list] = None,
+                       labels_segment: dict = None,
+                       scores_segment: dict = None,
+                       scores_points: dict = None,
                        ):
-        coord_list = self.check_3d(coord=coords)
+        coords = self.check_3d(coord=coords)[0]
+        segments_idx = len(np.unique(coords[:, 0]))
+        point_idx = len(coords)
 
-        if not self.as_point_cloud:
-            coords = np.concatenate(coord_list)
+        if labels_segment is not None:
+            labels_segment = {k.rstrip(): v for k, v in labels_segment.items()}
+            for k, v in labels_segment.items():
+                if len(v) != segments_idx:
+                    labels_segment.pop(k)
+            if len(labels_segment) == 0:
+                labels_segment = None
 
-        if labels is not None:
-            assert len(labels[0]) == len(labels[1])
-            labels[0] = [s.rstrip() + ' ' for s in labels[0]]
+        if scores_segment is not None:
+            scores_segment = {k.rstrip(): v for k, v in scores_segment.items()}
+            for k, v in scores_segment.items():
+                if len(v) != segments_idx:
+                    scores_segment.pop(k)
+            if len(scores_segment) == 0:
+                scores_segment = None
+
+        if scores_points is not None:
+            scores_points = {k.rstrip(): v for k, v in scores_points.items()}
+            for k, v in scores_points.items():
+                if len(v) != point_idx:
+                    scores_points.pop(k)
+            if len(scores_points) == 0:
+                scores_points = None
 
         # Build Amira header
-        if scores is not None:
-            score = len(scores[0])
-            self._build_header(
-                coord=coords,
-                file_dir=file_dir,
-                label=labels[0] if labels is not None else None,
-                score=[score, scores[0]],
-            )
-        else:
-            score = False
-            self._build_header(
-                coord=coords,
-                file_dir=file_dir,
-                label=labels[0] if labels is not None else None,
-                score=None,
-            )
+        self._build_header_V2(
+            coord=coords,
+            file_dir=file_dir,
+            labels_segment=list(labels_segment.keys()),
+            scores_segment=list(scores_segment.keys()),
+            scores_points=list(scores_points.keys()),
+        )
 
         # Save only as a point cloud
         if self.as_point_cloud:
@@ -336,7 +478,6 @@ class NumpyToAmira:
                 vertex_coord.append(f"{c[0]:.15e} " f"{c[1]:.15e} " f"{c[2]:.15e}")
             self._write_to_amira(data=vertex_coord, file_dir=file_dir)
         else:
-            segments_idx = len(np.unique(coords[:, 0]))
             vertex_id_1 = -2
             vertex_id_2 = -1
 
@@ -387,7 +528,7 @@ class NumpyToAmira:
             total_vertex = len(np.unique(coords[:, 0])) * 2
             total_edge = len(np.unique(coords[:, 0]))
 
-            for i in labels[1]:
+            for i in labels_segment.values():
                 vertex_label = [f"@{label_id}"]
                 edge_label = [f"@{label_id + 1}"]
 
@@ -404,15 +545,25 @@ class NumpyToAmira:
                 self._write_to_amira(data=vertex_label, file_dir=file_dir)
                 self._write_to_amira(data=edge_label, file_dir=file_dir)
 
-            if isinstance(score, int) and score:
-                for i, s in enumerate(scores[1]):
+            if scores_segment is not None:
+                for i, v in enumerate(scores_segment.values()):
                     label_id = label_id + i
                     edge_score = [f"@{label_id}"]
 
                     for j in range(segments_idx):
-                        edge_score.append(f"{s[j]:.15e}")
+                        edge_score.append(f"{v[j]:.15e}")
 
                     self._write_to_amira(data=edge_score, file_dir=file_dir)
+
+            if scores_points is not None:
+                for i, v in enumerate(scores_points.values()):
+                    label_id = label_id + i
+                    point_score = [f"@{label_id}"]
+
+                    for j in range(point_idx):
+                        point_score.append(f"{v[j]:.15e}")
+
+                    self._write_to_amira(data=point_score, file_dir=file_dir)
 
     def export_amira(
         self,
