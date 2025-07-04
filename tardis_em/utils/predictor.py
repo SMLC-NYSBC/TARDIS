@@ -1388,6 +1388,9 @@ class GeneralPredictor:
         :type overwrite_save: bool
         :return: None
         """
+        if self.segments is None:
+            return
+
         self.log_prediction.append(
             f"Instance Prediction: {i[:-self.in_format]}; Number of segments: {np.max(self.segments[:, 0])+1}"
         )
@@ -1711,10 +1714,10 @@ class GeneralPredictor:
         :param save_progres: Boolean flag indicating whether to overwrite and save the
             progress of processing for each file. Default is False.
         :type save_progres: bool
+
         :return: Depending on the output format, returns semantic segmentation outputs,
             instance segmentation outputs, and instance-filtered outputs in the form
             of lists, where each list entry corresponds to the prediction of an individual file.
-        :rtype: tuple or list
         """
         self.get_file_list()
 
@@ -1861,11 +1864,7 @@ class GeneralPredictor:
                     instance_output.append(np.zeros((0, 4)))
                     instance_filter_output.append(np.zeros((0, 4)))
                 continue
-            else:
-                half_time = round((time.time() - end_predict) / 60, 1)
-                self.log_prediction.append(
-                    f"Instance Prediction Finished in: {half_time} min"
-                )
+
             with open(join(self.am_output, "prediction_log.txt"), "w") as f:
                 f.write(" \n".join(self.log_prediction))
 
@@ -1896,11 +1895,15 @@ class GeneralPredictor:
                 self.log_prediction.append(
                     f"Instance prediction: Not segments could be predicted with point cloud generated from Semantic mask."
                 )
+            else:
+                half_time = round((time.time() - end_predict) / 60, 1)
+                self.log_prediction.append(
+                    f"Instance Prediction Finished in: {half_time} min"
+                )
+
             self.log_prediction.append('\n')
             with open(join(self.am_output, "prediction_log.txt"), "w") as f:
                 f.write(" \n".join(self.log_prediction))
-
-                continue
 
             self.log_tardis(id_, i, log_id=7)
 
@@ -1944,6 +1947,8 @@ class GeneralPredictor:
             if self.output_format.endswith("return"):
                 return semantic_output, instance_output, instance_filter_output
             return semantic_output
+        else:
+            return
 
 
 class Predictor:
