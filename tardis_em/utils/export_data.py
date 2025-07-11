@@ -386,14 +386,12 @@ class NumpyToAmira:
                     label_id += 2
 
             if scores_segment is not None:
-                for i in range(scores_segment[0]):
-                    name_ = scores_segment[1][i]
-                    f.write("EDGE { float " + f"{name_}" + " } " + f"@{label_id} \n")
+                for i in scores_segment:
+                    f.write("EDGE { float " + f"{i}" + " } " + f"@{label_id} \n")
                     label_id = label_id + 1
             if scores_points is not None:
-                for i in range(scores_points[0]):
-                    name_ = scores_points[1][i]
-                    f.write("POINT { float " + f"{name_}" + " } " + f"@{label_id} \n")
+                for i in scores_points:
+                    f.write("POINT { float " + f"{i}" + " } " + f"@{label_id} \n")
                     label_id = label_id + 1
 
             f.write("\n")
@@ -440,25 +438,16 @@ class NumpyToAmira:
 
         if labels_segment is not None:
             labels_segment = {k.rstrip(): v for k, v in labels_segment.items()}
-            for k, v in labels_segment.items():
-                if len(v) != segments_idx:
-                    labels_segment.pop(k)
-            if len(labels_segment) == 0:
-                labels_segment = None
 
         if scores_segment is not None:
             scores_segment = {k.rstrip(): v for k, v in scores_segment.items()}
-            for k, v in scores_segment.items():
-                if len(v) != segments_idx:
-                    scores_segment.pop(k)
+            scores_segment = {k: v for k, v in scores_segment.items() if len(v) == segments_idx}
             if len(scores_segment) == 0:
                 scores_segment = None
 
         if scores_points is not None:
             scores_points = {k.rstrip(): v for k, v in scores_points.items()}
-            for k, v in scores_points.items():
-                if len(v) != point_idx:
-                    scores_points.pop(k)
+            scores_points = {k: v for k, v in scores_points.items() if len(v) == point_idx}
             if len(scores_points) == 0:
                 scores_points = None
 
@@ -466,9 +455,9 @@ class NumpyToAmira:
         self._build_header_V2(
             coord=coords,
             file_dir=file_dir,
-            labels_segment=list(labels_segment.keys()),
-            scores_segment=list(scores_segment.keys()),
-            scores_points=list(scores_points.keys()),
+            labels_segment=list(labels_segment.keys()) if labels_segment is not None else None,
+            scores_segment=list(scores_segment.keys()) if scores_segment is not None else None,
+            scores_points=list(scores_points.keys()) if scores_points is not None else None,
         )
 
         # Save only as a point cloud
@@ -533,7 +522,8 @@ class NumpyToAmira:
                 edge_label = [f"@{label_id + 1}"]
 
                 lable_edge = np.repeat(0, total_edge)
-                lable_edge[i] = 1
+                lable_edge[i.astype(int)] = 1
+
                 edge_label.extend(lable_edge)
 
                 lable_vertex = np.repeat(0, total_vertex)
@@ -541,29 +531,28 @@ class NumpyToAmira:
                 lable_vertex[(i + i + 1).astype(int)] = 1
                 vertex_label.extend(lable_vertex)
                 label_id += 2
-
                 self._write_to_amira(data=vertex_label, file_dir=file_dir)
                 self._write_to_amira(data=edge_label, file_dir=file_dir)
 
             if scores_segment is not None:
-                for i, v in enumerate(scores_segment.values()):
-                    label_id = label_id + i
+                for v in scores_segment.values():
                     edge_score = [f"@{label_id}"]
 
-                    for j in range(segments_idx):
-                        edge_score.append(f"{v[j]:.15e}")
+                    for j in v:
+                        edge_score.append(f"{j:.15e}")
 
                     self._write_to_amira(data=edge_score, file_dir=file_dir)
+                    label_id += 1
 
             if scores_points is not None:
-                for i, v in enumerate(scores_points.values()):
-                    label_id = label_id + i
+                for v in scores_points.values():
                     point_score = [f"@{label_id}"]
 
-                    for j in range(point_idx):
-                        point_score.append(f"{v[j]:.15e}")
+                    for j in v:
+                        point_score.append(f"{j:.15e}")
 
                     self._write_to_amira(data=point_score, file_dir=file_dir)
+                    label_id += 1
 
     def export_amira(
         self,
