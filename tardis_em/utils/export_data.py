@@ -335,22 +335,24 @@ class NumpyToAmira:
             f.write("    Units { \n" '        Coordinates "Å" \n' "    } \n")
             if not self.as_point_cloud:
                 f.write("    SpatialGraphUnitsVertex { \n")
-                for i in labels_segment:
-                    f.write(
-                        f"        {i}" + " { \n"
-                        "            Unit -1, \n"
-                        "            Dimension -1 \n"
-                        "        } \n"
-                    )
+                if labels_segment is not None:
+                    for i in labels_segment:
+                        f.write(
+                            f"        {i}" + " { \n"
+                                             "            Unit -1, \n"
+                                             "            Dimension -1 \n"
+                                             "        } \n"
+                        )
                 f.write("    } \n")
                 f.write("    SpatialGraphUnitsEdge { \n")
-                for i in labels_segment:
-                    f.write(
-                        f"        {i}" + " { \n"
-                        "            Unit -1, \n"
-                        "            Dimension -1 \n"
-                        "        } \n"
-                    )
+                if labels_segment is not None:
+                    for i in labels_segment:
+                        f.write(
+                            f"        {i}" + " { \n"
+                            "            Unit -1, \n"
+                            "            Dimension -1 \n"
+                            "        } \n"
+                        )
                 f.write("    } \n")
                 f.write("    SpatialGraphUnitsPoint { \n")
                 f.write("        thickness { \n")
@@ -358,17 +360,18 @@ class NumpyToAmira:
                 f.write("            Dimension -1 \n")
                 f.write("        } \n")
                 f.write("    } \n")
-                for id_, i in enumerate(labels_segment):
-                    f.write(
-                        f"    {i}" + " { \n"
-                        "		Label0" + " { \n"
-                        "			Color 1 0.5 0.5, \n"
-                        f"          Id {id_ + 1} \n"
-                        "     } \n"
-                        "        Id 0, \n"
-                        "        Color 1 0 0 \n"
-                        "    } \n"
-                    )
+                if labels_segment is not None:
+                    for id_, i in enumerate(labels_segment):
+                        f.write(
+                            f"    {i}" + " { \n"
+                            "		Label0" + " { \n"
+                            "			Color 1 0.5 0.5, \n"
+                            f"          Id {id_ + 1} \n"
+                            "     } \n"
+                            "        Id 0, \n"
+                            "        Color 1 0 0 \n"
+                            "    } \n"
+                        )
             f.write('	ContentType "HxSpatialGraph" \n' "} \n")
             f.write("\n")
             f.write(
@@ -380,10 +383,11 @@ class NumpyToAmira:
 
             label_id = 5
             if not self.as_point_cloud:
-                for i in labels_segment:
-                    f.write("VERTEX { int " + f"{i}" + "} " + f"@{label_id} \n")
-                    f.write("EDGE { int " + f"{i}" + "} " + f"@{label_id + 1} \n")
-                    label_id += 2
+                if labels_segment is not None:
+                    for i in labels_segment:
+                        f.write("VERTEX { int " + f"{i}" + "} " + f"@{label_id} \n")
+                        f.write("EDGE { int " + f"{i}" + "} " + f"@{label_id + 1} \n")
+                        label_id += 2
 
             if scores_segment is not None:
                 for i in scores_segment:
@@ -514,25 +518,26 @@ class NumpyToAmira:
 
             # Write down all labels
             label_id = 5
-            total_vertex = len(np.unique(coords[:, 0])) * 2
-            total_edge = len(np.unique(coords[:, 0]))
+            if labels_segment is not None:
+                total_vertex = len(np.unique(coords[:, 0])) * 2
+                total_edge = len(np.unique(coords[:, 0]))
 
-            for i in labels_segment.values():
-                vertex_label = [f"@{label_id}"]
-                edge_label = [f"@{label_id + 1}"]
+                for i in labels_segment.values():
+                    vertex_label = [f"@{label_id}"]
+                    edge_label = [f"@{label_id + 1}"]
 
-                lable_edge = np.repeat(0, total_edge)
-                lable_edge[i.astype(int)] = 1
+                    lable_edge = np.repeat(0, total_edge)
+                    lable_edge[i.astype(int)] = 1
 
-                edge_label.extend(lable_edge)
+                    edge_label.extend(lable_edge)
 
-                lable_vertex = np.repeat(0, total_vertex)
-                lable_vertex[(i*2).astype(int)] = 1
-                lable_vertex[(i + i + 1).astype(int)] = 1
-                vertex_label.extend(lable_vertex)
-                label_id += 2
-                self._write_to_amira(data=vertex_label, file_dir=file_dir)
-                self._write_to_amira(data=edge_label, file_dir=file_dir)
+                    lable_vertex = np.repeat(0, total_vertex)
+                    lable_vertex[(i*2).astype(int)] = 1
+                    lable_vertex[(i + i + 1).astype(int)] = 1
+                    vertex_label.extend(lable_vertex)
+                    label_id += 2
+                    self._write_to_amira(data=vertex_label, file_dir=file_dir)
+                    self._write_to_amira(data=edge_label, file_dir=file_dir)
 
             if scores_segment is not None:
                 for v in scores_segment.values():
