@@ -5,7 +5,7 @@
 #  Simons Machine Learning Center                                     #
 #                                                                     #
 #  Robert Kiewisz, Tristan Bepler                                     #
-#  MIT License 2021 - 2024                                            #
+#  MIT License 2021 - 2025                                            #
 #######################################################################
 import json
 import sys
@@ -348,10 +348,26 @@ class GeneralPredictor:
                         )
                         model_version = model_version[-1]
                     except:
-                        if isfile(join(expanduser("~"), ".tardis_em", "fnet_attn_32", model, "model_version.json")):
-                            model_version = json.load(open(
-                                join(expanduser("~"), ".tardis_em", "fnet_attn_32", model, "model_version.json")
-                            ))
+                        if isfile(
+                            join(
+                                expanduser("~"),
+                                ".tardis_em",
+                                "fnet_attn_32",
+                                model,
+                                "model_version.json",
+                            )
+                        ):
+                            model_version = json.load(
+                                open(
+                                    join(
+                                        expanduser("~"),
+                                        ".tardis_em",
+                                        "fnet_attn_32",
+                                        model,
+                                        "model_version.json",
+                                    )
+                                )
+                            )
                             model_version = model_version["version"]
                         else:
                             model_version = "Local"
@@ -1253,7 +1269,9 @@ class GeneralPredictor:
 
         if log_id == 7:
             if self.segments is not None:
-                no_segments = np.max(self.segments[:, 0]) if len(self.segments) > 0 else 0
+                no_segments = (
+                    np.max(self.segments[:, 0]) if len(self.segments) > 0 else 0
+                )
             else:
                 no_segments = "None"
         else:
@@ -1405,8 +1423,10 @@ class GeneralPredictor:
             "Microtubule_tirf",
         ]:
             try:
-                self.segments_filter = self.filter_splines(segments=self.segments,
-                                                           px=None if self.predict == "Microtubule_tirf" else self.px)
+                self.segments_filter = self.filter_splines(
+                    segments=self.segments,
+                    px=None if self.predict == "Microtubule_tirf" else self.px,
+                )
                 self.segments_filter = sort_by_length(self.segments_filter)
 
                 self.log_prediction.append(
@@ -1904,7 +1924,7 @@ class GeneralPredictor:
                     f"Instance Prediction Finished in: {half_time} min"
                 )
 
-            self.log_prediction.append('\n')
+            self.log_prediction.append("\n")
             with open(join(self.am_output, "prediction_log.txt"), "w") as f:
                 f.write(" \n".join(self.log_prediction))
 

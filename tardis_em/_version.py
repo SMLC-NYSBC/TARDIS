@@ -5,7 +5,7 @@
 #  Simons Machine Learning Center                                     #
 #                                                                     #
 #  Robert Kiewisz, Tristan Bepler                                     #
-#  MIT License 2021 - 2024                                            #
+#  MIT License 2021 - 2025                                            #
 # #####################################################################
 
-version = "0.3.18"
+version = "0.3.19"

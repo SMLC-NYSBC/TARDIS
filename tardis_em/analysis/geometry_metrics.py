@@ -5,7 +5,7 @@
 #  Simons Machine Learning Center                                     #
 #                                                                     #
 #  Robert Kiewisz, Tristan Bepler                                     #
-#  MIT License 2021 - 2024                                            #
+#  MIT License 2021 - 2025                                            #
 #######################################################################
 from typing import Union
 
@@ -300,10 +300,10 @@ def intensity(data: np.ndarray, image: np.ndarray, thickness=1) -> tuple:
 
     # Determined avg. background level
     spline_up = np.copy(pixel_coords_bg)
-    spline_up[:, 1] = spline_up[:, 1] + thickness[1]
+    spline_up[:, 1] = spline_up[:, 1] + (thickness[1] * 2)
 
     spline_down = np.copy(pixel_coords_bg)
-    spline_down[:, 1] = spline_down[:, 1] - thickness[1]
+    spline_down[:, 1] = spline_down[:, 1] - (thickness[1] * 2)
 
     # Extract the pixel values along the spline
     intensity_up = pixel_intensity(spline_up, image)
@@ -408,7 +408,9 @@ def thicken_line_coordinates(coords: np.ndarray, thickness: int):
     return np.array(list(thickened_coords))
 
 
-def intensity_list(coord: np.ndarray, image: np.ndarray, thickness=1):
+def intensity_list(
+    coord: np.ndarray, image: np.ndarray, thickness=1, normalize_image=False
+):
     """
     Extracts intensity values along spline coordinates from the given image.
 
@@ -432,12 +434,14 @@ def intensity_list(coord: np.ndarray, image: np.ndarray, thickness=1):
     """
     norm = MinMaxNormalize()
     spline_intensity_list_m, spline_intensity_list_s = [], []
-    image = norm(image)
+    if normalize_image:
+        image = norm(image)
 
     for i in np.unique(coord[:, 0]):
         points = coord[np.where(coord[:, 0] == i)[0], 1:]
         if len(points) > 5:
             m, s = intensity(points, image, thickness)
+
             spline_intensity_list_m.append(m)
             spline_intensity_list_s.append(s)
         else:
@@ -447,7 +451,9 @@ def intensity_list(coord: np.ndarray, image: np.ndarray, thickness=1):
     return spline_intensity_list_m, spline_intensity_list_s
 
 
-def calculate_spline_correlations(image_stack, spline_coords, frame_id, thickness=[1, 1]):
+def calculate_spline_correlations(
+    image_stack, spline_coords, frame_id, thickness=[1, 1]
+):
     norm = MinMaxNormalize()
     frame_ref = norm(image_stack[frame_id])
 
@@ -504,19 +510,29 @@ def calculate_spline_correlations(image_stack, spline_coords, frame_id, thicknes
         correlations_px[int(spline_id)]["reference"] = [float(f) for f in ref_intensity]
         correlations_px[int(spline_id)]["MT"] = {}
         for i in range(N):
-            spline_intensity = pixel_intensity(pixel_coords, norm(image_stack[i])) - spline_background
+            spline_intensity = (
+                pixel_intensity(pixel_coords, norm(image_stack[i])) - spline_background
+            )
 
             if i == frame_id:
-                correlations_px[int(spline_id)]["MT"][i] = [0.0 for f in spline_intensity]
+                correlations_px[int(spline_id)]["MT"][i] = [
+                    0.0 for f in spline_intensity
+                ]
                 correlations[int(spline_id), i] = 0.0
             else:
-                correlations[int(spline_id), i] = np.corrcoef(ref_intensity, spline_intensity)[0, 1]
-                correlations_px[int(spline_id)]["MT"][i] = [float(f) for f in spline_intensity]
+                correlations[int(spline_id), i] = np.corrcoef(
+                    ref_intensity, spline_intensity
+                )[0, 1]
+                correlations_px[int(spline_id)]["MT"][i] = [
+                    float(f) for f in spline_intensity
+                ]
 
     return correlations, correlations_px
 
 
-def group_points_by_distance(points: np.ndarray, eps: float = 'auto', min_samples: int = 1) -> list[list[int]]:
+def group_points_by_distance(
+    points: np.ndarray, eps: float = "auto", min_samples: int = 1
+) -> list[list[int]]:
     """
     Groups 3D points based on spatial proximity using DBSCAN.
 
@@ -529,7 +545,7 @@ def group_points_by_distance(points: np.ndarray, eps: float = 'auto', min_sample
     coords = points[:, 1:]  # 3D coordinates
 
     # Auto-threshold calculation
-    if eps == 'auto':
+    if eps == "auto":
         pairwise_distances = pdist(coords)
         median_distance = np.median(pairwise_distances)
         eps = median_distance / 2

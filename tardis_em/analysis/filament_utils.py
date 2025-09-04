@@ -5,7 +5,7 @@
 #  Simons Machine Learning Center                                     #
 #                                                                     #
 #  Robert Kiewisz, Tristan Bepler                                     #
-#  MIT License 2021 - 2024                                            #
+#  MIT License 2021 - 2025                                            #
 #######################################################################
 from typing import Optional, Union
 
@@ -52,7 +52,7 @@ def resample_filament(points, spacing_size) -> np.ndarray:
     # Get unique IDs
     unique_ids = np.unique(points[:, 0])
 
-    if spacing_size == 'auto':
+    if spacing_size == "auto":
         length_max = np.max(length_list(points))
         spacing_size_ = int(0.01 * length_max)
     else:

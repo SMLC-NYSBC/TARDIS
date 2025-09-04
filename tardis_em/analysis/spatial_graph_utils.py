@@ -5,7 +5,7 @@
 #  Simons Machine Learning Center                                     #
 #                                                                     #
 #  Robert Kiewisz, Tristan Bepler                                     #
-#  MIT License 2021 - 2024                                            #
+#  MIT License 2021 - 2025                                            #
 #######################################################################
 from typing import Tuple
 
@@ -16,7 +16,7 @@ from tardis_em.analysis.filament_utils import (
     cut_at_degree,
     reorder_segments_id,
     sort_segment,
-    resample_filament
+    resample_filament,
 )
 from tardis_em.analysis.geometry_metrics import total_length
 from tardis_em.utils.errors import TardisError

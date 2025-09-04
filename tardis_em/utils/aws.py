@@ -5,7 +5,7 @@
 #  Simons Machine Learning Center                                     #
 #                                                                     #
 #  Robert Kiewisz, Tristan Bepler                                     #
-#  MIT License 2021 - 2024                                            #
+#  MIT License 2021 - 2025                                            #
 #######################################################################
 
 import io
@@ -261,7 +261,7 @@ def get_weights_aws(
 
         # Save version
         with open(join(dir_, "model_version.json"), "w") as f:
-            json.dump({'version': version}, f)
+            json.dump({"version": version}, f)
 
         """Save temp weights"""
         if not isdir(join(expanduser("~"), ".tardis_em")):

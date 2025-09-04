@@ -5,7 +5,7 @@
 #  Simons Machine Learning Center                                     #
 #                                                                     #
 #  Robert Kiewisz, Tristan Bepler                                     #
-#  MIT License 2021 - 2024                                            #
+#  MIT License 2021 - 2025                                            #
 #######################################################################
 
 import re
@@ -662,6 +662,7 @@ def mrc_mode(mode: int, amin: int):
     else:
         if mode in [np.int8, np.uint8]:
             return 0
+
         for name in dtype_m:
             if mode == dtype_m[name]:
                 return name

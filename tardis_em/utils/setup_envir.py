@@ -5,11 +5,11 @@
 #  Simons Machine Learning Center                                     #
 #                                                                     #
 #  Robert Kiewisz, Tristan Bepler                                     #
-#  MIT License 2021 - 2024                                            #
+#  MIT License 2021 - 2025                                            #
 #######################################################################
 
 import glob
-from os import listdir, mkdir, rename
+from os import listdir, mkdir, rename, chmod
 from os.path import isdir, join
 from shutil import rmtree
 from typing import Union
@@ -85,6 +85,9 @@ def build_temp_dir(dir_s: str):
 
     if not isdir(join(dir_s, "Predictions")):
         mkdir(join(dir_s, "Predictions"))
+    chmod(join(dir_s, "Predictions"), 0o777)
+    chmod(join(dir_s, "temp"), 0o777)
+    chmod(join(dir_s, "temp", "Patches"), 0o777)
 
 
 def clean_up(dir_s: str):

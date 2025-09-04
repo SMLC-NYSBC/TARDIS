@@ -5,7 +5,7 @@
 #  Simons Machine Learning Center                                     #
 #                                                                     #
 #  Robert Kiewisz, Tristan Bepler                                     #
-#  MIT License 2021 - 2024                                            #
+#  MIT License 2021 - 2025                                            #
 #######################################################################
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
@@ -384,14 +384,18 @@ def assign_filaments_to_n_poles(filaments, poles):
     filament_pole_lists = [[] for _ in range(poles.shape[0])]
 
     # Process each filament
-    for idx, (start_idx, end_idx, filament_id) in enumerate(zip(index_starts, end_indices, unique_ids)):
+    for idx, (start_idx, end_idx, filament_id) in enumerate(
+        zip(index_starts, end_indices, unique_ids)
+    ):
         # Extract all points for the current filament
-        filament_points = filaments[start_idx:end_idx + 1]
+        filament_points = filaments[start_idx : end_idx + 1]
         filament_coords = filament_points[:, 1:4]
 
         # Calculate distances from all points to all poles
         differences = filament_coords[:, np.newaxis, :] - poles[np.newaxis, :, :]
-        distances = np.linalg.norm(differences, axis=-1)  # Shape: [num_points, num_poles]
+        distances = np.linalg.norm(
+            differences, axis=-1
+        )  # Shape: [num_points, num_poles]
 
         # Find minimal distance to each pole
         min_distances = np.min(distances, axis=0)  # Shape: [num_poles]

@@ -5,7 +5,7 @@
 #  Simons Machine Learning Center                                     #
 #                                                                     #
 #  Robert Kiewisz, Tristan Bepler                                     #
-#  MIT License 2021 - 2024                                            #
+#  MIT License 2021 - 2025                                            #
 #######################################################################
 import codecs
 import time
@@ -323,7 +323,7 @@ class NumpyToAmira:
                 f.write("\n")
                 f.write("# TARDIS-em history: \n")
                 for h in history:
-                    f.write('# ' + h + '\n')
+                    f.write("# " + h + "\n")
             f.write("\n")
             f.write(
                 f"define VERTEX {vertex} \n"
@@ -339,9 +339,9 @@ class NumpyToAmira:
                     for i in labels_segment:
                         f.write(
                             f"        {i}" + " { \n"
-                                             "            Unit -1, \n"
-                                             "            Dimension -1 \n"
-                                             "        } \n"
+                            "            Unit -1, \n"
+                            "            Dimension -1 \n"
+                            "        } \n"
                         )
                 f.write("    } \n")
                 f.write("    SpatialGraphUnitsEdge { \n")
@@ -429,13 +429,14 @@ class NumpyToAmira:
             for i in data:
                 f.write(f"{i} \n")
 
-    def export_amiraV2(self,
-                       file_dir: str,
-                       coords=np.ndarray,
-                       labels_segment: dict = None,
-                       scores_segment: dict = None,
-                       scores_points: dict = None,
-                       ):
+    def export_amiraV2(
+        self,
+        file_dir: str,
+        coords=np.ndarray,
+        labels_segment: dict = None,
+        scores_segment: dict = None,
+        scores_points: dict = None,
+    ):
         coords = self.check_3d(coord=coords)[0]
         segments_idx = len(np.unique(coords[:, 0]))
         point_idx = len(coords)
@@ -445,13 +446,17 @@ class NumpyToAmira:
 
         if scores_segment is not None:
             scores_segment = {k.rstrip(): v for k, v in scores_segment.items()}
-            scores_segment = {k: v for k, v in scores_segment.items() if len(v) == segments_idx}
+            scores_segment = {
+                k: v for k, v in scores_segment.items() if len(v) == segments_idx
+            }
             if len(scores_segment) == 0:
                 scores_segment = None
 
         if scores_points is not None:
             scores_points = {k.rstrip(): v for k, v in scores_points.items()}
-            scores_points = {k: v for k, v in scores_points.items() if len(v) == point_idx}
+            scores_points = {
+                k: v for k, v in scores_points.items() if len(v) == point_idx
+            }
             if len(scores_points) == 0:
                 scores_points = None
 
@@ -459,9 +464,15 @@ class NumpyToAmira:
         self._build_header_V2(
             coord=coords,
             file_dir=file_dir,
-            labels_segment=list(labels_segment.keys()) if labels_segment is not None else None,
-            scores_segment=list(scores_segment.keys()) if scores_segment is not None else None,
-            scores_points=list(scores_points.keys()) if scores_points is not None else None,
+            labels_segment=(
+                list(labels_segment.keys()) if labels_segment is not None else None
+            ),
+            scores_segment=(
+                list(scores_segment.keys()) if scores_segment is not None else None
+            ),
+            scores_points=(
+                list(scores_points.keys()) if scores_points is not None else None
+            ),
         )
 
         # Save only as a point cloud
@@ -532,7 +543,7 @@ class NumpyToAmira:
                     edge_label.extend(lable_edge)
 
                     lable_vertex = np.repeat(0, total_vertex)
-                    lable_vertex[(i*2).astype(int)] = 1
+                    lable_vertex[(i * 2).astype(int)] = 1
                     lable_vertex[(i + i + 1).astype(int)] = 1
                     vertex_label.extend(lable_vertex)
                     label_id += 2
@@ -755,6 +766,8 @@ def to_mrc(
 
     :return: None
     """
+    data = np.ascontiguousarray(data)
+
     mode = mrc_mode(mode=data.dtype, amin=data.min())
     time_ = time.asctime()
 
