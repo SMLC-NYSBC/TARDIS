@@ -79,7 +79,7 @@ class TardisLogo:
         if is_interactive():
             self.CLEAR = lambda: clear_output(wait=True)
 
-        self.FN = "TARDIS-pytorch Copyright Information:"
+        self.FN = "TARDIS-em Copyright Information:"
         self.C = "Copyright (c) 2021 Robert Kiewisz, Tristan Bepler"
 
         self.logo = logo

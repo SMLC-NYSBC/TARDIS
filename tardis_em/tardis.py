@@ -62,7 +62,7 @@ def main(func=None, dir_=None, pixel_size=None):
             text_1="TARDIS detected no GPU support :(",
             text_3="Do not panic! Please uninstall pytorch,",
             text_4="and follow official instruction from https://pytorch.org",
-            text_7="rkiewisz@nysbc.org | tbepler@nysbc.org",
+            text_7="robert.kiewisz@gmail.com | tbepler@nysbc.org",
             text_8="Join Slack community: https://tardis-em.slack.com",
         )
         time.sleep(10)
@@ -75,7 +75,7 @@ def main(func=None, dir_=None, pixel_size=None):
             text_0="WELCOME to TARDIS!",
             text_1="TARDIS is fully automatic segmentation software no need for model training!",
             text_3="Contact developers if segmentation of your organelle is not supported! ",
-            text_4="rkiewisz@nysbc.org | tbepler@nysbc.org",
+            text_4="robert.kiewisz@gmail.com | tbepler@nysbc.org",
             text_5="Join Slack community: https://tardis-em.slack.com",
             text_7="FUNCTIONALITY:",
             text_8="To predict microtubule and filament instances:",

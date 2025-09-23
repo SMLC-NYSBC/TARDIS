@@ -227,7 +227,7 @@ def main(
     test_click=False,
 ):
     """
-    MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
+    MAIN MODULE FOR PREDICTION MT WITH TARDIS-EM
     """
     cleanup_list = []
 
@@ -282,33 +282,34 @@ def main(
     if not test_click:
         predictor()
 
-        # Cleanup move tiffs to the Predictions directory
-        images = []
-        for i in cleanup_list:
-            f_name = dirname(i)
-            images.append(tiff.imread(i))
+        if len(nd2_files) > 0:
+            # Cleanup move tiffs to the Predictions directory
+            images = []
+            for i in cleanup_list:
+                f_name = dirname(i)
+                images.append(tiff.imread(i))
 
-            os.rename(i, join(f_name, "Predictions", splitext(basename(i))[0]) + ".tif")
+                os.rename(i, join(f_name, "Predictions", splitext(basename(i))[0]) + ".tif")
 
-        # Analyze length, average intensity along the spline,
-        name_s = find_filtered_files(
-            join(dirname(path), "Predictions"), prefix="instances_filter"
-        )
-        data = []
-        for d in name_s:
-            d = np.genfromtxt(d, delimiter=",")
+            # Analyze length, average intensity along the spline,
+            name_s = find_filtered_files(
+                join(dirname(path), "Predictions"), prefix="instances_filter"
+            )
+            data = []
+            for d in name_s:
+                d = np.genfromtxt(d, delimiter=",")
 
-            if str(d[0, 0]) == "nan":
-                d = d[1:, :]
-            data.append(d)
+                if str(d[0, 0]) == "nan":
+                    d = d[1:, :]
+                data.append(d)
 
-        analyse_filaments_list(
-            data=data,
-            names_l=name_s,
-            path=join(path, "Predictions"),
-            images=images,
-            px=None,
-        )
+            analyse_filaments_list(
+                data=data,
+                names_l=name_s,
+                path=join(path, "Predictions"),
+                images=images,
+                px=None,
+            )
 
 
 if __name__ == "__main__":

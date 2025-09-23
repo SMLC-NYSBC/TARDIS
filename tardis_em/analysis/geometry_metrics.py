@@ -36,7 +36,7 @@ def curvature(coord: np.ndarray, tortuosity_b=False) -> Union[float, tuple]:
         element and the tortuosity value as the second element.
     """
     # try:
-    tck, u = splprep(coord.T, s=1)
+    tck, u = splprep(coord.T, s=None)
 
     # Calculate the first, second, and third derivatives
     der1 = splev(u, tck, der=1)  # First derivative (velocity)
@@ -288,12 +288,12 @@ def intensity(data: np.ndarray, image: np.ndarray, thickness=1) -> tuple:
     pixel_coords = np.unique(pixel_coords, axis=0)
 
     if thickness[1] > 1:
-        pixel_coords_bg = thicken_line_coordinates(pixel_coords, thickness[1])
+        pixel_coords_bg = np.copy(thicken_line_coordinates(pixel_coords, thickness[1]))
     else:
         pixel_coords_bg = np.copy(pixel_coords)
 
     if thickness[0] > 1:
-        pixel_coords = thicken_line_coordinates(pixel_coords, thickness[0])
+        pixel_coords = np.copy(thicken_line_coordinates(pixel_coords, thickness[0]))
 
     # Extract the pixel values along the spline
     spline_intensity = pixel_intensity(pixel_coords, image)
@@ -364,11 +364,16 @@ def pixel_intensity(coord: np.ndarray, image: np.ndarray) -> Union[list, None]:
             else:
                 extracted_pixels.append(None)
 
+    # Replace None value with mean value from the extracted pixels
     if None in extracted_pixels:
         try:
-            min_value = min(item for item in extracted_pixels if item is not None)
+            clean_vals = [v for v in extracted_pixels if v is not None]
+            if not clean_vals:  # avoid division by zero
+                return None
+            extracted_mean = sum(clean_vals) / len(clean_vals)
+
             extracted_pixels = [
-                min_value if item is None else item for item in extracted_pixels
+                extracted_mean if item is None else item for item in extracted_pixels
             ]
         except ValueError:
             extracted_pixels = None
@@ -439,6 +444,7 @@ def intensity_list(
 
     for i in np.unique(coord[:, 0]):
         points = coord[np.where(coord[:, 0] == i)[0], 1:]
+
         if len(points) > 5:
             m, s = intensity(points, image, thickness)
 
@@ -503,11 +509,18 @@ def calculate_spline_correlations(
         else:
             spline_background = 0.0
 
+        def is_floatable(x):
+            try:
+                float(x)
+                return True
+            except (TypeError, ValueError):
+                return False
+
         # Get reference sequence at frame_id
         ref_intensity = pixel_intensity(pixel_coords, frame_ref) - spline_background
 
         correlations_px[int(spline_id)] = {}
-        correlations_px[int(spline_id)]["reference"] = [float(f) for f in ref_intensity]
+        correlations_px[int(spline_id)]["reference"] = [float(f) if is_floatable(f) else 0.0 for f in ref_intensity]
         correlations_px[int(spline_id)]["MT"] = {}
         for i in range(N):
             spline_intensity = (

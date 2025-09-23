@@ -889,10 +889,7 @@ def to_am(data: np.ndarray, pixel_size: float, file_dir: str, header: list = Non
     :return: None
     """
     nz, ny, nx = data.shape
-    xLen, yLen, zLen = nx * pixel_size, ny * pixel_size, nz * pixel_size
-
-    if header is not None:
-        header = ["# " + h if not h.startswith("#") else h for h in header]
+    xLen, yLen, zLen = (nx - 1) * pixel_size, (ny - 1) * pixel_size, (nz - 1) * pixel_size
 
     am = [
         "# AmiraMesh BINARY-LITTLE-ENDIAN 3.0",
@@ -900,10 +897,12 @@ def to_am(data: np.ndarray, pixel_size: float, file_dir: str, header: list = Non
         f"# tardis_em-pytorch v{version}",
         f"# MIT License * 2021-{datetime.now().year} * Robert Kiewisz & Tristan Bepler",
     ]
+
     if header is not None:
+        header = ["# " + h if not h.startswith("#") else h for h in header]
         am = am + header
+
     am = am + [
-        header,
         "",
         "",
         f"define Lattice {nx} {ny} {nz}",
@@ -927,9 +926,11 @@ def to_am(data: np.ndarray, pixel_size: float, file_dir: str, header: list = Non
     with codecs.open(file_dir, mode="w", encoding="utf-8") as f:
         for i in am:
             f.write(f"{i} \n")
+
     with codecs.open(file_dir, mode="ab+") as f:
         bytes_data = data.flatten().tobytes()
         f.write(BytesIO(bytes_data).getbuffer())
+        f.write(b"\n")
 
 
 def to_stl(data: np.ndarray, file_dir: str):

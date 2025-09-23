@@ -196,7 +196,7 @@ def main(
     test_click=False,
 ):
     """
-    MAIN MODULE FOR PREDICTION MT WITH TARDIS-PYTORCH
+    MAIN MODULE FOR PREDICTION MT WITH TARDIS-EM
     """
     if output_format.split("_")[1] == "None":
         instances = False

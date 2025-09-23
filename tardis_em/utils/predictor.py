@@ -310,12 +310,11 @@ class GeneralPredictor:
             dir_ = getcwd()
 
         main_ = [
-            "# ASCII Spatial Graph",
-            "# TARDIS - Transformer And Rapid Dimensionless Instance Segmentation (R)",
-            f"# tardis_em-pytorch v{version} \r",
-            f"# MIT License * 2021-{datetime.now().year} * "
-            "Robert Kiewisz & Tristan Bepler",
-            "Robert Kiewisz & Tristan Bepler",
+            "###############################################################################",
+            "# TARDIS - Transformer And Rapid Dimensionless Instance Segmentation (R)      #",
+            f"# tardis_em v{version}                                                           #",
+            f"# MIT License * 2021-{datetime.now().year} | Robert Kiewisz & Tristan Bepler                   #",
+            "###############################################################################",
             "",
             f"Directory: {dir_}",
             f"Output Format: {self.output_format}",
@@ -1859,6 +1858,18 @@ class GeneralPredictor:
                     sys.exit()
 
                 # Save predicted mask as file
+                if self.image.ndim == 3:
+                    _, y_dim, x_dim = self.image.shape
+                else:
+                    y_dim, x_dim = self.image.shape
+                y_pad = max(1, min(5, int(round(y_dim * 0.01))))
+                x_pad = max(1, min(5, int(round(x_dim * 0.01))))
+
+                self.image[..., :x_pad] = 0
+                self.image[..., -x_pad:] = 0
+                self.image[..., :y_pad, :] = 0
+                self.image[..., -y_pad:, :] = 0
+
                 self.save_semantic_mask(i)
 
                 # Sanity check for binary mask

@@ -726,7 +726,6 @@ def load_am(am_file: str):
         ).split(" ")
 
         physical_size = np.array((float(bb[6]), float(bb[8]), float(bb[10][:-3])))
-
         transformation = np.array((float(bb[5]), float(bb[7]), float(bb[9])))
 
     try:
@@ -743,7 +742,6 @@ def load_am(am_file: str):
     else:
         pixel_size = (physical_size[0] - transformation[0]) / (nx - 1)
 
-    physical_size = (physical_size[0] - transformation[0]) / (nx - 1)
     pixel_size = np.round(pixel_size, 3)
 
     if "Lattice { byte Data }" in am or "Lattice { float Data }" in am:
@@ -778,27 +776,13 @@ def load_am(am_file: str):
         )
         return None
 
-    if dtype_ != np.float32:
-        binary_start = str.find(am, "\n@1\n") + 4
-        img = img[binary_start:-1]
-    if nz == 1:
-        if len(img) == ny * nx:
-            img = img.reshape((ny, nx))
-        else:
-            df_img = np.zeros((ny * nx), dtype=dtype_)
-            df_img[: len(img)] = img
-            img = df_img.reshape((ny, nx))
-    else:
-        if len(img) == nz * ny * nx:
-            img = img.reshape((nz, ny, nx))
-            # if dtype_ == np.float32:
-            # img = np.flip(img, 0)
-        else:
-            df_img = np.zeros((nz * ny * nx), dtype=dtype_)
-            df_img[: len(img)] = img
-            img = df_img.reshape((nz, ny, nx))
+    byte_length = nx * ny * nz
+    if len(img) >= byte_length:
+        img = img[-byte_length:].reshape((nz, ny, nx))
 
-    return img, pixel_size, physical_size, transformation
+        return img, pixel_size, physical_size, transformation
+    else:
+        return None
 
 
 def load_am_surf(surf_file: str, simplify_f=None) -> Tuple:

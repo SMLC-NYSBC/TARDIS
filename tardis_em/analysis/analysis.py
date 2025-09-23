@@ -185,10 +185,9 @@ def save_analysis(
 
     if save is not None:
         date = datetime.now()
-        tardis_version = version
 
-        file_name = f"TARDIS_V{tardis_version}_analysis_{date.day}_{date.month}_{date.year}-{date.hour}_{date.minute}.csv"
-        header = [
+        file_name = f"{names[0]}.csv"
+        header_pd = [
             "File_Name",
             "No. of Filament",
             "Pixel_Size [nm]",
@@ -200,7 +199,7 @@ def save_analysis(
             "Sum. Intensity [U]",
             "Sum. Intensity / Length [U/nm]",
         ]
-        header = header + [
+        header_pd = header_pd + [
             f"Correlation [Pearson] CH_{i}" for i in range(correlation_len)
         ]
 
@@ -226,17 +225,17 @@ def save_analysis(
             ]
 
             if 10 in keep_:
-                keep = keep_.extend([i for i in remove_ if i > 10])
+                keep_ = keep_.extend([i for i in remove_ if i > 10])
                 remove_ = [i for i in remove_ if i < 10]
             analysis_file = np.delete(analysis_file, remove_, axis=1)
 
-            header = header + [f"Correlation [Pearson] CH_{i}" for i in range(2)]
-            header = [h for id, h in enumerate(header) if id in keep_]
+            header_pd = header_pd + [f"Correlation [Pearson] CH_{i}" for i in range(2)]
+            header_pd = [h for id, h in enumerate(header_pd) if id in keep_]
 
         segments = pd.DataFrame(analysis_file)
         segments.to_csv(
             join(save, file_name),
-            header=header,
+            header=header_pd,
             index=False,
             sep=",",
         )

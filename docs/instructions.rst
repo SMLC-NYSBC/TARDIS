@@ -11,13 +11,17 @@ Option 1:
 ---------
 Install TARDIS using the newest released package from `Github <https://github.com/SMLC-NYSBC/TARDIS/releases>`__
 
+1. Set-up new conda enviroemnt
+
 .. code-block:: bash
 
-    pip install package_name-py3-none-any.whl
+    conda create -n tardis python=3.11
+    conda activate tardis
 
-or
+2. Install pytorch with GPU support as per Pytorch official website: https://pytorch.org/get-started/locally/
 
--  Install pytorch with GPU support as per Pytorch official website: https://pytorch.org/get-started/locally/
+
+3. Install TARDIS
 
 .. code-block:: bash
 
@@ -74,12 +78,6 @@ The following command will install TARDIS and all its dependencies
 .. code-block:: bash
 
     pip install tardis-em
-
-or
-
-.. code-block:: bash
-
-    conda install tardis-em
 
 
 (Optional) Install from GitHub master branch:
