@@ -14,8 +14,8 @@ from os.path import join
 import click
 
 from tardis_em._version import version
-from tardis_em.stitch_volume.utils import sort_tomogram_files
-from tardis_em.stitch_volume.align_tomograms import AlignTomograms
+from tardis_em_analysis.stitch_volume.utils import sort_tomogram_files
+from tardis_em_analysis.stitch_volume.align_tomograms import AlignTomograms
 
 
 warnings.simplefilter("ignore", UserWarning)
