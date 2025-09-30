@@ -48,14 +48,14 @@ from tardis_em.utils.normalization import (
     adaptive_threshold,
 )
 from tardis_em.utils.setup_envir import build_temp_dir, clean_up
-from tardis_em.analysis.spatial_graph_utils import (
+from tardis_em_analysis.spatial_graph_utils import (
     FilterSpatialGraph,
     FilterConnectedNearSegments,
     SpatialGraphCompare,
     ComputeConfidenceScore,
 )
-from tardis_em.analysis.filament_utils import sort_by_length, resample_filament
-from tardis_em.analysis.geometry_metrics import length_list
+from tardis_em_analysis.filament_utils import sort_by_length, resample_filament
+from tardis_em_analysis.geometry_metrics import length_list
 from tardis_em._version import version
 
 # try:

@@ -4,14 +4,14 @@ Analysis
 
 Analysis -> Analysis wrappers
 =============================
-.. automodule:: tardis_em.analysis.analysis
+.. automodule:: tardis_em_analysis.analysis
 
 Analysis -> Filament Structure
 ==============================
 
-.. automodule:: tardis_em.analysis.filament_structure
+.. automodule:: tardis_em_analysis.filament_structure
 
 Analysis -> Geometry metrics
 ============================
 
-.. automodule:: tardis_em.analysis.geometry_metrics
+.. automodule:: tardis_em_analysis.geometry_metrics

@@ -17,7 +17,7 @@ import numpy as np
 
 from tardis_em.utils.errors import TardisError
 from tardis_em.utils.load_data import mrc_mode, mrc_write_header, MRCHeader
-from tardis_em.analysis.filament_utils import reorder_segments_id
+from tardis_em_analysis.filament_utils import reorder_segments_id
 from tardis_em._version import version
 import shutil
 from io import StringIO

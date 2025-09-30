@@ -24,9 +24,9 @@ from tardis_em.utils.load_data import (
     load_mrc_file,
 )
 from tardis_em.utils.logo import TardisLogo
-from tardis_em.analysis.filament_utils import sort_segment, cut_150_degree
-from tardis_em.analysis.spatial_graph_utils import compare_splines_probability
-from tardis_em.analysis.geometry_metrics import (
+from tardis_em_analysis.filament_utils import sort_segment, cut_150_degree
+from tardis_em_analysis.spatial_graph_utils import compare_splines_probability
+from tardis_em_analysis.geometry_metrics import (
     angle_between_vectors,
     tortuosity,
     total_length,

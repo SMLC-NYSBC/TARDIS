@@ -38,7 +38,7 @@ from tardis_em.utils.device import get_device
 from tardis_em.utils.predictor import Predictor
 from tardis_em.utils.normalization import RescaleNormalize, MeanStdNormalize
 from tardis_em.utils.export_data import to_mrc
-from tardis_em.analysis.filament_utils import sort_by_length
+from tardis_em_analysis.filament_utils import sort_by_length
 
 
 async def get_from_aws(url):

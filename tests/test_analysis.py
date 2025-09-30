@@ -11,7 +11,7 @@
 import pytest
 import numpy as np
 import os
-from tardis_em.analysis.analysis import (
+from tardis_em_analysis.analysis import (
     analyse_filaments,
     save_analysis,
 )

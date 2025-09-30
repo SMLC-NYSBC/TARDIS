@@ -16,7 +16,7 @@ import click
 import numpy as np
 import tifffile.tifffile as tiff
 
-from tardis_em.analysis.analysis import analyse_filaments_list
+from tardis_em_analysis.analysis import analyse_filaments_list
 from tardis_em.utils.predictor import GeneralPredictor
 from tardis_em._version import version
 from tardis_em import format_choices

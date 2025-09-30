@@ -3,7 +3,6 @@
   "ignore": [
     "**/__init__.py",
     "tardis_em/__init__.py",
-    "tardis_em/analysis/__init__.py",
     "tardis_em/tardis/__init__.py",
     "tardis_em/scripts/__init__.py",
     "tardis_em/stitch_volume/__init__.py",
@@ -20,7 +19,6 @@
     "tardis_em/dist_pytorch/utils/__init__.py",
     "tardis_em/benchmarks/__init__.py",
     "tardis_em/dist_pytorch/sparse_model/__init__.py",
-    "tardis_em/analysis/mt_classification/__init__.py",
     "docs/",
     "doc/"
   ]

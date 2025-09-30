@@ -13,7 +13,7 @@ import click
 import numpy as np
 import os
 
-from tardis_em.analysis.mt_classification.mt_classes import MicrotubuleClassifier
+from tardis_em_analysis.mt_classification.mt_classes import MicrotubuleClassifier
 from tardis_em.utils.export_data import NumpyToAmira
 from tardis_em._version import version
 

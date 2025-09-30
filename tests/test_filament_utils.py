@@ -9,7 +9,7 @@
 #######################################################################
 
 import numpy as np
-from tardis_em.analysis.filament_utils import (
+from tardis_em_analysis.filament_utils import (
     resample_filament,
     sort_segments,
     reorder_segments_id,
@@ -17,7 +17,7 @@ from tardis_em.analysis.filament_utils import (
     sort_by_length,
     cut_150_degree,
 )
-from tardis_em.analysis.geometry_metrics import (
+from tardis_em_analysis.geometry_metrics import (
     curvature,
     curvature_list,
     tortuosity,

@@ -15,7 +15,7 @@ import torch
 
 from tardis_em.dist_pytorch.utils.utils import VoxelDownSampling
 from tardis_em.utils.errors import TardisError
-from tardis_em.analysis.filament_utils import smooth_spline, sort_segment
+from tardis_em_analysis.filament_utils import smooth_spline, sort_segment
 
 
 class PropGreedyGraphCut:

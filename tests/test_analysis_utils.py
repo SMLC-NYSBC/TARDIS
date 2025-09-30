@@ -9,7 +9,7 @@
 #######################################################################
 
 import numpy as np
-from tardis_em.analysis.mt_classification.utils import (
+from tardis_em_analysis.mt_classification.utils import (
     count_true_groups,
     distances_of_ends_to_surface,
     distance_to_the_pole,
