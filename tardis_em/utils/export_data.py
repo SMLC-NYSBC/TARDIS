@@ -889,7 +889,11 @@ def to_am(data: np.ndarray, pixel_size: float, file_dir: str, header: list = Non
     :return: None
     """
     nz, ny, nx = data.shape
-    xLen, yLen, zLen = (nx - 1) * pixel_size, (ny - 1) * pixel_size, (nz - 1) * pixel_size
+    xLen, yLen, zLen = (
+        (nx - 1) * pixel_size,
+        (ny - 1) * pixel_size,
+        (nz - 1) * pixel_size,
+    )
 
     am = [
         "# AmiraMesh BINARY-LITTLE-ENDIAN 3.0",

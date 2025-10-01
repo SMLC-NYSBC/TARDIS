@@ -33,7 +33,7 @@ warnings.simplefilter("ignore", UserWarning)
 @click.option(
     "-m",
     "--method",
-    default='warp',
+    default="warp",
     type=click.Choice(["sift", "warp", "powell"]),
     help="Alignment method.",
     show_default=True,
@@ -48,12 +48,7 @@ warnings.simplefilter("ignore", UserWarning)
 )
 @click.option("-test_click", "--test_click", default=False, hidden=True)
 @click.version_option(version=version)
-def main(
-    path: str,
-    method: str,
-    stitch_volumes: bool,
-    test_click: bool
-):
+def main(path: str, method: str, stitch_volumes: bool, test_click: bool):
     path_images, path_coords = sort_tomogram_files(path)
     output = join(path, "aligned")
 

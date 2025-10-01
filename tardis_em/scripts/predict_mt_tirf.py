@@ -289,7 +289,9 @@ def main(
                 f_name = dirname(i)
                 images.append(tiff.imread(i))
 
-                os.rename(i, join(f_name, "Predictions", splitext(basename(i))[0]) + ".tif")
+                os.rename(
+                    i, join(f_name, "Predictions", splitext(basename(i))[0]) + ".tif"
+                )
 
             # Analyze length, average intensity along the spline,
             name_s = find_filtered_files(
