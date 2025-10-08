@@ -35,7 +35,7 @@ def get_device(device: Union[str, list, tuple] = "0") -> torch.device:
     """
     device_ = None
 
-    if device == "gpu":  # Load GPU ID 0
+    if device in ["gpu", "cuda"]:  # Load GPU ID 0
         if torch.cuda.is_available():
             device_ = torch.device("cuda:0")
         else:
