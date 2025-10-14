@@ -76,6 +76,11 @@ class NumpyToAmira:
         :rtype: Union[List[np.ndarray], np.ndarray]
         """
         if isinstance(coord, np.ndarray):
+            # Remove single point filaments
+            unique_id, count = np.unique(coord[:, 0], return_counts=True)
+            valid_id = unique_id[count > 1]
+            coord = coord[np.isin(coord[:, 0], valid_id)]
+
             if coord.shape[1] == 3 and not self.as_point_cloud:
                 TardisError(
                     "132",
@@ -103,6 +108,12 @@ class NumpyToAmira:
                     "tardis_em/utils/export_data.py",
                     "Expected list of np.ndarrays!",
                 )
+
+            # Remove single point filaments
+            for idx, i in enumerate(coord):
+                unique_id, count = np.unique(coord[idx][:, 0], return_counts=True)
+                valid_id = unique_id[count > 1]
+                coord[idx] = coord[idx][np.isin(coord[idx][:, 0], valid_id)]
 
             # Add dummy Z dimension
             coord = [
