@@ -8,12 +8,15 @@
 #  MIT License 2021 - 2025                                            #
 #######################################################################
 
+import logging
 from typing import Optional, Tuple, Union
 
 import numpy as np
 from numpy import ndarray
 
 from tardis_em.utils.errors import TardisError
+
+logger = logging.getLogger(__name__)
 
 
 class CenterCrop:

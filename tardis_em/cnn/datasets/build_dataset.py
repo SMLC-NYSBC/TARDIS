@@ -7,6 +7,7 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2025                                            #
 #######################################################################
+import logging
 from os import listdir
 from os.path import isfile, join
 from typing import Tuple, Union
@@ -19,6 +20,8 @@ from tardis_em.utils.errors import TardisError
 from tardis_em.utils.load_data import ImportDataFromAmira, load_image
 from tardis_em.utils.logo import print_progress_bar, TardisLogo
 from tardis_em.utils.normalization import RescaleNormalize, MeanStdNormalize
+
+logger = logging.getLogger(__name__)
 
 
 def build_train_dataset(
@@ -57,6 +60,9 @@ def build_train_dataset(
     :rtype: NoneType
     """
     """Setup"""
+    logger.info(f"Starting dataset preprocessing from directory: {dataset_dir}")
+    logger.debug(f"Parameters: circle_size={circle_size}, trim_xy={trim_xy}, trim_z={trim_z}")
+
     # Activate Tardis progress bar
     tardis_progress = TardisLogo()
     tardis_progress(title="Data pre-processing for CNN")
@@ -83,6 +89,7 @@ def build_train_dataset(
         for f in listdir(dataset_dir)
         if f.endswith(IMG_FORMATS) and not f.endswith(MASK_FORMATS)
     ]
+    logger.info(f"Found {len(img_list)} images to process")
 
     """For each image find matching mask, pre-process, trim and save"""
     img_counter = 0

@@ -9,12 +9,15 @@
 #######################################################################
 
 import glob
+import logging
 from os import listdir, mkdir, rename, chmod
 from os.path import isdir, join
 from shutil import rmtree
 from typing import Union
 
 from tardis_em.utils.errors import TardisError
+
+logger = logging.getLogger(__name__)
 
 
 def build_new_dir(dir_s: str):

@@ -15,6 +15,7 @@ from os import listdir, getcwd, mkdir
 from os.path import isdir, isfile, join, expanduser
 from typing import Optional, Union
 import platform
+import logging
 
 import numpy as np
 import pandas as pd
@@ -69,6 +70,8 @@ ota = ""
 # Pytorch CUDA optimization
 if torch.cuda.is_available():
     torch.backends.cudnn.benchmark = True
+
+logger = logging.getLogger(__name__)
 
 
 class GeneralPredictor:
@@ -2077,7 +2080,7 @@ class Predictor:
             assert checkpoint is not None and network is not None, msg
 
         if checkpoint is None:
-            print(
+            logger.info(
                 f"Searching for weight file for {network}_{subtype} for {model_type}..."
             )
 
@@ -2087,10 +2090,10 @@ class Predictor:
                 weights_only=False,
             )
         elif isinstance(checkpoint, dict):
-            print("Loading weight dictionary...")
+            logger.info("Loading weight dictionary...")
             weights = checkpoint
         else:
-            print("Loading weight model...")
+            logger.info("Loading weight model...")
             weights = torch.load(checkpoint, map_location="cpu", weights_only=False)
 
         # Load model

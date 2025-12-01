@@ -8,6 +8,7 @@
 #  MIT License 2021 - 2025                                            #
 #######################################################################
 import codecs
+import logging
 import time
 from datetime import datetime
 from io import BytesIO
@@ -22,6 +23,8 @@ from tardis_em._version import version
 import shutil
 from io import StringIO
 import os
+
+logger = logging.getLogger(__name__)
 
 
 class NumpyToAmira:

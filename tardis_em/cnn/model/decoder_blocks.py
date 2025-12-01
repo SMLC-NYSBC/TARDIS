@@ -8,6 +8,7 @@
 #  MIT License 2021 - 2025                                            #
 #######################################################################
 
+import logging
 from typing import Optional
 
 import torch
@@ -19,6 +20,8 @@ from tardis_em.cnn.model.convolution import (
 )
 from tardis_em.cnn.model.init_weights import init_weights
 from tardis_em.cnn.utils.utils import number_of_features_per_level
+
+logger = logging.getLogger(__name__)
 
 
 class DecoderBlockCNN(nn.Module):

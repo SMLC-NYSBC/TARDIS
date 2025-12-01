@@ -7,12 +7,15 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2025                                            #
 #######################################################################
+import logging
 from math import sqrt
 from typing import Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+logger = logging.getLogger(__name__)
 
 
 class PairBiasSelfAttention(nn.Module):

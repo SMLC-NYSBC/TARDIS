@@ -8,11 +8,14 @@
 #  MIT License 2021 - 2025                                            #
 #######################################################################
 
+import logging
 from typing import Union
 
 import numpy as np
 
 from tardis_em.utils.errors import TardisError
+
+logger = logging.getLogger(__name__)
 
 
 def get_n_params(model):

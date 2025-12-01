@@ -7,6 +7,7 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2025                                            #
 #######################################################################
+import logging
 import numpy as np
 import os
 from os.path import join
@@ -14,6 +15,7 @@ import tardis_em.utils.load_data as Loader
 import tardis_em.utils.export_data as Exporter
 import tifffile.tifffile as tiff
 
+logger = logging.getLogger(__name__)
 array_formats = (".csv", ".npy")
 
 

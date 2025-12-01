@@ -3,11 +3,13 @@
 #                                                                     #
 #  New York Structural Biology Center                                 #
 #  Simons Machine Learning Center                                     #
+#  Simons Machine Learning Center                                     #
 #                                                                     #
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2025                                            #
 #######################################################################
 
+import logging
 import sys
 from os import getcwd
 from typing import Optional
@@ -21,6 +23,8 @@ from tardis_em.utils.device import get_device
 from tardis_em.utils.errors import TardisError
 from tardis_em.utils.losses import *
 from tardis_em.utils.trainer import ISR_LR
+
+logger = logging.getLogger(__name__)
 
 # Setting for stable release to turn off all debug APIs
 torch.backends.cudnn.benchmark = True
@@ -112,16 +116,21 @@ def train_cnn(
     losses_f = {f.__name__: f() for f in loss_functions}
 
     """Check input variable"""
+    logger.info("Starting CNN training setup")
     if checkpoint is not None:
+        logger.info(f"Loading checkpoint from: {checkpoint}")
         save_train = torch.load(checkpoint, map_location=device, weights_only=False)
         if "model_struct_dict" in save_train.keys():
             model_structure = save_train["model_struct_dict"]
+            logger.debug("Model structure loaded from checkpoint")
 
     model_structure = check_model_dict(model_structure)
     if not isinstance(device, torch.device) and isinstance(device, str):
         device = get_device(device)
+    logger.info(f"Using device: {device}")
 
     """Build CNN model"""
+    logger.info(f"Building CNN network: {model_structure['cnn_type']}")
     try:
         model = build_cnn_network(
             network_type=model_structure["cnn_type"],
@@ -129,7 +138,9 @@ def train_cnn(
             img_size=model_structure["img_size"],
             prediction=False,
         )
-    except:
+        logger.info(f"CNN model built successfully with {sum(p.numel() for p in model.parameters())} parameters")
+    except Exception as e:
+        logger.error(f"Failed to build CNN model: {e}")
         TardisError(
             "14",
             "tardis_em/cnn/train.py",
@@ -154,14 +165,17 @@ def train_cnn(
     """Optionally: Load checkpoint for retraining"""
     if checkpoint is not None:
         model.load_state_dict(save_train["model_state_dict"])
+        logger.info("Model weights loaded from checkpoint")
     model = model.to(device)
 
     """Define loss function for training"""
     loss_fn = losses_f["BCELoss"]
     if loss_function in losses_f:
         loss_fn = losses_f[loss_function]
+    logger.info(f"Using loss function: {loss_function}")
 
     """Build training optimizer"""
+    logger.info(f"Configuring optimizer with learning rate: {learning_rate}")
     if learning_rate_scheduler:
         optimizer = optim.NAdam(
             params=model.parameters(),
@@ -181,6 +195,7 @@ def train_cnn(
 
     """Optionally: Build learning rate scheduler"""
     if learning_rate_scheduler:
+        logger.info(f"Using learning rate scheduler with warmup steps: {warmup}")
         optimizer = ISR_LR(
             optimizer, lr_mul=learning_rate, warmup_steps=warmup, scale=1
         )
@@ -188,9 +203,11 @@ def train_cnn(
     """Optionally: Checkpoint model"""
     if checkpoint is not None:
         optimizer.load_state_dict(save_train["optimizer_state_dict"])
+        logger.info("Optimizer state loaded from checkpoint")
         del save_train
 
     """Build trainer"""
+    logger.info(f"Initializing CNN trainer for {epochs} epochs with early stopping rate: {early_stop_rate}")
     train = CNNTrainer(
         model=model,
         structure=model_structure,

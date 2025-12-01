@@ -8,10 +8,13 @@
 #  MIT License 2021 - 2025                                            #
 #######################################################################
 from abc import abstractmethod
+import logging
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+logger = logging.getLogger(__name__)
 
 
 class AbstractLoss(nn.Module):

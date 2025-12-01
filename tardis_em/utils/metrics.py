@@ -8,11 +8,14 @@
 #  MIT License 2021 - 2025                                            #
 #######################################################################
 
+import logging
 from typing import Union
 
 import numpy as np
 import torch
 from sklearn.metrics import auc, average_precision_score, roc_curve
+
+logger = logging.getLogger(__name__)
 
 
 def compare_dict_metrics(last_best_dict: dict, new_dict: dict) -> bool:

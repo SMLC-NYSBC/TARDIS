@@ -7,11 +7,14 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2025                                            #
 #######################################################################
+import logging
 import numpy as np
 import scipy
 import torch
 
 from skimage import exposure
+
+logger = logging.getLogger(__name__)
 
 
 def adaptive_threshold(img: np.ndarray):

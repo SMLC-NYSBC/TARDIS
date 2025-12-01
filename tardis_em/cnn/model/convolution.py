@@ -8,6 +8,7 @@
 #  MIT License 2021 - 2025                                            #
 #######################################################################
 
+import logging
 from math import sqrt
 from typing import Optional
 
@@ -15,6 +16,8 @@ import torch
 import torch.nn as nn
 
 from tardis_em.utils.errors import TardisError
+
+logger = logging.getLogger(__name__)
 
 
 class GeLU(nn.Module):

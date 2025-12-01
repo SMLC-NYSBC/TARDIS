@@ -8,6 +8,7 @@
 #  MIT License 2021 - 2025                                            #
 #######################################################################
 
+import logging
 from math import pow, sqrt
 from typing import Tuple, Union
 
@@ -16,6 +17,8 @@ from skimage import draw
 
 from tardis_em.cnn.data_processing.interpolation import interpolation
 from tardis_em.utils.errors import TardisError
+
+logger = logging.getLogger(__name__)
 
 
 def draw_instances(

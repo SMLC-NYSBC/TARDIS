@@ -8,11 +8,14 @@
 #  MIT License 2021 - 2025                                            #
 #######################################################################
 
+import logging
 from typing import Iterable
 
 import numpy as np
 
 from tardis_em.utils.errors import TardisError
+
+logger = logging.getLogger(__name__)
 
 
 def interpolate_generator(points: np.ndarray) -> Iterable:

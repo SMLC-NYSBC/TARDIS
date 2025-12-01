@@ -7,6 +7,7 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2025                                            #
 #######################################################################
+import logging
 import random
 from typing import Optional, Tuple, Union
 
@@ -16,6 +17,8 @@ from sklearn.neighbors import KDTree
 
 from tardis_em.utils.errors import TardisError
 from tardis_em_analysis.utils import pc_median_dist, point_in_bb
+
+logger = logging.getLogger(__name__)
 
 
 class DownSampling:

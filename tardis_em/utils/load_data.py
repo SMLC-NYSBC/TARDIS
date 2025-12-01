@@ -8,6 +8,7 @@
 #  MIT License 2021 - 2025                                            #
 #######################################################################
 
+import logging
 import re
 from os import listdir
 from os.path import isfile, join
@@ -17,6 +18,8 @@ import numpy as np
 import pandas as pd
 import tifffile.tifffile as tif
 from tardis_em.utils import MRCHeader, header_struct
+
+logger = logging.getLogger(__name__)
 
 try:
     import nd2

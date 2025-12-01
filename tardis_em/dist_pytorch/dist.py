@@ -8,6 +8,7 @@
 #  MIT License 2021 - 2025                                            #
 #######################################################################
 
+import logging
 from typing import Optional, Tuple, Union
 
 import torch
@@ -16,6 +17,8 @@ import torch.nn as nn
 from tardis_em.dist_pytorch.model.embedding import EdgeEmbedding, NodeEmbedding
 from tardis_em.dist_pytorch.model.layers import DistStack
 from tardis_em.utils.errors import TardisError
+
+logger = logging.getLogger(__name__)
 
 
 class BasicDIST(nn.Module):

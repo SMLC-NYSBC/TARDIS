@@ -8,6 +8,7 @@
 #  MIT License 2021 - 2025                                            #
 #######################################################################
 
+import logging
 import io
 import json
 from os import makedirs, mkdir
@@ -17,6 +18,8 @@ from typing import Optional
 import requests
 
 from tardis_em.utils.errors import TardisError
+
+logger = logging.getLogger(__name__)
 
 
 def get_benchmark_aws() -> dict:

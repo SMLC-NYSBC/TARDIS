@@ -8,6 +8,7 @@
 #  MIT License 2021 - 2025                                            #
 #######################################################################
 
+import logging
 from typing import Optional, Tuple
 
 import torch
@@ -21,6 +22,8 @@ from tardis_em.dist_pytorch.model.modules import (
     SelfAttention2D,
     TriangularEdgeUpdate,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class DistStack(nn.Module):

@@ -7,6 +7,7 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2025                                            #
 #######################################################################
+import logging
 import time
 from os import makedirs
 from os.path import isdir, join
@@ -27,6 +28,8 @@ from tardis_em.utils.load_data import load_image
 from tardis_em.utils.logo import print_progress_bar, TardisLogo
 from tardis_em.utils.metrics import AP, AUC, calculate_f1, IoU, mcov
 from tardis_em.utils.predictor import Predictor
+
+logger = logging.getLogger(__name__)
 
 
 class CnnBenchmark:

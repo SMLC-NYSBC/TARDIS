@@ -18,6 +18,8 @@ from IPython.display import clear_output
 
 from tardis_em._version import version
 
+logger = logging.getLogger(__name__)
+
 
 def print_progress_bar(value: int, max_v: int):
     """
@@ -194,6 +196,33 @@ class TardisLogo:
 
         # Check and update window size
         self.cell_width()
+
+        # Log the key information
+        logger.info(f"TARDIS {version} - {self.title}")
+        if text_0.strip():
+            logger.info(text_0)
+        if text_1.strip():
+            logger.info(text_1)
+        if text_2.strip():
+            logger.info(text_2)
+        if text_3.strip():
+            logger.debug(text_3)
+        if text_4.strip():
+            logger.debug(text_4)
+        if text_5.strip():
+            logger.debug(text_5)
+        if text_6.strip():
+            logger.debug(text_6)
+        if text_7.strip():
+            logger.debug(text_7)
+        if text_8.strip():
+            logger.debug(text_8)
+        if text_9.strip():
+            logger.debug(text_9)
+        if text_10.strip():
+            logger.debug(text_10)
+        if text_11.strip():
+            logger.debug(text_11)
 
         self.CLEAR()
         if self.logo:

@@ -8,6 +8,7 @@
 #  MIT License 2021 - 2025                                            #
 #######################################################################
 
+import logging
 from typing import Optional, Tuple, Union
 
 import numpy as np
@@ -15,6 +16,8 @@ import torch
 import torch.nn.functional as F
 from torch.fft import fftn, ifftn, fftshift, ifftshift
 from scipy.ndimage import gaussian_filter
+
+logger = logging.getLogger(__name__)
 
 
 def scale_image(

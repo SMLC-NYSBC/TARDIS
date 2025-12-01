@@ -13,6 +13,7 @@ from os.path import expanduser, join
 from typing import Optional
 
 import click
+import logging
 import torch
 
 from tardis_em.benchmarks.predictor import CnnBenchmark, DISTBenchmark
@@ -23,6 +24,8 @@ from tardis_em.utils.logo import TardisLogo
 from tardis_em.utils.metrics import compare_dict_metrics
 from tardis_em.utils.predictor import Predictor
 from tardis_em._version import version
+
+logger = logging.getLogger(__name__)
 
 
 @click.command()
@@ -117,6 +120,10 @@ def main(
     Standard benchmark for DIST on medical and standard point clouds
     """
     """Global setting"""
+    logger.info(f"Starting benchmark for dataset: {data_set}")
+    logger.info(f"Model checkpoint: {model_checkpoint}")
+    logger.info(f"Device: {device}, Threshold: {nn_threshold}")
+
     tardis_progress = TardisLogo()
     title = "TARDIS - NN Benchmark"
     tardis_progress(title=title)
@@ -124,10 +131,13 @@ def main(
     # Specified local directory for benchmark dataset
     if local_directory is None:  # Default NYSBC-SMLC internal server
         DIR_ = join(expanduser("~") + "/../../data/rkiewisz/Benchmarks")
+        logger.debug("Using default benchmark directory")
     else:
         DIR_ = local_directory
+        logger.info(f"Using custom benchmark directory: {DIR_}")
 
     """Get model for benchmark"""
+    logger.info("Loading model checkpoint")
     model = torch.load(
         model_checkpoint, map_location=get_device(device), weights_only=False
     )

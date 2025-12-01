@@ -8,6 +8,7 @@
 #  MIT License 2021 - 2025                                            #
 #######################################################################
 
+import logging
 import gc
 from typing import Tuple, Union
 
@@ -18,6 +19,8 @@ from skimage.morphology import skeletonize
 
 from tardis_em.dist_pytorch.utils.utils import VoxelDownSampling
 from tardis_em.utils.errors import TardisError
+
+logger = logging.getLogger(__name__)
 
 
 class BuildPointCloud:

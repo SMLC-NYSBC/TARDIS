@@ -7,6 +7,7 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2025                                            #
 #######################################################################
+import logging
 from os import getcwd, mkdir
 from os.path import isdir, join
 from shutil import rmtree
@@ -18,6 +19,8 @@ from torch import optim
 
 from tardis_em.utils.logo import print_progress_bar, TardisLogo
 from tardis_em.utils.utils import EarlyStopping
+
+logger = logging.getLogger(__name__)
 
 
 class ISR_LR:

@@ -10,10 +10,13 @@
 
 import inspect
 import sys
+import logging
 from os.path import expanduser, join
 from typing import Tuple, Union, Any
 
 from tardis_em.utils.logo import TardisLogo
+
+logger = logging.getLogger(__name__)
 
 id_dict = {
     "0": "NO_ERROR",  # All good
@@ -100,6 +103,20 @@ class TardisError(Exception):
         self.tardis_error_rise = TardisLogo()
         prev_frame = inspect.currentframe().f_back
 
+        # Log error information using logging module
+        code = "ERROR" if not warning_b else "WARNING"
+        log_level = logging.ERROR if not warning_b else logging.WARNING
+
+        error_msg = (
+            f"TARDIS {code} CODE: {id_} {id_desc}\n"
+            f"Location: {prev_frame.f_code.co_name} in {py}\n"
+            f"Frame: {prev_frame}\n"
+            f"Description: {desc}"
+        )
+
+        logger.log(log_level, error_msg)
+
+        # Also write to file for backward compatibility
         dir_ = join(expanduser("~"), "_tardis_error.log")
         with open(dir_, "w") as f:
             f.write(f"TARDIS ERROR CODE: {id_} {id_desc} \n")
@@ -114,7 +131,6 @@ class TardisError(Exception):
         desc_3, desc_4, desc_5, desc_6, desc_7, desc_8, desc_9, desc_10 = self.cut_desc(
             desc
         )
-        code = "ERROR" if not warning_b else "WARNING"
 
         self.tardis_error_rise(
             title=f"TARDIS {code} CODE {id_} {id_desc} \n",

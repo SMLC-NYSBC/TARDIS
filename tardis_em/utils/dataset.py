@@ -8,6 +8,7 @@
 #  MIT License 2021 - 2025                                            #
 #######################################################################
 
+import logging
 import random
 import shutil
 from glob import glob
@@ -17,6 +18,8 @@ from shutil import copyfile, copytree, move
 from typing import Optional
 
 from tardis_em.utils.errors import TardisError
+
+logger = logging.getLogger(__name__)
 
 
 def find_filtered_files(directory, prefix="instances_filter", format_b="csv"):

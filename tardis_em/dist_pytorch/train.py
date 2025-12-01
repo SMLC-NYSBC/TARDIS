@@ -8,12 +8,15 @@
 #  MIT License 2021 - 2025                                            #
 #######################################################################
 
+import logging
 import sys
 from os import getcwd
 from typing import Optional
 
 import torch
 from torch import optim
+
+logger = logging.getLogger(__name__)
 
 from tardis_em.dist_pytorch.dist import CDIST, DIST
 from tardis_em.dist_pytorch.sparse_dist import SparseDIST
@@ -104,12 +107,16 @@ def train_dist(
     }
 
     """Check input variable"""
+    logger.info("Starting DIST training setup")
+    logger.info(f"Dataset type: {dataset_type}, Edge angles: {edge_angles}")
     model_structure = check_model_dict(model_structure)
 
     if not isinstance(device, torch.device) and isinstance(device, str):
         device = get_device(device)
+    logger.info(f"Using device: {device}")
 
     """Build DIST model"""
+    logger.info(f"Building DIST model: {model_structure['dist_type']}")
     if model_structure["dist_type"] == "instance":
         model = DIST(
             n_out=model_structure["n_out"],
@@ -182,25 +189,32 @@ def train_dist(
 
     """Optionally: Load checkpoint for retraining"""
     if checkpoint is not None:
+        logger.info(f"Loading checkpoint from: {checkpoint}")
         save_train = torch.load(checkpoint, map_location=device, weights_only=False)
 
         if "model_struct_dict" in save_train.keys():
             model_dict = save_train["model_struct_dict"]
             globals().update(model_dict)
+            logger.debug("Model structure loaded from checkpoint")
 
         model.load_state_dict(save_train["model_state_dict"])
+        logger.info("Model weights loaded from checkpoint")
 
+    logger.info(f"DIST model built successfully with {sum(p.numel() for p in model.parameters())} parameters")
     model = model.to(device)
 
     """Define loss function for training"""
     loss_fn = losses_f["BCELoss"]
     if loss_function in losses_f:
         loss_fn = losses_f[loss_function]
+    logger.info(f"Using loss function: {loss_function}")
 
     """Build training optimizer"""
+    logger.info(f"Configuring optimizer with learning rate: {learning_rate}")
     if lr_scheduler:
         optimizer = optim.Adam(params=model.parameters(), betas=(0.9, 0.98), eps=1e-9)
         optimizer = ISR_LR(optimizer, lr_mul=learning_rate)
+        logger.info("Using learning rate scheduler")
     else:
         optimizer = optim.Adam(
             params=model.parameters(), lr=learning_rate, betas=(0.9, 0.98), eps=1e-9
@@ -209,6 +223,7 @@ def train_dist(
     """Optionally: Checkpoint model"""
     if checkpoint is not None:
         optimizer.load_state_dict(save_train["optimizer_state_dict"])
+        logger.info("Optimizer state loaded from checkpoint")
         del save_train
 
     """Build trainer"""
@@ -220,6 +235,9 @@ def train_dist(
         dataset_type = 2
     else:
         dataset_type = 4
+
+    logger.info(f"Initializing DIST trainer for {epochs} epochs with early stopping rate: {early_stop_rate}")
+    logger.info(f"Dataset type: {dataset_type}")
 
     if model_structure["dist_type"] == "instance":
         train = DistTrainer(

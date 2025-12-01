@@ -8,6 +8,7 @@
 #  MIT License 2021 - 2025                                            #
 #######################################################################
 
+import logging
 import os
 from os import listdir
 from os.path import join, splitext
@@ -21,6 +22,8 @@ from tardis_em.cnn.datasets.augmentation import preprocess
 from tardis_em.utils.errors import TardisError
 from tardis_em.utils.load_data import load_image
 from tardis_em.utils.normalization import MinMaxNormalize
+
+logger = logging.getLogger(__name__)
 
 
 class CNNDataset(Dataset):

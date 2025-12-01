@@ -8,6 +8,7 @@
 #  MIT License 2021 - 2025                                            #
 #######################################################################
 
+import logging
 from typing import Optional, Union
 
 import numpy as np
@@ -16,6 +17,8 @@ import torch
 from tardis_em.dist_pytorch.utils.utils import VoxelDownSampling
 from tardis_em.utils.errors import TardisError
 from tardis_em_analysis.filament_utils import smooth_spline, sort_segment
+
+logger = logging.getLogger(__name__)
 
 
 class PropGreedyGraphCut:

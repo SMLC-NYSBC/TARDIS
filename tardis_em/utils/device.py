@@ -7,9 +7,12 @@
 #  Robert Kiewisz, Tristan Bepler                                     #
 #  MIT License 2021 - 2025                                            #
 #######################################################################
+import logging
 from typing import Union
 
 import torch
+
+logger = logging.getLogger(__name__)
 
 
 def get_device(device: Union[str, list, tuple] = "0") -> torch.device:
@@ -38,29 +41,38 @@ def get_device(device: Union[str, list, tuple] = "0") -> torch.device:
     if device in ["gpu", "cuda"]:  # Load GPU ID 0
         if torch.cuda.is_available():
             device_ = torch.device("cuda:0")
+            logger.info(f"Using GPU device: cuda:0")
         else:
             device_ = torch.device("cpu")
+            logger.info("CUDA not available, falling back to CPU")
     elif device == "cpu":  # Load CPU
         device_ = torch.device("cpu")
+        logger.info("Using CPU device")
     elif device_is_str(device):  # Load specific GPU ID
         if torch.cuda.is_available():
             if int(device) == -1:
                 device_ = torch.device("cpu")
+                logger.info("Using CPU device (specified with -1)")
             else:
                 device_ = torch.device(f"cuda:{int(device)}")
+                logger.info(f"Using GPU device: cuda:{int(device)}")
         else:
             device_ = torch.device("cpu")
+            logger.warning("CUDA not available, falling back to CPU")
     elif isinstance(device, list) or isinstance(device, tuple):
         if torch.cuda.is_available():
             device_ = []
             for i in device:
                 if device_is_str(i):
                     device_.append(int(i))
+            logger.info(f"Using multiple GPU devices: {device_}")
     elif device == "mps":  # Load Apple silicon
         if torch.backends.mps.is_available():
             device_ = torch.device("mps")
+            logger.info("Using MPS device (Apple Silicon)")
         else:
             device_ = torch.device("cpu")
+            logger.warning("MPS not available, falling back to CPU")
     return device_
 
 
