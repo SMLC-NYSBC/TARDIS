@@ -2,7 +2,7 @@
 torch>2.0.0
 numpy>=2.0.0
 pandas>=2.2.0
-tardis_em_analysis==0.3.22
+tardis_em_analysis>=0.3.24
 
 # Image loading/export library
 tifffile
