@@ -104,6 +104,7 @@ class GeneralPredictor:
         device_s: str,
         debug: bool,
         checkpoint: Optional[list] = None,
+        local_only=False,
         model_version: Optional[int] = None,
         correct_px: float = None,
         normalize_px: float = None,
@@ -136,6 +137,7 @@ class GeneralPredictor:
         :param instances: Flag to enable instance-based predictions.
         :param device_s: The computation device (CPU/GPU) to be used.
         :param debug: Flag to enable debugging mode.
+        :param local_only: Flag to indicate if only local weights should be used for model loading.
         :param checkpoint: Optional, list of checkpoints for loading model weights.
         :param model_version: Optional, model version identifier.
         :param correct_px: Optional, value to correct pixel dimensions if needed.
@@ -167,6 +169,7 @@ class GeneralPredictor:
             self.expect_2d = False
         self.amira_prefix = amira_prefix
         self.checkpoint = checkpoint
+        self.local_only = local_only
         self.model_version = model_version
         self.correct_px = correct_px
         self.normalize_px = normalize_px
@@ -573,6 +576,7 @@ class GeneralPredictor:
                         img_size=self.patch_size,
                         sigmoid=False,
                         device=self.device,
+                        local_only=self.local_only,
                     )
                 else:
                     self.cnn = Predictor(
@@ -585,6 +589,7 @@ class GeneralPredictor:
                         sigmoid=False,
                         _2d=True,
                         device=self.device,
+                        local_only=self.local_only,
                     )
             # Build DIST network with loaded pre-trained weights
             if not self.output_format.endswith("None"):
@@ -595,6 +600,7 @@ class GeneralPredictor:
                     model_type="2d",
                     model_version=None,
                     device=self.device,
+                    local_only=self.local_only,
                 )
         elif NN in ["Membrane2D", "Membrane"]:
             # None - default value
@@ -618,6 +624,7 @@ class GeneralPredictor:
                         sigmoid=False,
                         device=self.device,
                         _2d=True,
+                        local_only=self.local_only,
                     )
 
                 # Build DIST network with loaded pre-trained weights
@@ -629,6 +636,7 @@ class GeneralPredictor:
                         model_type="2d",
                         model_version=None,
                         device=self.device,
+                        local_only=self.local_only,
                     )
             else:
                 if not self.binary_mask:
@@ -641,6 +649,7 @@ class GeneralPredictor:
                         img_size=self.patch_size,
                         sigmoid=False,
                         device=self.device,
+                        local_only=self.local_only,
                     )
 
                 # Build DIST network with loaded pre-trained weights
@@ -652,6 +661,7 @@ class GeneralPredictor:
                         model_type="3d",
                         model_version=None,
                         device=self.device,
+                        local_only=self.local_only,
                     )
         elif NN.startswith("General"):
             self.cnn = Predictor(
@@ -662,6 +672,7 @@ class GeneralPredictor:
                 sigmoid=False,
                 device=self.device,
                 _2d=self.expect_2d,
+                local_only=self.local_only,
             )
             if not self.output_format.endswith("None"):
                 if NN.endswith("filament"):
@@ -672,6 +683,7 @@ class GeneralPredictor:
                         model_type="2d",
                         model_version=None,
                         device=self.device,
+                        local_only=self.local_only,
                     )
                 else:
                     self.dist = Predictor(
@@ -681,6 +693,7 @@ class GeneralPredictor:
                         model_type="3d",
                         model_version=None,
                         device=self.device,
+                        local_only=self.local_only,
                     )
 
     def load_data(self, id_name: Union[str, np.ndarray]):
@@ -2012,6 +2025,7 @@ class Predictor:
         sigma: Optional[float] = None,
         sigmoid=True,
         _2d=False,
+        local_only=False,
         logo=True,
     ):
         """
@@ -2085,7 +2099,7 @@ class Predictor:
             )
 
             weights = torch.load(
-                get_weights_aws(network, subtype, model_type, model_version),
+                get_weights_aws(network, subtype, model_type, model_version, local_only=local_only),
                 map_location="cpu",
                 weights_only=False,
             )

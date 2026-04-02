@@ -138,6 +138,7 @@ def get_weights_aws(
     subtype: str,
     model: Optional[str] = None,
     version: Optional[int] = None,
+    local_only: bool = False,
 ):
     """
     Retrieve the weights of a specified deep learning model architecture and subtype,
@@ -215,6 +216,12 @@ def get_weights_aws(
                 "tardis_em/utils/aws.py",
                 f"Incorrect DIST model selected {model} but expected {DIST_DATASET}",
             )
+
+    if local_only:
+        local_weights = join(dir_, "model_weights.pth")
+        if isfile(local_weights):
+            print(f"Loaded local weights for: {network}_{subtype}...")
+            return local_weights
 
     all_version = get_all_version_aws(network, subtype, model)
 

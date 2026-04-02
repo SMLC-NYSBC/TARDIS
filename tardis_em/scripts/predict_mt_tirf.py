@@ -59,6 +59,14 @@ warnings.simplefilter("ignore", UserWarning)
     show_default=True,
 )
 @click.option(
+    "-local",
+    "--local_only",
+    default=False,
+    type=bool,
+    help="Flag to indicate if only local weights should be used for model loading.",
+    show_default=True,
+)
+@click.option(
     "-mv",
     "--model_version",
     default=None,
@@ -222,6 +230,7 @@ def main(
     connect_splines: int,
     connect_cylinder: int,
     device: str,
+    local_only: bool,
     debug: bool,
     continue_b: bool,
     test_click=False,
@@ -260,6 +269,7 @@ def main(
         normalize_px=1.0,
         convolution_nn=convolution_nn,
         checkpoint=checkpoint,
+        local_only=local_only,
         model_version=model_version,
         output_format=output_format,
         patch_size=patch_size,
