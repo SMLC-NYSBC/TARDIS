@@ -117,5 +117,5 @@ docs/resources/Tardis_logo_2.svg
 .github/workflows/bld.bat
 /conda-build/builds
 /conda-build/builds-0.2.2
-/benchmarks
+/benchmarks/nature
 .vscode/settings.json
