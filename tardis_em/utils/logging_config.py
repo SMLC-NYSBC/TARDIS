@@ -21,6 +21,25 @@ from typing import Optional
 from datetime import datetime
 
 
+def in_worker_process() -> bool:
+    """
+    True when running inside a multiprocessing worker (so import-time banners
+    can be suppressed).
+
+    A spawned child re-imports this package during ``prepare()``, which runs
+    *before* its ``_bootstrap`` sets up ``parent_process()`` — so at import time
+    ``parent_process()`` is still ``None`` in the child. ``_inheriting`` is the
+    flag multiprocessing sets while preparing the child, so it is the reliable
+    signal at import time; the other two checks cover imports after bootstrap.
+    """
+    proc = multiprocessing.current_process()
+    return (
+        getattr(proc, "_inheriting", False)
+        or multiprocessing.parent_process() is not None
+        or proc.name != "MainProcess"
+    )
+
+
 def setup_logger(
     name: Optional[str] = None,
     level: int = logging.INFO,
@@ -141,6 +160,6 @@ def configure_tardis_logging(
     # Log initial message — skip in spawned worker processes (multiprocessing
     # re-imports the package), where it is only repeated import-time noise.
     logger = logging.getLogger("tardis_em")
-    if multiprocessing.parent_process() is None:
+    if not in_worker_process():
         logger.info("TARDIS-em logging initialized")
 

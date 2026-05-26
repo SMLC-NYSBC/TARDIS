@@ -1,10 +1,9 @@
 from tardis_em._version import version
 import os
 import logging
-import multiprocessing
 
 # Import logging configuration
-from tardis_em.utils.logging_config import configure_tardis_logging
+from tardis_em.utils.logging_config import configure_tardis_logging, in_worker_process
 
 # Temporal fallback for mps devices
 os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
@@ -16,7 +15,7 @@ configure_tardis_logging(level=logging.INFO)
 # spawned worker processes (multiprocessing re-imports the package), so only emit
 # it in the main process.
 logger = logging.getLogger(__name__)
-if multiprocessing.parent_process() is None:
+if not in_worker_process():
     logger.info("TARDIS initialized")
 
 __version__ = version
