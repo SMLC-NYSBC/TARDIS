@@ -469,7 +469,7 @@ def confusion_matrix(
 
         tp = np.sum(confusion_vector == 1)
         fp = np.sum(confusion_vector == float("inf"))
-        tn = np.sum(np.isnan(confusion_vector) is True)
+        tn = np.sum(np.isnan(confusion_vector))
         fn = np.sum(confusion_vector == 0)
 
     return tp, fp, tn, fn
@@ -493,11 +493,11 @@ def normalize_image(image: np.ndarray):
     image_max = np.max(image)
 
     if image_min == 0 and image_max == 1:
-        return image
+        # Already binary only if every value is exactly 0 or 1
+        if np.all((image == 0) | (image == 1)):
+            return image
 
-    if image_min == 0:
-        image = np.where(image > image_min, 1, 0)
-    elif image_max == 0:
-        image = np.where(image < image_max, 1, 0)
+    if image_max == 0:
+        return np.where(image < image_max, 1, 0)
 
-    return image
+    return np.where(image > 0, 1, 0)

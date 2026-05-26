@@ -133,6 +133,52 @@ def get_model_aws(https: str):
     )
 
 
+def is_model_weight_response(response) -> bool:
+    """
+    Check whether an HTTP response from the S3 weights bucket contains an actual
+    model checkpoint and not an XML/HTML error page (e.g. ``NoSuchKey`` or
+    ``AccessDenied``).
+
+    A valid ``model_weights.pth`` is either a zip archive (newer ``torch.save``,
+    magic bytes ``PK\\x03\\x04``) or a legacy pickle - never a text document. S3
+    error responses are XML and start with ``<``. Writing such a page to disk is
+    exactly what produces the later ``_pickle.UnpicklingError: invalid load key,
+    '<'`` failure in ``torch.load``, so we reject it at download time.
+
+    :param response: Response object returned by :func:`get_model_aws`.
+    :return: True if the response looks like a real checkpoint file.
+    :rtype: bool
+    """
+    if response.status_code != 200:
+        return False
+    return response.content[:1] != b"<"
+
+
+def is_valid_local_weight(path: str) -> bool:
+    """
+    Check that a locally cached ``model_weights.pth`` is an actual checkpoint and
+    not a previously saved S3 error page.
+
+    Older TARDIS versions could write an XML error document (``NoSuchKey`` /
+    ``AccessDenied``) to disk as ``model_weights.pth``. Because the cache validity
+    check only compared HTTP timestamps, such a poisoned file was trusted forever
+    and kept failing ``torch.load`` with ``invalid load key, '<'``. Reading the
+    first byte lets the cache self-heal: an XML file (starts with ``<``) is
+    treated as invalid so the caller re-downloads it.
+
+    :param path: Path to the local ``model_weights.pth`` file.
+    :return: True if the file exists and does not look like an error page.
+    :rtype: bool
+    """
+    if not isfile(path):
+        return False
+    try:
+        with open(path, "rb") as f:
+            return f.read(1) != b"<"
+    except OSError:
+        return False
+
+
 def get_weights_aws(
     network: str,
     subtype: str,
@@ -220,6 +266,15 @@ def get_weights_aws(
     if local_only:
         local_weights = join(dir_, "model_weights.pth")
         if isfile(local_weights):
+            if not is_valid_local_weight(local_weights):
+                TardisError(
+                    "19",
+                    "tardis_em/utils/aws.py",
+                    f"Local weights for {network}_{subtype} are corrupted "
+                    f"(an S3 error page, not a checkpoint): {local_weights}. "
+                    f"Delete the file and re-download with internet access.",
+                    warning_b=False,
+                )
             print(f"Loaded local weights for: {network}_{subtype}...")
             return local_weights
 
@@ -239,13 +294,11 @@ def get_weights_aws(
         else:
             version = f"V_{max([int(v.split('_')[1]) for v in all_version])}"
 
-    if aws_check_with_temp(model_name=[network, subtype, model, version]):
+    if aws_check_with_temp(
+        model_name=[network, subtype, model, version]
+    ) and is_valid_local_weight(join(dir_, "model_weights.pth")):
         print(f"Loaded temp weights for: {network}_{subtype} {version}...")
-
-        if isfile(join(dir_, "model_weights.pth")):
-            return join(dir_, "model_weights.pth")
-        else:
-            TardisError("19", "tardis_em/utils/aws.py", "No weights found")
+        return join(dir_, "model_weights.pth")
     else:
         print(f"Downloading new weights for: {network}_{subtype} {version}...")
 
@@ -260,6 +313,18 @@ def get_weights_aws(
                 "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/tardis_em/"
                 f"{network}_{subtype}/"
                 f"{model}/{version}/model_weights.pth"
+            )
+
+        # Validate the response before touching disk. If S3 returns an error
+        # page (NoSuchKey / AccessDenied) we must not persist it as a checkpoint.
+        if not is_model_weight_response(weight):
+            TardisError(
+                "19",
+                "tardis_em/utils/aws.py",
+                f"Failed to download weights for {network}_{subtype} {version} "
+                f"(HTTP {weight.status_code}). S3 returned an error page instead "
+                f"of a model file - check the network/subtype/model/version.",
+                warning_b=False,
             )
 
         # Save weights
@@ -282,10 +347,7 @@ def get_weights_aws(
 
         print(f"Pre-Trained model download from S3 and saved/updated in {dir_}")
 
-        weight = weight.content
-        if "AccessDenied" in str(weight[:100]):
-            return join(dir_, "model_weights.pth")
-        return io.BytesIO(weight)
+        return io.BytesIO(weight.content)
 
 
 def aws_check_with_temp(model_name: list) -> bool:

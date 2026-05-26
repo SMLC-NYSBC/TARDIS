@@ -15,7 +15,11 @@ from os.path import join, isdir
 import click
 
 from tardis_em._version import version
-from tardis_em.utils.aws import get_all_version_aws, get_model_aws
+from tardis_em.utils.aws import (
+    get_all_version_aws,
+    get_model_aws,
+    is_model_weight_response,
+)
 from tardis_em.utils.errors import TardisError
 
 warnings.simplefilter("ignore", UserWarning)
@@ -124,8 +128,18 @@ def main(
         weight_cnn = get_model_aws(
             "https://tardis-weigths.s3.dualstack.us-east-1.amazonaws.com/tardis_em/"
             "fnet_attn_32/"
-            f"{model_cnn}/{cnn_version}//model_weights.pth"
+            f"{model_cnn}/{cnn_version}/model_weights.pth"
         )
+
+        if not is_model_weight_response(weight_cnn):
+            TardisError(
+                "19",
+                "tardis_em/scripts/fetch_weights_file.py",
+                f"Failed to download CNN weights {model_cnn} {cnn_version} "
+                f"(HTTP {weight_cnn.status_code}). S3 returned an error page "
+                f"instead of a model file - nothing was saved.",
+                warning_b=False,
+            )
 
         open(
             join(save_dir, "fnet_attn_32", model_cnn, cnn_version, "model_weights.pth"),
@@ -167,6 +181,17 @@ def main(
             "dist_triang/"
             f"{model_dist}/{dist_version}/model_weights.pth"
         )
+
+        if not is_model_weight_response(weight_dist):
+            TardisError(
+                "19",
+                "tardis_em/scripts/fetch_weights_file.py",
+                f"Failed to download DIST weights {model_dist} {dist_version} "
+                f"(HTTP {weight_dist.status_code}). S3 returned an error page "
+                f"instead of a model file - nothing was saved.",
+                warning_b=False,
+            )
+
         open(
             join(
                 save_dir, "dist_triang", model_dist, dist_version, "model_weights.pth"
