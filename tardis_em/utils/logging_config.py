@@ -14,6 +14,7 @@ This module provides functions to configure logging for the entire TARDIS projec
 with consistent formatting and output options.
 """
 import logging
+import multiprocessing
 import sys
 from pathlib import Path
 from typing import Optional
@@ -137,7 +138,9 @@ def configure_tardis_logging(
         file_output=file_output,
     )
 
-    # Log initial message
+    # Log initial message — skip in spawned worker processes (multiprocessing
+    # re-imports the package), where it is only repeated import-time noise.
     logger = logging.getLogger("tardis_em")
-    logger.info("TARDIS-em logging initialized")
+    if multiprocessing.parent_process() is None:
+        logger.info("TARDIS-em logging initialized")
 
