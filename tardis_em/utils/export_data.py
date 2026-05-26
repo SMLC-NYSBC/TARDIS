@@ -882,7 +882,13 @@ def to_mrc(
         f.write(data.tobytes())
 
 
-def to_am(data: np.ndarray, pixel_size: float, file_dir: str, header: list = None):
+def to_am(
+    data: np.ndarray,
+    pixel_size: float,
+    file_dir: str,
+    header: list = None,
+    z_chunk: Optional[int] = None,
+):
     """
     Converts a 3D NumPy array into AmiraMesh format and writes it to a specified file.
     The function generates a header describing the dataset and its attributes,
@@ -899,6 +905,12 @@ def to_am(data: np.ndarray, pixel_size: float, file_dir: str, header: list = Non
         AmiraMesh file. Items not starting with "#" will be prefixed with "#".
         Defaults to None.
     :type header: list or None
+    :param z_chunk: Optional. If set, write the lattice to disk in chunks of this
+        many Z-slices instead of materialising the whole array in RAM — useful for
+        very large volumes or ``np.memmap`` inputs. ``None`` (default) keeps the
+        original single-pass ``flatten()`` write. The output file is byte-identical
+        either way.
+    :type z_chunk: int or None
 
     :return: None
     """
@@ -945,9 +957,16 @@ def to_am(data: np.ndarray, pixel_size: float, file_dir: str, header: list = Non
         for i in am:
             f.write(f"{i} \n")
 
-    with codecs.open(file_dir, mode="ab+") as f:
-        bytes_data = data.flatten().tobytes()
-        f.write(BytesIO(bytes_data).getbuffer())
+    with open(file_dir, mode="ab") as f:
+        if z_chunk:
+            # Stream the lattice in Z-chunks so a large volume (or a memmap) is
+            # never fully materialised in RAM. For C-order data the byte sequence
+            # is identical to ``data.flatten().tobytes()`` — row-major slices
+            # concatenated in Z — so the output file is unchanged.
+            for z0 in range(0, data.shape[0], int(z_chunk)):
+                f.write(np.ascontiguousarray(data[z0 : z0 + int(z_chunk)]).tobytes())
+        else:
+            f.write(data.flatten().tobytes())
         f.write(b"\n")
 
 
