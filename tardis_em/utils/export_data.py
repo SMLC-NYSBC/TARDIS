@@ -882,6 +882,82 @@ def to_mrc(
         f.write(data.tobytes())
 
 
+def _am_lattice_header(
+    nz: int, ny: int, nx: int, pixel_size: float, header: list = None
+) -> list:
+    """Build the AmiraMesh byte-lattice header lines for an ``(nz, ny, nx)`` volume."""
+    xLen, yLen, zLen = (
+        (nx - 1) * pixel_size,
+        (ny - 1) * pixel_size,
+        (nz - 1) * pixel_size,
+    )
+    am = [
+        "# AmiraMesh BINARY-LITTLE-ENDIAN 3.0",
+        "# TARDIS - Transformer And Rapid Dimensionless Instance Segmentation (R)",
+        f"# tardis_em-pytorch v{version}",
+        f"# MIT License * 2021-{datetime.now().year} * Robert Kiewisz & Tristan Bepler",
+    ]
+    if header is not None:
+        am = am + ["# " + h if not h.startswith("#") else h for h in header]
+    am = am + [
+        "",
+        "",
+        f"define Lattice {nx} {ny} {nz}",
+        "",
+        "Parameters {",
+        "    Units {",
+        '       Coordinates "Å"',
+        "    }",
+        '    DataWindow "0.000000 255.000000",',
+        f'    Content "{nx}x{ny}x{nz} byte, uniform coordinates",',
+        f"    BoundingBox 0 {xLen} 0 {yLen} 0 {zLen},",
+        '    CoordType "uniform"',
+        "}",
+        "",
+        "Lattice { byte Data } @1",
+        "",
+        "# Data section follows",
+        "@1",
+    ]
+    return am
+
+
+def to_am_streamed(
+    file_dir: str,
+    slab_paths,
+    shape,
+    pixel_size: float,
+    header: list = None,
+):
+    """
+    Write an AmiraMesh byte volume by concatenating raw ``uint8`` slab files,
+    without ever holding the volume in RAM.
+
+    Each path in ``slab_paths`` is a raw C-order ``uint8`` dump of a contiguous
+    block of Z-slices (``[z, ny, nx]``); concatenated in order they form the
+    ``(nz, ny, nx)`` lattice. The slabs are streamed to the output with
+    ``shutil.copyfileobj`` (file → file, small buffer), so peak memory is a few KB
+    regardless of volume size — unlike passing a full array / memmap to
+    :func:`to_am`, whose pages become resident.
+
+    :param file_dir: output ``.am`` path.
+    :param slab_paths: ordered iterable of raw uint8 slab file paths.
+    :param shape: full ``(nz, ny, nx)`` lattice shape.
+    :param pixel_size: voxel size (Å) for the bounding box.
+    :param header: optional extra header lines.
+    """
+    nz, ny, nx = shape
+    am = _am_lattice_header(nz, ny, nx, pixel_size, header)
+    with codecs.open(file_dir, mode="w", encoding="utf-8") as f:
+        for i in am:
+            f.write(f"{i} \n")
+    with open(file_dir, mode="ab") as out:
+        for p in slab_paths:
+            with open(p, "rb") as src:
+                shutil.copyfileobj(src, out)
+        out.write(b"\n")
+
+
 def to_am(
     data: np.ndarray,
     pixel_size: float,
@@ -915,43 +991,7 @@ def to_am(
     :return: None
     """
     nz, ny, nx = data.shape
-    xLen, yLen, zLen = (
-        (nx - 1) * pixel_size,
-        (ny - 1) * pixel_size,
-        (nz - 1) * pixel_size,
-    )
-
-    am = [
-        "# AmiraMesh BINARY-LITTLE-ENDIAN 3.0",
-        "# TARDIS - Transformer And Rapid Dimensionless Instance Segmentation (R)",
-        f"# tardis_em-pytorch v{version}",
-        f"# MIT License * 2021-{datetime.now().year} * Robert Kiewisz & Tristan Bepler",
-    ]
-
-    if header is not None:
-        header = ["# " + h if not h.startswith("#") else h for h in header]
-        am = am + header
-
-    am = am + [
-        "",
-        "",
-        f"define Lattice {nx} {ny} {nz}",
-        "",
-        "Parameters {",
-        "    Units {",
-        '       Coordinates "Å"',
-        "    }",
-        '    DataWindow "0.000000 255.000000",',
-        f'    Content "{nx}x{ny}x{nz} byte, uniform coordinates",',
-        f"    BoundingBox 0 {xLen} 0 {yLen} 0 {zLen},",
-        '    CoordType "uniform"',
-        "}",
-        "",
-        "Lattice { byte Data } @1",
-        "",
-        "# Data section follows",
-        "@1",
-    ]
+    am = _am_lattice_header(nz, ny, nx, pixel_size, header)
 
     with codecs.open(file_dir, mode="w", encoding="utf-8") as f:
         for i in am:
