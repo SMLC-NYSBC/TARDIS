@@ -13,6 +13,7 @@ from os import getcwd
 import click
 
 from tardis_em._version import version
+from tardis_em.utils.logo import print_error
 from tardis_em_analysis.serial_stitch.cli import run_stitch
 
 warnings.simplefilter("ignore", UserWarning)
@@ -104,16 +105,23 @@ def main(
     if test_click:
         return
 
-    run_stitch(
-        path,
-        output,
-        image_fill=image_fill,
-        method=method,
-        warp_omega=warp_omega,
-        downscale=downscale,
-        use_gpu=False if cpu else None,
-        workers=workers,
-    )
+    try:
+        run_stitch(
+            path,
+            output,
+            image_fill=image_fill,
+            method=method,
+            warp_omega=warp_omega,
+            downscale=downscale,
+            use_gpu=False if cpu else None,
+            workers=workers,
+        )
+    except (FileNotFoundError, ValueError) as e:
+        # Expected, user-facing problems (bad/empty folder, no usable sections,
+        # nothing to stitch): show the message inside the TARDIS logo box, no
+        # Python traceback.
+        print_error(str(e), title="serial-section stitcher — cannot stitch")
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

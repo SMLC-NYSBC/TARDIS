@@ -281,6 +281,25 @@ class TardisLogo:
             print(logo)
 
 
+def print_error(message: str, title: str = "ERROR") -> None:
+    """
+    Print a (multi-line) error message inside the TARDIS logo box.
+
+    Reuses :class:`TardisLogo` (without the robot art, so the body spans the full
+    box width) to give errors the same branded frame as the startup banner. The
+    first 12 lines fill the box; any overflow is printed plainly beneath it. The
+    renderer truncates lines longer than the box width, so keep each line short.
+
+    :param message: the error text (newline-separated lines).
+    :param title: short title shown in the box header.
+    """
+    lines = str(message).splitlines() or [str(message)]
+    fields = {f"text_{i}": line for i, line in enumerate(lines[:12])}
+    TardisLogo(logo=False)(title=f"| {title}", **fields)
+    for extra in lines[12:]:
+        print(extra)
+
+
 class ContextFilter(logging.Filter):
     hostname = socket.gethostname()
 
