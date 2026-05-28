@@ -63,6 +63,7 @@ class ImportDataFromAmira:
         self.pixel_size = None
         self.physical_size, self.transformation = None, None
         self.surface = None
+        self._am_blocks: Optional[dict] = None  # populated only for binary .am
 
         # Read image and its property if existing
         if self.src_img is not None:
@@ -118,7 +119,8 @@ class ImportDataFromAmira:
                     f"for given dir: {self.src_surf}",
                 )
 
-        # Read spatial graph
+        # Read spatial graph — grow the header window until the data-section
+        # marker is found (or we give up at 10 KB; headers are small).
         am = ""
         frame = 500
         while "# Data section follows" not in am:
@@ -128,28 +130,24 @@ class ImportDataFromAmira:
             if frame == 10000:
                 break
 
-        binary = False
-        spatial_graph = ""
-        if not any(
-            [
-                True
-                for i in ["AmiraMesh 3D ASCII", "# ASCII Spatial Graph"]
-                if i not in am
-            ]
-        ):
-            if "AmiraMesh BINARY-LITTLE-ENDIAN 3.0" not in am:
-                spatial_graph = None
+        # Classify by format string in the header.
+        is_binary = "AmiraMesh BINARY-LITTLE-ENDIAN" in am
+        is_ascii = ("AmiraMesh 3D ASCII" in am) or ("# ASCII Spatial Graph" in am)
+
+        if is_binary:
+            header, blocks = _parse_am_binary_spatial_graph(src_am)
+            if blocks:
+                self.spatial_graph = header
+                self._am_blocks = blocks
             else:
-                binary = True
-        if spatial_graph is not None:
+                self.spatial_graph = None
+        elif is_ascii:
             self.spatial_graph = (
                 open(src_am, "r", encoding="iso-8859-1").read().split("\n")
             )
             self.spatial_graph = [x for x in self.spatial_graph if x != ""]
-
-        if binary:
+        else:
             self.spatial_graph = None
-            # self.spatial_graph = self.am_decode(self.spatial_graph)
 
     def __am_decode(self, am: str) -> str:
         pass
@@ -172,6 +170,15 @@ class ImportDataFromAmira:
         :rtype: Union[np.ndarray, None]
         """
         if self.spatial_graph is None:
+            return None
+
+        if self._am_blocks is not None:
+            for line in self.spatial_graph:
+                if line.startswith("EDGE { int NumEdgePoints }"):
+                    n = _extract_at_n(line)
+                    if n is not None and n in self._am_blocks:
+                        return self._am_blocks[n].astype(int)
+                    break
             return None
 
         # Find line starting with EDGE { int NumEdgePoints }
@@ -236,6 +243,15 @@ class ImportDataFromAmira:
         if self.spatial_graph is None:
             return None
 
+        if self._am_blocks is not None:
+            for line in self.spatial_graph:
+                if line.startswith("POINT { float[3] EdgePointCoordinates }"):
+                    n = _extract_at_n(line)
+                    if n is not None and n in self._am_blocks:
+                        return self._am_blocks[n].astype(float)
+                    break
+            return None
+
         # Find line starting with POINT { float[3] EdgePointCoordinates }
         points = str(
             [
@@ -291,6 +307,15 @@ class ImportDataFromAmira:
         :rtype: Union[np.ndarray, None]
         """
         if self.spatial_graph is None:
+            return None
+
+        if self._am_blocks is not None:
+            for line in self.spatial_graph:
+                if line.startswith("VERTEX { float[3] VertexCoordinates }"):
+                    n = _extract_at_n(line)
+                    if n is not None and n in self._am_blocks:
+                        return self._am_blocks[n].astype(float)
+                    break
             return None
 
         # Find line starting with POINT { float[3] EdgePointCoordinates }
@@ -483,6 +508,19 @@ class ImportDataFromAmira:
 
         labels_dict = {}
         for i in labels:
+            if self._am_blocks is not None:
+                # Binary: pull the int-per-edge array straight from the parsed
+                # block keyed by the line's trailing "@N".
+                n = _extract_at_n(i)
+                arr = self._am_blocks.get(n) if n is not None else None
+                if arr is None:
+                    continue
+                label_list = np.where(arr.ravel() != 0)[0]
+                labels_dict.update(
+                    {i[11:-5].replace(" ", "").replace("}", ""): label_list}
+                )
+                continue
+
             # Find line starting with EDGE { int label }
             label_start = "".join((ch if ch in "0123456789" else " ") for ch in i)
             label_start = [int(i) for i in label_start.split()][-1:]
@@ -669,6 +707,95 @@ def mrc_mode(mode: int, amin: int):
         for name in dtype_m:
             if mode == dtype_m[name]:
                 return name
+
+
+def _extract_at_n(line: str) -> Optional[int]:
+    """Return the ``N`` integer from a header line ending in ``@N``, else None."""
+    m = re.search(r"@(\d+)\s*$", line)
+    return int(m.group(1)) if m else None
+
+
+def _parse_am_binary_spatial_graph(am_file: str):
+    """
+    Parse an ``AmiraMesh BINARY-LITTLE-ENDIAN`` spatial-graph file.
+
+    The text header (everything before ``# Data section follows``) is decoded
+    and returned as a list of non-empty lines. The binary body that follows
+    is split into per-``@N`` ndarrays whose count/columns/dtype are inferred
+    from the matching ``VERTEX|EDGE|POINT { type[k]? name } @N`` declaration
+    in the header.
+
+    Sizes per block are computed from ``define VERTEX/EDGE/POINT N`` and the
+    field width (``float[3]`` → 3 cols of float32, ``int`` → 1 col of int32,
+    etc.), so we don't search for ``@M`` markers inside the binary (raw bytes
+    can spuriously contain that pattern).
+
+    Returns ``(header_lines, am_blocks)``. ``am_blocks`` may be empty if the
+    file is missing the data section or no field declarations parse cleanly.
+    """
+    with open(am_file, "rb") as f:
+        raw = f.read()
+
+    marker = b"# Data section follows\n"
+    pos = raw.find(marker)
+    if pos < 0:
+        return [], {}
+
+    header = raw[:pos].decode("iso-8859-1").split("\n")
+    header = [line for line in header if line != ""]
+
+    counts = {"VERTEX": 0, "EDGE": 0, "POINT": 0}
+    for line in header:
+        m = re.match(r"\s*define\s+(VERTEX|EDGE|POINT)\s+(\d+)", line)
+        if m:
+            counts[m.group(1)] = int(m.group(2))
+
+    spec_re = re.compile(
+        r"^\s*(VERTEX|EDGE|POINT)\s*\{\s*"
+        r"(float|int)(?:\[(\d+)\])?\s+\w+\s*\}\s*@(\d+)\s*$"
+    )
+    # specs[N] = (rows, ncols, np.dtype)
+    specs = {}
+    for line in header:
+        m = spec_re.match(line)
+        if not m:
+            continue
+        section, base, cols, n = m.group(1), m.group(2), m.group(3), int(m.group(4))
+        ncols = int(cols) if cols else 1
+        dtype = np.dtype("<f4") if base == "float" else np.dtype("<i4")
+        specs[n] = (counts[section], ncols, dtype)
+
+    # Walk the binary tail block-by-block. Sizes drive the cursor — we only
+    # use the textual "@N\n" markers to identify (and order-check) blocks.
+    body = raw[pos + len(marker):]
+    am_blocks: dict = {}
+    p = 0
+    n_blocks = len(body)
+    while p < n_blocks:
+        if body[p:p + 1] == b"\n":
+            p += 1
+        if p >= n_blocks or body[p:p + 1] != b"@":
+            break
+        nl = body.find(b"\n", p)
+        if nl < 0:
+            break
+        try:
+            n = int(body[p + 1:nl])
+        except ValueError:
+            break
+        p = nl + 1
+        spec = specs.get(n)
+        if spec is None:
+            break
+        rows, ncols, dtype = spec
+        nbytes = rows * ncols * dtype.itemsize
+        if p + nbytes > n_blocks:
+            break
+        arr = np.frombuffer(body[p:p + nbytes], dtype=dtype).reshape(rows, ncols)
+        am_blocks[n] = arr
+        p += nbytes
+
+    return header, am_blocks
 
 
 def _find_am_ascii_data_offset(am_file: str) -> int:

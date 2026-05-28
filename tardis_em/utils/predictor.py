@@ -729,9 +729,24 @@ class GeneralPredictor:
         if isinstance(id_name, str):
             # Load image file
             if id_name.endswith(".am"):
-                am = open(join(self.dir, id_name), "r", encoding="iso-8859-1").read(500)
+                # Sniff the header by CONTENT, not by the format string:
+                # an Amira ``.am`` can be a uniform Lattice image (defines
+                # ``Lattice``) or a microtubule spatial graph (defines
+                # ``VERTEX``/``EDGE``), and either may be ASCII or
+                # BINARY-LITTLE-ENDIAN. The format line alone can't tell
+                # them apart, so check what the file *defines*.
+                head = (
+                    open(join(self.dir, id_name), "r", encoding="iso-8859-1")
+                    .read(8192)
+                    .lower()
+                )
+                is_graph = (
+                    "hxspatialgraph" in head
+                    or "define vertex" in head
+                    or "define edge" in head
+                )
 
-                if "AmiraMesh 3D ASCII" in am:
+                if is_graph:
                     self.amira_image = False
                     self.pc_hd = ImportDataFromAmira(
                         join(self.dir, id_name)
