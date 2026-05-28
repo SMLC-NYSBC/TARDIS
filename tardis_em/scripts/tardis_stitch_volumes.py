@@ -3,6 +3,7 @@
 #                                                                     #
 #  Robert Kiewisz                                                     #
 #  MIT License 2021 - 2026                                            #
+#  (CLI wrapper; calls pandorica.stitch under Prosperity 3.0.0)       #
 #######################################################################
 import warnings
 from os import getcwd
@@ -11,7 +12,16 @@ import click
 
 from tardis_em._version import version
 from tardis_em.utils.logo import print_error
-from tardis_em_analysis.serial_stitch.cli import run_stitch
+
+# Stitcher is an optional dependency provided by the `pandorica` package
+# (Prosperity-licensed, separate maintenance). Install with:
+#     pip install "tardis_em[stitch]"
+# or directly:
+#     pip install pandorica
+try:
+    from pandorica.stitch.cli import run_stitch
+except ImportError:  # noqa: F401
+    run_stitch = None
 
 warnings.simplefilter("ignore", UserWarning)
 
@@ -101,6 +111,17 @@ def main(
     """
     if test_click:
         return
+
+    if run_stitch is None:
+        print_error(
+            "The serial-section stitcher is not installed.\n"
+            "Install with:\n"
+            "    pip install \"tardis_em[stitch]\"\n"
+            "or directly:\n"
+            "    pip install pandorica",
+            title="serial-section stitcher — package missing",
+        )
+        raise SystemExit(1)
 
     try:
         run_stitch(
