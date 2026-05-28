@@ -710,13 +710,19 @@ def mrc_mode(mode: int, amin: int):
 
 
 def _extract_at_n(line: str) -> Optional[int]:
-    """Return the ``N`` integer from a header line ending in ``@N``, else None."""
+    """
+    Code by Robert Kiewisz
+
+    Return the ``N`` integer from a header line ending in ``@N``, else None.
+    """
     m = re.search(r"@(\d+)\s*$", line)
     return int(m.group(1)) if m else None
 
 
 def _parse_am_binary_spatial_graph(am_file: str):
     """
+    Code by Robert Kiewisz
+
     Parse an ``AmiraMesh BINARY-LITTLE-ENDIAN`` spatial-graph file.
 
     The text header (everything before ``# Data section follows``) is decoded
@@ -800,6 +806,8 @@ def _parse_am_binary_spatial_graph(am_file: str):
 
 def _find_am_ascii_data_offset(am_file: str) -> int:
     """
+    Code by Robert Kiewisz
+
     Byte offset to the start of an ASCII Amira Lattice data section.
 
     Streams the file in 1 MiB chunks looking for the ``\\n@1\\n`` marker that

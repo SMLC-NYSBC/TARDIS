@@ -23,6 +23,8 @@ logger = logging.getLogger(__name__)
 
 def print_progress_bar(value: int, max_v: int):
     """
+    Code by Robert Kiewisz
+
     Displays a progress bar indicating the percentage of completion. The progress
     bar is dynamically adjusted based on the terminal's width in interactive
     mode. In non-interactive environments or in case of error, a default width
@@ -54,6 +56,8 @@ def print_progress_bar(value: int, max_v: int):
 
 def is_interactive():
     """
+    Code by Robert Kiewisz
+
     Simple check if a command line window is from Jupiter.
     """
     import __main__ as main
@@ -283,6 +287,8 @@ class TardisLogo:
 
 def print_error(message: str, title: str = "ERROR") -> None:
     """
+    Code by Robert Kiewisz
+
     Print a (multi-line) error message inside the TARDIS logo box.
 
     Reuses :class:`TardisLogo` (without the robot art, so the body spans the full
@@ -301,6 +307,9 @@ def print_error(message: str, title: str = "ERROR") -> None:
 
 
 class ContextFilter(logging.Filter):
+    """    Code by Robert Kiewisz
+    Logging filter to add hostname information to log records.
+    """
     hostname = socket.gethostname()
 
     def filter(self, record):

@@ -885,7 +885,11 @@ def to_mrc(
 def _am_lattice_header(
     nz: int, ny: int, nx: int, pixel_size: float, header: list = None
 ) -> list:
-    """Build the AmiraMesh byte-lattice header lines for an ``(nz, ny, nx)`` volume."""
+    """
+    Code by Robert Kiewisz
+
+    Build the AmiraMesh byte-lattice header lines for an ``(nz, ny, nx)`` volume.
+    """
     xLen, yLen, zLen = (
         (nx - 1) * pixel_size,
         (ny - 1) * pixel_size,
@@ -930,6 +934,8 @@ def to_am_streamed(
     header: list = None,
 ):
     """
+    Code by Robert Kiewisz
+
     Write an AmiraMesh byte volume by concatenating raw ``uint8`` slab files,
     without ever holding the volume in RAM.
 
