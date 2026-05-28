@@ -671,6 +671,32 @@ def mrc_mode(mode: int, amin: int):
                 return name
 
 
+def _find_am_ascii_data_offset(am_file: str) -> int:
+    """
+    Byte offset to the start of an ASCII Amira Lattice data section.
+
+    Streams the file in 1 MiB chunks looking for the ``\\n@1\\n`` marker that
+    separates the header from the numeric body, so we don't read a multi-GB
+    volume just to skip the header. Returns -1 if the marker is absent.
+    """
+    marker = b"\n@1\n"
+    keep = len(marker) - 1
+    pos = 0  # absolute byte offset of start of `buf` in the file
+    buf = b""
+    with open(am_file, "rb") as f:
+        while True:
+            chunk = f.read(1 << 20)
+            if not chunk:
+                return -1
+            buf += chunk
+            idx = buf.find(marker)
+            if idx >= 0:
+                return pos + idx + len(marker)
+            if len(buf) > keep:
+                pos += len(buf) - keep
+                buf = buf[-keep:]
+
+
 def load_am(am_file: str):
     """
     Loads data from an AmiraMesh (.am) 3D image file and extracts image,
@@ -748,21 +774,31 @@ def load_am(am_file: str):
     pixel_size = np.round(pixel_size, 3)
 
     if "Lattice { byte Data }" in am or "Lattice { float Data }" in am:
-        if asci:
-            img = (
-                open("../../rand_sample/T216_grid3b.am", "r", encoding="iso-8859-1")
-                .read()
-                .split("\n")
-            )
-            img = [x for x in img if x != ""]
-            img = np.asarray(img)
-            return img
+        if "Lattice { byte Data }" in am:
+            dtype_ = np.uint8
         else:
-            if "Lattice { byte Data }" in am:
-                dtype_ = np.uint8
+            dtype_ = np.float32
+
+        if asci:
+            # ASCII Lattice: header is followed by a "\n@1\n" marker, then one
+            # whitespace-separated number per voxel. Stream through the file to
+            # find the data offset (header is small but body can be multi-GB),
+            # then let numpy parse the numeric body in C.
+            data_offset = _find_am_ascii_data_offset(am_file)
+            if data_offset < 0:
+                TardisError(
+                    "130",
+                    "tardis_em/utils/load_data.py",
+                    f".am {am_file} ASCII data section (@1) not found.",
+                )
+                return None
+            with open(am_file, "rb") as f:
+                f.seek(data_offset)
+                img = np.fromfile(f, dtype=dtype_, sep=" ", count=nx * ny * nz)
+        else:
+            if dtype_ is np.uint8:
                 img = np.fromfile(am_file, dtype=dtype_)
             else:
-                dtype_ = np.float32
                 offset = str.find(am, "\n@1\n") + 4
                 img = np.fromfile(am_file, dtype=np.float32, offset=offset)
     elif "Lattice { sbyte Data }" in am:
