@@ -374,8 +374,7 @@ class TriangularEdgeUpdate(nn.Module):
         """
         z = self.norm_input(z)
 
-        a = torch.sigmoid(self.gate_a(z)) * self.linear_a(z)  # B x L x L x O
-        b = torch.sigmoid(self.gate_b(z)) * self.linear_b(z)  # B x L x L x O
+        a, b = self._gated_input(z)  # B x L x L x O
 
         if mask is not None:
             mask = mask.unsqueeze(3).expand(
@@ -390,7 +389,60 @@ class TriangularEdgeUpdate(nn.Module):
         else:
             k = torch.einsum("bkio,bkjo->bijo", a, b)
 
+        return self._gated_output(z, k)
+
+    def _gated_input(self, z: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        a = torch.sigmoid(self.gate_a(z)) * self.linear_a(z)
+        b = torch.sigmoid(self.gate_b(z)) * self.linear_b(z)
+        return a, b
+
+    def _gated_output(self, z: torch.Tensor, k: torch.Tensor) -> torch.Tensor:
         return torch.sigmoid(self.gate_o(z)) * self.linear_o(self.norm_o(k))
+
+    def contract(self, h_pairs: torch.Tensor, rows: int) -> torch.Tensor:
+        """
+        Inference helper for a memory-efficient forward pass without a mask.
+
+        Computes the triangular product `k` of `forward` for the whole pair
+        tensor. The gated projections are built one block of rows at a time,
+        so the input-sized intermediates only exist for one block.
+
+        :param h_pairs: Pair features (B x L x L x D), before `norm_input`.
+        :param rows: Number of pair rows processed at once.
+        :return: `k` stored channel-first as B x O x L x L.
+        """
+        batch, length = h_pairs.shape[0], h_pairs.shape[1]
+        a = h_pairs.new_empty(batch, self.channel_dim, length, length)
+        b = h_pairs.new_empty(batch, self.channel_dim, length, length)
+
+        for start in range(0, length, rows):
+            a_rows, b_rows = self._gated_input(
+                self.norm_input(h_pairs[:, start : start + rows])
+            )
+            a[:, :, start : start + rows] = a_rows.permute(0, 3, 1, 2)
+            b[:, :, start : start + rows] = b_rows.permute(0, 3, 1, 2)
+
+        # Same contraction as the einsum in forward
+        if self.axis == 1:
+            return torch.matmul(a, b.transpose(2, 3))
+        return torch.matmul(a.transpose(2, 3), b)
+
+    def forward_rows(
+        self, h_rows: torch.Tensor, k: torch.Tensor, start: int
+    ) -> torch.Tensor:
+        """
+        Inference helper that returns `forward(h_pairs)` for one block of rows.
+
+        :param h_rows: Rows `start:start + n` of the pair features passed to
+            `contract` (B x n x L x D), before `norm_input`.
+        :param k: Output of `contract` for the full pair features.
+        :param start: Index of the first row in `h_rows`.
+        :return: Update for these rows (B x n x L x D).
+        """
+        z = self.norm_input(h_rows)
+        k_rows = k[:, :, start : start + z.shape[1]].permute(0, 2, 3, 1)
+
+        return self._gated_output(z, k_rows)
 
 
 class QuadraticEdgeUpdate(nn.Module):
@@ -876,10 +928,10 @@ class SelfAttention2D(MultiHeadAttention):
     Implements 2D self-attention mechanism.
 
     This class extends the MultiHeadAttention module to perform self-attention
-    specifically over 2D edge features. It provides functionality to reshape
-    the input features depending on the axis mode (rows or columns) and enables
-    efficient computation of attention by considering memory constraints via
-    batching.
+    specifically over 2D edge features of shape (Batch x Rows x Cols x Dim). It
+    provides functionality to reshape the input features depending on the axis
+    mode (rows or columns) and enables efficient computation of attention by
+    considering memory constraints via batching.
     """
 
     def __init__(
@@ -897,11 +949,16 @@ class SelfAttention2D(MultiHeadAttention):
         :type embed_dim: int
         :param num_heads: The number of attention heads.
         :type num_heads: int
-        :param axis: The axis or axes along which attention is applied.
-        :type axis: Optional or defined type of the axis
+        :param axis: Axis of the 2D grid along which attention is applied: 0 attends
+            along the rows (over i, separately for each column j), 1 attends along
+            the columns (over j, separately for each row i), and None attends over
+            all Rows x Cols positions.
+        :type axis: Optional[int]
         :param dropout: The dropout rate applied during training.
         :type dropout: float
-        :param max_size: The maximum size of the attention mechanism. Defaults to 4194304.
+        :param max_size: Maximum number of attention matrix entries (sequence length
+            squared times batch size) computed at once. Defaults to 4194304; 0
+            disables splitting.
         :type max_size: int
         """
         super(SelfAttention2D, self).__init__(
@@ -917,38 +974,36 @@ class SelfAttention2D(MultiHeadAttention):
         batching for memory-efficient computation when the attention matrix size exceeds
         a specified maximum.
 
-        :param x: Input tensor containing the features to be processed using 2D self-attention.
+        :param x: Input tensor of shape (Batch x Rows x Cols x Dim) containing the
+            features to be processed using 2D self-attention.
         :type x: torch.Tensor
-        :param padding_mask: Optional mask used to ignore certain positions during the
-            attention computation.
+        :param padding_mask: Optional boolean mask of shape (Batch x Rows x Cols);
+            True marks positions ignored as keys in the attention computation.
         :type padding_mask: torch.Tensor or None
-        :return: Transformed tensor with the same spatial dimensions as the input but
-            adjusted for the attention weights applied.
+        :return: Transformed tensor with the same shape as the input.
         :rtype: torch.Tensor
         """
 
-        R, C, B, DIM = x.size()
+        B, R, C, DIM = x.size()
         axis = self.axis
         if axis is None:
-            x = x.view(R * C, B, DIM)
+            """attend over all Rows x Cols positions"""
+            x = x.reshape(B, R * C, DIM).transpose(0, 1)
             if padding_mask is not None:
-                padding_mask = padding_mask.view(B, R * C)
+                padding_mask = padding_mask.reshape(B, R * C)
         else:
             assert axis == 0 or axis == 1
 
             """attend along the row dimension"""
             if axis == 0:
-                x = x.view(R, C * B, DIM)
+                x = x.permute(1, 0, 2, 3).reshape(R, B * C, DIM)
                 if padding_mask is not None:
-                    padding_mask = padding_mask.permute(2, 0, 1)
-                    padding_mask = padding_mask.reshape(C * B, R)
+                    padding_mask = padding_mask.permute(0, 2, 1).reshape(B * C, R)
                 """attend along the col dimension"""
             else:
-                x = x.transpose(0, 1)
-                x = x.reshape(C, R * B, DIM)
+                x = x.permute(2, 0, 1, 3).reshape(C, B * R, DIM)
                 if padding_mask is not None:
-                    padding_mask = padding_mask.permute(1, 0, 2)
-                    padding_mask = padding_mask.reshape(R * B, C)
+                    padding_mask = padding_mask.reshape(B * R, C)
 
         if 0 < self.max_size < x.size(0) ** 2 * x.size(1):
             """
@@ -957,7 +1012,7 @@ class SelfAttention2D(MultiHeadAttention):
             workable calculating attention over batches helps reduce RAM when
             N or M is large
             """
-            batch_size = x.size(0) ** 2 // self.max_size
+            batch_size = self.max_size // x.size(0) ** 2
             if batch_size < 1:
                 """might run out of RAM, but batch size can't be < 1"""
                 batch_size = 1
@@ -977,12 +1032,11 @@ class SelfAttention2D(MultiHeadAttention):
 
         """transpose h back to input shape"""
         if axis is None:
-            h = h.view(R, C, B, DIM)
+            h = h.transpose(0, 1).reshape(B, R, C, DIM)
         elif axis == 0:
-            h = h.view(R, C, B, DIM)
+            h = h.view(R, B, C, DIM).permute(1, 0, 2, 3)
         else:
-            h = h.view(C, R, B, DIM)
-            h = h.transpose(0, 1)
+            h = h.view(C, B, R, DIM).permute(1, 2, 0, 3)
 
         return h
 

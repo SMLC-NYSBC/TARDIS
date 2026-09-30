@@ -90,6 +90,59 @@ def test_self_attn():
     assert torch.all(data_attn_0 == data_attn_1)
 
 
+def test_self_attn_axes():
+    torch.manual_seed(0)
+    data = torch.rand((2, 6, 7, 16))  # (Batch x Rows x Cols x Channels)
+
+    for axis in [0, 1, None]:
+        attn = SelfAttention2D(embed_dim=16, num_heads=4, axis=axis)
+        torch.nn.init.normal_(attn.out_proj.weight, std=0.1)  # zero at init
+
+        changed = data.clone()
+        changed[0, 2, 3] += 1.0
+        with torch.no_grad():
+            diff = (attn(changed) - attn(data)).abs().sum(-1) > 1e-6
+
+        # Only positions sharing the attended row, column, or grid see the change
+        expected = torch.zeros_like(diff)
+        if axis == 0:
+            expected[0, :, 3] = True
+        elif axis == 1:
+            expected[0, 2, :] = True
+        else:
+            expected[0] = True
+        assert torch.equal(diff, expected)
+
+        # Splitting into small attention batches gives the same result
+        attn_split = SelfAttention2D(embed_dim=16, num_heads=4, axis=axis, max_size=100)
+        attn_split.load_state_dict(attn.state_dict())
+        with torch.no_grad():
+            assert torch.allclose(attn_split(data), attn(data), atol=1e-6)
+
+
+def test_self_attn_padding_mask():
+    torch.manual_seed(0)
+    data = torch.rand((1, 5, 5, 16))
+    mask = torch.zeros((1, 5, 5), dtype=torch.bool)
+    mask[0, :, 4] = True  # ignore column 4 as keys
+
+    attn = SelfAttention2D(embed_dim=16, num_heads=4, axis=1)
+    torch.nn.init.normal_(attn.out_proj.weight, std=0.1)
+
+    changed = data.clone()
+    changed[0, :, 4] += 1.0
+    with torch.no_grad():
+        out = attn(data)
+        out_changed = attn(changed)
+        out_masked = attn(data, padding_mask=mask)
+        out_masked_changed = attn(changed, padding_mask=mask)
+
+    # Without the mask, column 4 affects the other columns (attention over j);
+    # with the mask, the masked keys do not
+    assert not torch.allclose(out[:, :, :4], out_changed[:, :, :4], atol=1e-6)
+    assert torch.allclose(out_masked[:, :, :4], out_masked_changed[:, :, :4], atol=1e-6)
+
+
 def test_gelu():
     data = torch.rand((1, 10, 10))
 
