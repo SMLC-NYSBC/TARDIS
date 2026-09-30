@@ -181,8 +181,13 @@ class BasicDIST(nn.Module):
             node = node.transpose(0, 1)
 
         """ Encode throughout the transformer layers """
+        # edge is created in this method, so the layers may overwrite it
+        # when gradients are disabled (saves one copy of the edge features)
         _, edge = self.layers(
-            node_features=node, edge_features=edge, src_key_padding_mask=None
+            node_features=node,
+            edge_features=edge,
+            src_key_padding_mask=None,
+            inplace=True,
         )
 
         """ Predict the graph edges """
