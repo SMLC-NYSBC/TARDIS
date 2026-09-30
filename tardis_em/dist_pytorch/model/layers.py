@@ -87,6 +87,7 @@ class DistStack(nn.Module):
         node_features: Optional[torch.Tensor] = None,
         src_mask=None,
         src_key_padding_mask=None,
+        inplace=False,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Processes input edge features and optionally node features through multiple layers, applying
@@ -102,16 +103,20 @@ class DistStack(nn.Module):
                               Defaults to None.
         :param src_mask: Optional source mask for attention-based computations.
         :param src_key_padding_mask: Optional key padding mask for attention-based computations.
+        :param inplace: If True, `edge_features` may be overwritten when gradients
+                        are disabled. Saves one copy of the edge features.
         :return: A tuple consisting of two tensors:
                  - Updated node features
                  - Updated edge features
         """
-        for layer in self.layers:
+        for i, layer in enumerate(self.layers):
             node_features, edge_features = layer(
                 h_pairs=edge_features,
                 h_nodes=node_features,
                 src_mask=src_mask,
                 src_key_padding_mask=src_key_padding_mask,
+                # After the first layer, edge_features is owned by this stack
+                inplace=inplace or i > 0,
             )
 
         return node_features, edge_features
@@ -129,6 +134,9 @@ class DistLayer(nn.Module):
     DistLayer allows for versatile interaction between node and pair features
     through specific update routines that depend on the chosen structure.
     """
+
+    # Pair positions (rows x columns) processed at once when gradients are disabled
+    inference_chunk_size = 2**15
 
     def __init__(
         self,
@@ -190,12 +198,13 @@ class DistLayer(nn.Module):
                 )
 
         # Edge optional MHA update
+        # row_attention attends over i for each j, col_attention over j for each i
         if self.structure in ["full", "full_af", "self_attn"]:
             self.row_attention = SelfAttention2D(
-                embed_dim=pairs_dim, num_heads=num_heads, dropout=dropout, axis=1
+                embed_dim=pairs_dim, num_heads=num_heads, dropout=dropout, axis=0
             )
             self.col_attention = SelfAttention2D(
-                embed_dim=pairs_dim, num_heads=num_heads, dropout=dropout, axis=0
+                embed_dim=pairs_dim, num_heads=num_heads, dropout=dropout, axis=1
             )
 
         # Edge triangular update
@@ -280,6 +289,7 @@ class DistLayer(nn.Module):
         h_nodes: Optional[torch.Tensor] = None,
         mask: Optional[torch.Tensor] = None,
         src_key_padding_mask=None,
+        inplace=False,
     ) -> torch.Tensor:
         """
         Updates the edge features in a graph based on the chosen structural configuration
@@ -297,9 +307,19 @@ class DistLayer(nn.Module):
         :param src_key_padding_mask: Optional tensor of shape `(batch_size, num_nodes)`. If
             provided, it is used to generate a mask to ignore certain nodes by expanding it
             along the necessary dimensions.
+        :param inplace: If True, `h_pairs` may be overwritten when gradients are disabled.
         :return: A tensor of the same shape as `h_pairs`, representing the updated edge
             features after applying the selected transformations.
         """
+        if (
+            not torch.is_grad_enabled()
+            and mask is None
+            and src_key_padding_mask is None
+        ):
+            return self._update_edges_no_grad(
+                h_pairs=h_pairs, h_nodes=h_nodes, inplace=inplace
+            )
+
         # Convert node features to edge shape
         if h_nodes is not None:
             h_pairs = h_pairs + self.pair_update(x=h_nodes)
@@ -307,6 +327,13 @@ class DistLayer(nn.Module):
         if src_key_padding_mask is not None:
             mask = src_key_padding_mask.unsqueeze(2) | src_key_padding_mask.unsqueeze(1)
 
+        h_pairs = self._update_structure(h_pairs=h_pairs, mask=mask)
+
+        return h_pairs + self.pair_ffn(x=h_pairs)
+
+    def _update_structure(
+        self, h_pairs: torch.Tensor, mask: Optional[torch.Tensor] = None
+    ) -> torch.Tensor:
         # Update edge features
         if self.structure == "full":
             h_pairs = (
@@ -345,7 +372,73 @@ class DistLayer(nn.Module):
                 + self.col_update_2(z=h_pairs, mask=mask)
             )
 
-        return h_pairs + self.pair_ffn(x=h_pairs)
+        return h_pairs
+
+    def _update_edges_no_grad(
+        self,
+        h_pairs: torch.Tensor,
+        h_nodes: Optional[torch.Tensor] = None,
+        inplace=False,
+    ) -> torch.Tensor:
+        """
+        Memory-efficient version of `update_edges` for inference without masks.
+
+        Gives the same result as `update_edges`, but adds each residual update
+        into `h_pairs` in place, one block of rows at a time. The large
+        intermediates (up to 4 x pairs_dim channels in the feed-forward network)
+        then exist only for one block instead of the full L x L grid. Triangular
+        updates are split this way; the other structures only split the
+        feed-forward network.
+
+        This path does not support autograd because it writes in place.
+
+        :param h_pairs: Edge features (batch_size, num_nodes, num_nodes, feature_dim).
+        :param h_nodes: Optional node features.
+        :param inplace: If True, `h_pairs` may be overwritten; otherwise it is copied
+            before the first in-place update.
+        :return: Updated edge features.
+        """
+        if h_nodes is not None:
+            h_pairs = h_pairs + self.pair_update(x=h_nodes)
+            inplace = True  # h_pairs is now a new tensor
+
+        batch, length = h_pairs.shape[0], h_pairs.shape[1]
+        rows = max(1, self.inference_chunk_size // (batch * length))
+
+        if self.structure in ["triang", "dualtriang"]:
+            if not inplace:
+                h_pairs = h_pairs.clone()
+
+            if self.structure == "triang":
+                updates = [(self.row_update, self.col_update)]
+            else:
+                updates = [
+                    (self.row_update_1, self.col_update_1),
+                    (self.row_update_2, self.col_update_2),
+                ]
+
+            # h = h + row_update(h) + col_update(h), computed block by block.
+            # Row block i of the update only needs row block i of h and the
+            # triangular products k, which are computed before h is changed.
+            for row_update, col_update in updates:
+                row_k = row_update.contract(h_pairs, rows)
+                col_k = col_update.contract(h_pairs, rows)
+
+                for start in range(0, length, rows):
+                    h_rows = h_pairs[:, start : start + rows]
+                    row = row_update.forward_rows(h_rows, row_k, start)
+                    col = col_update.forward_rows(h_rows, col_k, start)
+                    h_rows += row
+                    h_rows += col
+                del row_k, col_k
+        else:
+            h_pairs = self._update_structure(h_pairs=h_pairs)
+
+        for start in range(0, length, rows):
+            h_rows = h_pairs[:, start : start + rows]
+            h_rows += self.pair_ffn(x=h_rows)
+
+        return h_pairs
 
     def forward(
         self,
@@ -353,6 +446,7 @@ class DistLayer(nn.Module):
         h_nodes: Optional[torch.Tensor] = None,
         src_mask=None,
         src_key_padding_mask=None,
+        inplace=False,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Processes and updates node and edge features using provided input tensors.
@@ -365,6 +459,7 @@ class DistLayer(nn.Module):
         :param src_mask: Optional mask applied at the source level during node update.
         :param src_key_padding_mask: Optional mask to specify which elements should be
             ignored in the computation, typically used for padded sequences.
+        :param inplace: If True, `h_pairs` may be overwritten when gradients are disabled.
 
         :return: Tuple of two tensors, the updated node features and the updated edge
             features in the graph.
@@ -380,6 +475,9 @@ class DistLayer(nn.Module):
 
         # Update edge features
         h_pairs = self.update_edges(
-            h_pairs=h_pairs, h_nodes=h_nodes, src_key_padding_mask=src_key_padding_mask
+            h_pairs=h_pairs,
+            h_nodes=h_nodes,
+            src_key_padding_mask=src_key_padding_mask,
+            inplace=inplace,
         )
         return h_nodes, h_pairs

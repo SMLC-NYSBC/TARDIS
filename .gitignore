@@ -119,3 +119,6 @@ docs/resources/Tardis_logo_2.svg
 /conda-build/builds-0.2.2
 /benchmarks/nature
 .vscode/settings.json
+
+# Local scratch work
+scratch-workspace/
