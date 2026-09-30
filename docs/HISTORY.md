@@ -1,5 +1,23 @@
 # History
 <details open>
+    <summary><b>0.3.36 (2026-09-30)</b></summary>
+
+* **DIST module changes:**
+  * *General*:
+    * Lower memory use for DIST inference. Without gradients, edge features are updated
+      in place, one block of rows at a time. Peak memory at 900 points drops from about
+      7.5 GB to 0.8 GB, with identical predictions. Training is unchanged.
+  * *Bugfixes*:
+    * Fixed `SelfAttention2D` input layout. It assumed (Rows, Cols, Batch, Dim), but DIST
+      passes (Batch, Rows, Cols, Dim), so column attention did not attend across columns.
+      Models with the `full`, `full_af`, or `self_attn` structure trained before this fix
+      must be retrained. Shipped DIST models use `triang` and are not affected.
+    * Fixed the split size in `SelfAttention2D`, so each split of a large attention
+      matrix stays within `max_size`.
+
+</details>
+
+<details>
     <summary><b>0.3.10 (2025-01-07)</b></summary>
 
 * **General changes:**
