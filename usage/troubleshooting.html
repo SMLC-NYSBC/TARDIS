@@ -1,0 +1,232 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Troubleshooting &mdash; TARDIS-em 0.3.36 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="../_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=39181258"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="../_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Helper functions" href="helper.html" />
+    <link rel="prev" title="Tuning new CNN module for specific dataset" href="fine_tune_model.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TARDIS-em
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#citation">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#what-s-new">What’s new?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../HISTORY.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../instructions.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="3d_actin.html">-  3D Actin Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="3d_mt.html">-  3D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2d_mt.html">-  2D Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tirf_mt.html">-  TIRF Microtubules Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="3d_membrane.html">-  3D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="2d_membrane.html">-  2D Membrane Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripting.html">-  Scripting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fine_tune_model.html">Fine-Tune TARDIS models</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#pytorch-not-compiled-with-cuda">Pytorch not compiled with CUDA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tardis-produce-no-output-and-no-error-message">TARDIS produce no output and no error message</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#error-loading-model-invalid-load-key">Error loading model: <code class="docutils literal notranslate"><span class="pre">invalid</span> <span class="pre">load</span> <span class="pre">key,</span> <span class="pre">'&lt;'</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#offline-air-gapped-clusters">Offline / air-gapped clusters</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="helper.html">TARDIS helper-functions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html">CNN Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#dist-module">DIST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#analysis-module">Analysis Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_doc.html#global-functions">Global Functions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TARDIS-em</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Troubleshooting</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/usage/troubleshooting.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="troubleshooting">
+<h1>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading"></a></h1>
+<p>Here are few know issue and how to troubleshoot them.</p>
+<section id="pytorch-not-compiled-with-cuda">
+<h2>Pytorch not compiled with CUDA<a class="headerlink" href="#pytorch-not-compiled-with-cuda" title="Link to this heading"></a></h2>
+<p>Fix by reinstall pytorch pre-build with CUDA:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">uninstall</span> <span class="n">pytorch</span>
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">uninstall</span> <span class="n">torch</span>
+</pre></div>
+</div>
+<p>and follow instruction for <a class="reference external" href="https://pytorch.org">Pytorch website</a>
+on how to install current pytorch version with CUDA on your system.</p>
+</section>
+<section id="tardis-produce-no-output-and-no-error-message">
+<h2>TARDIS produce no output and no error message<a class="headerlink" href="#tardis-produce-no-output-and-no-error-message" title="Link to this heading"></a></h2>
+<p>This could be because TARDIS could not find any know object (e.g. membrane or microtubules) in your
+tomogram or micrograph.</p>
+<p>You can try to reduce <code class="code highlight bash docutils literal highlight-bash">-ct<span class="w"> </span>&lt;float<span class="p">;</span><span class="w"> </span>default<span class="w"> </span><span class="m">0</span>.25&gt;</code> to 0.1 or 0.05. If this wont help, please
+contact <a class="reference external" href="mailto:rkiewisz&#37;&#52;&#48;nysbc&#46;org">Developers</a>.</p>
+</section>
+<section id="error-loading-model-invalid-load-key">
+<h2>Error loading model: <code class="docutils literal notranslate"><span class="pre">invalid</span> <span class="pre">load</span> <span class="pre">key,</span> <span class="pre">'&lt;'</span></code><a class="headerlink" href="#error-loading-model-invalid-load-key" title="Link to this heading"></a></h2>
+<p>The full message looks like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">_pickle</span><span class="o">.</span><span class="n">UnpicklingError</span><span class="p">:</span> <span class="n">invalid</span> <span class="n">load</span> <span class="n">key</span><span class="p">,</span> <span class="s1">'&lt;'</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>This means the <code class="docutils literal notranslate"><span class="pre">model_weights.pth</span></code> file is <strong>not</strong> a model checkpoint - it is an
+XML error page (starting with <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>) that was saved by a failed download, for
+example <code class="docutils literal notranslate"><span class="pre">NoSuchKey</span></code> or <code class="docutils literal notranslate"><span class="pre">AccessDenied</span></code> returned by S3. A genuine checkpoint is
+several MB to hundreds of MB; a corrupted one is usually a few hundred bytes.</p>
+<p>Fix:</p>
+<ol class="arabic simple">
+<li><p>Delete the cached weights and let TARDIS re-download them with internet access:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rm<span class="w"> </span>-rf<span class="w"> </span>~/.tardis_em
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Or, if you pre-downloaded the weights manually, replace the corrupted file with
+a direct download (see <a class="reference internal" href="#offline-air-gapped-clusters">Offline / air-gapped clusters</a> below).</p></li>
+</ol>
+<p>Recent TARDIS versions detect this automatically: a corrupted cached file is
+re-downloaded, and a failed download aborts with a clear error instead of being
+saved as a checkpoint.</p>
+</section>
+<section id="offline-air-gapped-clusters">
+<h2>Offline / air-gapped clusters<a class="headerlink" href="#offline-air-gapped-clusters" title="Link to this heading"></a></h2>
+<p>On clusters where compute nodes have no internet access, pre-download the weights
+on a login node and point TARDIS at them with <code class="docutils literal notranslate"><span class="pre">-cch</span></code> / <code class="docutils literal notranslate"><span class="pre">-dch</span></code> (or via the
+<code class="docutils literal notranslate"><span class="pre">$TARDIS_CNN_MODELS</span></code> / <code class="docutils literal notranslate"><span class="pre">$TARDIS_DIST_MODELS</span></code> environment variables).</p>
+<p>The weights live in the public S3 bucket <code class="docutils literal notranslate"><span class="pre">tardis-weigths</span></code>:</p>
+<ul class="simple">
+<li><p>CNN models: <code class="docutils literal notranslate"><span class="pre">tardis_em/fnet_attn_32/&lt;model&gt;/&lt;version&gt;/model_weights.pth</span></code></p></li>
+<li><p>DIST models: <code class="docutils literal notranslate"><span class="pre">tardis_em/dist_triang/&lt;model&gt;/&lt;version&gt;/model_weights.pth</span></code></p></li>
+</ul>
+<p>Option 1 - <code class="docutils literal notranslate"><span class="pre">tardis_fetch</span></code> (downloads one model at a time):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tardis_fetch<span class="w"> </span>-dir<span class="w"> </span>./weights<span class="w"> </span>-mc<span class="w"> </span>actin_3d<span class="w"> </span>-md<span class="w"> </span>3d
+</pre></div>
+</div>
+<p>Option 2 - mirror the whole bucket with <code class="docutils literal notranslate"><span class="pre">rclone</span></code> (no AWS credentials needed):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mkdir<span class="w"> </span>-p<span class="w"> </span>weights
+
+rclone<span class="w"> </span>config<span class="w"> </span>create<span class="w"> </span>tardis_s3<span class="w"> </span>s3<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>provider<span class="w"> </span>AWS<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>env_auth<span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>region<span class="w"> </span>us-east-1
+
+rclone<span class="w"> </span>copy<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--s3-no-check-bucket<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--progress<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>tardis_s3:tardis-weigths/tardis_em<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>./weights
+</pre></div>
+</div>
+<p>Option 3 - download a single file directly, e.g. the 3D actin CNN model:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-L<span class="w"> </span>-o<span class="w"> </span>model_weights.pth<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>https://tardis-weigths.s3.us-east-1.amazonaws.com/tardis_em/fnet_attn_32/actin_3d/V_3/model_weights.pth
+</pre></div>
+</div>
+<p>After downloading, sanity-check the file size (a few hundred bytes means the
+download failed and returned an error page):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ls<span class="w"> </span>-lh<span class="w"> </span>weights/**/model_weights.pth
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="fine_tune_model.html" class="btn btn-neutral float-left" title="Tuning new CNN module for specific dataset" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="helper.html" class="btn btn-neutral float-right" title="Helper functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021-2024, Robert Kiewisz, Tristan Bepler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
